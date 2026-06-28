@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ProgramApplication;
 use App\Models\User;
 use App\Modules\Program_Management\Services\ProgramApplicationReviewService;
+use App\Modules\Program_Management\Services\ProgramApplicationStatusMailService;
 use App\Services\RejectedProgramApplicationService;
 use App\Services\SkOfficialActivityService;
 use Illuminate\Database\Eloquent\Model;
@@ -28,6 +29,7 @@ abstract class RejectedProgramApplicationController extends Controller
         private readonly RejectedProgramApplicationService $rejectedService,
         private readonly ProgramApplicationReviewService $reviewService,
         private readonly SkOfficialActivityService $activityService,
+        private readonly ProgramApplicationStatusMailService $statusMailService,
     ) {
     }
 
@@ -191,6 +193,12 @@ abstract class RejectedProgramApplicationController extends Controller
             "Restored rejected {$label} application: {$fullName}",
             ['application_id' => $applicationId]
         );
+
+        $fresh = $application->fresh(['scheduleProgram', 'kabataan']);
+
+        if ($this->statusMailService->isProgramLetterNotifiable($this->letter)) {
+            $this->statusMailService->notify($fresh, 'restored');
+        }
 
         return response()->json([
             'success' => true,

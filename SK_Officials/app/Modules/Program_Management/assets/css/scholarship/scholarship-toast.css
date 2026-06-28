@@ -1,0 +1,32 @@
+/* Shared scholarship toast — centered below main header, always green */
+.scholarship-toast {
+    position: fixed;
+    top: 82px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    padding: 12px 22px;
+    border-radius: 10px;
+    background: #22c55e;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+    max-width: min(520px, calc(100vw - 32px));
+    text-align: center;
+}
+
+.scholarship-toast svg {
+    flex-shrink: 0;
+}
+
+.scholarship-toast.is-visible {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}

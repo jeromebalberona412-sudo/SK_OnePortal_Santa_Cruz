@@ -23,7 +23,7 @@
         'last_name', 'first_name', 'middle_name', 'suffix', 'birthday', 'age', 'sex',
         'civil_status', 'contact_number', 'email', 'region', 'province', 'city',
         'barangay', 'purok_zone', 'youth_classification', 'youth_age_group', 'education',
-        'current_school', 'course_strand', 'work_status', 'sk_voter', 'sk_voted',
+        'current_school', 'course_strand',
     ];
 
     const KK_FIELD_LABELS = {
@@ -47,9 +47,6 @@
         education: 'Educational Attainment',
         current_school: 'Current School',
         course_strand: 'Course / Strand',
-        work_status: 'Work Status',
-        sk_voter: 'Registered SK Voter',
-        sk_voted: 'Voted Last Election',
     };
 
     const SECTIONS = [
@@ -265,24 +262,23 @@
         if (!container) return;
 
         const editableSections = SECTIONS.filter((s) => !s.kkProfiling && !s.customFileUploads);
-        const kkCheckboxes = Object.entries(KK_FIELD_LABELS).map(([key, label]) => `
-            <label class="schol-kk-field-label">
-                <input type="checkbox" class="kk-profiling-field" value="${escapeHtml(key)}">
-                <span>${escapeHtml(label)}</span>
-            </label>
+        const kkFieldList = DEFAULT_KK_FIELDS.map((key) => `
+            <div class="schol-system-field-row">
+                <div class="schol-system-field-meta">
+                    <span class="schol-system-field-label">${escapeHtml(KK_FIELD_LABELS[key] || key)}</span>
+                </div>
+                <span class="schol-system-required-pill">Auto-filled</span>
+            </div>
         `).join('');
 
         container.innerHTML = `
             <div class="schol-system-section schol-system-section-kk">
                 <div class="schol-system-section-head">
                     <h5>1. Personal Information (KK Profiling)</h5>
+                    <span class="schol-system-lock-badge">System Fields · Auto-included</span>
                 </div>
-                <p class="schol-system-section-desc">Select KK Profiling fields to automatically include in scholarship applications. Selected fields will be auto-filled from the applicant's KK Profile and displayed as read-only.</p>
-                <div class="schol-kk-fields-grid">${kkCheckboxes}</div>
-                <div class="schol-kk-fields-actions">
-                    <button type="button" id="selectAllKKFields" class="schol-btn schol-btn-secondary schol-btn-sm">Select All</button>
-                    <button type="button" id="clearAllKKFields" class="schol-btn schol-btn-secondary schol-btn-sm">Clear All</button>
-                </div>
+                <p class="schol-system-section-desc">All KK Profiling fields are automatically included in scholarship applications. Data is auto-filled from the applicant's KK Profile and displayed as read-only.</p>
+                <div class="schol-system-fields">${kkFieldList}</div>
             </div>
             ${editableSections.map((section, index) => `
                 <div class="schol-system-section" data-section="${section.id}">
@@ -303,13 +299,6 @@
                     </div>
                 </div>
             `).join('')}
-            <div class="schol-system-section schol-system-section-req">
-                <div class="schol-system-section-head">
-                    <h5>5. Uploading of Requirements</h5>
-                    <span class="schol-system-lock-badge">Custom · File Upload Questions</span>
-                </div>
-                <p class="schol-system-section-desc">Add PDF file upload requirements below using the Requirements builder. Each item becomes a required document for applicants.</p>
-            </div>
         `;
     }
 
@@ -502,6 +491,7 @@
     global.ScholarshipSystemFields = {
         SECTIONS,
         DEFAULT_KK_FIELDS,
+        KK_FIELD_LABELS,
         getApplicantSections,
         getAllFields,
         getFileFieldsFromProgram,

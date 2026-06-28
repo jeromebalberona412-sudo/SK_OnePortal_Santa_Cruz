@@ -53,4 +53,17 @@ class ScheduleProgram extends Model
     {
         return $this->hasMany(ProgramApplication::class);
     }
+
+    public function quickGuidelineSteps(): HasMany
+    {
+        return $this->hasMany(ScholarshipQuickGuidelineStep::class)->orderBy('step_order');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where(function ($builder) {
+            $builder->whereRaw('"is_archived" = false')
+                ->orWhereNull('is_archived');
+        });
+    }
 }

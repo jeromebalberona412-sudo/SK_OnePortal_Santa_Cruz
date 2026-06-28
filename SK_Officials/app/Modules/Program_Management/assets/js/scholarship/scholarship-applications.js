@@ -94,12 +94,15 @@ function mapDetailRecord(app) {
         cor_certified: docs.some((doc) => /cor|certified/i.test(String(doc.question_label || doc.label || doc.original_name || doc.name || ''))),
         photo_id: docs.some((doc) => /id|photo/i.test(String(doc.question_label || doc.label || doc.original_name || doc.name || ''))),
         uploaded_documents: docs,
+        system_field_answers: app.system_field_answers || {},
         form_answers: (app.custom_answers || []).map((item, index) => ({
             question: item.question_label || item.label || `Question ${index + 1}`,
             question_type: item.question_type || '',
             answer: item.answer ?? SCHOL_EMPTY,
         })),
         kk_profile_data: app.kk_profile_data || base.kk_profile_data || {},
+        schedule_program: app.schedule_program || null,
+        program_name: app.program_name,
     };
 }
 
@@ -130,10 +133,16 @@ function initScholarshipRequests() {
     }
 
     let records = [];
+    let rawApiRecords = {};
+    let filteredRecords = [];
+    let currentPage = 1;
+    let recordsPerPage = 10;
+    let tablePagination = null;
     let apiSummary = { total: 0, pending: 0, approved: 0, rejected: 0 };
     let deleteTargetId = null;
     let viewTargetId = null;
     let rejectTargetId = null;
+    let pendingApproveId = null;
 
     const tbody = document.getElementById('scholTableBody');
     const searchInput = document.getElementById('scholSearch');
@@ -202,9 +211,6 @@ function initScholarshipRequests() {
     const viewModal = document.getElementById('scholViewModal');
     const viewBody = document.getElementById('scholViewBody');
     const viewClose = document.getElementById('scholViewClose');
-    const viewCloseFooter = document.getElementById('scholViewCloseFooter');
-    const approveBtn = document.getElementById('scholApproveBtn');
-    const rejectBtn = document.getElementById('scholRejectBtn');
     const deleteModal = document.getElementById('scholDeleteModal');
     const deleteClose = document.getElementById('scholDeleteClose');
     const deleteCancel = document.getElementById('scholDeleteCancel');
@@ -220,6 +226,12 @@ function initScholarshipRequests() {
     const rejectReasonOther = document.getElementById('rejectReasonOther');
     const rejectReasonOtherInput = document.getElementById('rejectReasonOtherInput');
     const rejectReasonOtherCount = document.getElementById('rejectReasonOtherCount');
+    const rejectConfirmText = document.getElementById('scholRejectConfirmText');
+    const rejectConfirmError = document.getElementById('scholRejectConfirmError');
+    const approveConfirmModal = document.getElementById('scholApproveConfirmModal');
+    const approveConfirmClose = document.getElementById('scholApproveConfirmClose');
+    const approveConfirmCancel = document.getElementById('scholApproveConfirmCancel');
+    const approveConfirmBtn = document.getElementById('scholApproveConfirmBtn');
     let filterSearch = '';
 
     // Rejection Reason "Other" checkbox handler
@@ -241,6 +253,9 @@ function initScholarshipRequests() {
             rejectReasonOtherCount.textContent = `${rejectReasonOtherInput.value.length}/500 characters`;
         });
     }
+    if (rejectConfirmText) {
+        rejectConfirmText.addEventListener('input', syncRejectConfirmButton);
+    }
     let filterStartDate = '';
     let filterEndDate = '';
     let filterStartTime = '';
@@ -249,11 +264,49 @@ function initScholarshipRequests() {
 
     function openRejectReasonModal() {
         document.querySelectorAll('.reject-reason-checkbox').forEach(cb => { cb.checked = false; });
+        if (rejectReasonOtherInput) {
+            rejectReasonOtherInput.style.display = 'none';
+            rejectReasonOtherInput.value = '';
+        }
+        if (rejectReasonOtherCount) rejectReasonOtherCount.style.display = 'none';
+        if (rejectConfirmText) rejectConfirmText.value = '';
+        if (rejectConfirmError) {
+            rejectConfirmError.style.display = 'none';
+            rejectConfirmError.textContent = '';
+        }
+        resetRejectConfirmButton();
         if (rejectReasonModal) rejectReasonModal.style.display = 'flex';
+    }
+
+    function resetRejectConfirmButton() {
+        if (!rejectReasonConfirm) return;
+        rejectReasonConfirm.disabled = true;
+        rejectReasonConfirm.classList.remove('is-enabled');
+        rejectReasonConfirm.classList.add('is-disabled');
+    }
+
+    function syncRejectConfirmButton() {
+        if (!rejectReasonConfirm) return;
+        const matched = (rejectConfirmText?.value?.trim() || '') === 'Confirm';
+        rejectReasonConfirm.disabled = !matched;
+        rejectReasonConfirm.classList.toggle('is-enabled', matched);
+        rejectReasonConfirm.classList.toggle('is-disabled', !matched);
+    }
+
+    function openApproveConfirmModal(id) {
+        pendingApproveId = id;
+        if (approveConfirmModal) approveConfirmModal.style.display = 'flex';
+    }
+
+    function closeApproveConfirmModal() {
+        pendingApproveId = null;
+        if (approveConfirmModal) approveConfirmModal.style.display = 'none';
     }
 
     function closeRejectReasonModal() {
         rejectTargetId = null;
+        if (rejectConfirmText) rejectConfirmText.value = '';
+        resetRejectConfirmButton();
         if (rejectReasonModal) rejectReasonModal.style.display = 'none';
     }
 
@@ -637,50 +690,31 @@ function initScholarshipRequests() {
     }
 
     // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    function render() {
-        // Sort by submitted date+time ascending (earliest first)
-        const parseSubmitted = r => {
-            const d = r.submitted_at || '';
-            const t = r.submitted_time || '12:00 AM';
-            return new Date(`${d} ${t}`).getTime() || 0;
-        };
+    function buildFilteredRecords() {
+        const parseDate = (dateStr) => (dateStr ? new Date(dateStr) : null);
 
-        // Helper function to parse date from "Jan 10, 2025" format to Date object
-        const parseDate = (dateStr) => {
-            if (!dateStr) return null;
-            return new Date(dateStr);
-        };
-
-        // Helper function to convert 12-hour time to 24-hour for comparison
         const convertTo24Hour = (time12) => {
             if (!time12) return '';
             const [time, period] = time12.split(' ');
             let [hours, minutes] = time.split(':');
             hours = parseInt(hours, 10);
-
             if (period === 'PM' && hours !== 12) hours += 12;
             if (period === 'AM' && hours === 12) hours = 0;
-
             return `${hours.toString().padStart(2, '0')}:${minutes}`;
         };
 
-        // Filter out Approved and Rejected records from the table display
-        const filtered = records.filter(r => {
+        return records.filter((r) => {
             const name = `${r.last_name} ${r.first_name}`.toLowerCase();
             const school = (r.school_name || '').toLowerCase();
             const q = filterSearch.toLowerCase();
-
-            // Search filter
             const matchesSearch = !filterSearch || name.includes(q) || school.includes(q);
 
-            // Filter type (all/recent/monthly/yearly)
             let matchesFilterType = true;
             if (filterType !== 'all') {
                 const submittedDate = parseDate(r.submitted_at);
                 if (submittedDate) {
                     const now = new Date();
                     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
                     switch (filterType) {
                         case 'recent': {
                             const sevenDaysAgo = new Date(today);
@@ -688,37 +722,30 @@ function initScholarshipRequests() {
                             matchesFilterType = submittedDate >= sevenDaysAgo;
                             break;
                         }
-                        case 'monthly': {
-                            matchesFilterType = submittedDate.getMonth() === now.getMonth() &&
-                                submittedDate.getFullYear() === now.getFullYear();
+                        case 'monthly':
+                            matchesFilterType = submittedDate.getMonth() === now.getMonth()
+                                && submittedDate.getFullYear() === now.getFullYear();
                             break;
-                        }
-                        case 'yearly': {
+                        case 'yearly':
                             matchesFilterType = submittedDate.getFullYear() === now.getFullYear();
                             break;
-                        }
                     }
                 }
             }
 
-            // Date range filter
             let matchesDateRange = true;
             if (filterStartDate || filterEndDate) {
                 const submittedDate = parseDate(r.submitted_at);
                 if (submittedDate) {
-                    if (filterStartDate) {
-                        const startDate = new Date(filterStartDate);
-                        if (submittedDate < startDate) matchesDateRange = false;
-                    }
+                    if (filterStartDate && submittedDate < new Date(filterStartDate)) matchesDateRange = false;
                     if (filterEndDate) {
                         const endDate = new Date(filterEndDate);
-                        endDate.setHours(23, 59, 59, 999); // Include the entire end date
+                        endDate.setHours(23, 59, 59, 999);
                         if (submittedDate > endDate) matchesDateRange = false;
                     }
                 }
             }
 
-            // Time range filter
             let matchesTimeRange = true;
             if (filterStartTime || filterEndTime) {
                 const submittedTime24 = convertTo24Hour(r.submitted_time);
@@ -730,23 +757,51 @@ function initScholarshipRequests() {
 
             return r.status === 'Pending' && matchesSearch && matchesFilterType && matchesDateRange && matchesTimeRange;
         }).sort((a, b) => {
-            // Sort alphabetically by last name, then first name
             const lastNameA = (a.last_name || '').toLowerCase();
             const lastNameB = (b.last_name || '').toLowerCase();
-            if (lastNameA !== lastNameB) {
-                return lastNameA.localeCompare(lastNameB);
-            }
-            const firstNameA = (a.first_name || '').toLowerCase();
-            const firstNameB = (b.first_name || '').toLowerCase();
-            return firstNameA.localeCompare(firstNameB);
+            if (lastNameA !== lastNameB) return lastNameA.localeCompare(lastNameB);
+            return (a.first_name || '').toLowerCase().localeCompare((b.first_name || '').toLowerCase());
         });
+    }
+
+    function renderActionMenuCell(record) {
+        const isPending = record.status === 'Pending';
+        const reviewActions = isPending ? `
+            <button type="button" class="row-actions-item row-actions-item-approve" data-action="approve" data-id="${record.id}" role="menuitem">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Approve</span>
+            </button>
+            <button type="button" class="row-actions-item row-actions-item-danger" data-action="reject" data-id="${record.id}" role="menuitem">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <span>Reject</span>
+            </button>
+        ` : '';
+
+        return `
+            <div class="row-actions-menu">
+                <button type="button" class="row-actions-trigger" aria-label="Actions" aria-haspopup="true" aria-expanded="false">${window.ROW_ACTIONS_ELLIPSIS || '⋯'}</button>
+                <div class="row-actions-dropdown" role="menu">
+                    <button type="button" class="row-actions-item row-actions-item-view" data-action="view" data-id="${record.id}" role="menuitem">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span>View</span>
+                    </button>
+                    ${reviewActions}
+                </div>
+            </div>`;
+    }
+
+    function render() {
+        filteredRecords = buildFilteredRecords();
+        const pageRows = typeof window.paginateSlice === 'function'
+            ? window.paginateSlice(filteredRecords, currentPage, recordsPerPage)
+            : filteredRecords;
 
         tbody.innerHTML = '';
 
-        if (filtered.length === 0) {
-            tbody.innerHTML = `<tr class="schol-empty-row"><td colspan="8">No applications found.</td></tr>`;
+        if (filteredRecords.length === 0) {
+            tbody.innerHTML = `<tr class="schol-empty-row"><td colspan="7">No applications found.</td></tr>`;
         } else {
-            filtered.forEach((r, i) => {
+            pageRows.forEach((r) => {
                 const statusCls = r.status === 'Approved' ? 'schol-pill-approved'
                     : r.status === 'Rejected' ? 'schol-pill-rejected'
                         : 'schol-pill-pending';
@@ -755,25 +810,16 @@ function initScholarshipRequests() {
                     <td class="schol-fullname-cell"><span class="schol-fullname">${formatApplicantName(r)}</span></td>
                     <td style="text-align:center;font-size:12px;">${r.school_name || SCHOL_EMPTY}</td>
                     <td style="text-align:center;">${r.year_level || SCHOL_EMPTY}</td>
-                    <td style="text-align:center;font-size:12px;">${r.purpose || SCHOL_EMPTY}</td>
-                    <td style="text-align:center;font-size:10px;">
-                        <div style="display:flex;flex-direction:column;gap:3px;align-items:center;line-height:1.3;">
-                            ${formatRequirementsCell(r)}
-                        </div>
-                    </td>
                     <td style="text-align:center;"><span class="schol-pill ${statusCls}">${r.status}</span></td>
                     <td style="text-align:center;">${r.submitted_at || SCHOL_EMPTY}</td>
                     <td style="text-align:center;font-size:12px;color:#6b7280;">${r.submitted_time || SCHOL_EMPTY}</td>
-                    <td style="text-align:center;">
-                        <div class="schol-tbl-actions prog-tbl-actions">
-                            <button class="schol-tbl-btn schol-tbl-btn-view prog-btn prog-btn-view" data-action="view" data-id="${r.id}">View</button>
-                        </div>
-                    </td>
+                    <td class="col-actions">${renderActionMenuCell(r)}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
+        if (tablePagination) tablePagination.updateFooter();
         updateStats();
     }
 
@@ -789,9 +835,14 @@ function initScholarshipRequests() {
     }
 
     async function loadRecords() {
-        const data = await scholApiFetch(`/api/program-applications?letter=${PROGRAM_LETTER}`);
-        records = (data.data || []).map(mapApiRecord);
+        const data = await scholApiFetch(`/api/program-applications?letter=${PROGRAM_LETTER}&status=pending`);
+        rawApiRecords = {};
+        records = (data.data || []).map((app) => {
+            rawApiRecords[app.id] = app;
+            return mapApiRecord(app);
+        });
         apiSummary = data.summary || {};
+        currentPage = 1;
         render();
     }
 
@@ -808,28 +859,79 @@ function initScholarshipRequests() {
         await loadRecords();
     }
 
-    // â”€â”€ Table click â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    tbody.addEventListener('click', e => {
-        const btn = e.target.closest('button[data-action]');
+    // ── Table click ─────────────────────────────────────────────────────────────
+    if (typeof window.bindRowActionsTable === 'function') {
+        window.bindRowActionsTable(tbody);
+    }
+
+    tbody.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.row-actions-item[data-action]');
         if (!btn) return;
+
         const action = btn.getAttribute('data-action');
         const id = parseInt(btn.getAttribute('data-id'), 10);
         const record = records.find(r => r.id === id);
         if (!record) return;
 
-        if (action === 'view') { openViewModalFromApi(record); }
+        if (typeof window.closeAllRowActionMenus === 'function') {
+            window.closeAllRowActionMenus();
+        }
+
+        if (action === 'view') {
+            openViewModalFromApi(record);
+            return;
+        }
+
+        if (action === 'approve') {
+            openApproveConfirmModal(id);
+            return;
+        }
+
+        if (action === 'reject') {
+            rejectTargetId = id;
+            openRejectReasonModal();
+        }
     });
+
+    function recordToViewApp(record) {
+        const cached = rawApiRecords[record.id];
+        if (cached) return cached;
+
+        return {
+            id: record.id,
+            last_name: record.last_name,
+            first_name: record.first_name,
+            middle_name: record.middle_name,
+            suffix: record.suffix,
+            date_submitted: record.submitted_at,
+            submitted_time: record.submitted_time,
+            status: record.status,
+            status_label: record.status,
+            program_name: record.program_name,
+            kk_profile_data: record.kk_profile_data || {},
+            system_field_answers: record.system_field_answers || {},
+            custom_answers: (record.form_answers || []).map((item) => ({
+                question_label: item.question,
+                answer: item.answer,
+            })),
+            required_documents: record.uploaded_documents || [],
+        };
+    }
 
     async function openViewModalFromApi(record) {
         viewTargetId = record.id;
+        openViewModal(recordToViewApp(record));
+
         try {
-            if (typeof window.showLoading === 'function') window.showLoading();
             const data = await scholApiFetch(`/api/program-applications/${record.id}?letter=${PROGRAM_LETTER}`);
-            if (data.data) openViewModal(mapDetailRecord(data.data));
+            if (data.data) {
+                rawApiRecords[record.id] = data.data;
+                if (viewTargetId === record.id) {
+                    openViewModal(data.data);
+                }
+            }
         } catch (error) {
-            showScholToast(error.message || 'Failed to load application details.', 'error');
-        } finally {
-            if (typeof window.hideLoading === 'function') window.hideLoading();
+            showScholToast(error.message || 'Failed to load full application details.');
         }
     }
 
@@ -873,167 +975,15 @@ function initScholarshipRequests() {
         }).join('');
     }
 
-    function openViewModal(r) {
-        const statusCls = r.status === 'Approved' ? 'schol-pill-approved'
-            : r.status === 'Rejected' ? 'schol-pill-rejected'
-                : 'schol-pill-pending';
-
-        const purposeText = r.purpose || (Array.isArray(r.purpose_list) ? r.purpose_list.join(', ') : SCHOL_EMPTY);
-        const fullName = formatApplicantName(r);
-        const initials = getApplicantInitials(r);
+    function openViewModal(app) {
         const SV = window.ScholarshipViewShared;
-        const esc = (s) => (SV ? SV.escapeHtml(s) : String(s ?? ''));
-        const uploadedDocsHtml = renderUploadedDocumentsSection(r.uploaded_documents);
-        const program = SV ? SV.loadScholarshipProgram() : null;
-        const programHtml = SV ? SV.renderProgramInformationSection(program) : '';
-        const formAnswersHtml = SV ? SV.renderFormAnswersSection(r, program) : '';
-
-        // KK Profile Data Section
-        const kkProfileData = r.kk_profile_data || {};
-        const kkProfilingFields = (program?.kkProfilingFields || []).filter((field) => field !== 'full_name');
-        const hasKKProfileData = kkProfilingFields.length > 0 && Object.keys(kkProfileData).length > 0;
-
-        const kkProfileHtml = hasKKProfileData ? `
-            <!-- KK Profile Information -->
-            <div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                <h4 style="font-size:16px;font-weight:700;color:#0369a1;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                    KK Profile Information
-                    <span style="margin-left:auto;font-size:12px;font-weight:600;color:#64748b;background:#fff;padding:4px 12px;border-radius:20px;border:1px solid #0ea5e9;">Auto-filled from KK Profile</span>
-                </h4>
-                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
-                    ${kkProfilingFields.map(field => {
-                        const fieldLabels = {
-                            last_name: 'Last Name',
-                            first_name: 'First Name',
-                            middle_name: 'Middle Name',
-                            suffix: 'Suffix',
-                            birthday: 'Birthday',
-                            age: 'Age',
-                            sex: 'Sex',
-                            civil_status: 'Civil Status',
-                            contact_number: 'Contact Number',
-                            email: 'Email Address',
-                            home_address: 'Home Address',
-                            region: 'Region',
-                            province: 'Province',
-                            city: 'City/Municipality',
-                            barangay: 'Barangay',
-                            purok_zone: 'Purok/Zone',
-                            youth_classification: 'Youth Classification',
-                            youth_age_group: 'Youth Age Group',
-                            education: 'Educational Attainment',
-                            current_school: 'Current School',
-                            course_strand: 'Course / Strand',
-                            work_status: 'Work Status',
-                            sk_voter: 'Registered SK Voter',
-                            sk_voted: 'Voted Last Election',
-                            kk_assembly: 'Attended KK Assembly',
-                            vote_frequency: 'Number of KK Assembly Attendances'
-                        };
-                        const value = kkProfileData[field];
-                        if (!value) return '';
-                        return `
-                            <div style="${field === 'home_address' ? 'grid-column:1/-1;' : ''}">
-                                <label style="font-size:13px;font-weight:600;color:#0369a1;margin-bottom:6px;display:block;">${fieldLabels[field] || field}</label>
-                                <div style="font-size:15px;color:#111827;padding:10px 14px;background:#fff;border-radius:6px;border:1px solid #bae6fd;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(value)}</div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            </div>
-        ` : '';
-
-        viewBody.innerHTML = `
-            <div style="padding:24px;background:#f0f1f5;">
-                ${kkProfileHtml}
-
-                <!-- Scholarship Application Responses -->
-                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                    <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg>
-                        Scholarship Application Responses
-                    </h4>
-                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
-                        <div style="grid-column:1/-1;">
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">School Name</label>
-                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${r.school_name || 'Not specified'}</div>
-                        </div>
-                        <div style="grid-column:1/-1;">
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">School Address</label>
-                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${r.school_address || 'Not specified'}</div>
-                        </div>
-                        <div>
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Year Level</label>
-                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${r.year_level || 'Not specified'}</div>
-                        </div>
-                        <div>
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Program / Strand</label>
-                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${r.program_strand || 'Not specified'}</div>
-                        </div>
-                        <div style="grid-column:1/-1;">
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Purpose of Application</label>
-                            <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${purposeText || 'Not specified'}</div>
-                        </div>
-                        <div style="grid-column:1/-1;">
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Submitted Documents</label>
-                            <div style="background:#f9fafb;border-radius:8px;padding:16px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-                                ${uploadedDocsHtml}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                ${programHtml}
-
-                ${formAnswersHtml}
-
-                <!-- Submission Details -->
-                <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                    <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        Submission Details
-                    </h4>
-                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
-                        <div>
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Date Submitted</label>
-                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${r.submitted_at || 'Not specified'}</div>
-                        </div>
-                        <div>
-                            <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Time Submitted</label>
-                            <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${r.submitted_time || 'Not specified'}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Applicant summary -->
-                <div style="background:white;border-radius:12px;padding:20px 24px;box-shadow:0 1px 3px rgba(0,0,0,0.1);display:flex;align-items:center;gap:16px;border-top:3px solid #213F99;">
-                    <div style="width:56px;height:56px;background:#e8eef9;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#213F99;flex-shrink:0;">${initials}</div>
-                    <div style="flex:1;min-width:0;">
-                        <div style="font-size:18px;font-weight:700;color:#111827;margin-bottom:4px;">${fullName}</div>
-                        <div style="font-size:14px;color:#6b7280;">${esc(program?.programName || 'Scholarship Program')}</div>
-                    </div>
-                    <span class="schol-pill ${statusCls}" style="flex-shrink:0;">${r.status}</span>
-                </div>
-            </div>
-        `;
+        const detail = SV?.mapScholarshipApplicationDetail
+            ? SV.mapScholarshipApplicationDetail(app)
+            : mapDetailRecord(app);
+        viewBody.innerHTML = SV?.renderApplicationViewBody
+            ? SV.renderApplicationViewBody(detail)
+            : '';
         viewModal.style.display = 'flex';
-        const canReview = r.can_review !== false;
-        if (approveBtn) approveBtn.style.display = (r.status === 'Pending' && canReview) ? 'inline-flex' : 'none';
-        if (rejectBtn) rejectBtn.style.display = (r.status === 'Pending' && canReview) ? 'inline-flex' : 'none';
-
-        const reviewNotice = document.getElementById('scholReviewScheduleNotice');
-        if (reviewNotice) {
-            if (r.status === 'Pending' && !canReview) {
-                const endLabel = r.schedule_end_date
-                    ? new Date(r.schedule_end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-                    : 'the application period ends';
-                reviewNotice.textContent = `Approve and reject are available only after the application schedule ends on ${endLabel}.`;
-                reviewNotice.style.display = 'block';
-            } else {
-                reviewNotice.style.display = 'none';
-            }
-        }
     }
 
     function closeViewModal() {
@@ -1061,34 +1011,34 @@ function initScholarshipRequests() {
         });
     }
 
-    // Approve / Reject
-    if (approveBtn) {
-        approveBtn.addEventListener('click', async () => {
-            if (!viewTargetId) return;
-            const record = records.find(r => r.id === viewTargetId);
-            if (record && record.can_review === false) {
-                showScholToast('Applications can only be approved after the application schedule has ended.', 'error');
-                return;
-            }
+    [approveConfirmClose, approveConfirmCancel].forEach((btn) => {
+        if (btn) btn.addEventListener('click', closeApproveConfirmModal);
+    });
+    if (approveConfirmModal) {
+        approveConfirmModal.addEventListener('click', (e) => {
+            if (e.target === approveConfirmModal) closeApproveConfirmModal();
+        });
+    }
+    if (approveConfirmBtn) {
+        approveConfirmBtn.addEventListener('click', async () => {
+            if (!pendingApproveId || approveConfirmBtn.disabled) return;
+            const record = records.find(r => r.id === pendingApproveId);
             const name = record ? `${record.first_name} ${record.last_name}` : 'Applicant';
+            const originalHtml = approveConfirmBtn.innerHTML;
             try {
+                approveConfirmBtn.disabled = true;
+                approveConfirmBtn.textContent = 'Approving…';
                 if (typeof window.showLoading === 'function') window.showLoading();
-                await updateApplicationStatus(viewTargetId, 'approved');
-                closeViewModal();
+                await updateApplicationStatus(pendingApproveId, 'approved');
+                closeApproveConfirmModal();
                 showScholToast(`Application of ${name} has been approved successfully!`);
             } catch (error) {
                 showScholToast(error.message || 'Failed to approve application.', 'error');
             } finally {
+                approveConfirmBtn.disabled = false;
+                approveConfirmBtn.innerHTML = originalHtml;
                 if (typeof window.hideLoading === 'function') window.hideLoading();
             }
-        });
-    }
-    if (rejectBtn) {
-        rejectBtn.addEventListener('click', () => {
-            if (!viewTargetId) return;
-            rejectTargetId = viewTargetId;
-            closeViewModal();
-            openRejectReasonModal();
         });
     }
 
@@ -1096,10 +1046,6 @@ function initScholarshipRequests() {
     if (rejectReasonConfirm) {
         rejectReasonConfirm.addEventListener('click', async () => {
             const record = records.find(r => r.id === rejectTargetId);
-            if (record && record.can_review === false) {
-                showScholToast('Applications can only be rejected after the application schedule has ended.', 'error');
-                return;
-            }
 
             const selectedReasons = [];
             document.querySelectorAll('.reject-reason-checkbox:checked').forEach(cb => {
@@ -1110,6 +1056,16 @@ function initScholarshipRequests() {
 
             if (selectedReasons.length === 0) {
                 showScholToast('Please select at least one rejection reason.', 'error');
+                return;
+            }
+
+            if ((rejectConfirmText?.value?.trim() || '') !== 'Confirm') {
+                if (rejectConfirmError) {
+                    rejectConfirmError.textContent = 'Please type Confirm to reject this application.';
+                    rejectConfirmError.style.display = 'block';
+                } else {
+                    showScholToast('Please type Confirm to reject this application.', 'error');
+                }
                 return;
             }
 
@@ -1149,18 +1105,48 @@ function initScholarshipRequests() {
 
     // â”€â”€ Filters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const filterDropdown = document.getElementById('scholFilter');
-    if (filterDropdown) filterDropdown.addEventListener('change', () => { filterType = filterDropdown.value; render(); });
-    if (searchInput) searchInput.addEventListener('input', () => { filterSearch = searchInput.value.trim(); render(); });
-    if (startDateFilter) startDateFilter.addEventListener('change', () => { filterStartDate = startDateFilter.value; render(); });
-    if (endDateFilter) endDateFilter.addEventListener('change', () => { filterEndDate = endDateFilter.value; render(); });
+    if (filterDropdown) filterDropdown.addEventListener('change', () => {
+        filterType = filterDropdown.value;
+        currentPage = 1;
+        render();
+    });
+    if (searchInput) searchInput.addEventListener('input', () => {
+        filterSearch = searchInput.value.trim();
+        currentPage = 1;
+        render();
+    });
+    if (startDateFilter) startDateFilter.addEventListener('change', () => {
+        filterStartDate = startDateFilter.value;
+        currentPage = 1;
+        render();
+    });
+    if (endDateFilter) endDateFilter.addEventListener('change', () => {
+        filterEndDate = endDateFilter.value;
+        currentPage = 1;
+        render();
+    });
     bindTimeFilter('scholFilterStartTime', () => {
         filterStartTime = time12To24Hour(getTimeFromDropdowns('scholFilterStartTime'));
+        currentPage = 1;
         render();
     });
     bindTimeFilter('scholFilterEndTime', () => {
         filterEndTime = time12To24Hour(getTimeFromDropdowns('scholFilterEndTime'));
+        currentPage = 1;
         render();
     });
+
+    if (typeof window.bindTablePageFooter === 'function') {
+        tablePagination = window.bindTablePageFooter({
+            prefix: 'scholReq',
+            getTotalRecords: () => filteredRecords.length,
+            getCurrentPage: () => currentPage,
+            setCurrentPage: (page) => { currentPage = page; },
+            getRecordsPerPage: () => recordsPerPage,
+            setRecordsPerPage: (value) => { recordsPerPage = value; },
+            onPageChange: () => render(),
+        });
+    }
 
     setTimeToDropdowns('schedOpenTime', '8:00 AM');
     setTimeToDropdowns('schedCloseTime', '5:00 PM');
@@ -1178,15 +1164,8 @@ function initScholarshipRequests() {
     })();
 }
 
-function showScholToast(msg, type = 'success') {
-    const toast = document.getElementById('scholToast');
-    const msgEl = document.getElementById('scholToastMsg');
-    if (!toast) return;
-    if (msgEl) msgEl.textContent = msg;
-    toast.className = 'schol-toast schol-toast-show' + (type === 'error' ? ' schol-toast-error' : '');
-    toast.style.display = 'flex';
-    setTimeout(() => {
-        toast.classList.remove('schol-toast-show');
-        setTimeout(() => { toast.style.display = 'none'; }, 300);
-    }, 3000);
+function showScholToast(msg) {
+    if (typeof window.showScholarshipToast === 'function') {
+        window.showScholarshipToast(msg);
+    }
 }

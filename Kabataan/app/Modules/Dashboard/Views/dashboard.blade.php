@@ -176,10 +176,6 @@
             <div class="modal-header">
                 <h2>Education Programs</h2>
                 <div class="modal-header-actions">
-                    <button type="button" class="modal-header-btn modal-header-btn-guide" data-open-sch-quick-guidelines title="Quick Guidelines">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                        <span>Quick Guidelines</span>
-                    </button>
                     <button type="button" class="modal-toggle-btn education-modal-toggle-btn" id="educationModalMaximize" aria-label="Maximize">□</button>
                     <button type="button" class="modal-close education-modal-close-btn" onclick="closeEducationModal()" aria-label="Close">&times;</button>
                 </div>

@@ -10,13 +10,15 @@
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
+        'app/Modules/layout/css/table-row-actions-menu.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholarship_application_form.css',
         'app/Modules/Program_Management/assets/css/scholarship/approved-scholars.css',
         'app/Modules/Dashboard/assets/css/dashboard.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
 </head>
-<body>
+<body class="has-table-page-footer">
 
 @include('loading')
 @include('layout::header')
@@ -93,9 +95,9 @@
             </div>
             <div class="schol-toolbar-pro-actions">
                 <select id="slYearFilter" class="schol-filter-input schol-filter-input--compact" aria-label="Scholarship year">
-                    <option value="">All Years</option>
+                    <option value="" selected>All Years</option>
                     <option value="2026">Scholarship 2026</option>
-                    <option value="2025" selected>Scholarship 2025</option>
+                    <option value="2025">Scholarship 2025</option>
                     <option value="2024">Scholarship 2024</option>
                     <option value="2023">Scholarship 2023</option>
                 </select>
@@ -126,7 +128,6 @@
                             <th>School</th>
                             <th>Year / Level</th>
                             <th>Program / Strand</th>
-                            <th>Purpose</th>
                             <th>Date Approved</th>
                             <th>Payment Status</th>
                             <th class="col-actions">Actions</th>
@@ -135,38 +136,8 @@
                     <tbody id="slTableBody"></tbody>
                 </table>
             </div>
-            
-            <!-- ── Pagination ── -->
-            <div class="sl-pagination-wrapper">
-                <div class="sl-pagination-info">
-                    Showing <span id="slShowingStart">0</span> to <span id="slShowingEnd">0</span> of <span id="slTotalRecords">0</span> scholars
-                </div>
-                <div class="sl-pagination-controls">
-                    <button type="button" class="sl-page-btn" id="slFirstPage" title="First Page">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="11 17 6 12 11 7"/>
-                            <polyline points="18 17 13 12 18 7"/>
-                        </svg>
-                    </button>
-                    <button type="button" class="sl-page-btn" id="slPrevPage" title="Previous Page">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="15 18 9 12 15 6"/>
-                        </svg>
-                    </button>
-                    <div class="sl-page-numbers" id="slPageNumbers"></div>
-                    <button type="button" class="sl-page-btn" id="slNextPage" title="Next Page">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="9 18 15 12 9 6"/>
-                        </svg>
-                    </button>
-                    <button type="button" class="sl-page-btn" id="slLastPage" title="Last Page">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="13 17 18 12 13 7"/>
-                            <polyline points="6 17 11 12 6 7"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
+
+            @include('Program_Management::scholarship.partials.table-pagination', ['prefix' => 'scholAppr'])
         </div>
 
     </div>
@@ -197,9 +168,6 @@
             </div>
         </div>
         <div class="sl-modal-body sl-modal-body--form">
-            <input type="hidden" id="editScholarIndex">
-            <div id="slEditSummary"></div>
-
             <div class="sl-edit-field">
                 <label for="editPaymentStatus" class="sl-edit-label">Payment Status <span style="color:#ef4444;">*</span></label>
                 <select id="editPaymentStatus" class="sl-edit-input" required>
@@ -228,43 +196,53 @@
             </div>
         </div>
         <div class="sl-modal-body sl-modal-body--form">
-            <input type="hidden" id="revokeScholarIndex">
-            <div id="slRevokeSummary"></div>
-
-            <p class="sl-revoke-notice">You are about to revoke the approval of this scholarship beneficiary. Please provide a reason for revoking the approval. This action will move the record from Approved Scholars to Rejected Scholars.</p>
-
             <div class="sl-edit-field">
-                <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Select Revocation Reason:</label>
-                <div style="display:flex;flex-direction:column;gap:8px;">
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;">
+                <label class="sl-edit-label">Select Revocation Reason:</label>
+                <div class="sl-revoke-reason-list">
+                    <label class="sl-revoke-reason-option">
                         <input type="radio" name="revokeReason" value="Mistakenly Approved" checked>
                         <span>Mistakenly Approved</span>
                     </label>
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;">
+                    <label class="sl-revoke-reason-option">
                         <input type="radio" name="revokeReason" value="other" id="slRevokeOtherRadio">
                         <span>Other Reason</span>
                     </label>
                 </div>
             </div>
 
-            <div class="sl-edit-field" id="slRevokeReasonField" style="margin-top:16px;display:none;">
-                <label for="revokeReason" class="sl-edit-label">Revocation Reason <span style="color:#ef4444;">*</span></label>
-                <textarea id="revokeReason" class="sl-edit-input" rows="4" placeholder="Enter the reason for revoking approval..." maxlength="500" style="resize:none;"></textarea>
-                <div style="font-size:11px;color:#6b7280;margin-top:4px;text-align:right;"><span id="revokeReasonCount">0</span>/500 characters</div>
-                <p class="sl-edit-hint">This reason will be stored and displayed in the Rejected Scholars details page.</p>
+            <div class="sl-edit-field" id="slRevokeReasonField" style="display:none;">
+                <label for="revokeReason" class="sl-edit-label">Other Reason <span style="color:#ef4444;">*</span></label>
+                <textarea id="revokeReason" class="sl-edit-input" rows="3" placeholder="Enter revocation reason..." maxlength="500" style="resize:none;"></textarea>
             </div>
 
-            <div class="sl-edit-actions">
-                <button type="button" class="sl-edit-btn sl-edit-btn-cancel" id="btnCancelRevoke" style="background-color:#9ca3af;color:#fff;border:none;">Cancel</button>
-                <button type="button" class="sl-edit-btn" id="btnConfirmRevoke" style="background-color:#ef4444;color:#fff;border:none;">Revoke</button>
+            <div class="sk-type-confirm-section">
+                <label class="sk-type-confirm-label" for="slRevokeConfirmText">Confirmation Required</label>
+                <input type="text" id="slRevokeConfirmText" class="sk-type-confirm-input" placeholder="Type Confirm to confirm" autocomplete="off" spellcheck="false">
+                <p class="sk-type-confirm-hint sk-type-confirm-hint-error" id="slRevokeConfirmError" style="display:none;"></p>
+            </div>
+
+            <div class="sl-edit-actions sl-edit-actions--confirm">
+                <button type="button" class="sk-btn-cancel-confirm" id="btnCancelRevoke">Cancel</button>
+                <button type="button" class="sk-btn-action-confirm is-disabled" id="btnConfirmRevoke" disabled>Revoke</button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Toast -->
+<div class="scholarship-toast" id="scholarshipToast" style="display:none;" role="status" aria-live="polite">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    <span id="scholarshipToastMsg"></span>
+</div>
+
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
+    'app/Modules/layout/js/table-row-actions-menu.js',
+    'app/Modules/layout/js/table-page-footer.js',
+    'app/Modules/Program_Management/assets/css/scholarship/scholarship-toast.css',
+    'app/Modules/Program_Management/assets/js/scholarship/scholarship-toast.js',
+    'app/Modules/Program_Management/assets/js/scholarship/scholarship-system-fields.js',
     'app/Modules/Program_Management/assets/js/scholarship/scholarship-view-shared.js',
     'app/Modules/Program_Management/assets/js/scholarship/approved-scholars.js'
 ])

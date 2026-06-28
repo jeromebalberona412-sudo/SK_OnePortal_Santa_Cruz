@@ -14,6 +14,7 @@ class ProgramApplicationReviewService
     public function __construct(
         private readonly RejectedProgramApplicationService $rejectedService,
         private readonly ProgramDocumentService $documentService,
+        private readonly ProgramApplicationStatusMailService $statusMailService,
     ) {}
 
     /**
@@ -72,9 +73,12 @@ class ProgramApplicationReviewService
             && $application->status === ProgramApplication::STATUS_APPROVED;
 
         if ($isRestoreToPending) {
-            if (strtoupper($letter) !== ScheduleProgramService::LETTER_SPORTS) {
+            if (! in_array(strtoupper($letter), [
+                ScheduleProgramService::LETTER_SPORTS,
+                ScheduleProgramService::LETTER_EDUCATION,
+            ], true)) {
                 throw ValidationException::withMessages([
-                    'status' => ['Only sports applications can be restored to pending.'],
+                    'status' => ['Only sports and scholarship applications can be revoked to pending.'],
                 ]);
             }
 
@@ -84,9 +88,17 @@ class ProgramApplicationReviewService
                 'reviewed_at' => null,
                 'rejection_reason' => null,
                 'rejection_reasons' => null,
+                'payment_status' => null,
             ]);
 
-            return $this->formatApplication($application->fresh(['scheduleProgram', 'kabataan']), true);
+            $fresh = $application->fresh(['scheduleProgram', 'kabataan']);
+
+            if ($this->statusMailService->isProgramLetterNotifiable($letter)) {
+                $revokeReason = $rejectionReason ?? (is_array($rejectionReasons) ? ($rejectionReasons[0] ?? null) : null);
+                $this->statusMailService->notify($fresh, 'revoked', $revokeReason);
+            }
+
+            return $this->formatApplication($fresh, true);
         }
 
         if (! in_array($status, [ProgramApplication::STATUS_APPROVED, ProgramApplication::STATUS_REJECTED], true)) {
@@ -143,19 +155,30 @@ class ProgramApplicationReviewService
                 && ($application->payment_status === null || trim((string) $application->payment_status) === '')) {
                 $payload['payment_status'] = 'Unpaid';
             }
+
+            if (strtoupper($letter) === ScheduleProgramService::LETTER_EDUCATION) {
+                $payload['payment_status'] = 'Unclaimed';
+            }
         }
 
         $application->update($payload);
 
+        $fresh = $application->fresh(['scheduleProgram', 'kabataan']);
+
         if ($status === ProgramApplication::STATUS_REJECTED) {
-            $this->rejectedService->recordRejection(
-                $application->fresh(['scheduleProgram']),
-                $user,
-                $letter
-            );
+            $this->rejectedService->recordRejection($fresh, $user, $letter);
         }
 
-        return $this->formatApplication($application->fresh(['scheduleProgram', 'kabataan']), true);
+        if ($this->statusMailService->isProgramLetterNotifiable($letter)) {
+            if ($status === ProgramApplication::STATUS_APPROVED) {
+                $this->statusMailService->notify($fresh, 'approved');
+            } elseif ($status === ProgramApplication::STATUS_REJECTED && ! $isRevoke) {
+                $reason = $payload['rejection_reason'] ?? null;
+                $this->statusMailService->notify($fresh, 'rejected', is_string($reason) ? $reason : null);
+            }
+        }
+
+        return $this->formatApplication($fresh, true);
     }
 
     /**
@@ -196,12 +219,21 @@ class ProgramApplicationReviewService
             ]);
         }
 
-        $normalized = match (strtolower(trim($paymentStatus))) {
-            'paid', 'claimed' => 'Paid',
-            'unpaid', 'unclaimed', 'not paid' => 'Unpaid',
-            default => throw ValidationException::withMessages([
-                'payment_status' => ['Payment status must be Paid or Unpaid.'],
-            ]),
+        $normalized = match (strtoupper(trim($letter))) {
+            ScheduleProgramService::LETTER_EDUCATION => match (strtolower(trim($paymentStatus))) {
+                'claimed', 'paid' => 'Claimed',
+                'unclaimed', 'unpaid', 'not paid' => 'Unclaimed',
+                default => throw ValidationException::withMessages([
+                    'payment_status' => ['Payment status must be Claimed or Unclaimed.'],
+                ]),
+            },
+            default => match (strtolower(trim($paymentStatus))) {
+                'paid', 'claimed' => 'Paid',
+                'unpaid', 'unclaimed', 'not paid' => 'Unpaid',
+                default => throw ValidationException::withMessages([
+                    'payment_status' => ['Payment status must be Paid or Unpaid.'],
+                ]),
+            },
         };
 
         $idsToUpdate = collect([$application->id]);
@@ -365,6 +397,9 @@ class ProgramApplicationReviewService
                 $kkFields = ScheduleProgramService::DEFAULT_SPORTS_KK_FIELDS;
             }
             $formatted['kk_profile_data'] = $this->buildKkProfileData($application, $kkFields);
+            $formatted['system_field_answers'] = is_array($application->system_field_answers)
+                ? $application->system_field_answers
+                : [];
             $formatted['schedule_program'] = $application->scheduleProgram ? [
                 'id' => $application->scheduleProgram->id,
                 'program_name' => $application->scheduleProgram->program_name,
@@ -502,8 +537,11 @@ class ProgramApplicationReviewService
     {
         $letter = strtoupper((string) ($application->scheduleProgram?->program_letter ?? ''));
 
-        // Sports officials can approve/reject pending applications anytime.
-        if ($letter === ScheduleProgramService::LETTER_SPORTS) {
+        // Officials can approve/reject pending scholarship and sports applications anytime.
+        if (in_array($letter, [
+            ScheduleProgramService::LETTER_SPORTS,
+            ScheduleProgramService::LETTER_EDUCATION,
+        ], true)) {
             return true;
         }
 
@@ -561,6 +599,7 @@ class ProgramApplicationReviewService
             'purok_zone' => $this->stringifyValue($application->purok ?? $profileExtras['purok_zone'] ?? ''),
             'youth_classification' => $this->stringifyValue($profileExtras['youth_classification'] ?? ''),
             'youth_age_group' => $this->stringifyValue($profileExtras['youth_age_group'] ?? ''),
+            'education' => $this->stringifyValue($profileExtras['education'] ?? ''),
             'home_address' => trim(implode(', ', array_filter([
                 $this->stringifyValue($application->purok ?? $profileExtras['purok_zone'] ?? ''),
                 $this->stringifyValue($application->barangay ?? $profileExtras['barangay'] ?? ''),

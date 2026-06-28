@@ -3,7 +3,7 @@ let programMeta = null;
 let editingProgramId = null;
 let pendingDeleteProgramId = null;
 let reqGroupCounter = 0;
-let docReqCounter = 0;
+let usedSemesters = [];
 
 function switchBuilderTab(tabId) {
     document.querySelectorAll('.sch-program-tab').forEach((btn) => {
@@ -17,6 +17,9 @@ function switchBuilderTab(tabId) {
     if (tabId === 'preview') {
         renderInlineProgramPreview();
     }
+    if (tabId === 'custom-questions' && window.SpfbFormBuilder?.renderQuestionList) {
+        window.SpfbFormBuilder.renderQuestionList();
+    }
 }
 
 function bindBuilderTabs() {
@@ -25,109 +28,370 @@ function bindBuilderTabs() {
     });
 }
 
-function createDocRequirementCard(req = {}) {
-    const id = req.id || `doc_req_${++docReqCounter}`;
-    const name = req.name || '';
-    const fileType = req.file_type || 'pdf';
-    const maxSize = req.max_size_mb ?? 5;
-    const description = req.description || '';
-    const required = req.required !== false;
-
-    return `
-        <div class="sch-doc-req-card" data-doc-req="${id}">
-            <div class="sch-doc-req-head">
-                <strong>Document Requirement</strong>
-                <button type="button" class="sch-req-remove-group sch-doc-req-remove">Remove</button>
-            </div>
-            <div class="schol-schedule-grid schol-schedule-grid-2">
-                <div class="schol-field schol-field-full">
-                    <label>Requirement Name <span class="schol-req">*</span></label>
-                    <input type="text" class="schol-input sch-doc-req-name" value="${escapeHtml(name)}" placeholder="e.g. Certificate of Enrollment">
-                </div>
-                <div class="schol-field">
-                    <label>Requirement Type</label>
-                    <select class="schol-input sch-doc-req-type">
-                        <option value="pdf" ${fileType === 'pdf' ? 'selected' : ''}>PDF</option>
-                        <option value="image" ${fileType === 'image' ? 'selected' : ''}>Image</option>
-                        <option value="pdf_or_image" ${fileType === 'pdf_or_image' ? 'selected' : ''}>PDF or Image</option>
-                    </select>
-                </div>
-                <div class="schol-field">
-                    <label>Max File Size (MB)</label>
-                    <input type="number" class="schol-input sch-doc-req-size" value="${escapeHtml(String(maxSize))}" min="1" max="10" step="1">
-                </div>
-                <div class="schol-field schol-field-full">
-                    <label>Description</label>
-                    <input type="text" class="schol-input sch-doc-req-desc" value="${escapeHtml(description)}" placeholder="Optional instructions for applicants">
-                </div>
-                <div class="schol-field">
-                    <label class="schol-checkbox-label"><input type="checkbox" class="sch-doc-req-required" ${required ? 'checked' : ''}> Required</label>
-                </div>
-            </div>
-        </div>`;
+function getDefaultKkFields() {
+    return window.ScholarshipSystemFields?.DEFAULT_KK_FIELDS || [];
 }
 
-function renderDocumentRequirements(list = []) {
-    const container = document.getElementById('schDocReqContainer');
-    if (!container) return;
-    docReqCounter = 0;
-    const items = list.length ? list : [{ name: '', file_type: 'pdf', required: true, max_size_mb: 5 }];
-    container.innerHTML = items.map((item) => createDocRequirementCard(item)).join('');
-    bindDocumentRequirementEvents(container);
+function setApplicationTypeAvailability(renewalEnabled) {
+    document.querySelectorAll('input[name="applicationType"]').forEach((radio) => {
+        const isRenewalOption = radio.value === 'renewal_only' || radio.value === 'both';
+        radio.disabled = isRenewalOption && !renewalEnabled;
+        radio.closest('.schol-radio-label')?.classList.toggle('schol-radio-disabled', isRenewalOption && !renewalEnabled);
+    });
+
+    if (!renewalEnabled) {
+        const current = getApplicationTypeValue();
+        if (current === 'renewal_only' || current === 'both') {
+            setApplicationTypeValue('new_only');
+        }
+    }
 }
 
-function bindDocumentRequirementEvents(container) {
-    container.querySelectorAll('.sch-doc-req-remove').forEach((btn) => {
-        btn.onclick = () => {
-            const cards = container.querySelectorAll('[data-doc-req]');
-            if (cards.length <= 1) {
-                showToast('At least one requirement card must remain.', 'error');
-                return;
+function getDefaultEligibility() {
+    return programMeta?.default_eligibility || {
+        youth_classifications: ['In School Youth'],
+        youth_age_groups: [],
+        education_levels: ['High School Level', 'High School Grad', 'College Level'],
+    };
+}
+
+const SCHOLARSHIP_TARGET_LEVELS = {
+    senior_high: {
+        label: 'Senior High',
+        education_levels: ['High School Level'],
+    },
+    college: {
+        label: 'College',
+        education_levels: ['College Level'],
+    },
+};
+
+function getScholarshipTargetLevels() {
+    return Array.from(document.querySelectorAll('input[name="scholarshipTargetLevel"]:checked'))
+        .map((input) => input.value)
+        .filter((value) => value === 'senior_high' || value === 'college');
+}
+
+function updateScholarshipBothButtonState() {
+    const bothBtn = document.getElementById('schLevelBothBtn');
+    if (!bothBtn) return;
+
+    const levels = getScholarshipTargetLevels();
+    const bothActive = levels.includes('senior_high') && levels.includes('college');
+    bothBtn.classList.toggle('is-active', bothActive);
+    bothBtn.setAttribute('aria-pressed', bothActive ? 'true' : 'false');
+}
+
+function setScholarshipTargetLevels(levels) {
+    const selected = new Set(Array.isArray(levels) ? levels : []);
+    if (!Array.isArray(levels) && typeof levels === 'string' && levels !== '') {
+        if (levels === 'both') {
+            selected.add('senior_high');
+            selected.add('college');
+        } else {
+            selected.add(levels);
+        }
+    }
+
+    document.querySelectorAll('input[name="scholarshipTargetLevel"]').forEach((input) => {
+        input.checked = selected.has(input.value);
+    });
+    updateScholarshipBothButtonState();
+}
+
+function bindScholarshipLevelControls() {
+    const bothBtn = document.getElementById('schLevelBothBtn');
+    if (bothBtn && !bothBtn.dataset.bound) {
+        bothBtn.dataset.bound = '1';
+        bothBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            document.querySelectorAll('input[name="scholarshipTargetLevel"]').forEach((input) => {
+                input.checked = true;
+            });
+            updateScholarshipBothButtonState();
+        });
+        bothBtn.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                bothBtn.click();
             }
-            btn.closest('[data-doc-req]')?.remove();
-        };
+        });
+    }
+
+    document.querySelectorAll('input[name="scholarshipTargetLevel"]').forEach((input) => {
+        if (input.dataset.levelBound === '1') return;
+        input.dataset.levelBound = '1';
+        input.addEventListener('change', updateScholarshipBothButtonState);
     });
 }
 
-function collectDocumentRequirements() {
-    const items = [];
-    document.querySelectorAll('#schDocReqContainer [data-doc-req]').forEach((card) => {
-        const name = card.querySelector('.sch-doc-req-name')?.value?.trim() || '';
-        if (!name) return;
-        items.push({
-            id: card.dataset.docReq || `doc_req_${Date.now()}`,
-            name,
-            file_type: card.querySelector('.sch-doc-req-type')?.value || 'pdf',
-            max_size_mb: Number(card.querySelector('.sch-doc-req-size')?.value || 5),
-            required: Boolean(card.querySelector('.sch-doc-req-required')?.checked),
-            description: card.querySelector('.sch-doc-req-desc')?.value?.trim() || '',
+function bindParticipationQtyInput() {
+    const input = document.getElementById('participationQty');
+    if (!input || input.dataset.bound === '1') return;
+    input.dataset.bound = '1';
+
+    const sanitize = () => {
+        const digits = input.value.replace(/\D/g, '');
+        if (digits === '') {
+            input.value = '';
+            return;
+        }
+        let num = parseInt(digits, 10);
+        if (Number.isNaN(num)) {
+            input.value = '';
+            return;
+        }
+        if (num > 1000) num = 1000;
+        input.value = String(num);
+    };
+
+    input.addEventListener('input', sanitize);
+    input.addEventListener('paste', (event) => {
+        event.preventDefault();
+        const pasted = (event.clipboardData || window.clipboardData)?.getData('text') || '';
+        input.value = pasted.replace(/\D/g, '');
+        sanitize();
+    });
+    input.addEventListener('keydown', (event) => {
+        if (['e', 'E', '+', '-', '.', ','].includes(event.key)) {
+            event.preventDefault();
+        }
+    });
+}
+
+function parseParticipationQuantity(raw) {
+    const trimmed = String(raw ?? '').trim();
+    if (trimmed === '') {
+        return { valid: true, value: null };
+    }
+    if (!/^\d+$/.test(trimmed)) {
+        return {
+            valid: false,
+            message: 'Maximum beneficiaries must contain whole numbers only (0–1000).',
+        };
+    }
+    const qtyNum = parseInt(trimmed, 10);
+    if (qtyNum < 0 || qtyNum > 1000) {
+        return {
+            valid: false,
+            message: 'Maximum beneficiaries must be between 0 and 1000.',
+        };
+    }
+    return { valid: true, value: qtyNum };
+}
+
+function formatTargetLevelsLabel(levels) {
+    const normalized = Array.isArray(levels) ? levels : [];
+    if (normalized.includes('senior_high') && normalized.includes('college')) {
+        return 'Both (Senior High & College)';
+    }
+    const labels = normalized
+        .map((level) => SCHOLARSHIP_TARGET_LEVELS[level]?.label)
+        .filter(Boolean);
+    return labels.join(', ');
+}
+
+function buildEligibilityForTargetLevels(targetLevels) {
+    const educationLevels = [];
+    (Array.isArray(targetLevels) ? targetLevels : []).forEach((level) => {
+        const config = SCHOLARSHIP_TARGET_LEVELS[level];
+        if (config) {
+            educationLevels.push(...config.education_levels);
+        }
+    });
+
+    if (educationLevels.length === 0) {
+        return getDefaultEligibility();
+    }
+
+    return {
+        youth_classifications: ['In School Youth'],
+        youth_age_groups: [],
+        education_levels: [...new Set(educationLevels)],
+    };
+}
+
+const QUICK_GUIDELINE_MAX_CHARS = 2000;
+const QUICK_GUIDELINE_MAX_STEPS = 10;
+
+function renderQuickGuidelineCharCount(value) {
+    const length = [...String(value ?? '')].length;
+    return `${length} / ${QUICK_GUIDELINE_MAX_CHARS}`;
+}
+
+function updateQuickGuidelineCharCount(textarea) {
+    const counter = textarea?.closest('.sch-qg-edit-field')?.querySelector('.sch-qg-char-count');
+    if (!counter || !textarea) return;
+    const length = [...textarea.value].length;
+    counter.textContent = `${length} / ${QUICK_GUIDELINE_MAX_CHARS}`;
+    counter.classList.toggle('is-over', length > QUICK_GUIDELINE_MAX_CHARS);
+}
+
+function bindQuickGuidelinesFieldEvents() {
+    document.querySelectorAll('#schQuickGuidelinesBuilder textarea').forEach((textarea) => {
+        if (textarea.dataset.qgBound === '1') return;
+        textarea.dataset.qgBound = '1';
+        textarea.maxLength = QUICK_GUIDELINE_MAX_CHARS;
+        textarea.addEventListener('input', () => {
+            if ([...textarea.value].length > QUICK_GUIDELINE_MAX_CHARS) {
+                textarea.value = [...textarea.value].slice(0, QUICK_GUIDELINE_MAX_CHARS).join('');
+            }
+            updateQuickGuidelineCharCount(textarea);
+        });
+        updateQuickGuidelineCharCount(textarea);
+    });
+}
+
+function snapshotQuickGuidelinesFromDom() {
+    const cards = document.querySelectorAll('#schQuickGuidelinesBuilder .sch-qg-edit-card');
+    return Array.from(cards).map((card) => ({
+        en: card.querySelector('.sch-qg-en')?.value ?? '',
+        tl: card.querySelector('.sch-qg-tl')?.value ?? '',
+    }));
+}
+
+function updateQuickGuidelinesActions() {
+    const addBtn = document.getElementById('schAddQuickGuidelineBtn');
+    const stepCount = document.querySelectorAll('#schQuickGuidelinesBuilder .sch-qg-edit-card').length;
+    if (addBtn) {
+        addBtn.disabled = stepCount >= QUICK_GUIDELINE_MAX_STEPS;
+        addBtn.title = stepCount >= QUICK_GUIDELINE_MAX_STEPS
+            ? `Maximum of ${QUICK_GUIDELINE_MAX_STEPS} steps reached`
+            : '';
+    }
+}
+
+function renderQuickGuidelinesBuilder(steps = null) {
+    const container = document.getElementById('schQuickGuidelinesBuilder');
+    if (!container) return;
+
+    const guidelines = Array.isArray(steps) ? steps : [];
+    if (!guidelines.length) {
+        container.innerHTML = '<p class="sch-qg-empty">No quick guideline steps yet. This section is optional — click <strong>Add Step</strong> to create up to 10 bilingual steps for Kabataan applicants.</p>';
+        updateQuickGuidelinesActions();
+        return;
+    }
+
+    container.innerHTML = guidelines.map((step, index) => `
+        <div class="sch-qg-edit-card" data-qg-step="${index}">
+            <div class="sch-qg-edit-card__header">
+                <p class="sch-qg-edit-card__title">Step #${index + 1}</p>
+                <button type="button" class="sch-qg-delete-btn" data-qg-delete="${index}" aria-label="Delete step ${index + 1}">Delete</button>
+            </div>
+            <div class="sch-qg-edit-field">
+                <label>English</label>
+                <textarea class="schol-input sch-qg-en" rows="4" maxlength="${QUICK_GUIDELINE_MAX_CHARS}">${escapeHtml(step.en || '')}</textarea>
+                <span class="sch-qg-char-count">${renderQuickGuidelineCharCount(step.en || '')}</span>
+            </div>
+            <div class="sch-qg-edit-field">
+                <label>Tagalog</label>
+                <textarea class="schol-input sch-qg-tl" rows="4" maxlength="${QUICK_GUIDELINE_MAX_CHARS}">${escapeHtml(step.tl || '')}</textarea>
+                <span class="sch-qg-char-count">${renderQuickGuidelineCharCount(step.tl || '')}</span>
+            </div>
+        </div>
+    `).join('');
+    bindQuickGuidelinesFieldEvents();
+    bindQuickGuidelinesDeleteEvents();
+    updateQuickGuidelinesActions();
+}
+
+function bindQuickGuidelinesDeleteEvents() {
+    document.querySelectorAll('#schQuickGuidelinesBuilder [data-qg-delete]').forEach((button) => {
+        if (button.dataset.qgDeleteBound === '1') return;
+        button.dataset.qgDeleteBound = '1';
+        button.addEventListener('click', () => {
+            const index = Number.parseInt(button.getAttribute('data-qg-delete') || '', 10);
+            if (Number.isNaN(index)) return;
+            deleteQuickGuidelineStep(index);
         });
     });
-    return items;
 }
 
-function documentRequirementsToFileQuestions(requirements) {
-    return requirements.map((req) => ({
-        id: req.id || `q_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-        label: req.name,
-        type: 'file',
-        required: req.required !== false,
-        options: [],
-        file_type: req.file_type || 'pdf',
-        max_size_mb: req.max_size_mb || 5,
-        description: req.description || '',
-    }));
+function addQuickGuidelineStep() {
+    const current = snapshotQuickGuidelinesFromDom();
+    if (current.length >= QUICK_GUIDELINE_MAX_STEPS) return;
+    current.push({ en: '', tl: '' });
+    renderQuickGuidelinesBuilder(current);
 }
 
-function fileQuestionsToDocumentRequirements(questions) {
-    return (questions || []).filter((q) => q.type === 'file').map((q) => ({
-        id: q.id,
-        name: q.label || q.name || 'Document',
-        file_type: q.file_type || 'pdf',
-        required: q.required !== false,
-        max_size_mb: q.max_size_mb || 5,
-        description: q.description || '',
-    }));
+function deleteQuickGuidelineStep(index) {
+    const current = snapshotQuickGuidelinesFromDom();
+    if (index < 0 || index >= current.length) return;
+    current.splice(index, 1);
+    renderQuickGuidelinesBuilder(current);
+}
+
+function validateQuickGuidelines() {
+    const cards = document.querySelectorAll('#schQuickGuidelinesBuilder .sch-qg-edit-card');
+    if (cards.length > QUICK_GUIDELINE_MAX_STEPS) {
+        return {
+            valid: false,
+            message: `Quick Guidelines cannot exceed ${QUICK_GUIDELINE_MAX_STEPS} steps.`,
+        };
+    }
+
+    for (let index = 0; index < cards.length; index += 1) {
+        const card = cards[index];
+        const fields = [
+            { selector: '.sch-qg-en', label: 'English' },
+            { selector: '.sch-qg-tl', label: 'Tagalog' },
+        ];
+        for (const field of fields) {
+            const textarea = card.querySelector(field.selector);
+            const length = [...(textarea?.value || '')].length;
+            if (length > QUICK_GUIDELINE_MAX_CHARS) {
+                return {
+                    valid: false,
+                    message: `Quick Guidelines step #${index + 1} (${field.label}) exceeds ${QUICK_GUIDELINE_MAX_CHARS} characters.`,
+                };
+            }
+        }
+    }
+    return { valid: true, message: '' };
+}
+
+function collectQuickGuidelines() {
+    return snapshotQuickGuidelinesFromDom()
+        .map(({ en, tl }) => ({ en: en.trim(), tl: tl.trim() }))
+        .filter(({ en, tl }) => en || tl)
+        .map(({ en, tl }) => ({ en: en || tl, tl: tl || en }));
+}
+
+function applyCommitteeHeadDisplay(savedHead = '') {
+    const headEl = document.getElementById('committeeHeadDisplay');
+    if (!headEl) return;
+    headEl.value = savedHead || programMeta?.committee_head || '';
+    headEl.placeholder = headEl.value ? '' : 'Assign Education Committee head in Committees';
+}
+
+function applyAutoSchoolYear() {
+    const schoolYearEl = document.getElementById('schoolYear');
+    if (!schoolYearEl) return;
+
+    const schoolYear = programMeta?.school_year || '';
+    schoolYearEl.value = schoolYear;
+    schoolYearEl.placeholder = schoolYear ? '' : 'Set program duration in Programs first';
+}
+
+function updateSemesterAvailability(currentSemester = '') {
+    const semesterEl = document.getElementById('programSemester');
+    if (!semesterEl) return;
+
+    const blocked = new Set(
+        (Array.isArray(usedSemesters) ? usedSemesters : [])
+            .filter((semester) => semester && semester !== currentSemester),
+    );
+
+    semesterEl.querySelectorAll('option').forEach((option) => {
+        if (!option.value) return;
+        const isBlocked = blocked.has(option.value);
+        option.disabled = isBlocked;
+        option.hidden = isBlocked;
+    });
+
+    if (semesterEl.value && blocked.has(semesterEl.value)) {
+        semesterEl.value = '';
+    }
 }
 
 function getApplicationTypeValue() {
@@ -136,32 +400,26 @@ function getApplicationTypeValue() {
 
 function setApplicationTypeValue(value) {
     const radio = document.querySelector(`input[name="applicationType"][value="${value}"]`);
-    if (radio) radio.checked = true;
+    if (radio) {
+        radio.disabled = false;
+        radio.checked = true;
+    }
 }
 
 function renderInlineProgramPreview() {
     const panel = document.getElementById('schProgramPreviewPanel');
     if (!panel) return;
 
-    let customNonFile = [];
+    let customQuestions = [];
     if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.getQuestions === 'function') {
-        customNonFile = window.SpfbFormBuilder.getQuestions().filter((question) => question.type !== 'file');
+        customQuestions = window.SpfbFormBuilder.getQuestions().filter((question) => question.type !== 'file');
     }
 
-    const documentRequirements = collectDocumentRequirements();
     const fakeProgram = {
         program_name: document.getElementById('programName')?.value || programMeta?.program_name || 'Scholarship Program',
-        program_type: document.getElementById('programType')?.value || '',
-        committee: document.getElementById('programCommittee')?.value || '',
         participation_quantity: document.getElementById('participationQty')?.value || '',
-        start_date: document.getElementById('schedStartDate')?.value || '',
-        end_date: document.getElementById('schedEndDate')?.value || '',
-        announcement: document.getElementById('spfbAnnouncement')?.value || '',
-        kk_profiling_fields: Array.from(document.querySelectorAll('.kk-profiling-field:checked')).map((el) => el.value),
-        custom_questions: [
-            ...documentRequirementsToFileQuestions(documentRequirements),
-            ...customNonFile,
-        ],
+        kk_profiling_fields: getDefaultKkFields(),
+        custom_questions: customQuestions,
         scholarship_details: collectScholarshipDetails(),
     };
     panel.innerHTML = renderProgramViewHtml(fakeProgram);
@@ -234,14 +492,6 @@ function bindRequirementGroupEvents(container) {
     });
 }
 
-function collectCheckedValues(selector) {
-    const values = [];
-    document.querySelectorAll(`${selector}:checked`).forEach((checkbox) => {
-        values.push(checkbox.value);
-    });
-    return values;
-}
-
 function collectScholarshipDetails() {
     const groups = [];
     document.querySelectorAll('#schReqGroupsContainer [data-req-group]').forEach((card) => {
@@ -270,29 +520,21 @@ function collectScholarshipDetails() {
         details.verification_period = { start: verificationStart || null, end: verificationEnd || null };
     }
 
-    const youthClassifications = collectCheckedValues('.sch-eligibility-classification');
-    const youthAgeGroups = collectCheckedValues('.sch-eligibility-age-group');
-    const educationLevels = collectCheckedValues('.sch-eligibility-education');
+    details.eligibility = buildEligibilityForTargetLevels(getScholarshipTargetLevels());
 
-    if (youthClassifications.length || youthAgeGroups.length || educationLevels.length) {
-        details.eligibility = {
-            youth_classifications: youthClassifications,
-            youth_age_groups: youthAgeGroups,
-            education_levels: educationLevels,
-        };
-    }
-
-    const schoolYear = document.getElementById('schoolYear')?.value?.trim() || '';
+    const schoolYear = document.getElementById('schoolYear')?.value?.trim() || programMeta?.school_year || '';
     const semester = document.getElementById('programSemester')?.value?.trim() || '';
     const applicationType = getApplicationTypeValue();
-    const programDescription = document.getElementById('programDescription')?.value?.trim() || '';
-    const documentRequirements = collectDocumentRequirements();
+    const targetLevels = getScholarshipTargetLevels();
 
     if (schoolYear) details.school_year = schoolYear;
     if (semester) details.semester = semester;
     if (applicationType) details.application_type = applicationType;
-    if (programDescription) details.program_description = programDescription;
-    if (documentRequirements.length) details.document_requirements = documentRequirements;
+    if (targetLevels.length) details.scholarship_target_levels = targetLevels;
+    details.quick_guidelines = collectQuickGuidelines();
+    details.committee_head = document.getElementById('committeeHeadDisplay')?.value?.trim()
+        || programMeta?.committee_head
+        || '';
 
     return details;
 }
@@ -311,30 +553,19 @@ function populateScholarshipDetails(details, customQuestions = []) {
     setDate('schVerificationStart', data.verification_period?.start);
     setDate('schVerificationEnd', data.verification_period?.end);
 
-    const eligibility = data.eligibility || {};
-    const setEligibility = (selector, values) => {
-        const allowed = new Set(Array.isArray(values) ? values : []);
-        document.querySelectorAll(selector).forEach((checkbox) => {
-            checkbox.checked = allowed.has(checkbox.value);
-        });
-    };
-
-    setEligibility('.sch-eligibility-classification', eligibility.youth_classifications);
-    setEligibility('.sch-eligibility-age-group', eligibility.youth_age_groups);
-    setEligibility('.sch-eligibility-education', eligibility.education_levels);
-
     const schoolYearEl = document.getElementById('schoolYear');
     const semesterEl = document.getElementById('programSemester');
-    const descEl = document.getElementById('programDescription');
-    if (schoolYearEl) schoolYearEl.value = data.school_year || '';
+    applyAutoSchoolYear();
+    if (schoolYearEl && data.school_year) schoolYearEl.value = data.school_year;
     if (semesterEl) semesterEl.value = data.semester || '';
-    if (descEl) descEl.value = data.program_description || '';
+    updateSemesterAvailability(data.semester || '');
     setApplicationTypeValue(data.application_type || 'new_only');
-
-    const docReqs = data.document_requirements?.length
-        ? data.document_requirements
-        : fileQuestionsToDocumentRequirements(customQuestions);
-    renderDocumentRequirements(docReqs);
+    const targetLevels = Array.isArray(data.scholarship_target_levels) && data.scholarship_target_levels.length
+        ? data.scholarship_target_levels
+        : (data.scholarship_target_level ? [data.scholarship_target_level] : []);
+    setScholarshipTargetLevels(targetLevels);
+    renderQuickGuidelinesBuilder(data.quick_guidelines || []);
+    applyCommitteeHeadDisplay(data.committee_head || '');
 }
 
 function resetScholarshipDetailsForm() {
@@ -343,17 +574,15 @@ function resetScholarshipDetailsForm() {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
-    document.querySelectorAll('.sch-eligibility-classification, .sch-eligibility-age-group, .sch-eligibility-education').forEach((checkbox) => {
-        checkbox.checked = false;
-    });
-    const schoolYearEl = document.getElementById('schoolYear');
     const semesterEl = document.getElementById('programSemester');
-    const descEl = document.getElementById('programDescription');
-    if (schoolYearEl) schoolYearEl.value = '';
+    applyAutoSchoolYear();
     if (semesterEl) semesterEl.value = '';
-    if (descEl) descEl.value = '';
+    updateSemesterAvailability('');
     setApplicationTypeValue('new_only');
-    renderDocumentRequirements([]);
+    setScholarshipTargetLevels([]);
+    renderQuickGuidelinesBuilder([]);
+    applyCommitteeHeadDisplay();
+    setApplicationTypeAvailability(false);
 }
 
 const KK_FIELD_LABELS = {
@@ -377,10 +606,9 @@ const KK_FIELD_LABELS = {
     education: 'Educational Attainment',
     current_school: 'Current School',
     course_strand: 'Course / Strand',
-    work_status: 'Work Status',
-    sk_voter: 'Registered SK Voter',
-    sk_voted: 'Voted Last Election',
 };
+
+const SCHOLARSHIP_EXCLUDED_KK_FIELDS = ['work_status', 'sk_voter', 'sk_voted'];
 
 function csrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
@@ -413,14 +641,10 @@ function escapeHtml(str) {
         .replace(/"/g, '&quot;');
 }
 
-function showToast(msg, type) {
-    const toastEl = document.getElementById('safToast');
-    if (!toastEl) return;
-    toastEl.textContent = msg;
-    toastEl.style.display = 'flex';
-    toastEl.style.background = type === 'error' ? '#ef4444' : '#22c55e';
-    clearTimeout(showToast._t);
-    showToast._t = setTimeout(() => { toastEl.style.display = 'none'; }, 2800);
+function showToast(msg) {
+    if (typeof window.showScholarshipToast === 'function') {
+        window.showScholarshipToast(msg);
+    }
 }
 
 function setSaveButtonLoading(isLoading) {
@@ -466,19 +690,17 @@ async function loadProgramMeta() {
     const response = await apiFetch('/api/schedule-programs/meta?letter=A');
     programMeta = response.data || null;
 
-    const typeEl = document.getElementById('programType');
     const nameEl = document.getElementById('programName');
-    const committeeEl = document.getElementById('programCommittee');
 
-    if (typeEl) {
-        typeEl.value = programMeta?.program_type || 'Equitable Access to Quality Education';
-    }
     if (nameEl) {
         nameEl.value = programMeta?.program_name || programMeta?.program_type || '';
     }
-    if (committeeEl) {
-        committeeEl.value = programMeta?.committee || 'Education Committee';
-    }
+
+    usedSemesters = Array.isArray(programMeta?.used_semesters) ? programMeta.used_semesters : [];
+    applyAutoSchoolYear();
+    updateSemesterAvailability();
+    applyCommitteeHeadDisplay();
+    renderQuickGuidelinesBuilder([]);
 }
 
 async function loadPrograms() {
@@ -491,23 +713,10 @@ function resetModalForm() {
     editingProgramId = null;
 
     const participationQty = document.getElementById('participationQty');
-    const startDate = document.getElementById('schedStartDate');
-    const endDate = document.getElementById('schedEndDate');
     const status = document.getElementById('programStatus');
-    const announcement = document.getElementById('spfbAnnouncement');
-    const announcementCount = document.getElementById('spfbAnnouncementCount');
 
     if (participationQty) participationQty.value = '';
-    if (startDate) startDate.value = '';
-    if (endDate) endDate.value = '';
     if (status) status.value = 'open';
-    if (announcement) announcement.value = '';
-    if (announcementCount) announcementCount.textContent = '0';
-
-    document.querySelectorAll('.kk-profiling-field').forEach((checkbox) => {
-        const defaults = window.ScholarshipSystemFields?.DEFAULT_KK_FIELDS || [];
-        checkbox.checked = defaults.includes(checkbox.value);
-    });
 
     if (window.SpfbFormBuilder) {
         window.SpfbFormBuilder.reset();
@@ -516,14 +725,11 @@ function resetModalForm() {
     resetScholarshipDetailsForm();
 
     if (programMeta) {
-        const typeEl = document.getElementById('programType');
         const nameEl = document.getElementById('programName');
-        const committeeEl = document.getElementById('programCommittee');
-        if (typeEl) typeEl.value = programMeta.program_type || '';
         if (nameEl) nameEl.value = programMeta.program_name || programMeta.program_type || '';
-        if (committeeEl) committeeEl.value = programMeta.committee || '';
     }
 
+    setApplicationTypeAvailability(false);
     switchBuilderTab('details');
 }
 
@@ -545,13 +751,6 @@ function openModal(forEditId) {
     }
 
     if (!forEditId) {
-        if (schedulePrograms.length > 0) {
-            modal.style.display = 'none';
-            document.body.style.overflow = '';
-            showToast('A scholarship program already exists. Edit the existing program instead.', 'error');
-            return;
-        }
-
         resetModalForm();
         if (modalTitle) {
             modalTitle.innerHTML = `
@@ -580,6 +779,48 @@ function closeModal() {
     resetModalForm();
 }
 
+function renderActionMenuCell(programId) {
+    return `
+        <td class="col-actions">
+            <div class="row-actions-menu">
+                <button type="button" class="row-actions-trigger" aria-label="Actions" aria-haspopup="true" aria-expanded="false">${window.ROW_ACTIONS_ELLIPSIS || '⋯'}</button>
+                <div class="row-actions-dropdown" role="menu">
+                    <button type="button" class="row-actions-item row-actions-item-view" data-action="view" data-program-id="${programId}" role="menuitem">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span>View</span>
+                    </button>
+                    <button type="button" class="row-actions-item row-actions-item-edit" data-action="edit" data-program-id="${programId}" role="menuitem">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        <span>Edit</span>
+                    </button>
+                    <button type="button" class="row-actions-item row-actions-item-danger" data-action="delete" data-program-id="${programId}" role="menuitem">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        <span>Delete</span>
+                    </button>
+                </div>
+            </div>
+        </td>
+    `;
+}
+
+function resetDeleteProgramConfirmButton() {
+    const confirmBtn = document.getElementById('deleteProgramConfirm');
+    if (!confirmBtn) return;
+    confirmBtn.disabled = true;
+    confirmBtn.classList.remove('is-enabled');
+    confirmBtn.classList.add('is-disabled');
+}
+
+function syncDeleteProgramConfirmButton() {
+    const confirmBtn = document.getElementById('deleteProgramConfirm');
+    const confirmInput = document.getElementById('deleteProgramConfirmText');
+    if (!confirmBtn) return;
+    const matched = (confirmInput?.value?.trim() || '') === 'Confirm';
+    confirmBtn.disabled = !matched;
+    confirmBtn.classList.toggle('is-enabled', matched);
+    confirmBtn.classList.toggle('is-disabled', !matched);
+}
+
 function renderFormsTable() {
     const tableBody = document.getElementById('safFormsTableBody');
     const countEl = document.getElementById('programCount');
@@ -601,36 +842,27 @@ function renderFormsTable() {
     tableBody.innerHTML = forms.map((program) => {
         const status = resolveProgramStatus(program);
         const statusClass = status === 'open' ? 'schol-pill-approved' : 'schol-pill-rejected';
+        const details = program.scholarship_details || {};
+        const submissionStart = details.submission_period?.start || program.start_date || '—';
+        const submissionEnd = details.submission_period?.end || program.end_date || '—';
 
         return `
             <tr>
                 <td>${escapeHtml(program.program_name)}</td>
-                <td>${escapeHtml(program.program_type)}</td>
-                <td>${escapeHtml(program.committee)}</td>
+                <td>${escapeHtml(details.school_year || '—')}</td>
+                <td>${escapeHtml(details.semester || '—')}</td>
                 <td>${escapeHtml(program.participation_quantity ?? 'N/A')}</td>
-                <td>${escapeHtml(program.start_date)}</td>
-                <td>${escapeHtml(program.end_date)}</td>
+                <td>${escapeHtml(submissionStart)}</td>
+                <td>${escapeHtml(submissionEnd)}</td>
                 <td><span class="schol-pill ${statusClass}">${formatStatusLabel(status)}</span></td>
-                <td class="col-actions">
-                    <div class="prog-tbl-actions">
-                        <button type="button" class="prog-btn prog-btn-view" data-form-view="${program.id}">View</button>
-                        <button type="button" class="prog-btn prog-btn-edit" data-form-edit="${program.id}">Edit</button>
-                        <button type="button" class="prog-btn prog-btn-delete" data-form-delete="${program.id}">Delete</button>
-                    </div>
-                </td>
+                ${renderActionMenuCell(program.id)}
             </tr>
         `;
     }).join('');
 
-    tableBody.querySelectorAll('[data-form-view]').forEach((btn) => {
-        btn.addEventListener('click', () => openFormPreview(btn.getAttribute('data-form-view')));
-    });
-    tableBody.querySelectorAll('[data-form-edit]').forEach((btn) => {
-        btn.addEventListener('click', () => editProgram(btn.getAttribute('data-form-edit')));
-    });
-    tableBody.querySelectorAll('[data-form-delete]').forEach((btn) => {
-        btn.addEventListener('click', () => openDeleteProgramModal(btn.getAttribute('data-form-delete')));
-    });
+    if (typeof window.bindRowActionsTable === 'function') {
+        window.bindRowActionsTable(tableBody);
+    }
 }
 
 function editProgram(programId) {
@@ -644,27 +876,13 @@ function editProgram(programId) {
     openModal(program.id);
 
     const participationQty = document.getElementById('participationQty');
-    const startDate = document.getElementById('schedStartDate');
-    const endDate = document.getElementById('schedEndDate');
     const status = document.getElementById('programStatus');
-    const typeEl = document.getElementById('programType');
     const nameEl = document.getElementById('programName');
-    const committeeEl = document.getElementById('programCommittee');
-    const announcementEl = document.getElementById('spfbAnnouncement');
-    const announcementCountEl = document.getElementById('spfbAnnouncementCount');
     const modalTitle = document.getElementById('scholarProgramModalTitle');
 
     if (participationQty) participationQty.value = program.participation_quantity ?? '';
-    if (startDate) startDate.value = program.start_date || '';
-    if (endDate) endDate.value = program.end_date || '';
     if (status) status.value = resolveProgramStatus(program);
-    if (typeEl) typeEl.value = program.program_type || '';
     if (nameEl) nameEl.value = program.program_name || '';
-    if (committeeEl) committeeEl.value = program.committee || '';
-    if (announcementEl) {
-        announcementEl.value = program.announcement || '';
-        if (announcementCountEl) announcementCountEl.textContent = String(announcementEl.value.length);
-    }
 
     const allQuestions = program.custom_questions || [];
     const customOnly = allQuestions.filter((question) => question.type !== 'file');
@@ -674,11 +892,12 @@ function editProgram(programId) {
     }
 
     populateScholarshipDetails(program.scholarship_details || null, allQuestions);
-
-    const kkFields = program.kk_profiling_fields || [];
-    document.querySelectorAll('.kk-profiling-field').forEach((checkbox) => {
-        checkbox.checked = kkFields.includes(checkbox.value);
-    });
+    usedSemesters = schedulePrograms
+        .filter((item) => String(item.id) !== String(program.id))
+        .map((item) => item.scholarship_details?.semester)
+        .filter(Boolean);
+    updateSemesterAvailability(program.scholarship_details?.semester || '');
+    setApplicationTypeAvailability(Boolean(program.renewal_options_enabled));
 
     switchBuilderTab('details');
 
@@ -719,12 +938,6 @@ const APPLICATION_TYPE_LABELS = {
     both: 'New Applicants + Renewal',
 };
 
-const FILE_TYPE_LABELS = {
-    pdf: 'PDF',
-    image: 'Image',
-    pdf_or_image: 'PDF or Image',
-};
-
 function renderProgramViewHtml(program) {
     const status = resolveProgramStatus(program);
     const statusColors = {
@@ -732,28 +945,22 @@ function renderProgramViewHtml(program) {
         closed: { bg: '#fee2e2', text: '#991b1b', label: 'Closed' },
     };
     const statusStyle = statusColors[status] || statusColors.open;
-    const kkFields = program.kk_profiling_fields || [];
-    const allQuestions = program.custom_questions || [];
+    const kkFields = (program.kk_profiling_fields?.length ? program.kk_profiling_fields : getDefaultKkFields())
+        .filter((field) => !SCHOLARSHIP_EXCLUDED_KK_FIELDS.includes(field));
+    const allQuestions = (program.custom_questions || []).filter((question) => question.type !== 'file');
     const details = program.scholarship_details || {};
     const groups = Array.isArray(details.requirement_groups) ? details.requirement_groups : [];
-    const fileQuestions = allQuestions.filter((question) => question.type === 'file');
-    const customQuestions = allQuestions.filter((question) => question.type !== 'file');
-    const documentRequirements = details.document_requirements?.length
-        ? details.document_requirements
-        : fileQuestionsToDocumentRequirements(fileQuestions);
+    const targetLevels = Array.isArray(details.scholarship_target_levels) && details.scholarship_target_levels.length
+        ? details.scholarship_target_levels
+        : (details.scholarship_target_level ? [details.scholarship_target_level] : []);
+    const targetLevelLabel = formatTargetLevelsLabel(targetLevels);
+    const committeeHead = details.committee_head || programMeta?.committee_head || '';
 
     const kkList = kkFields.length
         ? `<ul class="sch-view-req-list">${kkFields.map((field) => `<li>${escapeHtml(KK_FIELD_LABELS[field] || field)}</li>`).join('')}</ul>`
-        : '<p class="sch-view-muted">No KK Profiling fields selected.</p>';
+        : '<p class="sch-view-muted">All KK Profiling fields are included automatically.</p>';
 
     let announcementsHtml = '';
-    if (program.announcement) {
-        announcementsHtml += renderViewAnnouncementCard(
-            'Announcement',
-            `<p class="sch-view-announcement-text">${escapeHtml(program.announcement)}</p>`
-        );
-    }
-
     groups.forEach((group) => {
         const items = (group.items || []).filter((item) => String(item || '').trim());
         if (!group.title && !items.length) return;
@@ -765,7 +972,7 @@ function renderProgramViewHtml(program) {
 
     const submissionLabel = formatPeriodRange(details.submission_period, program);
     const verificationLabel = formatPeriodRange(details.verification_period, program);
-    const eligibility = details.eligibility || {};
+    const eligibility = details.eligibility || getDefaultEligibility();
     const eligibilityClassifications = (eligibility.youth_classifications || []).filter(Boolean);
     const eligibilityAgeGroups = (eligibility.youth_age_groups || []).filter(Boolean);
     const eligibilityEducation = (eligibility.education_levels || []).filter(Boolean);
@@ -773,21 +980,8 @@ function renderProgramViewHtml(program) {
         ? `<ul class="sch-view-req-list">${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
         : `<p class="sch-view-muted">${fallback}</p>`;
 
-    const questionsHtml = documentRequirements.length
-        ? documentRequirements.map((req, index) => `
-            <div class="sch-view-question-card">
-                <div class="sch-view-question-label">
-                    ${index + 1}. ${escapeHtml(req.name)}
-                    ${req.required !== false ? '<span class="sch-view-required">*</span>' : ''}
-                </div>
-                <div class="sch-view-question-type">Type: ${escapeHtml(FILE_TYPE_LABELS[req.file_type] || req.file_type || 'PDF')}${req.max_size_mb ? ` · Max ${escapeHtml(String(req.max_size_mb))} MB` : ''}</div>
-                ${req.description ? `<div class="sch-view-muted">${escapeHtml(req.description)}</div>` : ''}
-            </div>
-        `).join('')
-        : '<div class="sch-view-empty-box">No upload requirements added.</div>';
-
-    const customQuestionsHtml = customQuestions.length
-        ? customQuestions.map((question, index) => `
+    const customQuestionsHtml = allQuestions.length
+        ? allQuestions.map((question, index) => `
             <div class="sch-view-question-card">
                 <div class="sch-view-question-label">
                     ${index + 1}. ${escapeHtml(question.label)}
@@ -798,20 +992,6 @@ function renderProgramViewHtml(program) {
         `).join('')
         : '';
 
-    const quickGuidelinesHtml = `
-        <div class="schol-schedule-card sch-view-section">
-            <h4 class="schol-schedule-title">Quick Guidelines</h4>
-            <p class="sch-view-muted">Built-in 6-step guide shown to all applicants.</p>
-            <ol class="sch-qg-official-simple-list">
-                <li>Complete the scholarship application form.</li>
-                <li>Upload all required documents.</li>
-                <li>Review your information.</li>
-                <li>Submit your application.</li>
-                <li>Wait for evaluation.</li>
-                <li>Monitor your application status.</li>
-            </ol>
-        </div>`;
-
     return `
         <div class="sch-view-program-wrap">
             <div class="schol-schedule-card sch-view-section">
@@ -820,14 +1000,6 @@ function renderProgramViewHtml(program) {
                     <div class="sch-view-field sch-view-field-full">
                         <label>Program</label>
                         <div class="sch-view-value">${escapeHtml(program.program_name)}</div>
-                    </div>
-                    <div class="sch-view-field">
-                        <label>Program Type</label>
-                        <div class="sch-view-value">${escapeHtml(program.program_type)}</div>
-                    </div>
-                    <div class="sch-view-field">
-                        <label>Committee</label>
-                        <div class="sch-view-value">${escapeHtml(program.committee || '—')}</div>
                     </div>
                     <div class="sch-view-field">
                         <label>School Year</label>
@@ -841,28 +1013,19 @@ function renderProgramViewHtml(program) {
                         <label>Application Type</label>
                         <div class="sch-view-value">${escapeHtml(APPLICATION_TYPE_LABELS[details.application_type] || details.application_type || '—')}</div>
                     </div>
+                    ${targetLevelLabel ? `
+                    <div class="sch-view-field">
+                        <label>Scholarship Level</label>
+                        <div class="sch-view-value">${escapeHtml(targetLevelLabel)}</div>
+                    </div>` : ''}
+                    ${committeeHead ? `
+                    <div class="sch-view-field">
+                        <label>Committee Head</label>
+                        <div class="sch-view-value">${escapeHtml(committeeHead)}</div>
+                    </div>` : ''}
                     <div class="sch-view-field">
                         <label>Maximum Beneficiaries</label>
                         <div class="sch-view-value">${escapeHtml(program.participation_quantity ?? 'N/A')}</div>
-                    </div>
-                    ${details.program_description ? `
-                    <div class="sch-view-field sch-view-field-full">
-                        <label>Program Description</label>
-                        <div class="sch-view-value sch-view-value-pre">${escapeHtml(details.program_description)}</div>
-                    </div>` : ''}
-                </div>
-            </div>
-
-            <div class="schol-schedule-card sch-view-section">
-                <h4 class="schol-schedule-title">Application Window Schedule</h4>
-                <div class="sch-view-grid">
-                    <div class="sch-view-field">
-                        <label>Start Date</label>
-                        <div class="sch-view-value">${formatIsoDateDisplay(program.start_date)}</div>
-                    </div>
-                    <div class="sch-view-field">
-                        <label>End Date</label>
-                        <div class="sch-view-value">${formatIsoDateDisplay(program.end_date)}</div>
                     </div>
                     <div class="sch-view-field">
                         <label>Status</label>
@@ -876,22 +1039,23 @@ function renderProgramViewHtml(program) {
                 <div class="sch-view-grid">
                     <div class="sch-view-field sch-view-field-full">
                         <label>Youth Classification</label>
-                        ${formatEligibilityList(eligibilityClassifications, 'Any classification (Senior High and College only).')}
+                        ${formatEligibilityList(eligibilityClassifications, 'In School Youth (automatic).')}
                     </div>
+                    ${eligibilityAgeGroups.length ? `
                     <div class="sch-view-field sch-view-field-full">
                         <label>Youth Age Group</label>
-                        ${formatEligibilityList(eligibilityAgeGroups, 'Any age group (Senior High and College only).')}
-                    </div>
+                        ${formatEligibilityList(eligibilityAgeGroups, 'Any age group.')}
+                    </div>` : ''}
                     <div class="sch-view-field sch-view-field-full">
                         <label>Educational Background</label>
-                        ${formatEligibilityList(eligibilityEducation, 'Senior High School and College Level.')}
+                        ${formatEligibilityList(eligibilityEducation, targetLevelLabel ? `Based on ${targetLevelLabel} selection.` : 'High School Level or College Level (In School Youth only).')}
                     </div>
                 </div>
             </div>
 
             <div class="schol-schedule-card sch-view-section">
                 <h4 class="schol-schedule-title">1. Personal Information (KK Profiling)</h4>
-                <p class="sch-view-kk-note">Selected fields are auto-filled from the applicant's KK Profile and displayed as read-only.</p>
+                <p class="sch-view-kk-note">All KK Profiling fields are automatically included and auto-filled from the applicant's KK Profile as read-only.</p>
                 ${kkList}
             </div>
 
@@ -909,18 +1073,11 @@ function renderProgramViewHtml(program) {
                     <div class="sch-view-value">${escapeHtml(verificationLabel)}</div>
                 </div>` : ''}
 
-            <div class="schol-schedule-card sch-view-section">
-                <h4 class="schol-schedule-title">Uploading of Requirements</h4>
-                <div class="sch-view-questions">${questionsHtml}</div>
-            </div>
-
             ${customQuestionsHtml ? `
             <div class="schol-schedule-card sch-view-section">
                 <h4 class="schol-schedule-title">Custom Questions</h4>
                 <div class="sch-view-questions">${customQuestionsHtml}</div>
             </div>` : ''}
-
-            ${quickGuidelinesHtml}
         </div>`;
 }
 
@@ -957,26 +1114,56 @@ function openDeleteProgramModal(programId) {
     pendingDeleteProgramId = programId;
     const deleteModal = document.getElementById('deleteProgramModal');
     const nameEl = document.getElementById('deleteProgramName');
+    const confirmInput = document.getElementById('deleteProgramConfirmText');
+    const confirmError = document.getElementById('deleteProgramConfirmError');
+
     if (nameEl) {
-        nameEl.textContent = program ? `"${program.program_name}"` : '';
+        nameEl.textContent = program ? program.program_name || 'this program' : 'this program';
     }
+    if (confirmInput) confirmInput.value = '';
+    if (confirmError) {
+        confirmError.style.display = 'none';
+        confirmError.textContent = '';
+    }
+    resetDeleteProgramConfirmButton();
     if (deleteModal) deleteModal.style.display = 'flex';
 }
 
 function closeDeleteProgramModal() {
     pendingDeleteProgramId = null;
     const deleteModal = document.getElementById('deleteProgramModal');
+    const confirmInput = document.getElementById('deleteProgramConfirmText');
+    const confirmError = document.getElementById('deleteProgramConfirmError');
+
+    if (confirmInput) confirmInput.value = '';
+    if (confirmError) {
+        confirmError.style.display = 'none';
+        confirmError.textContent = '';
+    }
+    resetDeleteProgramConfirmButton();
     if (deleteModal) deleteModal.style.display = 'none';
 }
 
 async function confirmDeleteProgram() {
     if (!pendingDeleteProgramId) return;
 
+    const confirmInput = document.getElementById('deleteProgramConfirmText');
+    const confirmError = document.getElementById('deleteProgramConfirmError');
+    if ((confirmInput?.value?.trim() || '') !== 'Confirm') {
+        if (confirmError) {
+            confirmError.textContent = 'Please type Confirm to delete this program.';
+            confirmError.style.display = 'block';
+        }
+        return;
+    }
+
     const confirmBtn = document.getElementById('deleteProgramConfirm');
     const defaultHtml = confirmBtn ? confirmBtn.innerHTML : 'Delete Program';
 
     if (confirmBtn) {
         confirmBtn.disabled = true;
+        confirmBtn.classList.remove('is-enabled');
+        confirmBtn.classList.add('is-disabled');
         confirmBtn.innerHTML = '<span class="schol-save-spinner"></span> Deleting...';
     }
 
@@ -989,23 +1176,22 @@ async function confirmDeleteProgram() {
         showToast(error.message || 'Failed to delete program.', 'error');
     } finally {
         if (confirmBtn) {
-            confirmBtn.disabled = false;
             confirmBtn.innerHTML = defaultHtml;
+            syncDeleteProgramConfirmButton();
         }
     }
 }
 
 async function handleSave() {
-    const startDate = document.getElementById('schedStartDate')?.value?.trim();
-    const endDate = document.getElementById('schedEndDate')?.value?.trim();
+    const submissionStart = document.getElementById('schSubmissionStart')?.value?.trim();
+    const submissionEnd = document.getElementById('schSubmissionEnd')?.value?.trim();
     const status = document.getElementById('programStatus')?.value || 'open';
     const participationQtyRaw = document.getElementById('participationQty')?.value?.trim();
-    const announcement = document.getElementById('spfbAnnouncement')?.value?.trim() || '';
     const schoolYear = document.getElementById('schoolYear')?.value?.trim();
     const semester = document.getElementById('programSemester')?.value?.trim();
 
     if (!schoolYear) {
-        showToast('Please select a school year.', 'error');
+        showToast('School year is unavailable. Set the program duration in Programs first.', 'error');
         switchBuilderTab('details');
         return;
     }
@@ -1016,50 +1202,45 @@ async function handleSave() {
         return;
     }
 
-    if (!startDate || !endDate) {
-        showToast('Please select application start and end dates.', 'error');
+    const targetLevels = getScholarshipTargetLevels();
+    if (!targetLevels.length) {
+        showToast('Please select at least one scholarship level: Senior High, College, or Both.', 'error');
+        switchBuilderTab('details');
+        return;
+    }
+
+    if (!submissionStart || !submissionEnd) {
+        showToast('Please set the submission period start and end dates.', 'error');
         switchBuilderTab('details');
         return;
     }
 
     let participationQuantity = null;
-    if (participationQtyRaw !== '') {
-        const qtyNum = parseInt(participationQtyRaw, 10);
-        if (Number.isNaN(qtyNum) || qtyNum < 0) {
-            showToast('Maximum beneficiaries cannot be negative.', 'error');
-            return;
-        }
-        participationQuantity = qtyNum;
+    const participationCheck = parseParticipationQuantity(participationQtyRaw);
+    if (!participationCheck.valid) {
+        showToast(participationCheck.message, 'error');
+        switchBuilderTab('details');
+        return;
     }
+    participationQuantity = participationCheck.value;
 
-    const documentRequirements = collectDocumentRequirements();
-    if (!documentRequirements.length) {
-        showToast('Add at least one document requirement in the Requirements tab.', 'error');
-        switchBuilderTab('requirements');
+    const quickGuidelinesCheck = validateQuickGuidelines();
+    if (!quickGuidelinesCheck.valid) {
+        showToast(quickGuidelinesCheck.message, 'error');
+        switchBuilderTab('quick-guidelines');
         return;
     }
 
-    let customQuestionsNonFile = [];
+    let customQuestions = [];
     if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.getQuestions === 'function') {
-        customQuestionsNonFile = window.SpfbFormBuilder.getQuestions().filter((question) => question.type !== 'file');
+        customQuestions = window.SpfbFormBuilder.getQuestions().filter((question) => question.type !== 'file');
     }
 
-    const fileQuestions = documentRequirementsToFileQuestions(documentRequirements);
-    const customQuestions = [...fileQuestions, ...customQuestionsNonFile];
-
-    const kkProfilingFields = [];
-    document.querySelectorAll('.kk-profiling-field:checked').forEach((checkbox) => {
-        kkProfilingFields.push(checkbox.value);
-    });
-
     const payload = {
-        start_date: startDate,
-        end_date: endDate,
         status,
         participation_quantity: participationQuantity,
-        announcement,
         scholarship_details: collectScholarshipDetails(),
-        kk_profiling_fields: kkProfilingFields,
+        kk_profiling_fields: getDefaultKkFields(),
         custom_questions: customQuestions,
     };
 
@@ -1082,6 +1263,7 @@ async function handleSave() {
 
         closeModal();
         await loadPrograms();
+        await loadProgramMeta();
     } catch (error) {
         showToast(error.message || 'Failed to save program.', 'error');
     } finally {
@@ -1097,17 +1279,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderRequirementGroups([]);
 
     bindBuilderTabs();
-    renderDocumentRequirements([]);
-
-    const addDocReqBtn = document.getElementById('schAddDocReqBtn');
-    if (addDocReqBtn) {
-        addDocReqBtn.addEventListener('click', () => {
-            const container = document.getElementById('schDocReqContainer');
-            if (!container) return;
-            container.insertAdjacentHTML('beforeend', createDocRequirementCard({ name: '', file_type: 'pdf', required: true, max_size_mb: 5 }));
-            bindDocumentRequirementEvents(container);
-        });
-    }
+    bindScholarshipLevelControls();
+    bindParticipationQtyInput();
 
     const tableBody = document.getElementById('safFormsTableBody');
     if (!tableBody) return;
@@ -1125,6 +1298,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
     if (saveBtn) saveBtn.addEventListener('click', handleSave);
 
+    tableBody.addEventListener('click', (event) => {
+        const actionItem = event.target.closest('.row-actions-item');
+        if (!actionItem) return;
+
+        const programId = actionItem.getAttribute('data-program-id');
+        const action = actionItem.getAttribute('data-action');
+        if (!programId || !action) return;
+
+        if (action === 'view') openFormPreview(programId);
+        if (action === 'edit') editProgram(programId);
+        if (action === 'delete') openDeleteProgramModal(programId);
+    });
+
+    const deleteConfirmInput = document.getElementById('deleteProgramConfirmText');
+    if (deleteConfirmInput) {
+        deleteConfirmInput.addEventListener('input', () => {
+            const confirmError = document.getElementById('deleteProgramConfirmError');
+            if (confirmError) {
+                confirmError.style.display = 'none';
+                confirmError.textContent = '';
+            }
+            syncDeleteProgramConfirmButton();
+        });
+    }
+
     const addReqGroupBtn = document.getElementById('schAddReqGroupBtn');
     if (addReqGroupBtn) {
         addReqGroupBtn.addEventListener('click', () => {
@@ -1133,6 +1331,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             container.insertAdjacentHTML('beforeend', createRequirementGroupCard({ title: '', items: [''] }));
             bindRequirementGroupEvents(container);
         });
+    }
+
+    const addQgBtn = document.getElementById('schAddQuickGuidelineBtn');
+    if (addQgBtn) {
+        addQgBtn.addEventListener('click', () => addQuickGuidelineStep());
     }
 
     if (modal) {
@@ -1152,30 +1355,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    const selectAllKKBtn = document.getElementById('selectAllKKFields');
-    const clearAllKKBtn = document.getElementById('clearAllKKFields');
-    if (selectAllKKBtn) {
-        selectAllKKBtn.addEventListener('click', () => {
-            document.querySelectorAll('.kk-profiling-field').forEach((checkbox) => {
-                checkbox.checked = true;
-            });
-        });
-    }
-    if (clearAllKKBtn) {
-        clearAllKKBtn.addEventListener('click', () => {
-            document.querySelectorAll('.kk-profiling-field').forEach((checkbox) => {
-                checkbox.checked = false;
-            });
-        });
-    }
-
     const deleteClose = document.getElementById('deleteProgramClose');
     const deleteCancel = document.getElementById('deleteProgramCancel');
     const deleteConfirm = document.getElementById('deleteProgramConfirm');
     const deleteModal = document.getElementById('deleteProgramModal');
     if (deleteClose) deleteClose.addEventListener('click', closeDeleteProgramModal);
     if (deleteCancel) deleteCancel.addEventListener('click', closeDeleteProgramModal);
-    if (deleteConfirm) deleteConfirm.addEventListener('click', confirmDeleteProgram);
+    if (deleteConfirm) {
+        resetDeleteProgramConfirmButton();
+        deleteConfirm.addEventListener('click', confirmDeleteProgram);
+    }
     if (deleteModal) {
         deleteModal.addEventListener('click', (event) => {
             if (event.target === deleteModal) closeDeleteProgramModal();

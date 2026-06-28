@@ -4,7 +4,9 @@ namespace App\Modules\Program_Management\Services;
 
 use App\Models\Abyip;
 use App\Models\Committee;
+use App\Models\ProgramApplication;
 use App\Models\ScheduleProgram;
+use App\Models\ScholarshipQuickGuidelineStep;
 use App\Models\User;
 use App\Modules\Programs\Services\AbyipProgramCatalogService;
 use Illuminate\Support\Collection;
@@ -37,7 +39,26 @@ class ScheduleProgramService
     /** @var list<string> */
     private const ELIGIBILITY_EDUCATION_LEVELS = [
         'High School Level',
+        'High School Grad',
         'College Level',
+    ];
+
+    /** @var list<string> */
+    public const DEFAULT_SCHOLARSHIP_YOUTH_CLASSIFICATIONS = [
+        'In School Youth',
+    ];
+
+    /** @var list<string> */
+    public const DEFAULT_SCHOLARSHIP_EDUCATION_LEVELS = [
+        'High School Level',
+        'High School Grad',
+        'College Level',
+    ];
+
+    /** @var list<string> */
+    public const ALLOWED_SCHOLARSHIP_TARGET_LEVELS = [
+        'senior_high',
+        'college',
     ];
 
     /** @var list<string> */
@@ -82,6 +103,28 @@ class ScheduleProgramService
         'youth_classification', 'youth_age_group', 'education', 'current_school',
         'course_strand', 'work_status', 'sk_voter', 'sk_voted',
     ];
+
+    /** @var list<string> */
+    public const DEFAULT_SCHOLARSHIP_KK_FIELDS = [
+        'last_name', 'first_name', 'middle_name', 'suffix',
+        'birthday', 'age', 'sex', 'civil_status', 'contact_number', 'email',
+        'region', 'province', 'city', 'barangay', 'purok_zone',
+        'youth_classification', 'youth_age_group', 'education',
+        'current_school', 'course_strand',
+    ];
+
+    /** @var list<string> */
+    private const SCHOLARSHIP_EXCLUDED_KK_FIELDS = [
+        'work_status',
+        'sk_voter',
+        'sk_voted',
+    ];
+
+    public const SCHOLARSHIP_MAX_BENEFICIARIES = 1000;
+
+    public const SCHOLARSHIP_QUICK_GUIDELINE_MAX_CHARS = 2000;
+
+    public const SCHOLARSHIP_QUICK_GUIDELINE_MAX_STEPS = 10;
 
     /** @var list<string> */
     public const DEFAULT_SPORTS_KK_FIELDS = [
@@ -194,7 +237,164 @@ class ScheduleProgramService
             $meta['sports_age_classifications'] = self::sportsAgeClassificationsConfig();
         }
 
+        if ($letter === self::LETTER_EDUCATION) {
+            $youthProgram = $this->catalogService->findYouthProgramByLetter($user->barangay_id, $letter);
+            $schoolYear = $this->deriveSchoolYearFromYouthProgram($youthProgram);
+            $meta['school_year'] = $schoolYear;
+            $meta['program_duration'] = $youthProgram !== null ? [
+                'start_date' => $youthProgram['start_date'],
+                'end_date' => $youthProgram['end_date'],
+            ] : null;
+            $meta['used_semesters'] = $schoolYear !== null
+                ? $this->usedSemestersForSchoolYear($user, $schoolYear)
+                : [];
+            $meta['default_eligibility'] = self::defaultScholarshipEligibility();
+            $meta['committee_head'] = $this->resolveEducationCommitteeHead($user);
+        }
+
         return $meta;
+    }
+
+    /**
+     * @return array{youth_classifications: list<string>, youth_age_groups: list<string>, education_levels: list<string>}
+     */
+    public static function scholarshipEligibilityForTargetLevels(array $targetLevels): array
+    {
+        $educationLevels = [];
+
+        if (in_array('senior_high', $targetLevels, true)) {
+            $educationLevels[] = 'High School Level';
+        }
+
+        if (in_array('college', $targetLevels, true)) {
+            $educationLevels[] = 'College Level';
+        }
+
+        return [
+            'youth_classifications' => self::DEFAULT_SCHOLARSHIP_YOUTH_CLASSIFICATIONS,
+            'youth_age_groups' => [],
+            'education_levels' => $educationLevels !== [] ? array_values(array_unique($educationLevels)) : self::DEFAULT_SCHOLARSHIP_EDUCATION_LEVELS,
+        ];
+    }
+
+    /**
+     * @return array{youth_classifications: list<string>, youth_age_groups: list<string>, education_levels: list<string>}
+     */
+    public static function scholarshipEligibilityForTargetLevel(string $targetLevel): array
+    {
+        return self::scholarshipEligibilityForTargetLevels([$targetLevel]);
+    }
+
+    /**
+     * @return array{youth_classifications: list<string>, youth_age_groups: list<string>, education_levels: list<string>}
+     */
+    public static function defaultScholarshipEligibility(): array
+    {
+        return [
+            'youth_classifications' => self::DEFAULT_SCHOLARSHIP_YOUTH_CLASSIFICATIONS,
+            'youth_age_groups' => [],
+            'education_levels' => self::DEFAULT_SCHOLARSHIP_EDUCATION_LEVELS,
+        ];
+    }
+
+    /**
+     * @param  array{id: int, program_name: string, letter: string, start_date: string, end_date: string}|null  $youthProgram
+     */
+    public function deriveSchoolYearFromYouthProgram(?array $youthProgram): ?string
+    {
+        if ($youthProgram === null) {
+            return null;
+        }
+
+        $year = (int) date('Y', strtotime((string) ($youthProgram['start_date'] ?? '')));
+        if ($year <= 0) {
+            return null;
+        }
+
+        return sprintf('%d-%d', $year, $year + 1);
+    }
+
+    protected function resolveEducationCommitteeHead(User $user): ?string
+    {
+        if ($user->barangay_id === null) {
+            return null;
+        }
+
+        $committee = Committee::query()
+            ->with('head.officialProfile')
+            ->whereHas('head', fn ($query) => $query->where('barangay_id', $user->barangay_id))
+            ->whereRaw('LOWER(committee_name) LIKE ?', [self::LETTER_CONFIG[self::LETTER_EDUCATION]['committee_like']])
+            ->first();
+
+        if ($committee?->head === null) {
+            return null;
+        }
+
+        return $this->formatOfficialDisplayName($committee->head);
+    }
+
+    protected function formatOfficialDisplayName(User $user): string
+    {
+        $profile = $user->officialProfile;
+        if ($profile !== null) {
+            $middleInitial = $profile->middle_name
+                ? mb_strtoupper(mb_substr(trim((string) $profile->middle_name), 0, 1)).'.'
+                : null;
+            $formatted = trim(implode(' ', array_filter([
+                $profile->first_name ? mb_strtoupper((string) $profile->first_name, 'UTF-8') : null,
+                $middleInitial,
+                $profile->last_name ? mb_strtoupper((string) $profile->last_name, 'UTF-8') : null,
+                $profile->suffix,
+            ])));
+
+            if ($formatted !== '') {
+                return $formatted;
+            }
+        }
+
+        return trim((string) $user->name);
+    }
+
+    public function resolveSchoolYearForBarangay(?int $barangayId, string $letter = self::LETTER_EDUCATION): ?string
+    {
+        return $this->deriveSchoolYearFromYouthProgram(
+            $this->catalogService->findYouthProgramByLetter($barangayId, $letter)
+        );
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function usedSemestersForSchoolYear(User $user, string $schoolYear, ?int $ignoreProgramId = null): array
+    {
+        if ($user->barangay_id === null || $schoolYear === '') {
+            return [];
+        }
+
+        return ScheduleProgram::query()
+            ->where('barangay_id', $user->barangay_id)
+            ->active()
+            ->when(
+                Schema::hasColumn('schedule_programs', 'program_letter'),
+                fn ($query) => $query->where('program_letter', self::LETTER_EDUCATION),
+                fn ($query) => $query->whereRaw('LOWER(committee) LIKE ?', ['%education%']),
+            )
+            ->when($ignoreProgramId !== null, fn ($query) => $query->where('id', '!=', $ignoreProgramId))
+            ->get()
+            ->filter(function (ScheduleProgram $program) use ($schoolYear) {
+                $details = is_array($program->scholarship_details) ? $program->scholarship_details : [];
+
+                return ($details['school_year'] ?? '') === $schoolYear;
+            })
+            ->map(function (ScheduleProgram $program) {
+                $details = is_array($program->scholarship_details) ? $program->scholarship_details : [];
+
+                return trim((string) ($details['semester'] ?? ''));
+            })
+            ->filter(fn (string $semester) => $semester !== '')
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /**
@@ -207,6 +407,7 @@ class ScheduleProgramService
         }
 
         $query = ScheduleProgram::query()
+            ->with('quickGuidelineSteps')
             ->where('barangay_id', $user->barangay_id)
             ->active()
             ->orderByDesc('start_date')
@@ -242,7 +443,7 @@ class ScheduleProgramService
      */
     public function store(User $user, array $data, string $letter = self::LETTER_EDUCATION): array
     {
-        $validated = $this->validatePayload($data, $letter);
+        $validated = $this->validatePayload($data, $letter, null, $user);
         $meta = $this->resolveProgramMeta($user, $letter);
 
         if ($user->barangay_id !== null) {
@@ -273,6 +474,19 @@ class ScheduleProgramService
                         'program' => ["A {$label} program already exists for {$year}. Edit the existing program instead."],
                     ]);
                 }
+            } elseif ($letter === self::LETTER_EDUCATION) {
+                $schoolYear = (string) ($validated['scholarship_details']['school_year'] ?? '');
+                $semester = (string) ($validated['scholarship_details']['semester'] ?? '');
+
+                if ($this->scholarshipProgramExistsForYearSemester(
+                    (int) $user->barangay_id,
+                    $schoolYear,
+                    $semester,
+                )) {
+                    throw ValidationException::withMessages([
+                        'program' => ["A scholarship program already exists for {$schoolYear} ({$semester}). Edit the existing program instead."],
+                    ]);
+                }
             } elseif ($existsQuery->exists()) {
                 $message = 'A program already exists for this barangay. Edit the existing program instead of creating a new one.';
 
@@ -301,7 +515,9 @@ class ScheduleProgramService
             'custom_questions' => $validated['custom_questions'],
         ]);
 
-        return $this->formatProgram($program);
+        $this->syncQuickGuidelineSteps($program, $validated['quick_guidelines'] ?? []);
+
+        return $this->formatProgram($program->fresh(['quickGuidelineSteps']));
     }
 
     /**
@@ -311,7 +527,12 @@ class ScheduleProgramService
     public function update(User $user, int $programId, array $data, ?string $letter = null): array
     {
         $program = $this->findModel($user, $programId);
-        $validated = $this->validatePayload($data, $letter ?? (string) ($program->program_letter ?? self::LETTER_EDUCATION));
+        $validated = $this->validatePayload(
+            $data,
+            $letter ?? (string) ($program->program_letter ?? self::LETTER_EDUCATION),
+            $programId,
+            $user,
+        );
         $meta = $this->resolveProgramMeta($user, $letter ?? (string) ($program->program_letter ?? self::LETTER_EDUCATION));
 
         $program->update([
@@ -330,7 +551,9 @@ class ScheduleProgramService
             'custom_questions' => $validated['custom_questions'],
         ]);
 
-        return $this->formatProgram($program->fresh());
+        $this->syncQuickGuidelineSteps($program, $validated['quick_guidelines'] ?? []);
+
+        return $this->formatProgram($program->fresh(['quickGuidelineSteps']));
     }
 
     public function delete(User $user, int $programId): void
@@ -341,6 +564,7 @@ class ScheduleProgramService
     protected function findModel(User $user, int $programId): ScheduleProgram
     {
         $program = ScheduleProgram::query()
+            ->with('quickGuidelineSteps')
             ->where('id', $programId)
             ->where('barangay_id', $user->barangay_id)
             ->active()
@@ -368,16 +592,31 @@ class ScheduleProgramService
      *     sports_details: ?array<string, mixed>
      * }
      */
-    protected function validatePayload(array $data, ?string $letter = null): array
+    protected function validatePayload(array $data, ?string $letter = null, ?int $programId = null, ?User $user = null): array
     {
         $letter = strtoupper(trim((string) ($letter ?? $data['program_letter'] ?? '')));
-        $startDate = (string) ($data['start_date'] ?? '');
-        $endDate = (string) ($data['end_date'] ?? '');
+        $isScholarshipPayload = $letter === self::LETTER_EDUCATION
+            && isset($data['scholarship_details'])
+            && is_array($data['scholarship_details']);
+        $scholarshipDetails = $this->sanitizeScholarshipDetails($data['scholarship_details'] ?? null);
+
+        if ($isScholarshipPayload) {
+            $startDate = (string) ($scholarshipDetails['submission_period']['start'] ?? '');
+            $endDate = (string) ($scholarshipDetails['submission_period']['end'] ?? '');
+        } else {
+            $startDate = (string) ($data['start_date'] ?? '');
+            $endDate = (string) ($data['end_date'] ?? '');
+        }
+
         $status = (string) ($data['status'] ?? ScheduleProgram::STATUS_OPEN);
 
         if ($startDate === '' || $endDate === '') {
             throw ValidationException::withMessages([
-                'start_date' => ['Start date and end date are required.'],
+                $isScholarshipPayload ? 'scholarship_details' : 'start_date' => [
+                    $isScholarshipPayload
+                        ? 'Submission period start and end dates are required.'
+                        : 'Start date and end date are required.',
+                ],
             ]);
         }
 
@@ -397,7 +636,13 @@ class ScheduleProgramService
         $participationQuantity = null;
         if ($qtyRaw !== null && $qtyRaw !== '') {
             $qty = (int) $qtyRaw;
-            if ($qty < 0 || $qty > 500) {
+            if ($letter === self::LETTER_EDUCATION) {
+                if ($qty < 0 || $qty > self::SCHOLARSHIP_MAX_BENEFICIARIES) {
+                    throw ValidationException::withMessages([
+                        'participation_quantity' => ['Maximum beneficiaries must be between 0 and '.self::SCHOLARSHIP_MAX_BENEFICIARIES.'.'],
+                    ]);
+                }
+            } elseif ($qty < 0 || $qty > 500) {
                 throw ValidationException::withMessages([
                     'participation_quantity' => ['Participation quantity must be between 0 and 500.'],
                 ]);
@@ -410,8 +655,19 @@ class ScheduleProgramService
             fn ($field) => in_array((string) $field, self::ALLOWED_KK_FIELDS, true)
         ));
 
+        if ($letter === self::LETTER_EDUCATION) {
+            $kkFields = array_values(array_filter(
+                $kkFields,
+                fn ($field) => ! in_array($field, self::SCHOLARSHIP_EXCLUDED_KK_FIELDS, true)
+            ));
+        }
+
         if ($letter === self::LETTER_SPORTS && $kkFields === []) {
             $kkFields = self::DEFAULT_SPORTS_KK_FIELDS;
+        }
+
+        if ($letter === self::LETTER_EDUCATION && $kkFields === []) {
+            $kkFields = self::DEFAULT_SCHOLARSHIP_KK_FIELDS;
         }
 
         $customQuestions = $this->sanitizeCustomQuestions((array) ($data['custom_questions'] ?? []));
@@ -420,22 +676,59 @@ class ScheduleProgramService
             $customQuestions = $this->ensureDefaultTeamNameQuestion($customQuestions);
         }
 
-        $scholarshipDetails = $this->sanitizeScholarshipDetails($data['scholarship_details'] ?? null);
+        if ($letter === self::LETTER_EDUCATION) {
+            $customQuestions = collect($customQuestions)
+                ->reject(fn ($question) => ($question['type'] ?? '') === 'file')
+                ->values()
+                ->all();
+        }
+
         $sportsDetails = $letter === self::LETTER_SPORTS
             ? $this->sanitizeSportsDetails($data['sports_details'] ?? null)
             : null;
 
-        if (isset($data['scholarship_details']) && is_array($data['scholarship_details'])) {
-            if (empty($scholarshipDetails['school_year']) || empty($scholarshipDetails['semester'])) {
+        $quickGuidelines = [];
+
+        if ($isScholarshipPayload && $user !== null) {
+            $expectedSchoolYear = $this->resolveSchoolYearForBarangay($user->barangay_id);
+            if ($expectedSchoolYear === null) {
+                throw ValidationException::withMessages([
+                    'scholarship_details' => ['Set the program duration in Programs before creating a scholarship schedule.'],
+                ]);
+            }
+
+            $scholarshipDetails['school_year'] = $expectedSchoolYear;
+            $targetLevels = $this->resolveScholarshipTargetLevels($scholarshipDetails);
+            if ($targetLevels === []) {
+                throw ValidationException::withMessages([
+                    'scholarship_details' => ['Please select at least one scholarship level (Senior High and/or College).'],
+                ]);
+            }
+
+            $scholarshipDetails['scholarship_target_levels'] = $targetLevels;
+            unset($scholarshipDetails['scholarship_target_level']);
+            $scholarshipDetails['eligibility'] = self::scholarshipEligibilityForTargetLevels($targetLevels);
+            $scholarshipDetails['committee_head'] = $this->resolveEducationCommitteeHead($user);
+            $rawScholarshipDetails = is_array($data['scholarship_details'] ?? null)
+                ? $data['scholarship_details']
+                : [];
+            $quickGuidelines = self::sanitizeQuickGuidelines(
+                $rawScholarshipDetails['quick_guidelines'] ?? null
+            );
+            $this->assertQuickGuidelinesWithinLimit($quickGuidelines);
+            unset($scholarshipDetails['quick_guidelines']);
+
+            if (empty($scholarshipDetails['semester'])) {
                 throw ValidationException::withMessages([
                     'scholarship_details' => ['School year and semester are required for scholarship programs.'],
                 ]);
             }
 
-            $hasFileRequirement = collect($customQuestions)->contains(fn ($question) => ($question['type'] ?? '') === 'file');
-            if (! $hasFileRequirement) {
+            $applicationType = (string) ($scholarshipDetails['application_type'] ?? 'new_only');
+            if (in_array($applicationType, ['renewal_only', 'both'], true)
+                && ! $this->programSupportsRenewalOptions($programId)) {
                 throw ValidationException::withMessages([
-                    'custom_questions' => ['At least one document requirement is required.'],
+                    'scholarship_details' => ['Renewal application types are only available after at least one scholar has applied.'],
                 ]);
             }
         }
@@ -453,6 +746,7 @@ class ScheduleProgramService
             'status' => $status,
             'announcement' => $this->nullableString($data['announcement'] ?? null),
             'scholarship_details' => $scholarshipDetails,
+            'quick_guidelines' => $isScholarshipPayload ? ($quickGuidelines ?? []) : [],
             'sports_details' => $sportsDetails,
             'kk_profiling_fields' => $kkFields,
             'custom_questions' => $customQuestions,
@@ -492,7 +786,12 @@ class ScheduleProgramService
 
         $submission = $this->sanitizePeriod($raw['submission_period'] ?? null);
         $verification = $this->sanitizePeriod($raw['verification_period'] ?? null);
-        $eligibility = $this->sanitizeEligibility($raw['eligibility'] ?? null);
+        $targetLevels = $this->resolveScholarshipTargetLevels($raw);
+        $eligibility = $targetLevels !== []
+            ? self::scholarshipEligibilityForTargetLevels($targetLevels)
+            : self::defaultScholarshipEligibility();
+        $quickGuidelines = self::sanitizeQuickGuidelines($raw['quick_guidelines'] ?? null);
+        $committeeHead = $this->nullableString($raw['committee_head'] ?? null);
         $schoolYear = $this->sanitizeSchoolYear($raw['school_year'] ?? null);
         $semester = $this->sanitizeSemester($raw['semester'] ?? null);
         $applicationType = $this->sanitizeApplicationType($raw['application_type'] ?? null);
@@ -503,10 +802,12 @@ class ScheduleProgramService
             $groups === []
             && $submission === null
             && $verification === null
-            && $eligibility === null
             && $schoolYear === null
             && $semester === null
             && $applicationType === null
+            && $targetLevels === []
+            && $quickGuidelines === []
+            && $committeeHead === null
             && $programDescription === null
             && $documentRequirements === []
         ) {
@@ -517,11 +818,8 @@ class ScheduleProgramService
             'requirement_groups' => $groups,
             'submission_period' => $submission,
             'verification_period' => $verification,
+            'eligibility' => $eligibility,
         ];
-
-        if ($eligibility !== null) {
-            $payload['eligibility'] = $eligibility;
-        }
 
         if ($schoolYear !== null) {
             $payload['school_year'] = $schoolYear;
@@ -533,6 +831,14 @@ class ScheduleProgramService
 
         if ($applicationType !== null) {
             $payload['application_type'] = $applicationType;
+        }
+
+        if ($targetLevels !== []) {
+            $payload['scholarship_target_levels'] = $targetLevels;
+        }
+
+        if ($committeeHead !== null) {
+            $payload['committee_head'] = $committeeHead;
         }
 
         if ($programDescription !== null) {
@@ -573,6 +879,118 @@ class ScheduleProgramService
         $type = trim((string) $value);
 
         return in_array($type, self::ALLOWED_APPLICATION_TYPES, true) ? $type : null;
+    }
+
+    protected function sanitizeScholarshipTargetLevel(mixed $value): ?string
+    {
+        $level = trim((string) $value);
+
+        return in_array($level, self::ALLOWED_SCHOLARSHIP_TARGET_LEVELS, true) ? $level : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $raw
+     * @return list<string>
+     */
+    protected function resolveScholarshipTargetLevels(array $raw): array
+    {
+        $levels = $this->sanitizeScholarshipTargetLevels($raw['scholarship_target_levels'] ?? null);
+        if ($levels !== []) {
+            return $levels;
+        }
+
+        $legacy = $this->sanitizeScholarshipTargetLevel($raw['scholarship_target_level'] ?? null);
+
+        return $legacy !== null ? [$legacy] : [];
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function sanitizeScholarshipTargetLevels(mixed $raw): array
+    {
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        $levels = [];
+        foreach ($raw as $level) {
+            $sanitized = $this->sanitizeScholarshipTargetLevel($level);
+            if ($sanitized !== null) {
+                $levels[] = $sanitized;
+            }
+        }
+
+        return array_values(array_unique($levels));
+    }
+
+    /**
+     * @return list<array{en: string, tl: string}>
+     */
+    public static function sanitizeQuickGuidelines(mixed $raw): array
+    {
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        $steps = [];
+        foreach ($raw as $step) {
+            if (! is_array($step)) {
+                continue;
+            }
+
+            $en = trim((string) ($step['en'] ?? ''));
+            $tl = trim((string) ($step['tl'] ?? ''));
+            if ($en === '' && $tl === '') {
+                continue;
+            }
+
+            $steps[] = [
+                'en' => $en !== '' ? $en : $tl,
+                'tl' => $tl !== '' ? $tl : $en,
+            ];
+
+            if (count($steps) >= self::SCHOLARSHIP_QUICK_GUIDELINE_MAX_STEPS) {
+                break;
+            }
+        }
+
+        return $steps;
+    }
+
+    /**
+     * @param  list<array{en: string, tl: string}>  $guidelines
+     */
+    protected function assertQuickGuidelinesWithinLimit(array $guidelines): void
+    {
+        if (count($guidelines) > self::SCHOLARSHIP_QUICK_GUIDELINE_MAX_STEPS) {
+            throw ValidationException::withMessages([
+                'scholarship_details' => [
+                    sprintf(
+                        'Quick Guidelines cannot exceed %d steps.',
+                        self::SCHOLARSHIP_QUICK_GUIDELINE_MAX_STEPS
+                    ),
+                ],
+            ]);
+        }
+
+        foreach ($guidelines as $index => $step) {
+            foreach (['en' => 'English', 'tl' => 'Tagalog'] as $field => $label) {
+                $text = (string) ($step[$field] ?? '');
+                if (mb_strlen($text) > self::SCHOLARSHIP_QUICK_GUIDELINE_MAX_CHARS) {
+                    throw ValidationException::withMessages([
+                        'scholarship_details' => [
+                            sprintf(
+                                'Quick Guidelines step #%d (%s) exceeds %d characters.',
+                                $index + 1,
+                                $label,
+                                self::SCHOLARSHIP_QUICK_GUIDELINE_MAX_CHARS
+                            ),
+                        ],
+                    ]);
+                }
+            }
+        }
     }
 
     /**
@@ -941,6 +1359,45 @@ class ScheduleProgramService
         }, $config[$key]);
     }
 
+    public function scholarshipProgramExistsForYearSemester(
+        int $barangayId,
+        string $schoolYear,
+        string $semester,
+        ?int $ignoreProgramId = null,
+    ): bool {
+        if ($schoolYear === '' || $semester === '') {
+            return false;
+        }
+
+        return ScheduleProgram::query()
+            ->where('barangay_id', $barangayId)
+            ->active()
+            ->when(
+                Schema::hasColumn('schedule_programs', 'program_letter'),
+                fn ($query) => $query->where('program_letter', self::LETTER_EDUCATION),
+                fn ($query) => $query->whereRaw('LOWER(committee) LIKE ?', ['%education%']),
+            )
+            ->when($ignoreProgramId !== null, fn ($query) => $query->where('id', '!=', $ignoreProgramId))
+            ->get()
+            ->contains(function (ScheduleProgram $program) use ($schoolYear, $semester) {
+                $details = is_array($program->scholarship_details) ? $program->scholarship_details : [];
+
+                return ($details['school_year'] ?? '') === $schoolYear
+                    && ($details['semester'] ?? '') === $semester;
+            });
+    }
+
+    public function programSupportsRenewalOptions(?int $programId): bool
+    {
+        if ($programId === null) {
+            return false;
+        }
+
+        return ProgramApplication::query()
+            ->where('program_id', $programId)
+            ->exists();
+    }
+
     protected function nullableString(mixed $value): ?string
     {
         if ($value === null) {
@@ -968,6 +1425,13 @@ class ScheduleProgramService
             $sportLabel = $this->sanitizeSportLabel((string) $sportsDetails['sport_key'], null);
         }
 
+        $scholarshipDetails = is_array($program->scholarship_details) ? $program->scholarship_details : [];
+        unset($scholarshipDetails['quick_guidelines']);
+        $quickGuidelines = $this->resolveQuickGuidelinesForProgram($program);
+        if ($quickGuidelines !== []) {
+            $scholarshipDetails['quick_guidelines'] = $quickGuidelines;
+        }
+
         return [
             'id' => $program->id,
             'program_letter' => $program->program_letter,
@@ -984,16 +1448,68 @@ class ScheduleProgramService
             'endDate' => $program->end_date?->toDateString(),
             'status' => $program->status,
             'announcement' => $program->announcement,
-            'scholarship_details' => $program->scholarship_details,
+            'scholarship_details' => $scholarshipDetails !== [] ? $scholarshipDetails : null,
             'sports_details' => $program->sports_details,
             'kk_profiling_fields' => $program->kk_profiling_fields ?? [],
             'kkProfilingFields' => $program->kk_profiling_fields ?? [],
             'custom_questions' => $program->custom_questions ?? [],
             'customQuestions' => $program->custom_questions ?? [],
+            'renewal_options_enabled' => $this->programSupportsRenewalOptions($program->id),
             'created_at' => $program->created_at?->toIso8601String(),
             'updated_at' => $program->updated_at?->toIso8601String(),
             'is_archived' => (bool) ($program->is_archived ?? false),
             'archived_at' => $program->archived_at?->toIso8601String(),
         ];
+    }
+
+    /**
+     * @return list<array{en: string, tl: string}>
+     */
+    protected function resolveQuickGuidelinesForProgram(ScheduleProgram $program): array
+    {
+        if (! $program->relationLoaded('quickGuidelineSteps')) {
+            $program->load('quickGuidelineSteps');
+        }
+
+        $steps = $program->quickGuidelineSteps
+            ->map(fn (ScholarshipQuickGuidelineStep $step) => [
+                'en' => (string) $step->content_en,
+                'tl' => (string) $step->content_tl,
+            ])
+            ->values()
+            ->all();
+
+        if ($steps !== []) {
+            return $steps;
+        }
+
+        $legacy = is_array($program->scholarship_details)
+            ? ($program->scholarship_details['quick_guidelines'] ?? null)
+            : null;
+
+        return self::sanitizeQuickGuidelines($legacy);
+    }
+
+    /**
+     * @param  list<array{en: string, tl: string}>  $steps
+     */
+    protected function syncQuickGuidelineSteps(ScheduleProgram $program, array $steps): void
+    {
+        if (! Schema::hasTable('scholarship_quick_guideline_steps')) {
+            return;
+        }
+
+        ScholarshipQuickGuidelineStep::query()
+            ->where('schedule_program_id', $program->id)
+            ->delete();
+
+        foreach ($steps as $index => $step) {
+            ScholarshipQuickGuidelineStep::create([
+                'schedule_program_id' => $program->id,
+                'step_order' => $index + 1,
+                'content_en' => (string) ($step['en'] ?? ''),
+                'content_tl' => (string) ($step['tl'] ?? ''),
+            ]);
+        }
     }
 }

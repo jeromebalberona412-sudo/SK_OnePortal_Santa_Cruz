@@ -1502,3 +1502,250 @@ select.schol-input {
         flex: 1 1 auto;
     }
 }
+
+.schol-table-card .schol-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.schol-table-card {
+    overflow: hidden;
+}
+
+/* ── Kabataan application view (SK Officials review modal) ── */
+.sch-app-view-wrap {
+    padding: 20px 24px 24px;
+    background: #f0f1f5;
+}
+
+.sch-app-view-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.sch-app-view-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.sch-app-view-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #e8eef9;
+    color: #213F99;
+    font-size: 17px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.sch-app-view-header-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.sch-app-view-header-meta {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+.sch-app-view {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.sch-app-view-section {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.sch-app-view-section-muted {
+    background: #fafafa;
+}
+
+.sch-app-view-section-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: linear-gradient(90deg, #213F99 0%, #2f55c7 100%);
+    color: #fff;
+}
+
+.sch-app-view-step {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.sch-app-view-section-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.sch-app-view-section-body {
+    padding: 18px;
+}
+
+.sch-app-view-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 14px;
+}
+
+.sch-app-view-note {
+    margin: 12px 0 0;
+    font-size: 12px;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.sch-app-view-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.sch-app-view-grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.sch-app-view-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.sch-app-view-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.sch-app-view-value {
+    font-size: 14px;
+    color: #111827;
+    line-height: 1.5;
+    padding: 10px 12px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    word-break: break-word;
+}
+
+.sch-app-view-subsection {
+    margin-bottom: 16px;
+}
+
+.sch-app-view-subsection:last-child {
+    margin-bottom: 0;
+}
+
+.sch-app-view-subtitle {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #213F99;
+}
+
+.sch-app-view-empty {
+    margin: 0;
+    font-size: 14px;
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.sch-app-view-docs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sch-app-view-doc {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 14px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.sch-app-view-doc-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: #fee2e2;
+    color: #b91c1c;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.sch-app-view-doc-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    word-break: break-word;
+}
+
+.sch-app-view-doc-meta {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+.sch-app-view-doc-links {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.sch-app-view-doc-links a {
+    font-size: 13px;
+    font-weight: 600;
+    color: #213F99;
+    text-decoration: none;
+}
+
+@media (max-width: 900px) {
+    .sch-app-view-grid,
+    .sch-app-view-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}

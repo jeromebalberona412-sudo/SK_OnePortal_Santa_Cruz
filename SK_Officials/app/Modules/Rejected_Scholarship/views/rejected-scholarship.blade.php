@@ -10,14 +10,15 @@
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
+        'app/Modules/layout/css/table-row-actions-menu.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholarship_application_form.css',
         'app/Modules/Rejected_Scholarship/assets/css/rejected-scholarship.css'
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/sk-archive-terms.css') }}">
 </head>
-<body>
+<body class="has-table-page-footer">
 
 @include('loading')
 @include('layout::header')
@@ -41,8 +42,8 @@
         <!-- Stats Cards -->
         <div class="module-stats-grid" id="rsStatsRow"></div>
 
-        <!-- Restore Success Banner -->
-        <div class="restore-success-banner" id="rsRestoreBanner" style="display:none;">
+        <!-- Restore Success Banner (legacy — toast used instead) -->
+        <div class="restore-success-banner" id="rsRestoreBanner" style="display:none;" aria-hidden="true">
             <span class="restore-banner-icon">✓</span>
             <span class="restore-banner-text" id="rsRestoreBannerText"></span>
         </div>
@@ -77,16 +78,7 @@
                         <tbody id="rejectedScholTableBody"></tbody>
                     </table>
                 </div>
-                <div class="pagination-container">
-                    <div class="pagination-info">
-                        <span id="rejectedScholPaginationInfo">No records found</span>
-                    </div>
-                    <div class="pagination-controls">
-                        <button type="button" id="rejectedScholPrevBtn" class="pagination-btn" disabled>Previous</button>
-                        <div class="pagination-numbers" id="rejectedScholPageNumbers"></div>
-                        <button type="button" id="rejectedScholNextBtn" class="pagination-btn" disabled>Next</button>
-                    </div>
-                </div>
+                @include('Program_Management::scholarship.partials.table-pagination', ['prefix' => 'scholRej'])
             </div>
         </section>
 
@@ -125,12 +117,20 @@
 </div>
 
 <!-- Toast -->
-<div class="dk-toast" id="rsToast"></div>
+<div class="scholarship-toast" id="scholarshipToast" style="display:none;" role="status" aria-live="polite">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    <span id="scholarshipToastMsg"></span>
+</div>
 
 <script src="{{ url('/shared/js/sk-archive-terms.js') }}"></script>
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
+    'app/Modules/layout/js/table-row-actions-menu.js',
+    'app/Modules/layout/js/table-page-footer.js',
+    'app/Modules/Program_Management/assets/css/scholarship/scholarship-toast.css',
+    'app/Modules/Program_Management/assets/js/scholarship/scholarship-toast.js',
+    'app/Modules/Program_Management/assets/js/scholarship/scholarship-system-fields.js',
     'app/Modules/Program_Management/assets/js/scholarship/scholarship-view-shared.js',
     'app/Modules/Rejected_Scholarship/assets/js/rejected-scholarship.js'
 ])

@@ -95,6 +95,39 @@
         const groups = Array.isArray(details.requirement_groups) ? details.requirement_groups : [];
         let html = '';
 
+        const schoolYear = details.school_year || '';
+        const semester = details.semester || '';
+        const targetLevels = formatScholarshipTargetLevels(details);
+        if (schoolYear || semester || targetLevels) {
+            html += `
+                <div class="program-description-section sch-program-meta-section">
+                    <h4 class="section-heading">Scholarship Details</h4>
+                    <div class="program-details-grid sch-program-info-grid">
+                        ${schoolYear ? `
+                        <div class="detail-card">
+                            <div class="detail-content">
+                                <span class="detail-label">School Year</span>
+                                <span class="detail-value">${escapeHtml(schoolYear)}</span>
+                            </div>
+                        </div>` : ''}
+                        ${semester ? `
+                        <div class="detail-card">
+                            <div class="detail-content">
+                                <span class="detail-label">Semester</span>
+                                <span class="detail-value">${escapeHtml(semester)}</span>
+                            </div>
+                        </div>` : ''}
+                        ${targetLevels ? `
+                        <div class="detail-card">
+                            <div class="detail-content">
+                                <span class="detail-label">Scholarship Level</span>
+                                <span class="detail-value">${escapeHtml(targetLevels)}</span>
+                            </div>
+                        </div>` : ''}
+                    </div>
+                </div>`;
+        }
+
         if (schedule?.announcement) {
             html += renderAnnouncementCard(
                 'Announcement',
@@ -186,11 +219,26 @@
         return html;
     }
 
+    function resolveScheduleCommitteeHead(schedule) {
+        return schedule?.scholarship_details?.committee_head || '';
+    }
+
     function renderScheduleInfoSections(schedule) {
         const max = schedule.participation_quantity;
         const remaining = schedule.available_slots;
         const remainingNum = remaining != null ? Number(remaining) : null;
         const remainingClass = remainingNum === 0 ? 'sch-program-slots-full' : 'sch-program-slots-remaining';
+        const committeeHead = resolveScheduleCommitteeHead(schedule);
+        const scholarship = isScholarshipSchedule(schedule);
+        const details = schedule?.scholarship_details || {};
+        const applicationStart = details.submission_period?.start || schedule.start_date;
+        const applicationEnd = details.submission_period?.end || schedule.end_date;
+        const applicationStartDisplay = details.submission_period?.start_display
+            || schedule.start_date_display
+            || formatIsoDateDisplay(applicationStart);
+        const applicationEndDisplay = details.submission_period?.end_display
+            || schedule.end_date_display
+            || formatIsoDateDisplay(applicationEnd);
 
         return `
             <div class="program-description-section sch-program-info-section">
@@ -202,6 +250,20 @@
                             <span class="detail-value">${escapeHtml(schedule.program_name || '—')}</span>
                         </div>
                     </div>
+                    ${scholarship && schedule.committee ? `
+                    <div class="detail-card">
+                        <div class="detail-content">
+                            <span class="detail-label">Committee</span>
+                            <span class="detail-value">${escapeHtml(schedule.committee)}</span>
+                        </div>
+                    </div>` : ''}
+                    ${scholarship && committeeHead ? `
+                    <div class="detail-card">
+                        <div class="detail-content">
+                            <span class="detail-label">Committee Head</span>
+                            <span class="detail-value">${escapeHtml(committeeHead)}</span>
+                        </div>
+                    </div>` : ''}
                     <div class="detail-card">
                         <div class="detail-content">
                             <span class="detail-label">Max Participation Limit</span>
@@ -217,18 +279,18 @@
                 </div>
             </div>
             <div class="program-description-section sch-program-window-section">
-                <h4 class="section-heading">Application Window Schedule</h4>
+                <h4 class="section-heading">${scholarship ? 'Submission Period' : 'Application Window Schedule'}</h4>
                 <div class="program-details-grid">
                     <div class="detail-card">
                         <div class="detail-content">
                             <span class="detail-label">Start Date</span>
-                            <span class="detail-value">${escapeHtml(schedule.start_date_display || formatIsoDateDisplay(schedule.start_date) || '—')}</span>
+                            <span class="detail-value">${escapeHtml(applicationStartDisplay || '—')}</span>
                         </div>
                     </div>
                     <div class="detail-card">
                         <div class="detail-content">
                             <span class="detail-label">End Date</span>
-                            <span class="detail-value">${escapeHtml(schedule.end_date_display || formatIsoDateDisplay(schedule.end_date) || '—')}</span>
+                            <span class="detail-value">${escapeHtml(applicationEndDisplay || '—')}</span>
                         </div>
                     </div>
                 </div>
@@ -344,10 +406,39 @@
         });
     }
 
+    function formatScholarshipTargetLevels(details) {
+        const levels = Array.isArray(details?.scholarship_target_levels)
+            ? details.scholarship_target_levels
+            : (details?.scholarship_target_level ? [details.scholarship_target_level] : []);
+        const labels = [];
+        if (levels.includes('senior_high')) labels.push('Senior High');
+        if (levels.includes('college')) labels.push('College');
+        return labels.join(' & ');
+    }
+
+    function resolveScheduleQuickGuidelines(schedule) {
+        const fromRoot = Array.isArray(schedule?.quick_guidelines) ? schedule.quick_guidelines : [];
+        const fromDetails = Array.isArray(schedule?.scholarship_details?.quick_guidelines)
+            ? schedule.scholarship_details.quick_guidelines
+            : [];
+        return fromRoot.length ? fromRoot : fromDetails;
+    }
+
     function schedulesForAbyipProgram(program) {
-        return (programsData?.schedule_programs || []).filter(
-            (schedule) => schedule.program_type === program.title
-        );
+        const schedules = programsData?.schedule_programs || [];
+        const letter = String(program?.letter || '').toUpperCase();
+
+        if (program?.type === 'education' || letter === 'A') {
+            return schedules.filter((schedule) => String(schedule.program_letter || '').toUpperCase() === 'A'
+                || schedule.program_type === program.title);
+        }
+
+        if (program?.type === 'sports' || letter === 'I') {
+            return schedules.filter((schedule) => String(schedule.program_letter || '').toUpperCase() === 'I'
+                || schedule.program_type === program.title);
+        }
+
+        return schedules.filter((schedule) => schedule.program_type === program.title);
     }
 
     function navigateToProgram(program) {
@@ -419,16 +510,13 @@
         const container = document.getElementById('educationProgramsContainer');
         if (!container) return;
 
-        const quickGuidelinesBtn = document.querySelector('#educationModal [data-open-sch-quick-guidelines]');
         const schedules = schedulesForAbyipProgram(program);
 
         if (!schedules.length) {
             container.innerHTML = renderProgramsEmptyState(EMPTY_SCHEDULE_MESSAGE);
-            if (quickGuidelinesBtn) quickGuidelinesBtn.hidden = true;
             return;
         }
 
-        if (quickGuidelinesBtn) quickGuidelinesBtn.hidden = false;
         container.innerHTML = schedules
             .map((schedule) => renderScheduleCard(program, schedule, EDUCATION_HEADER_GRADIENT, true))
             .join('');
@@ -891,6 +979,7 @@
         const canApply = schedule.can_apply !== false;
         const openAndEligible = !applied && schedule.status === 'open' && canApply;
         const scholarship = isScholarshipSchedule(schedule);
+        const quickGuidelines = scholarship ? resolveScheduleQuickGuidelines(schedule) : [];
         const categoryTag = hideEmoji
             ? escapeHtml(abyipProgram.short_label)
             : `${escapeHtml(abyipProgram.emoji)} ${escapeHtml(abyipProgram.short_label)}`;
@@ -925,6 +1014,10 @@
                 </div>
                 ${renderScheduleInfoSections(schedule)}
                 <div class="program-action">
+                    ${scholarship && quickGuidelines.length ? `
+                    <button type="button" class="sch-quick-guidelines-btn" data-open-sch-quick-guidelines data-schedule-qg="${schedule.id}" style="margin-bottom:10px;">
+                        Quick Guidelines
+                    </button>` : ''}
                     ${actionButton}
                 </div>
             </div>
@@ -959,6 +1052,19 @@
                     button.getAttribute('data-apply-schedule'),
                     button.getAttribute('data-program-letter')
                 );
+            });
+        });
+
+        container.querySelectorAll('[data-schedule-qg]').forEach((button) => {
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const scheduleId = button.getAttribute('data-schedule-qg');
+                const schedule = (programsData?.schedule_programs || []).find((item) => String(item.id) === String(scheduleId));
+                const steps = resolveScheduleQuickGuidelines(schedule);
+                if (window.ScholarshipQuickGuidelines && steps.length) {
+                    window.ScholarshipQuickGuidelines.open(steps);
+                }
             });
         });
 

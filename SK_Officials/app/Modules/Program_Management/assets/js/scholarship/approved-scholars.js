@@ -19,12 +19,10 @@ function slFormatFullName(record) {
 }
 
 function slNormalizePaymentStatus(scholar) {
-    if (scholar.payment_status && SL_PAYMENT_STATUSES.includes(scholar.payment_status)) {
-        return scholar.payment_status;
-    }
-    if (scholar.status === 'Paid') return 'Claimed';
-    if (scholar.status === 'Pending Payout') return 'Unclaimed';
-    if (scholar.status === 'Cancelled') return 'Unclaimed';
+    const raw = String(scholar?.payment_status || '').trim();
+    if (raw === 'Paid' || raw === 'Claimed') return 'Claimed';
+    if (raw === 'Unpaid' || raw === 'Unclaimed') return 'Unclaimed';
+    if (raw && SL_PAYMENT_STATUSES.includes(raw)) return raw;
     return 'Unclaimed';
 }
 
@@ -106,10 +104,19 @@ function slToggleModalMaximize(overlay, box, maxBtn, e) {
 const PROGRAM_LETTER = 'A';
 let SL_SCHOLARS = [];
 
+function slShowToast(message) {
+    if (typeof window.showScholarshipToast === 'function') {
+        window.showScholarshipToast(message);
+    }
+}
+
 let currentPage = 1;
-let perPage = 10;
+let recordsPerPage = 10;
 let activePaymentFilter = 'all';
 let filteredScholars = [];
+let tablePagination = null;
+let revokeScholarId = null;
+let editScholarId = null;
 
 function slCsrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
@@ -130,6 +137,14 @@ async function slApiFetch(url, options = {}) {
     return data;
 }
 
+function slDeriveScholarshipYear(app) {
+    const dateStr = app.reviewed_at || app.created_at;
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (Number.isNaN(d.getTime())) return '';
+    return String(d.getFullYear());
+}
+
 function mapApprovedScholar(app) {
     const approvedAt = app.reviewed_at
         ? new Date(app.reviewed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
@@ -147,7 +162,8 @@ function mapApprovedScholar(app) {
         program_strand: app.course,
         purpose: app.purpose || '-',
         approved_at: approvedAt,
-        payment_status: app.payment_status || 'Unclaimed',
+        scholarship_year: slDeriveScholarshipYear(app),
+        payment_status: slNormalizePaymentStatus({ payment_status: app.payment_status }),
         sex: app.sex,
         age: app.age,
         barangay: app.barangay,
@@ -155,14 +171,10 @@ function mapApprovedScholar(app) {
 }
 
 async function loadApprovedScholars() {
-    const data = await slApiFetch(`/api/program-applications?letter=${PROGRAM_LETTER}`);
-    SL_SCHOLARS = (data.data || [])
-        .filter((app) => app.status === 'approved')
-        .map(mapApprovedScholar);
+    const data = await slApiFetch(`/api/program-applications?letter=${PROGRAM_LETTER}&status=approved`);
+    SL_SCHOLARS = (data.data || []).map(mapApprovedScholar);
     slEnsurePaymentStatuses();
-    filteredScholars = [...SL_SCHOLARS];
-    updateSummaryCards();
-    renderScholarTable();
+    applyFilters();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -170,21 +182,37 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeModal();
     initializeFilters();
     initializePaymentFilterTabs();
-    initializePagination();
     initializeEditModal();
+    initializeRevokeModal();
+    bindApprovedTableActions();
+
+    if (typeof window.bindTablePageFooter === 'function') {
+        tablePagination = window.bindTablePageFooter({
+            prefix: 'scholAppr',
+            getTotalRecords: () => filteredScholars.length,
+            getCurrentPage: () => currentPage,
+            setCurrentPage: (page) => { currentPage = page; },
+            getRecordsPerPage: () => recordsPerPage,
+            setRecordsPerPage: (value) => { recordsPerPage = value; },
+            onPageChange: () => renderScholarTable(),
+        });
+    }
 
     (async () => {
         try {
-            if (typeof window.showLoading === 'function') window.showLoading();
             await loadApprovedScholars();
         } catch (error) {
             const tbody = document.getElementById('slTableBody');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="sl-empty">Unable to load approved scholars.</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="sl-empty">Unable to load approved scholars.</td></tr>';
             alert(error.message || 'Failed to load approved scholars.');
-        } finally {
-            if (typeof window.hideLoading === 'function') window.hideLoading();
         }
     })();
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            loadApprovedScholars().catch(() => {});
+        }
+    });
 });
 
 function escapeSl(str) {
@@ -201,23 +229,44 @@ function slPaymentBadgeClass(status) {
     return 'sl-badge-default';
 }
 
+function slRenderActionMenuCell(scholar) {
+    return `
+        <div class="row-actions-menu">
+            <button type="button" class="row-actions-trigger" aria-label="Actions" aria-haspopup="true" aria-expanded="false">${window.ROW_ACTIONS_ELLIPSIS || '⋯'}</button>
+            <div class="row-actions-dropdown" role="menu">
+                <button type="button" class="row-actions-item row-actions-item-view" data-action="view" data-id="${scholar.id}" role="menuitem">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <span>View</span>
+                </button>
+                <button type="button" class="row-actions-item row-actions-item-edit" data-action="edit" data-id="${scholar.id}" role="menuitem">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    <span>Edit</span>
+                </button>
+                <button type="button" class="row-actions-item row-actions-item-danger" data-action="revoke" data-id="${scholar.id}" role="menuitem">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    <span>Revoke</span>
+                </button>
+            </div>
+        </div>`;
+}
+
 function renderScholarTable() {
     const tbody = document.getElementById('slTableBody');
     if (!tbody) return;
 
-    const start = (currentPage - 1) * perPage;
-    const end = start + perPage;
-    const paginatedScholars = filteredScholars.slice(start, end);
+    const pageRows = typeof window.paginateSlice === 'function'
+        ? window.paginateSlice(filteredScholars, currentPage, recordsPerPage)
+        : filteredScholars;
 
-    if (paginatedScholars.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="sl-empty">No scholars found.</td></tr>`;
+    if (pageRows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="sl-empty">No scholars found.</td></tr>`;
+        if (tablePagination) tablePagination.updateFooter();
         return;
     }
 
-    tbody.innerHTML = paginatedScholars.map((r, i) => {
+    tbody.innerHTML = pageRows.map((r) => {
         const fullName = slFormatFullName(r);
         const displayProgram = r.program_strand || '—';
-        const actualIndex = start + i;
         const paymentStatus = slNormalizePaymentStatus(r);
         const statusBadge = `<span class="sl-badge ${slPaymentBadgeClass(paymentStatus)}">${escapeSl(paymentStatus.toUpperCase())}</span>`;
 
@@ -227,107 +276,51 @@ function renderScholarTable() {
             <td class="sl-td-center">${escapeSl(r.school_name || '—')}</td>
             <td class="sl-td-center">${escapeSl(r.year_level || '—')}</td>
             <td class="sl-td-center sl-td-program">${escapeSl(displayProgram)}</td>
-            <td class="sl-td-center sl-td-purpose">${escapeSl(r.purpose || '—')}</td>
             <td class="sl-td-center">${escapeSl(r.approved_at || '—')}</td>
             <td class="sl-td-center">${statusBadge}</td>
-            <td class="sl-td-center sl-actions">
-                <div class="prog-tbl-actions">
-                    <button type="button" class="prog-btn prog-btn-view" data-scholar-idx="${actualIndex}">View</button>
-                    <button type="button" class="prog-btn prog-btn-edit" data-scholar-edit="${actualIndex}">Edit</button>
-                    <button type="button" class="prog-btn prog-btn-revoke" data-scholar-revoke="${actualIndex}" style="background-color:#ef4444;color:#fff;border:none;">Revoke</button>
-                </div>
-            </td>
+            <td class="sl-td-center sl-actions col-actions">${slRenderActionMenuCell(r)}</td>
         </tr>`;
     }).join('');
 
-    tbody.querySelectorAll('button[data-scholar-idx]').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const idx = parseInt(this.getAttribute('data-scholar-idx'), 10);
-            if (filteredScholars[idx]) openScholarModal(filteredScholars[idx]);
-        });
+    if (tablePagination) tablePagination.updateFooter();
+}
+
+function bindApprovedTableActions() {
+    const tbody = document.getElementById('slTableBody');
+    if (!tbody || tbody.dataset.slActionsBound === '1') return;
+    tbody.dataset.slActionsBound = '1';
+
+    if (typeof window.bindRowActionsTable === 'function') {
+        window.bindRowActionsTable(tbody);
+    }
+
+    tbody.addEventListener('click', async (event) => {
+        const btn = event.target.closest('.row-actions-item[data-action]');
+        if (!btn) return;
+
+        const action = btn.getAttribute('data-action');
+        const id = parseInt(btn.getAttribute('data-id'), 10);
+        const scholar = SL_SCHOLARS.find((item) => item.id === id);
+        if (!scholar) return;
+
+        if (typeof window.closeAllRowActionMenus === 'function') {
+            window.closeAllRowActionMenus();
+        }
+
+        if (action === 'view') {
+            await openScholarModal(scholar);
+            return;
+        }
+
+        if (action === 'edit') {
+            openEditModal(scholar);
+            return;
+        }
+
+        if (action === 'revoke') {
+            openRevokeModal(scholar);
+        }
     });
-
-    tbody.querySelectorAll('[data-scholar-edit]').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const idx = parseInt(this.getAttribute('data-scholar-edit'), 10);
-            const s = filteredScholars[idx];
-            if (s) openEditModal(idx, s);
-        });
-    });
-
-    tbody.querySelectorAll('[data-scholar-revoke]').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const idx = parseInt(this.getAttribute('data-scholar-revoke'), 10);
-            const s = filteredScholars[idx];
-            if (s) openRevokeModal(idx, s);
-        });
-    });
-
-    tbody.querySelectorAll('[data-scholar-delete]').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const idx = parseInt(this.getAttribute('data-scholar-delete'), 10);
-            if (!confirm('Remove this scholar from the list?')) return;
-            const scholarToDelete = filteredScholars[idx];
-            const originalIndex = SL_SCHOLARS.indexOf(scholarToDelete);
-            if (originalIndex > -1) SL_SCHOLARS.splice(originalIndex, 1);
-            applyFilters();
-        });
-    });
-
-    // Revoke Approval Modal handlers
-    const revokeModal = document.getElementById('slRevokeModal');
-    const revokeClose = document.getElementById('slRevokeClose');
-    const revokeCancel = document.getElementById('btnCancelRevoke');
-    const revokeConfirm = document.getElementById('btnConfirmRevoke');
-    const revokeMaximize = document.getElementById('slRevokeMaximize');
-    const revokeBox = document.getElementById('slRevokeBox');
-    const revokeOtherRadio = document.getElementById('slRevokeOtherRadio');
-    const revokeReasonField = document.getElementById('slRevokeReasonField');
-    const revokeReasonInput = document.getElementById('revokeReason');
-    const revokeReasonCount = document.getElementById('revokeReasonCount');
-
-    const closeRevoke = () => {
-        revokeModal.style.display = 'none';
-        slResetModalMaximize(revokeModal, revokeBox, revokeMaximize);
-    };
-
-    if (revokeClose) revokeClose.addEventListener('click', closeRevoke);
-    if (revokeCancel) revokeCancel.addEventListener('click', closeRevoke);
-    if (revokeModal) {
-        revokeModal.addEventListener('click', (e) => {
-            if (e.target === revokeModal) closeRevoke();
-        });
-    }
-
-    if (revokeMaximize && revokeBox) {
-        revokeMaximize.addEventListener('click', (e) => {
-            slToggleModalMaximize(revokeModal, revokeBox, revokeMaximize, e);
-        });
-    }
-
-    // Other radio button handler
-    if (revokeOtherRadio && revokeReasonField) {
-        revokeOtherRadio.addEventListener('change', function () {
-            if (this.checked) {
-                revokeReasonField.style.display = 'block';
-            } else {
-                revokeReasonField.style.display = 'none';
-                if (revokeReasonInput) revokeReasonInput.value = '';
-                if (revokeReasonCount) revokeReasonCount.textContent = '0';
-            }
-        });
-    }
-
-    // Character counter for revoke reason
-    if (revokeReasonInput && revokeReasonCount) {
-        revokeReasonInput.addEventListener('input', function () {
-            revokeReasonCount.textContent = this.value.length;
-        });
-    }
-
-    if (revokeConfirm) {
-        revokeConfirm.addEventListener('click', confirmRevokeApproval);
-    }
 }
 
 function initializeExportButton() {
@@ -336,36 +329,52 @@ function initializeExportButton() {
     exportBtn.addEventListener('click', () => exportToCsv(filteredScholars));
 }
 
-function openRevokeModal(idx, scholar) {
+function openRevokeModal(scholar) {
     const revokeModal = document.getElementById('slRevokeModal');
     const revokeBox = document.getElementById('slRevokeBox');
     const revokeMaximize = document.getElementById('slRevokeMaximize');
-    const revokeSummary = document.getElementById('slRevokeSummary');
-    const revokeIndexInput = document.getElementById('revokeScholarIndex');
     const revokeReasonInput = document.getElementById('revokeReason');
-    const revokeReasonCount = document.getElementById('revokeReasonCount');
     const revokeReasonField = document.getElementById('slRevokeReasonField');
+    const revokeConfirmText = document.getElementById('slRevokeConfirmText');
+    const revokeConfirmError = document.getElementById('slRevokeConfirmError');
+    const revokeConfirmBtn = document.getElementById('btnConfirmRevoke');
 
-    if (!revokeModal) return;
+    if (!revokeModal || !scholar) return;
 
+    revokeScholarId = scholar.id;
     slResetModalMaximize(revokeModal, revokeBox, revokeMaximize);
-    if (revokeSummary) revokeSummary.innerHTML = slRenderScholarSummaryHtml(scholar);
-    if (revokeIndexInput) revokeIndexInput.value = idx;
     if (revokeReasonInput) revokeReasonInput.value = '';
-    if (revokeReasonCount) revokeReasonCount.textContent = '0';
     if (revokeReasonField) revokeReasonField.style.display = 'none';
+    if (revokeConfirmText) revokeConfirmText.value = '';
+    if (revokeConfirmError) {
+        revokeConfirmError.style.display = 'none';
+        revokeConfirmError.textContent = '';
+    }
 
-    // Reset radio buttons to default (Mistakenly Approved)
-    const radioButtons = document.querySelectorAll('input[name="revokeReason"]');
-    radioButtons.forEach(rb => {
-        if (rb.value === 'Mistakenly Approved') {
-            rb.checked = true;
-        } else {
-            rb.checked = false;
-        }
+    document.querySelectorAll('input[name="revokeReason"]').forEach((rb) => {
+        rb.checked = rb.value === 'Mistakenly Approved';
     });
 
+    slResetRevokeConfirmButton();
     revokeModal.style.display = 'flex';
+}
+
+function slResetRevokeConfirmButton() {
+    const revokeConfirmBtn = document.getElementById('btnConfirmRevoke');
+    if (!revokeConfirmBtn) return;
+    revokeConfirmBtn.disabled = true;
+    revokeConfirmBtn.classList.remove('is-enabled');
+    revokeConfirmBtn.classList.add('is-disabled');
+}
+
+function slSyncRevokeConfirmButton() {
+    const revokeConfirmBtn = document.getElementById('btnConfirmRevoke');
+    const revokeConfirmText = document.getElementById('slRevokeConfirmText');
+    if (!revokeConfirmBtn) return;
+    const matched = (revokeConfirmText?.value?.trim() || '') === 'Confirm';
+    revokeConfirmBtn.disabled = !matched;
+    revokeConfirmBtn.classList.toggle('is-enabled', matched);
+    revokeConfirmBtn.classList.toggle('is-disabled', !matched);
 }
 
 function closeRevokeModal() {
@@ -377,15 +386,24 @@ function closeRevokeModal() {
 }
 
 async function confirmRevokeApproval() {
-    const revokeIndexInput = document.getElementById('revokeScholarIndex');
     const revokeReasonInput = document.getElementById('revokeReason');
-    const revokeOtherRadio = document.getElementById('slRevokeOtherRadio');
+    const revokeConfirmText = document.getElementById('slRevokeConfirmText');
+    const revokeConfirmError = document.getElementById('slRevokeConfirmError');
+    const revokeConfirmBtn = document.getElementById('btnConfirmRevoke');
 
-    if (!revokeIndexInput) return;
+    if (!revokeScholarId) return;
 
-    const idx = parseInt(revokeIndexInput.value, 10);
+    if ((revokeConfirmText?.value?.trim() || '') !== 'Confirm') {
+        if (revokeConfirmError) {
+            revokeConfirmError.textContent = 'Please type Confirm to revoke this approval.';
+            revokeConfirmError.style.display = 'block';
+        } else {
+            alert('Please type Confirm to revoke this approval.');
+        }
+        return;
+    }
+
     let reason = '';
-
     const selectedRadio = document.querySelector('input[name="revokeReason"]:checked');
     if (selectedRadio) {
         if (selectedRadio.value === 'other') {
@@ -404,37 +422,44 @@ async function confirmRevokeApproval() {
         return;
     }
 
-    const scholarToRevoke = filteredScholars[idx];
-    if (!scholarToRevoke?.id) return;
-
+    const defaultHtml = revokeConfirmBtn ? revokeConfirmBtn.innerHTML : 'Revoke';
     try {
+        if (revokeConfirmBtn) {
+            revokeConfirmBtn.disabled = true;
+            revokeConfirmBtn.textContent = 'Revoking…';
+        }
         if (typeof window.showLoading === 'function') window.showLoading();
-        await slApiFetch(`/api/program-applications/${scholarToRevoke.id}/status?letter=${PROGRAM_LETTER}`, {
+
+        await slApiFetch(`/api/program-applications/${revokeScholarId}/status?letter=${PROGRAM_LETTER}`, {
             method: 'PUT',
             body: JSON.stringify({
-                status: 'rejected',
-                rejection_reasons: [reason],
+                status: 'pending',
                 rejection_reason: reason,
+                rejection_reasons: [reason],
                 letter: PROGRAM_LETTER,
             }),
         });
         closeRevokeModal();
+        revokeScholarId = null;
         await loadApprovedScholars();
-        applyFilters();
-        alert('Scholar approval has been revoked. The record has been moved to Rejected Scholars.');
+        slShowToast('Scholar approval revoked. The application has been returned to Scholarship Applications.');
     } catch (error) {
         alert(error.message || 'Failed to revoke approval.');
     } finally {
+        if (revokeConfirmBtn) {
+            revokeConfirmBtn.innerHTML = defaultHtml;
+            slSyncRevokeConfirmButton();
+        }
         if (typeof window.hideLoading === 'function') window.hideLoading();
     }
 }
 
 function exportToCsv(scholars) {
     if (scholars.length === 0) { alert('No scholars to export.'); return; }
-    const headers = ['Full Name', 'School', 'Year/Level', 'Program/Strand', 'Purpose', 'Date Approved', 'Payment Status'];
+    const headers = ['Full Name', 'School', 'Year/Level', 'Program/Strand', 'Date Approved', 'Payment Status'];
     const rows = scholars.map(r => {
         const fullName = slFormatFullName(r);
-        return [fullName, r.school_name || '', r.year_level || '', r.program_strand || '', r.purpose || '', r.approved_at || '', slNormalizePaymentStatus(r)];
+        return [fullName, r.school_name || '', r.year_level || '', r.program_strand || '', r.approved_at || '', slNormalizePaymentStatus(r)];
     });
     let csv = headers.join(',') + '\n';
     rows.forEach(row => { csv += row.map(c => `"${c}"`).join(',') + '\n'; });
@@ -472,113 +497,31 @@ function initializeModal() {
     }
 }
 
-function openScholarModal(r) {
+function openScholarModal(scholar) {
+    return openScholarModalAsync(scholar);
+}
+
+async function openScholarModalAsync(scholar) {
     const modal = document.getElementById('slViewModal');
     const modalBox = document.getElementById('slViewBox');
     const maxBtn = document.getElementById('slViewMaximize');
     const body = document.getElementById('slViewBody');
-    if (!modal || !body) return;
+    if (!modal || !body || !scholar?.id) return;
 
-    slResetModalMaximize(modal, modalBox, maxBtn);
-
-    const purposeText = r.purpose || (Array.isArray(r.purpose_list) ? r.purpose_list.join(', ') : '—');
-    const reqList = [];
-    if (r.cor_certified) reqList.push('COR – CERTIFIED TRUE COPY');
-    if (r.photo_id) reqList.push('PHOTO COPY OF ID (FRONT AND BACK)');
-
-    const SV = window.ScholarshipViewShared;
-    const esc = (s) => (SV ? SV.escapeHtml(s) : String(s ?? ''));
-    const program = SV ? SV.loadScholarshipProgram() : null;
-    const programHtml = SV ? SV.renderProgramInformationSection(program) : '';
-    const formAnswersHtml = SV ? SV.renderFormAnswersSection(r, program) : '';
-    const summaryHtml = slRenderScholarSummaryHtml(r);
-
-    body.innerHTML = `
-        <div style="padding:24px;background:#f0f1f5;">
-            ${summaryHtml}
-
-            <!-- Personal Information -->
-            <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    Personal Information
-                </h4>
-                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
-                    <div>
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Date of Birth</label>
-                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(r.date_of_birth) || 'Not specified'}</div>
-                    </div>
-                    <div>
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Gender</label>
-                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(r.gender) || 'Not specified'}</div>
-                    </div>
-                    <div>
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Age</label>
-                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(r.age) || 'Not specified'}</div>
-                    </div>
-                    <div>
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Contact Number</label>
-                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(r.contact_no) || 'Not specified'}</div>
-                    </div>
-                    <div style="grid-column:1/-1;">
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Address</label>
-                        <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${esc(r.address) || 'Not specified'}</div>
-                    </div>
-                    <div style="grid-column:1/-1;">
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Email Address</label>
-                        <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(r.email) || 'Not specified'}</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Education & Scholarship -->
-            <div style="background:white;border-radius:12px;padding:24px;margin-bottom:20px;border:2px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                <h4 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 20px;display:flex;align-items:center;gap:8px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg>
-                    Education & Scholarship
-                </h4>
-                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
-                    <div style="grid-column:1/-1;">
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">School Name</label>
-                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(r.school_name) || 'Not specified'}</div>
-                    </div>
-                    <div style="grid-column:1/-1;">
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">School Address</label>
-                        <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${esc(r.school_address) || 'Not specified'}</div>
-                    </div>
-                    <div>
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Year Level</label>
-                        <div style="font-size:15px;font-weight:600;color:#111827;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">${esc(r.year_level) || 'Not specified'}</div>
-                    </div>
-                    <div>
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Program / Strand</label>
-                        <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${esc(r.program_strand) || 'Not specified'}</div>
-                    </div>
-                    <div style="grid-column:1/-1;">
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Purpose of Application</label>
-                        <div style="font-size:15px;color:#374151;padding:12px 16px;background:#fff;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);min-height:50px;">${purposeText || 'Not specified'}</div>
-                    </div>
-                    <div style="grid-column:1/-1;">
-                        <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block;">Submitted Requirements</label>
-                        <div style="background:#f9fafb;border-radius:8px;padding:16px;border:2px solid #e5e7eb;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-                            ${reqList.length > 0 ? reqList.map(req => `
-                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                    <span style="font-size:14px;color:#111827;">${req}</span>
-                                </div>
-                            `).join('') : '<span style="font-size:14px;color:#9ca3af;">No requirements submitted</span>'}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            ${programHtml}
-
-            ${formAnswersHtml}
-        </div>
-    `;
-
-    modal.style.display = 'flex';
+    try {
+        const data = await slApiFetch(`/api/program-applications/${scholar.id}?letter=${PROGRAM_LETTER}`);
+        const SV = window.ScholarshipViewShared;
+        const detail = SV?.mapScholarshipApplicationDetail
+            ? SV.mapScholarshipApplicationDetail(data.data || {})
+            : data.data;
+        body.innerHTML = SV?.renderApplicationViewBody
+            ? SV.renderApplicationViewBody(detail)
+            : '';
+        slResetModalMaximize(modal, modalBox, maxBtn);
+        modal.style.display = 'flex';
+    } catch (error) {
+        alert(error.message || 'Failed to load application details.');
+    }
 }
 
 function slDownloadPlaceholderPdf(filename) {
@@ -685,93 +628,76 @@ function applyFilters() {
     currentPage = 1;
     updateSummaryCards();
     renderScholarTable();
-    renderPagination();
 }
 
-function initializePagination() {
-    const firstBtn = document.getElementById('slFirstPage');
-    const prevBtn = document.getElementById('slPrevPage');
-    const nextBtn = document.getElementById('slNextPage');
-    const lastBtn = document.getElementById('slLastPage');
+function initializeRevokeModal() {
+    const revokeModal = document.getElementById('slRevokeModal');
+    const revokeClose = document.getElementById('slRevokeClose');
+    const revokeCancel = document.getElementById('btnCancelRevoke');
+    const revokeConfirm = document.getElementById('btnConfirmRevoke');
+    const revokeMaximize = document.getElementById('slRevokeMaximize');
+    const revokeBox = document.getElementById('slRevokeBox');
+    const revokeOtherRadio = document.getElementById('slRevokeOtherRadio');
+    const revokeReasonField = document.getElementById('slRevokeReasonField');
+    const revokeReasonInput = document.getElementById('revokeReason');
+    const revokeConfirmText = document.getElementById('slRevokeConfirmText');
+    const revokeConfirmError = document.getElementById('slRevokeConfirmError');
 
-    if (firstBtn) firstBtn.addEventListener('click', () => goToPage(1));
-    if (prevBtn) prevBtn.addEventListener('click', () => goToPage(currentPage - 1));
-    if (nextBtn) nextBtn.addEventListener('click', () => goToPage(currentPage + 1));
-    if (lastBtn) lastBtn.addEventListener('click', () => goToPage(getTotalPages()));
+    const closeRevoke = () => {
+        revokeScholarId = null;
+        if (revokeModal) revokeModal.style.display = 'none';
+        slResetModalMaximize(revokeModal, revokeBox, revokeMaximize);
+    };
 
-    renderPagination();
-}
-
-function getTotalPages() {
-    return Math.ceil(filteredScholars.length / perPage) || 1;
-}
-
-function goToPage(page) {
-    const totalPages = getTotalPages();
-    if (page < 1 || page > totalPages) return;
-    currentPage = page;
-    renderScholarTable();
-    renderPagination();
-}
-window.goToPage = goToPage;
-
-function renderPagination() {
-    const totalPages = getTotalPages();
-    const totalRecords = filteredScholars.length;
-    const start = totalRecords === 0 ? 0 : (currentPage - 1) * perPage + 1;
-    const end = Math.min(currentPage * perPage, totalRecords);
-
-    const showingStart = document.getElementById('slShowingStart');
-    const showingEnd = document.getElementById('slShowingEnd');
-    const totalEl = document.getElementById('slTotalRecords');
-    if (showingStart) showingStart.textContent = start;
-    if (showingEnd) showingEnd.textContent = end;
-    if (totalEl) totalEl.textContent = totalRecords;
-
-    const firstBtn = document.getElementById('slFirstPage');
-    const prevBtn = document.getElementById('slPrevPage');
-    const nextBtn = document.getElementById('slNextPage');
-    const lastBtn = document.getElementById('slLastPage');
-    if (firstBtn) firstBtn.disabled = currentPage === 1;
-    if (prevBtn) prevBtn.disabled = currentPage === 1;
-    if (nextBtn) nextBtn.disabled = currentPage === totalPages;
-    if (lastBtn) lastBtn.disabled = currentPage === totalPages;
-
-    const pageNumbers = document.getElementById('slPageNumbers');
-    if (!pageNumbers) return;
-
-    let pages = [];
-    if (totalPages <= 7) {
-        for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-        pages.push(1);
-        if (currentPage > 3) pages.push('...');
-        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-            pages.push(i);
-        }
-        if (currentPage < totalPages - 2) pages.push('...');
-        pages.push(totalPages);
+    if (revokeClose) revokeClose.addEventListener('click', closeRevoke);
+    if (revokeCancel) revokeCancel.addEventListener('click', closeRevoke);
+    if (revokeModal) {
+        revokeModal.addEventListener('click', (e) => {
+            if (e.target === revokeModal) closeRevoke();
+        });
     }
-
-    pageNumbers.innerHTML = pages.map(page => {
-        if (page === '...') return '<span class="sl-page-ellipsis">...</span>';
-        const isActive = page === currentPage ? 'active' : '';
-        return `<button type="button" class="sl-page-num ${isActive}" onclick="goToPage(${page})">${page}</button>`;
-    }).join('');
+    if (revokeMaximize && revokeBox) {
+        revokeMaximize.addEventListener('click', (e) => {
+            slToggleModalMaximize(revokeModal, revokeBox, revokeMaximize, e);
+        });
+    }
+    if (revokeOtherRadio && revokeReasonField) {
+        revokeOtherRadio.addEventListener('change', function () {
+            revokeReasonField.style.display = this.checked ? 'block' : 'none';
+            if (!this.checked && revokeReasonInput) revokeReasonInput.value = '';
+        });
+        document.querySelectorAll('input[name="revokeReason"]').forEach((rb) => {
+            if (rb.value !== 'other') {
+                rb.addEventListener('change', () => {
+                    if (revokeReasonField) revokeReasonField.style.display = 'none';
+                    if (revokeReasonInput) revokeReasonInput.value = '';
+                });
+            }
+        });
+    }
+    if (revokeConfirmText) {
+        revokeConfirmText.addEventListener('input', () => {
+            if (revokeConfirmError) {
+                revokeConfirmError.style.display = 'none';
+                revokeConfirmError.textContent = '';
+            }
+            slSyncRevokeConfirmButton();
+        });
+    }
+    if (revokeConfirm) revokeConfirm.addEventListener('click', confirmRevokeApproval);
 }
 
-function openEditModal(index, scholar) {
+function openEditModal(scholar) {
     const modal = document.getElementById('slEditModal');
     const editBox = document.getElementById('slEditBox');
     const editMaxBtn = document.getElementById('slEditMaximize');
-    const editSummary = document.getElementById('slEditSummary');
+    const paymentSelect = document.getElementById('editPaymentStatus');
 
+    if (!modal || !scholar?.id) return;
+
+    editScholarId = scholar.id;
     slResetModalMaximize(modal, editBox, editMaxBtn);
-    if (editSummary) editSummary.innerHTML = slRenderScholarSummaryHtml(scholar);
-
-    document.getElementById('editScholarIndex').value = index;
-    document.getElementById('editPaymentStatus').value = slNormalizePaymentStatus(scholar);
-
+    if (paymentSelect) paymentSelect.value = slNormalizePaymentStatus(scholar);
     modal.style.display = 'flex';
 }
 
@@ -779,34 +705,54 @@ function closeEditModal() {
     const modal = document.getElementById('slEditModal');
     const editBox = document.getElementById('slEditBox');
     const editMaxBtn = document.getElementById('slEditMaximize');
+    editScholarId = null;
     if (modal) modal.style.display = 'none';
     slResetModalMaximize(modal, editBox, editMaxBtn);
 }
 
-function saveEditStatus() {
-    const index = parseInt(document.getElementById('editScholarIndex').value, 10);
-    const paymentStatus = document.getElementById('editPaymentStatus').value;
+async function saveEditStatus() {
+    const paymentStatus = document.getElementById('editPaymentStatus')?.value;
+    const saveBtn = document.getElementById('btnSaveEdit');
+
+    if (!editScholarId) {
+        alert('Scholar not found.');
+        return;
+    }
 
     if (!SL_PAYMENT_STATUSES.includes(paymentStatus)) {
         alert('Please select a valid payment status.');
         return;
     }
 
-    const scholar = filteredScholars[index];
-    if (!scholar) {
-        alert('Scholar not found.');
-        return;
-    }
+    const defaultHtml = saveBtn ? saveBtn.innerHTML : 'Save Changes';
+    try {
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving…';
+        }
+        if (typeof window.showLoading === 'function') window.showLoading();
 
-    const originalIndex = SL_SCHOLARS.indexOf(scholar);
-    if (originalIndex === -1) {
-        alert('Scholar not found in original list.');
-        return;
-    }
+        await slApiFetch(`/api/program-applications/${editScholarId}/payment?letter=${PROGRAM_LETTER}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                payment_status: paymentStatus,
+                letter: PROGRAM_LETTER,
+            }),
+        });
 
-    SL_SCHOLARS[originalIndex].payment_status = paymentStatus;
-    applyFilters();
-    closeEditModal();
+        editScholarId = null;
+        await loadApprovedScholars();
+        closeEditModal();
+        slShowToast('Payment status updated successfully.');
+    } catch (error) {
+        slShowToast(error.message || 'Failed to update payment status.');
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = defaultHtml;
+        }
+        if (typeof window.hideLoading === 'function') window.hideLoading();
+    }
 }
 
 function initializeEditModal() {
@@ -824,7 +770,7 @@ function initializeEditModal() {
 
     if (editClose) editClose.addEventListener('click', closeEdit);
     if (btnCancelEdit) btnCancelEdit.addEventListener('click', closeEdit);
-    if (btnSaveEdit) btnSaveEdit.addEventListener('click', saveEditStatus);
+    if (btnSaveEdit) btnSaveEdit.addEventListener('click', () => { saveEditStatus(); });
     if (editModal) {
         editModal.addEventListener('click', (e) => {
             if (e.target === editModal) closeEdit();

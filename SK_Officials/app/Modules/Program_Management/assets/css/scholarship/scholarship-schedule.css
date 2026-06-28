@@ -78,18 +78,10 @@
     border-radius: 14px;
     border: 1px solid #e5e7eb;
     box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
-    overflow: hidden;
-}
-
-.saf-table-wrap {
-    overflow-x: auto;
-}
-
-.saf-page-wrap .saf-table-wrap {
     overflow: visible;
 }
 
-.saf-forms-table-card:has(.row-actions-menu) {
+.saf-table-wrap {
     overflow: visible;
 }
 
@@ -127,7 +119,7 @@
 }
 
 .saf-forms-table th.col-actions {
-    width: 220px;
+    width: 64px;
 }
 
 .saf-forms-table td {
@@ -522,6 +514,179 @@
     margin-top: 20px;
 }
 
+.schol-target-level-group {
+    margin-top: 20px;
+}
+
+.schol-target-level-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.schol-target-level-group .schol-target-level-row .schol-level-option {
+    margin-bottom: 0;
+    font-size: inherit;
+    font-weight: inherit;
+    color: inherit;
+    text-transform: none;
+    letter-spacing: normal;
+    cursor: pointer;
+}
+
+.schol-level-option {
+    position: relative;
+    cursor: pointer;
+    display: block;
+    min-width: 0;
+}
+
+.schol-level-option input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.schol-level-option span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 2px solid #cbd5e1;
+    border-radius: 10px;
+    background: #fff;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    text-align: center;
+    transition: border-color 0.2s, background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.schol-level-option:hover span {
+    border-color: #93c5fd;
+    background: #f8fafc;
+}
+
+.schol-level-option input:checked + span,
+.schol-level-both-option.is-active span {
+    border-color: #1d4ed8;
+    background: #eff6ff;
+    color: #1d4ed8;
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
+}
+
+.schol-level-option input:focus-visible + span,
+.schol-level-both-option:focus-visible span {
+    outline: 2px solid #1d4ed8;
+    outline-offset: 2px;
+}
+
+.sch-target-level-hint {
+    margin-top: 8px;
+}
+
+.sch-qg-builder {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.sch-qg-empty {
+    margin: 0;
+    padding: 16px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.sch-qg-edit-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 14px 16px;
+    background: #fafafa;
+}
+
+.sch-qg-edit-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.sch-qg-edit-card__title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1d4ed8;
+}
+
+.sch-qg-delete-btn {
+    border: 1px solid #fecaca;
+    background: #fff;
+    color: #dc2626;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.sch-qg-delete-btn:hover {
+    background: #fef2f2;
+}
+
+#schAddQuickGuidelineBtn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.sch-qg-edit-field {
+    margin-bottom: 10px;
+}
+
+.sch-qg-edit-field:last-child {
+    margin-bottom: 0;
+}
+
+.sch-qg-edit-field label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.sch-qg-edit-field textarea {
+    min-height: 88px;
+    max-height: 88px;
+    resize: none;
+    overflow-y: auto;
+}
+
+.sch-qg-char-count {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    color: #94a3b8;
+    text-align: right;
+}
+
+.sch-qg-char-count.is-over {
+    color: #dc2626;
+    font-weight: 600;
+}
+
 .schol-radio-row {
     display: flex;
     flex-wrap: wrap;
@@ -739,5 +904,20 @@
 
 .sports-age-remove-btn:hover {
     color: #b91c1c;
+}
+
+.sch-school-year-hint {
+    margin-top: 6px;
+    margin-bottom: 0;
+}
+
+.schol-radio-disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.sch-application-type-hint {
+    margin-top: 8px;
+    margin-bottom: 0;
 }
 

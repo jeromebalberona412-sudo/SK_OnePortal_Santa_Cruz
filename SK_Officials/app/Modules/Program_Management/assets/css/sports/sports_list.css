@@ -250,7 +250,7 @@ body {
     overflow: visible;
 }
 
-.spl-table-wrapper { overflow-x: auto; overflow-y: visible; }
+.spl-table-wrapper { overflow: visible; }
 
 .spl-table {
     width: 100%;

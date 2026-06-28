@@ -41,6 +41,7 @@ class ProgramApplication extends Model
         'course',
         'gwa',
         'custom_answers',
+        'system_field_answers',
         'required_documents',
         'purpose',
         'remarks',
@@ -58,6 +59,7 @@ class ProgramApplication extends Model
         return [
             'birthdate' => 'date',
             'custom_answers' => 'array',
+            'system_field_answers' => 'array',
             'required_documents' => 'array',
             'rejection_reasons' => 'array',
             'parent_income' => 'decimal:2',

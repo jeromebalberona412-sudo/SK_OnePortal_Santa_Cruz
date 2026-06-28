@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ScheduleProgram extends Model
 {
@@ -73,5 +74,10 @@ class ScheduleProgram extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function quickGuidelineSteps(): HasMany
+    {
+        return $this->hasMany(ScholarshipQuickGuidelineStep::class)->orderBy('step_order');
     }
 }

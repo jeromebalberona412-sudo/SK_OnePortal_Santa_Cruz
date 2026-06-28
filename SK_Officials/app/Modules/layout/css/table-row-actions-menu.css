@@ -6,6 +6,39 @@
     width: 100%;
 }
 
+/* Prevent nested scrollbars that block dropdown menus (requires double tap to open). */
+.saf-table-wrap,
+.schol-table-wrap,
+.sports-table-wrap,
+.spl-table-wrapper,
+.table-wrapper {
+    overflow: visible !important;
+}
+
+.saf-forms-table-card:has(.row-actions-menu),
+.saf-forms-table-card:has(.row-actions-trigger),
+.schol-table-card:has(.row-actions-menu),
+.schol-table-card:has(.row-actions-trigger),
+.sports-table-card:has(.row-actions-menu),
+.sports-table-card:has(.row-actions-trigger) {
+    overflow: visible !important;
+}
+
+.saf-forms-table tbody tr,
+.schol-table tbody tr,
+.sports-table tbody tr,
+.kabataan-table tbody tr,
+.kk-table tbody tr {
+    position: relative;
+}
+
+.saf-forms-table th.col-actions,
+.saf-forms-table td.col-actions {
+    width: 64px !important;
+    min-width: 64px !important;
+    max-width: 64px !important;
+}
+
 .row-actions-trigger {
     display: inline-flex;
     align-items: center;
@@ -64,6 +97,7 @@
     top: auto;
     right: auto;
     left: auto;
+    bottom: auto;
     transform: none;
 }
 
@@ -151,6 +185,28 @@
 }
 
 .row-actions-item-approve:hover svg {
+    color: #ffffff;
+}
+
+/* Restore — green (distinct from yellow Edit) */
+.row-actions-item-restore {
+    background: #16a34a;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35);
+}
+
+.row-actions-item-restore svg {
+    color: #ffffff;
+}
+
+.row-actions-item-restore:hover {
+    background: #15803d;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(34, 197, 94, 0.45);
+}
+
+.row-actions-item-restore:hover svg {
     color: #ffffff;
 }
 

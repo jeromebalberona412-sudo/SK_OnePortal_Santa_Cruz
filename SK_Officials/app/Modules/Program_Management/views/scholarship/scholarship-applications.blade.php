@@ -8,11 +8,14 @@
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
-        'app/Modules/Program_Management/assets/css/scholarship/scholarship_application_form.css'
+        'app/Modules/layout/css/table-row-actions-menu.css',
+        'app/Modules/Program_Management/assets/css/scholarship/scholarship_application_form.css',
+        'app/Modules/Program_Management/assets/css/sports/sports_requests.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
 </head>
-<body>
+<body class="has-table-page-footer">
 @include('loading')
 @include('layout::header')
 @include('layout::sidebar')
@@ -91,8 +94,6 @@
                         <th class="schol-col-name">FULL NAME<div class="schol-col-hint">LN, FN, MN, Suffix</div></th>
                         <th>School</th>
                         <th>Year / Level</th>
-                        <th>Purpose</th>
-                        <th>Requirements</th>
                         <th>Status</th>
                         <th>Date Submitted</th>
                         <th>Time Submitted</th>
@@ -104,6 +105,8 @@
         </div>
     </div>
 
+    @include('Program_Management::scholarship.partials.table-pagination', ['prefix' => 'scholReq'])
+
 </div>
 </main>
 
@@ -113,39 +116,27 @@
 <div class="schol-modal-overlay" id="scholViewModal" style="display:none;">
     <div class="schol-modal-box schol-modal-xl" id="scholViewBox">
         <div class="schol-modal-header">
-            <h3>Application Details — PDF View</h3>
+            <h3>Application Details</h3>
             <div style="display:flex;align-items:center;gap:2px;">
                 <button type="button" class="schol-modal-close" id="scholViewMaximize" title="Maximize" style="font-size:16px;padding:2px 8px;opacity:0.85;">□</button>
                 <button type="button" class="schol-modal-close" id="scholViewClose" title="Close">&times;</button>
             </div>
         </div>
         <div class="schol-modal-body" id="scholViewBody" style="background:#f0f1f5;"></div>
-        <p id="scholReviewScheduleNotice" class="schol-review-schedule-notice" style="display:none;"></p>
-        <!-- Footer: Approve + Reject only, no Close -->
-        <div class="schol-modal-footer">
-            <button type="button" class="schol-btn schol-btn-approve" id="scholApproveBtn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                Approve
-            </button>
-            <button type="button" class="schol-btn schol-btn-reject" id="scholRejectBtn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                Reject
-            </button>
-        </div>
     </div>
 </div>
 
 <!-- ── Rejection Reason Modal ── -->
 <div class="schol-modal-overlay" id="scholRejectReasonModal" style="display:none;">
-    <div class="schol-modal-box schol-modal-md">
-        <div class="schol-modal-header schol-modal-header-danger">
-            <h3>Rejection Reason</h3>
+    <div class="schol-modal-box schol-modal-md sk-type-confirm-modal">
+        <div class="sk-type-confirm-header">
+            <h3>Reject Application</h3>
             <button type="button" class="schol-modal-close" id="scholRejectReasonClose">&times;</button>
         </div>
-        <div class="schol-modal-body">
-            <p style="font-size:14px;color:#374151;line-height:1.6;margin-bottom:16px;">Please select the reason(s) for rejecting this application:</p>
-            
-            <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="sk-type-confirm-body">
+            <p class="sk-type-confirm-message">Please select the reason(s) for rejecting this application:</p>
+
+            <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;">
                     <input type="checkbox" class="reject-reason-checkbox" value="Invalid Documents" style="cursor:pointer;width:16px;height:16px;">
                     <span>Invalid Documents</span>
@@ -161,10 +152,36 @@
                 <textarea id="rejectReasonOtherInput" class="schol-input" placeholder="Please specify the reason (max 500 characters)" maxlength="500" rows="3" style="display:none;margin-top:8px;resize:none;"></textarea>
                 <div style="font-size:11px;color:#6b7280;text-align:right;margin-top:4px;display:none;" id="rejectReasonOtherCount">0/500 characters</div>
             </div>
+
+            <div class="sk-type-confirm-section">
+                <label class="sk-type-confirm-label" for="scholRejectConfirmText">Confirmation Required</label>
+                <input type="text" id="scholRejectConfirmText" class="sk-type-confirm-input" placeholder="Type Confirm to confirm" autocomplete="off" spellcheck="false">
+                <p class="sk-type-confirm-hint sk-type-confirm-hint-error" id="scholRejectConfirmError" style="display:none;"></p>
+            </div>
+        </div>
+        <div class="sk-type-confirm-footer">
+            <button type="button" class="sk-btn-cancel-confirm" id="scholRejectReasonCancel">Cancel</button>
+            <button type="button" class="sk-btn-action-confirm is-disabled" id="scholRejectReasonConfirm" disabled>Reject</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Approve Confirmation Modal ── -->
+<div class="schol-modal-overlay" id="scholApproveConfirmModal" style="display:none;">
+    <div class="schol-modal-box schol-modal-sm">
+        <div class="schol-modal-header">
+            <h3>Approve Application</h3>
+            <button type="button" class="schol-modal-close" id="scholApproveConfirmClose">&times;</button>
+        </div>
+        <div class="schol-modal-body" style="overflow:visible;">
+            <p style="font-size:14px;color:#374151;line-height:1.6;margin:0;">Are you sure you want to approve this application?</p>
         </div>
         <div class="schol-modal-footer">
-            <button type="button" class="schol-btn schol-btn-outline" id="scholRejectReasonCancel">Cancel</button>
-            <button type="button" class="schol-btn schol-btn-danger" id="scholRejectReasonConfirm">Confirm Rejection</button>
+            <button type="button" class="schol-btn schol-btn-outline" id="scholApproveConfirmCancel">Cancel</button>
+            <button type="button" class="schol-btn schol-btn-approve" id="scholApproveConfirmBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Approve
+            </button>
         </div>
     </div>
 </div>
@@ -187,14 +204,19 @@
 </div>
 
 <!-- Toast -->
-<div class="schol-toast" id="scholToast" style="display:none;">
+<div class="scholarship-toast" id="scholarshipToast" style="display:none;" role="status" aria-live="polite">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-    <span id="scholToastMsg"></span>
+    <span id="scholarshipToastMsg"></span>
 </div>
 
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
+    'app/Modules/layout/js/table-row-actions-menu.js',
+    'app/Modules/layout/js/table-page-footer.js',
+    'app/Modules/Program_Management/assets/css/scholarship/scholarship-toast.css',
+    'app/Modules/Program_Management/assets/js/scholarship/scholarship-toast.js',
+    'app/Modules/Program_Management/assets/js/scholarship/scholarship-system-fields.js',
     'app/Modules/Program_Management/assets/js/scholarship/scholarship-view-shared.js',
     'app/Modules/Program_Management/assets/js/scholarship/scholarship-applications.js'
 ])

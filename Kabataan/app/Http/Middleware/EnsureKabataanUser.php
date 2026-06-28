@@ -18,7 +18,11 @@ class EnsureKabataanUser
     {
         $user = $request->user();
 
-        if ($user !== null && ! $this->kabataanAuthService->canAccessPortal($user)) {
+        if ($user === null) {
+            return redirect()->guest(route('login'));
+        }
+
+        if (! $this->kabataanAuthService->canAccessPortal($user)) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

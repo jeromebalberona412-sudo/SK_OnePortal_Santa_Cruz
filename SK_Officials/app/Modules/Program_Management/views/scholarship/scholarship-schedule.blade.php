@@ -9,6 +9,7 @@
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholarship_application_form.css',
+        'app/Modules/layout/css/table-row-actions-menu.css',
         'app/Modules/Program_Management/assets/css/sports/sports_requests.css',
         'app/Modules/GForm_Builder/assets/css/gform-builder.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholarship-schedule.css',
@@ -101,11 +102,11 @@
                 <thead>
                     <tr>
                         <th>Program Name</th>
-                        <th>Type</th>
-                        <th>Committee</th>
+                        <th>School Year</th>
+                        <th>Semester</th>
                         <th>Participants</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
+                        <th>Submission Start</th>
+                        <th>Submission End</th>
                         <th>Status</th>
                         <th class="col-actions">Actions</th>
                     </tr>
@@ -141,10 +142,9 @@
         <div class="schol-modal-body schol-program-builder-body">
             <nav class="sch-program-builder-tabs" id="schProgramBuilderTabs" aria-label="Scholarship program builder">
                 <button type="button" class="sch-program-tab is-active" data-sch-tab="details">Program Details</button>
-                <button type="button" class="sch-program-tab" data-sch-tab="eligibility">Eligibility</button>
                 <button type="button" class="sch-program-tab" data-sch-tab="application-form">Application Form</button>
                 <button type="button" class="sch-program-tab" data-sch-tab="custom-questions">Custom Questions</button>
-                <button type="button" class="sch-program-tab" data-sch-tab="requirements">Requirements</button>
+                <button type="button" class="sch-program-tab" data-sch-tab="quick-guidelines">Quick Guidelines</button>
                 <button type="button" class="sch-program-tab" data-sch-tab="preview">Preview</button>
             </nav>
 
@@ -159,25 +159,9 @@
                                 <input type="text" id="programName" class="schol-input" readonly placeholder="Loading from ABYIP...">
                             </div>
                             <div class="schol-field">
-                                <label for="programType">Program Type <span class="schol-req">*</span></label>
-                                <input type="text" id="programType" class="schol-input schol-input-program-type" readonly>
-                            </div>
-                            <div class="schol-field">
-                                <label for="programCommittee">Committee <span class="schol-req">*</span></label>
-                                <input type="text" id="programCommittee" class="schol-input" readonly>
-                            </div>
-                            <div class="schol-field">
                                 <label for="schoolYear">School Year <span class="schol-req">*</span></label>
-                                <select id="schoolYear" class="schol-input" required>
-                                    <option value="">Select school year</option>
-                                    @php
-                                        $baseYear = (int) date('Y');
-                                        for ($i = 0; $i < 5; $i++) {
-                                            $y = $baseYear + $i;
-                                            echo '<option value="' . $y . '-' . ($y + 1) . '">' . $y . '-' . ($y + 1) . '</option>';
-                                        }
-                                    @endphp
-                                </select>
+                                <input type="text" id="schoolYear" class="schol-input" readonly placeholder="From Programs duration">
+                                <p class="schol-details-hint sch-school-year-hint">Auto-detected from the Equitable Access to Quality Education program duration.</p>
                             </div>
                             <div class="schol-field">
                                 <label for="programSemester">Semester <span class="schol-req">*</span></label>
@@ -188,16 +172,8 @@
                                 </select>
                             </div>
                             <div class="schol-field">
-                                <label for="schedStartDate">Application Start Date <span class="schol-req">*</span></label>
-                                <input type="date" id="schedStartDate" class="schol-input" required>
-                            </div>
-                            <div class="schol-field">
-                                <label for="schedEndDate">Application End Date <span class="schol-req">*</span></label>
-                                <input type="date" id="schedEndDate" class="schol-input" required>
-                            </div>
-                            <div class="schol-field">
                                 <label for="participationQty">Maximum Beneficiaries</label>
-                                <input type="number" id="participationQty" class="schol-input" placeholder="e.g. 100" min="0" max="500" step="1">
+                                <input type="text" id="participationQty" class="schol-input" placeholder="e.g. 100" inputmode="numeric" autocomplete="off" maxlength="4">
                             </div>
                             <div class="schol-field">
                                 <label for="programStatus">Status</label>
@@ -206,23 +182,42 @@
                                     <option value="closed">Closed</option>
                                 </select>
                             </div>
-                            <div class="schol-field schol-field-full">
-                                <label for="programDescription">Program Description</label>
-                                <textarea id="programDescription" class="schol-input schol-textarea" rows="3" placeholder="Describe this scholarship program for Kabataan applicants..."></textarea>
+                        </div>
+
+                        <div class="schol-field schol-field-full schol-target-level-group">
+                            <label>Scholarship Level <span class="schol-req">*</span></label>
+                            <div class="schol-target-level-row" role="group" aria-label="Scholarship level">
+                                <label class="schol-level-option">
+                                    <input type="checkbox" name="scholarshipTargetLevel" value="senior_high">
+                                    <span>Senior High</span>
+                                </label>
+                                <label class="schol-level-option">
+                                    <input type="checkbox" name="scholarshipTargetLevel" value="college">
+                                    <span>College</span>
+                                </label>
+                                <label class="schol-level-option schol-level-both-option" id="schLevelBothBtn" role="button" tabindex="0" aria-pressed="false">
+                                    <span>Both</span>
+                                </label>
                             </div>
+                            <p class="schol-details-hint sch-target-level-hint">Select Senior High, College, or click Both to include both levels. Open to In School Youth only.</p>
+                        </div>
+
+                        <div class="schol-field schol-field-full">
+                            <label for="committeeHeadDisplay">Committee Head</label>
+                            <input type="text" id="committeeHeadDisplay" class="schol-input" readonly placeholder="From Education Committee assignment">
+                            <p class="schol-details-hint">Auto-filled from the Education Committee head assigned in Committees.</p>
                         </div>
 
                         <div class="schol-field schol-field-full schol-application-type-group">
                             <label>Application Type <span class="schol-req">*</span></label>
                             <div class="schol-radio-row">
                                 <label class="schol-radio-label"><input type="radio" name="applicationType" value="new_only" checked> New Applicants Only</label>
-                                <label class="schol-radio-label"><input type="radio" name="applicationType" value="renewal_only"> Renewal Only</label>
-                                <label class="schol-radio-label"><input type="radio" name="applicationType" value="both"> New Applicants + Renewal</label>
+                                <label class="schol-radio-label schol-radio-disabled"><input type="radio" name="applicationType" value="renewal_only" disabled> Renewal Only</label>
+                                <label class="schol-radio-label schol-radio-disabled"><input type="radio" name="applicationType" value="both" disabled> New Applicants + Renewal</label>
                             </div>
+                            <p class="schol-details-hint sch-application-type-hint">Renewal options unlock after at least one scholar has applied to this program.</p>
                         </div>
                     </div>
-
-                    @include('GForm_Builder::partials.announcement-field')
 
                     <div class="schol-schedule-card schol-details-card">
                         <h4 class="schol-schedule-title">Program Announcements</h4>
@@ -231,12 +226,12 @@
                         <button type="button" class="schol-btn schol-btn-secondary" id="schAddReqGroupBtn">+ Add Requirement Group</button>
                         <div class="schol-schedule-grid schol-schedule-grid-2" style="margin-top:16px;">
                             <div class="schol-field">
-                                <label for="schSubmissionStart">Submission Period — Start</label>
-                                <input type="date" id="schSubmissionStart" class="schol-input">
+                                <label for="schSubmissionStart">Submission Period — Start <span class="schol-req">*</span></label>
+                                <input type="date" id="schSubmissionStart" class="schol-input" required>
                             </div>
                             <div class="schol-field">
-                                <label for="schSubmissionEnd">Submission Period — End</label>
-                                <input type="date" id="schSubmissionEnd" class="schol-input">
+                                <label for="schSubmissionEnd">Submission Period — End <span class="schol-req">*</span></label>
+                                <input type="date" id="schSubmissionEnd" class="schol-input" required>
                             </div>
                             <div class="schol-field">
                                 <label for="schVerificationStart">Assessment/Verification — Start</label>
@@ -245,37 +240,6 @@
                             <div class="schol-field">
                                 <label for="schVerificationEnd">Assessment/Verification — End</label>
                                 <input type="date" id="schVerificationEnd" class="schol-input">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Eligibility --}}
-                <div class="sch-program-tab-panel" data-sch-panel="eligibility" hidden>
-                    <div class="schol-schedule-card">
-                        <h4 class="schol-schedule-title">Eligibility Criteria</h4>
-                        <p class="schol-details-hint">Only Senior High School and College students may apply. Use filters below to limit who can apply.</p>
-                        <div class="schol-eligibility-group">
-                            <label class="schol-eligibility-group-title">Youth Classification</label>
-                            <div class="schol-eligibility-grid">
-                                @foreach (['In School Youth', 'Out of School Youth', 'Working Youth', 'Person w/ Disability', 'Children in Conflict w/ Law', 'Indigenous People'] as $item)
-                                    <label class="schol-eligibility-label"><input type="checkbox" class="sch-eligibility-classification" value="{{ $item }}"><span>{{ $item }}</span></label>
-                                @endforeach
-                            </div>
-                        </div>
-                        <div class="schol-eligibility-group">
-                            <label class="schol-eligibility-group-title">Youth Age Group</label>
-                            <div class="schol-eligibility-grid">
-                                @foreach (['Child Youth (15-17 yrs old)', 'Core Youth (18-24 yrs old)', 'Young Adult (15-30 yrs old)'] as $item)
-                                    <label class="schol-eligibility-label"><input type="checkbox" class="sch-eligibility-age-group" value="{{ $item }}"><span>{{ $item }}</span></label>
-                                @endforeach
-                            </div>
-                        </div>
-                        <div class="schol-eligibility-group">
-                            <label class="schol-eligibility-group-title">Educational Background</label>
-                            <div class="schol-eligibility-grid">
-                                <label class="schol-eligibility-label"><input type="checkbox" class="sch-eligibility-education" value="High School Level"><span>Senior High School</span></label>
-                                <label class="schol-eligibility-label"><input type="checkbox" class="sch-eligibility-education" value="College Level"><span>College Level</span></label>
                             </div>
                         </div>
                     </div>
@@ -293,7 +257,7 @@
                 {{-- Custom Questions --}}
                 <div class="sch-program-tab-panel" data-sch-panel="custom-questions" hidden>
                     <div class="schol-schedule-card">
-                        <p class="schol-details-hint">Add optional questions after the default application form. File uploads belong in the <strong>Requirements</strong> tab.</p>
+                        <p class="schol-details-hint">Add optional questions after the default application form.</p>
                         @include('GForm_Builder::partials.custom-questions-builder', [
                             'sectionTitle' => 'Custom Questions',
                             'hint' => 'Supported: Text, Textarea, Number, Radio, Checkbox, Dropdown, Date.',
@@ -302,13 +266,13 @@
                     </div>
                 </div>
 
-                {{-- Document Requirements --}}
-                <div class="sch-program-tab-panel" data-sch-panel="requirements" hidden>
-                    <div class="schol-schedule-card">
-                        <h4 class="schol-schedule-title">Upload Requirements</h4>
-                        <p class="schol-details-hint">Documents Kabataan must upload when applying. At least one requirement is required.</p>
-                        <div id="schDocReqContainer" class="sch-doc-req-list"></div>
-                        <button type="button" class="schol-btn schol-btn-secondary" id="schAddDocReqBtn">+ Add Requirement</button>
+                {{-- Quick Guidelines --}}
+                <div class="sch-program-tab-panel" data-sch-panel="quick-guidelines" hidden>
+                    <div class="schol-schedule-card schol-quick-guidelines-card">
+                        <h4 class="schol-schedule-title">Quick Guidelines</h4>
+                        <p class="schol-details-hint">Optional bilingual quick guide for Kabataan applicants (English + Tagalog). Add up to 10 steps; leave empty if not needed. Maximum 2,000 characters per field.</p>
+                        <div id="schQuickGuidelinesBuilder" class="sch-qg-builder"></div>
+                        <button type="button" class="schol-btn schol-btn-secondary" id="schAddQuickGuidelineBtn">+ Add Step</button>
                     </div>
                 </div>
 
@@ -320,18 +284,6 @@
                         <div id="schProgramPreviewPanel" class="sch-program-preview-panel">
                             <p class="sch-view-muted">Open this tab to generate a preview.</p>
                         </div>
-                    </div>
-                    <div class="schol-schedule-card schol-quick-guidelines-card">
-                        <h4 class="schol-schedule-title">Quick Guidelines</h4>
-                        <p class="schol-details-hint">Built-in system guide — shown to all applicants (not editable).</p>
-                        <ol class="sch-qg-official-simple-list">
-                            <li>Complete the scholarship application form.</li>
-                            <li>Upload all required documents.</li>
-                            <li>Review your information.</li>
-                            <li>Submit your application.</li>
-                            <li>Wait for evaluation.</li>
-                            <li>Monitor your application status.</li>
-                        </ol>
                     </div>
                 </div>
             </div>
@@ -454,19 +406,21 @@
 
 <!-- Delete Program Confirmation Modal -->
 <div class="schol-modal-overlay" id="deleteProgramModal" style="display:none;">
-    <div class="schol-modal-box schol-modal-sm saf-delete-modal">
-        <div class="schol-modal-header schol-modal-header-danger">
+    <div class="schol-modal-box sk-type-confirm-modal saf-delete-modal" style="max-width:420px;padding:0;overflow:hidden;">
+        <div class="sk-type-confirm-header">
             <h3>Delete Program</h3>
-            <button type="button" class="schol-modal-close" id="deleteProgramClose" aria-label="Close">&times;</button>
+            <button type="button" class="schol-modal-close" id="deleteProgramClose" aria-label="Close" style="position:absolute;right:12px;top:10px;color:#fff;opacity:0.9;">&times;</button>
         </div>
-        <div class="schol-modal-body">
-            <p class="saf-delete-lead">Delete this program?</p>
-            <p class="saf-delete-detail">This will permanently remove the scholarship program and its schedule. This action cannot be undone.</p>
-            <p class="saf-delete-name" id="deleteProgramName"></p>
+        <div class="sk-type-confirm-body">
+            <p class="sk-type-confirm-message">Are you sure you want to delete <strong id="deleteProgramName"></strong>?</p>
+            <p class="sk-type-confirm-desc">This will permanently remove the scholarship program and its schedule. This action cannot be undone.</p>
+            <label class="sk-type-confirm-label" for="deleteProgramConfirmText">Confirmation Required</label>
+            <input type="text" id="deleteProgramConfirmText" class="sk-type-confirm-input" placeholder="Type Confirm to confirm" autocomplete="off" spellcheck="false">
+            <p class="sk-type-confirm-hint sk-type-confirm-hint-error" id="deleteProgramConfirmError" style="display:none;"></p>
         </div>
-        <div class="schol-modal-footer">
-            <button type="button" class="schol-btn schol-btn-outline" id="deleteProgramCancel">Cancel</button>
-            <button type="button" class="schol-btn schol-btn-danger" id="deleteProgramConfirm">Delete Program</button>
+        <div class="sk-type-confirm-footer">
+            <button type="button" class="sk-btn-cancel-confirm" id="deleteProgramCancel">Cancel</button>
+            <button type="button" class="sk-btn-action-confirm is-disabled" id="deleteProgramConfirm" disabled>Delete Program</button>
         </div>
     </div>
 </div>
@@ -491,11 +445,18 @@
     </div>
 </div>
 
-<div class="sports-toast" id="safToast" style="display:none;"></div>
+<div class="scholarship-toast" id="scholarshipToast" style="display:none;" role="status" aria-live="polite">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    <span id="scholarshipToastMsg"></span>
+</div>
 
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
+    'app/Modules/layout/css/table-row-actions-menu.css',
+    'app/Modules/layout/js/table-row-actions-menu.js',
+    'app/Modules/Program_Management/assets/css/scholarship/scholarship-toast.css',
+    'app/Modules/Program_Management/assets/js/scholarship/scholarship-toast.js',
     'app/Modules/GForm_Builder/assets/js/gform-builder.js',
     'app/Modules/Program_Management/assets/js/scholarship/scholarship-system-fields.js',
     'app/Modules/Program_Management/assets/js/scholarship/scholarship-view-shared.js',
@@ -509,21 +470,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.GFormBuilder) {
         window.GFormBuilder.init({
             excludeTypes: ['file'],
-            showToast: (msg, type) => {
-                const toast = document.getElementById('safToast');
-                if (toast) {
-                    toast.textContent = msg;
-                    toast.style.display = 'flex';
-                    toast.style.background = type === 'error' ? '#ef4444' : '#22c55e';
-                    setTimeout(() => { toast.style.display = 'none'; }, 2800);
+            showToast: (msg) => {
+                if (typeof window.showScholarshipToast === 'function') {
+                    window.showScholarshipToast(msg);
                 }
             }
         });
         console.log('Form builder initialized and button bound');
     }
     
-    // Setup date validation
-    setupDateValidation();
+    // Setup submission period date validation
+    setupSubmissionPeriodValidation();
     
     // Setup filter
     setupProgramFilter();
@@ -539,68 +496,31 @@ function setupCharacterCounter(inputId, counterId) {
     }
 }
 
-function setupDateValidation() {
-    const startDate = document.getElementById('schedStartDate');
-    const endDate = document.getElementById('schedEndDate');
-    const startTime = document.getElementById('schedStartTime');
-    const endTime = document.getElementById('schedEndTime');
-    
+function setupSubmissionPeriodValidation() {
+    const startDate = document.getElementById('schSubmissionStart');
+    const endDate = document.getElementById('schSubmissionEnd');
+
     if (startDate) {
-        // Set minimum date to today
         const today = new Date().toISOString().split('T')[0];
         startDate.setAttribute('min', today);
-        
+
         startDate.addEventListener('change', () => {
-            // Update end date minimum to start date
             if (endDate && startDate.value) {
                 endDate.setAttribute('min', startDate.value);
-                
-                // Validate if end date is before start date
                 if (endDate.value && endDate.value < startDate.value) {
                     endDate.value = startDate.value;
                 }
             }
         });
     }
-    
+
     if (endDate) {
         endDate.addEventListener('change', () => {
-            // Validate end date is not before start date
             if (startDate && startDate.value && endDate.value < startDate.value) {
-                alert('End date cannot be before start date');
+                alert('Submission end date cannot be before start date');
                 endDate.value = startDate.value;
             }
-            
-            // If same day, validate time
-            if (startDate && startDate.value === endDate.value) {
-                validateSameDayTime();
-            }
         });
-    }
-    
-    if (startTime) {
-        startTime.addEventListener('change', () => {
-            if (startDate && endDate && startDate.value === endDate.value) {
-                validateSameDayTime();
-            }
-        });
-    }
-    
-    if (endTime) {
-        endTime.addEventListener('change', () => {
-            if (startDate && endDate && startDate.value === endDate.value) {
-                validateSameDayTime();
-            }
-        });
-    }
-    
-    function validateSameDayTime() {
-        if (startTime && endTime && startTime.value && endTime.value) {
-            if (endTime.value <= startTime.value) {
-                alert('End time must be after start time on the same day');
-                endTime.value = '';
-            }
-        }
     }
 }
 

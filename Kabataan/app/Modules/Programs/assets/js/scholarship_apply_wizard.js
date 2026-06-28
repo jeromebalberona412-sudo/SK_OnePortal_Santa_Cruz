@@ -901,6 +901,12 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         updateStepUI();
 
         if (global.ScholarshipQuickGuidelines) {
+            const customSteps = program?.quick_guidelines?.length
+                ? program.quick_guidelines
+                : (program?.scholarship_details?.quick_guidelines || []);
+            if (Array.isArray(customSteps) && customSteps.length) {
+                global.ScholarshipQuickGuidelines.setSteps(customSteps);
+            }
             global.ScholarshipQuickGuidelines.bindTriggers(shell || document);
         }
     }

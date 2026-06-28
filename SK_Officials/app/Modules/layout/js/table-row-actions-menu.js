@@ -7,6 +7,8 @@
         </svg>
     `;
 
+    let suppressScrollCloseUntil = 0;
+
     function resetRowActionsDropdown(menu) {
         const dropdown = menu?.querySelector('.row-actions-dropdown');
         if (!dropdown) {
@@ -82,7 +84,8 @@
         if (willOpen) {
             menu.classList.add('is-open');
             trigger.setAttribute('aria-expanded', 'true');
-            requestAnimationFrame(() => positionRowActionsDropdown(menu));
+            positionRowActionsDropdown(menu);
+            suppressScrollCloseUntil = Date.now() + 250;
         }
     }
 
@@ -95,6 +98,7 @@
         tbody.addEventListener('click', (event) => {
             const trigger = event.target.closest('.row-actions-trigger');
             if (trigger) {
+                event.preventDefault();
                 event.stopPropagation();
                 toggleRowActionsMenu(trigger);
             }
@@ -102,6 +106,10 @@
     }
 
     document.addEventListener('click', (event) => {
+        if (event.target.closest('.row-actions-trigger')) {
+            return;
+        }
+
         if (event.target.closest('.row-actions-item')) {
             closeAllRowActionMenus();
             return;
@@ -126,6 +134,10 @@
     });
 
     window.addEventListener('scroll', () => {
+        if (Date.now() < suppressScrollCloseUntil) {
+            return;
+        }
+
         closeAllRowActionMenus();
     }, true);
 

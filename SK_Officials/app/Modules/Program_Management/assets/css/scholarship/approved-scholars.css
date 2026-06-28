@@ -239,13 +239,21 @@ body {
     border: 1px solid #e5e7eb;
 }
 
+.sl-table-card .sl-table-wrapper {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
 .sl-table-wrapper {
     overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .sl-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: 13px;
     min-width: 860px;
 }
@@ -265,9 +273,15 @@ body {
     letter-spacing: 0.06em;
     white-space: nowrap;
     border-right: 1px solid rgba(255, 255, 255, 0.08);
+    background: #2c2c3e;
+}
+
+.sl-table thead th:first-child {
+    border-top-left-radius: 12px;
 }
 
 .sl-table thead th:last-child {
+    border-top-right-radius: 12px;
     border-right: none;
 }
 
@@ -1635,4 +1649,134 @@ body {
 .sl-edit-btn-save:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(33, 63, 153, 0.3);
+}
+
+/* ── Revoke reason + type confirm ── */
+.sl-revoke-reason-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sl-revoke-reason-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #374151;
+}
+
+.sl-edit-actions--confirm {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.sk-type-confirm-section {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.sk-type-confirm-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.sk-type-confirm-input {
+    width: 100%;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #1e293b;
+    box-sizing: border-box;
+}
+
+.sk-type-confirm-input:focus {
+    outline: none;
+    border-color: #1A365D;
+    box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.12);
+}
+
+.sk-type-confirm-hint-error {
+    margin: 8px 0 0;
+    font-size: 12px;
+    color: #b45309;
+}
+
+.sk-btn-cancel-confirm {
+    flex: 1;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #475569;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 0;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.sk-btn-action-confirm {
+    flex: 1;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 10px 0;
+    font-family: inherit;
+}
+
+.sk-btn-action-confirm.is-disabled {
+    background: #cbd5e1;
+    color: #64748b;
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.sk-btn-action-confirm.is-enabled {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.sk-btn-action-confirm.is-enabled:hover {
+    background: linear-gradient(135deg, #b91c1c, #991b1b);
+}
+
+.sl-table-card .col-actions,
+.sl-table tbody td.col-actions {
+    overflow: visible;
+    position: relative;
+}
+
+.sl-toast {
+    position: fixed;
+    bottom: 48px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+    max-width: min(420px, calc(100vw - 32px));
+}
+
+.sl-toast-success {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+}
+
+.sl-toast-error {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
 }

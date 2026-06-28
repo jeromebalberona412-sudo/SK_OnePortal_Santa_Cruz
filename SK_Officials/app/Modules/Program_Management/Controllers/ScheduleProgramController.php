@@ -11,7 +11,9 @@ use Illuminate\Validation\ValidationException;
 
 class ScheduleProgramController extends Controller
 {
-    public function __construct(private readonly ScheduleProgramService $service) {}
+    public function __construct(
+        private readonly ScheduleProgramService $service,
+    ) {}
 
     public function meta(Request $request): JsonResponse
     {

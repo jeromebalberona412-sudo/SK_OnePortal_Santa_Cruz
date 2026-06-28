@@ -7,6 +7,7 @@ use App\Models\KabataanRegistration;
 use App\Models\KkSurveyResponse;
 use App\Models\ProgramApplication;
 use App\Models\ScheduleProgram;
+use App\Models\ScholarshipQuickGuidelineStep;
 use App\Models\User;
 use App\Modules\KKProfiling\Controllers\KKProfilingController;
 use App\Modules\Profile\Services\ProfileImageService;
@@ -410,7 +411,7 @@ class KabataanProgramService
         $application->load(['scheduleProgram']);
 
         try {
-            (new SkOfficialsNotificationDispatcher())->notifyProgramApplication(
+            (new SkOfficialsNotificationDispatcher)->notifyProgramApplication(
                 (int) ($user->barangay_id ?? $program->barangay_id ?? 0),
                 (string) ($registration->full_name ?? $user->name ?? 'A Kabataan member'),
                 (string) ($program->program_name ?? 'a program'),
@@ -429,6 +430,8 @@ class KabataanProgramService
         $barangayId = $this->resolveUserBarangayId($user);
 
         return ScheduleProgram::query()
+            ->with('quickGuidelineSteps')
+            ->active()
             ->when($tenantId !== null, fn ($q) => $q->where('tenant_id', $tenantId))
             ->when($barangayId !== null, fn ($q) => $q->where('barangay_id', $barangayId))
             ->where('status', ScheduleProgram::STATUS_OPEN)
@@ -490,6 +493,7 @@ class KabataanProgramService
         $barangayId = $this->resolveUserBarangayId($user);
 
         $scheduleCount = ScheduleProgram::query()
+            ->active()
             ->when($tenantId !== null, fn ($q) => $q->where('tenant_id', $tenantId))
             ->when($barangayId !== null, fn ($q) => $q->where('barangay_id', $barangayId))
             ->where('status', ScheduleProgram::STATUS_OPEN)
@@ -573,6 +577,47 @@ class KabataanProgramService
 
         $sportsDetails = is_array($program->sports_details) ? $program->sports_details : [];
 
+        $scholarshipDetails = is_array($program->scholarship_details) ? $program->scholarship_details : [];
+        unset($scholarshipDetails['quick_guidelines']);
+        $quickGuidelines = $this->resolveQuickGuidelinesForProgram($program);
+        if ($quickGuidelines !== []) {
+            $scholarshipDetails['quick_guidelines'] = $quickGuidelines;
+        }
+
+        if ($scholarshipDetails !== []) {
+            $submission = is_array($scholarshipDetails['submission_period'] ?? null)
+                ? $scholarshipDetails['submission_period']
+                : null;
+            if ($submission !== null) {
+                if (! empty($submission['start'])) {
+                    $scholarshipDetails['submission_period']['start_display'] = $this->formatDate(
+                        \Carbon\Carbon::parse((string) $submission['start'])
+                    );
+                }
+                if (! empty($submission['end'])) {
+                    $scholarshipDetails['submission_period']['end_display'] = $this->formatDate(
+                        \Carbon\Carbon::parse((string) $submission['end'])
+                    );
+                }
+            }
+
+            $verification = is_array($scholarshipDetails['verification_period'] ?? null)
+                ? $scholarshipDetails['verification_period']
+                : null;
+            if ($verification !== null) {
+                if (! empty($verification['start'])) {
+                    $scholarshipDetails['verification_period']['start_display'] = $this->formatDate(
+                        \Carbon\Carbon::parse((string) $verification['start'])
+                    );
+                }
+                if (! empty($verification['end'])) {
+                    $scholarshipDetails['verification_period']['end_display'] = $this->formatDate(
+                        \Carbon\Carbon::parse((string) $verification['end'])
+                    );
+                }
+            }
+        }
+
         $payload = [
             'id' => $program->id,
             'program_type' => $program->program_type,
@@ -588,7 +633,7 @@ class KabataanProgramService
             'end_date_display' => $this->formatDate($program->end_date),
             'status' => $program->status,
             'announcement' => $program->announcement,
-            'scholarship_details' => $program->scholarship_details,
+            'scholarship_details' => $scholarshipDetails !== [] ? $scholarshipDetails : $program->scholarship_details,
             'sports_details' => $program->sports_details,
             'sport_key' => $sportsDetails['sport_key'] ?? null,
             'sport_label' => $this->resolveSportLabel($sportsDetails),
@@ -597,6 +642,7 @@ class KabataanProgramService
             'has_applied' => $application !== null,
             'application_status' => $application?->status,
             'application_id' => $application?->id,
+            'quick_guidelines' => $quickGuidelines,
         ];
 
         $eligibility = $this->evaluateEligibility($user, $program);
@@ -676,7 +722,13 @@ class KabataanProgramService
             'sport_label' => $this->resolveSportLabel($sportsDetails),
             'program_period' => $this->formatProgramPeriod($scheduleProgram),
             'status' => $application->status,
-            'status_display' => ucfirst((string) $application->status),
+            'status_display' => match ((string) $application->status) {
+                ProgramApplication::STATUS_APPROVED => 'Completed — Approved',
+                ProgramApplication::STATUS_REJECTED => 'Rejected',
+                ProgramApplication::STATUS_CANCELLED => 'Cancelled',
+                ProgramApplication::STATUS_PENDING => 'Pending Review',
+                default => ucfirst((string) $application->status),
+            },
             'submitted_at' => $displayDate?->format('M j, Y'),
             'submitted_at_iso' => $displayDate?->toIso8601String(),
             'application_year' => $displayDate?->format('Y')
@@ -794,6 +846,14 @@ class KabataanProgramService
 
         $details = is_array($program->scholarship_details) ? $program->scholarship_details : [];
         $criteria = is_array($details['eligibility'] ?? null) ? $details['eligibility'] : [];
+        $targetLevels = array_values(array_filter(array_map(
+            fn ($value) => trim((string) $value),
+            is_array($details['scholarship_target_levels'] ?? null)
+                ? (array) $details['scholarship_target_levels']
+                : (trim((string) ($details['scholarship_target_level'] ?? '')) !== ''
+                    ? [(string) $details['scholarship_target_level']]
+                    : [])
+        )));
 
         $allowedClassifications = array_values(array_intersect(
             self::ELIGIBILITY_YOUTH_CLASSIFICATIONS,
@@ -811,9 +871,18 @@ class KabataanProgramService
         ));
 
         if ($allowedEducationLevels !== [] && ! in_array($education, $allowedEducationLevels, true)) {
+            $message = 'Your educational background does not meet this scholarship program\'s eligibility requirements.';
+            if (in_array('senior_high', $targetLevels, true) && in_array('college', $targetLevels, true)) {
+                $message = 'This scholarship is open to In School Youth with High School Level or College Level educational background only.';
+            } elseif (in_array('senior_high', $targetLevels, true)) {
+                $message = 'This scholarship is open to In School Youth with High School Level educational background only.';
+            } elseif (in_array('college', $targetLevels, true)) {
+                $message = 'This scholarship is open to In School Youth with College Level educational background only.';
+            }
+
             return [
                 'eligible' => false,
-                'message' => 'Your educational background does not meet this scholarship program\'s eligibility requirements.',
+                'message' => $message,
             ];
         }
 
@@ -821,7 +890,9 @@ class KabataanProgramService
         if ($allowedClassifications !== [] && ! in_array($userClassification, $allowedClassifications, true)) {
             return [
                 'eligible' => false,
-                'message' => 'Your youth classification does not meet this scholarship program\'s eligibility requirements.',
+                'message' => $targetLevels !== []
+                    ? 'This scholarship is open to In School Youth only.'
+                    : 'Your youth classification does not meet this scholarship program\'s eligibility requirements.',
             ];
         }
 
@@ -1574,5 +1645,59 @@ class KabataanProgramService
     public function kkFieldLabels(): array
     {
         return self::KK_FIELD_LABELS;
+    }
+
+    /**
+     * @return list<array{en: string, tl: string}>
+     */
+    private function resolveQuickGuidelinesForProgram(ScheduleProgram $program): array
+    {
+        if (! $program->relationLoaded('quickGuidelineSteps')) {
+            $program->load('quickGuidelineSteps');
+        }
+
+        $steps = $program->quickGuidelineSteps
+            ->map(fn (ScholarshipQuickGuidelineStep $step) => [
+                'en' => (string) $step->content_en,
+                'tl' => (string) $step->content_tl,
+            ])
+            ->values()
+            ->all();
+
+        if ($steps !== []) {
+            return $steps;
+        }
+
+        $legacy = is_array($program->scholarship_details)
+            ? ($program->scholarship_details['quick_guidelines'] ?? null)
+            : null;
+
+        if (! is_array($legacy)) {
+            return [];
+        }
+
+        $sanitized = [];
+        foreach ($legacy as $step) {
+            if (! is_array($step)) {
+                continue;
+            }
+
+            $en = trim((string) ($step['en'] ?? ''));
+            $tl = trim((string) ($step['tl'] ?? ''));
+            if ($en === '' && $tl === '') {
+                continue;
+            }
+
+            $sanitized[] = [
+                'en' => $en !== '' ? $en : $tl,
+                'tl' => $tl !== '' ? $tl : $en,
+            ];
+
+            if (count($sanitized) >= 10) {
+                break;
+            }
+        }
+
+        return $sanitized;
     }
 }

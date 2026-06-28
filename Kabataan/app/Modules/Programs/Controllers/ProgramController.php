@@ -118,7 +118,7 @@ class ProgramController extends Controller
     {
         $validated = $request->validate([
             'schedule_program_id' => ['required', 'integer'],
-            'answers' => ['required', 'array'],
+            'answers' => ['present', 'array'],
             'answers.*.question_id' => ['required', 'string'],
             'answers.*.question_type' => ['nullable', 'string'],
             'answers.*.question_label' => ['nullable', 'string'],
@@ -140,9 +140,13 @@ class ProgramController extends Controller
         ], 201);
     }
 
-    public function scholarshipLanding(Request $request): View
+    public function scholarshipLanding(Request $request): View|RedirectResponse
     {
         $user = Auth::user();
+        if ($user === null) {
+            return redirect()->guest(route('login'));
+        }
+
         $scheduleId = (int) $request->query('schedule', 0);
 
         $registration = KabataanRegistration::with('barangay')
@@ -173,6 +177,10 @@ class ProgramController extends Controller
     public function sportsLanding(Request $request): View|RedirectResponse
     {
         $user = Auth::user();
+        if ($user === null) {
+            return redirect()->guest(route('login'));
+        }
+
         $scheduleId = (int) $request->query('schedule', 0);
 
         if ($scheduleId > 0) {

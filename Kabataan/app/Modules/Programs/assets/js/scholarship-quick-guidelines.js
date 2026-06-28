@@ -29,6 +29,7 @@
 
     let modalEl = null;
     let isMaximized = false;
+    let activeSteps = STEPS;
 
     function escapeHtml(value) {
         return String(value ?? '')
@@ -66,7 +67,7 @@
     }
 
     function renderModalContent() {
-        const gridHtml = STEPS.map((step, index) => renderStepCard(step, index)).join('');
+        const gridHtml = activeSteps.map((step, index) => renderStepCard(step, index)).join('');
 
         return `
             <div class="sch-qg-shell kabataan-modal-box ${isMaximized ? 'modal-maximized' : ''}" role="dialog" aria-modal="true" aria-labelledby="schQgTitle">
@@ -150,7 +151,14 @@
         }
     }
 
-    function open() {
+    function open(steps) {
+        const useSteps = Array.isArray(steps) && steps.length
+            ? steps
+            : (Array.isArray(activeSteps) && activeSteps.length ? activeSteps : []);
+        if (!useSteps.length) {
+            return;
+        }
+        activeSteps = useSteps;
         const modal = ensureModal();
         modal.innerHTML = renderModalContent();
         modal.hidden = false;
@@ -163,8 +171,13 @@
         modalEl.hidden = true;
         modalEl.classList.remove('modal-maximized');
         isMaximized = false;
+        activeSteps = STEPS;
         document.body.style.overflow = '';
         document.removeEventListener('keydown', onKeyDown);
+    }
+
+    function setSteps(steps) {
+        activeSteps = Array.isArray(steps) && steps.length ? steps : [];
     }
 
     function bindTriggers(root) {
@@ -174,7 +187,16 @@
             btn.addEventListener('click', (event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                open();
+                const customSteps = btn.dataset.schQgSteps;
+                if (customSteps) {
+                    try {
+                        open(JSON.parse(customSteps));
+                        return;
+                    } catch (error) {
+                        // fall through to activeSteps
+                    }
+                }
+                open(activeSteps);
             });
         });
     }
@@ -183,6 +205,7 @@
         STEPS,
         open,
         close,
+        setSteps,
         bindTriggers,
     };
 

@@ -17,6 +17,7 @@ use App\Modules\Program_Management\Controllers\ProgramApplicationController;
 use App\Modules\Program_Management\Controllers\ProgramEvaluationController;
 use App\Modules\Program_Management\Controllers\ProgramSurveyController;
 use App\Modules\Program_Management\Controllers\ScheduleProgramController;
+use App\Modules\Program_Management\Controllers\ScholarshipSchoolYearController;
 use App\Modules\Programs\Controllers\ProgramController;
 use App\Modules\Programs\Services\AbyipProgramCatalogService;
 use App\Modules\Rejected_KKProfiling\Controllers\RejectedKKProfilingController;
@@ -249,6 +250,11 @@ Route::middleware([
         Route::post('/', [ScheduleProgramController::class, 'store'])->name('api.schedule-programs.store');
         Route::put('/{id}', [ScheduleProgramController::class, 'update'])->name('api.schedule-programs.update');
         Route::delete('/{id}', [ScheduleProgramController::class, 'destroy'])->name('api.schedule-programs.destroy');
+    });
+
+    Route::prefix('api/scholarship-school-years')->group(function () {
+        Route::get('/', [ScholarshipSchoolYearController::class, 'index'])->name('api.scholarship-school-years.index');
+        Route::post('/', [ScholarshipSchoolYearController::class, 'store'])->name('api.scholarship-school-years.store');
     });
 
     Route::prefix('api/program-applications')->group(function () {

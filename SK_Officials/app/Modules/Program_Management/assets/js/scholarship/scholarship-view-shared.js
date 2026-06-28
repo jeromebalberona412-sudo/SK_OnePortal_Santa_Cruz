@@ -335,6 +335,294 @@
             </div>`;
     }
 
+    function formatCurrencyValue(value) {
+        const digits = String(value || '').replace(/\D/g, '');
+        if (!digits) return '—';
+        const SF = global.ScholarshipSystemFields;
+        return SF?.formatCurrencyDisplay?.(digits) || `₱${Number(digits).toLocaleString('en-PH')}`;
+    }
+
+    function viewFieldHtml(label, value, colSpan) {
+        const val = String(value ?? '').trim() || '—';
+        return `
+            <div class="sch-app-view-field" ${colSpan ? `style="grid-column: span ${colSpan}"` : ''}>
+                <span class="sch-app-view-label">${escapeHtml(label)}</span>
+                <span class="sch-app-view-value">${escapeHtml(val)}</span>
+            </div>`;
+    }
+
+    function viewSectionCard(stepNum, title, bodyHtml) {
+        return `
+            <section class="sch-app-view-section">
+                <div class="sch-app-view-section-head">
+                    <span class="sch-app-view-step">${stepNum}</span>
+                    <h4 class="sch-app-view-section-title">${escapeHtml(title)}</h4>
+                </div>
+                <div class="sch-app-view-section-body">${bodyHtml}</div>
+            </section>`;
+    }
+
+    function buildPersonalInfoItems(kkProfile) {
+        const SF = global.ScholarshipSystemFields;
+        const labels = SF?.KK_FIELD_LABELS || {};
+        const order = SF?.DEFAULT_KK_FIELDS || [
+            'last_name', 'first_name', 'middle_name', 'suffix', 'birthday', 'age', 'sex',
+            'civil_status', 'contact_number', 'email', 'region', 'province', 'city',
+            'barangay', 'purok_zone', 'youth_classification', 'youth_age_group', 'education',
+            'current_school', 'course_strand',
+        ];
+
+        return order
+            .map((id) => ({
+                label: labels[id] || id.replace(/_/g, ' '),
+                value: kkProfile?.[id],
+            }))
+            .filter((item) => String(item.value ?? '').trim() !== '');
+    }
+
+    function renderPersonalInformationSection(kkProfile) {
+        const items = buildPersonalInfoItems(kkProfile);
+        const fullName = formatScholarshipFullName({
+            last_name: kkProfile?.last_name,
+            first_name: kkProfile?.first_name,
+            middle_name: kkProfile?.middle_name,
+            suffix: kkProfile?.suffix,
+        });
+
+        const grid = items
+            .map((item) => viewFieldHtml(item.label, item.value))
+            .join('');
+
+        return viewSectionCard(1, 'Personal Information', `
+            ${fullName && fullName !== '—' ? `<p class="sch-app-view-name">${escapeHtml(fullName)}</p>` : ''}
+            <div class="sch-app-view-grid">${grid || '<p class="sch-app-view-empty">No personal information recorded.</p>'}</div>
+            <p class="sch-app-view-note">Auto-filled from the applicant&apos;s approved KK Profiling.</p>
+        `);
+    }
+
+    function renderEducationalBackgroundSection(systemFields, kkEducation) {
+        const SF = global.ScholarshipSystemFields;
+        const edu = kkEducation || systemFields?._kk_education || systemFields?.education || '';
+        const blocks = [];
+
+        (SF?.SCHOOL_BLOCKS || []).forEach((block) => {
+            if (SF?.isSchoolBlockVisible && !SF.isSchoolBlockVisible(block.id, edu)) {
+                return;
+            }
+
+            const prefix = block.id === 'senior_high' ? 'senior_high' : block.id;
+            const schoolLabel = block.id === 'elementary'
+                ? 'Elementary School'
+                : (block.id === 'secondary' ? 'Secondary School' : 'Senior High School');
+
+            blocks.push(`
+                <div class="sch-app-view-subsection">
+                    <h5 class="sch-app-view-subtitle">${escapeHtml(block.title)}</h5>
+                    <div class="sch-app-view-grid sch-app-view-grid-2">
+                        ${viewFieldHtml(schoolLabel, systemFields[`${prefix}_school`])}
+                        ${viewFieldHtml('Address', systemFields[`${prefix}_address`])}
+                        ${viewFieldHtml('Year Graduated', systemFields[`${prefix}_year_graduated`])}
+                    </div>
+                </div>`);
+        });
+
+        if (!blocks.length) {
+            blocks.push('<p class="sch-app-view-empty">No educational background entries for this profile level.</p>');
+        }
+
+        return viewSectionCard(2, 'Educational Background', blocks.join(''));
+    }
+
+    function renderBackgroundInformationSection(systemFields) {
+        const groups = [
+            { title: 'Mother', prefix: 'mother' },
+            { title: 'Father', prefix: 'father' },
+            { title: 'Guardian', prefix: 'guardian' },
+        ];
+
+        const groupHtml = groups.map(({ title, prefix }) => {
+            const fullName = [
+                systemFields[`${prefix}_first_name`],
+                systemFields[`${prefix}_middle_name`],
+                systemFields[`${prefix}_last_name`],
+                systemFields[`${prefix}_suffix`],
+            ].filter((part) => String(part || '').trim()).join(' ');
+
+            if (!fullName && !systemFields[`${prefix}_occupation`] && !systemFields[`${prefix}_contact_number`]) {
+                return '';
+            }
+
+            return `
+                <div class="sch-app-view-subsection">
+                    <h5 class="sch-app-view-subtitle">${title}</h5>
+                    <div class="sch-app-view-grid">
+                        ${viewFieldHtml('Full Name', fullName || '—', 3)}
+                        ${prefix === 'guardian' ? viewFieldHtml('Relation', systemFields.guardian_relation) : ''}
+                        ${viewFieldHtml('Occupation', systemFields[`${prefix}_occupation`])}
+                        ${viewFieldHtml('Contact No.', systemFields[`${prefix}_contact_number`])}
+                    </div>
+                </div>`;
+        }).join('');
+
+        return viewSectionCard(3, 'Background Information', `
+            ${groupHtml || '<p class="sch-app-view-empty">No family background recorded.</p>'}
+            <div class="sch-app-view-subsection">
+                <div class="sch-app-view-grid">
+                    ${viewFieldHtml('Annual Family Gross Income', formatCurrencyValue(systemFields.annual_family_gross_income), 3)}
+                </div>
+            </div>
+        `);
+    }
+
+    function getSystemFieldLabel(fieldId) {
+        const field = global.ScholarshipSystemFields?.getAllFields?.().find((f) => f.id === fieldId);
+        return field?.label || fieldId.replace(/_/g, ' ');
+    }
+
+    function renderAdditionalInformationSection(systemFields, kkEducation) {
+        const SF = global.ScholarshipSystemFields;
+        const edu = kkEducation || '';
+        const fieldIds = [
+            'strand', 'strand_abbreviation', 'year_level', 'units_enrolled',
+            'expected_graduation_year', 'graduating', 'semester_of_graduation',
+            'school_name', 'school_abbreviation', 'school_address',
+            'receiving_gov_aid', 'gov_aid_program_name', 'family_on_scholarship',
+        ];
+
+        const visibleFields = fieldIds.filter((id) => {
+            const field = SF?.getAllFields?.().find((f) => f.id === id);
+            if (!field) return Boolean(systemFields[id]);
+            return SF.isFieldVisible(field, systemFields, edu);
+        });
+
+        if (!visibleFields.length) {
+            return viewSectionCard(4, 'Additional Information',
+                '<p class="sch-app-view-empty">No additional information required for this education level.</p>');
+        }
+
+        const grid = visibleFields
+            .map((id) => viewFieldHtml(getSystemFieldLabel(id), systemFields[id]))
+            .join('');
+
+        return viewSectionCard(4, 'Additional Information', `<div class="sch-app-view-grid">${grid}</div>`);
+    }
+
+    function renderRequirementsSection(formAnswers, uploadedDocuments) {
+        const fileAnswers = (formAnswers || []).filter((item) => item.question_type === 'file' && item.answer);
+        const docs = uploadedDocuments?.length ? uploadedDocuments : fileAnswers.map((item) => ({
+            question_label: item.question,
+            original_name: isDocumentAnswer(item.answer) ? item.answer.original_name : item.question,
+            preview_url: item.answer?.preview_url,
+            download_url: item.answer?.download_url,
+            size_display: item.answer?.size_display,
+        }));
+
+        if (!docs.length) {
+            return viewSectionCard(5, 'Uploading of Requirements',
+                '<p class="sch-app-view-empty">No uploaded requirements found.</p>');
+        }
+
+        const list = docs.map((doc) => {
+            const previewUrl = doc.preview_url || doc.download_url || '#';
+            const downloadUrl = doc.download_url || previewUrl;
+            const fileName = doc.original_name || doc.question_label || 'Document';
+            const meta = [doc.size_display, doc.question_label].filter(Boolean).join(' • ');
+            return `
+                <div class="sch-app-view-doc">
+                    <div class="sch-app-view-doc-icon">PDF</div>
+                    <div class="sch-app-view-doc-body">
+                        <div class="sch-app-view-doc-title">${escapeHtml(fileName)}</div>
+                        ${meta ? `<div class="sch-app-view-doc-meta">${escapeHtml(meta)}</div>` : ''}
+                        <div class="sch-app-view-doc-links">
+                            <a href="${escapeHtml(previewUrl)}" target="_blank" rel="noopener">Preview</a>
+                            <a href="${escapeHtml(downloadUrl)}" target="_blank" rel="noopener">Download</a>
+                        </div>
+                    </div>
+                </div>`;
+        }).join('');
+
+        return viewSectionCard(5, 'Uploading of Requirements', `<div class="sch-app-view-docs">${list}</div>`);
+    }
+
+    function resolveKkEducation(kkProfile, systemFields) {
+        return kkProfile?.education || systemFields?.education || systemFields?._kk_education || '';
+    }
+
+    function renderKabataanApplicationView(record) {
+        const kkProfile = record.kk_profile_data || {};
+        const systemFields = record.system_field_answers || {};
+        const kkEducation = resolveKkEducation(kkProfile, systemFields);
+
+        return `
+            <div class="sch-app-view">
+                ${renderPersonalInformationSection(kkProfile)}
+                ${renderEducationalBackgroundSection(systemFields, kkEducation)}
+                ${renderBackgroundInformationSection(systemFields)}
+                ${renderAdditionalInformationSection(systemFields, kkEducation)}
+                ${renderRequirementsSection(record.form_answers, record.uploaded_documents)}
+            </div>`;
+    }
+
+    function normalizeApplicationDocuments(docs) {
+        if (!docs) return [];
+        if (Array.isArray(docs)) return docs;
+        if (typeof docs === 'object') return Object.values(docs);
+        return [];
+    }
+
+    function mapScholarshipApplicationDetail(app) {
+        const docs = normalizeApplicationDocuments(app.required_documents);
+        return {
+            last_name: app.last_name,
+            first_name: app.first_name,
+            middle_name: app.middle_name,
+            suffix: app.suffix,
+            kk_profile_data: app.kk_profile_data || {},
+            system_field_answers: app.system_field_answers || {},
+            form_answers: (app.custom_answers || []).map((item, index) => ({
+                question: item.question_label || item.label || `Question ${index + 1}`,
+                question_type: item.question_type || '',
+                answer: item.answer ?? '—',
+            })),
+            uploaded_documents: docs,
+            submitted_at: app.date_submitted || app.submitted_at,
+            submitted_time: app.submitted_time,
+            status: app.status_label || app.status,
+            program_name: app.program_name,
+            schedule_program: app.schedule_program || null,
+        };
+    }
+
+    function renderApplicationViewBody(record, options = {}) {
+        const esc = escapeHtml;
+        const sectionsHtml = renderKabataanApplicationView(record);
+        const extraHtml = options.extraHtml || '';
+
+        return `
+            <div class="sch-app-view-wrap">
+                ${extraHtml}
+                ${sectionsHtml}
+                <section class="sch-app-view-section sch-app-view-section-muted">
+                    <div class="sch-app-view-section-head">
+                        <span class="sch-app-view-step">•</span>
+                        <h4 class="sch-app-view-section-title">Submission Details</h4>
+                    </div>
+                    <div class="sch-app-view-section-body">
+                        <div class="sch-app-view-grid sch-app-view-grid-2">
+                            <div class="sch-app-view-field">
+                                <span class="sch-app-view-label">Date Submitted</span>
+                                <span class="sch-app-view-value">${esc(record.submitted_at || '—')}</span>
+                            </div>
+                            <div class="sch-app-view-field">
+                                <span class="sch-app-view-label">Time Submitted</span>
+                                <span class="sch-app-view-value">${esc(record.submitted_time || '—')}</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>`;
+    }
+
     global.ScholarshipViewShared = {
         SAF_STORAGE_KEY,
         SAMPLE_SCHOLARSHIP_PROGRAM,
@@ -347,5 +635,8 @@
         resolveFormAnswers,
         renderProgramInformationSection,
         renderFormAnswersSection,
+        renderKabataanApplicationView,
+        mapScholarshipApplicationDetail,
+        renderApplicationViewBody,
     };
 })(window);

@@ -4,11 +4,13 @@ document.addEventListener('DOMContentLoaded', () => initRejectedScholarship());
 
 const DATA_URL = '/rejected-scholars/data';
 const RESTORE_URL = (id) => `/rejected-scholars/${id}/restore`;
+const PROGRAM_LETTER = 'A';
 
 let rsAllRecords = [];
 let rsFiltered = [];
 let rsCurrentPage = 1;
-const rsPerPage = 10;
+let rsRecordsPerPage = 10;
+let rsTablePagination = null;
 let rsPendingRestoreId = null;
 let rsActiveFilter = 'all';
 let rsArchiveTerm = '2025-2027';
@@ -27,11 +29,30 @@ function escapeHtml(value) {
         .replace(/"/g, '&quot;');
 }
 
+function rsShowToast(message) {
+    if (typeof window.showScholarshipToast === 'function') {
+        window.showScholarshipToast(message);
+    }
+}
+
 function initRejectedScholarship() {
     bindSearch();
     bindFilterTabs();
     bindRestoreModal();
     bindViewModal();
+    bindRejectedTableActions();
+
+    if (typeof window.bindTablePageFooter === 'function') {
+        rsTablePagination = window.bindTablePageFooter({
+            prefix: 'scholRej',
+            getTotalRecords: () => rsFiltered.length,
+            getCurrentPage: () => rsCurrentPage,
+            setCurrentPage: (page) => { rsCurrentPage = page; },
+            getRecordsPerPage: () => rsRecordsPerPage,
+            setRecordsPerPage: (value) => { rsRecordsPerPage = value; },
+            onPageChange: () => renderTable(),
+        });
+    }
 
     if (window.SkArchive) {
         SkArchive.mountShowArchiveFilter((termId) => {
@@ -68,7 +89,7 @@ async function loadData() {
         rsFiltered = [];
         renderStats({ total: 0, today: 0, month: 0 });
         renderTable();
-        alert(err.message || 'Failed to load rejected records.');
+        rsShowToast(err.message || 'Failed to load rejected records.');
     } finally {
         rsIsLoading = false;
         setTableLoading(false);
@@ -162,28 +183,83 @@ function bindFilterTabs() {
     });
 }
 
+function rsRenderActionMenuCell(record) {
+    const canRestore = window.SkArchive
+        ? SkArchive.canRestoreRecord(record, ['_rejectedTs', 'rejected_at'])
+        : true;
+
+    const restoreItem = canRestore
+        ? `<button type="button" class="row-actions-item row-actions-item-restore" data-action="restore" data-id="${record.id}" role="menuitem">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                <span>Restore</span>
+           </button>`
+        : `<button type="button" class="row-actions-item is-disabled" disabled title="Past term — view only" role="menuitem">
+                <span>Restore</span>
+           </button>`;
+
+    return `
+        <div class="row-actions-menu">
+            <button type="button" class="row-actions-trigger" aria-label="Actions" aria-haspopup="true" aria-expanded="false">${window.ROW_ACTIONS_ELLIPSIS || '⋯'}</button>
+            <div class="row-actions-dropdown" role="menu">
+                <button type="button" class="row-actions-item row-actions-item-view" data-action="view" data-id="${record.id}" role="menuitem">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <span>View</span>
+                </button>
+                ${restoreItem}
+            </div>
+        </div>`;
+}
+
+function bindRejectedTableActions() {
+    const tbody = document.getElementById('rejectedScholTableBody');
+    if (!tbody || tbody.dataset.rsActionsBound === '1') return;
+    tbody.dataset.rsActionsBound = '1';
+
+    if (typeof window.bindRowActionsTable === 'function') {
+        window.bindRowActionsTable(tbody);
+    }
+
+    tbody.addEventListener('click', (event) => {
+        const btn = event.target.closest('.row-actions-item[data-action]');
+        if (!btn || btn.disabled) return;
+
+        const action = btn.getAttribute('data-action');
+        const id = parseInt(btn.getAttribute('data-id'), 10);
+        if (!id) return;
+
+        if (typeof window.closeAllRowActionMenus === 'function') {
+            window.closeAllRowActionMenus();
+        }
+
+        if (action === 'view') {
+            openViewModal(id);
+            return;
+        }
+
+        if (action === 'restore') {
+            openRestoreModal(id);
+        }
+    });
+}
+
 function renderTable() {
     const tbody = document.getElementById('rejectedScholTableBody');
-    const info = document.getElementById('rejectedScholPaginationInfo');
     if (!tbody) return;
 
     applyClientFilters();
-    const start = (rsCurrentPage - 1) * rsPerPage;
-    const end = start + rsPerPage;
-    const page = rsFiltered.slice(start, end);
+    const pageRows = typeof window.paginateSlice === 'function'
+        ? window.paginateSlice(rsFiltered, rsCurrentPage, rsRecordsPerPage)
+        : rsFiltered;
 
     if (rsFiltered.length === 0) {
         tbody.innerHTML = '<tr class="empty-state-row"><td colspan="6">No rejected scholarship applications found.</td></tr>';
-        if (info) info.textContent = 'No records found';
-        renderPagination(0);
+        if (rsTablePagination) rsTablePagination.updateFooter();
         return;
     }
 
-    tbody.innerHTML = page.map((r, idx) => {
-        const name = `${r.last_name || ''}, ${r.first_name || ''}${r.middle_name ? ' ' + r.middle_name.charAt(0) + '.' : ''}`;
-        const canRestore = window.SkArchive
-            ? SkArchive.canRestoreRecord(r, ['_rejectedTs', 'rejected_at'])
-            : true;
+    const start = (rsCurrentPage - 1) * rsRecordsPerPage;
+    tbody.innerHTML = pageRows.map((r, idx) => {
+        const name = r.full_name || `${r.last_name || ''}, ${r.first_name || ''}`.replace(/^,\s*/, '');
 
         return `
         <tr>
@@ -192,44 +268,11 @@ function renderTable() {
             <td style="text-align:left;font-size:12px;">${escapeHtml(r.school_name || '—')}</td>
             <td><span class="rs-status-pill">Rejected</span></td>
             <td><span class="rs-date-badge">${escapeHtml(r.date_submitted || '—')}</span></td>
-            <td>
-                <div class="action-btns">
-                    <button class="btn-view-action" data-action="view" data-id="${r.id}">View</button>
-                    ${canRestore
-                        ? `<button class="btn-restore-action" data-action="restore" data-id="${r.id}">Restore</button>`
-                        : '<button type="button" class="btn-restore-action is-disabled" disabled title="Past term — view only">Restore</button>'}
-                </div>
-            </td>
+            <td class="col-actions">${rsRenderActionMenuCell(r)}</td>
         </tr>`;
     }).join('');
 
-    if (info) info.textContent = `Showing ${start + 1}–${Math.min(end, rsFiltered.length)} of ${rsFiltered.length} records`;
-    renderPagination(rsFiltered.length);
-
-    tbody.querySelectorAll('.btn-view-action').forEach((btn) => {
-        btn.addEventListener('click', () => openViewModal(parseInt(btn.dataset.id, 10)));
-    });
-    tbody.querySelectorAll('.btn-restore-action:not(.is-disabled)').forEach((btn) => {
-        btn.addEventListener('click', () => openRestoreModal(parseInt(btn.dataset.id, 10)));
-    });
-}
-
-function renderPagination(total) {
-    const pages = Math.ceil(total / rsPerPage) || 1;
-    const nums = document.getElementById('rejectedScholPageNumbers');
-    const prev = document.getElementById('rejectedScholPrevBtn');
-    const next = document.getElementById('rejectedScholNextBtn');
-
-    if (nums) {
-        nums.innerHTML = Array.from({ length: pages }, (_, i) =>
-            `<button class="pagination-btn ${i + 1 === rsCurrentPage ? 'active' : ''}">${i + 1}</button>`
-        ).join('');
-        nums.querySelectorAll('.pagination-btn').forEach((btn, i) => {
-            btn.addEventListener('click', () => { rsCurrentPage = i + 1; renderTable(); });
-        });
-    }
-    if (prev) { prev.disabled = rsCurrentPage === 1; prev.onclick = () => { rsCurrentPage--; renderTable(); }; }
-    if (next) { next.disabled = rsCurrentPage >= pages || pages === 0; next.onclick = () => { rsCurrentPage++; renderTable(); }; }
+    if (rsTablePagination) rsTablePagination.updateFooter();
 }
 
 function bindSearch() {
@@ -252,39 +295,56 @@ function formatRejectionReason(r) {
     return r.rejection_reason || '—';
 }
 
-function openViewModal(id) {
+async function openViewModal(id) {
     const r = rsAllRecords.find((x) => x.id === id);
     if (!r) return;
 
     const body = document.getElementById('rsViewModalBody');
-    if (!body) return;
+    const modal = document.getElementById('rsViewModal');
+    if (!body || !modal) return;
 
-    const fullName = r.full_name || `${r.last_name || ''}, ${r.first_name || ''}`.replace(/^,\s*/, '');
-    const answers = (r.custom_answers || []).map((item, index) => `
-        <div style="margin-bottom:12px;padding:12px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;">
-            <div style="font-weight:600;margin-bottom:4px;">${index + 1}. ${escapeHtml(item.question_label || item.label || 'Question')}</div>
-            <div style="color:#475569;">${escapeHtml(Array.isArray(item.answer) ? item.answer.join(', ') : (item.answer ?? '—'))}</div>
-        </div>
-    `).join('');
+    const SV = window.ScholarshipViewShared;
+    const esc = (value) => escapeHtml(value);
 
-    body.innerHTML = `
-        <div class="record-view-profile-layout">
-            <p class="record-view-fullname">${escapeHtml(fullName)}</p>
-            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 20px;margin-top:16px;">
-                <div><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;">Program</div><div style="font-weight:600;">${escapeHtml(r.program_name || '—')}</div></div>
-                <div><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;">School</div><div style="font-weight:600;">${escapeHtml(r.school_name || '—')}</div></div>
-                <div><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;">Grade / Course</div><div style="font-weight:600;">${escapeHtml([r.grade_level, r.course].filter(Boolean).join(' · ') || '—')}</div></div>
-                <div><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;">Contact</div><div style="font-weight:600;">${escapeHtml(r.contact_number || '—')}</div></div>
-            </div>
-            <div style="margin-top:20px;padding:14px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;">
-                <div style="font-size:12px;font-weight:700;color:#b91c1c;margin-bottom:8px;">Rejection Details</div>
-                <div><strong>Reason:</strong> ${escapeHtml(formatRejectionReason(r))}</div>
-                <div style="margin-top:6px;"><strong>Rejected:</strong> ${escapeHtml(r.rejected_date || '—')} ${escapeHtml(r.rejected_time || '')}</div>
-            </div>
-            ${answers ? `<div style="margin-top:18px;"><div style="font-weight:700;margin-bottom:10px;">Form Answers</div>${answers}</div>` : ''}
-        </div>`;
+    try {
+        const res = await fetch(`/api/program-applications/${id}?letter=${PROGRAM_LETTER}`, {
+            headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken() },
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.message || 'Failed to load application details.');
 
-    document.getElementById('rsViewModal').style.display = 'flex';
+        const app = json.data || r;
+        const detail = SV?.mapScholarshipApplicationDetail
+            ? SV.mapScholarshipApplicationDetail(app)
+            : app;
+        const rejectionHtml = `
+            <section class="sch-app-view-section" style="margin-bottom:14px;">
+                <div class="sch-app-view-section-head" style="background:linear-gradient(90deg,#b91c1c 0%,#dc2626 100%);">
+                    <span class="sch-app-view-step">!</span>
+                    <h4 class="sch-app-view-section-title">Rejection Details</h4>
+                </div>
+                <div class="sch-app-view-section-body">
+                    <div class="sch-app-view-grid sch-app-view-grid-2">
+                        <div class="sch-app-view-field">
+                            <span class="sch-app-view-label">Reason</span>
+                            <span class="sch-app-view-value">${esc(formatRejectionReason(r))}</span>
+                        </div>
+                        <div class="sch-app-view-field">
+                            <span class="sch-app-view-label">Rejected On</span>
+                            <span class="sch-app-view-value">${esc([r.rejected_date, r.rejected_time].filter(Boolean).join(' ') || '—')}</span>
+                        </div>
+                    </div>
+                </div>
+            </section>`;
+
+        body.innerHTML = SV?.renderApplicationViewBody
+            ? SV.renderApplicationViewBody(detail, { extraHtml: rejectionHtml })
+            : rejectionHtml;
+
+        modal.style.display = 'flex';
+    } catch (err) {
+        rsShowToast(err.message || 'Failed to load application details.');
+    }
 }
 
 function bindViewModal() {
@@ -318,7 +378,7 @@ function openRestoreModal(id) {
     if (!record) return;
 
     if (window.SkArchive && SkArchive.isArchivedTerm(record.skTerm)) {
-        alert('This record is from a past SK term and cannot be restored.');
+        rsShowToast('This record is from a past SK term and cannot be restored.');
         return;
     }
 
@@ -359,25 +419,12 @@ function bindRestoreModal() {
             if (!res.ok) throw new Error(data.message || 'Restore failed.');
 
             closeRestoreModal();
-            showRestoreBanner(`${data.full_name || 'Record'} has been restored to Scholarship Applications.`);
+            rsShowToast(`${data.full_name || 'Record'} has been restored to Scholarship Applications.`);
             loadData();
         } catch (err) {
-            alert(err.message || 'Restore failed.');
+            rsShowToast(err.message || 'Restore failed.');
         } finally {
             if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'Restore'; }
         }
     });
-}
-
-function showRestoreBanner(message) {
-    const banner = document.getElementById('rsRestoreBanner');
-    const text = document.getElementById('rsRestoreBannerText');
-    if (!banner || !text) return;
-    text.textContent = message;
-    banner.style.display = 'flex';
-    banner.classList.add('show');
-    setTimeout(() => {
-        banner.classList.remove('show');
-        setTimeout(() => { banner.style.display = 'none'; }, 400);
-    }, 4000);
 }

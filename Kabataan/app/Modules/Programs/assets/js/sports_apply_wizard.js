@@ -630,10 +630,16 @@
 
         const statusBlock = document.createElement('div');
         statusBlock.className = 'gf-card sports-submitted-card';
+        const isApproved = application.status === 'approved';
+        const statusLabel = application.status_display || application.status || 'Pending';
+        const statusMessage = isApproved
+            ? '<p class="sports-card-meta sports-card-success">Your sports application is complete and has been approved.</p>'
+            : '';
         statusBlock.innerHTML = `
-            <h2 class="gf-section-title">Application Submitted</h2>
-            <p class="sports-card-meta"><strong>Status:</strong> ${escapeHtml(application.status_display || application.status || 'Pending')}</p>
+            <h2 class="gf-section-title">${isApproved ? 'Application Approved' : 'Application Submitted'}</h2>
+            <p class="sports-card-meta"><strong>Status:</strong> ${escapeHtml(statusLabel)}</p>
             <p class="sports-card-meta"><strong>Submitted:</strong> ${escapeHtml(application.submitted_at || '—')}</p>
+            ${statusMessage}
             <h3 class="gf-subsection-title">Your Answers</h3>
             ${answersHtml}
             <div class="gf-submit-row">

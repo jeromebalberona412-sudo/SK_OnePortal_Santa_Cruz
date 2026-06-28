@@ -4,8 +4,10 @@
 }
 
 .schol-table-card,
-.schol-table-wrap {
-    overflow: visible;
+.schol-table-wrap,
+.sports-table-card,
+.sports-table-wrap {
+    overflow: visible !important;
 }
 
 .saf-sport-badge {
@@ -189,12 +191,11 @@ body {
     background: #fff; border-radius: 16px;
     border: 1px solid #e5e7eb;
     box-shadow: 0 4px 16px rgba(15,23,42,0.08);
-    overflow: hidden;
+    overflow: visible;
     width: 100%;
 }
 .sports-table-wrap { 
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;
     width: 100%;
 }
 .sports-table { 

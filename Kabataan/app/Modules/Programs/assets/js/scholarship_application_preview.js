@@ -296,16 +296,22 @@
             : `<div class="sch-preview-avatar">${escapeHtml(getInitials(fullName))}</div>`;
         const kkEducation = getKkEducation(personalInfo, systemFields);
         const respondentNo = formatRespondentDisplay(application);
+        const statusKey = String(application.status || '').toLowerCase();
+        const isApproved = statusKey === 'approved';
+        const isPending = statusKey === 'pending';
+        const statusLabel = application.status_display || application.status || '—';
+        const showCancel = isPending && application.can_cancel;
+
+        let asideNotice = '';
+        if (statusKey === 'rejected') {
+            asideNotice = `<div class="sch-preview-warning">Your application was not approved. Please check your email or contact your SK officials for details.</div>`;
+        } else if (isPending) {
+            asideNotice = `<div class="sch-preview-warning">Your application has been submitted. You may no longer edit your responses unless you cancel and re-apply.</div>`;
+        }
 
         shell.innerHTML = `
             <div class="sch-preview-shell">
                 <div class="sch-preview-top">
-                    <div class="sl-back-link">
-                        <a href="/dashboard">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-                            <span>Back to Dashboard</span>
-                        </a>
-                    </div>
                     <h1>Scholarship Application – Preview</h1>
                     <p class="sch-preview-subtitle">Review of your submitted application for ${escapeHtml(application.program_name || program?.program_name || 'this program')}.</p>
                 </div>
@@ -345,13 +351,14 @@
                             </div>
                             <div class="sch-preview-summary-row">
                                 <span class="sch-preview-summary-label">Status</span>
-                                <span class="sch-preview-summary-value">${escapeHtml(application.status_display || application.status || '—')}</span>
+                                <span class="sch-preview-summary-value">${escapeHtml(statusLabel)}</span>
                             </div>
-                            <div class="sch-preview-warning">Your application has been submitted. You may no longer edit your responses unless you cancel and re-apply.</div>
+                            ${asideNotice}
                         </div>
+                        ${showCancel ? `
                         <div class="sch-preview-actions-card">
-                            ${application.can_cancel ? `<button type="button" class="sch-preview-action-btn is-danger" id="schPreviewCancelBtn">Cancel Application</button>` : ''}
-                        </div>
+                            <button type="button" class="sch-preview-action-btn is-danger" id="schPreviewCancelBtn">Cancel Application</button>
+                        </div>` : ''}
                     </aside>
                 </div>
             </div>`;
