@@ -91,18 +91,10 @@
             </div>
             <div class="filters-row">
                 <div class="filter-item">
-                    <label for="kkBarangayFilter" class="filter-label">Purok/Sitio</label>
+                    <label for="kkBarangayFilter" class="filter-label">Purok / Sitio</label>
                     <select id="kkBarangayFilter" class="filter-select">
                         <option value="">All</option>
-                        <option value="BAYSIDE">BAYSIDE</option>
-                        <option value="VILLA GRACIA">VILLA GRACIA</option>
-                        <option value="IMELDA">IMELDA</option>
-                        <option value="LUPANG PANGAKO">LUPANG PANGAKO</option>
-                        <option value="DAMAYAN">DAMAYAN</option>
-                        <option value="MARCELO">MARCELO</option>
-                        <option value="BIGAYAN VILLA ROSA">BIGAYAN VILLA ROSA</option>
-                        <option value="PHASE 3">PHASE 3</option>
-                        <option value="BIGAYAN SAN LUIS">BIGAYAN SAN LUIS</option>
+                        @include('layout::partials.barangay-zone-options')
                     </select>
                 </div>
                 <div class="filter-item">

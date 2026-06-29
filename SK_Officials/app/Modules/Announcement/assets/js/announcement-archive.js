@@ -75,7 +75,6 @@ function renderCard(post) {
             <div class="archive-card-actions">
                 ${thumb}
                 <button type="button" class="archive-btn archive-btn-primary" data-restore="${post.id}">Restore</button>
-                <button type="button" class="archive-btn archive-btn-danger" data-delete="${post.id}">Delete Permanently</button>
             </div>
         </article>
     `;
@@ -173,23 +172,6 @@ async function confirmRestore() {
     }
 }
 
-async function confirmPermanentDelete() {
-    if (!pendingActionId) return;
-    const btn = document.getElementById('confirmPermanentDeleteBtn');
-    btn.disabled = true;
-
-    try {
-        await apiFetch(cfg.deleteUrl(pendingActionId), { method: 'DELETE' });
-        closeModals();
-        showSuccess('Post permanently deleted.');
-        await loadArchive(currentPage);
-    } catch (err) {
-        alert(err.message);
-    } finally {
-        btn.disabled = false;
-    }
-}
-
 function bindEvents() {
     document.getElementById('archiveSearch')?.addEventListener('input', () => {
         clearTimeout(searchTimer);
@@ -206,16 +188,10 @@ function bindEvents() {
 
     document.getElementById('archiveList')?.addEventListener('click', (e) => {
         const restoreBtn = e.target.closest('[data-restore]');
-        const deleteBtn = e.target.closest('[data-delete]');
 
         if (restoreBtn) {
             pendingActionId = restoreBtn.dataset.restore;
             openModal('restoreModal');
-        }
-
-        if (deleteBtn) {
-            pendingActionId = deleteBtn.dataset.delete;
-            openModal('permanentDeleteModal');
         }
     });
 
@@ -224,7 +200,6 @@ function bindEvents() {
     });
 
     document.getElementById('confirmRestoreBtn')?.addEventListener('click', confirmRestore);
-    document.getElementById('confirmPermanentDeleteBtn')?.addEventListener('click', confirmPermanentDelete);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

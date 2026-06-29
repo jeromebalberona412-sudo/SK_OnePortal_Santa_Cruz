@@ -2,7 +2,6 @@
 
 let aspRecords = [];
 let aspPendingRestoreId = null;
-let aspPendingDeleteId = null;
 
 function csrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
@@ -62,7 +61,6 @@ function renderTable(records) {
     tbody.innerHTML = records.map((record) => {
         const days = record.days_remaining ?? 0;
         const daysClass = days <= 7 ? 'asp-days-badge is-urgent' : 'asp-days-badge';
-        const canDelete = record.can_permanently_delete;
 
         return `
             <tr>
@@ -78,7 +76,6 @@ function renderTable(records) {
                 <td class="col-actions">
                     <div class="prog-tbl-actions">
                         <button type="button" class="asp-btn-restore" data-restore="${record.id}">Restore</button>
-                        <button type="button" class="asp-btn-delete" data-delete="${record.id}" ${canDelete ? '' : 'disabled title="Contains historical records"'}>Delete Permanently</button>
                     </div>
                 </td>
             </tr>
@@ -87,9 +84,6 @@ function renderTable(records) {
 
     tbody.querySelectorAll('[data-restore]').forEach((button) => {
         button.addEventListener('click', () => openRestoreModal(Number(button.dataset.restore)));
-    });
-    tbody.querySelectorAll('[data-delete]:not(:disabled)').forEach((button) => {
-        button.addEventListener('click', () => openDeleteModal(Number(button.dataset.delete)));
     });
 }
 
@@ -120,20 +114,6 @@ function closeRestoreModal() {
     document.getElementById('aspRestoreModal').style.display = 'none';
 }
 
-function openDeleteModal(id) {
-    const record = findRecord(id);
-    if (!record || !record.can_permanently_delete) return;
-    aspPendingDeleteId = id;
-    const nameEl = document.getElementById('aspDeleteName');
-    if (nameEl) nameEl.textContent = record.program_name || record.program_type || 'Sports Program';
-    document.getElementById('aspDeleteModal').style.display = 'flex';
-}
-
-function closeDeleteModal() {
-    aspPendingDeleteId = null;
-    document.getElementById('aspDeleteModal').style.display = 'none';
-}
-
 document.addEventListener('DOMContentLoaded', async () => {
     const searchInput = document.getElementById('aspSearch');
     let searchTimer = null;
@@ -151,8 +131,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('aspRestoreClose')?.addEventListener('click', closeRestoreModal);
     document.getElementById('aspRestoreCancel')?.addEventListener('click', closeRestoreModal);
-    document.getElementById('aspDeleteClose')?.addEventListener('click', closeDeleteModal);
-    document.getElementById('aspDeleteCancel')?.addEventListener('click', closeDeleteModal);
 
     document.getElementById('aspRestoreConfirm')?.addEventListener('click', async () => {
         if (!aspPendingRestoreId) return;
@@ -165,22 +143,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             await loadArchivedPrograms(searchInput?.value?.trim() || '');
         } catch (error) {
             showToast(error.message || 'Failed to restore program.', 'error');
-        } finally {
-            if (button) button.disabled = false;
-        }
-    });
-
-    document.getElementById('aspDeleteConfirm')?.addEventListener('click', async () => {
-        if (!aspPendingDeleteId) return;
-        const button = document.getElementById('aspDeleteConfirm');
-        if (button) button.disabled = true;
-        try {
-            await apiFetch(`/sports-programs/delete/${aspPendingDeleteId}`, { method: 'DELETE' });
-            closeDeleteModal();
-            showToast('Sports program permanently deleted.');
-            await loadArchivedPrograms(searchInput?.value?.trim() || '');
-        } catch (error) {
-            showToast(error.message || 'Failed to delete program.', 'error');
         } finally {
             if (button) button.disabled = false;
         }

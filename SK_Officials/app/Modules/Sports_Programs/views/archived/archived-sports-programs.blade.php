@@ -26,7 +26,7 @@
         <section class="page-header-section asp-page-header">
             <div class="page-header-left">
                 <h1 class="page-title">Archived Sports Programs</h1>
-                <p class="page-subtitle">Restore archived sports programs within 30 days. Programs with historical records cannot be permanently deleted.</p>
+                <p class="page-subtitle">Sports programs removed from the active schedule. You can restore records within 30 days. After 30 days, they will be automatically deleted.</p>
             </div>
             <div class="page-header-right">
                 <a href="{{ route('schedule-programs.sports-application-form') }}" class="schol-btn schol-btn-save">Back to Sports Programs</a>
@@ -101,24 +101,6 @@
         <div class="schol-modal-footer">
             <button type="button" class="schol-btn schol-btn-outline" id="aspRestoreCancel">Cancel</button>
             <button type="button" class="schol-btn schol-btn-save" id="aspRestoreConfirm">Restore</button>
-        </div>
-    </div>
-</div>
-
-<div class="schol-modal-overlay" id="aspDeleteModal" style="display:none;">
-    <div class="schol-modal-box schol-modal-sm saf-delete-modal">
-        <div class="schol-modal-header schol-modal-header-danger">
-            <h3>Delete Permanently</h3>
-            <button type="button" class="schol-modal-close" id="aspDeleteClose">&times;</button>
-        </div>
-        <div class="schol-modal-body">
-            <p class="saf-delete-lead">Permanently delete this archived sports program?</p>
-            <p class="saf-delete-detail">This action cannot be undone.</p>
-            <p class="asp-modal-name" id="aspDeleteName"></p>
-        </div>
-        <div class="schol-modal-footer">
-            <button type="button" class="schol-btn schol-btn-outline" id="aspDeleteCancel">Cancel</button>
-            <button type="button" class="schol-btn schol-btn-danger" id="aspDeleteConfirm">Delete Permanently</button>
         </div>
     </div>
 </div>

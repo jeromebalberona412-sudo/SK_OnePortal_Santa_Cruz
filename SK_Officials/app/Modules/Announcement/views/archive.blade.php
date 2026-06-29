@@ -26,7 +26,7 @@
         <header class="archive-page-header">
             <div>
                 <h1 class="archive-page-title">Deleted Posts</h1>
-                <p class="archive-page-subtitle">Archived community feed posts. Restore within 30 days or they will be permanently deleted.</p>
+                <p class="archive-page-subtitle">Archived community feed posts. You can restore records within 30 days. After 30 days, they will be automatically deleted.</p>
             </div>
             <a href="{{ route('announcements') }}" class="archive-back-link">
                 <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
@@ -70,24 +70,10 @@
     </div>
 </div>
 
-{{-- Permanent delete confirmation --}}
-<div id="permanentDeleteModal" class="archive-modal">
-    <div class="archive-modal-overlay" data-close-modal></div>
-    <div class="archive-modal-box">
-        <h2>Delete Permanently</h2>
-        <p>This action cannot be undone. All Cloudinary images and database records for this post will be permanently removed.</p>
-        <div class="archive-modal-actions">
-            <button type="button" class="archive-btn archive-btn-muted" data-close-modal>Cancel</button>
-            <button type="button" class="archive-btn archive-btn-danger" id="confirmPermanentDeleteBtn">Delete Permanently</button>
-        </div>
-    </div>
-</div>
-
 <script>
     window.ArchiveConfig = {
         dataUrl: @json(route('announcements.archive.data')),
         restoreUrl: (id) => @json(url('/announcements/archive')) + '/' + id + '/restore',
-        deleteUrl: (id) => @json(url('/announcements/archive')) + '/' + id,
         csrf: @json(csrf_token()),
     };
 </script>

@@ -244,9 +244,9 @@ body {
 
 .committees-table th:nth-child(5),
 .committees-table td:nth-child(5) {
-    width: 23%;
-    text-align: center;
-    min-width: 200px;
+    max-width: 220px;
+    width: auto;
+    text-align: left;
 }
 
 .committees-table th:nth-child(6),
@@ -272,14 +272,10 @@ body {
 }
 
 .committee-description {
-    text-align: center;
+    text-align: left;
     font-size: 12px;
-    line-height: 1.5;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    line-height: 1.4;
+    white-space: normal;
     word-break: break-word;
 }
 
@@ -574,7 +570,8 @@ body {
 .modal-field textarea {
     resize: vertical;
     min-height: 70px;
-    max-height: 200px;
+    max-height: 120px;
+    max-width: 100%;
 }
 
 .char-counter {

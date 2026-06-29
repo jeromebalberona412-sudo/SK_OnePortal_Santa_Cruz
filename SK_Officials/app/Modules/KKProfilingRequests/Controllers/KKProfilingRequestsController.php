@@ -5,6 +5,7 @@ namespace App\Modules\KKProfilingRequests\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
 use App\Services\BarangayLogoUrlService;
+use App\Services\BarangayZoneService;
 use App\Services\KkSupportingDocumentService;
 use App\Services\KkProfilingRequestDataService;
 use App\Services\KkSurveyResponseService;
@@ -43,6 +44,9 @@ class KKProfilingRequestsController extends Controller
         return view('KKProfilingRequests::kkprofiling-requests', [
             'barangayName'    => $barangayName,
             'barangayLogoUrl' => $barangayLogoUrl,
+            'barangayZones'   => $user?->barangay_id
+                ? app(BarangayZoneService::class)->activeZonesForBarangay((int) $user->barangay_id)
+                : collect(),
         ]);
     }
 

@@ -5,6 +5,7 @@ namespace App\Modules\PreviousKabataan\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
 use App\Models\PreviousKabataan;
+use App\Services\BarangayZoneService;
 use App\Services\PreviousKabataanProfileMapper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,7 +15,13 @@ class PreviousKabataanController extends Controller
 {
     public function index()
     {
-        return view('PreviousKabataan::previous-kabataan');
+        $user = Auth::user();
+
+        return view('PreviousKabataan::previous-kabataan', [
+            'barangayZones' => $user?->barangay_id
+                ? app(BarangayZoneService::class)->activeZonesForBarangay((int) $user->barangay_id)
+                : collect(),
+        ]);
     }
 
     public function data(Request $request)

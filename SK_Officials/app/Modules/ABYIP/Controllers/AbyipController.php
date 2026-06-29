@@ -21,6 +21,7 @@ class AbyipController extends Controller
     {
         return response()->json([
             'data' => $this->abyipService->listForBarangay($request->user()),
+            'years' => $this->abyipService->distinctYearsForBarangay($request->user())->values()->all(),
         ]);
     }
 

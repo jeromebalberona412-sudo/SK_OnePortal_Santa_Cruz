@@ -158,13 +158,6 @@
                             </a>
                         </li>
 
-                        <!-- Sports Programs -->
-                        <li class="nav-subitem">
-                            <a href="{{ route('schedule-programs.sports-application-form') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('schedule-programs.sports-application-form', 'sports-application-form') ? 'active' : '' }}">
-                                <span>Sports Programs</span>
-                            </a>
-                        </li>
-
                     </ul>
                 </li>
 
@@ -199,10 +192,6 @@
 
                         <li class="nav-subitem">
                             <a href="{{ route('archived-youth-records') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('archived-youth-records') ? 'active' : '' }}">
-                                <svg class="nav-subicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                                    <path d="M16 3H8v4h8V3z"></path>
-                                </svg>
                                 <span>Archived Youth Records</span>
                             </a>
                         </li>
@@ -224,12 +213,6 @@
                         <!-- Deleted Kabataan -->
                         <li class="nav-subitem">
                             <a href="{{ route('deleted-kabataan') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('deleted-kabataan') ? 'active' : '' }}">
-                                <svg class="nav-subicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="9" cy="7" r="4"></circle>
-                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                </svg>
                                 <span>Deleted Kabataan</span>
                             </a>
                         </li>
@@ -237,11 +220,6 @@
                         <!-- Archived Sports Programs -->
                         <li class="nav-subitem">
                             <a href="{{ route('sports-programs.archived') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('sports-programs.archived') ? 'active' : '' }}">
-                                <svg class="nav-subicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
-                                    <path d="M2 12h20"></path>
-                                </svg>
                                 <span>Archived Sports Programs</span>
                             </a>
                         </li>
@@ -249,13 +227,6 @@
                         <!-- Deleted Posts -->
                         <li class="nav-subitem">
                             <a href="{{ route('announcements.archive') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('announcements.archive') ? 'active' : '' }}">
-                                <svg class="nav-subicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                    <path d="M19 6l-1 14H6L5 6"></path>
-                                    <path d="M10 11v6"></path>
-                                    <path d="M14 11v6"></path>
-                                    <path d="M9 6V4h6v2"></path>
-                                </svg>
                                 <span>Deleted Posts</span>
                             </a>
                         </li>
@@ -275,10 +246,6 @@
                         <!-- Rejected KK Profiling -->
                         <li class="nav-subitem">
                             <a href="{{ route('rejected-kkprofiling') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('rejected-kkprofiling') ? 'active' : '' }}">
-                                <svg class="nav-subicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                </svg>
                                 <span>Rejected KK Profiling</span>
                             </a>
                         </li>
@@ -286,9 +253,6 @@
                         <!-- Rejected Scholarship -->
                         <li class="nav-subitem">
                             <a href="{{ route('rejected-scholars') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('rejected-scholars', 'rejected-scholarship') ? 'active' : '' }}">
-                                <svg class="nav-subicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"/>
-                                </svg>
                                 <span>Rejected Scholarships</span>
                             </a>
                         </li>
@@ -296,11 +260,6 @@
                         <!-- Rejected Sports Applications -->
                         <li class="nav-subitem">
                             <a href="{{ route('rejected-sports') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('rejected-sports') ? 'active' : '' }}">
-                                <svg class="nav-subicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
-                                    <path d="M2 12h20"></path>
-                                </svg>
                                 <span>Rejected Sports</span>
                             </a>
                         </li>

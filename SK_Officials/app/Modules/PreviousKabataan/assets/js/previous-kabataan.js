@@ -372,7 +372,7 @@ function updateBulkToolbar() {
     }
 
     if (bulkDeleteLabel) {
-        bulkDeleteLabel.textContent = count > 1 ? `Delete (${count})` : 'Delete';
+        bulkDeleteLabel.textContent = count > 1 ? `Delete Rows (${count})` : 'Delete Rows';
     }
 }
 

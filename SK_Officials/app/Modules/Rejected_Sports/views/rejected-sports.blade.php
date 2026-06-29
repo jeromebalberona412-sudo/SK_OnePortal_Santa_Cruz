@@ -30,7 +30,7 @@
         <section class="page-header-section">
             <div class="page-header-left">
                 <h1 class="page-title">Rejected Sports Applications</h1>
-                <p class="page-subtitle">Sports applications that were revoked or rejected. Restore to return them to the active requests queue.</p>
+                <p class="page-subtitle">Sports applications that were revoked or rejected. You can restore records within 30 days. After 30 days, they will be automatically deleted.</p>
             </div>
         </section>
 

@@ -42,7 +42,7 @@ function initializeKabataanUI() {
     const searchInput = document.getElementById('kabataanSearch');
     const genderFilter = document.getElementById('kabataanGenderFilter');
     const youthAgeGroupFilter = document.getElementById('kabataanYouthAgeGroupFilter');
-    const purokFilter = document.getElementById('kabataanPurok / SitioFilter');
+    const purokFilter = document.getElementById('kabataanPurokSitioFilter');
     const educationFilter = document.getElementById('kabataanEducationFilter');
     const tableActionsBar = document.getElementById('kabataanTableActions');
 
@@ -395,7 +395,7 @@ function initializeKabataanUI() {
         }
 
         if (label) {
-            label.textContent = count > 1 ? `Delete (${count})` : 'Delete';
+            label.textContent = count > 1 ? `Delete Rows (${count})` : 'Delete Rows';
         }
     }
 

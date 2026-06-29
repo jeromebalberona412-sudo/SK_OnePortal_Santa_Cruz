@@ -5,6 +5,7 @@ namespace App\Modules\Kabataan\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
 use App\Services\BarangayLogoUrlService;
+use App\Services\BarangayZoneService;
 use App\Services\KkSupportingDocumentService;
 use App\Services\KkProfilingRequestDataService;
 use App\Services\RespondentNumberService;
@@ -41,6 +42,9 @@ class KabataanController extends Controller
         return view('Kabataan::kabataan', [
             'barangayName'    => $barangayName,
             'barangayLogoUrl' => $barangayLogoUrl,
+            'barangayZones'   => $user?->barangay_id
+                ? app(BarangayZoneService::class)->activeZonesForBarangay((int) $user->barangay_id)
+                : collect(),
         ]);
     }
 

@@ -61,7 +61,7 @@ class AppServiceProvider extends ServiceProvider
             $notificationService = app(SkOfficialsNotificationService::class);
 
             $view->with([
-                'headerNotifications' => $notificationService->recentForUser($user, 5),
+                'headerNotifications' => $notificationService->allForUser($user),
                 'unreadNotificationCount' => $notificationService->unreadCountForUser($user),
             ]);
         });

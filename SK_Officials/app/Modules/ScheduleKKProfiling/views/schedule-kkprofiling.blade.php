@@ -31,16 +31,10 @@
                     Manage and track KK Profiling schedule sessions.
                 </p>
             </div>
-        </section>
-
-        <!-- ── Action Bar ── -->
-        <section class="page-filters-section">
-            <div class="table-action-bar">
-                <div class="filters-row">
-                    <div class="filter-item">
-                        <label for="skkpYearFilter" class="filter-label">Year</label>
-                        <select id="skkpYearFilter" class="filter-select"></select>
-                    </div>
+            <div class="page-header-actions">
+                <div class="filter-item filter-item-inline">
+                    <label for="skkpYearFilter" class="filter-label">Year</label>
+                    <select id="skkpYearFilter" class="filter-select filter-select-inline"></select>
                 </div>
                 <div class="abyip-search-inline">
                     <label for="skkpSearch" class="abyip-sr-only">Search schedules</label>
@@ -59,10 +53,6 @@
 
         <!-- ── Table ── -->
         <section class="page-content-section">
-            <div class="section-heading-row">
-                <h2 class="section-title">KK Profiling Schedules</h2>
-            </div>
-
             <div class="table-card">
                 <div class="table-wrapper">
                     <table class="skkp-table">

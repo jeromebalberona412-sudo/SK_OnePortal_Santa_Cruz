@@ -12,11 +12,11 @@ let resubmitRecordId = null;
 let pendingPdfData = null; // Store PDF data temporarily
 let pendingPdfExtractedText = null; // Text extracted from PDF for program auto-detection
 let pendingIsImported = false; // Track if pending record is an imported Word doc
+let pendingPdfUploadFile = null;
 
 let filterSearchText = '';
 let filterYear = '';
 let searchDebounceTimer = null;
-let abyipTableSorter = null;
 
 const abyipCsrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
@@ -290,9 +290,7 @@ function renderRecordsTable() {
         return;
     }
 
-    const filtered = abyipTableSorter
-        ? abyipTableSorter.sortRows(getFilteredRecords())
-        : getFilteredRecords();
+    const filtered = getFilteredRecords();
     if (filtered.length === 0) {
         tbody.innerHTML =
             '<tr><td colspan="5" class="abyip-records-empty">No records match your search.</td></tr>';
@@ -313,7 +311,7 @@ function renderRecordsTable() {
                 record.id +
                 '">' +
                 '<td class="abyip-records-title">' +
-                escapeHtml(record.title || '') +
+                escapeHtml(formatRecordTitle(record)) +
                 rejectionNote +
                 '</td>' +
                 '<td class="abyip-records-date">' +
@@ -376,7 +374,6 @@ function setMountContentEditable(editable) {
 
 function setMainModalFooterMode(mode) {
     const footer = document.getElementById('abyipModalFooter');
-    const exportBtn = document.getElementById('abyipModalExportWord');
     const printBtn = document.getElementById('abyipModalPrint');
     const saveBtn = document.getElementById('abyipModalSave');
     const cancelBtn = document.getElementById('abyipModalCancel');
@@ -384,16 +381,12 @@ function setMainModalFooterMode(mode) {
     if (mode === 'view') {
         footer?.classList.add('abyip-modal-footer-view');
         footer?.classList.remove('abyip-modal-footer-import', 'abyip-modal-footer-pdf-view');
-        // Show only Print and Export buttons in view mode (no cancel button)
-        if (exportBtn) exportBtn.style.display = 'inline-block';
         if (printBtn) printBtn.style.display = 'inline-block';
         if (saveBtn) saveBtn.style.display = 'none';
         if (cancelBtn) cancelBtn.style.display = 'none';
     } else if (mode === 'import') {
         footer?.classList.add('abyip-modal-footer-import');
         footer?.classList.remove('abyip-modal-footer-view', 'abyip-modal-footer-pdf-view');
-        // Show Save and Cancel buttons for import mode
-        if (exportBtn) exportBtn.style.display = 'none';
         if (printBtn) printBtn.style.display = 'none';
         if (saveBtn) {
             saveBtn.style.display = 'inline-block';
@@ -403,8 +396,6 @@ function setMainModalFooterMode(mode) {
     } else if (mode === 'pdf-view') {
         footer?.classList.add('abyip-modal-footer-pdf-view');
         footer?.classList.remove('abyip-modal-footer-view', 'abyip-modal-footer-import');
-        // Show only Save and Cancel buttons for PDF view mode (no Print or Export)
-        if (exportBtn) exportBtn.style.display = 'none';
         if (printBtn) printBtn.style.display = 'none';
         if (saveBtn) {
             saveBtn.style.display = 'inline-block';
@@ -413,8 +404,6 @@ function setMainModalFooterMode(mode) {
         if (cancelBtn) cancelBtn.style.display = 'inline-block';
     } else {
         footer?.classList.remove('abyip-modal-footer-view', 'abyip-modal-footer-import', 'abyip-modal-footer-pdf-view');
-        // Show Save and Cancel buttons in create/edit modes
-        if (exportBtn) exportBtn.style.display = 'none';
         if (printBtn) printBtn.style.display = 'none';
         if (saveBtn) {
             saveBtn.style.display = 'inline-block';
@@ -639,12 +628,49 @@ function printAbyipDocument() {
     }, 500);
 }
 
+function formatRecordTitle(record) {
+    const title = String(record.title || 'ABYIP').trim();
+    const year = record.calendarYear;
+
+    if (!year) {
+        return title;
+    }
+
+    if (/\bCY\s*\d{4}\b/i.test(title)) {
+        return title;
+    }
+
+    return `${title} CY ${year}`;
+}
+
+function populateYearFilter(years) {
+    const yearFilter = document.getElementById('abyipYearFilter');
+    if (!yearFilter) {
+        return;
+    }
+
+    const currentVal = yearFilter.value;
+    yearFilter.innerHTML = '<option value="">All Years</option>';
+
+    (years || []).forEach(function (year) {
+        const opt = document.createElement('option');
+        opt.value = String(year);
+        opt.textContent = 'CY ' + year;
+        if (String(year) === currentVal) {
+            opt.selected = true;
+        }
+        yearFilter.appendChild(opt);
+    });
+}
+
 async function loadRecords() {
     try {
         const response = await abyipApiFetch('/api/abyip');
         abyipRecords = (response.data || []).map(mapRecordFromApi);
+        populateYearFilter(response.years || []);
     } catch (e) {
         abyipRecords = [];
+        populateYearFilter([]);
     }
 }
 
@@ -985,6 +1011,28 @@ async function confirmDeleteRecord() {
     }
 }
 
+function resetPdfUploadModal() {
+    pendingPdfUploadFile = null;
+    const fileInput = document.getElementById('pdfFileInput');
+    if (fileInput) {
+        fileInput.value = '';
+    }
+
+    const zone = document.getElementById('abyipPdfUploadZone');
+    const selected = document.getElementById('abyipPdfSelected');
+    const continueBtn = document.getElementById('abyipPdfUploadContinueBtn');
+
+    if (zone) {
+        zone.hidden = false;
+    }
+    if (selected) {
+        selected.hidden = true;
+    }
+    if (continueBtn) {
+        continueBtn.disabled = true;
+    }
+}
+
 function openCreateOptionsModal() {
     const rejectedRecord = abyipRecords.find(function (record) {
         return String(record.status || '').toLowerCase() === 'rejected';
@@ -999,6 +1047,8 @@ function openCreateOptionsModal() {
         showNotification('Cannot create a new ABYIP. An existing record is already present. Please delete it first before creating a new one.', 'error');
         return;
     }
+
+    resetPdfUploadModal();
     const m = document.getElementById('createOptionsModal');
     if (m) {
         m.classList.add('active');
@@ -1012,6 +1062,62 @@ function closeCreateOptionsModal() {
         m.classList.remove('active');
         m.setAttribute('aria-hidden', 'true');
     }
+    resetPdfUploadModal();
+}
+
+function openImportPdfFilePicker() {
+    document.getElementById('pdfFileInput')?.click();
+}
+
+function handlePdfFileChosen(event) {
+    const fileInput = event.target;
+    const file = fileInput?.files?.[0];
+    if (!file) {
+        return;
+    }
+
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    if (!isPdf) {
+        showNotification('Please select a PDF file.', 'error');
+        fileInput.value = '';
+        return;
+    }
+
+    if (file.size > 15 * 1024 * 1024) {
+        showNotification('PDF must be 15MB or smaller.', 'error');
+        fileInput.value = '';
+        return;
+    }
+
+    pendingPdfUploadFile = file;
+
+    const zone = document.getElementById('abyipPdfUploadZone');
+    const selected = document.getElementById('abyipPdfSelected');
+    const nameEl = document.getElementById('abyipPdfSelectedName');
+    const continueBtn = document.getElementById('abyipPdfUploadContinueBtn');
+
+    if (zone) {
+        zone.hidden = true;
+    }
+    if (selected) {
+        selected.hidden = false;
+    }
+    if (nameEl) {
+        nameEl.textContent = file.name;
+    }
+    if (continueBtn) {
+        continueBtn.disabled = false;
+    }
+}
+
+function continuePdfUpload() {
+    if (!pendingPdfUploadFile) {
+        return;
+    }
+
+    const file = pendingPdfUploadFile;
+    closeCreateOptionsModal();
+    processPdfImportFile(file);
 }
 
 function openImportWordFilePicker() {
@@ -1811,22 +1917,22 @@ async function extractPdfTextForPrograms(pdfDoc) {
     return lines.join('\n');
 }
 
-function openImportPdfFilePicker() {
-    closeCreateOptionsModal();
-    const fileInput = document.getElementById('pdfFileInput');
-    if (fileInput) {
-        fileInput.click();
-    }
+function openImportPdfFilePickerLegacy() {
+    document.getElementById('pdfFileInput')?.click();
 }
 
 function handlePdfImport(event) {
-    const fileInput = event.target;
-    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+    const file = event.target?.files?.[0];
+    if (!file) {
         return;
     }
+    processPdfImportFile(file);
+    if (event.target) {
+        event.target.value = '';
+    }
+}
 
-    const file = fileInput.files[0];
-    
+function processPdfImportFile(file) {
     // Show loading notification
     showNotification('Loading PDF document...', 'info');
     
@@ -1855,23 +1961,19 @@ function handlePdfImport(event) {
                 }
 
                 openAbyipModalWithPdfPreview(pdf, file.name);
-                fileInput.value = '';
             }).catch(function(error) {
                 console.error('PDF loading error:', error);
                 showNotification('Error loading PDF document. Please try again.', 'error');
-                fileInput.value = '';
             });
             
         } catch (error) {
             console.error('PDF import error:', error);
             showNotification('Error importing PDF document. Please try again.', 'error');
-            fileInput.value = '';
         }
     };
 
     reader.onerror = function() {
         showNotification('Error reading file. Please try again.', 'error');
-        fileInput.value = '';
     };
 
     reader.readAsArrayBuffer(file);
@@ -2026,21 +2128,6 @@ function renderStoredPdf(base64Data, filename) {
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
-    if (window.SkTableSort) {
-        abyipTableSorter = SkTableSort.mount({
-            columnKeys: ['title', 'dateCreated', 'timeCreated', 'status'],
-            skipThClasses: ['th-checkbox', 'col-actions', 'abyip-records-actions-col'],
-            dateColumns: ['dateCreated', 'timeCreated'],
-            defaultColumn: 'dateCreated',
-            getSortValue: (row, column) => {
-                if (column === 'timeCreated') return row.dateCreated || '';
-                return row[column] ?? '';
-            },
-            onSort: () => renderRecordsTable(),
-        });
-        abyipTableSorter.initHeaders('.abyip-records-table thead tr');
-    }
-
     await loadRecords();
     renderRecordsTable();
 
@@ -2052,24 +2139,27 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     document.getElementById('addAbyipBtn')?.addEventListener('click', openCreateOptionsModal);
 
-    document.getElementById('selectImportBtn')?.addEventListener('click', openImportWordFilePicker);
-    document.getElementById('selectImportPdfBtn')?.addEventListener('click', openImportPdfFilePicker);
+    document.getElementById('abyipPdfUploadZone')?.addEventListener('click', openImportPdfFilePicker);
+    document.getElementById('abyipPdfUploadZone')?.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openImportPdfFilePicker();
+        }
+    });
+    document.getElementById('abyipPdfClearBtn')?.addEventListener('click', resetPdfUploadModal);
+    document.getElementById('abyipPdfUploadContinueBtn')?.addEventListener('click', continuePdfUpload);
+    document.getElementById('createOptionsCancelBtn')?.addEventListener('click', closeCreateOptionsModal);
     document.getElementById('createOptionsClose')?.addEventListener('click', closeCreateOptionsModal);
     document.getElementById('createOptionsModal')?.addEventListener('click', function (e) {
         if (e.target === e.currentTarget) closeCreateOptionsModal();
     });
 
-    // File input change listener for Word import
-    document.getElementById('wordFileInput')?.addEventListener('change', handleWordImport);
-    
-    // File input change listener for PDF import
-    document.getElementById('pdfFileInput')?.addEventListener('change', handlePdfImport);
+    document.getElementById('pdfFileInput')?.addEventListener('change', handlePdfFileChosen);
 
     document.getElementById('abyipModalClose')?.addEventListener('click', closeAbyipModal);
     document.getElementById('abyipModalCancel')?.addEventListener('click', closeAbyipModal);
     document.getElementById('abyipModalSave')?.addEventListener('click', saveAbyip);
     document.getElementById('abyipModalPrint')?.addEventListener('click', printAbyipDocument);
-    document.getElementById('abyipModalExportWord')?.addEventListener('click', exportToWord);
 
     document.getElementById('recordsTableBody')?.addEventListener('click', function (e) {
         const btn = e.target.closest('button[data-action]');

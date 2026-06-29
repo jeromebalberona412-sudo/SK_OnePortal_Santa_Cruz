@@ -26,10 +26,9 @@ class NotificationController extends Controller
     public function list(Request $request): JsonResponse
     {
         $user = Auth::user();
-        $limit = max(1, min(20, (int) $request->integer('limit', 5)));
 
         return response()->json([
-            'data' => $this->notificationService->recentForUser($user, $limit),
+            'data' => $this->notificationService->allForUser($user),
             'unread_count' => $this->notificationService->unreadCountForUser($user),
         ]);
     }

@@ -2609,9 +2609,9 @@ a.stat-card.stat-card-clickable {
 .kkf-personal-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 16px;
     border: 1px solid #bbb;
-    padding: 5px 7px;
+    padding: 10px 12px;
     margin-bottom: 6px;
 }
 
@@ -3499,8 +3499,22 @@ a.stat-card.stat-card-clickable {
 .kabataan-email-cell {
     font-size: 12px;
     color: #374151;
-    max-width: 200px;
+    min-width: 160px;
+    max-width: 260px;
+    white-space: normal;
+    line-height: 1.45;
     word-break: break-word;
+    padding-right: 10px;
+}
+
+.kkf-personal-right .kkf-inline-pair {
+    gap: 10px;
+}
+
+#kabataanEmail {
+    flex: 1;
+    min-width: 200px;
+    width: auto;
 }
 
 .table-pagination-footer {

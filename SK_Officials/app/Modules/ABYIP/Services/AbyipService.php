@@ -91,6 +91,19 @@ class AbyipService
     }
 
     /**
+     * @return Collection<int, int>
+     */
+    public function distinctYearsForBarangay(User $user): Collection
+    {
+        return Abyip::query()
+            ->documents()
+            ->where('barangay_id', $user->barangay_id)
+            ->distinct()
+            ->orderByDesc('fiscal_year')
+            ->pluck('fiscal_year');
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function findForBarangay(User $user, int $documentId): array

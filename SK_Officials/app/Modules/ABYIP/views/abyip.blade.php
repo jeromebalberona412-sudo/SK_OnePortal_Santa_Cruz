@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Annual Barangay Youth Investment Program (ABYIP) — SK Officials Portal</title>
+    <title>Annual Barangay Youth Investment Program (ABYIP) CY {{ date('Y') }} — SK Officials Portal</title>
 
     <!-- PDF.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -32,7 +32,7 @@
 
         <section class="page-header-section">
             <div class="page-header-left">
-                <h1 class="page-title">Annual Barangay Youth Investment Program (ABYIP)</h1>
+                <h1 class="page-title">Annual Barangay Youth Investment Program (ABYIP) CY {{ date('Y') }}</h1>
                 <p class="page-subtitle">Create, view, and manage ABYIP records for the barangay.</p>
             </div>
             <div class="page-header-right">
@@ -40,10 +40,6 @@
                     <div class="abyip-filter-item">
                         <select id="abyipYearFilter" class="abyip-filter-select">
                             <option value="">All Years</option>
-                            <option value="2023">CY 2023</option>
-                            <option value="2024">CY 2024</option>
-                            <option value="2025">CY 2025</option>
-                            <option value="2026">CY 2026</option>
                         </select>
                     </div>
                     <div class="abyip-search-inline">
@@ -414,7 +410,6 @@
                 <button type="button" class="btn-cancel" id="abyipModalCancel">Cancel</button>
                 <button type="button" class="btn-save" id="abyipModalSave">Save ABYIP</button>
                 <button type="button" class="btn-print-abyip" id="abyipModalPrint">Print ABYIP</button>
-                <button type="button" class="btn-export-word" id="abyipModalExportWord">Export to Word</button>
             </div>
         </div>
     </div>
@@ -442,46 +437,44 @@
         </div>
     </div>
 
-    <!-- Create ABYIP Options Modal -->
+    <!-- Create ABYIP — PDF Upload Modal -->
     <div class="modal-backdrop" id="createOptionsModal" aria-hidden="true">
-        <div class="modal-box create-options-modal-box" role="dialog" aria-labelledby="createOptionsHeading">
+        <div class="modal-box create-options-modal-box abyip-upload-modal-box" role="dialog" aria-labelledby="createOptionsHeading">
             <div class="create-options-modal-header">
-                <h4 id="createOptionsHeading">Create New ABYIP</h4>
+                <h4 id="createOptionsHeading">Upload ABYIP (PDF)</h4>
                 <button type="button" class="modal-close-btn" id="createOptionsClose">&times;</button>
             </div>
-            <div class="abyip-meta-modal-inner">
-                <p class="abyip-meta-hint">Choose how you want to create your ABYIP document.</p>
-                <div class="create-options-buttons">
-                    <button type="button" class="btn-option btn-import" id="selectImportBtn">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        <span class="btn-option-title">Import MS Word</span>
-                        <span class="btn-option-desc">Import from existing Word document (View Only)</span>
-                    </button>
-                    <button type="button" class="btn-option btn-import-pdf" id="selectImportPdfBtn">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="abyip-meta-modal-inner abyip-pdf-upload-inner">
+                <p class="abyip-meta-hint">Upload your Annual Barangay Youth Investment Program document in PDF format. The file will be saved for viewing and printing.</p>
+                <div class="abyip-pdf-upload-zone" id="abyipPdfUploadZone" role="button" tabindex="0" aria-label="Upload ABYIP PDF">
+                    <div class="abyip-pdf-upload-icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                             <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <line x1="12" y1="18" x2="12" y2="12"></line>
+                            <polyline points="9 15 12 12 15 15"></polyline>
                         </svg>
-                        <span class="btn-option-title">Import PDF</span>
-                        <span class="btn-option-desc">Upload PDF document (View Only)</span>
-                    </button>
+                    </div>
+                    <p class="abyip-pdf-upload-title">Click to browse or drag and drop</p>
+                    <p class="abyip-pdf-upload-hint">PDF files only · Maximum 15MB</p>
                 </div>
+                <div class="abyip-pdf-selected" id="abyipPdfSelected" hidden>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <span id="abyipPdfSelectedName"></span>
+                    <button type="button" class="abyip-pdf-clear-btn" id="abyipPdfClearBtn">Remove</button>
+                </div>
+            </div>
+            <div class="abyip-pdf-upload-footer">
+                <button type="button" class="btn-cancel" id="createOptionsCancelBtn">Cancel</button>
+                <button type="button" class="btn primary-btn" id="abyipPdfUploadContinueBtn" disabled>Continue</button>
             </div>
         </div>
     </div>
 
-    <!-- Hidden file inputs for import -->
-    <input type="file" id="wordFileInput" accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display: none;">
+    <!-- Hidden file input for PDF import -->
     <input type="file" id="pdfFileInput" accept=".pdf,application/pdf" style="display: none;">
 </main>
 
-@include('layout::partials.table-column-sort')
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',

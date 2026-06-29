@@ -97,18 +97,10 @@
                     </select>
                 </div>
                 <div class="filter-item">
-                    <label for="kabataanPurok / SitioFilter" class="filter-label">Purok / Sitio</label>
-                    <select id="kabataanPurok / SitioFilter" class="filter-select">
+                    <label for="kabataanPurokSitioFilter" class="filter-label">Purok / Sitio</label>
+                    <select id="kabataanPurokSitioFilter" class="filter-select">
                         <option value="">All</option>
-                        <option value="BAYSIDE">BAYSIDE</option>
-                        <option value="VILLA GRACIA">VILLA GRACIA</option>
-                        <option value="IMELDA">IMELDA</option>
-                        <option value="LUPANG PANGAKO">LUPANG PANGAKO</option>
-                        <option value="DAMAYAN">DAMAYAN</option>
-                        <option value="MARCELO">MARCELO</option>
-                        <option value="BIGAYANVILLA ROSA">BIGAYANVILLA ROSA</option>
-                        <option value="PHASE3">PHASE3</option>
-                        <option value="BIGAYANSANLUIS">BIGAYANSANLUIS</option>
+                        @include('layout::partials.barangay-zone-options')
                     </select>
                 </div>
                 <div class="filter-item">
@@ -144,7 +136,7 @@
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                 </svg>
-                <span id="kabataanBulkDeleteLabel">Delete</span>
+                <span id="kabataanBulkDeleteLabel">Delete Rows</span>
             </button>
         </div>
 
@@ -170,7 +162,7 @@
                                 <th>City / Municipality</th>
                                 <th>Purok / Sitio</th>
                                 <th>Highest Education</th>
-                                <th>ID Documents</th>
+                                <th>Documents</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
                         </thead>
@@ -534,15 +526,7 @@
                         <div class="kkf-loc-col">
                             <select id="kabataanPurokZone" class="kkf-uline kkf-uline-select">
                                 <option value="">Select</option>
-                                <option value="BAYSIDE">BAYSIDE</option>
-                                <option value="VILLA GRACIA">VILLA GRACIA</option>
-                                <option value="IMELDA">IMELDA</option>
-                                <option value="LUPANG PANGAKO">LUPANG PANGAKO</option>
-                                <option value="DAMAYAN">DAMAYAN</option>
-                                <option value="MARCELO">MARCELO</option>
-                                <option value="BIGAYANVILLA ROSA">BIGAYANVILLA ROSA</option>
-                                <option value="PHASE3">PHASE3</option>
-                                <option value="BIGAYANSANLUIS">BIGAYANSANLUIS</option>
+                                @include('layout::partials.barangay-zone-options')
                             </select>
                             <label for="kabataanPurokZone" class="kkf-col-label">Purok/Zone</label>
                         </div>

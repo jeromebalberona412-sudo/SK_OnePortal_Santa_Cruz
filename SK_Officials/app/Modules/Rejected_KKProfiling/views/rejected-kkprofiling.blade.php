@@ -32,7 +32,7 @@
         <section class="page-header-section">
             <div class="page-header-left">
                 <h1 class="page-title">Rejected KK Profiling</h1>
-                <p class="page-subtitle">KK Profiling requests that were rejected.</p>
+                <p class="page-subtitle">KK Profiling requests that were rejected. You can restore records within 30 days. After 30 days, they will be automatically deleted.</p>
             </div>
             <div class="page-header-right">
                 <input type="text" id="rejectedKKSearch" class="filter-input" placeholder="Search by name or respondent #…">

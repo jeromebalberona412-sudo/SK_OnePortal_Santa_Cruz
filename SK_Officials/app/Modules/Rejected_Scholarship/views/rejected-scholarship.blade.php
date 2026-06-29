@@ -30,7 +30,7 @@
         @include('Program_Management::scholarship.partials.page-top', [
             'activeTab' => 'rejected',
             'pageTitle' => 'Rejected Scholars',
-            'pageSubtitle' => 'Scholarship applications that were rejected. Restore to return them to the application queue.',
+            'pageSubtitle' => 'Scholarship applications that were rejected. You can restore records within 30 days. After 30 days, they will be automatically deleted.',
         ])
 
         <section class="page-header-section rs-toolbar-row">
