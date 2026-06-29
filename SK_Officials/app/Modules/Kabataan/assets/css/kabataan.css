@@ -1507,6 +1507,12 @@ body {
     transform: translateY(-2px);
 }
 
+a.stat-card.stat-card-clickable {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
 .stat-card-blue, .stat-card-indigo { border-color: #3B82F6; }
 .stat-card-orange                  { border-color: #FACC15; }
 .stat-card-green, .stat-card-teal, .stat-card-yellow { border-color: #22C55E; }

@@ -37,33 +37,6 @@
 
         <!-- ── Kabataan Stat Cards ── -->
         <div class="module-stats-grid">
-            <div class="stat-card stat-card-green">
-                <div class="stat-card-top">
-                    <span class="stat-card-value" id="kabStatApproved">0</span>
-                    <div class="stat-card-icon stat-icon-green">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    </div>
-                </div>
-                <span class="stat-card-label">Approved Kabataan Records</span>
-            </div>
-            <div class="stat-card stat-card-orange">
-                <div class="stat-card-top">
-                    <span class="stat-card-value" id="kabStatPending">0</span>
-                    <div class="stat-card-icon stat-icon-orange">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    </div>
-                </div>
-                <span class="stat-card-label">Pending Kabataan Records</span>
-            </div>
-            <div class="stat-card stat-card-red">
-                <div class="stat-card-top">
-                    <span class="stat-card-value" id="kabStatRejected">0</span>
-                    <div class="stat-card-icon stat-icon-red">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                    </div>
-                </div>
-                <span class="stat-card-label">Rejected Kabataan Records</span>
-            </div>
             <div class="stat-card stat-card-blue">
                 <div class="stat-card-top">
                     <span class="stat-card-value" id="kabStatTotal">0</span>
@@ -73,6 +46,33 @@
                 </div>
                 <span class="stat-card-label">Total Kabataan Submissions</span>
             </div>
+            <a href="{{ route('kabataan') }}" class="stat-card stat-card-green stat-card-clickable">
+                <div class="stat-card-top">
+                    <span class="stat-card-value" id="kabStatApproved">0</span>
+                    <div class="stat-card-icon stat-icon-green">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                </div>
+                <span class="stat-card-label">Approved Kabataan Records</span>
+            </a>
+            <a href="{{ route('kk-profiling-requests') }}" class="stat-card stat-card-orange stat-card-clickable">
+                <div class="stat-card-top">
+                    <span class="stat-card-value" id="kabStatPending">0</span>
+                    <div class="stat-card-icon stat-icon-orange">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                </div>
+                <span class="stat-card-label">Pending Kabataan Records</span>
+            </a>
+            <a href="{{ route('rejected-kkprofiling') }}" class="stat-card stat-card-red stat-card-clickable">
+                <div class="stat-card-top">
+                    <span class="stat-card-value" id="kabStatRejected">0</span>
+                    <div class="stat-card-icon stat-icon-red">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    </div>
+                </div>
+                <span class="stat-card-label">Rejected Kabataan Records</span>
+            </a>
         </div>
 
         <section class="page-filters-section">
@@ -112,6 +112,15 @@
                     </select>
                 </div>
                 <div class="filter-item">
+                    <label for="kabataanYouthAgeGroupFilter" class="filter-label">Youth Age Group</label>
+                    <select id="kabataanYouthAgeGroupFilter" class="filter-select">
+                        <option value="">All</option>
+                        <option value="Child Youth (15-17 yrs old)">Child Youth (15-17 yrs old)</option>
+                        <option value="Core Youth (18-24 yrs old)">Core Youth (18-24 yrs old)</option>
+                        <option value="Young Adult (15-30 yrs old)">Young Adult (15-30 yrs old)</option>
+                    </select>
+                </div>
+                <div class="filter-item">
                     <label for="kabataanEducationFilter" class="filter-label">Highest Education</label>
                     <select id="kabataanEducationFilter" class="filter-select">
                         <option value="">All</option>
@@ -129,13 +138,13 @@
             </div>
         </section>
 
-        <div class="table-external-actions">
-            <button type="button" class="btn-float-delete" id="kabataanBulkDeleteBtn" hidden>
+        <div class="table-external-actions kabataan-table-actions" id="kabataanTableActions" hidden>
+            <button type="button" class="btn-float-delete" id="kabataanBulkDeleteBtn">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                 </svg>
-                <span id="kabataanBulkDeleteLabel">Delete 0 rows</span>
+                <span id="kabataanBulkDeleteLabel">Delete</span>
             </button>
         </div>
 

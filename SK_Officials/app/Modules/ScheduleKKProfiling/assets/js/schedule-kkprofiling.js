@@ -119,10 +119,17 @@ function initializeScheduleKKProfiling() {
         return `${month}/${day}/${year}`;
     }
 
+    function getCurrentYearTwoDigit() {
+        return String(new Date().getFullYear()).slice(-2);
+    }
+
     function expandTwoDigitYear(twoDigitYear) {
         const value = parseInt(twoDigitYear, 10);
         if (Number.isNaN(value)) return null;
-        return value >= 70 ? 1900 + value : 2000 + value;
+        const currentYear = new Date().getFullYear();
+        const expectedTwoDigit = currentYear % 100;
+        if (value !== expectedTwoDigit) return null;
+        return currentYear;
     }
 
     function mdyToYmd(mdyStr) {
@@ -174,12 +181,26 @@ function initializeScheduleKKProfiling() {
         showFieldError(dateExpiryError, '');
 
         if (startMd && !dateStart) {
-            showFieldError(dateStartError, 'Enter a valid date as MM/DD/YY.');
+            const yearHint = getCurrentYearTwoDigit();
+            const hasYear = /^\d{1,2}\/\d{1,2}\/\d{2}$/.test(startMd);
+            showFieldError(
+                dateStartError,
+                hasYear
+                    ? `Year must be ${yearHint} (current year only).`
+                    : 'Enter a valid date as MM/DD/YY.',
+            );
             valid = false;
         }
 
         if (expiryMd && !dateExpiry) {
-            showFieldError(dateExpiryError, 'Enter a valid date as MM/DD/YY.');
+            const yearHint = getCurrentYearTwoDigit();
+            const hasYear = /^\d{1,2}\/\d{1,2}\/\d{2}$/.test(expiryMd);
+            showFieldError(
+                dateExpiryError,
+                hasYear
+                    ? `Year must be ${yearHint} (current year only).`
+                    : 'Enter a valid date as MM/DD/YY.',
+            );
             valid = false;
         }
 

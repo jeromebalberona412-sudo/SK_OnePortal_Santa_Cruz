@@ -41,8 +41,10 @@ function initializeKabataanUI() {
     const tbody = document.getElementById('kabataanTableBody');
     const searchInput = document.getElementById('kabataanSearch');
     const genderFilter = document.getElementById('kabataanGenderFilter');
+    const youthAgeGroupFilter = document.getElementById('kabataanYouthAgeGroupFilter');
     const purokFilter = document.getElementById('kabataanPurok / SitioFilter');
     const educationFilter = document.getElementById('kabataanEducationFilter');
+    const tableActionsBar = document.getElementById('kabataanTableActions');
 
     const modal = document.getElementById('kabataanModal');
     const modalBox = modal ? modal.querySelector('.kabataan-modal-box') : null;
@@ -305,6 +307,7 @@ function initializeKabataanUI() {
 
     let currentQuery = '';
     let currentGender = '';
+    let currentYouthAgeGroup = '';
     let currentPurok = '';
     let currentEducation = '';
     let editingIndex = null;
@@ -322,9 +325,10 @@ function initializeKabataanUI() {
                 || (k.barangay && k.barangay.toLowerCase().includes(q))
                 || (education && education.toLowerCase().includes(q));
             const matchGender = !currentGender || k.sex === currentGender;
+            const matchYouthAgeGroup = !currentYouthAgeGroup || k.youthAgeGroup === currentYouthAgeGroup;
             const matchPurok = !currentPurok || k.purokZone === currentPurok;
             const matchEducation = !currentEducation || education === currentEducation;
-            return matchSearch && matchGender && matchPurok && matchEducation;
+            return matchSearch && matchGender && matchYouthAgeGroup && matchPurok && matchEducation;
         });
     }
 
@@ -380,13 +384,18 @@ function initializeKabataanUI() {
         const deleteBtn = document.getElementById('kabataanBulkDeleteBtn');
         const label = document.getElementById('kabataanBulkDeleteLabel');
         const count = selectedIds.size;
+        const hasSelection = count > 0;
+
+        if (tableActionsBar) {
+            tableActionsBar.hidden = !hasSelection;
+        }
 
         if (deleteBtn) {
-            deleteBtn.hidden = count === 0;
+            deleteBtn.hidden = !hasSelection;
         }
 
         if (label) {
-            label.textContent = `Delete ${count} row${count === 1 ? '' : 's'}`;
+            label.textContent = count > 1 ? `Delete (${count})` : 'Delete';
         }
     }
 
@@ -831,6 +840,14 @@ function initializeKabataanUI() {
     if (genderFilter) {
         genderFilter.addEventListener('change', () => {
             currentGender = genderFilter.value;
+            currentPage = 1;
+            render();
+        });
+    }
+
+    if (youthAgeGroupFilter) {
+        youthAgeGroupFilter.addEventListener('change', () => {
+            currentYouthAgeGroup = youthAgeGroupFilter.value;
             currentPage = 1;
             render();
         });

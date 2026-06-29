@@ -136,6 +136,21 @@ export function populateKkProfilingView(request, options = {}) {
         return candidates.some((candidate) => normalized === candidate.trim().toLowerCase());
     };
 
+    const formatDisplaySuffix = (value) => {
+        if (!value) return '';
+        const normalized = String(value).trim();
+        if (!normalized || normalized.toLowerCase() === 'none') return '';
+        return normalized;
+    };
+
+    const applySuffixDisplay = (elementId, value) => {
+        const el = document.getElementById(elementId);
+        const col = el?.closest('.kkp-name-col, .kkf-name-col');
+        const display = formatDisplaySuffix(value);
+        if (el) el.textContent = display;
+        if (col) col.hidden = !display;
+    };
+
     const formatBirthdayDisplay = (value) => {
         if (!value || value === '—') return '—';
         const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
@@ -148,7 +163,7 @@ export function populateKkProfilingView(request, options = {}) {
     setVal('kkViewLastName', lastName || '—');
     setVal('kkViewFirstName', firstName || '—');
     setVal('kkViewMiddleName', middleName || '—');
-    setVal('kkViewSuffix', suffix || 'None');
+    applySuffixDisplay('kkViewSuffix', suffix);
     setVal('kkViewRegion', region || '—');
     setVal('kkViewProvince', province || '—');
     setVal('kkViewCity', city || '—');
@@ -244,7 +259,7 @@ export function populateKkProfilingView(request, options = {}) {
         firstName,
         middleName ? middleName.charAt(0) + '.' : null,
         lastName,
-        suffix && suffix !== 'None' ? suffix : null,
+        suffix && formatDisplaySuffix(suffix) ? formatDisplaySuffix(suffix) : null,
     ].filter(Boolean);
     const printedName = nameParts.join(' ') || '—';
     if (sigNameEl) sigNameEl.textContent = printedName;
@@ -292,7 +307,7 @@ export function mapRegistrationToKkView(record) {
         firstName: record.first_name,
         middleName: record.middle_name,
         lastName: record.last_name,
-        suffix: record.suffix || 'None',
+        suffix: record.suffix || '',
         age: record.age,
         birthday: record.birthday,
         sex: record.sex,

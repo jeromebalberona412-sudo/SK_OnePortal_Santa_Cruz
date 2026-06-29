@@ -63,6 +63,8 @@ function initializeKKProfilingRequestsUI() {
     const searchInput = document.getElementById('kkSearch');
     const barangayFilter = document.getElementById('kkBarangayFilter');
     const voterFilter = document.getElementById('kkVoterFilter');
+    const sexFilter = document.getElementById('kkSexFilter');
+    const youthAgeGroupFilter = document.getElementById('kkYouthAgeGroupFilter');
     const viewModal = document.getElementById('kkViewModal');
     const approveModal = document.getElementById('kkApproveModal');
     const rejectModal = document.getElementById('kkRejectModal');
@@ -122,6 +124,8 @@ function initializeKKProfilingRequestsUI() {
     let currentSearchQuery = '';
     let currentBarangayFilter = '';
     let currentVoterFilter = '';
+    let currentSexFilter = '';
+    let currentYouthAgeGroupFilter = '';
     let activeRequestId = null;
     let currentPage = 1;
     let recordsPerPage = 10;
@@ -139,6 +143,8 @@ function initializeKKProfilingRequestsUI() {
             }
             if (currentBarangayFilter && r.purokZone !== currentBarangayFilter) return false;
             if (currentVoterFilter && r.registeredVoter !== currentVoterFilter) return false;
+            if (currentSexFilter && r.sex !== currentSexFilter) return false;
+            if (currentYouthAgeGroupFilter && r.youthAgeGroup !== currentYouthAgeGroupFilter) return false;
             return true;
         });
     }
@@ -202,7 +208,7 @@ function initializeKKProfilingRequestsUI() {
             const tr = document.createElement('tr');
             tr.className = 'empty-state-row';
             const td = document.createElement('td');
-            td.colSpan = 8;
+            td.colSpan = 9;
             td.textContent = 'No KK Profiling requests found.';
             tr.appendChild(td);
             tbody.appendChild(tr);
@@ -257,6 +263,7 @@ function initializeKKProfilingRequestsUI() {
                 </td>
                 <td class="kk-email-cell">${email}</td>
                 <td>${r.age}</td>
+                <td>${r.sex || '—'}</td>
                 <td>${r.barangay}</td>
                 <td>${purokZone}</td>
                 <td>${voterStatus}</td>
@@ -279,7 +286,11 @@ function initializeKKProfilingRequestsUI() {
         setVal('vLastName', request.lastName);
         setVal('vFirstName', request.firstName);
         setVal('vMiddleName', request.middleName);
-        setVal('vSuffix', formatDisplaySuffix(request.suffix));
+        const suffixEl = document.getElementById('vSuffix');
+        const suffixCol = suffixEl?.closest('.kkf-name-col');
+        const suffixDisplay = formatDisplaySuffix(request.suffix);
+        if (suffixEl) suffixEl.textContent = suffixDisplay;
+        if (suffixCol) suffixCol.hidden = !suffixDisplay;
         setVal('vRegion', request.region);
         setVal('vProvince', request.province);
         setVal('vCity', request.city);
@@ -483,7 +494,7 @@ function initializeKKProfilingRequestsUI() {
             setField('vLastName', 'lastName', lastName || '—');
             setField('vFirstName', 'firstName', firstName || '—');
             setField('vMiddleName', 'middleName', middleName || '—');
-            setField('vSuffix', 'suffix', suffix || 'None');
+            setField('vSuffix', 'suffix', formatDisplaySuffix(suffix) || '—');
             setField('vBarangay', 'barangay', barangay || '—');
             setField('vPurokZone', 'purokZone', purokZone || '—');
             setField('vAge', 'age', age || '—');
@@ -659,6 +670,8 @@ function initializeKKProfilingRequestsUI() {
     if (searchInput) { searchInput.addEventListener('input', () => { currentSearchQuery = searchInput.value.trim(); currentPage = 1; renderTable(); }); }
     if (barangayFilter) { barangayFilter.addEventListener('change', () => { currentBarangayFilter = barangayFilter.value; currentPage = 1; renderTable(); }); }
     if (voterFilter) { voterFilter.addEventListener('change', () => { currentVoterFilter = voterFilter.value; currentPage = 1; renderTable(); }); }
+    if (sexFilter) { sexFilter.addEventListener('change', () => { currentSexFilter = sexFilter.value; currentPage = 1; renderTable(); }); }
+    if (youthAgeGroupFilter) { youthAgeGroupFilter.addEventListener('change', () => { currentYouthAgeGroupFilter = youthAgeGroupFilter.value; currentPage = 1; renderTable(); }); }
 
     const prevBtn = document.getElementById('kkPrevBtn');
     const nextBtn = document.getElementById('kkNextBtn');
