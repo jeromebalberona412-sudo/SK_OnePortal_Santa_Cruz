@@ -16,6 +16,7 @@ let pendingIsImported = false; // Track if pending record is an imported Word do
 let filterSearchText = '';
 let filterYear = '';
 let searchDebounceTimer = null;
+let abyipTableSorter = null;
 
 const abyipCsrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
@@ -289,7 +290,9 @@ function renderRecordsTable() {
         return;
     }
 
-    const filtered = getFilteredRecords();
+    const filtered = abyipTableSorter
+        ? abyipTableSorter.sortRows(getFilteredRecords())
+        : getFilteredRecords();
     if (filtered.length === 0) {
         tbody.innerHTML =
             '<tr><td colspan="5" class="abyip-records-empty">No records match your search.</td></tr>';
@@ -2023,6 +2026,21 @@ function renderStoredPdf(base64Data, filename) {
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
+    if (window.SkTableSort) {
+        abyipTableSorter = SkTableSort.mount({
+            columnKeys: ['title', 'dateCreated', 'timeCreated', 'status'],
+            skipThClasses: ['th-checkbox', 'col-actions', 'abyip-records-actions-col'],
+            dateColumns: ['dateCreated', 'timeCreated'],
+            defaultColumn: 'dateCreated',
+            getSortValue: (row, column) => {
+                if (column === 'timeCreated') return row.dateCreated || '';
+                return row[column] ?? '';
+            },
+            onSort: () => renderRecordsTable(),
+        });
+        abyipTableSorter.initHeaders('.abyip-records-table thead tr');
+    }
+
     await loadRecords();
     renderRecordsTable();
 

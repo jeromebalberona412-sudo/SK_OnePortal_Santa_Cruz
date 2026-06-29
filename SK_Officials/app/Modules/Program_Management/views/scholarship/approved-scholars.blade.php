@@ -59,7 +59,7 @@
                         </svg>
                     </div>
                 </div>
-                <span class="stat-card-label">Pending Release</span>
+                <span class="stat-card-label">Total Scholarship Applications</span>
             </div>
             <div class="stat-card stat-card-green sl-dash-stat">
                 <div class="stat-card-top">

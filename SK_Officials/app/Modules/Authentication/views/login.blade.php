@@ -11,7 +11,9 @@
     <title>SK Officials Portal</title>
     @vite([
         'app/Modules/Authentication/assets/css/login.css',
+        'app/Modules/Authentication/assets/css/auth-legal.css',
         'app/Modules/Authentication/assets/js/login.js',
+        'app/Modules/Authentication/assets/js/auth-legal.js',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
@@ -174,14 +176,18 @@
                         <button type="button" class="sk-link" id="forgotBtn">Forgot password?</button>
                     </div>
 
+                    @include('authentication::partials.login-legal-consent')
+
                     <!-- Submit Button -->
-                    <button type="submit" class="sk-submit-btn" id="loginBtn">
+                    <button type="submit" class="sk-submit-btn" id="loginBtn" disabled>
                         <span>Sign In</span>
                     </button>
                 </form>
             </div>
         </div>
     </main>
+
+    @include('authentication::partials.legal-modals')
 
     <script>
         function togglePassword() {
@@ -261,6 +267,13 @@
                     isValid = false;
                 } else if (passwordInput.value.length < 8) {
                     showError(passwordInput, passwordError, 'Password must be at least 8 characters');
+                    isValid = false;
+                }
+
+                const legalConsent = document.getElementById('loginLegalConsent');
+                const legalConsentError = document.getElementById('legalConsentError');
+                if (!legalConsent || !legalConsent.checked) {
+                    if (legalConsentError) legalConsentError.hidden = false;
                     isValid = false;
                 }
 

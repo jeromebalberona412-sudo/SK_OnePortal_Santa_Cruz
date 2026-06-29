@@ -103,6 +103,7 @@ function slToggleModalMaximize(overlay, box, maxBtn, e) {
 
 const PROGRAM_LETTER = 'A';
 let SL_SCHOLARS = [];
+let totalApplicationCount = 0;
 
 function slShowToast(message) {
     if (typeof window.showScholarshipToast === 'function') {
@@ -171,8 +172,12 @@ function mapApprovedScholar(app) {
 }
 
 async function loadApprovedScholars() {
-    const data = await slApiFetch(`/api/program-applications?letter=${PROGRAM_LETTER}&status=approved`);
-    SL_SCHOLARS = (data.data || []).map(mapApprovedScholar);
+    const [approvedData, allData] = await Promise.all([
+        slApiFetch(`/api/program-applications?letter=${PROGRAM_LETTER}&status=approved`),
+        slApiFetch(`/api/program-applications?letter=${PROGRAM_LETTER}`),
+    ]);
+    SL_SCHOLARS = (approvedData.data || []).map(mapApprovedScholar);
+    totalApplicationCount = allData.summary?.total ?? (allData.data || []).length;
     slEnsurePaymentStatuses();
     applyFilters();
 }
@@ -554,7 +559,6 @@ window.slDownloadPlaceholderPdf = slDownloadPlaceholderPdf;
 
 function updateSummaryCards() {
     const total = filteredScholars.length;
-    const pending = filteredScholars.filter(s => slNormalizePaymentStatus(s) === 'Pending Release').length;
     const claimed = filteredScholars.filter(s => slNormalizePaymentStatus(s) === 'Claimed').length;
     const unclaimed = filteredScholars.filter(s => slNormalizePaymentStatus(s) === 'Unclaimed').length;
 
@@ -563,7 +567,7 @@ function updateSummaryCards() {
     const elPaid = document.getElementById('slStatPaid');
     const elUnclaimed = document.getElementById('slStatUnclaimed');
     if (elTotal) elTotal.textContent = total;
-    if (elPending) elPending.textContent = pending;
+    if (elPending) elPending.textContent = totalApplicationCount;
     if (elPaid) elPaid.textContent = claimed;
     if (elUnclaimed) elUnclaimed.textContent = unclaimed;
 }

@@ -777,9 +777,12 @@ html {
    ============================================ */
 
 .youth-input:disabled,
-.youth-submit-btn:disabled {
-    opacity: 0.6;
+.youth-submit-btn:disabled,
+.youth-submit-btn.auth-legal-submit-blocked {
+    opacity: 0.55;
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 /* Error State */

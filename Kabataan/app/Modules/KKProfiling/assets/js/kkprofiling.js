@@ -1890,7 +1890,7 @@ function showEmailVerification(email) {
 
         if (successMessageEl) {
             successMessageEl.textContent = message || (autoApproved
-                ? 'Your ID address matches your registered barangay. You can log in now.'
+                ? 'Your details match a previous KK profiling record. You can log in now.'
                 : 'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.');
         }
 
@@ -2010,7 +2010,7 @@ function showEmailVerification(email) {
             if (response.ok) {
                 showSuccessModal(
                     data.auto_approved
-                        ? (data.message || 'Registration verified! Your ID address matches your barangay. You can log in now.')
+                        ? (data.message || 'Registration verified! Your details match a previous KK profiling record. You can log in now.')
                         : (data.message || 'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.'),
                     Boolean(data.auto_approved),
                 );

@@ -731,6 +731,8 @@ create table public.kabataan_registrations (
   password_set_at timestamp without time zone null,
   reviewed_at timestamp without time zone null,
   review_notes text null,
+  archived_at timestamp without time zone null,
+  archive_reason character varying(64) null,
   created_at timestamp without time zone null,
   updated_at timestamp without time zone null,
   deleted_at timestamp without time zone null,
@@ -746,7 +748,8 @@ create table public.kabataan_registrations (
         'email_verified'::text,
         'password_set'::text,
         'active'::text,
-        'rejected'::text
+        'rejected'::text,
+        'archived'::text
       ]
     )
   )

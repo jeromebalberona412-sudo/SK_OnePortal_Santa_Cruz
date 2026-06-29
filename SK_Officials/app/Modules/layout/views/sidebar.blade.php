@@ -169,7 +169,7 @@
                 </li>
 
                 <!-- ── Archived (Dropdown) ── -->
-                <li class="nav-item nav-item-dropdown {{ request()->routeIs('deleted-kabataan', 'deleted-abyip', 'rejected-kkprofiling', 'rejected-scholars', 'rejected-scholarship', 'rejected-sports', 'announcements.archive', 'sports-programs.archived') ? 'open' : '' }}" id="archivedDropdown">
+                <li class="nav-item nav-item-dropdown {{ request()->routeIs('deleted-kabataan', 'archived-youth-records', 'deleted-abyip', 'rejected-kkprofiling', 'rejected-scholars', 'rejected-scholarship', 'rejected-sports', 'announcements.archive', 'sports-programs.archived') ? 'open' : '' }}" id="archivedDropdown">
                     <a href="#" class="nav-link nav-link-dropdown" id="archivedToggleLink">
                         <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="21 8 21 21 3 21 3 8"></polyline>
@@ -183,6 +183,29 @@
                     </a>
 
                     <ul class="nav-submenu" id="archivedSubmenu">
+
+                        <!-- ── Aged-out youth ── -->
+                        <li class="nav-subitem nav-subgroup-label">
+                            <span class="nav-subgroup-title">
+                                <svg class="nav-subicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                                Aged-Out Youth
+                            </span>
+                        </li>
+
+                        <li class="nav-subitem">
+                            <a href="{{ route('archived-youth-records') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('archived-youth-records') ? 'active' : '' }}">
+                                <svg class="nav-subicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                    <path d="M16 3H8v4h8V3z"></path>
+                                </svg>
+                                <span>Archived Youth Records</span>
+                            </a>
+                        </li>
 
                         <!-- ── Deleted Items group label ── -->
                         <li class="nav-subitem nav-subgroup-label">

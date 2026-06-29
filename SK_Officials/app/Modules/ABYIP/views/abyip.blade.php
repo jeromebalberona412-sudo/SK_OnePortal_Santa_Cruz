@@ -481,6 +481,7 @@
     <input type="file" id="pdfFileInput" accept=".pdf,application/pdf" style="display: none;">
 </main>
 
+@include('layout::partials.table-column-sort')
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',

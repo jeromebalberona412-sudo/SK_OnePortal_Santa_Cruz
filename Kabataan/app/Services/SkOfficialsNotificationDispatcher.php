@@ -46,7 +46,7 @@ class SkOfficialsNotificationDispatcher
             $barangayId,
             'kk_profiling',
             'KK Profiling Auto-Approved',
-            "{$fullName} has been automatically approved because all identity verification checks passed.",
+            "{$fullName} was automatically approved after matching a previous KK profiling record.",
             '/kabataan',
         );
     }

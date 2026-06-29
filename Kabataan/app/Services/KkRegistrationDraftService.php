@@ -309,36 +309,6 @@ class KkRegistrationDraftService
             $formData = $this->buildFormData($step1, $wizard);
             $formData['supporting_documents'] = $this->promoteDocuments($wizard);
 
-            $idVerification = is_array($wizard['step2_data']['id_verification'] ?? null)
-                ? $wizard['step2_data']['id_verification']
-                : null;
-
-            $verificationService = app(IdVerificationService::class);
-
-            if (
-                ! $verificationService->wasAlreadyProcessed($idVerification)
-                && $formData['supporting_documents'] !== []
-            ) {
-                $registrationFields = array_merge($step1, [
-                    '_both_sides_uploaded' => collect($formData['supporting_documents'])
-                        ->contains(fn (array $doc) => isset($doc['sides']['front'], $doc['sides']['back'])),
-                ]);
-
-                $reverified = $verificationService->verifySupportingDocuments(
-                    $formData['supporting_documents'],
-                    (int) $barangay->id,
-                    $registrationFields,
-                );
-
-                if (is_array($reverified)) {
-                    $idVerification = $reverified;
-                }
-            }
-
-            if (is_array($idVerification)) {
-                $formData['id_verification'] = $idVerification;
-            }
-
             $registration = KabataanRegistration::create([
                 'tenant_id' => $barangay->tenant_id,
                 'barangay_id' => $barangay->id,
@@ -378,10 +348,7 @@ class KkRegistrationDraftService
             $registration->linkUser($user->id);
 
             $evaluator = new RegistrationEvaluationService;
-            $autoApproved = $evaluator->evaluate(
-                $registration->fresh(),
-                is_array($idVerification) ? $idVerification : null,
-            );
+            $autoApproved = $evaluator->evaluate($registration->fresh());
 
             if (! $autoApproved) {
                 try {
@@ -735,6 +702,10 @@ class KkRegistrationDraftService
             return trim($step1['custom_suffix'] ?? '') ?: null;
         }
 
+        if ($suffix === null || $suffix === '' || strcasecmp((string) $suffix, 'none') === 0) {
+            return null;
+        }
+
         return $suffix;
     }
 
@@ -781,7 +752,6 @@ class KkRegistrationDraftService
                     $promoted[] = [
                         'type' => $key,
                         'sides' => $promotedSides,
-                        'ocr' => $wizard['step2_data']['id_verification'] ?? null,
                     ];
                 }
 

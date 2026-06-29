@@ -10,9 +10,6 @@ use App\Notifications\KabataanSetPasswordEmail;
 use App\Rules\FacebookProfileUrl;
 use App\Services\BarangayZoneService;
 use App\Services\DuplicateKabataanRegistrationService;
-use App\Services\IdVerificationService;
-use App\Services\KabataanFullNameMatcher;
-use App\Services\KkProfilingValidationMessages;
 use App\Services\KkRegistrationDraftService;
 use App\Services\RegistrationEvaluationService;
 use App\Support\SupportingDocumentTypes;
@@ -29,7 +26,6 @@ class KKProfilingWizardController extends Controller
     public function __construct(
         protected KkRegistrationDraftService $draftService,
         protected BarangayZoneService $barangayZoneService,
-        protected IdVerificationService $idVerificationService,
         protected DuplicateKabataanRegistrationService $duplicateChecker,
     ) {}
 
@@ -55,22 +51,22 @@ class KKProfilingWizardController extends Controller
 
     public function saveStep2(Request $request, string $barangay)
     {
-        @set_time_limit((int) config('ocr.pipeline_timeout', 600));
-
         $barangayRecord = $this->resolveBarangay($barangay);
         $wizard = $this->requireWizard();
 
         if (empty($wizard['step1_data'])) {
             throw ValidationException::withMessages([
-                'document_type' => ['Please complete Step 1 (KK Profiling Form) before uploading your School ID.'],
+                'document_type' => ['Please complete Step 1 (KK Profiling Form) before continuing.'],
             ]);
         }
 
+        $skipDocuments = $request->boolean('skip_documents');
         $allowedTypes = implode(',', SupportingDocumentTypes::allowed());
         $fileRule = ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'];
 
         $request->validate([
-            'document_type' => ['required', 'in:'.$allowedTypes],
+            'skip_documents' => ['sometimes', 'boolean'],
+            'document_type' => [$skipDocuments ? 'nullable' : 'sometimes', 'nullable', 'in:'.$allowedTypes],
             'school_id_front' => $fileRule,
             'school_id_back' => $fileRule,
             'national_id_front' => $fileRule,
@@ -85,83 +81,62 @@ class KKProfilingWizardController extends Controller
 
         $hasSchoolUpload = $schoolFront || $schoolBack;
         $hasNationalUpload = $nationalFront || $nationalBack;
+        $hasAnyUpload = $hasSchoolUpload || $hasNationalUpload;
 
-        if ($hasSchoolUpload && $hasNationalUpload) {
+        if ($skipDocuments && $hasAnyUpload) {
             throw ValidationException::withMessages([
-                'document_type' => ['You can only upload one ID type at a time.'],
+                'document_type' => ['Remove uploaded files or upload both sides instead of skipping this step.'],
             ]);
         }
 
-        if ($documentType === SupportingDocumentTypes::SCHOOL_ID && $hasNationalUpload) {
-            throw ValidationException::withMessages([
-                'document_type' => ['Selected School ID but National ID files were uploaded.'],
-            ]);
-        }
-
-        if ($documentType === SupportingDocumentTypes::NATIONAL_ID && $hasSchoolUpload) {
-            throw ValidationException::withMessages([
-                'document_type' => ['Selected National ID but School ID files were uploaded.'],
-            ]);
-        }
-
-        if (! $documentType && ($hasSchoolUpload || $hasNationalUpload)) {
-            throw ValidationException::withMessages([
-                'document_type' => ['Please select School ID or PhilSys / National ID.'],
-            ]);
-        }
-
-        $sides = match ($documentType) {
-            SupportingDocumentTypes::SCHOOL_ID => [
-                'front' => $schoolFront,
-                'back' => $schoolBack,
-            ],
-            SupportingDocumentTypes::NATIONAL_ID => [
-                'front' => $nationalFront,
-                'back' => $nationalBack,
-            ],
-            default => [],
-        };
-
-        $uploadedSides = collect($sides)->filter(fn ($file) => $file instanceof \Illuminate\Http\UploadedFile);
-        $hasUpload = $uploadedSides->isNotEmpty();
-
-        if ($hasUpload && $uploadedSides->count() < 2) {
-            throw ValidationException::withMessages([
-                'document_type' => ['Please upload both front and back images of your ID.'],
-            ]);
-        }
-
-        if (! $hasUpload) {
-            throw ValidationException::withMessages([
-                'document_type' => ['Please upload both front and back images of your selected ID to continue.'],
-            ]);
-        }
-
-        $verification = null;
-
-        if ($hasUpload) {
-            $wizard = $this->draftService->saveStep2($wizard, (string) $documentType, $sides);
-
-            $registrationFields = is_array($wizard['step1_data'] ?? null) ? $wizard['step1_data'] : [];
-            $registrationFields['registration_barangay'] = $barangayRecord->name;
-
-            $verification = $this->idVerificationService->verifyTempDocument(
-                $wizard,
-                (string) $documentType,
-                $registrationFields,
-            );
-
-            if (is_array($verification)) {
-                $wizard = $this->draftService->storeIdVerification($wizard, $verification);
+        if (! $skipDocuments && $hasAnyUpload) {
+            if ($hasSchoolUpload && $hasNationalUpload) {
+                throw ValidationException::withMessages([
+                    'document_type' => ['You can only upload one ID type at a time.'],
+                ]);
             }
 
-            $verification = $this->enrichVerificationWithWizardContext(
-                $verification,
-                $wizard,
-                $barangayRecord,
-            );
+            if (! $documentType) {
+                throw ValidationException::withMessages([
+                    'document_type' => ['Please select School ID or PhilSys / National ID.'],
+                ]);
+            }
 
-            $this->assertUploadedIdVerificationPassed($verification, $wizard, (string) $documentType);
+            if ($documentType === SupportingDocumentTypes::SCHOOL_ID && $hasNationalUpload) {
+                throw ValidationException::withMessages([
+                    'document_type' => ['Selected School ID but National ID files were uploaded.'],
+                ]);
+            }
+
+            if ($documentType === SupportingDocumentTypes::NATIONAL_ID && $hasSchoolUpload) {
+                throw ValidationException::withMessages([
+                    'document_type' => ['Selected National ID but School ID files were uploaded.'],
+                ]);
+            }
+
+            $sides = match ($documentType) {
+                SupportingDocumentTypes::SCHOOL_ID => [
+                    'front' => $schoolFront,
+                    'back' => $schoolBack,
+                ],
+                SupportingDocumentTypes::NATIONAL_ID => [
+                    'front' => $nationalFront,
+                    'back' => $nationalBack,
+                ],
+                default => [],
+            };
+
+            $uploadedSides = collect($sides)->filter(fn ($file) => $file instanceof \Illuminate\Http\UploadedFile);
+
+            if ($uploadedSides->count() > 0 && $uploadedSides->count() < 2) {
+                throw ValidationException::withMessages([
+                    'document_type' => ['Please upload both front and back images of your ID.'],
+                ]);
+            }
+
+            if ($uploadedSides->count() === 2) {
+                $wizard = $this->draftService->saveStep2($wizard, (string) $documentType, $sides);
+            }
         }
 
         $wizard = $this->draftService->advanceToStep3($wizard);
@@ -190,18 +165,10 @@ class KKProfilingWizardController extends Controller
             'token' => $wizard['token'],
             'step' => 3,
             'email' => $email,
-            'message' => 'School ID verified. Continue to email verification.',
-            'id_verification' => $verification,
-            'id_verified' => (bool) (
-                ($verification['name_match'] ?? false)
-                && ($verification['birthdate_match'] ?? false)
-                && ($verification['barangay_match'] ?? false)
-            ),
-            'auto_approve_hint' => (bool) (
-                ($verification['name_match'] ?? false)
-                && ($verification['birthdate_match'] ?? false)
-                && ($verification['barangay_match'] ?? false)
-            ),
+            'message' => $hasAnyUpload
+                ? 'Supporting documents saved. Continue to email verification.'
+                : 'Continue to email verification. You may upload an ID later if needed.',
+            'documents_uploaded' => $hasAnyUpload,
             'verification_sent' => $verificationSent,
             'email_error' => $emailError,
         ]);
@@ -616,7 +583,7 @@ class KKProfilingWizardController extends Controller
             'auto_approved' => $autoApproved,
             'evaluation_status' => $registration?->evaluation_status ?? ($completed['evaluation_status'] ?? null),
             'message' => $autoApproved
-                ? 'Registration verified! Your ID address matches your barangay. You can log in now.'
+                ? 'Registration verified! Your details match a previous KK profiling record. You can log in now.'
                 : 'Your registration has been submitted. Please wait for SK officials to verify your account.',
         ]);
     }
@@ -632,90 +599,6 @@ class KKProfilingWizardController extends Controller
         }
 
         return $wizard;
-    }
-
-    /**
-     * @param  array<string, mixed>|null  $verification
-     * @return array<string, mixed>|null
-     */
-    private function enrichVerificationWithWizardContext(
-        ?array $verification,
-        array $wizard,
-        Barangay $barangayRecord,
-    ): ?array {
-        if ($verification === null) {
-            return null;
-        }
-
-        $step1 = is_array($wizard['step1_data'] ?? null) ? $wizard['step1_data'] : [];
-        $matcher = app(KabataanFullNameMatcher::class);
-
-        if (empty($verification['form_full_name']) && $step1 !== []) {
-            $verification['form_full_name'] = $matcher->formatFormFullNameForDisplay($step1);
-        }
-
-        if (empty($verification['form_birthday']) && ! empty($step1['birthday'])) {
-            $verification['form_birthday'] = (string) $step1['birthday'];
-        }
-
-        if (empty($verification['form_barangay'])) {
-            $verification['form_barangay'] = $barangayRecord->name;
-        }
-
-        $verification['registration_barangay'] = $barangayRecord->name;
-
-        return $verification;
-    }
-
-    /**
-     * @param  array<string, mixed>|null  $verification
-     */
-    private function assertUploadedIdVerificationPassed(?array $verification, array $wizard, string $documentType): void
-    {
-        if (! in_array($documentType, [SupportingDocumentTypes::SCHOOL_ID, SupportingDocumentTypes::NATIONAL_ID], true)) {
-            return;
-        }
-
-        if ($verification === null) {
-            throw ValidationException::withMessages([
-                'document_type' => [KkProfilingValidationMessages::uploadProcessingFailed()],
-            ]);
-        }
-
-        if ($verification['duplicate_detected'] ?? false) {
-            throw ValidationException::withMessages([
-                'document_type' => [$verification['message'] ?? KkProfilingValidationMessages::DUPLICATE_IDENTITY],
-            ]);
-        }
-
-        $nameMatch = (bool) ($verification['name_match'] ?? false);
-        $birthdateMatch = (bool) ($verification['birthdate_match'] ?? false);
-        $barangayMatch = (bool) ($verification['barangay_match'] ?? false);
-        $autoApproved = ($verification['decision'] ?? '') === 'AUTO_APPROVE';
-
-        if ($nameMatch && $birthdateMatch && $barangayMatch) {
-            return;
-        }
-
-        if ($documentType === SupportingDocumentTypes::SCHOOL_ID) {
-            if (KkProfilingValidationMessages::verificationOcrUnreadable($verification)) {
-                throw ValidationException::withMessages([
-                    'document_type' => [KkProfilingValidationMessages::uploadProcessingFailed()],
-                ]);
-            }
-
-            throw ValidationException::withMessages([
-                'document_type' => [KkProfilingValidationMessages::schoolIdValidationBlocked($verification)],
-            ]);
-        }
-
-        $messages = KkProfilingValidationMessages::collectSchoolIdMismatches($verification);
-
-        throw ValidationException::withMessages([
-            'document_type' => [$messages !== []
-                ? implode("\n\n", $messages)
-                : ($verification['message'] ?? KkProfilingValidationMessages::uploadProcessingFailed())],
-        ]);
     }
 
     private function finalizeRegistrationResponse(KabataanRegistration $registration): \Illuminate\Http\JsonResponse
@@ -734,7 +617,7 @@ class KKProfilingWizardController extends Controller
             'success' => true,
             'auto_approved' => $autoApproved,
             'message' => $autoApproved
-                ? 'Registration verified! Your account is approved. You can log in now.'
+                ? 'Registration verified! Your details match a previous KK profiling record. You can log in now.'
                 : 'Registration completed! Please wait for verification/approval by SK Officials before logging in.',
         ]);
     }

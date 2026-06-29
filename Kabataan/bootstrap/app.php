@@ -13,10 +13,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'kabataan' => \App\Http\Middleware\EnsureKabataanUser::class,
+            'kabataan.view_only_guard' => \App\Http\Middleware\PreventArchivedKabataanMutations::class,
         ]);
 
         $middleware->appendToGroup('auth', [
             'kabataan',
+            'kabataan.view_only_guard',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

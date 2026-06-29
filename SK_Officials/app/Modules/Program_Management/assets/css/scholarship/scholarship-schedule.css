@@ -78,7 +78,7 @@
     border-radius: 14px;
     border: 1px solid #e5e7eb;
     box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
-    overflow: visible;
+    overflow: hidden;
 }
 
 .saf-table-wrap {
@@ -95,10 +95,12 @@
     background: #2c2c3e;
 }
 
+.saf-forms-table-card .saf-forms-table thead th:first-child,
 .saf-schedule-table-card .saf-forms-table thead th:first-child {
     border-top-left-radius: 12px;
 }
 
+.saf-forms-table-card .saf-forms-table thead th:last-child,
 .saf-schedule-table-card .saf-forms-table thead th:last-child {
     border-top-right-radius: 12px;
 }

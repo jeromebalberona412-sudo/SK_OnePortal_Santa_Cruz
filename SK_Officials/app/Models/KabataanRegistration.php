@@ -20,6 +20,7 @@ class KabataanRegistration extends Model
         'evaluation_status', 'evaluation_notes',
         'submitted_at', 'email_verified_at', 'password_set_at',
         'reviewed_at', 'review_notes',
+        'archived_at', 'archive_reason',
     ];
 
     protected $casts = [
@@ -29,6 +30,7 @@ class KabataanRegistration extends Model
         'email_verified_at'  => 'datetime',
         'password_set_at'    => 'datetime',
         'reviewed_at'        => 'datetime',
+        'archived_at'        => 'datetime',
         'deleted_at'         => 'datetime',
     ];
 

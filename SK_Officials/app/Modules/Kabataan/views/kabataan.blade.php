@@ -139,7 +139,7 @@
         </section>
 
         <div class="table-external-actions kabataan-table-actions" id="kabataanTableActions" hidden>
-            <button type="button" class="btn-float-delete" id="kabataanBulkDeleteBtn">
+            <button type="button" class="btn-float-delete" id="kabataanBulkDeleteBtn" hidden>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -165,6 +165,9 @@
                                 <th>Email</th>
                                 <th>Age</th>
                                 <th>Sex</th>
+                                <th>Region</th>
+                                <th>Province</th>
+                                <th>City / Municipality</th>
                                 <th>Purok / Sitio</th>
                                 <th>Highest Education</th>
                                 <th>ID Documents</th>

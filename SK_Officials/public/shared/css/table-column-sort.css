@@ -1,0 +1,72 @@
+.sk-sortable {
+    padding: 0;
+    vertical-align: middle;
+}
+
+.sk-sort-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 4px;
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.sk-sort-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.sk-sort-label {
+    display: inline-block;
+}
+
+.sk-sort-icon {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 0.7;
+    font-size: 8px;
+    gap: 1px;
+    flex-shrink: 0;
+    opacity: 0.45;
+}
+
+.sk-sort-icon::before,
+.sk-sort-icon::after {
+    display: block;
+}
+
+.sk-sort-icon::before { content: '▲'; }
+.sk-sort-icon::after { content: '▼'; }
+
+.sk-sortable.sort-asc .sk-sort-icon::before,
+.sk-sortable.sort-desc .sk-sort-icon::after {
+    opacity: 1;
+    color: #fbbf24;
+}
+
+.sk-sortable.sort-asc .sk-sort-icon,
+.sk-sortable.sort-desc .sk-sort-icon {
+    opacity: 1;
+}
+
+.sk-sort-btn .column-hint,
+.sk-sort-btn .spl-col-hint {
+    display: block;
+    font-size: 9px;
+    font-weight: 400;
+    opacity: 0.75;
+    text-transform: none;
+    letter-spacing: 0.02em;
+    margin-top: 2px;
+}

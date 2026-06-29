@@ -11,6 +11,8 @@ export default defineConfig({
                 // Authentication module assets
                 'app/Modules/Authentication/assets/css/login.css',
                 'app/Modules/Authentication/assets/js/login.js',
+                'app/Modules/Authentication/assets/css/auth-legal.css',
+                'app/Modules/Authentication/assets/js/auth-legal.js',
                 'app/Modules/Authentication/assets/css/forgot-password.css',
                 'app/Modules/Authentication/assets/js/forgot-password.js',
                 'app/Modules/Authentication/assets/css/password-reset-success.css',
@@ -71,6 +73,8 @@ export default defineConfig({
                 // Deleted Kabataan module assets
                 'app/Modules/Deleted_Kabataan/assets/css/deleted-kabataan.css',
                 'app/Modules/Deleted_Kabataan/assets/js/deleted-kabataan.js',
+                'app/Modules/Archived_Youth_Records/assets/css/archived-youth-records.css',
+                'app/Modules/Archived_Youth_Records/assets/js/archived-youth-records.js',
                 'app/Modules/Deleted_Abyip/assets/js/deleted-abyip.js',
                 // Rejected KK Profiling module assets
                 'app/Modules/Rejected_KKProfiling/assets/css/rejected-kkprofiling.css',

@@ -6,9 +6,10 @@
         ? app(\App\Modules\Profile\Services\ProfileImageService::class)->resolveDisplayUrl($headerUser)
         : 'https://ui-avatars.com/api/?name=' . urlencode($userName) . '&background=667eea&color=fff';
     $pageBadge = $pageBadge ?? null;
+    $kabataanViewOnly = $kabataanViewOnly ?? false;
 @endphp
 
-<nav class="kabataan-header" id="kabataanHeader" aria-label="Main navigation">
+<nav class="kabataan-header{{ $kabataanViewOnly ? ' kabataan-header--view-only' : '' }}" id="kabataanHeader" aria-label="Main navigation">
     <div class="kabataan-header__container">
         <a href="{{ route('dashboard') }}" class="kabataan-header__brand">
             <img src="/images/skoneportal_logo.webp" alt="SK OnePortal" class="kabataan-header__logo">
@@ -78,6 +79,15 @@
             </div>
         </div>
     </div>
+    @if ($kabataanViewOnly)
+        <div class="kabataan-view-only-banner" role="status">
+            {{ \App\Services\KabataanEligibilityService::VIEW_ONLY_MESSAGE }}
+        </div>
+    @endif
 </nav>
+
+@if ($kabataanViewOnly)
+    <script>document.body.classList.add('kabataan-has-view-only-banner');</script>
+@endif
 
 @include('layout::kabataan-logout-modal')

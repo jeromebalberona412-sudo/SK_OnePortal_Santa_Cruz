@@ -444,7 +444,7 @@ function initializeKabataanUI() {
             const tr = document.createElement('tr');
             tr.className = 'empty-state-row';
             const td = document.createElement('td');
-            td.colSpan = 10;
+            td.colSpan = 13;
             td.textContent = 'No kabataan match current filters.';
             tr.appendChild(td);
             tbody.appendChild(tr);
@@ -476,6 +476,9 @@ function initializeKabataanUI() {
                 <td class="kabataan-email-cell">${k.email || k.emailAddress || '—'}</td>
                 <td>${k.age || '-'}</td>
                 <td>${k.sex || '-'}</td>
+                <td>${k.region || '—'}</td>
+                <td>${k.province || '—'}</td>
+                <td>${k.city || '—'}</td>
                 <td>${k.purokZone || '-'}</td>
                 <td>${k.educationalBackground || k.highestEducation || '-'}</td>
                 <td>${formatDocumentsCell(Boolean(k.hasSupportingDocuments))}</td>
@@ -1624,6 +1627,9 @@ function initializeKabataanUI() {
                     email: r.email,
                     contact: r.contact_number,
                     barangay: r.barangay,
+                    region: r.region,
+                    province: r.province,
+                    city: r.city,
                     purokZone: r.purok_zone,
                     highestEducation: r.education,
                     educationalBackground: r.education,

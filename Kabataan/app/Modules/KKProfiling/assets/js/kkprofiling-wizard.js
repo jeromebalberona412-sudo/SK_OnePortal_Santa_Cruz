@@ -21,7 +21,7 @@
         },
         2: {
             title: 'Supporting Documents',
-            desc: 'Upload your School ID or PhilSys / National ID. Your name, birthdate, and barangay must match Step 1.',
+            desc: 'Optional: upload your School ID or PhilSys / National ID now, or skip and continue to email verification.',
         },
         3: {
             title: 'Check Your Email',
@@ -485,7 +485,7 @@
                     titleEl.textContent = 'Registration Verified!';
                 }
                 if (messageEl) {
-                    messageEl.textContent = 'Your ID address matches your registered barangay and purok/sitio. Your account is approved — you can log in now.';
+                    messageEl.textContent = 'Your details match a previous KK profiling record for your barangay. Your account is approved — you can log in now.';
                 }
             } else {
                 if (titleEl) {
@@ -825,7 +825,7 @@
             if (step === 1) {
                 nextLabelEl.textContent = 'Save & Continue';
             } else if (step === 2) {
-                nextLabelEl.textContent = hasSelectedFiles ? 'Upload & Continue' : 'Continue';
+                nextLabelEl.textContent = hasSelectedFiles ? 'Upload & Continue' : 'Skip & Continue';
             } else {
                 nextLabelEl.textContent = 'Continue';
             }
@@ -982,16 +982,66 @@
     async function saveStep2() {
         hideDocUploadError();
 
+        const hasFiles = hasPartialDocumentUpload();
+
+        if (hasFiles && !hasCompleteDocumentUpload()) {
+            showDocUploadError('Please upload both front and back images of your selected ID, or remove the files to skip this step.');
+            return false;
+        }
+
+        if (!hasFiles) {
+            showLoading('Continuing to email verification...');
+
+            let saved = false;
+
+            try {
+                const formData = new FormData();
+                formData.append('skip_documents', '1');
+
+                const response = await postFormData(`${apiBase}/step-2`, formData);
+
+                if (response?.verification_sent) {
+                    verificationSent = true;
+                    root.dataset.verificationSent = '1';
+
+                    if (displayEmail && response.email) {
+                        displayEmail.textContent = response.email;
+                    }
+
+                    if (window.startResendTimer) {
+                        window.startResendTimer();
+                    }
+                }
+
+                saved = true;
+
+                if (saved) {
+                    const skipAutoSend = Boolean(response?.verification_sent);
+                    await setStep(3, { skipAutoSend });
+
+                    if (response?.email_error) {
+                        showEmailStatus(response.email_error, 'error');
+                        enableResendButton();
+                    }
+                }
+            } catch (error) {
+                const message = error.errors?.document_type?.[0]
+                    || error.errors?.registration?.[0]
+                    || error.message;
+
+                showDocUploadError(message);
+            } finally {
+                hideLoading();
+            }
+
+            return saved;
+        }
+
         const documentType = getSelectedDocumentType();
         const files = getActiveDocumentFiles();
 
         if (!documentType) {
             showDocUploadError('Please select School ID or PhilSys / National ID.');
-            return false;
-        }
-
-        if (!hasCompleteDocumentUpload()) {
-            showDocUploadError('Please upload both front and back images of your selected ID.');
             return false;
         }
 
@@ -1003,7 +1053,7 @@
             return false;
         }
 
-        showLoading('Uploading and verifying your ID...');
+        showLoading('Saving your documents...');
 
         let saved = false;
 
@@ -1022,17 +1072,9 @@
             }
 
             const response = await postFormData(`${apiBase}/step-2`, formData);
-            const idVerified = Boolean(
-                response?.id_verified
-                || (
-                    response?.id_verification?.name_match
-                    && response?.id_verification?.birthdate_match
-                    && response?.id_verification?.barangay_match
-                ),
-            );
 
             if (idVerificationNotice) {
-                idVerificationNotice.hidden = !idVerified;
+                idVerificationNotice.hidden = !response?.documents_uploaded;
             }
 
             if (response?.verification_sent) {

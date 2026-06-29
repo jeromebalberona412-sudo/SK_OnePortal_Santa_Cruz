@@ -8,6 +8,7 @@ use App\Modules\Announcement\Controllers\BarangayProfileController;
 use App\Modules\Calendar\Controllers\CalendarController;
 use App\Modules\Committees\Controllers\CommitteeController;
 use App\Modules\Dashboard\Controllers\DashboardController;
+use App\Modules\Archived_Youth_Records\Controllers\ArchivedYouthRecordsController;
 use App\Modules\Deleted_Kabataan\Controllers\DeletedKabataanController;
 use App\Modules\Kabataan\Controllers\KabataanController;
 use App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController;
@@ -191,6 +192,9 @@ Route::middleware([
     Route::get('/deleted-kabataan', [DeletedKabataanController::class, 'index'])->name('deleted-kabataan');
     Route::get('/deleted-kabataan/data', [DeletedKabataanController::class, 'data'])->name('deleted-kabataan.data');
     Route::post('/deleted-kabataan/{id}/restore', [DeletedKabataanController::class, 'restore'])->name('deleted-kabataan.restore');
+
+    Route::get('/archived-youth-records', [ArchivedYouthRecordsController::class, 'index'])->name('archived-youth-records');
+    Route::get('/archived-youth-records/data', [ArchivedYouthRecordsController::class, 'data'])->name('archived-youth-records.data');
 
     Route::get('/deleted-abyip', function () {
         return view('Deleted_Abyip::deleted-abyip');

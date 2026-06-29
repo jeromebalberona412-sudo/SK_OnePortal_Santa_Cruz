@@ -3435,6 +3435,11 @@ a.stat-card.stat-card-clickable {
 }
 
 /* ── Bulk delete toolbar ── */
+.kabataan-page .kabataan-table-actions[hidden] {
+    display: none !important;
+    margin: 0;
+}
+
 .kabataan-table-toolbar {
     display: flex;
     justify-content: flex-end;

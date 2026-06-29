@@ -33,6 +33,8 @@ class KabataanRegistration extends Model
         'password_set_at',
         'reviewed_at',
         'review_notes',
+        'archived_at',
+        'archive_reason',
     ];
 
     protected $casts = [
@@ -43,6 +45,7 @@ class KabataanRegistration extends Model
         'facial_verification_completed_at' => 'datetime',
         'password_set_at'  => 'datetime',
         'reviewed_at'      => 'datetime',
+        'archived_at'      => 'datetime',
         'deleted_at'       => 'datetime',
     ];
 

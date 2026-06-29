@@ -1,0 +1,116 @@
+@import '../../../Deleted_Kabataan/assets/css/deleted-kabataan.css';
+
+.archived-youth-page .ayr-table thead {
+    background: #b45309;
+}
+
+.archived-youth-page .ayr-table tbody tr:hover {
+    background: #fffbeb;
+}
+
+.archived-at-badge {
+    display: inline-block;
+    font-size: 11px;
+    color: #b45309;
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.archived-time-badge {
+    display: inline-block;
+    font-size: 11px;
+    color: #92400e;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.ayr-archived-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    padding: 12px 20px;
+    background: #fffbeb;
+    border-bottom: 1px solid #fde68a;
+}
+
+.ayr-archived-meta-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #92400e;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.ayr-archived-meta-value {
+    font-size: 14px;
+    color: #111827;
+    font-weight: 600;
+}
+
+.ayr-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    padding: 12px 18px;
+    border-radius: 10px;
+    background: #111827;
+    color: #fff;
+    font-size: 14px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.ayr-toast.is-visible {
+    opacity: 1;
+}
+
+.ayr-toast.is-error {
+    background: #dc2626;
+}
+
+.ayr-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 1100px;
+}
+
+.ayr-table thead th,
+.ayr-table td {
+    padding: 10px 14px;
+    text-align: center;
+    border-bottom: 1px solid #e5e7eb;
+    border-right: 1px solid #e5e7eb;
+    vertical-align: middle;
+}
+
+.ayr-table thead th {
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.ayr-table th:last-child,
+.ayr-table td:last-child {
+    border-right: none;
+}
+
+.ayr-table tbody tr:nth-child(even) {
+    background: #f9fafb;
+}
+
+.stat-card-amber .stat-card-icon {
+    background: rgba(180, 83, 9, 0.12);
+    color: #b45309;
+}

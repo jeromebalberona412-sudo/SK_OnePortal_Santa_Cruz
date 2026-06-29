@@ -447,16 +447,23 @@ html, body {
 }
 
 .dash-section-header--wrap {
-    flex-wrap: wrap;
-    align-items: center;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+}
+
+.dash-section-header--wrap > div:first-child {
+    flex: 1;
+    min-width: 0;
 }
 
 .dash-chart-header-actions {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: flex-end;
     justify-content: flex-end;
     gap: 10px;
+    margin-left: auto;
+    flex-shrink: 0;
 }
 
 .dash-section-title {
@@ -1402,6 +1409,11 @@ html, body {
     .dash-chart-header-actions {
         width: 100%;
         justify-content: flex-start;
+        margin-left: 0;
+    }
+
+    .dash-section-header--chart-filters {
+        flex-wrap: wrap;
     }
 
     .dash-brgy-link-list {

@@ -10,6 +10,7 @@ use App\Services\KkProfilingRequestDataService;
 use App\Services\RespondentNumberService;
 use App\Services\SkOfficialActivityService;
 use App\Support\KabataanApprovedStatuses;
+use App\Support\KabataanLocationResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -78,6 +79,7 @@ class KabataanController extends Controller
 
         $data = $records->map(function ($r) use ($val, $approvedSurveys) {
             $fd = $r->form_data ?? [];
+            $location = KabataanLocationResolver::forRegistration($r);
             $supportingDocuments = $this->supportingDocumentService->formatForApi($r, 'kabataan.document');
             $idVerification = is_array($fd['id_verification'] ?? null) ? $fd['id_verification'] : null;
             $rawDocuments = $fd['supporting_documents'] ?? [];
@@ -110,6 +112,9 @@ class KabataanController extends Controller
                 'email'          => $r->email,
                 'contact_number' => $r->contact_number,
                 'barangay'       => $r->barangay?->name ?? '—',
+                'region'         => $location['region'],
+                'province'       => $location['province'],
+                'city'           => $location['city'],
                 'purok_zone'     => $val($fd, 'purok_zone'),
                 'education'      => $val($fd, 'education'),
                 'civil_status'   => $val($fd, 'civil_status'),

@@ -1,4 +1,4 @@
-{{-- Step 2: School ID or PhilSys — front and back images required when uploading --}}
+{{-- Step 2: Optional supporting documents upload --}}
 <section class="kkp-wizard-panel" id="kkpWizardStep2" data-wizard-step="2" @if(($kkpInitialStep ?? 1) !== 2) hidden @endif>
     <div class="kkp-wizard-panel-card kkp-wizard-panel-card--docs">
         <div class="kkp-wizard-panel-head">
@@ -11,9 +11,9 @@
                 </svg>
             </div>
             <div>
-                <h2 class="kkp-wizard-panel-title">Supporting Documents</h2>
+                <h2 class="kkp-wizard-panel-title">Supporting Documents <span class="kkp-wizard-optional">Optional</span></h2>
                 <p class="kkp-wizard-panel-desc">
-                    Upload your School ID or PhilSys / National ID (front and back). We will compare your name, birthdate, and barangay from Step 1 against your ID.
+                    You may upload your School ID or PhilSys / National ID now, or skip this step and continue to email verification.
                 </p>
             </div>
         </div>
@@ -23,13 +23,13 @@
                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
             </svg>
             <p>
-                Choose <strong>one</strong> ID type and upload <strong>both front and back</strong> images (JPG or PNG, max 10MB each).
-                Your KK Profiling Form (name, birthdate, barangay) must match what appears on your ID. If everything matches, you proceed to email verification and may be <strong>automatically approved</strong> after setting your password.
+                If you upload your ID now, you may not need to submit it again for future SK programs because your record will already have a copy on file.
+                This step does <strong>not</strong> scan or verify your ID. Your registration will be checked against previous KK profiling records from your barangay after you set your password.
             </p>
         </div>
 
         <div class="kkp-wizard-info-callout kkp-wizard-info-callout--success" id="kkpIdVerificationNotice" hidden role="status">
-            <p><strong>School ID verified!</strong> Your name, birthdate, and barangay match your uploaded ID. Continue to email verification.</p>
+            <p><strong>Documents saved.</strong> Continue to email verification.</p>
         </div>
 
         <div class="kkp-wizard-info-callout kkp-wizard-info-callout--error" id="kkpDocValidationError" hidden role="alert">
@@ -37,7 +37,7 @@
         </div>
 
         <fieldset class="kkp-wizard-doc-type-fieldset" id="kkpDocTypeFieldset">
-            <legend class="kkp-wizard-doc-type-legend">Select document type</legend>
+            <legend class="kkp-wizard-doc-type-legend">Select document type (if uploading)</legend>
             <div class="kkp-wizard-doc-type-options" role="radiogroup" aria-label="Document type">
                 <label class="kkp-wizard-doc-type-option">
                     <input type="radio" name="document_type" value="school_id" id="kkpDocTypeSchoolId">
@@ -51,7 +51,7 @@
                         </span>
                         <span class="kkp-wizard-doc-type-text">
                             <span class="kkp-wizard-doc-type-name">School ID</span>
-                            <span class="kkp-wizard-doc-type-desc">Front and back · address usually on back</span>
+                            <span class="kkp-wizard-doc-type-desc">Front and back · optional upload</span>
                         </span>
                     </span>
                 </label>
@@ -67,7 +67,7 @@
                         </span>
                         <span class="kkp-wizard-doc-type-text">
                             <span class="kkp-wizard-doc-type-name">PhilSys / National ID</span>
-                            <span class="kkp-wizard-doc-type-desc">Front and back of your National ID</span>
+                            <span class="kkp-wizard-doc-type-desc">Front and back · optional upload</span>
                         </span>
                     </span>
                 </label>

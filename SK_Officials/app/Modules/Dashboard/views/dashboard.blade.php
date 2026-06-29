@@ -360,7 +360,7 @@
         </div>
 
         <div class="dash-section-card">
-            <div class="dash-section-header dash-section-header--wrap">
+            <div class="dash-section-header dash-section-header--wrap dash-section-header--chart-filters">
                 <div>
                     <h2 class="dash-section-title">Monthly KK Requests</h2>
                     <p class="dash-section-sub" id="kkChartSubtitle">Approved, pending, and rejected submissions</p>

@@ -938,12 +938,7 @@ class KKProfilingController extends Controller
 
         $evaluator = new RegistrationEvaluationService();
         $formData = $registration->form_data ?? [];
-        $idVerification = is_array($formData['id_verification'] ?? null) ? $formData['id_verification'] : null;
-
-        $autoApproved = $evaluator->evaluate(
-            $registration->fresh(),
-            is_array($idVerification) ? $idVerification : null,
-        );
+        $autoApproved = $evaluator->evaluate($registration->fresh());
 
         try {
             (new KkSurveyResponseService())->syncFromRegistration(

@@ -12,6 +12,26 @@
     --kab-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
+.kabataan-header--view-only {
+    height: auto;
+    min-height: var(--kab-nav-h);
+}
+
+.kabataan-view-only-banner {
+    background: #fef3c7;
+    color: #92400e;
+    border-top: 1px solid rgba(251, 191, 36, 0.5);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    padding: 10px 16px;
+    text-align: center;
+}
+
+body.kabataan-has-view-only-banner {
+    padding-top: calc(var(--kab-nav-h) + 42px);
+}
+
 .kabataan-header {
     background: linear-gradient(135deg, var(--kab-brand-dark) 0%, var(--kab-brand-mid) 60%, var(--kab-brand-light) 100%);
     box-shadow: 0 2px 16px rgba(2, 42, 84, 0.35);

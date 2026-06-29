@@ -8,7 +8,9 @@
     <title>OnePortal Youth Officials</title>
     @vite([
         'app/Modules/Authentication/assets/css/youth-login.css',
+        'app/Modules/Authentication/assets/css/auth-legal.css',
         'app/Modules/Authentication/assets/js/youth-login.js',
+        'app/Modules/Authentication/assets/js/auth-legal.js',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
@@ -172,8 +174,10 @@
                         <a href="{{ route('password.request') }}" class="youth-link" id="forgotBtn">Forgot password?</a>
                     </div>
 
+                    @include('authentication::partials.login-legal-consent')
+
                     <!-- Submit Button -->
-                    <button type="submit" class="youth-submit-btn">
+                    <button type="submit" class="youth-submit-btn" id="loginBtn" disabled>
                         <span>Login</span>
                     </button>
 
@@ -192,6 +196,8 @@
             </div>
         </div>
     </main>
+
+    @include('authentication::partials.legal-modals')
 
     <!-- Load loading script AFTER the overlay HTML is rendered -->
     <script src="{{ url('/shared/js/loading.js') }}"></script>
@@ -254,6 +260,13 @@
 
                 if (!passwordInput.value) {
                     showError(passwordInput, passwordError, 'Password is required');
+                    isValid = false;
+                }
+
+                const legalConsent = document.getElementById('loginLegalConsent');
+                const legalConsentError = document.getElementById('legalConsentError');
+                if (!legalConsent || !legalConsent.checked) {
+                    if (legalConsentError) legalConsentError.hidden = false;
                     isValid = false;
                 }
 

@@ -814,8 +814,9 @@ html {
     background: #3a3a4a;
 }
 
-.sk-submit-btn:disabled {
-    opacity: 0.6;
+.sk-submit-btn:disabled,
+.sk-submit-btn.auth-legal-submit-blocked {
+    opacity: 0.55;
     cursor: not-allowed;
     transform: none;
 }

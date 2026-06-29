@@ -1000,7 +1000,24 @@ function initializeSchedulePrograms() {
     let filterStatus = '';
     let filterSearch = '';
 
-    // DOM refs — modal
+    let tableSorter = null;
+    if (tbody && window.SkTableSort) {
+        tableSorter = SkTableSort.mount({
+            columnKeys: ['programName', 'activityType', 'date', 'time', 'venue', 'status'],
+            skipThClasses: ['th-checkbox', 'col-actions'],
+            dateColumns: ['date'],
+            defaultColumn: 'date',
+            getSortValue: (row, column) => {
+                if (column === 'time') return row.startTime || '';
+                return row[column] ?? '';
+            },
+            onSort: () => { currentPage = 1; renderTable(); },
+        });
+        const headerRow = tbody.closest('table')?.querySelector('thead tr');
+        if (headerRow) tableSorter.initHeaders(headerRow);
+    }
+
+    // DOM refs — delete modal
     const formOverlay    = document.getElementById('spFormOverlay');
     const modalTitle     = document.getElementById('spModalTitle');
     const modalClose     = document.getElementById('spModalClose');
