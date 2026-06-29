@@ -80,6 +80,4 @@
         <li>Withdraw consent, subject to legal or regulatory requirements.</li>
         <li>File a complaint with the National Privacy Commission if you believe your privacy rights have been violated.</li>
     </ul>
-
-    <p class="auth-legal-doc-ack">I have read and understood the Privacy Policy of the SK OnePortal System. I voluntarily consent to the collection, processing, storage, and use of my personal information for KK Profiling, youth programs, and other legitimate purposes of the Sangguniang Kabataan of Santa Cruz, Laguna, in accordance with Republic Act No. 10173 (Data Privacy Act of 2012).</p>
 </div>

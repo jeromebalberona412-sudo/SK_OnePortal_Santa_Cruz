@@ -10,11 +10,11 @@
             @include('authentication::partials.terms-and-conditions')
         </div>
         <footer class="auth-legal-modal-footer">
-            <label class="auth-legal-modal-ack">
-                <input type="checkbox" id="termsModalAck" data-legal-ack="terms">
-                <span>I have read, understood, and agreed to the Terms and Conditions.</span>
+            <label class="auth-legal-modal-ack auth-legal-modal-ack--locked">
+                <input type="checkbox" id="termsModalAck" data-legal-ack="terms" disabled>
+                <span>I have read, understood, and agreed to the Terms and Conditions governing my registration and use of the KK Profiling feature of the SK OnePortal System of Santa Cruz, Laguna.</span>
             </label>
-            <button type="button" class="auth-legal-modal-btn" data-close-legal-modal="termsLegalModal">Close</button>
+            <button type="button" class="auth-legal-modal-btn" data-close-legal-modal="termsLegalModal" disabled>OK</button>
         </footer>
     </div>
 </div>
@@ -31,11 +31,11 @@
             @include('authentication::partials.privacy-policy')
         </div>
         <footer class="auth-legal-modal-footer">
-            <label class="auth-legal-modal-ack">
-                <input type="checkbox" id="privacyModalAck" data-legal-ack="privacy">
-                <span>I have read and understood the Privacy Policy.</span>
+            <label class="auth-legal-modal-ack auth-legal-modal-ack--locked">
+                <input type="checkbox" id="privacyModalAck" data-legal-ack="privacy" disabled>
+                <span>I have read and understood the Privacy Policy of the SK OnePortal System. I voluntarily consent to the collection, processing, storage, and use of my personal information for KK Profiling, youth programs, and other legitimate purposes of the Sangguniang Kabataan of Santa Cruz, Laguna, in accordance with Republic Act No. 10173 (Data Privacy Act of 2012).</span>
             </label>
-            <button type="button" class="auth-legal-modal-btn" data-close-legal-modal="privacyLegalModal">Close</button>
+            <button type="button" class="auth-legal-modal-btn" data-close-legal-modal="privacyLegalModal" disabled>OK</button>
         </footer>
     </div>
 </div>

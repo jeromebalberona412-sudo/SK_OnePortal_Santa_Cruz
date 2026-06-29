@@ -58,6 +58,4 @@
         <li>Request deletion where legally applicable.</li>
         <li>Withdraw consent where permitted by law.</li>
     </ul>
-
-    <p class="auth-legal-doc-ack">I have read and understood the Privacy Policy of the SK OnePortal System. I consent to the collection, processing, and storage of my personal information for account management, official reporting, and other legitimate SK operations in accordance with Republic Act No. 10173 (Data Privacy Act of 2012).</p>
 </div>

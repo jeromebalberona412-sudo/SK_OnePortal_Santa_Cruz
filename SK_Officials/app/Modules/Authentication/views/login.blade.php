@@ -179,7 +179,7 @@
                     @include('authentication::partials.login-legal-consent')
 
                     <!-- Submit Button -->
-                    <button type="submit" class="sk-submit-btn" id="loginBtn" disabled>
+                    <button type="submit" class="sk-submit-btn" id="loginBtn">
                         <span>Sign In</span>
                     </button>
                 </form>
@@ -188,6 +188,7 @@
     </main>
 
     @include('authentication::partials.legal-modals')
+    @include('authentication::partials.login-legal-prompt')
 
     <script>
         function togglePassword() {
@@ -267,13 +268,6 @@
                     isValid = false;
                 } else if (passwordInput.value.length < 8) {
                     showError(passwordInput, passwordError, 'Password must be at least 8 characters');
-                    isValid = false;
-                }
-
-                const legalConsent = document.getElementById('loginLegalConsent');
-                const legalConsentError = document.getElementById('legalConsentError');
-                if (!legalConsent || !legalConsent.checked) {
-                    if (legalConsentError) legalConsentError.hidden = false;
                     isValid = false;
                 }
 

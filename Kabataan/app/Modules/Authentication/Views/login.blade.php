@@ -177,7 +177,7 @@
                     @include('authentication::partials.login-legal-consent')
 
                     <!-- Submit Button -->
-                    <button type="submit" class="youth-submit-btn" id="loginBtn" disabled>
+                    <button type="submit" class="youth-submit-btn" id="loginBtn">
                         <span>Login</span>
                     </button>
 
@@ -198,6 +198,7 @@
     </main>
 
     @include('authentication::partials.legal-modals')
+    @include('authentication::partials.login-legal-prompt')
 
     <!-- Load loading script AFTER the overlay HTML is rendered -->
     <script src="{{ url('/shared/js/loading.js') }}"></script>
@@ -260,13 +261,6 @@
 
                 if (!passwordInput.value) {
                     showError(passwordInput, passwordError, 'Password is required');
-                    isValid = false;
-                }
-
-                const legalConsent = document.getElementById('loginLegalConsent');
-                const legalConsentError = document.getElementById('legalConsentError');
-                if (!legalConsent || !legalConsent.checked) {
-                    if (legalConsentError) legalConsentError.hidden = false;
                     isValid = false;
                 }
 

@@ -54,13 +54,6 @@ document.addEventListener('DOMContentLoaded', function () {
             isValid = false;
         }
 
-        const legalConsent = document.getElementById('loginLegalConsent');
-        const legalConsentError = document.getElementById('legalConsentError');
-        if (legalConsent && !legalConsent.checked) {
-            if (legalConsentError) legalConsentError.hidden = false;
-            isValid = false;
-        }
-
         if (!isValid) { e.preventDefault(); return false; }
 
         // Disable only the submit button, NOT all inputs

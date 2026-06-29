@@ -76,6 +76,4 @@
 
     <h3>Amendments</h3>
     <p>The SK Federation may update these Terms and Conditions whenever necessary. Continued use constitutes acceptance of the revised Terms.</p>
-
-    <p class="auth-legal-doc-ack">I have read, understood, and agreed to the Terms and Conditions governing the use of the SK OnePortal System for authorized Sangguniang Kabataan Officials of Santa Cruz, Laguna.</p>
 </div>

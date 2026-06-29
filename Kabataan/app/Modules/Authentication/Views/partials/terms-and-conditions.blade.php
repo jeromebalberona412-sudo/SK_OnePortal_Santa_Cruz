@@ -58,6 +58,4 @@
 
     <h3>Changes to Terms</h3>
     <p>These Terms may be updated periodically. Continued use of the system signifies acceptance of the updated Terms.</p>
-
-    <p class="auth-legal-doc-ack">I have read, understood, and agreed to the Terms and Conditions governing my registration and use of the KK Profiling feature of the SK OnePortal System of Santa Cruz, Laguna.</p>
 </div>

@@ -39,13 +39,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 showInputError(passwordInput, 'Invalid Email or Password');
             }
 
-            const legalConsent = document.getElementById('loginLegalConsent');
-            const legalConsentError = document.getElementById('legalConsentError');
-            if (legalConsent && !legalConsent.checked) {
-                isValid = false;
-                if (legalConsentError) legalConsentError.hidden = false;
-            }
-            
             if (!isValid) {
                 e.preventDefault();
             }
@@ -214,8 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Do not show loading if validation will block the submit
             const emailVal    = emailInput    ? emailInput.value.trim()    : '';
             const passwordVal = passwordInput ? passwordInput.value.trim() : '';
-            const legalConsent = document.getElementById('loginLegalConsent');
-            if (!emailVal || !isValidEmail(emailVal) || !passwordVal || (legalConsent && !legalConsent.checked)) {
+            if (!emailVal || !isValidEmail(emailVal) || !passwordVal) {
                 return; // validation listener already called e.preventDefault()
             }
 
