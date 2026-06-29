@@ -5,6 +5,7 @@ namespace App\Modules\BarangayMonitoring\Controllers;
 use App\Modules\BarangayMonitoring\Services\AbyipSubmissionScheduleService;
 use App\Modules\BarangayMonitoring\Services\BarangayMonitoringService;
 use App\Modules\Shared\Controllers\Controller;
+use App\Services\BarangayLogoUrlService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -20,7 +21,21 @@ class BarangayMonitoringController extends Controller
 
     public function index(Request $request): View
     {
-        $barangays = array_values($this->barangayCatalog());
+        $logoService = app(BarangayLogoUrlService::class);
+        $barangays = [];
+
+        foreach ($this->barangayCatalog() as $slug => $row) {
+            $barangayId = $this->monitoringService->resolveBarangayId($slug);
+            $abyipStatus = $this->monitoringService->resolveAbyipStatus($barangayId);
+
+            $barangays[] = array_merge($row, [
+                'barangay_id' => $barangayId,
+                'status' => $abyipStatus['status'],
+                'submitted_by' => $abyipStatus['submitted_by'],
+                'logo_url' => $barangayId ? $logoService->resolve($barangayId) : null,
+            ]);
+        }
+
         $stats = $this->buildStats($barangays);
 
         return view('barangay_monitoring::index', [
@@ -44,16 +59,18 @@ class BarangayMonitoringController extends Controller
         $barangayId = $this->monitoringService->resolveBarangayId($barangay);
         $barangayData = array_merge($catalog[$barangay], $detail[$barangay]);
         $barangayData['barangay_id'] = $barangayId;
+        $barangayData['logo_url'] = $barangayId ? app(BarangayLogoUrlService::class)->resolve($barangayId) : null;
         $barangayData['abyip']['reports'] = $this->monitoringService->getAbyipReports($barangayId);
         $barangayData['accomplishments'] = $this->monitoringService->getApprovedAccomplishments($barangayId);
         $barangayData['accomplishment_years'] = $this->monitoringService->accomplishmentYears($barangayId);
         $barangayData['accomplishment_terms'] = $this->monitoringService->accomplishmentTerms($barangayId);
         $barangayData['abyip_schedule'] = $this->scheduleService->currentSchedule();
 
-        $complianceStatus = $this->calculateComplianceStatus($barangayData);
+        $complianceStatus = $this->calculateComplianceStatus($barangayId);
         $barangayData['compliance_status'] = $complianceStatus['status'];
         $barangayData['compliance_details'] = $complianceStatus['details'];
-        $barangayData['warnings'] = $this->getWarningsForBarangay($barangayData);
+        $barangayData['submitted_by'] = $complianceStatus['submitted_by'] ?? null;
+        $barangayData['warnings'] = $this->getWarningsForBarangay($complianceStatus['status']);
 
         return view('barangay_monitoring::show', [
             'user' => $request->user(),
@@ -157,6 +174,7 @@ class BarangayMonitoringController extends Controller
         $activePrograms = array_sum(array_map(fn ($item) => $item['active_programs'], $barangays));
         $participationRates = array_map(fn ($item) => $item['participation_rate'], $barangays);
         $compliant = count(array_filter($barangays, fn ($item) => $item['status'] === 'compliant'));
+        $pending = count(array_filter($barangays, fn ($item) => $item['status'] === 'pending'));
         $nonCompliant = count(array_filter($barangays, fn ($item) => $item['status'] === 'non-compliant'));
 
         $avgParticipation = count($participationRates) > 0 ? round(array_sum($participationRates) / count($participationRates)) : 0;
@@ -254,82 +272,38 @@ class BarangayMonitoringController extends Controller
     }
 
     /**
-     * @param  array<string, mixed>  $barangayData
      * @return array<string, mixed>
      */
-    private function calculateComplianceStatus(array $barangayData): array
+    private function calculateComplianceStatus(?int $barangayId): array
     {
-        $currentYear = (int) date('Y');
-        $abyipReports = $barangayData['abyip']['reports'] ?? [];
-        $accomplishmentReports = $barangayData['accomplishments'] ?? [];
+        $abyipStatus = $this->monitoringService->resolveAbyipStatus($barangayId);
 
-        $abyipSubmittedThisYear = collect($abyipReports)->contains(function ($report) use ($currentYear) {
-            $reportYear = (int) date('Y', strtotime((string) ($report['date_submitted'] ?? '')));
-
-            return $reportYear === $currentYear || (int) ($report['fiscal_year'] ?? 0) === $currentYear;
-        });
-
-        $accomplishmentSubmittedThisYear = collect($accomplishmentReports)->contains(function ($report) use ($currentYear) {
-            return (int) ($report['year'] ?? 0) === $currentYear;
-        });
-
-        if ($abyipSubmittedThisYear && $accomplishmentSubmittedThisYear) {
-            $status = 'compliant';
-            $details = 'Both ABYIP and Accomplishment reports submitted this year';
-        } elseif ($abyipSubmittedThisYear || $accomplishmentSubmittedThisYear) {
-            $status = 'partial';
-            $details = $abyipSubmittedThisYear ? 'Missing current year Accomplishment Report' : 'Missing current year ABYIP Report';
-        } else {
-            $status = 'non-compliant';
-            $details = 'No reports submitted this year';
-        }
+        $details = match ($abyipStatus['status']) {
+            'compliant' => 'ABYIP report approved',
+            'pending' => 'ABYIP report submitted and awaiting review',
+            default => 'No ABYIP report submitted',
+        };
 
         return [
-            'status' => $status,
+            'status' => $abyipStatus['status'],
             'details' => $details,
-            'abyip_submitted' => $abyipSubmittedThisYear,
-            'accomplishment_submitted' => $accomplishmentSubmittedThisYear,
+            'submitted_by' => $abyipStatus['submitted_by'],
         ];
     }
 
     /**
-     * @param  array<string, mixed>  $barangayData
      * @return list<array<string, mixed>>
      */
-    private function getWarningsForBarangay(array $barangayData): array
+    private function getWarningsForBarangay(string $complianceStatus): array
     {
-        $warnings = [];
-        $complianceStatus = $barangayData['compliance_status'] ?? 'compliant';
-
-        if ($complianceStatus === 'non-compliant') {
-            $warnings[] = [
-                'type' => 'critical',
-                'title' => 'Non-Compliant Status',
-                'message' => 'This barangay has not submitted required reports',
-                'reasons' => [
-                    'Missing ABYIP Report',
-                    'Missing Accomplishment Report',
-                    'Delayed Submission',
-                    'Incomplete Documentation',
-                    'Other',
-                ],
-                'default_reason' => 'Missing ABYIP Report',
-            ];
-        } elseif ($complianceStatus === 'partial') {
-            $warnings[] = [
-                'type' => 'warning',
-                'title' => 'Partial Compliance',
-                'message' => 'This barangay is missing one or more required reports',
-                'reasons' => [
-                    'Missing ABYIP Report',
-                    'Missing Accomplishment Report',
-                    'Pending Review',
-                    'Other',
-                ],
-                'default_reason' => $barangayData['compliance_details'] ?? 'Missing Report',
-            ];
+        if ($complianceStatus !== 'non-compliant') {
+            return [];
         }
 
-        return $warnings;
+        return [[
+            'type' => 'critical',
+            'title' => 'Non-Compliant Status',
+            'message' => 'This barangay has not submitted an ABYIP report yet.',
+        ]];
     }
 }

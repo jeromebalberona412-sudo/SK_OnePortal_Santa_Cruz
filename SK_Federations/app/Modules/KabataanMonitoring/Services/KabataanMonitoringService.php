@@ -40,6 +40,33 @@ class KabataanMonitoringService
             ->all();
     }
 
+    /**
+     * @return list<string>
+     */
+    public function registrationYears(?string $barangayName = null): array
+    {
+        if (! Schema::hasTable('kabataan_registrations')) {
+            return [];
+        }
+
+        $query = KabataanRegistration::query()
+            ->whereNull('deleted_at')
+            ->whereNotNull('submitted_at');
+
+        if ($barangayName) {
+            $query->whereHas('barangay', fn ($builder) => $builder->where('name', $barangayName));
+        }
+
+        return $query
+            ->selectRaw('YEAR(submitted_at) as registration_year')
+            ->distinct()
+            ->orderByDesc('registration_year')
+            ->pluck('registration_year')
+            ->map(fn ($year) => (string) $year)
+            ->values()
+            ->all();
+    }
+
     public function find(int $id): ?KabataanRegistration
     {
         if (! Schema::hasTable('kabataan_registrations')) {
@@ -196,6 +223,8 @@ class KabataanMonitoringService
             'status' => $this->resolveParticipationStatus($formData),
             'attendance' => $this->formValue($formData, 'kk_assembly'),
             'lastCheckIn' => $record->submitted_at?->format('M j, Y') ?? '—',
+            'submittedAt' => $record->submitted_at?->toIso8601String(),
+            'submittedYear' => $record->submitted_at ? (int) $record->submitted_at->format('Y') : null,
             'score' => '—',
             'programs' => [],
             'recommendations' => [],

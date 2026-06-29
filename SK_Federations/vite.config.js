@@ -14,8 +14,6 @@ export default defineConfig({
                 'app/Modules/Accounts/assets/js/account.js',
                 'app/Modules/AuditLog/assets/css/auditlogs.css',
                 'app/Modules/AuditLog/assets/js/auditlogs.js',
-                'app/Modules/Archive_Management/assets/css/deleted-sk-federation.css',
-                'app/Modules/Archive_Management/assets/js/deleted-sk-federation.js',
                 'app/Modules/Archive_Management/assets/css/deleted-sk-officials.css',
                 'app/Modules/Archive_Management/assets/js/deleted-sk-officials.js',
                 'app/Modules/Archive_Management/assets/css/SK_federation.css',

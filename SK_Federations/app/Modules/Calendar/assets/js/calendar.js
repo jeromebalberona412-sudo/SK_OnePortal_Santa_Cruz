@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 const CONTENT_MAX = 500;
+const TITLE_MAX = 50;
 
 function getCsrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -232,7 +233,7 @@ function initializeCalendar() {
 
             const preview = document.createElement('div');
             preview.className = 'calendar-day-notes-preview';
-            preview.textContent = hasNote ? (note.title || note.content || '').slice(0, 40) : '';
+            preview.textContent = hasNote ? (note.title || note.content || '').slice(0, 50) : '';
             cell.appendChild(preview);
 
             const addLabel = document.createElement('div');
@@ -388,10 +389,11 @@ function initializeCalendar() {
     let dateKey, isEditMode, originalNote, activeYear, activeMonthIndex, activeDay;
 
     function updateCharCounter() {
-        if (!charCounter || !contentArea) return;
-        const len = contentArea.value.length;
-        charCounter.textContent = `${len} / ${CONTENT_MAX} characters`;
-        charCounter.classList.toggle('is-over', len > CONTENT_MAX);
+        if (!charCounter) return;
+        const contentLen = contentArea ? contentArea.value.length : 0;
+        const titleLen = titleInput ? titleInput.value.length : 0;
+        charCounter.textContent = `Title: ${titleLen} / ${TITLE_MAX} · Content: ${contentLen} / ${CONTENT_MAX}`;
+        charCounter.classList.toggle('is-over', contentLen > CONTENT_MAX || titleLen > TITLE_MAX);
     }
 
     function switchToViewMode() {
@@ -461,10 +463,10 @@ function initializeCalendar() {
                     </div>
                     <div class="calendar-modal-body">
                         <label class="calendar-note-label">Title</label>
-                        <input type="text" class="calendar-note-title-input" placeholder="Note title..." maxlength="255" />
+                        <input type="text" class="calendar-note-title-input" placeholder="Note title..." maxlength="${TITLE_MAX}" />
                         <label class="calendar-note-label">Content</label>
                         <textarea class="calendar-note-content" placeholder="Write your note..." maxlength="${CONTENT_MAX}"></textarea>
-                        <div class="calendar-note-char-counter">0 / ${CONTENT_MAX} characters</div>
+                        <div class="calendar-note-char-counter">Title: 0 / ${TITLE_MAX} · Content: 0 / ${CONTENT_MAX}</div>
                         <div class="calendar-modal-actions">
                             <button type="button" class="btn-secondary calendar-modal-cancel" style="display:none">Cancel</button>
                             <button type="button" class="btn-primary calendar-modal-save" style="display:none">Save</button>
@@ -505,6 +507,7 @@ function initializeCalendar() {
         toggleBtn.textContent = '□';
 
         contentArea.oninput = updateCharCounter;
+        titleInput.oninput = updateCharCounter;
 
         function hide() {
             backdrop.classList.remove('show', 'modal-maximized');
@@ -517,6 +520,7 @@ function initializeCalendar() {
             toggleBtn.removeEventListener('click', onToggle);
             backdrop.removeEventListener('click', onBackdrop);
             contentArea.oninput = null;
+            if (titleInput) titleInput.oninput = null;
         }
 
         function onClose() {
@@ -587,6 +591,10 @@ function initializeCalendar() {
 
             if (!title) {
                 showToast('Title is required.', 'error');
+                return;
+            }
+            if (title.length > TITLE_MAX) {
+                showToast(`Title must be ${TITLE_MAX} characters or less.`, 'error');
                 return;
             }
             if (!content) {

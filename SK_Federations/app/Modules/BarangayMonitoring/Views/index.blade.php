@@ -118,7 +118,7 @@
                         <select id="bmFilterStatus" onchange="bmFilterBarangays()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#475569;background:#fff;cursor:pointer;">
                             <option value="all">All Status</option>
                             <option value="compliant">Compliant</option>
-                            <option value="partial">Partial</option>
+                            <option value="pending">Pending</option>
                             <option value="non-compliant">Non-Compliant</option>
                         </select>
                         <select id="bmFilterBarangay" onchange="bmFilterBarangays()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#475569;background:#fff;cursor:pointer;">
@@ -158,25 +158,27 @@
                                 href="{{ route('barangay-monitoring.show', ['barangay' => $barangay['slug']]) }}"
                                 class="bm-list-item"
                                 data-status="{{ $barangay['status'] }}"
+                                data-name="{{ strtolower($barangay['name']) }}"
                                 data-barangay="{{ strtolower($barangay['name']) }}"
-                                data-date="{{ strtotime($barangay['last_update']) }}"
                             >
                                 <div class="bm-list-head">
-                                    <h4>{{ $barangay['name'] }}</h4>
+                                    <div class="bm-list-brand">
+                                        <div class="bm-list-logo">
+                                            @if(!empty($barangay['logo_url']))
+                                                <img src="{{ $barangay['logo_url'] }}" alt="" onerror="this.hidden=true;this.nextElementSibling.hidden=false;">
+                                            @endif
+                                            <span class="bm-list-logo-fallback" @if(!empty($barangay['logo_url'])) hidden @endif>{{ strtoupper(mb_substr($barangay['name'], 0, 1)) }}</span>
+                                        </div>
+                                        <h4>{{ $barangay['name'] }}</h4>
+                                    </div>
                                     <span class="bm-status {{ $barangay['status'] }}">{{ ucfirst(str_replace('-', ' ', $barangay['status'])) }}</span>
                                 </div>
-                                <div class="bm-list-meta">
-                                    <span><i class="fas fa-user"></i> SK Chairman: {{ $barangay['sk_chairman'] }}</span>
-                                </div>
-                                <div class="bm-list-meta">
-                                    <span><i class="fas fa-layer-group"></i> Annual Programs: {{ $barangay['active_programs'] }}</span>
-                                    <span><i class="fas fa-users"></i> Participation Rate: {{ $barangay['participation_rate'] }}%</span>
-                                </div>
-                                <div class="bm-list-meta">
-                                    <span><i class="fas fa-file-alt"></i> Report Rate: {{ $barangay['report_rate'] }}%</span>
-                                </div>
+                                @if(!empty($barangay['submitted_by']))
+                                    <div class="bm-list-meta">
+                                        <span><i class="fas fa-user"></i> Submitted by: {{ $barangay['submitted_by'] }}</span>
+                                    </div>
+                                @endif
                                 <div class="bm-list-foot">
-                                    <span>Last Update: {{ $barangay['last_update'] }}</span>
                                     <span class="bm-link-cta">View full details <i class="fas fa-arrow-right"></i></span>
                                 </div>
                             </a>

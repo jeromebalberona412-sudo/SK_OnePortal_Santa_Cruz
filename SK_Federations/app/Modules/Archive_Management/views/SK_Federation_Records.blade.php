@@ -21,7 +21,6 @@
             <p class="arfed-page-subtitle">Completed term records — read-only historical archive.</p>
         </div>
         <div class="arfed-header-right col-md-6">
-            <a href="{{ route('archived.deleted-sk-federation') }}" class="archive-goto-btn">Go to Deleted SK Federation</a>
             <select id="arfedYearFilter" class="arfed-year-filter form-select">
                 <option value="all">All Years</option>
             </select>

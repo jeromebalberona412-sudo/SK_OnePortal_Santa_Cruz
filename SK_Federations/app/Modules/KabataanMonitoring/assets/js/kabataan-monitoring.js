@@ -2,16 +2,17 @@
     const config = window.kmConfig || {};
     const records = [];
 
-    const state = { search: '', status: 'all', barangay: 'all' };
+    const state = { search: '', status: 'all', barangay: 'all', year: 'all' };
 
     function getFiltered() {
         var q = state.search.trim().toLowerCase();
         return records.filter(function(r) {
             var matchStatus = state.status === 'all' || r.status === state.status;
             var matchBrgy   = state.barangay === 'all' || r.barangay === state.barangay;
+            var matchYear = state.year === 'all' || String(r.submittedYear || '') === String(state.year);
             var hay = (r.name + ' ' + r.barangay + ' ' + r.focus + ' ' + r.youthClassification + ' ' + (r.respondentNumber || '') + ' ' + (r.purokZone || '')).toLowerCase();
             var matchSearch = !q || hay.includes(q);
-            return matchStatus && matchBrgy && matchSearch;
+            return matchStatus && matchBrgy && matchSearch && matchYear;
         });
     }
 
@@ -210,6 +211,7 @@
         if (searchInput) {
             searchInput.addEventListener('input', function(e) {
                 state.search = e.target.value || '';
+                resetBarangayPagination();
                 renderBarangayDetail();
             });
             // Also trigger on Enter key
@@ -224,24 +226,59 @@
         if (yearFilter) {
             yearFilter.addEventListener('change', function(e) {
                 state.year = e.target.value || 'all';
+                resetBarangayPagination();
                 renderBarangayDetail();
             });
         }
 
-        // Period filter dropdown
-        var periodFilter = document.getElementById('km-period-filter');
-        if (periodFilter) {
-            periodFilter.addEventListener('change', function(e) {
-                state.period = e.target.value || 'all';
+        var rowsSelect = document.getElementById('km-rows-per-page');
+        if (rowsSelect) {
+            rowsSelect.addEventListener('change', function(e) {
+                var perPage = parseInt(e.target.value, 10) || 10;
+                window.kmPaginationState = window.kmPaginationState || {};
+                window.kmPaginationState.itemsPerPage = perPage;
+                resetBarangayPagination();
                 renderBarangayDetail();
             });
         }
+
+        var pageInput = document.getElementById('km-page-input');
+        if (pageInput) {
+            pageInput.addEventListener('change', function(e) {
+                var statePag = window.kmPaginationState || {};
+                var page = parseInt(e.target.value, 10) || 1;
+                var totalPages = statePag.totalPages || 1;
+                page = Math.max(1, Math.min(totalPages, page));
+                statePag.currentPage = page;
+                renderPaginatedTable();
+            });
+        }
+
+        var prevBtn = document.getElementById('km-prev-btn');
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function() {
+                window.previousPage();
+            });
+        }
+
+        var nextBtn = document.getElementById('km-next-btn');
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function() {
+                window.nextPage();
+            });
+        }
+    }
+
+    function resetBarangayPagination() {
+        window.kmPaginationState = window.kmPaginationState || {};
+        window.kmPaginationState.currentPage = 1;
     }
 
     window.performBarangaySearch = function() {
         var searchInput = document.getElementById('km-brgy-search');
         if (searchInput) {
             state.search = searchInput.value || '';
+            resetBarangayPagination();
             renderBarangayDetail();
         }
     };
@@ -251,27 +288,33 @@
         var brgy = window.kmBarangay || '';
         var tbody = document.getElementById('km-table-tbody');
         var empty = document.getElementById('km-empty');
-        var countEl = document.getElementById('km-result-count');
         if (!tbody) return;
 
-        // Render table
         var filtered = getFiltered().filter(function(r){ return r.barangay === brgy; });
-        if (countEl) countEl.textContent = filtered.length + ' record' + (filtered.length !== 1 ? 's' : '');
+
+        window.kmPaginationState = window.kmPaginationState || {};
+        if (!window.kmPaginationState.itemsPerPage) {
+            var rowsSelect = document.getElementById('km-rows-per-page');
+            window.kmPaginationState.itemsPerPage = parseInt(rowsSelect?.value || '10', 10) || 10;
+        }
+        if (!window.kmPaginationState.currentPage) {
+            window.kmPaginationState.currentPage = 1;
+        }
+
+        window.kmPaginationState.allItems = filtered;
+        window.kmPaginationState.totalPages = Math.max(1, Math.ceil(filtered.length / window.kmPaginationState.itemsPerPage) || 1);
+
+        if (window.kmPaginationState.currentPage > window.kmPaginationState.totalPages) {
+            window.kmPaginationState.currentPage = window.kmPaginationState.totalPages;
+        }
 
         if (!filtered.length) {
-            tbody.innerHTML = '';
-            if (empty) empty.hidden = false;
+            tbody.innerHTML = '<tr class="km-empty-row"><td colspan="7">No profiles match your current filters.</td></tr>';
+            if (empty) empty.hidden = true;
             updatePagination([], 0);
             return;
         }
         if (empty) empty.hidden = true;
-
-        // Pagination setup
-        window.kmPaginationState = window.kmPaginationState || {};
-        window.kmPaginationState.itemsPerPage = 10;
-        window.kmPaginationState.currentPage = 1;
-        window.kmPaginationState.allItems = filtered;
-        window.kmPaginationState.totalPages = Math.ceil(filtered.length / window.kmPaginationState.itemsPerPage);
 
         renderPaginatedTable();
     }
@@ -333,52 +376,36 @@
     }
 
     function updatePagination(items, currentPage) {
-        var state = window.kmPaginationState || {};
+        var statePag = window.kmPaginationState || {};
         var paginationText = document.getElementById('km-pagination-text');
         var prevBtn = document.getElementById('km-prev-btn');
         var nextBtn = document.getElementById('km-next-btn');
-        var pageNumbers = document.getElementById('km-pagination-numbers');
+        var pageInput = document.getElementById('km-page-input');
+        var totalPagesEl = document.getElementById('km-total-pages');
 
         if (!items.length) {
-            if (paginationText) paginationText.textContent = 'Showing 0 of 0 records';
+            if (paginationText) paginationText.textContent = '0 records';
             if (prevBtn) prevBtn.disabled = true;
             if (nextBtn) nextBtn.disabled = true;
-            if (pageNumbers) pageNumbers.innerHTML = '';
+            if (pageInput) pageInput.value = '1';
+            if (totalPagesEl) totalPagesEl.textContent = '1';
             return;
         }
 
-        var start = (currentPage - 1) * state.itemsPerPage + 1;
-        var end = Math.min(currentPage * state.itemsPerPage, items.length);
-        if (paginationText) paginationText.textContent = 'Showing ' + start + ' to ' + end + ' of ' + items.length + ' records';
-
-        if (prevBtn) prevBtn.disabled = currentPage === 1;
-        if (nextBtn) nextBtn.disabled = currentPage === state.totalPages;
-
-        // Generate page numbers
-        var pageHtml = '';
-        var maxPages = 5;
-        var startPage = Math.max(1, currentPage - Math.floor(maxPages / 2));
-        var endPage = Math.min(state.totalPages, startPage + maxPages - 1);
-        if (endPage - startPage < maxPages - 1) {
-            startPage = Math.max(1, endPage - maxPages + 1);
+        if (paginationText) {
+            paginationText.textContent = items.length + ' record' + (items.length === 1 ? '' : 's');
         }
 
-        if (startPage > 1) {
-            pageHtml += '<button class="km-page-num" onclick="goToPage(1)">1</button>';
-            if (startPage > 2) pageHtml += '<span class="km-page-ellipsis">...</span>';
+        if (pageInput) {
+            pageInput.value = String(currentPage);
+            pageInput.max = String(statePag.totalPages || 1);
+        }
+        if (totalPagesEl) {
+            totalPagesEl.textContent = String(statePag.totalPages || 1);
         }
 
-        for (var i = startPage; i <= endPage; i++) {
-            var activeClass = i === currentPage ? 'active' : '';
-            pageHtml += '<button class="km-page-num ' + activeClass + '" onclick="goToPage(' + i + ')">' + i + '</button>';
-        }
-
-        if (endPage < state.totalPages) {
-            if (endPage < state.totalPages - 1) pageHtml += '<span class="km-page-ellipsis">...</span>';
-            pageHtml += '<button class="km-page-num" onclick="goToPage(' + state.totalPages + ')">' + state.totalPages + '</button>';
-        }
-
-        if (pageNumbers) pageNumbers.innerHTML = pageHtml;
+        if (prevBtn) prevBtn.disabled = currentPage <= 1;
+        if (nextBtn) nextBtn.disabled = currentPage >= (statePag.totalPages || 1);
     }
 
     window.previousPage = function() {
@@ -398,28 +425,11 @@
     };
 
     window.goToPage = function(pageNum) {
-        var state = window.kmPaginationState || {};
-        if (pageNum >= 1 && pageNum <= state.totalPages) {
-            state.currentPage = pageNum;
+        var statePag = window.kmPaginationState || {};
+        if (pageNum >= 1 && pageNum <= statePag.totalPages) {
+            statePag.currentPage = pageNum;
             renderPaginatedTable();
         }
-    };
-
-    window.exportBarangayCSV = function() {
-        var brgy = window.kmBarangay || '';
-        var members = records.filter(function(r){ return r.barangay === brgy; });
-        var headers = ['Respondent #','Full Name','Age','Barangay','Purok/Zone','Registered Voter'];
-        var rows = members.map(function(r) {
-            return [r.respondentNumber,r.name,r.age,r.barangay,r.purokZone,r.registeredVoter]
-                .map(function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }).join(',');
-        });
-        var csv = [headers.join(',')].concat(rows).join('\n');
-        var blob = new Blob([csv],{type:'text/csv'});
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement('a');
-        a.href=url; a.download='kkk-'+brgy.replace(/\s+/g,'-').toLowerCase()+'.csv';
-        document.body.appendChild(a); a.click();
-        document.body.removeChild(a); URL.revokeObjectURL(url);
     };
 
     // ── KK Profiling Form Modal ──

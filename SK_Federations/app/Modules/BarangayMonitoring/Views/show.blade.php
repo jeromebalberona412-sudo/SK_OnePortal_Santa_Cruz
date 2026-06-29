@@ -21,20 +21,33 @@
     </a>
 
     <header class="bm-show-hero">
-        <div class="bm-show-hero-main">
-            <h1 class="bm-show-title">{{ $barangayData['name'] }}</h1>
-            <p class="bm-show-subtitle">
-                <i class="fas fa-map-marker-alt"></i>
-                {{ $barangayData['name'] }}, {{ $barangayData['municipality'] }}
-            </p>
+        <div class="bm-show-hero-brand">
+            <div class="bm-show-hero-logo">
+                @if(!empty($barangayData['logo_url']))
+                    <img src="{{ $barangayData['logo_url'] }}" alt="{{ $barangayData['name'] }} logo" onerror="this.hidden=true;this.nextElementSibling.hidden=false;">
+                @endif
+                <span class="bm-show-hero-logo-fallback" @if(!empty($barangayData['logo_url'])) hidden @endif>{{ strtoupper(mb_substr($barangayData['name'], 0, 1)) }}</span>
+            </div>
+            <div class="bm-show-hero-main">
+                <h1 class="bm-show-title">{{ $barangayData['name'] }}</h1>
+                <p class="bm-show-subtitle">
+                    <i class="fas fa-map-marker-alt"></i>
+                    {{ $barangayData['name'] }}, {{ $barangayData['municipality'] }}
+                </p>
+                @if(!empty($barangayData['submitted_by']))
+                    <p class="bm-show-submitted-by">
+                        <i class="fas fa-user"></i> Submitted by: {{ $barangayData['submitted_by'] }}
+                    </p>
+                @endif
+            </div>
         </div>
         <div class="bm-show-hero-status">
-            <span class="bm-show-status-label">Compliance</span>
+            <span class="bm-show-status-label">ABYIP Status</span>
             <span class="bm-compliance-badge bm-compliance-{{ $barangayData['compliance_status'] }}">
                 @if($barangayData['compliance_status'] === 'compliant')
                     <i class="fas fa-check-circle"></i> Compliant
-                @elseif($barangayData['compliance_status'] === 'partial')
-                    <i class="fas fa-exclamation-circle"></i> Partial
+                @elseif($barangayData['compliance_status'] === 'pending')
+                    <i class="fas fa-clock"></i> Pending
                 @else
                     <i class="fas fa-times-circle"></i> Non-Compliant
                 @endif
@@ -118,15 +131,16 @@
                 </div>
             </div>
             <div class="bm-table-wrap">
-                <table class="bm-table bm-data-table" id="abyipTable">
+                <table class="bm-table bm-data-table bm-data-table--abyip" id="abyipTable">
                     <thead>
                         <tr>
                             <th>Title</th>
                             <th>Fiscal Year</th>
                             <th>Date Submitted</th>
+                            <th>Time Submitted</th>
                             <th>Submitted By</th>
                             <th>Status</th>
-                            <th>View</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -134,20 +148,21 @@
                         <tr class="bm-abyip-row" data-year="{{ $report['fiscal_year'] ?? '' }}" data-status="{{ $report['status'] ?? 'pending' }}" data-id="{{ $report['id'] }}">
                             <td class="bm-cell-strong" data-label="Title">{{ $report['name'] ?? 'N/A' }}</td>
                             <td data-label="Fiscal Year">{{ $report['fiscal_year'] ?? '—' }}</td>
-                            <td data-label="Date Submitted">{{ !empty($report['date_submitted']) ? date('M d, Y h:i A', strtotime($report['date_submitted'])) : '—' }}</td>
+                            <td data-label="Date Submitted">{{ !empty($report['date_submitted']) ? date('M d, Y', strtotime($report['date_submitted'])) : '—' }}</td>
+                            <td data-label="Time Submitted">{{ !empty($report['date_submitted']) ? date('h:i A', strtotime($report['date_submitted'])) : '—' }}</td>
                             <td data-label="Submitted By">{{ $report['submitted_by'] ?? '—' }}</td>
                             <td data-label="Status">
                                 <span class="bm-status-pill bm-status-{{ $report['status'] ?? 'pending' }}">
                                     {{ ucfirst($report['status'] ?? 'pending') }}
                                 </span>
                             </td>
-                            <td data-label="View">
+                            <td data-label="Actions">
                                 <button type="button" class="bm-view-btn" data-abyip-view="{{ $report['id'] }}">View</button>
                             </td>
                         </tr>
                         @empty
                         <tr class="bm-empty-row-tr">
-                            <td colspan="6" class="bm-empty-row">
+                            <td colspan="7" class="bm-empty-row">
                                 <i class="fas fa-inbox"></i>
                                 <span>No ABYIP reports submitted yet</span>
                             </td>

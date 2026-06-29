@@ -17,7 +17,7 @@ it('registers audit log routes in sk federation', function () {
 });
 
 it('registers archive management routes in sk federation', function () {
-    expect(Route::has('archived.deleted-sk-federation'))->toBeTrue();
+    expect(Route::has('archived.deleted-sk-federation'))->toBeFalse();
     expect(Route::has('archived.deleted-sk-officials'))->toBeTrue();
     expect(Route::has('archived.sk-federation-records'))->toBeTrue();
     expect(Route::has('archived.sk-officials-records'))->toBeTrue();
@@ -27,5 +27,5 @@ it('registers archive management routes in sk federation', function () {
 it('redirects guests away from migrated module pages', function () {
     get('/accounts/federation')->assertRedirect('/login');
     get('/audit-logs')->assertRedirect('/login');
-    get('/archived/deleted-sk-federation')->assertRedirect('/login');
+    get('/archived/deleted-sk-officials')->assertRedirect('/login');
 });

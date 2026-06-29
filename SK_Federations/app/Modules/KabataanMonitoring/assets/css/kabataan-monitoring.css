@@ -1167,3 +1167,196 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ── Barangay detail page ── */
+.km-barangay-detail-page {
+    gap: 18px;
+}
+
+.km-brgy-hero {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 22px 24px;
+    background: #fff;
+    border: 1px solid var(--km-border);
+    border-radius: var(--km-radius);
+    box-shadow: var(--km-card-shadow);
+}
+
+.km-brgy-hero-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #f8fafc;
+    border: 1px solid var(--km-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.km-brgy-hero-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 8px;
+}
+
+.km-brgy-hero-logo-fallback {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--km-blue);
+}
+
+.km-brgy-hero-eyebrow {
+    margin: 0 0 4px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--km-blue);
+}
+
+.km-brgy-hero-title {
+    margin: 0;
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
+    font-weight: 800;
+    color: var(--km-text);
+    line-height: 1.2;
+}
+
+.km-brgy-hero-subtitle {
+    margin: 6px 0 0;
+    font-size: 0.95rem;
+    color: var(--km-muted);
+}
+
+.km-masterlist-top {
+    background: #fff;
+    border: 1px solid var(--km-border);
+    border-radius: var(--km-radius);
+    box-shadow: var(--km-card-shadow);
+    padding: 16px 20px;
+}
+
+.km-masterlist-topbar .km-filter-row-inner--compact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.km-barangay-detail-page .km-table thead {
+    background: var(--km-blue);
+}
+
+.km-barangay-detail-page .km-table thead th {
+    background: var(--km-blue);
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+    border-right-color: rgba(255, 255, 255, 0.12);
+}
+
+.km-table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+    flex-wrap: wrap;
+}
+
+.km-table-footer.pagination-footer {
+    font-size: 11px;
+    color: #64748b;
+}
+
+.km-table-footer .pagination-footer-nav {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.km-table-footer .pagination-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.km-table-footer .pagination-page-label,
+.km-table-footer .pagination-page-of {
+    font-size: 11px;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+.km-table-footer .pagination-page-input {
+    width: 34px;
+    height: 22px;
+    padding: 0 2px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background: #fff;
+    color: #374151;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.km-table-footer .pagination-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background: #fff;
+    color: #64748b;
+    cursor: pointer;
+}
+
+.km-table-footer .pagination-arrow:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.km-table-footer .pagination-rows-select {
+    height: 22px;
+    min-width: 72px;
+    padding: 0 1.4rem 0 0.45rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background: #fff;
+    color: #374151;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.km-table-footer .pagination-record-count {
+    font-size: 11px;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .km-brgy-hero {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .km-table-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .km-table-footer .pagination-footer-nav,
+    .km-table-footer .pagination-footer-right {
+        justify-content: space-between;
+    }
+}

@@ -21,28 +21,11 @@ class DeletedArchiveController extends Controller
         return view('archive-management::deleted-sk-officials');
     }
 
-    public function federationIndex(): View
-    {
-        return view('archive-management::deleted-sk-federation');
-    }
-
     public function officialsData(Request $request): JsonResponse
     {
         $tenantId = $this->resolveTenantId($request->user());
         $payload = $this->deletedArchiveService->listDeletedAccounts(
             User::ROLE_SK_OFFICIAL,
-            $tenantId,
-            $request
-        );
-
-        return response()->json($payload);
-    }
-
-    public function federationData(Request $request): JsonResponse
-    {
-        $tenantId = $this->resolveTenantId($request->user());
-        $payload = $this->deletedArchiveService->listDeletedAccounts(
-            User::ROLE_SK_FED,
             $tenantId,
             $request
         );
@@ -64,27 +47,6 @@ class DeletedArchiveController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Account restored to the SK Officials list.',
-            'data' => [
-                'id' => $user->id,
-                'full_name' => $user->name,
-            ],
-        ]);
-    }
-
-    public function restoreFederation(Request $request, int $account): JsonResponse
-    {
-        $admin = $request->user();
-        $this->resolveTenantId($admin);
-
-        $user = $this->deletedArchiveService->restoreAccount(
-            $account,
-            User::ROLE_SK_FED,
-            $admin
-        );
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Account restored to the SK Federation list.',
             'data' => [
                 'id' => $user->id,
                 'full_name' => $user->name,

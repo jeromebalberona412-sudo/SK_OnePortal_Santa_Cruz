@@ -43,7 +43,7 @@ class CalendarController extends Controller
         $user = $request->user();
         $validated = $request->validate([
             'note_date' => ['required', 'date'],
-            'title' => ['required', 'string', 'max:255'],
+            'title' => ['required', 'string', 'max:50'],
             'content' => ['required', 'string', 'max:500'],
         ]);
 
@@ -87,7 +87,7 @@ class CalendarController extends Controller
         $this->assertCanModifyDate($note->note_date->toDateString());
 
         $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
+            'title' => ['required', 'string', 'max:50'],
             'content' => ['required', 'string', 'max:500'],
         ]);
 

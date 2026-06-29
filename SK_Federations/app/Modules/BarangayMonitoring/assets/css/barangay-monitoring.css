@@ -199,6 +199,39 @@
     color: #0f172a;
 }
 
+.bm-list-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.bm-list-logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.bm-list-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 4px;
+}
+
+.bm-list-logo-fallback {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--fed-blue, #213F99);
+}
+
 .bm-list-meta {
     display: flex;
     flex-wrap: wrap;
@@ -246,9 +279,9 @@
     color: #16a34a;
 }
 
-.bm-status.partial {
-    background: #fef9c3;
-    color: #ca8a04;
+.bm-status.pending {
+    background: #fef3c7;
+    color: #b45309;
 }
 
 .bm-status.non-compliant {
@@ -527,6 +560,53 @@
     box-shadow: var(--bm-shadow);
 }
 
+.bm-show-hero-brand {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    min-width: 0;
+    flex: 1;
+}
+
+.bm-show-hero-logo {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.bm-show-hero-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 6px;
+}
+
+.bm-show-hero-logo-fallback {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--bm-fed-blue, #213F99);
+}
+
+.bm-show-submitted-by {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: #475569;
+}
+
+.bm-show-submitted-by i {
+    color: var(--bm-fed-blue, #213F99);
+}
+
 .bm-show-title {
     font-size: 1.75rem;
     font-weight: 800;
@@ -581,7 +661,7 @@
     border: 1px solid #bbf7d0;
 }
 
-.bm-compliance-partial {
+.bm-compliance-pending {
     background: #fef3c7;
     color: #b45309;
     border: 1px solid #fde68a;
@@ -800,6 +880,15 @@
 /* Data table */
 .bm-show-page .bm-data-table thead {
     background: #f8fafc;
+}
+
+.bm-show-page .bm-data-table--abyip thead {
+    background: var(--bm-fed-blue, #213F99);
+}
+
+.bm-show-page .bm-data-table--abyip th {
+    color: #ffffff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .bm-show-page .bm-data-table th {

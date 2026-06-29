@@ -3,6 +3,8 @@
 namespace App\Modules\KabataanMonitoring\Controllers;
 
 use App\Modules\KabataanMonitoring\Services\KabataanMonitoringService;
+use App\Modules\Profile\Models\Barangay;
+use App\Services\BarangayLogoUrlService;
 use App\Modules\Shared\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -49,9 +51,15 @@ class KabataanMonitoringController extends Controller
 
     public function barangayDetail(Request $request, string $barangay): View
     {
+        $barangayName = urldecode($barangay);
+        $barangayId = Barangay::query()->where('name', $barangayName)->value('id');
+        $logoUrl = $barangayId ? app(BarangayLogoUrlService::class)->resolve((int) $barangayId) : null;
+
         return view('kabataan_monitoring::barangay-detail', [
             'user' => $request->user(),
-            'barangay' => urldecode($barangay),
+            'barangay' => $barangayName,
+            'barangayLogoUrl' => $logoUrl,
+            'registrationYears' => $this->service->registrationYears($barangayName),
         ]);
     }
 }

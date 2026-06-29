@@ -67,9 +67,6 @@
         </button>
 
         <div id="archiveManagementSubmenu" class="sidebar-submenu {{ $archiveManagementOpen ? 'is-open' : '' }}">
-            <a href="{{ route('archived.deleted-sk-federation') }}" class="menu-item submenu-item submenu-item--plain {{ request()->routeIs('archived.deleted-sk-federation') ? 'active' : '' }}">
-                <span>Deleted SK Federation</span>
-            </a>
             <a href="{{ route('archived.deleted-sk-officials') }}" class="menu-item submenu-item submenu-item--plain {{ request()->routeIs('archived.deleted-sk-officials') ? 'active' : '' }}">
                 <span>Deleted SK Officials</span>
             </a>

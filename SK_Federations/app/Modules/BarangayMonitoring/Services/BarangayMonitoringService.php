@@ -89,6 +89,38 @@ class BarangayMonitoringService
     }
 
     /**
+     * @return array{status: string, submitted_by: ?string, latest_report: ?array<string, mixed>}
+     */
+    public function resolveAbyipStatus(?int $barangayId): array
+    {
+        $reports = $this->getAbyipReports($barangayId);
+
+        if ($reports === []) {
+            return [
+                'status' => 'non-compliant',
+                'submitted_by' => null,
+                'latest_report' => null,
+            ];
+        }
+
+        $approved = collect($reports)->first(fn (array $report) => ($report['status'] ?? '') === 'approved');
+
+        if ($approved !== null) {
+            return [
+                'status' => 'compliant',
+                'submitted_by' => $approved['submitted_by'] ?? null,
+                'latest_report' => $approved,
+            ];
+        }
+
+        return [
+            'status' => 'pending',
+            'submitted_by' => $reports[0]['submitted_by'] ?? null,
+            'latest_report' => $reports[0],
+        ];
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function getApprovedAccomplishments(?int $barangayId): array

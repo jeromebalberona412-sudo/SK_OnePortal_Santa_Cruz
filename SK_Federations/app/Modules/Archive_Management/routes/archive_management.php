@@ -46,16 +46,6 @@ Route::middleware(['auth', 'verified', 'single.session', 'sk_fed.access', 'trust
             ->whereNumber('record')
             ->name('archived.sk-officials-records.restore');
 
-        Route::get('/archived/deleted-sk-federation', [DeletedArchiveController::class, 'federationIndex'])
-            ->name('archived.deleted-sk-federation');
-
-        Route::get('/archived/deleted-sk-federation/data', [DeletedArchiveController::class, 'federationData'])
-            ->name('archived.deleted-sk-federation.data');
-
-        Route::post('/archived/deleted-sk-federation/{account}/restore', [DeletedArchiveController::class, 'restoreFederation'])
-            ->whereNumber('account')
-            ->name('archived.deleted-sk-federation.restore');
-
         Route::get('/archived/deleted-sk-officials', [DeletedArchiveController::class, 'officialsIndex'])
             ->name('archived.deleted-sk-officials');
 
