@@ -1,8 +1,14 @@
 const cfg = window.ArchiveConfig || {};
+const ARCHIVE_PER_PAGE = 12;
 let currentPage = 1;
 let lastPage = 1;
+let totalRecords = 0;
 let searchTimer = null;
 let pendingActionId = null;
+let archivePosts = [];
+let lightboxImages = [];
+let lightboxIndex = 0;
+let viewingPostId = null;
 
 function apiFetch(url, options = {}) {
     const headers = {
@@ -34,62 +40,112 @@ function tierClass(tier) {
     return 'days-red';
 }
 
-function renderStats(stats = {}) {
-    const row = document.getElementById('archiveStatsRow');
-    if (!row) return;
-
-    row.innerHTML = `
-        <div class="archive-stat-card">
-            <div class="archive-stat-label">Total Archived</div>
-            <div class="archive-stat-value">${stats.total ?? 0}</div>
-        </div>
-        <div class="archive-stat-card">
-            <div class="archive-stat-label">Expiring Within 7 Days</div>
-            <div class="archive-stat-value">${stats.expiring_soon ?? 0}</div>
-        </div>
-    `;
+function formatDate(iso) {
+    if (!iso) return '—';
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-function renderCard(post) {
-    const thumb = post.thumbnail_url
-        ? `<img src="${escapeHtml(post.thumbnail_url)}" alt="" class="archive-card-thumb">`
-        : '';
+function formatTime(iso) {
+    if (!iso) return '';
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatDateTime(iso) {
+    const date = formatDate(iso);
+    const time = formatTime(iso);
+    if (date === '—') return '—';
+    return time ? `${date} · ${time}` : date;
+}
+
+function renderImageThumbs(images, postId) {
+    const list = images || [];
+    if (!list.length) {
+        return '<span class="archive-no-image">No images</span>';
+    }
+
+    const visible = list.slice(0, 3);
+    const extra = list.length > 3 ? `<span class="archive-thumb-more">+${list.length - 3}</span>` : '';
 
     return `
-        <article class="archive-card" data-id="${post.id}">
-            <div class="archive-card-main">
-                <div class="archive-card-badges">
-                    <span class="archive-badge archived">Archived</span>
-                    <span class="archive-badge ${tierClass(post.days_tier)}">${escapeHtml(post.auto_delete_label)}</span>
-                    <span class="archive-badge days-${post.days_tier}">${post.days_remaining} days remaining</span>
-                    <span class="archive-badge type">${escapeHtml(post.type_label)}</span>
-                </div>
-                <h3 class="archive-card-title">${escapeHtml(post.title)}</h3>
-                <p class="archive-card-preview">${escapeHtml(post.body_preview)}</p>
-                <div class="archive-card-meta">
-                    <span>By ${escapeHtml(post.author_name)}</span>
-                    <span>Archived ${escapeHtml(post.archived_ago)}</span>
-                    ${post.image_count ? `<span>${post.image_count} image${post.image_count === 1 ? '' : 's'}</span>` : ''}
-                </div>
-            </div>
-            <div class="archive-card-actions">
-                ${thumb}
-                <button type="button" class="archive-btn archive-btn-primary" data-restore="${post.id}">Restore</button>
-            </div>
-        </article>
+        <div class="archive-thumb-grid" data-post-id="${postId}">
+            ${visible.map((url, index) => `
+                <button type="button" class="archive-thumb-btn" data-image-index="${index}" title="View image">
+                    <img src="${escapeHtml(url)}" alt="Post image ${index + 1}">
+                </button>
+            `).join('')}
+            ${extra}
+        </div>
     `;
 }
 
-function renderList(posts) {
-    const list = document.getElementById('archiveList');
-    if (!list) return;
+function getPostImages(postId) {
+    const post = findPost(postId);
+    if (post?.images?.length) return post.images;
+    if (post?.thumbnail_url) return [post.thumbnail_url];
+    return [];
+}
+
+function renderActionMenuCell(postId) {
+    const ellipsis = window.ROW_ACTIONS_ELLIPSIS || '⋯';
+    return `
+        <td class="col-actions">
+            <div class="row-actions-menu">
+                <button type="button" class="row-actions-trigger" aria-label="Actions" aria-haspopup="true" aria-expanded="false">${ellipsis}</button>
+                <div class="row-actions-dropdown" role="menu">
+                    <button type="button" class="row-actions-item row-actions-item-view" data-action="view" data-id="${postId}" role="menuitem">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span>View</span>
+                    </button>
+                    <button type="button" class="row-actions-item row-actions-item-restore" data-action="restore" data-id="${postId}" role="menuitem">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                        <span>Restore</span>
+                    </button>
+                </div>
+            </div>
+        </td>
+    `;
+}
+
+function renderRow(post) {
+    const days = post.days_remaining ?? 0;
+    const daysClass = `archive-days-badge ${tierClass(post.days_tier)}`;
+
+    return `
+        <tr data-id="${post.id}">
+            <td><span class="archive-type-badge">${escapeHtml(post.type_label)}</span></td>
+            <td>${escapeHtml(post.author_name)}</td>
+            <td>${escapeHtml(formatDate(post.created_at))}</td>
+            <td>${escapeHtml(formatTime(post.created_at)) || '—'}</td>
+            <td>${escapeHtml(formatDate(post.archived_at))}</td>
+            <td>${escapeHtml(formatTime(post.archived_at)) || '—'}</td>
+            <td>
+                <span class="${daysClass}" title="${escapeHtml(post.auto_delete_label)}">${days} day${days === 1 ? '' : 's'}</span>
+            </td>
+            ${renderActionMenuCell(post.id)}
+        </tr>
+    `;
+}
+
+function renderTable(posts) {
+    const tbody = document.getElementById('archiveTableBody');
+    if (!tbody) return;
+
+    archivePosts = posts || [];
 
     if (!posts.length) {
-        list.innerHTML = '<div class="archive-empty">No archived posts found.</div>';
+        tbody.innerHTML = '<tr class="empty-state-row"><td colspan="8">No archived posts found.</td></tr>';
+        if (window.bindRowActionsTable) bindRowActionsTable(tbody);
         return;
     }
 
-    list.innerHTML = posts.map(renderCard).join('');
+    tbody.innerHTML = posts.map(renderRow).join('');
+    if (window.bindRowActionsTable) {
+        bindRowActionsTable(tbody);
+    }
 }
 
 function updatePagination() {
@@ -97,16 +153,33 @@ function updatePagination() {
     const info = document.getElementById('archivePageInfo');
     const prev = document.getElementById('archivePrevBtn');
     const next = document.getElementById('archiveNextBtn');
+    const nums = document.getElementById('archivePageNumbers');
 
-    if (!wrap) return;
+    if (!wrap || !info || !prev || !next) return;
 
-    if (lastPage <= 1) {
-        wrap.style.display = 'none';
+    wrap.style.display = 'flex';
+
+    if (totalRecords === 0) {
+        info.textContent = 'No records found';
+        if (nums) nums.innerHTML = '';
+        prev.disabled = true;
+        next.disabled = true;
         return;
     }
 
-    wrap.style.display = 'flex';
-    info.textContent = `Page ${currentPage} of ${lastPage}`;
+    const start = (currentPage - 1) * ARCHIVE_PER_PAGE + 1;
+    const end = Math.min(currentPage * ARCHIVE_PER_PAGE, totalRecords);
+    info.textContent = `Showing ${start}–${end} of ${totalRecords} records`;
+
+    if (nums) {
+        nums.innerHTML = Array.from({ length: lastPage }, (_, i) => `
+            <button type="button" class="pagination-btn ${i + 1 === currentPage ? 'active' : ''}">${i + 1}</button>
+        `).join('');
+        nums.querySelectorAll('.pagination-btn').forEach((btn, i) => {
+            btn.addEventListener('click', () => loadArchive(i + 1));
+        });
+    }
+
     prev.disabled = currentPage <= 1;
     next.disabled = currentPage >= lastPage;
 }
@@ -114,10 +187,10 @@ function updatePagination() {
 async function loadArchive(page = 1) {
     currentPage = page;
     const search = document.getElementById('archiveSearch')?.value.trim() || '';
-    const list = document.getElementById('archiveList');
+    const tbody = document.getElementById('archiveTableBody');
 
-    if (list) {
-        list.innerHTML = '<div class="archive-loading">Loading archived posts…</div>';
+    if (tbody) {
+        tbody.innerHTML = '<tr class="archive-loading-row"><td colspan="8">Loading archived posts…</td></tr>';
     }
 
     const params = new URLSearchParams({ page: String(page) });
@@ -125,15 +198,159 @@ async function loadArchive(page = 1) {
 
     try {
         const data = await apiFetch(`${cfg.dataUrl}?${params.toString()}`);
-        renderStats(data.stats);
-        renderList(data.data || []);
+        renderTable(data.data || []);
         lastPage = data.last_page || 1;
+        totalRecords = data.total ?? 0;
         updatePagination();
     } catch (err) {
-        if (list) {
-            list.innerHTML = `<div class="archive-empty">${escapeHtml(err.message)}</div>`;
+        if (tbody) {
+            tbody.innerHTML = `<tr class="empty-state-row"><td colspan="8">${escapeHtml(err.message)}</td></tr>`;
         }
+        totalRecords = 0;
+        lastPage = 1;
+        updatePagination();
     }
+}
+
+function findPost(id) {
+    return archivePosts.find((post) => String(post.id) === String(id));
+}
+
+function renderViewModalContent(post) {
+    const images = post.images || [];
+    const imagesHtml = images.length
+        ? `<div class="archive-view-gallery" data-post-id="${post.id}">
+            ${images.map((url, index) => `
+                <button type="button" class="archive-view-gallery-item" data-image-index="${index}">
+                    <img src="${escapeHtml(url)}" alt="Image ${index + 1}">
+                </button>
+            `).join('')}
+           </div>`
+        : '<p class="archive-view-empty">No images attached to this post.</p>';
+
+    const linkHtml = post.link_url
+        ? `<a href="${escapeHtml(post.link_url)}" class="archive-view-link" target="_blank" rel="noopener">${escapeHtml(post.link_url)}</a>`
+        : '—';
+
+    return `
+        <div class="archive-view-meta-grid">
+            <div class="archive-view-meta-item"><span class="label">Type</span><span class="value">${escapeHtml(post.type_label)}</span></div>
+            <div class="archive-view-meta-item"><span class="label">Posted By</span><span class="value">${escapeHtml(post.author_name)}</span></div>
+            <div class="archive-view-meta-item"><span class="label">Barangay</span><span class="value">${escapeHtml(post.barangay_name || '—')}</span></div>
+            <div class="archive-view-meta-item"><span class="label">Posted</span><span class="value">${escapeHtml(formatDateTime(post.created_at))}</span></div>
+            <div class="archive-view-meta-item"><span class="label">Archived</span><span class="value">${escapeHtml(formatDateTime(post.archived_at))}</span></div>
+            <div class="archive-view-meta-item"><span class="label">Days Left</span><span class="value">${escapeHtml(post.auto_delete_label)}</span></div>
+            <div class="archive-view-meta-item archive-view-meta-item--wide"><span class="label">Link</span><span class="value">${linkHtml}</span></div>
+        </div>
+        ${post.title ? `
+        <div class="archive-view-section">
+            <h3>Title</h3>
+            <p class="archive-view-text">${escapeHtml(post.title)}</p>
+        </div>` : ''}
+        <div class="archive-view-section">
+            <h3>Content</h3>
+            <p class="archive-view-text archive-view-text--body">${escapeHtml(post.body || post.body_preview || '—')}</p>
+        </div>
+        <div class="archive-view-section">
+            <h3>Images (${images.length})</h3>
+            ${imagesHtml}
+        </div>
+    `;
+}
+
+async function openViewModal(id) {
+    viewingPostId = id;
+    let post = findPost(id);
+
+    const modal = document.getElementById('viewPostModal');
+    const body = document.getElementById('archiveViewBody');
+    const title = document.getElementById('archiveViewTitle');
+    const subtitle = document.getElementById('archiveViewSubtitle');
+
+    if (!modal || !body) return;
+
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    body.innerHTML = '<div class="archive-view-loading">Loading post details…</div>';
+
+    try {
+        if (!post || !post.body) {
+            const response = await apiFetch(cfg.showUrl(id));
+            post = response.data;
+            const existing = findPost(id);
+            if (existing) {
+                Object.assign(existing, post);
+            } else {
+                archivePosts.push(post);
+            }
+        }
+
+        if (title) title.textContent = post.title || 'Archived Post';
+        if (subtitle) subtitle.textContent = `Archived ${post.archived_ago || ''}`.trim();
+        const cached = findPost(post.id);
+        if (cached) Object.assign(cached, post);
+        else archivePosts.push(post);
+        body.innerHTML = renderViewModalContent(post);
+    } catch (err) {
+        body.innerHTML = `<div class="archive-view-empty">${escapeHtml(err.message)}</div>`;
+    }
+}
+
+function closeViewModal() {
+    const modal = document.getElementById('viewPostModal');
+    if (modal) modal.style.display = 'none';
+    document.body.style.overflow = '';
+    viewingPostId = null;
+}
+
+function openLightbox(images, startIndex = 0) {
+    lightboxImages = images || [];
+    lightboxIndex = Math.max(0, Math.min(startIndex, lightboxImages.length - 1));
+
+    const box = document.getElementById('archiveLightbox');
+    if (!box || !lightboxImages.length) return;
+
+    box.classList.add('is-open');
+    box.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    renderLightboxImage();
+}
+
+function closeLightbox() {
+    const box = document.getElementById('archiveLightbox');
+    if (box) {
+        box.classList.remove('is-open');
+        box.setAttribute('aria-hidden', 'true');
+    }
+    if (!document.getElementById('viewPostModal') || document.getElementById('viewPostModal').style.display === 'none') {
+        document.body.style.overflow = '';
+    }
+}
+
+function renderLightboxImage() {
+    const img = document.getElementById('archiveLightboxImage');
+    const counter = document.getElementById('archiveLightboxCounter');
+    const prev = document.getElementById('archiveLightboxPrev');
+    const next = document.getElementById('archiveLightboxNext');
+
+    if (!img || !lightboxImages.length) return;
+
+    img.src = lightboxImages[lightboxIndex];
+    if (counter) counter.textContent = `${lightboxIndex + 1} / ${lightboxImages.length}`;
+    if (prev) prev.style.display = lightboxImages.length > 1 ? 'flex' : 'none';
+    if (next) next.style.display = lightboxImages.length > 1 ? 'flex' : 'none';
+}
+
+function lightboxPrev() {
+    if (!lightboxImages.length) return;
+    lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length;
+    renderLightboxImage();
+}
+
+function lightboxNext() {
+    if (!lightboxImages.length) return;
+    lightboxIndex = (lightboxIndex + 1) % lightboxImages.length;
+    renderLightboxImage();
 }
 
 function showSuccess(message) {
@@ -163,6 +380,7 @@ async function confirmRestore() {
     try {
         await apiFetch(cfg.restoreUrl(pendingActionId), { method: 'POST' });
         closeModals();
+        closeViewModal();
         showSuccess('Post restored successfully.');
         await loadArchive(currentPage);
     } catch (err) {
@@ -186,13 +404,58 @@ function bindEvents() {
         if (currentPage < lastPage) loadArchive(currentPage + 1);
     });
 
-    document.getElementById('archiveList')?.addEventListener('click', (e) => {
-        const restoreBtn = e.target.closest('[data-restore]');
+    document.getElementById('archiveTableBody')?.addEventListener('click', (e) => {
+        const actionItem = e.target.closest('.row-actions-item');
+        if (!actionItem) return;
 
-        if (restoreBtn) {
-            pendingActionId = restoreBtn.dataset.restore;
+        const id = actionItem.dataset.id;
+        if (actionItem.dataset.action === 'view') {
+            openViewModal(id);
+            return;
+        }
+        if (actionItem.dataset.action === 'restore') {
+            pendingActionId = id;
             openModal('restoreModal');
         }
+    });
+
+    document.getElementById('archiveViewBody')?.addEventListener('click', (e) => {
+        const galleryItem = e.target.closest('.archive-view-gallery-item');
+        if (!galleryItem) return;
+        const postId = galleryItem.closest('.archive-view-gallery')?.dataset.postId || viewingPostId;
+        const images = getPostImages(postId);
+        openLightbox(images, Number(galleryItem.dataset.imageIndex || 0));
+    });
+
+    document.getElementById('archiveViewClose')?.addEventListener('click', closeViewModal);
+    document.getElementById('archiveViewCloseBtn')?.addEventListener('click', closeViewModal);
+    document.getElementById('viewPostModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'viewPostModal') closeViewModal();
+    });
+
+    document.getElementById('archiveViewRestoreBtn')?.addEventListener('click', () => {
+        if (!viewingPostId) return;
+        pendingActionId = viewingPostId;
+        openModal('restoreModal');
+    });
+
+    document.getElementById('archiveLightboxClose')?.addEventListener('click', closeLightbox);
+    document.getElementById('archiveLightboxPrev')?.addEventListener('click', lightboxPrev);
+    document.getElementById('archiveLightboxNext')?.addEventListener('click', lightboxNext);
+    document.getElementById('archiveLightbox')?.addEventListener('click', (e) => {
+        if (e.target.id === 'archiveLightbox') closeLightbox();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        const lightboxOpen = document.getElementById('archiveLightbox')?.classList.contains('is-open');
+        if (e.key === 'Escape') {
+            if (lightboxOpen) closeLightbox();
+            else closeViewModal();
+            closeModals();
+        }
+        if (!lightboxOpen) return;
+        if (e.key === 'ArrowLeft') lightboxPrev();
+        if (e.key === 'ArrowRight') lightboxNext();
     });
 
     document.querySelectorAll('[data-close-modal]').forEach((el) => {

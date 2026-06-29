@@ -8,6 +8,7 @@ use App\Models\KabataanRegistration;
 use App\Models\User;
 use App\Notifications\KabataanVerifyEmail;
 use App\Rules\FacebookProfileUrl;
+use App\Services\BarangayLogoUrlService;
 use App\Services\BarangayZoneService;
 use App\Services\IdVerificationService;
 use App\Services\KabataanPhotoService;
@@ -39,7 +40,15 @@ class KKProfilingController extends Controller
             $draftService->clearCompletedRegistration();
         }
 
-        $barangays = Barangay::orderBy('name')->get(['id', 'name']);
+        $logoService = app(BarangayLogoUrlService::class);
+        $barangays = Barangay::orderBy('name')->get(['id', 'name'])->map(function ($barangay) use ($logoService) {
+            return [
+                'id' => $barangay->id,
+                'name' => $barangay->name,
+                'logo_url' => $logoService->resolve($barangay->id),
+            ];
+        });
+
         return view('kkprofiling::signup', compact('barangays'));
     }
 
@@ -193,9 +202,8 @@ class KKProfilingController extends Controller
         if ($wizard && (int) ($wizard['barangay_id'] ?? 0) === (int) $barangayRecord->id) {
             $verificationSent = ! empty($wizard['verification_sent_at']);
             $respondentNumber = $wizard['respondent_number'] ?? $respondentNumber;
-            $wizardDraftEmail = strtolower(trim($wizard['email'] ?? $wizard['step1_data']['email'] ?? '')) ?: null;
 
-            $wizardEmail = $wizardDraftEmail ?? '';
+            $wizardEmail = strtolower(trim($wizard['email'] ?? $wizard['step1_data']['email'] ?? ''));
 
             if (! $registrationComplete && $wizardEmail !== '' && $draftService->isEmailRegistrationComplete($wizardEmail, (int) $barangayRecord->id)) {
                 $registration = KabataanRegistration::query()
@@ -216,8 +224,10 @@ class KKProfilingController extends Controller
 
         if ($registrationComplete) {
             $wizardInitialStep = 3;
-        } elseif ($wizard && ! empty($wizard['step1_data'])) {
-            $wizardInitialStep = max(1, min(3, (int) ($wizard['current_step'] ?? 1)));
+            $wizardDraftEmail = $completedEmail;
+        } else {
+            $wizardDraftEmail = null;
+            $verificationSent = false;
         }
 
         return view('kkprofiling::kkprofiling', [

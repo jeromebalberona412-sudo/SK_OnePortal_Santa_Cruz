@@ -23,6 +23,47 @@
         }
     };
 
+    function getLoginUrl() {
+        const loginLink = document.querySelector('a[href*="/login"]');
+        if (loginLink?.href) {
+            try {
+                const url = new URL(loginLink.href, window.location.origin);
+                return url.pathname;
+            } catch (error) {
+                // fall through
+            }
+        }
+
+        return '/login';
+    }
+
+    async function performLogout() {
+        closeKabataanLogoutModal();
+
+        if (typeof showLoading === 'function') {
+            showLoading('Logging out');
+        }
+
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const logoutUrl = logoutForm?.getAttribute('action') || '/logout';
+
+        try {
+            await fetch(logoutUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrf,
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            });
+        } catch (error) {
+            // Redirect to login even if the request fails
+        }
+
+        window.location.replace(getLoginUrl());
+    }
+
     if (logoutBtn && logoutForm) {
         logoutBtn.addEventListener('click', function (e) {
             e.preventDefault();
@@ -30,13 +71,8 @@
         });
     }
 
-    if (confirmBtn && logoutForm) {
-        confirmBtn.addEventListener('click', function () {
-            if (typeof showLoading === 'function') {
-                showLoading('Logging out');
-            }
-            logoutForm.submit();
-        });
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', performLogout);
     }
 
     modal?.querySelector('.kab-logout-modal__overlay')?.addEventListener('click', closeKabataanLogoutModal);

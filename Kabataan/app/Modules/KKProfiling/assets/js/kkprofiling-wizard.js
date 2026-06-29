@@ -55,8 +55,6 @@
     const docTypeRadios = document.querySelectorAll('input[name="document_type"]');
     const schoolIdUploadPanel = document.getElementById('kkpSchoolIdUpload');
     const nationalIdUploadPanel = document.getElementById('kkpNationalIdUpload');
-    const idVerificationNotice = document.getElementById('kkpIdVerificationNotice');
-    const docValidationError = document.getElementById('kkpDocValidationError');
 
     const DOCUMENT_INPUT_IDS = {
         school_id: ['kkpSchoolIdFront', 'kkpSchoolIdBack'],
@@ -102,36 +100,12 @@
     }
 
     function hideDocUploadError() {
-        if (!docValidationError) {
-            return;
-        }
-
-        docValidationError.hidden = true;
-
-        const messageEl = docValidationError.querySelector('p');
-        if (messageEl) {
-            messageEl.textContent = '';
-        } else {
-            docValidationError.textContent = '';
-        }
+        // No inline error panel on step 2
     }
 
     function showDocUploadError(message) {
         if (!message) {
             hideDocUploadError();
-            return;
-        }
-
-        if (idVerificationNotice) {
-            idVerificationNotice.hidden = true;
-        }
-
-        if (docValidationError) {
-            const messageEl = docValidationError.querySelector('p') || docValidationError;
-            messageEl.textContent = message;
-            messageEl.style.whiteSpace = 'pre-wrap';
-            docValidationError.hidden = false;
-            docValidationError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             return;
         }
 
@@ -1073,10 +1047,6 @@
 
             const response = await postFormData(`${apiBase}/step-2`, formData);
 
-            if (idVerificationNotice) {
-                idVerificationNotice.hidden = !response?.documents_uploaded;
-            }
-
             if (response?.verification_sent) {
                 verificationSent = true;
                 root.dataset.verificationSent = '1';
@@ -1278,6 +1248,60 @@
         }
     }
 
+    async function resetWizardFormState() {
+        if (form) {
+            form.reset();
+        }
+
+        clearAllDocumentInputs();
+        hideDocUploadError();
+
+        docTypeRadios.forEach((radio) => {
+            radio.checked = false;
+        });
+
+        if (schoolIdUploadPanel) schoolIdUploadPanel.hidden = true;
+        if (nationalIdUploadPanel) nationalIdUploadPanel.hidden = true;
+
+        const sigInput = document.getElementById('kkpSignatureData');
+        if (sigInput) {
+            sigInput.value = '';
+        }
+
+        if (typeof window.kkpRestoreSignaturePreview === 'function') {
+            window.kkpRestoreSignaturePreview('');
+        }
+
+        if (displayEmail) {
+            displayEmail.textContent = 'your-email@example.com';
+        }
+
+        verificationSent = false;
+        root.dataset.verificationSent = '0';
+        restoredStep = 1;
+        root.dataset.initialStep = '1';
+    }
+
+    function isBrowserReload() {
+        const navEntry = performance.getEntriesByType('navigation')[0];
+        return navEntry?.type === 'reload';
+    }
+
+    async function clearDraftOnRefresh() {
+        if (!isBrowserReload() || registrationCompleted) {
+            return false;
+        }
+
+        try {
+            await postJson(`${apiBase}/clear-draft`, {});
+        } catch (error) {
+            // Non-blocking — still reset the visible form
+        }
+
+        await resetWizardFormState();
+        return true;
+    }
+
     async function initWizard() {
         bindDocumentTypeControls();
 
@@ -1289,8 +1313,6 @@
 
         if (root.dataset.completedEmail && displayEmail) {
             displayEmail.textContent = root.dataset.completedEmail;
-        } else if (root.dataset.draftEmail && displayEmail) {
-            displayEmail.textContent = root.dataset.draftEmail;
         }
 
         if (registrationCompleted) {
@@ -1299,7 +1321,15 @@
             return;
         }
 
-        await restoreDraftState();
+        const wasClearedOnRefresh = await clearDraftOnRefresh();
+
+        if (!wasClearedOnRefresh) {
+            if (root.dataset.draftEmail && displayEmail) {
+                displayEmail.textContent = root.dataset.draftEmail;
+            }
+
+            await restoreDraftState();
+        }
 
         const serverEmailError = root.dataset.emailError;
 
@@ -1315,7 +1345,7 @@
             return;
         }
 
-        const targetStep = Math.max(1, Math.min(3, restoredStep || initialStep));
+        const targetStep = Math.max(1, Math.min(3, wasClearedOnRefresh ? 1 : (restoredStep || initialStep)));
         const skipAutoSendOnStep3 = targetStep === 3 && (verificationSent || verificationSentOnLoad);
 
         await setStep(targetStep, {

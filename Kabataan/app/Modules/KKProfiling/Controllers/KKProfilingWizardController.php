@@ -517,6 +517,17 @@ class KKProfilingWizardController extends Controller
         ]);
     }
 
+    public function clearDraft(string $barangay)
+    {
+        $this->resolveBarangay($barangay);
+        $this->draftService->clearSessionDraft();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Registration draft cleared.',
+        ]);
+    }
+
     public function documentPreview(string $barangay, string $type, ?string $side = 'front')
     {
         $barangayRecord = $this->resolveBarangay($barangay);

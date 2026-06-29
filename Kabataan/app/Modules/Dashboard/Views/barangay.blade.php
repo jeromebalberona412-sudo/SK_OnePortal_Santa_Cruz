@@ -384,7 +384,28 @@
         const modal      = document.getElementById('logoutConfirmModal');
         const confirmBtn = document.getElementById('confirmLogoutBtn');
         logoutBtn?.addEventListener('click', (e) => { e.preventDefault(); modal.classList.add('active'); });
-        confirmBtn?.addEventListener('click', () => logoutForm.submit());
+        confirmBtn?.addEventListener('click', async () => {
+            modal.classList.remove('active');
+            if (typeof showLoading === 'function') {
+                showLoading('Logging out');
+            }
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            const logoutUrl = logoutForm?.getAttribute('action') || '/logout';
+            try {
+                await fetch(logoutUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrf,
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    credentials: 'same-origin',
+                });
+            } catch (error) {
+                // Redirect to login even if the request fails
+            }
+            window.location.replace('/login');
+        });
         modal?.querySelector('.modal-overlay')?.addEventListener('click', () => modal.classList.remove('active'));
 
         window.toggleBrgyComments = function (id) {

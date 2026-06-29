@@ -104,6 +104,9 @@ Route::middleware([
     Route::get('/announcements/archive/data', [ArchiveAnnouncementController::class, 'data'])
         ->name('announcements.archive.data');
 
+    Route::get('/announcements/archive/{id}', [ArchiveAnnouncementController::class, 'show'])
+        ->name('announcements.archive.show');
+
     Route::post('/announcements/archive/{id}/restore', [ArchiveAnnouncementController::class, 'restore'])
         ->name('announcements.archive.restore');
 

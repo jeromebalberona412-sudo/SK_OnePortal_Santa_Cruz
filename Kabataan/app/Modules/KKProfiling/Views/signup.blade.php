@@ -50,6 +50,7 @@
 
                 <div class="kk-signup-filters" role="group" aria-label="Filter barangays by schedule status">
                     <button type="button" class="kk-signup-filter is-active" data-filter="all">All</button>
+                    <button type="button" class="kk-signup-filter" data-filter="Ongoing">Ongoing</button>
                     <button type="button" class="kk-signup-filter" data-filter="none">No schedule</button>
                 </div>
 
@@ -60,19 +61,32 @@
                 <div class="kk-signup-grid" id="barangayGrid">
                     @foreach($barangays as $brgy)
                         @php
-                            $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $brgy->name));
+                            $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $brgy['name']));
                             $slug = trim($slug, '-');
+                            $logoUrl = $brgy['logo_url'] ?? null;
                         @endphp
                         <button
                             type="button"
                             class="kk-signup-barangay"
-                            data-name="{{ $brgy->name }}"
+                            data-name="{{ $brgy['name'] }}"
                             data-slug="{{ $slug }}"
-                            data-barangay-id="{{ $brgy->id }}"
+                            data-barangay-id="{{ $brgy['id'] }}"
                             data-status="none"
                             disabled
                         >
-                            <span class="kk-signup-barangay-name">{{ $brgy->name }}</span>
+                            <span class="kk-signup-barangay-logo-wrap">
+                                @if($logoUrl)
+                                    <img
+                                        src="{{ $logoUrl }}"
+                                        alt=""
+                                        class="kk-signup-barangay-logo"
+                                        loading="lazy"
+                                        onerror="this.hidden=true;this.nextElementSibling.hidden=false;"
+                                    >
+                                @endif
+                                <span class="kk-signup-barangay-logo-fallback" @if($logoUrl) hidden @endif>{{ strtoupper(mb_substr($brgy['name'], 0, 1)) }}</span>
+                            </span>
+                            <span class="kk-signup-barangay-name">{{ $brgy['name'] }}</span>
                             <span class="kk-signup-barangay-meta">
                                 <span class="kk-signup-badge kk-signup-badge-none">No schedule</span>
                             </span>

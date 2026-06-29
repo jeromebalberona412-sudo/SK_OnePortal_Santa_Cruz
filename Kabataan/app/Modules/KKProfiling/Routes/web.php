@@ -36,6 +36,7 @@ Route::prefix('/api/kkprofiling/{barangay}/wizard')->group(function () {
     Route::post('/send-verification', [KKProfilingWizardController::class, 'sendVerification'])->name('kkprofiling.wizard.send-verification');
     Route::post('/resend-verification', [KKProfilingWizardController::class, 'resendVerification'])->name('kkprofiling.wizard.resend-verification');
     Route::post('/finalize', [KKProfilingWizardController::class, 'finalize'])->name('kkprofiling.wizard.finalize');
+    Route::post('/clear-draft', [KKProfilingWizardController::class, 'clearDraft'])->name('kkprofiling.wizard.clear-draft');
 });
 
 Route::get('/kkprofiling/{barangay}', [KKProfilingController::class, 'show'])

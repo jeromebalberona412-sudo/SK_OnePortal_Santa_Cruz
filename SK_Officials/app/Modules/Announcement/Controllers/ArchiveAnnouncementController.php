@@ -68,6 +68,23 @@ class ArchiveAnnouncementController extends Controller
         ]);
     }
 
+    public function show(int $id): JsonResponse
+    {
+        $user = Auth::user();
+        $this->ensureAuthorized($user);
+
+        $post = $this->findArchivedPost($id, $user);
+        $post->load(['user', 'barangay', 'images']);
+
+        if (! $this->archiveService->userCanAccess($post, $user)) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        return response()->json([
+            'data' => $this->formatArchivedPost($post),
+        ]);
+    }
+
     public function restore(int $id): JsonResponse
     {
         $user = Auth::user();
@@ -150,11 +167,16 @@ class ArchiveAnnouncementController extends Controller
             'id'               => $post->id,
             'type'             => $post->type,
             'type_label'       => ucfirst($post->type),
-            'title'            => $post->title ?: 'Untitled Post',
+            'title'            => $post->title ?? '',
+            'body'             => $post->body ?? '',
             'body_preview'     => $bodyPreview,
+            'link_url'         => $post->link_url,
             'author_name'      => $post->user?->name
                 ?? ('SK Brgy. '.($post->barangay?->name ?? '')),
             'barangay_name'    => $post->barangay?->name,
+            'is_federation_wide' => (bool) $post->is_federation_wide,
+            'created_at'       => $post->created_at?->toIso8601String(),
+            'posted_ago'       => $post->created_at?->diffForHumans() ?? '—',
             'archived_at'      => $post->archived_at?->toIso8601String(),
             'archived_ago'     => $post->archived_at?->diffForHumans() ?? '—',
             'days_remaining'   => $daysRemaining,
@@ -163,6 +185,7 @@ class ArchiveAnnouncementController extends Controller
                 ? 'Auto delete today'
                 : 'Auto delete in '.$daysRemaining.' day'.($daysRemaining === 1 ? '' : 's'),
             'image_count'      => count($images),
+            'images'           => $images,
             'thumbnail_url'    => $images[0] ?? null,
         ];
     }

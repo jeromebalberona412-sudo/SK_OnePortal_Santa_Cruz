@@ -10,6 +10,7 @@
     @vite([
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
+        'app/Modules/layout/css/table-row-actions-menu.css',
         'app/Modules/Announcement/assets/css/announcement-archive.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -23,39 +24,92 @@
 <main class="main-content">
     <div class="page-container archive-posts-page">
 
-        <header class="archive-page-header">
-            <div>
-                <h1 class="archive-page-title">Deleted Posts</h1>
-                <p class="archive-page-subtitle">Archived community feed posts. You can restore records within 30 days. After 30 days, they will be automatically deleted.</p>
+        <section class="page-header-section">
+            <div class="page-header-left">
+                <h1 class="page-title">Deleted Posts</h1>
+                <p class="page-subtitle">Archived community feed posts. You can restore records within 30 days. After 30 days, they will be automatically deleted.</p>
             </div>
-            <a href="{{ route('announcements') }}" class="archive-back-link">
-                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
-                Back to Community Feed
-            </a>
-        </header>
+            <div class="page-header-right">
+                <input type="search" id="archiveSearch" class="filter-input" placeholder="Search archived posts…" autocomplete="off">
+            </div>
+        </section>
 
-        <div class="archive-stats-row" id="archiveStatsRow"></div>
-
-        <div class="archive-success-banner" id="archiveSuccessBanner" style="display:none;">
-            <span class="archive-banner-icon">✓</span>
-            <span id="archiveSuccessText"></span>
+        <div class="restore-success-banner" id="archiveSuccessBanner" style="display:none;">
+            <span class="restore-banner-icon">✓</span>
+            <span class="restore-banner-text" id="archiveSuccessText"></span>
         </div>
 
-        <div class="archive-toolbar">
-            <input type="search" id="archiveSearch" class="archive-search-input" placeholder="Search archived posts…">
-        </div>
+        <section class="page-content-section">
+            <div class="section-heading-row">
+                <h2 class="section-title">Archived Posts</h2>
+            </div>
 
-        <div class="archive-list" id="archiveList">
-            <div class="archive-loading">Loading archived posts…</div>
-        </div>
+            <div class="table-card">
+                <div class="table-wrapper">
+                    <table class="ap-archive-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Posted By</th>
+                                <th>Posted Date</th>
+                                <th>Posted Time</th>
+                                <th>Archived Date</th>
+                                <th>Archived Time</th>
+                                <th>Days Left</th>
+                                <th class="col-actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="archiveTableBody">
+                            <tr class="archive-loading-row">
+                                <td colspan="8">Loading archived posts…</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
-        <div class="archive-pagination" id="archivePagination" style="display:none;">
-            <button type="button" class="archive-page-btn" id="archivePrevBtn">Previous</button>
-            <span class="archive-page-info" id="archivePageInfo"></span>
-            <button type="button" class="archive-page-btn" id="archiveNextBtn">Next</button>
-        </div>
+                <div class="pagination-container" id="archivePagination">
+                    <div class="pagination-info">
+                        <span id="archivePageInfo">No records found</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <button type="button" class="pagination-btn" id="archivePrevBtn" disabled>Previous</button>
+                        <div class="pagination-numbers" id="archivePageNumbers"></div>
+                        <button type="button" class="pagination-btn" id="archiveNextBtn" disabled>Next</button>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 </main>
+
+{{-- View post details --}}
+<div id="viewPostModal" class="archive-view-backdrop" style="display:none;">
+    <div class="archive-view-modal" role="dialog" aria-modal="true" aria-labelledby="archiveViewTitle">
+        <div class="archive-view-header">
+            <div>
+                <h2 class="archive-view-title" id="archiveViewTitle">Post Details</h2>
+                <p class="archive-view-subtitle" id="archiveViewSubtitle">Archived community post</p>
+            </div>
+            <button type="button" class="archive-view-close" id="archiveViewClose" aria-label="Close">&times;</button>
+        </div>
+        <div class="archive-view-body" id="archiveViewBody"></div>
+        <div class="archive-view-footer">
+            <button type="button" class="archive-btn archive-btn-muted" id="archiveViewCloseBtn">Close</button>
+            <button type="button" class="archive-btn archive-btn-primary" id="archiveViewRestoreBtn">Restore Post</button>
+        </div>
+    </div>
+</div>
+
+{{-- Image lightbox --}}
+<div id="archiveLightbox" class="archive-lightbox" aria-hidden="true">
+    <button type="button" class="archive-lightbox-close" id="archiveLightboxClose" aria-label="Close">&times;</button>
+    <button type="button" class="archive-lightbox-nav archive-lightbox-prev" id="archiveLightboxPrev" aria-label="Previous">&#8249;</button>
+    <div class="archive-lightbox-stage">
+        <img id="archiveLightboxImage" src="" alt="Post image">
+        <span class="archive-lightbox-counter" id="archiveLightboxCounter"></span>
+    </div>
+    <button type="button" class="archive-lightbox-nav archive-lightbox-next" id="archiveLightboxNext" aria-label="Next">&#8250;</button>
+</div>
 
 {{-- Restore confirmation --}}
 <div id="restoreModal" class="archive-modal">
@@ -73,6 +127,7 @@
 <script>
     window.ArchiveConfig = {
         dataUrl: @json(route('announcements.archive.data')),
+        showUrl: (id) => @json(url('/announcements/archive')) + '/' + id,
         restoreUrl: (id) => @json(url('/announcements/archive')) + '/' + id + '/restore',
         csrf: @json(csrf_token()),
     };
@@ -81,6 +136,7 @@
 @vite([
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
+    'app/Modules/layout/js/table-row-actions-menu.js',
     'app/Modules/Authentication/assets/js/loader.js',
     'app/Modules/Announcement/assets/js/announcement-archive.js',
 ])

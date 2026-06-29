@@ -28,14 +28,6 @@
             </p>
         </div>
 
-        <div class="kkp-wizard-info-callout kkp-wizard-info-callout--success" id="kkpIdVerificationNotice" hidden role="status">
-            <p><strong>Documents saved.</strong> Continue to email verification.</p>
-        </div>
-
-        <div class="kkp-wizard-info-callout kkp-wizard-info-callout--error" id="kkpDocValidationError" hidden role="alert">
-            <p></p>
-        </div>
-
         <fieldset class="kkp-wizard-doc-type-fieldset" id="kkpDocTypeFieldset">
             <legend class="kkp-wizard-doc-type-legend">Select document type (if uploading)</legend>
             <div class="kkp-wizard-doc-type-options" role="radiogroup" aria-label="Document type">

@@ -6,12 +6,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let activeFilter = 'all';
 
-    const statusConfig = {
-        Ongoing:     { open: true  },
-        Upcoming:    { open: false },
-        Rescheduled: { open: false },
-        Completed:   { open: false },
-        Cancelled:   { open: false },
+    const statusBadgeClass = {
+        Ongoing: 'kk-signup-badge-ongoing',
+        Upcoming: 'kk-signup-badge-upcoming',
+        Rescheduled: 'kk-signup-badge-rescheduled',
+        Completed: 'kk-signup-badge-completed',
+        Cancelled: 'kk-signup-badge-cancelled',
     };
 
     function fmtDate(str) {
@@ -50,17 +50,20 @@ document.addEventListener('DOMContentLoaded', () => {
             periodHtml += `<span class="kk-signup-period">Opens ${start}</span>`;
         } else if (endDate < today) {
             periodHtml += `<span class="kk-signup-period">Closed ${end}</span>`;
-        } else {
+        } else if (sched.status === 'Ongoing') {
             periodHtml += `<span class="kk-signup-period">Grace period: ${start} – ${end}</span>`;
         }
 
         return periodHtml;
     }
 
-    function applyCardSchedule(btn, sched) {
-        const cfg = statusConfig[sched.status];
-        if (!cfg) return;
+    function buildStatusBadge(sched) {
+        const status = sched.status || 'none';
+        const badgeClass = statusBadgeClass[status] || 'kk-signup-badge-none';
+        return `<span class="kk-signup-badge ${badgeClass}">${status}</span>`;
+    }
 
+    function applyCardSchedule(btn, sched) {
         const meta = btn.querySelector('.kk-signup-barangay-meta');
         const isOpen = Boolean(sched.is_open);
 
@@ -68,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.classList.add('has-schedule');
 
         if (meta) {
-            meta.innerHTML = buildPeriodMarkup(sched);
+            meta.innerHTML = `${buildStatusBadge(sched)}${buildPeriodMarkup(sched)}`;
         }
 
         if (isOpen) {
