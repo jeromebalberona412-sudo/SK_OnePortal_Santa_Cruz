@@ -46,7 +46,7 @@ class SkOfficialsNotificationDispatcher
             $barangayId,
             'kk_profiling',
             'KK Profiling Auto-Approved',
-            "✅ {$fullName} has been automatically approved because all identity verification checks passed.",
+            "{$fullName} has been automatically approved because all identity verification checks passed.",
             '/kabataan',
         );
     }
@@ -86,10 +86,16 @@ class SkOfficialsNotificationDispatcher
 
         $letter = strtoupper(trim((string) $programLetter));
         $actionUrl = $letter === 'I' ? '/sports-requests' : '/scholarship-applications';
-        $title = $letter === 'I' ? 'New Sports Application' : 'New Program Application';
-        $body = $letter === 'I'
-            ? "{$applicantName} submitted a sports program application for {$programName}."
-            : "{$applicantName} submitted an application for {$programName}.";
+        $title = match ($letter) {
+            'I' => 'New Sports Application',
+            'A' => 'New Scholarship Application',
+            default => 'New '.$programName.' Application',
+        };
+        $body = match ($letter) {
+            'I' => "{$applicantName} submitted a sports application for {$programName}.",
+            'A' => "{$applicantName} submitted a scholarship application for {$programName}.",
+            default => "{$applicantName} submitted an application for {$programName}.",
+        };
 
         $this->insertForBarangayOfficials(
             $barangayId,

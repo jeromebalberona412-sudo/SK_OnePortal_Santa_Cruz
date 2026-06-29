@@ -691,11 +691,9 @@ create table public.kk_profiling_schedules (
   constraint kk_profiling_schedules_status_check check (
     (status)::text = any (
       array[
-        'Upcoming'::text,
         'Ongoing'::text,
         'Completed'::text,
-        'Cancelled'::text,
-        'Rescheduled'::text
+        'Close'::text
       ]
     )
   )

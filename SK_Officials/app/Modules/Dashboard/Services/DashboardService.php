@@ -3,6 +3,7 @@
 namespace App\Modules\Dashboard\Services;
 
 use App\Models\Abyip;
+use App\Models\BarangayZone;
 use App\Models\CalendarNote;
 use App\Models\KabataanRegistration;
 use App\Models\KkSurveyResponse;
@@ -75,7 +76,7 @@ class DashboardService
      *
      * @return array<string, mixed>
      */
-    public function getChartData(User $user, int $year, string $granularity = 'monthly', ?int $month = null, ?string $termId = null): array
+    public function getChartData(User $user, int $year, string $granularity = 'monthly', ?int $month = null, ?string $termId = null, ?string $zone = null): array
     {
         $barangayId = $user->barangay_id;
 
@@ -83,6 +84,7 @@ class DashboardService
             return [
                 'purok_labels' => [],
                 'purok_counts' => [],
+                'zone_options' => [],
                 'kk_requests_chart' => [
                     'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                     'approved' => array_fill(0, 12, 0),
@@ -97,19 +99,21 @@ class DashboardService
         $terms = $this->availableTerms($barangayId);
         $selectedTerm = $this->resolveSelectedTerm($terms, $termId);
         $year = $this->clampYearToTerm($year, $selectedTerm);
+        $zoneFilter = $this->normalizeZoneFilter($zone);
 
-        $activeFormData = $this->activeRegistrationsFormData($barangayId, $year);
-        $purok = $this->purokDistributionFromRecords($activeFormData);
+        $activeFormData = $this->activeRegistrationsFormData($barangayId, $year, $zoneFilter);
+        $purok = $this->purokDistributionFromZones($barangayId, $activeFormData);
         $kkChart = $granularity === 'weekly' && $month !== null
-            ? $this->weeklyKkRequestStats($barangayId, $year, $month)
-            : $this->monthlyKkRequestStats($barangayId, $year);
+            ? $this->weeklyKkRequestStats($barangayId, $year, $month, $zoneFilter)
+            : $this->monthlyKkRequestStats($barangayId, $year, $zoneFilter);
 
         return [
             'purok_labels' => $purok['labels'],
             'purok_counts' => $purok['counts'],
+            'zone_options' => $this->zoneOptions($barangayId),
             'kk_requests_chart' => $kkChart,
             'gender_distribution' => $this->genderDistributionFromRecords($activeFormData),
-            'employment_status_distribution' => $this->employmentStatusDistribution($barangayId, $year),
+            'employment_status_distribution' => $this->employmentStatusDistribution($barangayId, $year, $zoneFilter),
         ];
     }
 
@@ -118,8 +122,9 @@ class DashboardService
      *
      * @return array{items: list<array{status: string, count: int}>, total: int}
      */
-    public function employmentStatusDistribution(int $barangayId, ?int $year = null): array
+    public function employmentStatusDistribution(int $barangayId, ?int $year = null, ?string $zone = null): array
     {
+        $zoneFilter = $this->normalizeZoneFilter($zone);
         $approvedQuery = KabataanRegistration::forBarangay($barangayId)
             ->where('status', 'active')
             ->whereIn('evaluation_status', ['active', 'Auto Approved', 'ID Verified']);
@@ -127,6 +132,8 @@ class DashboardService
         if ($year !== null) {
             $approvedQuery->whereYear('reviewed_at', $year);
         }
+
+        $this->applyZoneFilterToQuery($approvedQuery, $zoneFilter);
 
         $approvedRegistrationIds = $approvedQuery->pluck('id');
 
@@ -179,11 +186,11 @@ class DashboardService
     /**
      * @return array<string, mixed>
      */
-    public function getStats(User $user, int $year, string $granularity = 'monthly', ?int $month = null, ?string $termId = null): array
+    public function getStats(User $user, int $year, string $granularity = 'monthly', ?int $month = null, ?string $termId = null, ?string $zone = null): array
     {
         return array_merge(
             $this->getSummary($user, $year, $termId),
-            $this->getChartData($user, $year, $granularity, $month, $termId),
+            $this->getChartData($user, $year, $granularity, $month, $termId, $zone),
         );
     }
 
@@ -353,32 +360,87 @@ class DashboardService
     /**
      * @return \Illuminate\Support\Collection<int, KabataanRegistration>
      */
-    private function activeRegistrationsFormData(int $barangayId, int $year)
+    private function activeRegistrationsFormData(int $barangayId, int $year, ?string $zone = null)
     {
-        return KabataanRegistration::forBarangay($barangayId)
+        $query = KabataanRegistration::forBarangay($barangayId)
             ->where('status', 'active')
             ->whereIn('evaluation_status', ['active', 'Auto Approved', 'ID Verified'])
-            ->whereYear('reviewed_at', $year)
-            ->get(['form_data']);
+            ->whereYear('reviewed_at', $year);
+
+        $this->applyZoneFilterToQuery($query, $zone);
+
+        return $query->get(['form_data']);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function zoneOptions(int $barangayId): array
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('barangay_zones')) {
+            return [];
+        }
+
+        return BarangayZone::query()
+            ->where('barangay_id', $barangayId)
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->pluck('name')
+            ->all();
+    }
+
+    private function normalizeZoneFilter(?string $zone): ?string
+    {
+        $value = trim((string) $zone);
+        if ($value === '' || strtolower($value) === 'all') {
+            return null;
+        }
+
+        return $value;
+    }
+
+    private function applyZoneFilterToQuery($query, ?string $zone): void
+    {
+        if ($zone === null) {
+            return;
+        }
+
+        $query->where(function ($builder) use ($zone) {
+            $builder->where('form_data->purok_zone', $zone)
+                ->orWhere('form_data->purokZone', $zone);
+        });
     }
 
     /**
      * @param  \Illuminate\Support\Collection<int, KabataanRegistration>  $records
      * @return array{labels: list<string>, counts: list<int>}
      */
-    private function purokDistributionFromRecords($records): array
+    private function purokDistributionFromZones(int $barangayId, $records): array
     {
         $counts = [];
+
+        if (\Illuminate\Support\Facades\Schema::hasTable('barangay_zones')) {
+            foreach (BarangayZone::query()
+                ->where('barangay_id', $barangayId)
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->pluck('name') as $zoneName) {
+                $counts[$zoneName] = 0;
+            }
+        }
 
         foreach ($records as $record) {
             $purok = $this->formValue($record->form_data ?? [], 'purok_zone');
             if ($purok === '' || $purok === '—') {
-                $purok = 'Unspecified';
+                continue;
             }
-            $counts[$purok] = ($counts[$purok] ?? 0) + 1;
-        }
 
-        arsort($counts);
+            if (! array_key_exists($purok, $counts)) {
+                $counts[$purok] = 0;
+            }
+
+            $counts[$purok]++;
+        }
 
         return [
             'labels' => array_keys($counts),
@@ -389,17 +451,20 @@ class DashboardService
     /**
      * @return array{labels: list<string>, approved: list<int>, pending: list<int>, rejected: list<int>}
      */
-    private function monthlyKkRequestStats(int $barangayId, int $year): array
+    private function monthlyKkRequestStats(int $barangayId, int $year, ?string $zone = null): array
     {
         $labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         $approved = array_fill(0, 12, 0);
         $pending = array_fill(0, 12, 0);
         $rejected = array_fill(0, 12, 0);
 
-        $approvedRows = KabataanRegistration::forBarangay($barangayId)
+        $approvedQuery = KabataanRegistration::forBarangay($barangayId)
             ->where('status', 'active')
             ->whereIn('evaluation_status', ['active', 'Auto Approved', 'ID Verified'])
-            ->whereYear('reviewed_at', $year)
+            ->whereYear('reviewed_at', $year);
+        $this->applyZoneFilterToQuery($approvedQuery, $zone);
+
+        $approvedRows = $approvedQuery
             ->selectRaw('EXTRACT(MONTH FROM reviewed_at)::int AS month_num, COUNT(*) AS total')
             ->groupBy('month_num')
             ->pluck('total', 'month_num');
@@ -408,8 +473,15 @@ class DashboardService
             $approved[(int) $month - 1] = (int) $count;
         }
 
-        $rejectedRows = RejectedKkProfiling::forBarangay($barangayId)
-            ->whereYear('rejected_at', $year)
+        $rejectedQuery = RejectedKkProfiling::forBarangay($barangayId)
+            ->whereYear('rejected_at', $year);
+        if ($zone !== null) {
+            $rejectedQuery->whereHas('registration', function ($builder) use ($zone) {
+                $this->applyZoneFilterToQuery($builder, $zone);
+            });
+        }
+
+        $rejectedRows = $rejectedQuery
             ->selectRaw('EXTRACT(MONTH FROM rejected_at)::int AS month_num, COUNT(*) AS total')
             ->groupBy('month_num')
             ->pluck('total', 'month_num');
@@ -418,10 +490,13 @@ class DashboardService
             $rejected[(int) $month - 1] = (int) $count;
         }
 
-        $pendingRows = KabataanRegistration::forBarangay($barangayId)
+        $pendingQuery = KabataanRegistration::forBarangay($barangayId)
             ->whereNotIn('status', ['rejected'])
             ->whereIn('evaluation_status', ['Not Profiled', 'Wrong Credentials'])
-            ->whereYear('submitted_at', $year)
+            ->whereYear('submitted_at', $year);
+        $this->applyZoneFilterToQuery($pendingQuery, $zone);
+
+        $pendingRows = $pendingQuery
             ->selectRaw('EXTRACT(MONTH FROM submitted_at)::int AS month_num, COUNT(*) AS total')
             ->groupBy('month_num')
             ->pluck('total', 'month_num');
@@ -436,7 +511,7 @@ class DashboardService
     /**
      * @return array{labels: list<string>, approved: list<int>, pending: list<int>, rejected: list<int>}
      */
-    private function weeklyKkRequestStats(int $barangayId, int $year, int $month): array
+    private function weeklyKkRequestStats(int $barangayId, int $year, int $month, ?string $zone = null): array
     {
         $start = Carbon::create($year, $month, 1)->startOfMonth();
         $end = $start->copy()->endOfMonth();
@@ -455,9 +530,9 @@ class DashboardService
             }
 
             $labels[] = 'W'.$weekIndex;
-            $approved[] = $this->kkCountBetween($barangayId, 'approved', $cursor, $weekEnd);
-            $rejected[] = $this->kkCountBetween($barangayId, 'rejected', $cursor, $weekEnd);
-            $pending[] = $this->kkCountBetween($barangayId, 'pending', $cursor, $weekEnd);
+            $approved[] = $this->kkCountBetween($barangayId, 'approved', $cursor, $weekEnd, $zone);
+            $rejected[] = $this->kkCountBetween($barangayId, 'rejected', $cursor, $weekEnd, $zone);
+            $pending[] = $this->kkCountBetween($barangayId, 'pending', $cursor, $weekEnd, $zone);
 
             $cursor = $weekEnd->copy()->addDay();
             $weekIndex++;
@@ -466,18 +541,28 @@ class DashboardService
         return compact('labels', 'approved', 'pending', 'rejected');
     }
 
-    private function kkCountBetween(int $barangayId, string $type, Carbon $start, Carbon $end): int
+    private function kkCountBetween(int $barangayId, string $type, Carbon $start, Carbon $end, ?string $zone = null): int
     {
+        if ($type === 'rejected') {
+            $query = RejectedKkProfiling::forBarangay($barangayId)
+                ->whereBetween('rejected_at', [$start->copy()->startOfDay(), $end->copy()->endOfDay()]);
+
+            if ($zone !== null) {
+                $query->whereHas('registration', function ($builder) use ($zone) {
+                    $this->applyZoneFilterToQuery($builder, $zone);
+                });
+            }
+
+            return $query->count();
+        }
+
         $query = KabataanRegistration::forBarangay($barangayId);
+        $this->applyZoneFilterToQuery($query, $zone);
 
         return match ($type) {
             'approved' => $query
                 ->where('status', 'active')
                 ->whereIn('evaluation_status', ['active', 'Auto Approved', 'ID Verified'])
-                ->whereBetween('reviewed_at', [$start->copy()->startOfDay(), $end->copy()->endOfDay()])
-                ->count(),
-            'rejected' => $query
-                ->where('status', 'rejected')
                 ->whereBetween('reviewed_at', [$start->copy()->startOfDay(), $end->copy()->endOfDay()])
                 ->count(),
             default => $query

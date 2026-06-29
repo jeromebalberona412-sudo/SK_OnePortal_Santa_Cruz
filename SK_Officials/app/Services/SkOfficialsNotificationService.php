@@ -149,10 +149,16 @@ class SkOfficialsNotificationService
         ?string $programLetter = null,
     ): void {
         $letter = strtoupper(trim((string) $programLetter));
-        $title = $letter === 'I' ? 'New Sports Application' : 'New Program Application';
-        $body = $letter === 'I'
-            ? "{$applicantName} submitted a sports program application for {$programName}."
-            : "{$applicantName} submitted an application for {$programName}.";
+        $title = match ($letter) {
+            'I' => 'New Sports Application',
+            'A' => 'New Scholarship Application',
+            default => 'New '.$programName.' Application',
+        };
+        $body = match ($letter) {
+            'I' => "{$applicantName} submitted a sports application for {$programName}.",
+            'A' => "{$applicantName} submitted a scholarship application for {$programName}.",
+            default => "{$applicantName} submitted an application for {$programName}.",
+        };
 
         $this->notifyBarangayOfficials(
             $barangayId,
@@ -182,8 +188,8 @@ class SkOfficialsNotificationService
             'id' => (int) $notification->id,
             'category' => $notification->category,
             'category_label' => $this->categoryLabel($notification->category),
-            'title' => $notification->title,
-            'text' => $notification->body,
+            'title' => $this->stripEmoji($notification->title),
+            'text' => $this->stripEmoji($notification->body),
             'time' => $this->formatTime($notification->created_at),
             'unread' => $notification->isUnread(),
             'action_url' => $notification->action_url,
@@ -209,5 +215,16 @@ class SkOfficialsNotificationService
         }
 
         return $timestamp->format('g:i A').' · '.$timestamp->format('M j, Y');
+    }
+
+    private function stripEmoji(?string $value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+
+        $cleaned = preg_replace('/[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}\x{FE0F}\x{200D}]/u', '', $value) ?? $value;
+
+        return trim(preg_replace('/\s+/u', ' ', $cleaned) ?? $cleaned);
     }
 }

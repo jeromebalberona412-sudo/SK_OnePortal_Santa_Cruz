@@ -39,6 +39,7 @@ class DashboardController extends Controller
             'term_id' => ['nullable', 'string', 'max:20'],
             'granularity' => ['nullable', 'in:monthly,weekly'],
             'month' => ['nullable', 'integer', 'min:1', 'max:12'],
+            'zone' => ['nullable', 'string', 'max:120'],
             'summary' => ['nullable', 'boolean'],
             'charts' => ['nullable', 'boolean'],
         ]);
@@ -47,6 +48,7 @@ class DashboardController extends Controller
         $termId = $validated['term_id'] ?? null;
         $granularity = $validated['granularity'] ?? 'monthly';
         $month = isset($validated['month']) ? (int) $validated['month'] : null;
+        $zone = $validated['zone'] ?? null;
 
         if ($request->boolean('summary')) {
             return response()->json([
@@ -56,12 +58,12 @@ class DashboardController extends Controller
 
         if ($request->boolean('charts')) {
             return response()->json([
-                'data' => $this->dashboardService->getChartData($user, $year, $granularity, $month, $termId),
+                'data' => $this->dashboardService->getChartData($user, $year, $granularity, $month, $termId, $zone),
             ]);
         }
 
         return response()->json([
-            'data' => $this->dashboardService->getStats($user, $year, $granularity, $month, $termId),
+            'data' => $this->dashboardService->getStats($user, $year, $granularity, $month, $termId, $zone),
         ]);
     }
 }

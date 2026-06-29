@@ -10,6 +10,11 @@ let selectedTermId = '';
 let availableTerms = [];
 let kkChartGranularity = 'monthly';
 let kkChartMonth = new Date().getMonth() + 1;
+let kkChartZone = 'all';
+let genderChartFilter = 'all';
+let employmentChartFilter = 'all';
+let lastGenderDistribution = { labels: ['Male', 'Female'], values: [0, 0] };
+let lastEmploymentDistribution = { items: [], total: 0 };
 
 let chartBar = null;
 let chartLine = null;
@@ -65,20 +70,20 @@ document.addEventListener('DOMContentLoaded', function () {
     initTermFilter();
     initYearFilter();
     initKkChartFilters();
+    initGenderEmploymentFilters();
     initModals();
     initStatCardLinks();
     listenKkProfileEvents(function () {
-        loadDashboardCharts();
-        refreshSummaryStats();
+        refreshDashboard();
     });
 
     loadDashboard();
-    window.setInterval(refreshLiveSections, 45000);
-    window.setInterval(function () {
-        loadDashboardCharts();
-        refreshSummaryStats();
-    }, 45000);
+    window.setInterval(refreshDashboard, 45000);
 });
+
+function refreshDashboard() {
+    loadDashboard({ silent: true });
+}
 
 function listenKkProfileEvents(handler) {
     window.addEventListener('storage', function (event) {
@@ -136,6 +141,14 @@ function initKkChartFilters() {
     const granularitySel = document.getElementById('kkChartGranularity');
     const monthSel = document.getElementById('kkChartMonth');
     const monthWrap = document.getElementById('kkChartMonthWrap');
+    const zoneSel = document.getElementById('kkChartZone');
+
+    if (zoneSel) {
+        zoneSel.addEventListener('change', function () {
+            kkChartZone = zoneSel.value || 'all';
+            loadDashboard({ chartsOnly: true });
+        });
+    }
 
     if (granularitySel) {
         granularitySel.addEventListener('change', function () {
@@ -143,7 +156,8 @@ function initKkChartFilters() {
             if (monthWrap) {
                 monthWrap.hidden = kkChartGranularity !== 'weekly';
             }
-            loadDashboardCharts();
+            updateKkChartSubtitle();
+            loadDashboard({ chartsOnly: true });
         });
     }
 
@@ -151,9 +165,61 @@ function initKkChartFilters() {
         monthSel.value = String(kkChartMonth);
         monthSel.addEventListener('change', function () {
             kkChartMonth = Number(monthSel.value);
-            loadDashboardCharts();
+            updateKkChartSubtitle();
+            loadDashboard({ chartsOnly: true });
         });
     }
+
+    updateKkChartSubtitle();
+}
+
+function initGenderEmploymentFilters() {
+    const genderSel = document.getElementById('genderChartFilter');
+    const employmentSel = document.getElementById('employmentChartFilter');
+
+    if (genderSel) {
+        genderSel.addEventListener('change', function () {
+            genderChartFilter = genderSel.value || 'all';
+            renderPieChart(lastGenderDistribution);
+        });
+    }
+
+    if (employmentSel) {
+        employmentSel.addEventListener('change', function () {
+            employmentChartFilter = employmentSel.value || 'all';
+            renderEmploymentChart(lastEmploymentDistribution);
+        });
+    }
+}
+
+function updateKkChartSubtitle() {
+    const subtitle = document.getElementById('kkChartSubtitle');
+    if (!subtitle) return;
+
+    if (kkChartGranularity === 'weekly') {
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        subtitle.textContent = 'Weekly view for ' + (monthNames[kkChartMonth - 1] || 'selected month');
+        return;
+    }
+
+    subtitle.textContent = 'Approved, pending, and rejected submissions';
+}
+
+function populateZoneOptions(zones) {
+    const zoneSel = document.getElementById('kkChartZone');
+    if (!zoneSel) return;
+
+    const current = kkChartZone || 'all';
+    const options = ['<option value="all">All Zones</option>']
+        .concat((zones || []).map(function (zone) {
+            return '<option value="' + esc(zone) + '">' + esc(zone) + '</option>';
+        }));
+
+    zoneSel.innerHTML = options.join('');
+    zoneSel.value = Array.from(zoneSel.options).some(function (opt) { return opt.value === current; })
+        ? current
+        : 'all';
+    kkChartZone = zoneSel.value;
 }
 
 function buildDashboardParams() {
@@ -170,6 +236,10 @@ function buildDashboardParams() {
         params.set('month', String(kkChartMonth));
     }
 
+    if (kkChartZone && kkChartZone !== 'all') {
+        params.set('zone', kkChartZone);
+    }
+
     return params;
 }
 
@@ -181,13 +251,33 @@ function buildYearsForTerm(term) {
     return years.length ? years : [new Date().getFullYear()];
 }
 
-async function loadDashboard() {
+async function loadDashboard(options = {}) {
+    const silent = options.silent === true;
+    const chartsOnly = options.chartsOnly === true;
     const params = buildDashboardParams().toString();
+    const query = chartsOnly
+        ? params + '&charts=1'
+        : params;
+
+    if (chartsOnly) {
+        if (chartsLoading) return;
+        chartsLoading = true;
+        setEmploymentChartLoading(true);
+    }
 
     try {
-        const summaryResponse = await apiFetch('/api/dashboard/stats?' + params + '&summary=1');
-        dashboardData = summaryResponse.data || null;
-        if (!dashboardData) return;
+        const response = await apiFetch('/api/dashboard/stats?' + query);
+        const data = response.data || null;
+        if (!data) return;
+
+        if (chartsOnly) {
+            dashboardData = Object.assign({}, dashboardData || {}, data);
+            populateZoneOptions(data.zone_options || []);
+            renderCharts(data);
+            return;
+        }
+
+        dashboardData = data;
 
         if (dashboardData.term_id) {
             selectedTermId = dashboardData.term_id;
@@ -198,63 +288,22 @@ async function loadDashboard() {
 
         populateTermOptions(dashboardData.available_terms || []);
         populateYearOptions(dashboardData.available_years || [selectedYear], selectedYear);
-        renderSummary(dashboardData);
-        loadDashboardCharts();
+        populateZoneOptions(dashboardData.zone_options || []);
+        renderAll(dashboardData);
     } catch (error) {
-        console.error('Dashboard load failed:', error);
-        renderEmptyState();
+        if (!silent) {
+            console.error('Dashboard load failed:', error);
+            renderEmptyState();
+        }
+    } finally {
+        if (chartsOnly) {
+            chartsLoading = false;
+        }
     }
 }
 
 async function loadDashboardCharts() {
-    if (chartsLoading) return;
-    chartsLoading = true;
-    setEmploymentChartLoading(true);
-
-    try {
-        const params = buildDashboardParams().toString();
-        const chartsResponse = await apiFetch('/api/dashboard/stats?' + params + '&charts=1');
-        const chartData = chartsResponse.data;
-        if (!chartData) return;
-
-        dashboardData = Object.assign({}, dashboardData || {}, chartData);
-        renderCharts(chartData);
-    } catch (error) {
-        console.error('Dashboard charts load failed:', error);
-        renderEmploymentChart({ items: defaultEmploymentItems(), total: 0 });
-    } finally {
-        chartsLoading = false;
-    }
-}
-
-async function refreshSummaryStats() {
-    try {
-        const response = await apiFetch('/api/dashboard/stats?' + buildDashboardParams().toString() + '&summary=1');
-        const data = response.data;
-        if (!data) return;
-
-        dashboardData = Object.assign({}, dashboardData || {}, data);
-        renderStats(data.stats || {});
-    } catch (_) {
-        // Keep current stats on transient failures.
-    }
-}
-
-async function refreshLiveSections() {
-    if (!document.getElementById('committeesList')) {
-        return;
-    }
-
-    try {
-        const response = await apiFetch('/api/dashboard/stats?' + buildDashboardParams().toString() + '&summary=1');
-        const data = response.data;
-        if (!data) return;
-
-        renderActivity(data.recent_activity || []);
-        renderCommittees(data.officials || []);
-    } catch (_) {
-        // Keep current view on transient failures.
-    }
+    return loadDashboard({ chartsOnly: true });
 }
 
 function populateTermOptions(terms) {
@@ -314,8 +363,10 @@ function renderSummary(data) {
 function renderCharts(data) {
     renderBarChart(data);
     renderLineChart(data.kk_requests_chart || {});
-    renderPieChart(data.gender_distribution || { labels: ['Male', 'Female'], values: [0, 0] });
-    renderEmploymentChart(data.employment_status_distribution || { items: [], total: 0 });
+    lastGenderDistribution = data.gender_distribution || { labels: ['Male', 'Female'], values: [0, 0] };
+    lastEmploymentDistribution = data.employment_status_distribution || { items: [], total: 0 };
+    renderPieChart(lastGenderDistribution);
+    renderEmploymentChart(lastEmploymentDistribution);
 }
 
 function renderAll(data) {
@@ -599,8 +650,32 @@ function renderPieChart(genderDist) {
         chartPie = null;
     }
 
-    const colors = ['#3b82f6', '#ec4899'];
-    const total = (genderDist.values || []).reduce(function (sum, value) {
+    const sourceLabels = genderDist.labels || ['Male', 'Female'];
+    const sourceValues = genderDist.values || [0, 0];
+    const labels = [];
+    const values = [];
+    const colors = [];
+
+    sourceLabels.forEach(function (label, index) {
+        const key = String(label).toLowerCase();
+        const include = genderChartFilter === 'all'
+            || (genderChartFilter === 'male' && key.includes('male') && !key.includes('female'))
+            || (genderChartFilter === 'female' && key.includes('female'));
+
+        if (!include) return;
+
+        labels.push(label);
+        values.push(Number(sourceValues[index] || 0));
+        colors.push(key.includes('female') ? '#ec4899' : '#3b82f6');
+    });
+
+    if (!labels.length) {
+        labels.push('No data');
+        values.push(0);
+        colors.push('#d1d5db');
+    }
+
+    const total = values.reduce(function (sum, value) {
         return sum + Number(value || 0);
     }, 0);
 
@@ -637,9 +712,9 @@ function renderPieChart(genderDist) {
         type: 'pie',
         plugins: [pieLabelsPlugin],
         data: {
-            labels: genderDist.labels || ['Male', 'Female'],
+            labels: labels,
             datasets: [{
-                data: genderDist.values || [0, 0],
+                data: values,
                 backgroundColor: colors,
                 borderWidth: 2,
                 borderColor: '#fff',
@@ -667,10 +742,10 @@ function renderPieChart(genderDist) {
 
     const legend = document.getElementById('genderLegend');
     if (legend) {
-        legend.innerHTML = (genderDist.labels || []).map(function (label, index) {
+        legend.innerHTML = labels.map(function (label, index) {
             return '<div class="pie-legend-item">' +
                 '<span class="pie-legend-box" style="background:' + colors[index] + ';"></span>' +
-                '<span class="pie-legend-label">' + esc(label) + '</span>' +
+                '<span class="pie-legend-label">' + esc(label) + ' (' + values[index].toLocaleString() + ')</span>' +
                 '</div>';
         }).join('');
     }
@@ -680,14 +755,12 @@ function setEmploymentChartLoading(loading) {
     const skeleton = document.getElementById('employmentChartSkeleton');
     const wrap = document.getElementById('employmentChartWrap');
     const empty = document.getElementById('employmentChartEmpty');
-    const total = document.getElementById('employmentTotalCount');
     const legend = document.getElementById('employmentLegend');
 
     if (skeleton) skeleton.hidden = !loading;
     if (loading) {
         if (wrap) wrap.hidden = true;
         if (empty) empty.classList.add('d-none');
-        if (total) total.textContent = '';
         if (legend) legend.innerHTML = '';
     }
 }
@@ -706,12 +779,16 @@ function renderEmploymentChart(distribution) {
     const ctx = document.getElementById('chartEmploymentStatus');
     const wrap = document.getElementById('employmentChartWrap');
     const empty = document.getElementById('employmentChartEmpty');
-    const totalEl = document.getElementById('employmentTotalCount');
     const legend = document.getElementById('employmentLegend');
-    const items = (distribution.items && distribution.items.length)
+    const allItems = (distribution.items && distribution.items.length)
         ? distribution.items
         : defaultEmploymentItems();
-    const total = Number(distribution.total || 0);
+    const items = employmentChartFilter === 'all'
+        ? allItems
+        : allItems.filter(function (item) { return item.status === employmentChartFilter; });
+    const total = items.reduce(function (sum, item) {
+        return sum + Number(item.count || 0);
+    }, 0);
 
     setEmploymentChartLoading(false);
 
@@ -723,10 +800,7 @@ function renderEmploymentChart(distribution) {
     }
 
     if (wrap) wrap.hidden = false;
-    if (empty) empty.classList.add('d-none');
-    if (totalEl) {
-        totalEl.textContent = 'Total Youth Counted: ' + total.toLocaleString();
-    }
+    if (empty) empty.classList.toggle('d-none', total > 0);
 
     const labels = items.map(function (item) { return item.status; });
     const values = items.map(function (item) { return Number(item.count || 0); });
@@ -793,12 +867,15 @@ function renderEmploymentChart(distribution) {
     });
 
     if (legend) {
-        legend.innerHTML = labels.map(function (label, index) {
-            return '<div class="donut-legend-item">' +
-                '<div class="donut-legend-box" style="background:' + colors[index % colors.length] + ';"></div>' +
-                '<span class="donut-legend-label">' + esc(label) + ' (' + values[index].toLocaleString() + ')</span>' +
-                '</div>';
-        }).join('');
+        legend.hidden = employmentChartFilter !== 'all';
+        legend.innerHTML = employmentChartFilter === 'all'
+            ? labels.map(function (label, index) {
+                return '<div class="donut-legend-item">' +
+                    '<div class="donut-legend-box" style="background:' + colors[index % colors.length] + ';"></div>' +
+                    '<span class="donut-legend-label">' + esc(label) + ' (' + values[index].toLocaleString() + ')</span>' +
+                    '</div>';
+            }).join('')
+            : '';
     }
 }
 

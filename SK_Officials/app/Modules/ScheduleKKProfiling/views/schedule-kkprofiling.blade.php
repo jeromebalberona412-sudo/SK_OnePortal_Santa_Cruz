@@ -33,49 +33,15 @@
             </div>
         </section>
 
-        <!-- ── Stat Cards ── -->
-        <div class="module-stats-grid">
-            <div class="stat-card stat-card-blue">
-                <div class="stat-card-top">
-                    <span class="stat-card-value" id="skkpStatUpcoming">0</span>
-                    <div class="stat-card-icon stat-icon-blue">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
-                    </div>
-                </div>
-                <span class="stat-card-label">Upcoming</span>
-            </div>
-            <div class="stat-card stat-card-orange">
-                <div class="stat-card-top">
-                    <span class="stat-card-value" id="skkpStatOngoing">0</span>
-                    <div class="stat-card-icon stat-icon-orange">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    </div>
-                </div>
-                <span class="stat-card-label">Ongoing</span>
-            </div>
-            <div class="stat-card stat-card-green">
-                <div class="stat-card-top">
-                    <span class="stat-card-value" id="skkpStatCompleted">0</span>
-                    <div class="stat-card-icon stat-icon-green">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    </div>
-                </div>
-                <span class="stat-card-label">Completed</span>
-            </div>
-            <div class="stat-card stat-card-red">
-                <div class="stat-card-top">
-                    <span class="stat-card-value" id="skkpStatCancelled">0</span>
-                    <div class="stat-card-icon stat-icon-red">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                    </div>
-                </div>
-                <span class="stat-card-label">Cancelled</span>
-            </div>
-        </div>
-
         <!-- ── Action Bar ── -->
         <section class="page-filters-section">
             <div class="table-action-bar">
+                <div class="filters-row">
+                    <div class="filter-item">
+                        <label for="skkpYearFilter" class="filter-label">Year</label>
+                        <select id="skkpYearFilter" class="filter-select"></select>
+                    </div>
+                </div>
                 <div class="abyip-search-inline">
                     <label for="skkpSearch" class="abyip-sr-only">Search schedules</label>
                     <div class="abyip-search-wrapper">
@@ -157,18 +123,12 @@
             <div class="skkp-form-grid">
                 <div class="modal-field">
                     <label for="skkpFormDateStartMd">Date Start <span class="required">*</span></label>
-                    <div class="skkp-date-composite">
-                        <span class="skkp-date-year" id="skkpScheduleYear">{{ date('Y') }}</span>
-                        <input type="text" id="skkpFormDateStartMd" class="skkp-input skkp-date-md" placeholder="MM/DD" maxlength="5" autocomplete="off" inputmode="numeric" aria-label="Date Start month and day">
-                    </div>
+                    <input type="text" id="skkpFormDateStartMd" class="skkp-input skkp-date-mdy" placeholder="MM/DD/YY" maxlength="8" autocomplete="off" inputmode="numeric" aria-label="Date Start">
                     <span class="skkp-field-error" id="skkpDateStartError" style="display:none;font-size:11px;color:#ef4444;margin-top:3px;"></span>
                 </div>
                 <div class="modal-field">
                     <label for="skkpFormDateExpiryMd">Date Expiry <span class="required">*</span></label>
-                    <div class="skkp-date-composite">
-                        <span class="skkp-date-year" id="skkpScheduleYearExpiry">{{ date('Y') }}</span>
-                        <input type="text" id="skkpFormDateExpiryMd" class="skkp-input skkp-date-md" placeholder="MM/DD" maxlength="5" autocomplete="off" inputmode="numeric" aria-label="Date Expiry month and day">
-                    </div>
+                    <input type="text" id="skkpFormDateExpiryMd" class="skkp-input skkp-date-mdy" placeholder="MM/DD/YY" maxlength="8" autocomplete="off" inputmode="numeric" aria-label="Date Expiry">
                     <span class="skkp-field-error" id="skkpDateExpiryError" style="display:none;font-size:11px;color:#ef4444;margin-top:3px;"></span>
                 </div>
                 <div class="modal-field modal-field-full">
@@ -179,10 +139,9 @@
                 <div class="modal-field">
                     <label for="skkpFormStatus">Status <span class="required">*</span></label>
                     <select id="skkpFormStatus" class="skkp-select" required>
-                        <option value="Upcoming">Upcoming</option>
                         <option value="Ongoing">Ongoing</option>
                         <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option>
+                        <option value="Close">Close</option>
                     </select>
                     <div id="skkpStatusHint" class="skkp-status-hint"></div>
                 </div>

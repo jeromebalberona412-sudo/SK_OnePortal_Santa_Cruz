@@ -363,10 +363,15 @@
             <div class="dash-section-header dash-section-header--wrap">
                 <div>
                     <h2 class="dash-section-title">Monthly KK Requests</h2>
-                    <p class="dash-section-sub">Approved vs Rejected over time</p>
+                    <p class="dash-section-sub" id="kkChartSubtitle">Approved, pending, and rejected submissions</p>
                 </div>
                 <div class="dash-chart-header-actions">
-                    <span class="dash-chart-badge">Line Chart</span>
+                    <div class="line-chart-select-group">
+                        <label for="kkChartZone" class="dash-filter-label">Zone/Sitio</label>
+                        <select id="kkChartZone" class="dash-filter-select">
+                            <option value="all">All Zones</option>
+                        </select>
+                    </div>
                     <div class="line-chart-select-group">
                         <label for="kkChartGranularity" class="dash-filter-label">View</label>
                         <select id="kkChartGranularity" class="dash-filter-select">
@@ -421,12 +426,18 @@
     <div class="charts-grid-2">
 
         <div class="dash-section-card">
-            <div class="dash-section-header">
+            <div class="dash-section-header dash-section-header--wrap">
                 <div>
                     <h2 class="dash-section-title">Kabataan Sex Distribution</h2>
                     <p class="dash-section-sub">Male vs Female registered youth</p>
                 </div>
-                <span class="dash-chart-badge">Pie Chart</span>
+                <div class="dash-chart-header-actions">
+                    <select id="genderChartFilter" class="dash-filter-select" aria-label="Filter by sex">
+                        <option value="all" selected>All</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
             </div>
             <div class="chart-canvas-wrap chart-canvas-wrap--pie">
                 <canvas id="chartGenderPie"></canvas>
@@ -435,12 +446,21 @@
         </div>
 
         <div class="dash-section-card" id="employmentStatusCard">
-            <div class="dash-section-header">
+            <div class="dash-section-header dash-section-header--wrap">
                 <div>
                     <h2 class="dash-section-title">Employment Status Distribution</h2>
                     <p class="dash-section-sub">Current employment profile of registered Kabataan</p>
                 </div>
-                <span class="dash-chart-badge">Donut</span>
+                <div class="dash-chart-header-actions">
+                    <select id="employmentChartFilter" class="dash-filter-select" aria-label="Filter employment status">
+                        <option value="all" selected>All Statuses</option>
+                        <option value="Employed">Employed</option>
+                        <option value="Unemployed">Unemployed</option>
+                        <option value="Self-Employed">Self-Employed</option>
+                        <option value="Currently looking for a Job">Currently looking for a Job</option>
+                        <option value="Not Interested Looking for a Job">Not Interested Looking for a Job</option>
+                    </select>
+                </div>
             </div>
             <div id="employmentChartSkeleton" class="dash-chart-skeleton" aria-hidden="false">
                 <div class="dash-skeleton-bar" style="width:72%"></div>
@@ -454,7 +474,6 @@
             </div>
             <div class="donut-legend" id="employmentLegend"></div>
             <p class="dash-empty-msg d-none" id="employmentChartEmpty">No employment data available.</p>
-            <p class="dash-employment-total" id="employmentTotalCount"></p>
         </div>
 
     </div>

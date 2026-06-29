@@ -461,7 +461,7 @@ function initializeCalendar() {
                     </div>
                     <div class="calendar-modal-body">
                         <label class="calendar-note-label">Title</label>
-                        <input type="text" class="calendar-note-title-input" placeholder="Note title..." maxlength="255" />
+                        <input type="text" class="calendar-note-title-input" placeholder="Note title..." maxlength="50" />
                         <label class="calendar-note-label">Content</label>
                         <textarea class="calendar-note-content" placeholder="Write your note..." maxlength="${CONTENT_MAX}"></textarea>
                         <div class="calendar-note-char-counter">0 / ${CONTENT_MAX} characters</div>

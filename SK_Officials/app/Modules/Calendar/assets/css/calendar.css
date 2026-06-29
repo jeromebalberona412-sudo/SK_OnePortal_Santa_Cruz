@@ -210,17 +210,17 @@ body {
 }
 
 .calendar-day.is-today.has-notes .calendar-day-number {
-    color: #1a1a2e !important;
+    color: #ffffff !important;
     font-weight: 800;
 }
 
 .calendar-day.is-today.has-notes .calendar-day-notes-preview {
-    color: rgba(26, 26, 46, 0.85) !important;
-    font-weight: 500;
+    color: #ffffff !important;
+    font-weight: 600;
 }
 
 .calendar-day.is-today.has-notes .calendar-day-add {
-    color: rgba(26, 26, 46, 0.75) !important;
+    color: rgba(255, 255, 255, 0.92) !important;
     font-weight: 600;
 }
 
@@ -734,11 +734,16 @@ body {
 
 .calendar-confirm-overlay.theme-edit .calendar-confirm-header {
     background: #f5c518;
-    color: #2c2c3e;
+    color: #ffffff;
+}
+
+.calendar-confirm-overlay.theme-edit .calendar-confirm-body {
+    background: #2c2c3e;
+    color: #ffffff;
 }
 
 .calendar-confirm-overlay.theme-edit .calendar-confirm-actions {
-    background: #fffdf0;
+    background: #2c2c3e;
 }
 
 .calendar-confirm-overlay.theme-edit .calendar-confirm-ok {

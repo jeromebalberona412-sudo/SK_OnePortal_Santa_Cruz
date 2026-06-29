@@ -369,11 +369,9 @@ body {
     white-space: nowrap;
 }
 
-.skkp-status-badge.upcoming     { background: #dbeafe; color: #1d4ed8; }
 .skkp-status-badge.ongoing      { background: #fef9c3; color: #92400e; }
 .skkp-status-badge.completed    { background: #dcfce7; color: #15803d; }
-.skkp-status-badge.cancelled    { background: #fee2e2; color: #b91c1c; }
-.skkp-status-badge.rescheduled  { background: #ede9fe; color: #6d28d9; }
+.skkp-status-badge.close        { background: #fee2e2; color: #b91c1c; }
 
 /* ── Action Buttons ── */
 .skkp-actions {
