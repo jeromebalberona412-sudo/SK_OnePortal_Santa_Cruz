@@ -33,8 +33,44 @@ function makeSignatureSvg(index) {
 let PREV_KAB_DATA   = [];
 let filteredData    = [];
 let currentPage     = 1;
-const ROWS_PER_PAGE = 10;
+let recordsPerPage  = 10;
+const selectedIds   = new Set();
 let uploadedRows    = [];
+let deleteMode      = 'single';
+let deleteRecordId  = null;
+let pendingDeleteIds = [];
+let sortColumn      = 'lastName';
+let sortDirection   = 'asc';
+
+const TABLE_COL_COUNT = 23;
+
+const SORT_COLUMN_KEYS = [
+    'rowNum',
+    'lastName',
+    'firstName',
+    'middleName',
+    'suffix',
+    'age',
+    'birthday',
+    'sex',
+    'civilStatus',
+    'youthClassification',
+    'youthAgeGroup',
+    'contact',
+    'homeAddress',
+    'education',
+    'workStatus',
+    'registeredVoter',
+    'votingHistory',
+    'kkAssembly',
+    'votingFrequency',
+    'barangay',
+    'region',
+    'province',
+    'city',
+];
+
+const NUMERIC_SORT_COLUMNS = new Set(['rowNum', 'age', 'votingFrequency']);
 
 /* ── DOM refs ── */
 const tableBody      = document.getElementById('prevKabTableBody');
@@ -42,16 +78,23 @@ const searchInput    = document.getElementById('prevKabSearch');
 const yearFilter     = document.getElementById('prevKabYearFilter');
 const purokFilter    = document.getElementById('prevKabPurokFilter');
 const voterFilter    = document.getElementById('prevKabVoterFilter');
-const paginationInfo = document.getElementById('prevKabPaginationInfo');
-const paginationNums = document.getElementById('prevKabPaginationNums');
-const prevBtn        = document.getElementById('prevKabPrevBtn');
-const nextBtn        = document.getElementById('prevKabNextBtn');
+const bulkDeleteBtn  = document.getElementById('prevKabBulkDeleteBtn');
+const bulkDeleteLabel = document.getElementById('prevKabBulkDeleteLabel');
+const tableActionsBar = document.getElementById('prevKabTableActions');
+const selectAllCheckbox = document.getElementById('prevKabSelectAll');
 
 /* ── Helpers ── */
-function fullName(r) {
-    const parts = [r.lastName || r.last_name, r.firstName || r.first_name, r.middleName || r.middle_name].filter(Boolean).join(', ');
-    const sfx = r.suffix;
-    return sfx ? `${parts} ${sfx}` : parts;
+function cell(value) {
+    if (value === null || value === undefined) {
+        return '';
+    }
+
+    const text = String(value).trim();
+    if (!text || text === '—' || text === 'None') {
+        return '';
+    }
+
+    return text;
 }
 
 /* ── Load from API ── */
@@ -71,7 +114,6 @@ function loadData() {
             id: r.id,
             year: r.profiling_year,
             respondentNo: r.respondent_no,
-            name: r.name || '',
             lastName: r.last_name,
             firstName: r.first_name,
             middleName: r.middle_name,
@@ -116,6 +158,7 @@ function loadData() {
 
         filteredData = [...PREV_KAB_DATA];
         currentPage = 1;
+        applySort();
         renderTable();
     })
     .catch(() => {
@@ -129,96 +172,361 @@ function applyFilters() {
     loadData();
 }
 
+function getRecordSortValue(record, column) {
+    if (column === 'rowNum') {
+        return Number(record.id) || 0;
+    }
+
+    if (column === 'homeAddress') {
+        return cell(record.homeAddress || record.purokZone);
+    }
+
+    const value = record[column];
+    if (value === null || value === undefined) {
+        return '';
+    }
+
+    return String(value).trim();
+}
+
+function parseBirthdaySortValue(value) {
+    const text = String(value || '').trim();
+    if (!text) {
+        return 0;
+    }
+
+    const slashMatch = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (slashMatch) {
+        const [, month, day, year] = slashMatch;
+        return new Date(Number(year), Number(month) - 1, Number(day)).getTime() || 0;
+    }
+
+    const parsed = Date.parse(text);
+    return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function compareSortValues(a, b, column) {
+    if (column === 'birthday') {
+        const left = parseBirthdaySortValue(a);
+        const right = parseBirthdaySortValue(b);
+        return left - right;
+    }
+
+    if (NUMERIC_SORT_COLUMNS.has(column)) {
+        const left = Number(a) || 0;
+        const right = Number(b) || 0;
+        return left - right;
+    }
+
+    return String(a).localeCompare(String(b), undefined, { sensitivity: 'base', numeric: true });
+}
+
+function applySort() {
+    const column = sortColumn;
+    const direction = sortDirection === 'desc' ? -1 : 1;
+
+    filteredData.sort((left, right) => {
+        const result = compareSortValues(
+            getRecordSortValue(left, column),
+            getRecordSortValue(right, column),
+            column
+        );
+
+        if (result !== 0) {
+            return result * direction;
+        }
+
+        const lastNameCompare = compareSortValues(
+            getRecordSortValue(left, 'lastName'),
+            getRecordSortValue(right, 'lastName'),
+            'lastName'
+        );
+        if (lastNameCompare !== 0) {
+            return lastNameCompare;
+        }
+
+        return compareSortValues(
+            getRecordSortValue(left, 'firstName'),
+            getRecordSortValue(right, 'firstName'),
+            'firstName'
+        );
+    });
+}
+
+function updateSortHeaderState() {
+    document.querySelectorAll('.prev-kab-sortable').forEach((header) => {
+        header.classList.remove('sort-asc', 'sort-desc');
+        if (header.dataset.sort === sortColumn) {
+            header.classList.add(sortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+        }
+    });
+}
+
+function initSortableHeaders() {
+    const headerRow = document.querySelector('.prev-kab-table thead tr');
+    if (!headerRow) {
+        return;
+    }
+
+    const headers = Array.from(headerRow.querySelectorAll('th'));
+    let sortableIndex = 0;
+
+    headers.forEach((header) => {
+        if (header.classList.contains('th-checkbox')) {
+            return;
+        }
+
+        const sortKey = SORT_COLUMN_KEYS[sortableIndex];
+        sortableIndex += 1;
+        if (!sortKey) {
+            return;
+        }
+
+        const label = header.textContent.trim();
+        header.classList.add('prev-kab-sortable');
+        header.dataset.sort = sortKey;
+        header.innerHTML = `
+            <button type="button" class="prev-kab-sort-btn" data-sort="${sortKey}" aria-label="Sort by ${label}">
+                <span class="prev-kab-sort-label">${label}</span>
+                <span class="prev-kab-sort-icon" aria-hidden="true"></span>
+            </button>
+        `;
+    });
+
+    headerRow.addEventListener('click', (event) => {
+        const button = event.target.closest('.prev-kab-sort-btn');
+        if (!button) {
+            return;
+        }
+
+        const column = button.dataset.sort;
+        if (!column) {
+            return;
+        }
+
+        if (sortColumn === column) {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortColumn = column;
+            sortDirection = 'asc';
+        }
+
+        currentPage = 1;
+        applySort();
+        renderTable();
+    });
+
+    updateSortHeaderState();
+}
+
 /* ── Render ── */
+function getTotalPages(count = filteredData.length) {
+    return Math.max(1, Math.ceil(count / recordsPerPage) || 1);
+}
+
+function updatePaginationFooter(totalRecords) {
+    const totalPages = getTotalPages(totalRecords);
+    const pageInput = document.getElementById('prevKabPageInput');
+    const totalPagesEl = document.getElementById('prevKabTotalPages');
+    const prevBtn = document.getElementById('prevKabPrevBtn');
+    const nextBtn = document.getElementById('prevKabNextBtn');
+    const info = document.getElementById('prevKabPaginationInfo');
+
+    if (currentPage > totalPages) {
+        currentPage = totalPages;
+    }
+
+    if (pageInput) {
+        pageInput.value = String(currentPage);
+        pageInput.min = '1';
+        pageInput.max = String(totalPages);
+    }
+
+    if (totalPagesEl) {
+        totalPagesEl.textContent = String(totalPages);
+    }
+
+    if (prevBtn) {
+        prevBtn.disabled = currentPage <= 1;
+    }
+
+    if (nextBtn) {
+        nextBtn.disabled = currentPage >= totalPages;
+    }
+
+    if (info) {
+        info.textContent = `${totalRecords} record${totalRecords === 1 ? '' : 's'}`;
+    }
+}
+
+function updateBulkToolbar() {
+    const count = selectedIds.size;
+    const hasSelection = count > 0;
+
+    if (tableActionsBar) {
+        tableActionsBar.hidden = !hasSelection;
+    }
+
+    if (bulkDeleteBtn) {
+        bulkDeleteBtn.hidden = !hasSelection;
+    }
+
+    if (bulkDeleteLabel) {
+        bulkDeleteLabel.textContent = count > 1 ? `Delete (${count})` : 'Delete';
+    }
+}
+
+function syncSelectAllCheckbox() {
+    if (!selectAllCheckbox || !tableBody) {
+        return;
+    }
+
+    const visibleCheckboxes = Array.from(tableBody.querySelectorAll('.prev-kab-row-checkbox'));
+    const visibleIds = visibleCheckboxes
+        .map((checkbox) => checkbox.dataset.id)
+        .filter(Boolean);
+
+    selectAllCheckbox.checked = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id));
+    selectAllCheckbox.indeterminate = visibleIds.some((id) => selectedIds.has(id)) && !selectAllCheckbox.checked;
+}
+
 function renderTable() {
     const total = filteredData.length;
-    const pages = Math.max(1, Math.ceil(total / ROWS_PER_PAGE));
+    const start = (currentPage - 1) * recordsPerPage;
+    const slice = filteredData.slice(start, start + recordsPerPage);
 
-    const start = (currentPage - 1) * ROWS_PER_PAGE;
-    const slice = filteredData.slice(start, start + ROWS_PER_PAGE);
-
-    if (!tableBody) return;
+    if (!tableBody) {
+        return;
+    }
 
     if (slice.length === 0) {
-        tableBody.innerHTML = `<tr class="empty-state-row"><td colspan="20">No records found.</td></tr>`;
+        tableBody.innerHTML = `<tr class="empty-state-row"><td colspan="${TABLE_COL_COUNT}">No records found.</td></tr>`;
     } else {
-        tableBody.innerHTML = slice.map((r, i) => `
-            <tr>
-                <td>${(currentPage - 1) * ROWS_PER_PAGE + i + 1}</td>
-                <td class="fullname-cell">${r.name || fullName(r) || 'None'}</td>
-                <td>${r.age || 'None'}</td>
-                <td>${r.birthday || 'None'}</td>
-                <td>${r.sex || 'None'}</td>
-                <td>${r.civilStatus || 'None'}</td>
-                <td>${r.youthClassification || 'None'}</td>
-                <td>${r.youthAgeGroup || 'None'}</td>
-                <td>${r.contact || 'None'}</td>
-                <td>${r.homeAddress || r.purokZone || 'None'}</td>
-                <td>${r.education || 'None'}</td>
-                <td>${r.workStatus || 'None'}</td>
-                <td><span class="voter-badge ${r.registeredVoter === 'YES' || r.registeredVoter === 'Yes' ? 'yes' : 'no'}">${r.registeredVoter || 'None'}</span></td>
-                <td>${r.votingHistory || 'None'}</td>
-                <td>${r.kkAssembly || 'None'}</td>
-                <td>${r.votingFrequency || 'None'}</td>
-                <td>${r.barangay || 'None'}</td>
-                <td>${r.region || 'None'}</td>
-                <td>${r.province || 'None'}</td>
-                <td>${r.city || 'None'}</td>
-                <td>
-                    <div class="row-actions">
-                        <button class="btn-action-delete" onclick="openDeleteModal(${r.id})">Delete</button>
-                    </div>
+        tableBody.innerHTML = slice.map((r, i) => {
+            const recordId = r.id ? String(r.id) : '';
+            const voterValue = cell(r.registeredVoter);
+            const voterClass = voterValue.toLowerCase() === 'yes' ? 'yes' : (voterValue.toLowerCase() === 'no' ? 'no' : '');
+
+            return `
+            <tr${recordId ? ` data-record-id="${recordId}"` : ''}>
+                <td class="th-checkbox">
+                    ${recordId ? `<input type="checkbox" class="prev-kab-checkbox prev-kab-row-checkbox" data-id="${recordId}" aria-label="Select row" ${selectedIds.has(recordId) ? 'checked' : ''}>` : ''}
                 </td>
+                <td>${start + i + 1}</td>
+                <td>${cell(r.lastName)}</td>
+                <td>${cell(r.firstName)}</td>
+                <td>${cell(r.middleName)}</td>
+                <td>${cell(r.suffix)}</td>
+                <td>${cell(r.age)}</td>
+                <td>${cell(r.birthday)}</td>
+                <td>${cell(r.sex)}</td>
+                <td>${cell(r.civilStatus)}</td>
+                <td>${cell(r.youthClassification)}</td>
+                <td>${cell(r.youthAgeGroup)}</td>
+                <td>${cell(r.contact)}</td>
+                <td>${cell(r.homeAddress || r.purokZone)}</td>
+                <td>${cell(r.education)}</td>
+                <td>${cell(r.workStatus)}</td>
+                <td>${voterClass ? `<span class="voter-badge ${voterClass}">${voterValue}</span>` : ''}</td>
+                <td>${cell(r.votingHistory)}</td>
+                <td>${cell(r.kkAssembly)}</td>
+                <td>${cell(r.votingFrequency)}</td>
+                <td>${cell(r.barangay)}</td>
+                <td>${cell(r.region)}</td>
+                <td>${cell(r.province)}</td>
+                <td>${cell(r.city)}</td>
             </tr>
-        `).join('');
+        `;
+        }).join('');
     }
 
-    if (paginationInfo) {
-        const from = total === 0 ? 0 : start + 1;
-        const to   = Math.min(start + ROWS_PER_PAGE, total);
-        paginationInfo.textContent = `Showing ${from}–${to} of ${total} record${total !== 1 ? 's' : ''}`;
-    }
-
-    renderPagination(pages);
+    updatePaginationFooter(total);
+    updateBulkToolbar();
+    syncSelectAllCheckbox();
+    updateSortHeaderState();
 }
 
-function renderPagination(pages) {
-    if (!paginationNums) return;
+function resetDeleteModalFields() {
+    const confirmInput = document.getElementById('prevKabDeleteConfirmInput');
+    const confirmError = document.getElementById('prevKabDeleteConfirmError');
+    const confirmBtn = document.getElementById('prevKabDeleteConfirmBtn');
 
-    if (prevBtn) prevBtn.disabled = currentPage <= 1;
-    if (nextBtn) nextBtn.disabled = currentPage >= pages;
-
-    const maxVisible = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-    let endPage   = Math.min(pages, startPage + maxVisible - 1);
-    if (endPage - startPage < maxVisible - 1) startPage = Math.max(1, endPage - maxVisible + 1);
-
-    let html = '';
-    if (startPage > 1) html += `<button class="page-number" onclick="goToPage(1)">1</button>${startPage > 2 ? '<span style="padding:0 4px;color:#9ca3af">…</span>' : ''}`;
-    for (let p = startPage; p <= endPage; p++) {
-        html += `<button class="page-number ${p === currentPage ? 'active' : ''}" onclick="goToPage(${p})">${p}</button>`;
+    if (confirmInput) {
+        confirmInput.value = '';
     }
-    if (endPage < pages) html += `${endPage < pages - 1 ? '<span style="padding:0 4px;color:#9ca3af">…</span>' : ''}<button class="page-number" onclick="goToPage(${pages})">${pages}</button>`;
 
-    paginationNums.innerHTML = html;
+    if (confirmError) {
+        confirmError.style.display = 'none';
+        confirmError.textContent = '';
+    }
+
+    syncDeleteConfirmButton();
 }
 
-window.goToPage = function(p) {
-    currentPage = p;
-    renderTable();
-};
+function syncDeleteConfirmButton() {
+    const confirmInput = document.getElementById('prevKabDeleteConfirmInput');
+    const confirmBtn = document.getElementById('prevKabDeleteConfirmBtn');
+    const confirmError = document.getElementById('prevKabDeleteConfirmError');
+    const matched = (confirmInput?.value?.trim() || '') === 'Confirm';
+
+    if (confirmBtn) {
+        confirmBtn.disabled = !matched;
+        confirmBtn.classList.toggle('is-disabled', !matched);
+        confirmBtn.classList.toggle('is-enabled', matched);
+    }
+
+    if (confirmError && matched) {
+        confirmError.style.display = 'none';
+        confirmError.textContent = '';
+    }
+}
+
+function closeDeleteModal() {
+    const deleteModal = document.getElementById('prevKabDeleteModal');
+    if (deleteModal) {
+        deleteModal.style.display = 'none';
+    }
+
+    deleteMode = 'single';
+    deleteRecordId = null;
+    pendingDeleteIds = [];
+    resetDeleteModalFields();
+}
+
+function updateDeleteModalMessage() {
+    const messageEl = document.getElementById('prevKabDeleteMessage');
+    if (!messageEl) {
+        return;
+    }
+
+    const count = deleteMode === 'bulk' ? pendingDeleteIds.length : 1;
+    messageEl.textContent = count > 1
+        ? `Are you sure you want to delete ${count} selected records?`
+        : 'Are you sure you want to delete this record?';
+}
 
 /* ── Delete Modal ── */
-let deleteRecordId = null;
-
-window.openDeleteModal = function(id) {
+function openDeleteModal(id) {
+    deleteMode = 'single';
     deleteRecordId = id;
+    pendingDeleteIds = id ? [String(id)] : [];
+    resetDeleteModalFields();
+    updateDeleteModalMessage();
     document.getElementById('prevKabDeleteModal').style.display = 'flex';
-    document.getElementById('deleteReason').value = '';
-    document.getElementById('otherReason').value = '';
-    document.getElementById('otherReasonGroup').style.display = 'none';
-    document.getElementById('charCount').textContent = '0';
-};
+}
+
+function openBulkDeleteModal() {
+    if (selectedIds.size === 0) {
+        return;
+    }
+
+    deleteMode = 'bulk';
+    deleteRecordId = null;
+    pendingDeleteIds = Array.from(selectedIds);
+    resetDeleteModalFields();
+    updateDeleteModalMessage();
+    document.getElementById('prevKabDeleteModal').style.display = 'flex';
+}
 
 function setText(id, val) {
     const el = document.getElementById(id);
@@ -272,111 +580,151 @@ function normalizeValue(field, value) {
 /* ── Modal close ── */
 document.querySelectorAll('[data-modal-close]').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.getElementById('prevKabDeleteModal').style.display = 'none';
         document.getElementById('prevKabUploadModal').style.display = 'none';
         resetUploadModal();
     });
 });
 
 const deleteBackdrop = document.getElementById('prevKabDeleteModal');
+const deleteCancelBtn = document.getElementById('prevKabDeleteCancelBtn');
+const deleteConfirmInput = document.getElementById('prevKabDeleteConfirmInput');
+const deleteConfirmBtn = document.getElementById('prevKabDeleteConfirmBtn');
+
 if (deleteBackdrop) {
-    deleteBackdrop.addEventListener('click', e => {
-        if (e.target === deleteBackdrop) deleteBackdrop.style.display = 'none';
-    });
-}
-
-/* ── Delete Reason Handling ── */
-const otherReasonGroup = document.getElementById('otherReasonGroup');
-const otherReasonTextarea = document.getElementById('otherReason');
-const charCountSpan = document.getElementById('charCount');
-const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-
-// Handle checkbox changes for delete reason
-document.querySelectorAll('input[name="deleteReason"]').forEach(checkbox => {
-    checkbox.addEventListener('change', () => {
-        const otherCheckbox = document.querySelector('input[name="deleteReason"][value="Other"]');
-        if (otherCheckbox && otherCheckbox.checked) {
-            otherReasonGroup.style.display = 'block';
-        } else {
-            otherReasonGroup.style.display = 'none';
-        }
-    });
-});
-
-if (otherReasonTextarea) {
-    otherReasonTextarea.addEventListener('input', () => {
-        const currentLength = otherReasonTextarea.value.length;
-        charCountSpan.textContent = currentLength;
-        
-        // Enforce 500 character limit
-        if (currentLength > 500) {
-            otherReasonTextarea.value = otherReasonTextarea.value.substring(0, 500);
-            charCountSpan.textContent = 500;
+    deleteBackdrop.addEventListener('click', (e) => {
+        if (e.target === deleteBackdrop) {
+            closeDeleteModal();
         }
     });
 }
 
-if (confirmDeleteBtn) {
-    confirmDeleteBtn.addEventListener('click', () => {
-        // Get all checked checkboxes
-        const checkedReasons = Array.from(document.querySelectorAll('input[name="deleteReason"]:checked'))
-            .map(cb => cb.value);
+if (deleteCancelBtn) {
+    deleteCancelBtn.addEventListener('click', closeDeleteModal);
+}
 
-        if (checkedReasons.length === 0) {
-            alert('Please select a reason for deletion.');
+if (deleteConfirmInput) {
+    deleteConfirmInput.addEventListener('input', syncDeleteConfirmButton);
+}
+
+if (deleteConfirmBtn) {
+    deleteConfirmBtn.addEventListener('click', () => {
+        if (deleteConfirmBtn.disabled) {
             return;
         }
 
-        const otherCheckbox = document.querySelector('input[name="deleteReason"][value="Other"]');
-        const otherReason = otherReasonTextarea.value;
-
-        // If Other is selected, validate the textarea
-        if (otherCheckbox && otherCheckbox.checked && !otherReason.trim()) {
-            alert('Please provide a reason in the Other field.');
-            return;
-        }
-
-        // Build the final reason string
-        let finalReason = checkedReasons.join(', ');
-        if (otherCheckbox && otherCheckbox.checked) {
-            finalReason = `Other: ${otherReason}`;
-        }
-
-        if (!confirm(`Are you sure you want to delete this record?\n\nReason: ${finalReason}`)) {
-            return;
-        }
-
-        // Send delete request to server
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
-        confirmDeleteBtn.disabled = true;
-        confirmDeleteBtn.textContent = 'Deleting...';
-
-        fetch(`/previous-kabataan/${deleteRecordId}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ reason: finalReason }),
-        })
-        .then(r => r.json())
-        .then(res => {
-            if (res.success) {
-                document.getElementById('prevKabDeleteModal').style.display = 'none';
-                loadData();
-                showToast('✅ Record deleted successfully.');
-            } else {
-                showToast('❌ Failed to delete record. Please try again.', 'error');
+        if ((deleteConfirmInput?.value?.trim() || '') !== 'Confirm') {
+            const confirmError = document.getElementById('prevKabDeleteConfirmError');
+            if (confirmError) {
+                confirmError.textContent = 'Please type Confirm to delete this record.';
+                confirmError.style.display = 'block';
             }
-        })
-        .catch(() => {
-            showToast('❌ Network error. Please try again.', 'error');
-        })
-        .finally(() => {
-            confirmDeleteBtn.disabled = false;
-            confirmDeleteBtn.textContent = 'Delete';
-        });
+            return;
+        }
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const idsToDelete = [...pendingDeleteIds];
+        const recordIdToDelete = deleteRecordId;
+        const isBulkDelete = deleteMode === 'bulk' && idsToDelete.length > 0;
+        closeDeleteModal();
+
+        if (typeof window.showLoading === 'function') {
+            window.showLoading(isBulkDelete ? 'Deleting records' : 'Deleting record');
+        }
+
+        const request = isBulkDelete
+            ? fetch('/previous-kabataan/bulk-delete', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ids: idsToDelete.map((id) => parseInt(id, 10)),
+                }),
+            })
+            : fetch(`/previous-kabataan/${recordIdToDelete}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            });
+
+        request
+            .then((r) => r.json())
+            .then((res) => {
+                if (res.success) {
+                    idsToDelete.forEach((id) => selectedIds.delete(String(id)));
+                    loadData();
+                    showToast(
+                        isBulkDelete
+                            ? 'Selected records deleted successfully.'
+                            : 'Record deleted successfully.',
+                        'success'
+                    );
+                } else {
+                    showToast('Failed to delete record. Please try again.', 'error');
+                }
+            })
+            .catch(() => {
+                showToast('Network error. Please try again.', 'error');
+            })
+            .finally(() => {
+                if (typeof window.hideLoading === 'function') {
+                    window.hideLoading();
+                }
+
+                deleteMode = 'single';
+                deleteRecordId = null;
+                pendingDeleteIds = [];
+                resetDeleteModalFields();
+            });
+    });
+}
+
+const downloadSampleBtn = document.getElementById('prevKabDownloadSample');
+if (downloadSampleBtn) {
+    downloadSampleBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        downloadSampleTemplate();
+    });
+}
+
+function downloadSampleTemplate() {
+    import('xlsx').then((XLSX) => {
+        const headers = [[
+            'Last Name',
+            'First Name',
+            'Middle Name',
+            'Suffix',
+            'Age',
+            'Birthday',
+            'Sex',
+            'Civil Status',
+            'Youth Classification',
+            'Youth Age Group',
+            'Contact Number',
+            'Home Address',
+            'Highest Educational Attainment',
+            'Work Status',
+            'Registered Voter?',
+            'Voted Last Election?',
+            'Attended KK Assembly?',
+            'If Yes, How Many Times?',
+            'Barangay',
+            'Region',
+            'Province',
+            'City/Municipality',
+        ]];
+
+        const worksheet = XLSX.utils.aoa_to_sheet(headers);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Previous Kabataan');
+        XLSX.writeFile(workbook, 'previous-kabataan-template.xlsx');
+    }).catch(() => {
+        showToast('Failed to download sample template.', 'error');
     });
 }
 
@@ -468,10 +816,10 @@ function handleFileSelected(file) {
                     respondentNo:        String(idx + 1).padStart(3, '0'),
                     date:                norm['date'] || '',
                     name:                norm['name'] || '',
-                    lastName:            '',
-                    firstName:           '',
-                    middleName:          '',
-                    suffix:              '',
+                    lastName:            norm['last_name'] || norm['lastname'] || '',
+                    firstName:           norm['first_name'] || norm['firstname'] || '',
+                    middleName:          norm['middle_name'] || norm['middlename'] || '',
+                    suffix:              norm['suffix'] || '',
                     region:              norm['region'] || 'Region IV-A (CALABARZON)',
                     province:            norm['province'] || 'Laguna',
                     city:                norm['city_municipality'] || norm['city'] || 'Santa Cruz',
@@ -498,7 +846,7 @@ function handleFileSelected(file) {
                     groupChat:           norm['group_chat'] || '',
                     registeredVoter:     norm['registered_voter?'] || norm['registered_voter'] || '',
                 };
-            }).filter(r => r.name || r.lastName);
+            }).filter(r => r.lastName || r.firstName || r.name);
 
             renderFullPreviewTable(uploadedRows);
 
@@ -597,25 +945,28 @@ function renderFullPreviewTable(rows) {
     tbody.innerHTML = rows.map((r, idx) => `
         <tr>
             <td>${idx + 1}</td>
-            <td>${r.name || [r.lastName, r.firstName, r.middleName].filter(Boolean).join(', ') || 'None'}</td>
-            <td>${r.age || 'None'}</td>
-            <td>${r.birthday || 'None'}</td>
-            <td>${r.sex || 'None'}</td>
-            <td>${r.civilStatus || 'None'}</td>
-            <td>${r.youthClassification || 'None'}</td>
-            <td>${r.youthAgeGroup || 'None'}</td>
-            <td>${r.contact || 'None'}</td>
-            <td>${r.homeAddress || r.purokZone || 'None'}</td>
-            <td>${r.education || 'None'}</td>
-            <td>${r.workStatus || 'None'}</td>
-            <td>${r.registeredVoter || 'None'}</td>
-            <td>${r.votingHistory || 'None'}</td>
-            <td>${r.kkAssembly || 'None'}</td>
-            <td>${r.votingFrequency || 'None'}</td>
-            <td>${r.barangay || 'None'}</td>
-            <td>${r.region || 'None'}</td>
-            <td>${r.province || 'None'}</td>
-            <td>${r.city || 'None'}</td>
+            <td>${cell(r.lastName)}</td>
+            <td>${cell(r.firstName)}</td>
+            <td>${cell(r.middleName)}</td>
+            <td>${cell(r.suffix)}</td>
+            <td>${cell(r.age)}</td>
+            <td>${cell(r.birthday)}</td>
+            <td>${cell(r.sex)}</td>
+            <td>${cell(r.civilStatus)}</td>
+            <td>${cell(r.youthClassification)}</td>
+            <td>${cell(r.youthAgeGroup)}</td>
+            <td>${cell(r.contact)}</td>
+            <td>${cell(r.homeAddress || r.purokZone)}</td>
+            <td>${cell(r.education)}</td>
+            <td>${cell(r.workStatus)}</td>
+            <td>${cell(r.registeredVoter)}</td>
+            <td>${cell(r.votingHistory)}</td>
+            <td>${cell(r.kkAssembly)}</td>
+            <td>${cell(r.votingFrequency)}</td>
+            <td>${cell(r.barangay)}</td>
+            <td>${cell(r.region)}</td>
+            <td>${cell(r.province)}</td>
+            <td>${cell(r.city)}</td>
         </tr>
     `).join('');
 }
@@ -625,11 +976,13 @@ if (confirmSaveBtn) {
     confirmSaveBtn.addEventListener('click', () => {
         if (!uploadedRows.length) return;
 
-        // Show upload progress indicator
         showUploadProgress();
-        updateUploadProgress(0, uploadedRows.length);
+        updateUploadProgress(0, uploadedRows.length, true);
 
-        // Set button to loading state
+        if (typeof window.showLoading === 'function') {
+            window.showLoading('Uploading records');
+        }
+
         setButtonLoading(confirmSaveBtn, true, 'Confirm & Save');
 
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -643,18 +996,21 @@ if (confirmSaveBtn) {
 
         const sendBatch = (idx) => {
             if (idx >= batches.length) {
-                // Upload complete
                 hideUploadProgress();
                 uploadModal.style.display = 'none';
                 resetUploadModal();
                 setButtonLoading(confirmSaveBtn, false);
+
+                if (typeof window.hideLoading === 'function') {
+                    window.hideLoading();
+                }
+
                 loadData();
-                showToast(`✅ Successfully uploaded ${totalSaved} records.`);
+                showToast(`Successfully replaced records with ${totalSaved} new record${totalSaved === 1 ? '' : 's'}.`, 'success');
                 return;
             }
 
-            // Update progress
-            const currentProgress = Math.min(idx * BATCH + BATCH, uploadedRows.length);
+            const currentProgress = Math.min((idx + 1) * BATCH, uploadedRows.length);
             updateUploadProgress(currentProgress, uploadedRows.length);
 
             fetch('/previous-kabataan/upload', {
@@ -664,7 +1020,10 @@ if (confirmSaveBtn) {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ rows: batches[idx] }),
+                body: JSON.stringify({
+                    rows: batches[idx],
+                    replace_existing: idx === 0,
+                }),
             })
             .then(r => r.json())
             .then(res => {
@@ -674,13 +1033,23 @@ if (confirmSaveBtn) {
                 } else {
                     hideUploadProgress();
                     setButtonLoading(confirmSaveBtn, false);
-                    showToast('❌ Upload failed. Please try again.', 'error');
+
+                    if (typeof window.hideLoading === 'function') {
+                        window.hideLoading();
+                    }
+
+                    showToast('Upload failed. Please try again.', 'error');
                 }
             })
             .catch(() => {
                 hideUploadProgress();
                 setButtonLoading(confirmSaveBtn, false);
-                showToast('❌ Network error. Please try again.', 'error');
+
+                if (typeof window.hideLoading === 'function') {
+                    window.hideLoading();
+                }
+
+                showToast('Network error. Please try again.', 'error');
             });
         };
 
@@ -689,59 +1058,66 @@ if (confirmSaveBtn) {
 }
 
 /* ── Toast Notification System ── */
-function showToast(message, type = 'success', duration = 4000) {
-    const container = document.getElementById('prevKabToastContainer');
-    if (!container) return;
+function showToast(message, type = 'success', duration = 3000) {
+    const toast = document.getElementById('prevKabToast');
+    const msgEl = document.getElementById('prevKabToastMsg');
+    if (!toast || !msgEl) {
+        return;
+    }
 
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
+    msgEl.textContent = message;
+    toast.className = 'prev-kab-toast prev-kab-toast-show' + (type === 'error' ? ' prev-kab-toast-error' : '');
+    toast.style.display = 'flex';
 
-    const icon = type === 'success' ? '✅' : '❌';
-
-    toast.innerHTML = `
-        <span class="toast-icon">${icon}</span>
-        <span class="toast-message">${message}</span>
-        <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
-    `;
-
-    container.appendChild(toast);
-
-    // Auto-dismiss after duration
-    setTimeout(() => {
-        if (toast.parentElement) {
-            toast.classList.add('toast-exit');
-            toast.addEventListener('animationend', () => {
-                if (toast.parentElement) {
-                    toast.remove();
-                }
-            });
-        }
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(() => {
+        toast.classList.remove('prev-kab-toast-show');
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 300);
     }, duration);
 }
 
 /* ── Upload Progress Indicator Functions ── */
 function showUploadProgress() {
     const progressContainer = document.getElementById('prevKabUploadProgress');
+    const progressBar = document.getElementById('prevKabProgressBar');
+
     if (progressContainer) {
         progressContainer.style.display = 'block';
+    }
+
+    if (progressBar) {
+        progressBar.classList.add('is-indeterminate');
     }
 }
 
 function hideUploadProgress() {
     const progressContainer = document.getElementById('prevKabUploadProgress');
+    const progressBar = document.getElementById('prevKabProgressBar');
+
     if (progressContainer) {
         progressContainer.style.display = 'none';
     }
-}
-
-function updateUploadProgress(current, total) {
-    const progressBar = document.getElementById('prevKabProgressBar');
-    const progressStatus = document.getElementById('prevKabProgressStatus');
-    const progressPercentage = document.getElementById('prevKabProgressPercentage');
 
     if (progressBar) {
-        const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
-        progressBar.style.width = `${percentage}%`;
+        progressBar.classList.remove('is-indeterminate');
+    }
+}
+
+function updateUploadProgress(current, total, indeterminate = false) {
+    const progressBar = document.getElementById('prevKabProgressBar');
+    const progressBarFill = document.getElementById('prevKabProgressBarFill');
+    const progressStatus = document.getElementById('prevKabProgressStatus');
+    const progressPercentage = document.getElementById('prevKabProgressPercentage');
+    const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
+
+    if (progressBar) {
+        progressBar.classList.toggle('is-indeterminate', indeterminate || (current === 0 && total > 0));
+    }
+
+    if (progressBarFill) {
+        progressBarFill.style.width = `${percentage}%`;
     }
 
     if (progressStatus) {
@@ -749,7 +1125,6 @@ function updateUploadProgress(current, total) {
     }
 
     if (progressPercentage) {
-        const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
         progressPercentage.textContent = `${percentage}%`;
     }
 }
@@ -776,11 +1151,97 @@ if (searchInput)    searchInput.addEventListener('input', applyFilters);
 if (yearFilter)     yearFilter.addEventListener('change', applyFilters);
 if (purokFilter)    purokFilter.addEventListener('change', applyFilters);
 if (voterFilter)    voterFilter.addEventListener('change', applyFilters);
-if (prevBtn) prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderTable(); } });
-if (nextBtn) nextBtn.addEventListener('click', () => {
-    const pages = Math.ceil(filteredData.length / ROWS_PER_PAGE);
-    if (currentPage < pages) { currentPage++; renderTable(); }
-});
+
+const prevBtn = document.getElementById('prevKabPrevBtn');
+const nextBtn = document.getElementById('prevKabNextBtn');
+const pageInput = document.getElementById('prevKabPageInput');
+const rowsPerPageSelect = document.getElementById('prevKabRowsPerPageSelect');
+
+function goToPage(page) {
+    const totalPages = getTotalPages();
+    currentPage = Math.min(Math.max(1, page), totalPages);
+    renderTable();
+}
+
+if (prevBtn) {
+    prevBtn.addEventListener('click', () => goToPage(currentPage - 1));
+}
+
+if (nextBtn) {
+    nextBtn.addEventListener('click', () => goToPage(currentPage + 1));
+}
+
+if (pageInput) {
+    pageInput.addEventListener('change', () => {
+        const value = parseInt(pageInput.value, 10);
+        if (!Number.isNaN(value)) {
+            goToPage(value);
+        }
+    });
+}
+
+if (rowsPerPageSelect) {
+    rowsPerPageSelect.addEventListener('change', () => {
+        recordsPerPage = parseInt(rowsPerPageSelect.value, 10) || 10;
+        currentPage = 1;
+        renderTable();
+    });
+}
+
+if (bulkDeleteBtn) {
+    bulkDeleteBtn.addEventListener('click', openBulkDeleteModal);
+}
+
+if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener('change', () => {
+        if (!tableBody) {
+            return;
+        }
+
+        const visibleCheckboxes = Array.from(tableBody.querySelectorAll('.prev-kab-row-checkbox'));
+        visibleCheckboxes.forEach((checkbox) => {
+            const id = checkbox.dataset.id;
+            if (!id) {
+                return;
+            }
+
+            if (selectAllCheckbox.checked) {
+                selectedIds.add(id);
+            } else {
+                selectedIds.delete(id);
+            }
+
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+
+        updateBulkToolbar();
+        syncSelectAllCheckbox();
+    });
+}
+
+if (tableBody) {
+    tableBody.addEventListener('change', (event) => {
+        const checkbox = event.target.closest('.prev-kab-row-checkbox');
+        if (!checkbox) {
+            return;
+        }
+
+        const id = checkbox.dataset.id;
+        if (!id) {
+            return;
+        }
+
+        if (checkbox.checked) {
+            selectedIds.add(id);
+        } else {
+            selectedIds.delete(id);
+        }
+
+        updateBulkToolbar();
+        syncSelectAllCheckbox();
+    });
+}
 
 /* ── Init ── */
+initSortableHeaders();
 loadData();

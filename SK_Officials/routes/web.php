@@ -184,7 +184,9 @@ Route::middleware([
     Route::get('/previous-kabataan', [PreviousKabataanController::class, 'index'])->name('previous-kabataan');
     Route::get('/previous-kabataan/data', [PreviousKabataanController::class, 'data'])->name('previous-kabataan.data');
     Route::post('/previous-kabataan/upload', [PreviousKabataanController::class, 'upload'])->name('previous-kabataan.upload');
+    Route::post('/previous-kabataan/bulk-delete', [PreviousKabataanController::class, 'bulkDestroy'])->name('previous-kabataan.bulk-destroy');
     Route::post('/previous-kabataan/move/{id}', [PreviousKabataanController::class, 'moveFromActive'])->name('previous-kabataan.move');
+    Route::delete('/previous-kabataan/{id}', [PreviousKabataanController::class, 'destroy'])->name('previous-kabataan.destroy');
 
     Route::get('/deleted-kabataan', [DeletedKabataanController::class, 'index'])->name('deleted-kabataan');
     Route::get('/deleted-kabataan/data', [DeletedKabataanController::class, 'data'])->name('deleted-kabataan.data');

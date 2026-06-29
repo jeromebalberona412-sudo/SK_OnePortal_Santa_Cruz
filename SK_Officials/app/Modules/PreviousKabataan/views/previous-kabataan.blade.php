@@ -12,6 +12,7 @@
         'app/Modules/layout/css/sidebar.css',
         'app/Modules/PreviousKabataan/assets/css/previous-kabataan.css'
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
@@ -21,7 +22,7 @@
 @include('layout::sidebar')
 
 <main class="main-content">
-    <div class="page-container">
+    <div class="page-container prev-kab-page has-table-page-footer">
 
         <!-- Page Header -->
         <section class="page-header-section">
@@ -61,9 +62,9 @@
                     </select>
                 </div>
                 <div class="filter-item">
-                    <label for="prevKabPurokFilter" class="filter-label">Purok/Zone</label>
+                    <label for="prevKabPurokFilter" class="filter-label">Home Address</label>
                     <select id="prevKabPurokFilter" class="filter-select">
-                        <option value="">All Puroks</option>
+                        <option value="">All</option>
                         <option value="Bayside">Bayside</option>
                         <option value="Villa Gracia">Villa Gracia</option>
                         <option value="Imelda">Imelda</option>
@@ -86,6 +87,16 @@
             </div>
         </section>
 
+        <div class="table-external-actions prev-kab-table-actions" id="prevKabTableActions" hidden>
+            <button type="button" class="btn-float-delete" id="prevKabBulkDeleteBtn" hidden>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                <span id="prevKabBulkDeleteLabel">Delete</span>
+            </button>
+        </div>
+
         <!-- Content Section -->
         <section class="page-content-section">
             <div class="table-card">
@@ -93,11 +104,14 @@
                     <table class="prev-kab-table">
                         <thead>
                             <tr>
-                                <th>#</th>
-                                <th>
-                                    Full Name
-                                    <div class="column-hint">LN, FN, MN, Suffix</div>
+                                <th class="th-checkbox">
+                                    <input type="checkbox" class="prev-kab-checkbox prev-kab-checkbox-header" id="prevKabSelectAll" aria-label="Select all visible rows">
                                 </th>
+                                <th>#</th>
+                                <th>Last Name</th>
+                                <th>First Name</th>
+                                <th>Middle Name</th>
+                                <th>Suffix</th>
                                 <th>Age</th>
                                 <th>Birthday</th>
                                 <th>Sex</th>
@@ -116,7 +130,6 @@
                                 <th>Region</th>
                                 <th>Province</th>
                                 <th>City/Municipality</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="prevKabTableBody">
@@ -125,13 +138,25 @@
                 </div>
             </div>
 
-            <!-- Pagination -->
-            <div class="pagination-container">
-                <div class="pagination-info" id="prevKabPaginationInfo">Showing 0–0 of 0 records</div>
-                <div class="pagination-controls">
-                    <button class="pagination-btn" id="prevKabPrevBtn">Previous</button>
-                    <div class="pagination-numbers" id="prevKabPaginationNums"></div>
-                    <button class="pagination-btn" id="prevKabNextBtn">Next</button>
+            <div class="prev-kab-page-footer table-page-footer pagination-footer" aria-label="Table pagination">
+                <div class="pagination-footer-nav">
+                    <button type="button" class="pagination-arrow" id="prevKabPrevBtn" disabled aria-label="Previous page">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <span class="pagination-page-label">Page</span>
+                    <input type="number" class="pagination-page-input" id="prevKabPageInput" value="1" min="1" aria-label="Current page">
+                    <span class="pagination-page-of">of <span id="prevKabTotalPages">1</span></span>
+                    <button type="button" class="pagination-arrow" id="prevKabNextBtn" disabled aria-label="Next page">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
+                </div>
+                <div class="pagination-footer-right">
+                    <select id="prevKabRowsPerPageSelect" class="pagination-rows-select" aria-label="Rows per page">
+                        <option value="10">10 rows</option>
+                        <option value="50">50 rows</option>
+                        <option value="100">100 rows</option>
+                    </select>
+                    <span class="pagination-record-count" id="prevKabPaginationInfo">0 records</span>
                 </div>
             </div>
         </section>
@@ -139,42 +164,22 @@
     </div>
 </main>
 
-<!-- Delete Reason Modal -->
-<div class="modal-backdrop delete-modal-backdrop" id="prevKabDeleteModal" style="display:none;">
-    <div class="modal-box delete-modal-box">
-        <div class="modal-header">
-            <h2 class="modal-title">Delete Record</h2>
-            <div class="modal-window-controls">
-                <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
-            </div>
+<!-- Delete Confirmation Modal -->
+<div class="modal-backdrop prev-kab-delete-backdrop" id="prevKabDeleteModal" style="display:none;">
+    <div class="sk-type-confirm-modal prev-kab-delete-modal" role="dialog" aria-modal="true" aria-labelledby="prevKabDeleteTitle">
+        <div class="sk-type-confirm-header">
+            <h3 id="prevKabDeleteTitle">Delete Record</h3>
         </div>
-        <div class="modal-body" style="padding: 20px;">
-            <p style="margin-bottom: 16px; color: #374151; font-size: 14px;">Please provide a reason for deleting this record:</p>
-            
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label class="form-label" style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;">Reason</label>
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #374151;">
-                        <input type="checkbox" name="deleteReason" value="Duplicate Record"> Duplicate Record
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #374151;">
-                        <input type="checkbox" name="deleteReason" value="Incorrect Information"> Incorrect Information
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #374151;">
-                        <input type="checkbox" name="deleteReason" value="Other"> Other
-                    </label>
-                </div>
-            </div>
-            
-            <div class="form-group" id="otherReasonGroup" style="margin-bottom: 16px; display: none;">
-                <label for="otherReason" class="form-label" style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;">Other Reason</label>
-                <textarea id="otherReason" class="form-textarea other-reason-textarea" maxlength="500" rows="3" placeholder="Please specify the reason (max 500 characters)"></textarea>
-                <div style="text-align: right; font-size: 11px; color: #6b7280; margin-top: 4px;"><span id="charCount">0</span>/500</div>
-            </div>
+        <div class="sk-type-confirm-body">
+            <p class="sk-type-confirm-message" id="prevKabDeleteMessage">Are you sure you want to delete the selected record(s)?</p>
+            <p class="sk-type-confirm-desc">This action cannot be undone.</p>
+            <label class="sk-type-confirm-label" for="prevKabDeleteConfirmInput">Confirmation Required</label>
+            <input type="text" id="prevKabDeleteConfirmInput" class="sk-type-confirm-input" placeholder="Type Confirm to confirm" autocomplete="off" spellcheck="false">
+            <p class="sk-type-confirm-hint sk-type-confirm-hint-error" id="prevKabDeleteConfirmError" style="display:none;"></p>
         </div>
-        <div class="modal-footer">
-            <button type="button" class="btn outline-btn" data-modal-close>Cancel</button>
-            <button type="button" class="btn danger-btn" id="confirmDeleteBtn">Delete</button>
+        <div class="sk-type-confirm-footer">
+            <button type="button" class="sk-btn-cancel-confirm" id="prevKabDeleteCancelBtn">Cancel</button>
+            <button type="button" class="sk-btn-action-confirm is-disabled" id="prevKabDeleteConfirmBtn" disabled>Confirm Delete</button>
         </div>
     </div>
 </div>
@@ -189,7 +194,17 @@
                 <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
             </div>
         </div>
-        <div class="modal-body" style="padding:18px;">
+        <div class="modal-body upload-modal-body">
+
+            <button type="button" class="download-sample-link" id="prevKabDownloadSample">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download sample Excel template (headers only)
+            </button>
+
+            <div class="prev-kab-upload-replace-notice" role="note">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <p><strong>Important:</strong> Uploading a new file will <strong>replace all existing Previous Kabataan records</strong> for your barangay. Old data will be removed and only the new upload will remain.</p>
+            </div>
 
             <!-- Drop zone — hidden once file is selected -->
             <div class="upload-zone" id="prevKabUploadZone">
@@ -211,10 +226,10 @@
             </div>
 
             <!-- Upload Progress Indicator -->
-            <div class="upload-progress-container" id="prevKabUploadProgress" style="display:none;">
+            <div class="upload-progress-container" id="prevKabUploadProgress" style="display:none;" aria-live="polite">
                 <div class="upload-progress-header">
-                    <div class="upload-progress-spinner">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spinner-icon"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                    <div class="upload-progress-spinner" aria-hidden="true">
+                        <span class="upload-progress-ring"></span>
                     </div>
                     <div class="upload-progress-text">
                         <div class="upload-progress-title">Uploading records...</div>
@@ -222,7 +237,9 @@
                     </div>
                 </div>
                 <div class="upload-progress-bar-container">
-                    <div class="upload-progress-bar" id="prevKabProgressBar"></div>
+                    <div class="upload-progress-bar" id="prevKabProgressBar">
+                        <div class="upload-progress-bar-fill" id="prevKabProgressBarFill"></div>
+                    </div>
                 </div>
                 <div class="upload-progress-percentage" id="prevKabProgressPercentage">0%</div>
             </div>
@@ -238,10 +255,10 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>
-                                    Full Name
-                                    <div class="column-hint">LN, FN, MN, Suffix</div>
-                                </th>
+                                <th>Last Name</th>
+                                <th>First Name</th>
+                                <th>Middle Name</th>
+                                <th>Suffix</th>
                                 <th>Age</th>
                                 <th>Birthday</th>
                                 <th>Sex</th>
@@ -284,7 +301,10 @@
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>
 
-<!-- Toast Notification Container -->
-<div class="toast-container" id="prevKabToastContainer"></div>
+<!-- Toast (top-center) -->
+<div class="prev-kab-toast" id="prevKabToast" style="display:none;" role="status" aria-live="polite">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+    <span id="prevKabToastMsg"></span>
+</div>
 </body>
 </html>
