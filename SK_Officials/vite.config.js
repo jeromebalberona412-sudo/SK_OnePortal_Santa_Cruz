@@ -59,6 +59,7 @@ export default defineConfig({
                 'app/Modules/Reports_Management/assets/js/reports-management.js',
                 // Kabataan module assets
                 'app/Modules/Kabataan/assets/css/kabataan.css',
+                'app/Modules/Kabataan/assets/css/kabataan-print-questionnaire.css',
                 'app/Modules/Kabataan/assets/js/kabataan.js',
                 // Previous Kabataan module assets
                 'app/Modules/PreviousKabataan/assets/css/previous-kabataan.css',

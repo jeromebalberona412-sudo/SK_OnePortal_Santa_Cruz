@@ -28,7 +28,7 @@ body {
 
 .kabataan-page .page-content-section {
     max-width: 100%;
-    overflow-x: auto;
+    overflow-x: visible;
     overflow-y: visible;
 }
 
@@ -37,18 +37,35 @@ body {
     border-radius: 16px;
     border: 1px solid #e5e7eb;
     box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
-    overflow: visible;
+    overflow: hidden;
     max-width: 100%;
 }
 
 .kabataan-page .table-wrapper {
-    overflow-x: auto;
-    overflow-y: visible;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch;
     max-width: 100%;
     width: 100%;
     display: block;
     padding-bottom: 4px;
+}
+
+.kabataan-page .table-wrapper::-webkit-scrollbar {
+    height: 4px;
+}
+
+.kabataan-page .table-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.kabataan-page .table-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(244, 194, 13, 0.35);
+    border-radius: 4px;
+}
+
+.kabataan-page .table-wrapper:hover::-webkit-scrollbar-thumb {
+    background: #f4c20d;
 }
 
 .page-header-section {
@@ -266,26 +283,8 @@ body {
 
 .table-wrapper {
     overflow-x: auto;
-    overflow-y: visible;
+    overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
-}
-
-/* Horizontal scrollbar for the kabataan table — thin, yellow on hover */
-.table-wrapper::-webkit-scrollbar {
-    height: 4px;
-}
-
-.table-wrapper::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.table-wrapper::-webkit-scrollbar-thumb {
-    background: rgba(244, 194, 13, 0.35);
-    border-radius: 4px;
-}
-
-.table-wrapper:hover::-webkit-scrollbar-thumb {
-    background: #f4c20d;
 }
 
 @media (max-width: 768px) {
@@ -297,7 +296,8 @@ body {
 .kabataan-table {
     width: 100%;
     min-width: 1320px;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: 13px;
 }
 
@@ -309,12 +309,41 @@ body {
     color: #ffffff;
 }
 
+.kabataan-table thead th:first-child {
+    border-top-left-radius: 12px;
+}
+
+.kabataan-table thead th:last-child {
+    border-top-right-radius: 12px;
+}
+
 .kabataan-table th,
 .kabataan-table td {
     padding: 10px 12px;
     text-align: center;
     border-bottom: 1px solid #d1d5db;
     border-right: 1px solid #d1d5db;
+    vertical-align: middle;
+}
+
+.kabataan-table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.kabataan-table .th-checkbox {
+    width: 44px;
+}
+
+.kabataan-table .kabataan-email-cell {
+    max-width: 0;
+}
+
+.kabataan-fullname-cell {
+    min-width: 160px;
+    white-space: normal;
+    line-height: 1.35;
 }
 
 .kabataan-actions {
@@ -326,30 +355,19 @@ body {
     min-height: 32px;
 }
 
-.kabataan-table th:last-child:not(.col-actions),
-.kabataan-table td:last-child:not(.col-actions) {
-    border-right: none;
-    width: 180px;
-    min-width: 180px;
-    text-align: center;
-}
-
 .kabataan-table th.col-actions,
 .kabataan-table td.col-actions {
     border-right: none;
     text-align: center;
-    position: sticky;
-    right: 0;
-    z-index: 2;
-    min-width: 88px;
-    width: 88px;
+    min-width: 72px;
+    width: 72px;
     background: #fff;
-    box-shadow: -6px 0 10px rgba(15, 23, 42, 0.08);
+    overflow: visible;
+    white-space: nowrap;
 }
 
 .kabataan-table thead th.col-actions {
     background: #2c2c3e;
-    z-index: 3;
 }
 
 .kabataan-table tbody tr:nth-child(even) td.col-actions {
@@ -360,12 +378,22 @@ body {
     background: #f3f4f6;
 }
 
-.kabataan-table tbody tr {
-    border-bottom: 1px solid #e5e7eb;
+.kabataan-table th:last-child,
+.kabataan-table td:last-child {
+    border-right: none;
 }
 
-.kabataan-fullname-cell {
-    min-width: 160px;
+.kabataan-table .row-actions-menu {
+    display: inline-flex;
+    justify-content: center;
+}
+
+.kabataan-table .row-actions-trigger {
+    margin: 0 auto;
+}
+
+.kabataan-table tbody tr {
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .kabataan-fullname {

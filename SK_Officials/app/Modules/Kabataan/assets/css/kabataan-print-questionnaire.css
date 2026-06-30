@@ -1,0 +1,58 @@
+@page {
+    size: A4 portrait;
+    margin: 6mm;
+}
+
+body.kk-print-body {
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    color: #111;
+}
+
+.kk-print-root {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0;
+}
+
+.kk-print-sheet {
+    width: 100%;
+    max-width: 194mm;
+    margin: 0 auto;
+    page-break-after: always;
+}
+
+.kk-print-sheet:last-child {
+    page-break-after: auto;
+}
+
+.kk-print-questionnaire.kk-view-paper {
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    max-width: none;
+    overflow: visible;
+}
+
+.kk-print-questionnaire .kkp-form-main-title,
+.kk-print-questionnaire .kkf-section-title {
+    color: #111;
+}
+
+@media print {
+    body.kk-print-body {
+        background: #fff;
+    }
+
+    .kk-print-sheet {
+        max-width: none;
+        padding: 0;
+    }
+
+    .kk-print-questionnaire.kk-view-paper {
+        font-size: 11px;
+    }
+}

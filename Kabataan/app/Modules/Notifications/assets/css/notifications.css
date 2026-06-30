@@ -283,6 +283,11 @@
     height: 18px;
 }
 
+.kb-notif-empty[hidden],
+.kb-notif-list[hidden] {
+    display: none !important;
+}
+
 .kb-notif-empty {
     padding: 48px 24px 56px;
     text-align: center;

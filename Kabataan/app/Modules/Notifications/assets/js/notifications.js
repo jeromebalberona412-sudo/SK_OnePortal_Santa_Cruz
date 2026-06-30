@@ -107,4 +107,5 @@
         });
         updateCounts();
     });
+    updateCounts();
 })();

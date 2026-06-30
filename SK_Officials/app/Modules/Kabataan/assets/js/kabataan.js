@@ -432,14 +432,6 @@ function initializeKabataanUI() {
         return '';
     }
 
-    function formatDocumentsCell(hasDocuments) {
-        if (hasDocuments) {
-            return '<span class="kabataan-docs-badge kabataan-docs-badge--yes">Uploaded</span>';
-        }
-
-        return '<span class="kabataan-docs-badge kabataan-docs-badge--none">None</span>';
-    }
-
     function render() {
         tbody.innerHTML = '';
 
@@ -452,7 +444,7 @@ function initializeKabataanUI() {
             const tr = document.createElement('tr');
             tr.className = 'empty-state-row';
             const td = document.createElement('td');
-            td.colSpan = 13;
+            td.colSpan = 12;
             td.textContent = 'No kabataan match current filters.';
             tr.appendChild(td);
             tbody.appendChild(tr);
@@ -489,20 +481,19 @@ function initializeKabataanUI() {
                 <td>${k.city || '—'}</td>
                 <td>${k.purokZone || '-'}</td>
                 <td>${k.educationalBackground || k.highestEducation || '-'}</td>
-                <td>${formatDocumentsCell(Boolean(k.hasSupportingDocuments))}</td>
                 <td class="col-actions">
                     <div class="row-actions-menu">
                         <button type="button" class="row-actions-trigger" aria-label="Actions" aria-haspopup="true" aria-expanded="false">${window.ROW_ACTIONS_ELLIPSIS || '⋯'}</button>
                         <div class="row-actions-dropdown" role="menu">
                             <button type="button" class="row-actions-item row-actions-item-view" data-action="view" data-index="${index}" role="menuitem">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                <span>View Details</span>
+                                <span>View</span>
                             </button>
                             <button type="button" class="row-actions-item row-actions-item-documents" data-action="documents" data-index="${index}" role="menuitem">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                                 <span>Documents</span>
                             </button>
-                            <button type="button" class="row-actions-item" data-action="print" data-index="${index}" role="menuitem">
+                            <button type="button" class="row-actions-item row-actions-item-print" data-action="print" data-index="${index}" role="menuitem">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                                 <span>Print</span>
                             </button>
@@ -516,6 +507,10 @@ function initializeKabataanUI() {
         updatePaginationFooter(filtered.length);
         updateBulkToolbar();
         syncSelectAllCheckbox();
+
+        if (typeof window.bindRowActionsTable === 'function') {
+            window.bindRowActionsTable(tbody);
+        }
     }
 
     function switchKabataanViewTab(tabName) {

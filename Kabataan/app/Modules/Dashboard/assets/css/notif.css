@@ -157,6 +157,11 @@
 }
 
 /* Empty state */
+.np-empty[hidden],
+.np-list[hidden] {
+    display: none !important;
+}
+
 .np-empty {
     display: flex;
     flex-direction: column;

@@ -232,6 +232,28 @@
     color: #ffffff;
 }
 
+/* Print — slate */
+.row-actions-item-print {
+    background: #475569;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(71, 85, 105, 0.35);
+}
+
+.row-actions-item-print svg {
+    color: #ffffff;
+}
+
+.row-actions-item-print:hover {
+    background: #334155;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(71, 85, 105, 0.45);
+}
+
+.row-actions-item-print:hover svg {
+    color: #ffffff;
+}
+
 /* Reject / Delete — red (legacy kk-btn-reject) */
 .row-actions-item-danger {
     background: #dc2626;
@@ -276,7 +298,8 @@
 
 .kabataan-page .table-wrapper,
 .kkprofiling-page .table-wrapper {
-    overflow: visible !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
 }
 
 .kabataan-table tbody tr,

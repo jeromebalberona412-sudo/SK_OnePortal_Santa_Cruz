@@ -176,7 +176,6 @@
                                 <th>City / Municipality</th>
                                 <th>Purok / Sitio</th>
                                 <th>Highest Education</th>
-                                <th>Documents</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
                         </thead>

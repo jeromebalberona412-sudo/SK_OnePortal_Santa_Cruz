@@ -206,12 +206,14 @@ class KabataanController extends Controller
             ->first();
 
         $formData = $history?->form_data ?? $registration->form_data ?? [];
+        $barangayLogoUrl = app(BarangayLogoUrlService::class)->resolve((int) $user->barangay_id);
 
         return view('Kabataan::print-kk-profiling', [
             'registration' => $registration,
             'formData' => $formData,
             'profilingYear' => $year,
             'submittedAt' => $history?->submitted_at ?? $registration->submitted_at,
+            'barangayLogoUrl' => $barangayLogoUrl,
         ]);
     }
 
@@ -250,9 +252,12 @@ class KabataanController extends Controller
             ];
         }
 
+        $barangayLogoUrl = app(BarangayLogoUrlService::class)->resolve((int) $user->barangay_id);
+
         return view('Kabataan::print-kk-profiling-batch', [
             'records' => $records,
             'profilingYear' => $year,
+            'barangayLogoUrl' => $barangayLogoUrl,
         ]);
     }
 
