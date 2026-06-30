@@ -30,6 +30,9 @@
                         <p>Youth profiling records grouped by barangay</p>
                     </div>
                     <div class="km-masterlist-actions">
+                        <select id="km-year-filter" style="padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px;min-width:140px;margin-right:12px;">
+                            <option value="all">All Years</option>
+                        </select>
                         <select id="km-brgy-filter" style="padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px;min-width:220px;margin-right:12px;">
                             <option value="all">All Barangays</option>
                             <option value="Alipit">Alipit</option>

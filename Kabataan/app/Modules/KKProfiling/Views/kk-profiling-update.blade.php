@@ -2,7 +2,12 @@
 <div class="kkpu-overlay" id="kkProfilingUpdateModal" aria-hidden="true" role="dialog" aria-labelledby="kkpuModalTitle">
     <div class="kkpu-modal" id="kkpuModalPanel">
         <div class="kkpu-modal-header">
-            <h2 id="kkpuModalTitle">Update Your KK Profiling</h2>
+            <h2 id="kkpuModalTitle">
+                Update Your KK Profiling
+                @if (!empty($kkProfilingTargetYear))
+                    ({{ $kkProfilingTargetYear }})
+                @endif
+            </h2>
             <div class="kkpu-modal-actions">
                 <button type="button" class="kkpu-icon-btn" id="kkpuFullscreenBtn" aria-label="Toggle fullscreen" title="Fullscreen">
                     <svg class="kkpu-icon-expand" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -41,6 +46,7 @@
                         'barangayZones' => $kkBarangayZones ?? collect(),
                         'selectedPurokZone' => $kkSelectedPurokZone ?? '',
                         'selectedFacebookProfileUrl' => $kkSelectedFacebookProfileUrl ?? '',
+                        'emailReadonly' => true,
                     ])
                 </form>
             </div>

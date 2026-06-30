@@ -232,7 +232,7 @@ function initializeCalendar() {
 
             const preview = document.createElement('div');
             preview.className = 'calendar-day-notes-preview';
-            preview.textContent = hasNote ? (note.title || note.content || '').slice(0, 40) : '';
+            preview.textContent = hasNote ? (note.title || note.content || '').slice(0, 22) : '';
             cell.appendChild(preview);
 
             const addLabel = document.createElement('div');

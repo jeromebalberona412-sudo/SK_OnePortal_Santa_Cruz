@@ -85,7 +85,16 @@ class AuthController extends Controller
 
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
-        $request->session()->flash('show_kk_profiling_update', true);
+
+        $registration = KabataanRegistration::query()
+            ->where('user_id', $user->id)
+            ->latest('id')
+            ->first();
+
+        if ($registration && app(\App\Services\KkProfilingScheduleService::class)->requiresProfilingUpdate($registration)) {
+            $request->session()->flash('show_kk_profiling_update', true);
+            $request->session()->flash('kk_profiling_update_required', true);
+        }
 
         return redirect()->intended(route('dashboard'));
     }

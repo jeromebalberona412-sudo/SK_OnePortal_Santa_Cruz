@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
 use App\Services\BarangayLogoUrlService;
 use App\Services\BarangayZoneService;
+use App\Services\KabataanProfilingHistoryService;
 use App\Services\KkSupportingDocumentService;
 use App\Services\KkProfilingRequestDataService;
 use App\Services\RespondentNumberService;
@@ -22,6 +23,7 @@ class KabataanController extends Controller
         private readonly SkOfficialActivityService $activityService,
         private readonly KkSupportingDocumentService $supportingDocumentService,
         private readonly KkProfilingRequestDataService $profilingDataService,
+        private readonly KabataanProfilingHistoryService $profilingHistoryService,
     ) {
     }
 
@@ -53,24 +55,25 @@ class KabataanController extends Controller
         $user = Auth::user();
 
         if (!$user || !$user->barangay_id) {
-            return response()->json(['data' => [], 'stats' => $this->emptyStats()]);
+            return response()->json(['data' => [], 'stats' => $this->emptyStats(), 'years' => []]);
         }
 
-        $query = KabataanRegistration::with('barangay')
-            ->forBarangay($user->barangay_id);
-        KabataanApprovedStatuses::applyKabataanListScope($query);
-        $query->orderBy('last_name')->orderBy('first_name');
+        $availableYears = $this->profilingHistoryService->availableYears((int) $user->barangay_id);
+        $selectedYear = (int) ($request->input('year') ?: ($availableYears[0] ?? (int) now()->format('Y')));
+        $isHistorical = $this->profilingHistoryService->isHistoricalYear($selectedYear);
+
+        $records = $this->profilingHistoryService->recordsForYear((int) $user->barangay_id, $selectedYear);
 
         if ($request->filled('search')) {
-            $s = $request->search;
-            $query->where(function ($q) use ($s) {
-                $q->where('last_name', 'ilike', "%{$s}%")
-                  ->orWhere('first_name', 'ilike', "%{$s}%")
-                  ->orWhere('respondent_number', 'ilike', "%{$s}%");
-            });
-        }
+            $s = strtolower((string) $request->search);
+            $records = $records->filter(function ($record) use ($s) {
+                $last = strtolower((string) ($record->last_name ?? ''));
+                $first = strtolower((string) ($record->first_name ?? ''));
+                $respondent = strtolower((string) ($record->respondent_number ?? ''));
 
-        $records = $query->get();
+                return str_contains($last, $s) || str_contains($first, $s) || str_contains($respondent, $s);
+            })->values();
+        }
 
         $approvedSurveys = $this->profilingDataService
             ->surveysKeyedByRegistrationId(
@@ -81,16 +84,27 @@ class KabataanController extends Controller
             ? ($fd[$key][0] ?? '—')
             : ($fd[$key] ?? '—');
 
-        $data = $records->map(function ($r) use ($val, $approvedSurveys) {
-            $fd = $r->form_data ?? [];
-            $location = KabataanLocationResolver::forRegistration($r);
-            $supportingDocuments = $this->supportingDocumentService->formatForApi($r, 'kabataan.document');
+        $data = $records->map(function ($record) use ($val, $approvedSurveys, $selectedYear, $isHistorical) {
+            $registration = $record instanceof \App\Models\KabataanProfilingHistory
+                ? $record->registration
+                : $record;
+
+            if (! $registration) {
+                return null;
+            }
+
+            $fd = $record instanceof \App\Models\KabataanProfilingHistory
+                ? ($record->form_data ?? [])
+                : ($registration->form_data ?? []);
+
+            $location = KabataanLocationResolver::forRegistration($registration);
+            $supportingDocuments = $this->supportingDocumentService->formatForApi($registration, 'kabataan.document');
             $idVerification = is_array($fd['id_verification'] ?? null) ? $fd['id_verification'] : null;
             $rawDocuments = $fd['supporting_documents'] ?? [];
             $hasDocuments = $supportingDocuments !== []
                 || (is_array($rawDocuments) && $rawDocuments !== []);
 
-            $survey = $approvedSurveys[$r->id] ?? null;
+            $survey = $approvedSurveys[$registration->id] ?? null;
             if ($survey !== null) {
                 $surveyDocuments = $survey->supporting_documents ?? [];
                 if (is_array($surveyDocuments) && $surveyDocuments !== []) {
@@ -98,24 +112,35 @@ class KabataanController extends Controller
                 }
             }
 
+            $submittedAt = $record instanceof \App\Models\KabataanProfilingHistory
+                ? $record->submitted_at
+                : $registration->submitted_at;
+
             return [
-                'id'             => $r->id,
+                'id'             => $registration->id,
+                'profiling_year' => $selectedYear,
+                'is_historical'  => $isHistorical,
+                'can_modify'     => ! $isHistorical,
                 'respondent_no'       => RespondentNumberService::displaySequence(
-                    $r->respondent_sequence,
-                    $r->respondent_number
+                    $registration->respondent_sequence,
+                    $registration->respondent_number
                 ),
-                'respondent_sequence' => $r->respondent_sequence,
-                'last_name'      => $r->last_name,
-                'first_name'     => $r->first_name,
-                'middle_name'    => $r->middle_name,
-                'suffix'         => $r->suffix,
-                'full_name'      => $r->full_name,
+                'respondent_sequence' => $registration->respondent_sequence,
+                'last_name'      => $record->last_name ?? $registration->last_name,
+                'first_name'     => $record->first_name ?? $registration->first_name,
+                'middle_name'    => $record->middle_name ?? $registration->middle_name,
+                'suffix'         => $record->suffix ?? $registration->suffix,
+                'full_name'      => trim(implode(' ', array_filter([
+                    $record->last_name ?? $registration->last_name,
+                    $record->first_name ?? $registration->first_name,
+                    $record->middle_name ?? $registration->middle_name,
+                ]))),
                 'age'            => $val($fd, 'age'),
                 'sex'            => $val($fd, 'sex'),
                 'birthday'       => $val($fd, 'birthday'),
-                'email'          => $r->email,
-                'contact_number' => $r->contact_number,
-                'barangay'       => $r->barangay?->name ?? '—',
+                'email'          => $record->email ?? $registration->email,
+                'contact_number' => $record->contact_number ?? $registration->contact_number,
+                'barangay'       => $registration->barangay?->name ?? '—',
                 'region'         => $location['region'],
                 'province'       => $location['province'],
                 'city'           => $location['city'],
@@ -134,14 +159,14 @@ class KabataanController extends Controller
                 'facebook'       => $val($fd, 'facebook_profile_url') ?: $val($fd, 'facebook'),
                 'group_chat'     => $val($fd, 'group_chat'),
                 'signature'      => $fd['signature'] ?? null,
-                'submitted_at'   => $r->submitted_at?->format('m/d/Y'),
-                'reviewed_at'    => $r->reviewed_at?->format('m/d/Y'),
-                'evaluation_status' => $r->evaluation_status,
+                'submitted_at'   => $submittedAt?->format('m/d/Y'),
+                'reviewed_at'    => $registration->reviewed_at?->format('m/d/Y'),
+                'evaluation_status' => $registration->evaluation_status,
                 'supporting_documents' => $supportingDocuments,
                 'id_verification' => $idVerification,
                 'has_supporting_documents' => $hasDocuments,
             ];
-        });
+        })->filter()->values();
 
         $all = KabataanRegistration::forBarangay($user->barangay_id)->get();
         $listedCountQuery = KabataanRegistration::forBarangay($user->barangay_id);
@@ -156,7 +181,79 @@ class KabataanController extends Controller
             'total'    => $all->count(),
         ];
 
-        return response()->json(['data' => $data, 'stats' => $stats]);
+        return response()->json([
+            'data' => $data,
+            'stats' => $stats,
+            'years' => $availableYears,
+            'selected_year' => $selectedYear,
+            'is_historical' => $isHistorical,
+        ]);
+    }
+
+    public function print(Request $request, int $id)
+    {
+        $user = Auth::user();
+        if (! $user || ! $user->barangay_id) {
+            abort(401);
+        }
+
+        $year = (int) $request->query('year', $this->profilingHistoryService->currentProfilingYear());
+        $registration = KabataanRegistration::forBarangay($user->barangay_id)->findOrFail($id);
+
+        $history = \App\Models\KabataanProfilingHistory::query()
+            ->where('kabataan_registration_id', $registration->id)
+            ->where('profiling_year', $year)
+            ->first();
+
+        $formData = $history?->form_data ?? $registration->form_data ?? [];
+
+        return view('Kabataan::print-kk-profiling', [
+            'registration' => $registration,
+            'formData' => $formData,
+            'profilingYear' => $year,
+            'submittedAt' => $history?->submitted_at ?? $registration->submitted_at,
+        ]);
+    }
+
+    public function batchPrint(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer'],
+            'year' => ['nullable', 'integer'],
+        ]);
+
+        $user = Auth::user();
+        if (! $user || ! $user->barangay_id) {
+            abort(401);
+        }
+
+        $year = (int) ($validated['year'] ?? $this->profilingHistoryService->currentProfilingYear());
+        $ids = array_values(array_unique($validated['ids']));
+
+        $records = [];
+        foreach ($ids as $id) {
+            $registration = KabataanRegistration::forBarangay($user->barangay_id)->find($id);
+            if (! $registration) {
+                continue;
+            }
+
+            $history = \App\Models\KabataanProfilingHistory::query()
+                ->where('kabataan_registration_id', $registration->id)
+                ->where('profiling_year', $year)
+                ->first();
+
+            $records[] = [
+                'registration' => $registration,
+                'formData' => $history?->form_data ?? $registration->form_data ?? [],
+                'submittedAt' => $history?->submitted_at ?? $registration->submitted_at,
+            ];
+        }
+
+        return view('Kabataan::print-kk-profiling-batch', [
+            'records' => $records,
+            'profilingYear' => $year,
+        ]);
     }
 
     public function document(Request $request, int $id, int $documentIndex, string $side)
@@ -271,10 +368,19 @@ class KabataanController extends Controller
         return response()->json(['success' => true, 'message' => 'Kabataan record updated.']);
     }
 
-    public function destroy(int $id)
+    public function destroy(Request $request, int $id)
     {
         $user = Auth::user();
         $registration = KabataanRegistration::forBarangay($user->barangay_id)->findOrFail($id);
+
+        $year = (int) $request->input('year', $this->profilingHistoryService->currentProfilingYear());
+        if ($this->profilingHistoryService->isHistoricalYear($year)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Historical KK Profiling records cannot be deleted.',
+            ], 422);
+        }
+
         $fullName = $registration->full_name;
         $registration->delete();
 
@@ -293,10 +399,19 @@ class KabataanController extends Controller
         $validated = $request->validate([
             'ids'   => ['required', 'array', 'min:1'],
             'ids.*' => ['integer'],
+            'year'  => ['nullable', 'integer'],
         ]);
 
         $user = Auth::user();
         $ids = array_values(array_unique($validated['ids']));
+        $year = (int) ($validated['year'] ?? $this->profilingHistoryService->currentProfilingYear());
+
+        if ($this->profilingHistoryService->isHistoricalYear($year)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Historical KK Profiling records cannot be deleted.',
+            ], 422);
+        }
 
         $registrations = KabataanRegistration::forBarangay($user->barangay_id)
             ->whereIn('id', $ids)

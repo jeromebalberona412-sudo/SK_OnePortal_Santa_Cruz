@@ -225,7 +225,9 @@ class KabataanMonitoringService
             'attendance' => $this->formValue($formData, 'kk_assembly'),
             'lastCheckIn' => $record->submitted_at?->format('M j, Y') ?? '—',
             'submittedAt' => $record->submitted_at?->toIso8601String(),
-            'submittedYear' => $record->submitted_at ? (int) $record->submitted_at->format('Y') : null,
+            'submittedYear' => ! empty($formData['profile_updated_year'])
+                ? (int) $formData['profile_updated_year']
+                : ($record->submitted_at ? (int) $record->submitted_at->format('Y') : null),
             'score' => '—',
             'programs' => [],
             'recommendations' => [],

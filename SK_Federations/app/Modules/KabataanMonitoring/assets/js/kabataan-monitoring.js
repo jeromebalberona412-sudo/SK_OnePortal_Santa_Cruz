@@ -25,6 +25,19 @@
         // but kept for compatibility
     }
 
+    function populateYearFilter() {
+        var yearFilter = document.getElementById('km-year-filter');
+        if (!yearFilter) return;
+
+        var years = Array.from(new Set(records.map(function (r) {
+            return r.submittedYear ? String(r.submittedYear) : '';
+        }).filter(Boolean))).sort(function (a, b) { return parseInt(b, 10) - parseInt(a, 10); });
+
+        yearFilter.innerHTML = '<option value="all">All Years</option>' + years.map(function (year) {
+            return '<option value="' + year + '">' + year + '</option>';
+        }).join('');
+    }
+
     var statusLabel = { active: 'Active', moderate: 'Moderate', inactive: 'Inactive' };
 
     function renderBrgyCards() {
@@ -107,6 +120,7 @@
         loadRecords().then(function () {
             updateSummary();
             populateBrgyFilter();
+            populateYearFilter();
             renderBrgyCards();
         });
 
@@ -122,6 +136,14 @@
         if (brgyFilter) {
             brgyFilter.addEventListener('change', function(e) {
                 state.barangay = e.target.value || 'all';
+                renderBrgyCards();
+            });
+        }
+
+        var yearFilter = document.getElementById('km-year-filter');
+        if (yearFilter) {
+            yearFilter.addEventListener('change', function(e) {
+                state.year = e.target.value || 'all';
                 renderBrgyCards();
             });
         }

@@ -274,7 +274,7 @@
 
                                 <label class="kkp-inline-label">E-mail address: <span class="kkp-required">*</span></label>
 
-                                <input type="email" name="email" id="kkpEmail" class="kkp-uline kkp-uline-med kkp-email-input" placeholder=" " maxlength="254" autocomplete="email" autocapitalize="none" spellcheck="false" required>
+                                <input type="email" name="email" id="kkpEmail" class="kkp-uline kkp-uline-med kkp-email-input{{ !empty($emailReadonly) ? ' kkp-readonly' : '' }}" placeholder=" " maxlength="254" autocomplete="email" autocapitalize="none" spellcheck="false" required @if(!empty($emailReadonly)) readonly tabindex="-1" @endif>
 
                             </div>
 

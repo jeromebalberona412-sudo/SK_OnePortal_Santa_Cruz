@@ -14,6 +14,18 @@
     transition: opacity 0.28s ease;
 }
 
+.kkpu-overlay.is-mandatory {
+    pointer-events: auto;
+}
+
+.kkpu-overlay.is-mandatory .kkpu-modal {
+    box-shadow: 0 24px 64px rgba(2, 42, 84, 0.4);
+}
+
+body.kkpu-modal-open.is-mandatory-lock {
+    overflow: hidden;
+}
+
 .kkpu-overlay.is-open {
     display: flex;
     opacity: 1;

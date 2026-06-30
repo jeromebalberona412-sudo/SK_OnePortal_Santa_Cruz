@@ -33,7 +33,7 @@
             </div>
             <div class="page-header-actions">
                 <div class="filter-item filter-item-inline">
-                    <label for="skkpYearFilter" class="filter-label">Year</label>
+                    <label for="skkpYearFilter" class="filter-label">Profiling Year</label>
                     <select id="skkpYearFilter" class="filter-select filter-select-inline"></select>
                 </div>
                 <div class="abyip-search-inline">
@@ -58,6 +58,7 @@
                     <table class="skkp-table">
                         <thead>
                             <tr>
+                                <th>Profiling Year</th>
                                 <th>Date Start</th>
                                 <th>Date Expiry</th>
                                 <th>Link</th>
@@ -111,14 +112,31 @@
         <div class="modal-body skkp-form-body">
             <input type="hidden" id="skkpEditId">
             <div class="skkp-form-grid">
+                <div class="modal-field modal-field-full">
+                    <label for="skkpFormProfilingYear">Profiling Year</label>
+                    <input type="text" id="skkpFormProfilingYear" class="skkp-input skkp-input-readonly" readonly tabindex="-1" aria-readonly="true">
+                    <span class="skkp-field-note">Auto-detected from the current calendar year. Cannot be edited.</span>
+                </div>
                 <div class="modal-field">
                     <label for="skkpFormDateStartMd">Date Start <span class="required">*</span></label>
-                    <input type="text" id="skkpFormDateStartMd" class="skkp-input skkp-date-mdy" placeholder="MM/DD/YY" maxlength="8" autocomplete="off" inputmode="numeric" aria-label="Date Start">
+                    <div class="skkp-date-input-wrap">
+                        <input type="text" id="skkpFormDateStartMd" class="skkp-input skkp-date-mdy" placeholder="MM/DD/YYYY" maxlength="10" autocomplete="off" inputmode="numeric" aria-label="Date Start">
+                        <button type="button" class="skkp-date-calendar-btn" id="skkpFormDateStartPick" aria-label="Open calendar for Date Start" title="Pick date">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        </button>
+                        <input type="date" id="skkpFormDateStartNative" class="skkp-date-native" tabindex="-1" aria-hidden="true">
+                    </div>
                     <span class="skkp-field-error" id="skkpDateStartError" style="display:none;font-size:11px;color:#ef4444;margin-top:3px;"></span>
                 </div>
                 <div class="modal-field">
                     <label for="skkpFormDateExpiryMd">Date Expiry <span class="required">*</span></label>
-                    <input type="text" id="skkpFormDateExpiryMd" class="skkp-input skkp-date-mdy" placeholder="MM/DD/YY" maxlength="8" autocomplete="off" inputmode="numeric" aria-label="Date Expiry">
+                    <div class="skkp-date-input-wrap">
+                        <input type="text" id="skkpFormDateExpiryMd" class="skkp-input skkp-date-mdy" placeholder="MM/DD/YYYY" maxlength="10" autocomplete="off" inputmode="numeric" aria-label="Date Expiry">
+                        <button type="button" class="skkp-date-calendar-btn" id="skkpFormDateExpiryPick" aria-label="Open calendar for Date Expiry" title="Pick date">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        </button>
+                        <input type="date" id="skkpFormDateExpiryNative" class="skkp-date-native" tabindex="-1" aria-hidden="true">
+                    </div>
                     <span class="skkp-field-error" id="skkpDateExpiryError" style="display:none;font-size:11px;color:#ef4444;margin-top:3px;"></span>
                 </div>
                 <div class="modal-field modal-field-full">
@@ -158,6 +176,10 @@
         </div>
         <div class="modal-body skkp-view-body">
             <div class="skkp-view-grid">
+                <div class="skkp-view-row">
+                    <span class="skkp-view-label">Profiling Year</span>
+                    <span class="skkp-view-value" id="skkpViewProfilingYear">—</span>
+                </div>
                 <div class="skkp-view-row">
                     <span class="skkp-view-label">Date Start</span>
                     <span class="skkp-view-value" id="skkpViewDateStart">—</span>

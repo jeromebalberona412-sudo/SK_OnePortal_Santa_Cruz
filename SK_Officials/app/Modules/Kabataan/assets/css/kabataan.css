@@ -21,8 +21,34 @@ body {
 }
 
 .page-container {
-    max-width: 1200px;
+    max-width: 100%;
+    width: 100%;
     margin: 0 auto;
+}
+
+.kabataan-page .page-content-section {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+.kabataan-page .table-card {
+    background: #f9fafb;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+    overflow: visible;
+    max-width: 100%;
+}
+
+.kabataan-page .table-wrapper {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    width: 100%;
+    display: block;
+    padding-bottom: 4px;
 }
 
 .page-header-section {
@@ -235,7 +261,7 @@ body {
     border-radius: 16px;
     border: 1px solid #e5e7eb;
     box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
-    overflow: hidden;
+    overflow: visible;
 }
 
 .table-wrapper {
@@ -270,6 +296,7 @@ body {
 
 .kabataan-table {
     width: 100%;
+    min-width: 1320px;
     border-collapse: collapse;
     font-size: 13px;
 }
@@ -311,6 +338,26 @@ body {
 .kabataan-table td.col-actions {
     border-right: none;
     text-align: center;
+    position: sticky;
+    right: 0;
+    z-index: 2;
+    min-width: 88px;
+    width: 88px;
+    background: #fff;
+    box-shadow: -6px 0 10px rgba(15, 23, 42, 0.08);
+}
+
+.kabataan-table thead th.col-actions {
+    background: #2c2c3e;
+    z-index: 3;
+}
+
+.kabataan-table tbody tr:nth-child(even) td.col-actions {
+    background: #f9fafb;
+}
+
+.kabataan-table tbody tr:hover td.col-actions {
+    background: #f3f4f6;
 }
 
 .kabataan-table tbody tr {
@@ -3473,6 +3520,33 @@ a.stat-card.stat-card-clickable {
 }
 
 .btn-float-delete svg {
+    flex-shrink: 0;
+}
+
+.btn-float-print {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #1d4ed8;
+    background: #eff6ff;
+    border: 1px solid #93c5fd;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(29, 78, 216, 0.12);
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-float-print:hover {
+    background: #dbeafe;
+    border-color: #60a5fa;
+}
+
+.btn-float-print svg {
     flex-shrink: 0;
 }
 

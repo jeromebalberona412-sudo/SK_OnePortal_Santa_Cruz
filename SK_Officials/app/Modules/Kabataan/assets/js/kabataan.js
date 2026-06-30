@@ -306,6 +306,10 @@ function initializeKabataanUI() {
     sortKabataanAlphabetically();
 
     let currentQuery = '';
+    let currentProfilingYear = new Date().getFullYear();
+    let isHistoricalView = false;
+    const yearFilter = document.getElementById('kabataanYearFilter');
+    const batchPrintBtn = document.getElementById('kabataanBatchPrintBtn');
     let currentGender = '';
     let currentYouthAgeGroup = '';
     let currentPurok = '';
@@ -391,7 +395,11 @@ function initializeKabataanUI() {
         }
 
         if (deleteBtn) {
-            deleteBtn.hidden = !hasSelection;
+            deleteBtn.hidden = !hasSelection || isHistoricalView;
+        }
+
+        if (batchPrintBtn) {
+            batchPrintBtn.hidden = !hasSelection;
         }
 
         if (label) {
@@ -493,6 +501,10 @@ function initializeKabataanUI() {
                             <button type="button" class="row-actions-item row-actions-item-documents" data-action="documents" data-index="${index}" role="menuitem">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                                 <span>Documents</span>
+                            </button>
+                            <button type="button" class="row-actions-item" data-action="print" data-index="${index}" role="menuitem">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                <span>Print</span>
                             </button>
                         </div>
                     </div>
@@ -757,7 +769,29 @@ function initializeKabataanUI() {
         if (toggleBtn) toggleBtn.textContent = '□';
     }
 
-    // Pagination event listeners
+    if (batchPrintBtn) {
+        batchPrintBtn.addEventListener('click', () => {
+            const ids = Array.from(selectedIds).map((id) => parseInt(id, 10)).filter((id) => !Number.isNaN(id));
+            if (!ids.length) return;
+
+            ids.forEach((id, index) => {
+                window.setTimeout(() => {
+                    window.open(`/kabataan/${id}/print?year=${encodeURIComponent(currentProfilingYear)}`, `kk_print_${id}`, 'noopener');
+                }, index * 600);
+            });
+
+            showKabataanToast(`Opening ${ids.length} print preview${ids.length === 1 ? '' : 's'}...`, 'success');
+        });
+    }
+
+    if (yearFilter) {
+        yearFilter.addEventListener('change', () => {
+            currentProfilingYear = parseInt(yearFilter.value, 10) || currentProfilingYear;
+            selectedIds.clear();
+            loadData();
+        });
+    }
+
     const prevBtn = document.getElementById('kabataanPrevBtn');
     const nextBtn = document.getElementById('kabataanNextBtn');
     const pageInput = document.getElementById('kabataanPageInput');
@@ -911,6 +945,12 @@ function initializeKabataanUI() {
         const index = parseInt(btn.dataset.index, 10);
         if (action === 'view' && !Number.isNaN(index)) openModal(action, index);
         if (action === 'documents' && !Number.isNaN(index)) openModal('documents', index);
+        if (action === 'print' && !Number.isNaN(index)) {
+            const record = kabataan[index];
+            if (record?.id) {
+                window.open(`/kabataan/${record.id}/print?year=${currentProfilingYear}`, '_blank');
+            }
+        }
         if (action === 'delete' && !Number.isNaN(index)) openDeleteConfirm(index);
     });
 
@@ -1071,7 +1111,7 @@ function initializeKabataanUI() {
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify({ ids: pendingDeleteIds.map((id) => parseInt(id, 10)) }),
+                    body: JSON.stringify({ ids: pendingDeleteIds.map((id) => parseInt(id, 10)), year: currentProfilingYear }),
                 })
                     .then((r) => r.json())
                     .then((res) => {
@@ -1604,6 +1644,7 @@ function initializeKabataanUI() {
     function loadData() {
         const url = new URL('/kabataan/data', window.location.origin);
         if (currentQuery) url.searchParams.set('search', currentQuery);
+        if (currentProfilingYear) url.searchParams.set('year', String(currentProfilingYear));
 
         fetch(url.toString(), {
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
@@ -1651,10 +1692,23 @@ function initializeKabataanUI() {
                     supportingDocuments: r.supporting_documents || [],
                     idVerification: r.id_verification || null,
                     hasSupportingDocuments: Boolean(r.has_supporting_documents),
+                    canModify: r.can_modify !== false,
                 });
             });
 
             const stats = response.stats || {};
+            isHistoricalView = Boolean(response.is_historical);
+            if (response.selected_year) {
+                currentProfilingYear = parseInt(response.selected_year, 10) || currentProfilingYear;
+            }
+
+            if (yearFilter && Array.isArray(response.years) && response.years.length) {
+                const selected = String(currentProfilingYear);
+                yearFilter.innerHTML = response.years.map((year) =>
+                    `<option value="${year}" ${String(year) === selected ? 'selected' : ''}>${year}</option>`
+                ).join('');
+            }
+
             const el = id => document.getElementById(id);
             if (el('kabStatApproved')) el('kabStatApproved').textContent = stats.active || 0;
             if (el('kabStatPending'))  el('kabStatPending').textContent  = stats.pending || 0;

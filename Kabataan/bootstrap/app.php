@@ -14,11 +14,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'kabataan' => \App\Http\Middleware\EnsureKabataanUser::class,
             'kabataan.view_only_guard' => \App\Http\Middleware\PreventArchivedKabataanMutations::class,
+            'kk_profiling.update_required' => \App\Http\Middleware\EnsureKkProfilingUpdated::class,
         ]);
 
         $middleware->appendToGroup('auth', [
             'kabataan',
             'kabataan.view_only_guard',
+            'kk_profiling.update_required',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

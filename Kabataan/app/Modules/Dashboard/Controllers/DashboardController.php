@@ -9,6 +9,8 @@ use App\Modules\KKProfiling\Controllers\KKProfilingController;
 use App\Modules\Profile\Services\ProfileImageService;
 use App\Modules\Programs\Services\KabataanProgramService;
 use App\Services\BarangayZoneService;
+use App\Services\KabataanProfilingHistoryService;
+use App\Services\KkProfilingScheduleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -18,6 +20,8 @@ class DashboardController extends Controller
         private readonly KabataanProgramService $programService,
         private readonly BarangaySkProfileService $barangaySkProfileService,
         private readonly BarangayZoneService $barangayZoneService,
+        private readonly KkProfilingScheduleService $kkProfilingScheduleService,
+        private readonly KabataanProfilingHistoryService $profilingHistoryService,
     ) {}
 
     public function index(Request $request)
@@ -38,6 +42,10 @@ class DashboardController extends Controller
 
         $barangayName = $registration?->barangay?->name ?? 'Santa Cruz';
 
+        $requiresKkUpdate = $registration
+            && $this->kkProfilingScheduleService->hasActiveProfilingSchedule((int) $registration->barangay_id)
+            && $this->kkProfilingScheduleService->requiresProfilingUpdate($registration);
+
         $tenantId = (int) ($user->tenant_id ?? $registration?->barangay?->tenant_id ?? 0);
         $barangayProfiles = $tenantId > 0
             ? $this->barangaySkProfileService->listForTenant($tenantId)
@@ -49,20 +57,29 @@ class DashboardController extends Controller
             'barangayName' => $barangayName,
             'barangayProfiles' => $barangayProfiles,
             'programsPayload' => $this->programService->getDashboardPayload($user),
-            'showKkUpdateModal' => (bool) ($registration && session()->pull('show_kk_profiling_update', false)),
-            'kkUpdateBarangay' => $registration ? $barangayName : null,
-            'kkRespondentNumber' => $respondentNumber ?? '',
-            'kkRespondentDisplay' => KKProfilingController::formatRespondentDisplay($respondentNumber),
-            'kkBarangayLogoUrl' => KKProfilingController::getBarangayLogoUrl($registration?->barangay_id),
-            'kkBarangayZones' => $registration
+            'showKkUpdateModal' => $requiresKkUpdate,
+            'kkProfilingUpdateRequired' => $requiresKkUpdate,
+            'kkProfilingFormData' => $requiresKkUpdate && $registration
+                ? $this->profilingHistoryService->formDataForUpdate($registration)
+                : [],
+            'kkProfilingTargetYear' => $requiresKkUpdate && $registration
+                ? $this->kkProfilingScheduleService->targetProfilingYearForRegistration($registration)
+                : null,
+            'kkUpdateBarangay' => $requiresKkUpdate && $registration ? $barangayName : null,
+            'kkRespondentNumber' => $requiresKkUpdate ? ($respondentNumber ?? '') : '',
+            'kkRespondentDisplay' => $requiresKkUpdate
+                ? KKProfilingController::formatRespondentDisplay($respondentNumber)
+                : '01',
+            'kkBarangayLogoUrl' => $requiresKkUpdate && $registration
+                ? KKProfilingController::getBarangayLogoUrl($registration->barangay_id)
+                : null,
+            'kkBarangayZones' => $requiresKkUpdate && $registration
                 ? $this->barangayZoneService->activeZonesForBarangay((int) $registration->barangay_id)
                 : collect(),
-            'kkSelectedPurokZone' => is_array($formData['purok_zone'] ?? null)
+            'kkSelectedPurokZone' => $requiresKkUpdate && is_array($formData['purok_zone'] ?? null)
                 ? ($formData['purok_zone'][0] ?? '')
-                : ($formData['purok_zone'] ?? ''),
-            'kkSelectedFacebookProfileUrl' => is_array($formData['facebook_profile_url'] ?? null)
-                ? ($formData['facebook_profile_url'][0] ?? '')
-                : ($formData['facebook_profile_url'] ?? ($formData['facebook'] ?? '')),
+                : ($requiresKkUpdate ? ($formData['purok_zone'] ?? '') : ''),
+            'kkSelectedFacebookProfileUrl' => '',
         ])->withHeaders([
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma' => 'no-cache',

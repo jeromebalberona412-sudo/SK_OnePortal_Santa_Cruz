@@ -177,6 +177,8 @@ Route::middleware([
 
     Route::get('/kabataan', [KabataanController::class, 'index'])->name('kabataan');
     Route::get('/kabataan/data', [KabataanController::class, 'data'])->name('kabataan.data');
+    Route::get('/kabataan/{id}/print', [KabataanController::class, 'print'])->name('kabataan.print');
+    Route::post('/kabataan/batch-print', [KabataanController::class, 'batchPrint'])->name('kabataan.batch-print');
     Route::get('/kabataan/{id}/documents/{documentIndex}/{side}', [KabataanController::class, 'document'])
         ->where('side', 'front|back')
         ->name('kabataan.document');

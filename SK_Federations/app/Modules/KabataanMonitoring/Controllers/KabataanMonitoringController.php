@@ -27,6 +27,7 @@ class KabataanMonitoringController extends Controller
     {
         return response()->json([
             'data' => $this->service->listAll(),
+            'years' => $this->service->registrationYears(),
         ]);
     }
 

@@ -990,11 +990,13 @@
     document.addEventListener('DOMContentLoaded', () => loadFeed(true));
     </script>
 
-    @if(!empty($kkUpdateBarangay))
+    @if(!empty($kkProfilingUpdateRequired))
         @include('kkprofiling::kk-profiling-update')
     @endif
     <script>
         window.__SHOW_KK_UPDATE_MODAL = @json($showKkUpdateModal ?? false);
+        window.__KK_PROFILING_UPDATE_REQUIRED = @json($kkProfilingUpdateRequired ?? false);
+        window.__KK_PROFILING_FORM_DATA = @json($kkProfilingFormData ?? []);
         window.__kabataanPrograms = @json($programsPayload ?? ['abyip_programs' => [], 'schedule_programs' => []]);
     </script>
 

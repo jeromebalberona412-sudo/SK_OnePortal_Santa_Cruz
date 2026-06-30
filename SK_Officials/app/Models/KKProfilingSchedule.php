@@ -12,6 +12,7 @@ class KKProfilingSchedule extends Model
     protected $fillable = [
         'tenant_id',
         'barangay_id',
+        'profiling_year',
         'created_by',
         'date_start',
         'date_expiry',
@@ -22,6 +23,7 @@ class KKProfilingSchedule extends Model
     protected $casts = [
         'date_start'  => 'date:Y-m-d',
         'date_expiry' => 'date:Y-m-d',
+        'profiling_year' => 'integer',
     ];
 
     public function barangay(): BelongsTo

@@ -89,6 +89,12 @@
             </div>
             <div class="filters-row">
                 <div class="filter-item">
+                    <label for="kabataanYearFilter" class="filter-label">Profiling Year</label>
+                    <select id="kabataanYearFilter" class="filter-select">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <div class="filter-item">
                     <label for="kabataanGenderFilter" class="filter-label">Sex</label>
                     <select id="kabataanGenderFilter" class="filter-select">
                         <option value="">All</option>
@@ -131,6 +137,14 @@
         </section>
 
         <div class="table-external-actions kabataan-table-actions" id="kabataanTableActions" hidden>
+            <button type="button" class="btn-float-print" id="kabataanBatchPrintBtn" hidden>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                    <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+                <span>Batch Print</span>
+            </button>
             <button type="button" class="btn-float-delete" id="kabataanBulkDeleteBtn" hidden>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <polyline points="3 6 5 6 21 6"></polyline>

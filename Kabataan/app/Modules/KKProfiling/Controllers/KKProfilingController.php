@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Barangay;
 use App\Models\KabataanRegistration;
 use App\Models\User;
+use App\Notifications\KabataanProfilingUpdatedEmail;
 use App\Notifications\KabataanVerifyEmail;
 use App\Rules\FacebookProfileUrl;
 use App\Services\BarangayLogoUrlService;
 use App\Services\BarangayZoneService;
 use App\Services\IdVerificationService;
 use App\Services\KabataanPhotoService;
+use App\Services\KabataanProfilingHistoryService;
+use App\Services\KkProfilingScheduleService;
 use App\Services\KkRegistrationDraftService;
 use App\Services\KkSurveyResponseService;
 use App\Services\RegistrationEvaluationService;
@@ -295,7 +298,6 @@ class KKProfilingController extends Controller
             'sex'                   => 'required|in:Male,Female',
             'age'                   => 'required|integer|min:15|max:30',
             'birthday'              => 'required|date|before_or_equal:today',
-            'email'                 => ['required', 'email', 'max:254', 'regex:/^[A-Za-z0-9._%+-]{6,30}@gmail\.com$/i'],
             'contact_number'        => ['required', 'string', 'regex:/^09\d{9}$/'],
             'civil_status'          => 'required|string',
             'youth_classification'  => 'required|string',
@@ -357,13 +359,24 @@ class KKProfilingController extends Controller
                 ->withErrors(['birthday' => 'Invalid birthday value.']);
         }
 
+        $scheduleService = app(KkProfilingScheduleService::class);
+        $historyService = app(KabataanProfilingHistoryService::class);
+        $schedule = $scheduleService->activeUpdateSchedule((int) $registration->barangay_id);
+        $profilingYear = $scheduleService->scheduleProfilingYear($schedule);
+
+        if (! $scheduleService->requiresProfilingUpdate($registration)) {
+            return redirect()->route('dashboard')
+                ->withErrors(['kk_profiling' => 'KK Profiling update is not currently required.']);
+        }
+
         $existingForm = $registration->form_data ?? [];
         if (!empty($existingForm['respondent_number'])) {
             $validated['respondent_number'] = $existingForm['respondent_number'];
         } else {
             unset($validated['respondent_number']);
         }
-        $validated['profile_updated_year'] = (int) date('Y');
+        $validated['email'] = $registration->email;
+        $validated['profile_updated_year'] = $profilingYear;
         $validated['profile_updated_at'] = now()->toIso8601String();
         $validated['civil_status'] = $request->input('civil_status', []);
         $validated['youth_classification'] = $request->input('youth_classification', []);
@@ -385,14 +398,31 @@ class KKProfilingController extends Controller
             'first_name'     => $validated['first_name'],
             'middle_name'    => $validated['middle_name'] ?? null,
             'suffix'         => $validated['suffix'] ?? null,
-            'email'          => $validated['email'],
+            'email'          => $registration->email,
             'contact_number' => $validated['contact_number'] ?? null,
             'form_data'      => array_merge($existingForm, $validated),
             'submitted_at'   => now(),
         ]);
 
+        $registration->refresh();
+        $historyService->saveSnapshot(
+            $registration,
+            $profilingYear,
+            $schedule ? (int) $schedule->id : null,
+        );
+
+        app(KkSurveyResponseService::class)->syncFromRegistration($registration, 'approved');
+
+        $barangayName = $registration->barangay?->name ?? 'your barangay';
+        Notification::route('mail', $registration->email)
+            ->notify(new KabataanProfilingUpdatedEmail(
+                $registration->full_name,
+                $profilingYear,
+                $barangayName,
+            ));
+
         return redirect()->route('dashboard')
-            ->with('success', 'Your KK Profiling information has been updated successfully.');
+            ->with('success', 'Your KK Profiling information for '.$profilingYear.' has been updated successfully.');
     }
 
     /**
@@ -498,6 +528,15 @@ class KKProfilingController extends Controller
         }
 
         unset($validated['respondent_number']);
+        $scheduleService = app(KkProfilingScheduleService::class);
+        $activeSchedule = $scheduleService->activeUpdateSchedule((int) $barangayRecord->id);
+        if ($activeSchedule !== null) {
+            $today = now($scheduleService->timezone())->toDateString();
+            if ($today >= (string) $activeSchedule->date_start && $today <= (string) $activeSchedule->date_expiry) {
+                $validated['profile_updated_year'] = $scheduleService->scheduleProfilingYear($activeSchedule);
+                $validated['profile_updated_at'] = now()->toIso8601String();
+            }
+        }
         $validated['civil_status'] = $request->input('civil_status', []);
         $validated['youth_classification'] = $request->input('youth_classification', []);
         $validated['youth_age_group'] = $request->input('youth_age_group', []);
