@@ -398,8 +398,8 @@ function getCurrentAccountType() {
 
 function calculateAge(dateOfBirthValue) {
     if (!dateOfBirthValue) return '';
-    const dob = new Date(dateOfBirthValue);
-    if (isNaN(dob.getTime())) return '';
+    const dob = parseLocalDateString(dateOfBirthValue);
+    if (!dob) return '';
     const today = new Date();
     let age = today.getFullYear() - dob.getFullYear();
     const m = today.getMonth() - dob.getMonth();
@@ -510,15 +510,33 @@ function escapeHtml(value) {
 }
 
 // ── Inline validation helpers (light-theme forms) ─────────────
-const ACCOUNT_TERM_MAX_YEARS = 5;
-const ACCOUNT_TERM_START_MIN = '2023-01-01';
+const ACCOUNT_TERM_YEARS = 4;
 const SK_OFFICIAL_NAME_MIN = 3;
 const SK_OFFICIAL_NAME_MAX = 50;
+const SK_OFFICIAL_FIRST_NAME_REGEX = /^(?!\s)[A-Z.\-]+(?: [A-Z.\-]+)?$/;
 const SK_OFFICIAL_SUFFIX_OTHER_MAX = 10;
 const SK_OFFICIAL_AGE_MIN = 18;
 const SK_OFFICIAL_AGE_MAX = 24;
 const SK_OFFICIAL_GMAIL_REGEX = /^[a-z0-9._%+-]{6,30}@gmail\.com$/i;
 const SK_OFFICIAL_MAX_MSG = 'Maximum of 50 characters reached';
+const MODAL_ICON_MAXIMIZE = '\u{1F5D6}';
+const MODAL_ICON_RESTORE = '\u{1F5D7}';
+
+function formatLocalDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+}
+
+function parseLocalDateString(dateStr) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr || '');
+    if (!match) {
+        return null;
+    }
+    const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    return Number.isNaN(date.getTime()) ? null : date;
+}
 
 function _showErr(input, msg) {
     if (!input) return;
@@ -554,22 +572,113 @@ function getCurrentYearStartDate() {
     return `${new Date().getFullYear()}-01-01`;
 }
 
-function getTermStartMinDate() {
-    return ACCOUNT_TERM_START_MIN;
+function getCurrentYearEndDate() {
+    return `${new Date().getFullYear()}-12-31`;
+}
+
+function getTermStartMinDate(form) {
+    if (form && isSkOfficialsForm(form)) {
+        return '2023-01-01';
+    }
+    return getCurrentYearStartDate();
+}
+
+function getTermStartMaxDate(form) {
+    if (form && isSkOfficialsForm(form)) {
+        return formatLocalDate(new Date());
+    }
+    return getCurrentYearEndDate();
+}
+
+function getTermEndBoundsForStart(startDateStr) {
+    const start = parseLocalDateString(startDateStr);
+    if (!start) {
+        return { min: '', max: '', year: null };
+    }
+
+    const endYear = start.getFullYear() + ACCOUNT_TERM_YEARS;
+
+    return {
+        min: `${endYear}-01-01`,
+        max: `${endYear}-12-31`,
+        year: endYear,
+    };
+}
+
+function enforceTermEndWithinBounds(endInput, bounds) {
+    if (!endInput || !bounds?.year || !endInput.value) {
+        return;
+    }
+
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(endInput.value);
+    if (!match) {
+        return;
+    }
+
+    let month = match[2];
+    let day = match[3];
+    let nextValue = `${bounds.year}-${month}-${day}`;
+
+    if (nextValue < bounds.min) {
+        nextValue = bounds.min;
+    } else if (nextValue > bounds.max) {
+        nextValue = bounds.max;
+    }
+
+    endInput.value = nextValue;
 }
 
 function addYearsToDateString(dateStr, years) {
-    const date = new Date(`${dateStr}T00:00:00`);
-    if (Number.isNaN(date.getTime())) {
+    const date = parseLocalDateString(dateStr);
+    if (!date) {
         return '';
     }
     date.setFullYear(date.getFullYear() + years);
-    return date.toISOString().slice(0, 10);
+    return formatLocalDate(date);
+}
+
+function applyModalResizeState({ overlay, content, iconEl, btn, isMaximized }) {
+    if (!overlay || !content) {
+        return;
+    }
+    if (isMaximized) {
+        content.style.cssText = 'width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0';
+        overlay.style.padding = '0';
+        if (btn) btn.title = 'Restore Down';
+        if (iconEl) iconEl.textContent = MODAL_ICON_RESTORE;
+    } else {
+        content.style.cssText = '';
+        overlay.style.padding = '';
+        if (btn) btn.title = 'Maximize';
+        if (iconEl) iconEl.textContent = MODAL_ICON_MAXIMIZE;
+    }
+}
+
+function resetModalResizeState({ overlay, content, iconEl, btn }) {
+    if (content) content.style.cssText = '';
+    if (overlay) overlay.style.padding = '';
+    if (iconEl) iconEl.textContent = MODAL_ICON_MAXIMIZE;
+    if (btn) btn.title = 'Maximize';
 }
 
 
 function isSkOfficialsManualForm(form) {
     return form?.id === 'addSkOfficialsForm';
+}
+
+function isSkOfficialsForm(form) {
+    return form?.id === 'addSkOfficialsForm' || form?.id === 'editSkOfficialsForm';
+}
+
+function processSkOfficialFirstNameInput(input) {
+    if (!input) return '';
+    let value = input.value.replace(/^\s+/, '').replace(/[^a-zA-Z.\-\s]/g, '').toUpperCase();
+    value = value.replace(/\s{2,}/g, ' ');
+    if (value.length > SK_OFFICIAL_NAME_MAX) {
+        value = value.slice(0, SK_OFFICIAL_NAME_MAX);
+    }
+    input.value = value;
+    return value;
 }
 
 function processSkOfficialNameInput(input) {
@@ -609,13 +718,17 @@ function toggleSkOfficialSuffixOther(form) {
 }
 
 function _validateSkOfficialFirstName(input) {
-    const val = processSkOfficialNameInput(input);
+    const val = processSkOfficialFirstNameInput(input);
     if (!val) {
         _showErr(input, 'First name is required');
         return false;
     }
     if (val.length < SK_OFFICIAL_NAME_MIN) {
         _showErr(input, 'First name must be at least 3 characters');
+        return false;
+    }
+    if (!SK_OFFICIAL_FIRST_NAME_REGEX.test(val)) {
+        _showErr(input, 'Letters only, no leading spaces');
         return false;
     }
     if (showSkOfficialMaxMessage(input)) return false;
@@ -696,8 +809,8 @@ function getSkFedBirthdateBounds() {
     const maxDob = new Date(today.getFullYear() - SK_OFFICIAL_AGE_MIN, today.getMonth(), today.getDate());
     const minDob = new Date(today.getFullYear() - SK_OFFICIAL_AGE_MAX, today.getMonth(), today.getDate());
     return {
-        min: minDob.toISOString().slice(0, 10),
-        max: maxDob.toISOString().slice(0, 10),
+        min: formatLocalDate(minDob),
+        max: formatLocalDate(maxDob),
     };
 }
 
@@ -782,8 +895,8 @@ function getSkOfficialBirthdateBounds() {
     const maxDob = new Date(today.getFullYear() - SK_OFFICIAL_AGE_MIN, today.getMonth(), today.getDate());
     const minDob = new Date(today.getFullYear() - SK_OFFICIAL_AGE_MAX, today.getMonth(), today.getDate());
     return {
-        min: minDob.toISOString().slice(0, 10),
-        max: maxDob.toISOString().slice(0, 10),
+        min: formatLocalDate(minDob),
+        max: formatLocalDate(maxDob),
     };
 }
 
@@ -894,7 +1007,12 @@ function wireSkOfficialsManualValidation(form) {
         el.addEventListener('input', () => fn(el));
         el.addEventListener('blur', () => fn(el));
         el.addEventListener('keydown', (e) => {
-            if (e.key === ' ') {
+            if (name === 'first_name') {
+                if (e.key === ' ' && (el.value || '').includes(' ')) {
+                    e.preventDefault();
+                    return;
+                }
+            } else if (e.key === ' ') {
                 e.preventDefault();
                 return;
             }
@@ -1015,7 +1133,9 @@ function validateTermRange(form) {
 
     const start = startInput.value;
     const end = endInput.value;
-    const termStartMin = getTermStartMinDate();
+    const termStartMin = getTermStartMinDate(form);
+    const termStartMax = getTermStartMaxDate(form);
+    const isOfficialsForm = isSkOfficialsForm(form);
 
     let termValid = true;
 
@@ -1034,19 +1154,33 @@ function validateTermRange(form) {
     }
 
     if (!termValid) return false;
-    if (start && start < termStartMin) {
-        _showErr(startInput, 'Term start date cannot be before 2023');
-        return false;
-    }
-    if (start && end && end <= start) {
-        _showErr(endInput, 'Term end date must be after term start date');
+    if (start && (start < termStartMin || start > termStartMax)) {
+        _showErr(
+            startInput,
+            isOfficialsForm
+                ? 'Term start date must be between 2023 and today'
+                : 'Term start date must be within the current year'
+        );
         return false;
     }
     if (start && end) {
-        const maxEnd = addYearsToDateString(start, ACCOUNT_TERM_MAX_YEARS);
-        if (maxEnd && end > maxEnd) {
-            _showErr(endInput, 'Term end date must be within 5 years of term start date');
-            return false;
+        if (isOfficialsForm) {
+            const bounds = getTermEndBoundsForStart(start);
+            const endYear = parseInt(end.split('-')[0], 10);
+            if (endYear !== bounds.year) {
+                _showErr(endInput, `Term end year must be exactly ${ACCOUNT_TERM_YEARS} years after term start year`);
+                return false;
+            }
+            if (end < bounds.min || end > bounds.max) {
+                _showErr(endInput, 'Term end date must be within the term end year');
+                return false;
+            }
+        } else {
+            const requiredEnd = addYearsToDateString(start, ACCOUNT_TERM_YEARS);
+            if (end !== requiredEnd) {
+                _showErr(endInput, `Term end must be exactly ${ACCOUNT_TERM_YEARS} years after term start`);
+                return false;
+            }
         }
     }
 
@@ -1159,37 +1293,56 @@ function applyTermDateConstraints(form) {
         return;
     }
 
-    const termStartMin = getTermStartMinDate();
-    startInput.min = termStartMin;
-    startInput.removeAttribute('max');
+    const isOfficialsForm = isSkOfficialsForm(form);
+
+    startInput.min = getTermStartMinDate(form);
+    startInput.max = getTermStartMaxDate(form);
     clampDateInputYear(startInput);
     clampDateInputYear(endInput);
 
     const syncEndConstraints = () => {
         const startVal = startInput.value;
-        if (startVal && startVal < termStartMin) {
-            startInput.value = termStartMin;
+        if (startVal && (startVal < startInput.min || startVal > startInput.max)) {
+            startInput.value = '';
         }
         const effectiveStart = startInput.value;
         if (effectiveStart) {
-            endInput.min = effectiveStart;
-            endInput.max = addYearsToDateString(effectiveStart, ACCOUNT_TERM_MAX_YEARS);
+            if (isOfficialsForm) {
+                const bounds = getTermEndBoundsForStart(effectiveStart);
+                endInput.min = bounds.min;
+                endInput.max = bounds.max;
+                if (!endInput.value) {
+                    endInput.value = addYearsToDateString(effectiveStart, ACCOUNT_TERM_YEARS);
+                } else {
+                    enforceTermEndWithinBounds(endInput, bounds);
+                }
+            } else {
+                const exactEnd = addYearsToDateString(effectiveStart, ACCOUNT_TERM_YEARS);
+                endInput.min = exactEnd;
+                endInput.max = exactEnd;
+                endInput.value = exactEnd;
+            }
         } else {
-            endInput.min = termStartMin;
+            endInput.value = '';
+            endInput.removeAttribute('min');
             endInput.removeAttribute('max');
         }
-
-        if (endInput.value && effectiveStart && endInput.value < effectiveStart) {
-            endInput.value = '';
-        }
-        if (endInput.value && endInput.max && endInput.value > endInput.max) {
-            endInput.value = endInput.max;
-        }
+        validateTermRange(form);
     };
 
     startInput.addEventListener('change', syncEndConstraints);
     startInput.addEventListener('input', syncEndConstraints);
-    endInput.addEventListener('change', () => validateTermRange(form));
+    endInput.addEventListener('change', () => {
+        if (isOfficialsForm && startInput.value) {
+            enforceTermEndWithinBounds(endInput, getTermEndBoundsForStart(startInput.value));
+        }
+        validateTermRange(form);
+    });
+    endInput.addEventListener('input', () => {
+        if (isOfficialsForm && startInput.value) {
+            enforceTermEndWithinBounds(endInput, getTermEndBoundsForStart(startInput.value));
+        }
+    });
     endInput.addEventListener('blur', () => validateTermRange(form));
     syncEndConstraints();
 }
@@ -1240,8 +1393,6 @@ function wireCreateAccountForm(form) {
 
 // ── Add SK Officials modal ────────────────────────────────────
 let addOfficialsIsMaximized = false;
-const ICON_MAXIMIZE = '\u25A1';   // □  empty square  (maximize)
-const ICON_RESTORE = '\u29C9';   // ⧉  overlapping squares (restore down)
 
 window.toggleAddOfficialsSize = function () {
     const overlay = document.getElementById('addSkOfficialsModal');
@@ -1250,14 +1401,7 @@ window.toggleAddOfficialsSize = function () {
     const btn = document.getElementById('addOfficialsResizeBtn');
     if (!overlay || !content || !icon) return;
     addOfficialsIsMaximized = !addOfficialsIsMaximized;
-    if (addOfficialsIsMaximized) {
-        content.style.cssText = 'width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0';
-        overlay.style.padding = '0';
-        btn.title = 'Restore Down'; icon.innerHTML = '<path d="M4 14h6v6"></path><path d="M20 10h-6V4"></path><path d="M14 10l7-7"></path><path d="M3 21l7-7"></path>';
-    } else {
-        content.style.cssText = ''; overlay.style.padding = '';
-        btn.title = 'Maximize'; icon.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>';
-    }
+    applyModalResizeState({ overlay, content, iconEl: icon, btn, isMaximized: addOfficialsIsMaximized });
 };
 
 window.openAddSkOfficialsModal = function () {
@@ -1274,12 +1418,11 @@ window.openAddSkOfficialsModal = function () {
 
 window.closeAddSkOfficialsModal = function () {
     addOfficialsIsMaximized = false;
+    const overlay = document.getElementById('addSkOfficialsModal');
     const content = document.getElementById('addSkOfficialsModalContent');
-    if (content) content.style.cssText = '';
     const icon = document.getElementById('addOfficialsResizeIcon');
     const btn = document.getElementById('addOfficialsResizeBtn');
-    if (icon) icon.textContent = ICON_MAXIMIZE;
-    if (btn) btn.title = 'Maximize';
+    resetModalResizeState({ overlay, content, iconEl: icon, btn });
     const form = document.getElementById('addSkOfficialsForm');
     if (form) {
         form.reset();
@@ -1342,12 +1485,9 @@ window.closeEditSkOfficialsModal = function () {
     editOfficialsIsMaximized = false;
     const overlay = document.getElementById('editSkOfficialsModal');
     const content = overlay ? overlay.querySelector('.modal-content') : null;
-    if (overlay) overlay.style.padding = '';
-    if (content) content.style.cssText = '';
     const icon = document.getElementById('editOfficialsResizeIcon');
     const btn = document.getElementById('editOfficialsResizeBtn');
-    if (icon) icon.textContent = ICON_MAXIMIZE;
-    if (btn) btn.title = 'Maximize';
+    resetModalResizeState({ overlay, content, iconEl: icon, btn });
     const form = document.getElementById('editSkOfficialsForm');
     if (form) {
         form.reset();
@@ -1370,14 +1510,7 @@ window.toggleEditOfficialsSize = function () {
     const btn = document.getElementById('editOfficialsResizeBtn');
     if (!overlay || !content || !icon) return;
     editOfficialsIsMaximized = !editOfficialsIsMaximized;
-    if (editOfficialsIsMaximized) {
-        content.style.cssText = 'width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0';
-        overlay.style.padding = '0';
-        btn.title = 'Restore Down'; icon.innerHTML = '<path d="M4 14h6v6"></path><path d="M20 10h-6V4"></path><path d="M14 10l7-7"></path><path d="M3 21l7-7"></path>';
-    } else {
-        content.style.cssText = ''; overlay.style.padding = '';
-        btn.title = 'Maximize'; icon.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>';
-    }
+    applyModalResizeState({ overlay, content, iconEl: icon, btn, isMaximized: editOfficialsIsMaximized });
 };
 // Keep legacy aliases so any remaining references don't break
 window.toggleFullscreenEditSkOfficialsModal = window.toggleEditOfficialsSize;
@@ -1394,16 +1527,7 @@ window.toggleAddFedSize = function () {
     const btn = document.getElementById('addFedResizeBtn');
     if (!overlay || !content || !icon) return;
     addFedIsMaximized = !addFedIsMaximized;
-    if (addFedIsMaximized) {
-        content.style.cssText = 'width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0';
-        overlay.style.padding = '0';
-        btn.title = 'Restore Down';
-        icon.innerHTML = '<path d="M4 14h6v6"></path><path d="M20 10h-6V4"></path><path d="M14 10l7-7"></path><path d="M3 21l7-7"></path>';
-    } else {
-        content.style.cssText = ''; overlay.style.padding = '';
-        btn.title = 'Maximize';
-        icon.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>';
-    }
+    applyModalResizeState({ overlay, content, iconEl: icon, btn, isMaximized: addFedIsMaximized });
 };
 
 window.openAddAccountModal = function () {
@@ -1427,12 +1551,11 @@ window.openAddAccountModal = function () {
 
 window.closeAddAccountModal = function () {
     addFedIsMaximized = false;
+    const overlay = document.getElementById('addAccountModal');
     const content = document.getElementById('addSkFedModalContent');
-    if (content) content.style.cssText = '';
     const icon = document.getElementById('addFedResizeIcon');
     const btn = document.getElementById('addFedResizeBtn');
-    if (icon) icon.textContent = ICON_MAXIMIZE;
-    if (btn) btn.title = 'Maximize';
+    resetModalResizeState({ overlay, content, iconEl: icon, btn });
     const form = document.getElementById('addSkFedForm');
     if (form) {
         form.reset();
@@ -1457,12 +1580,9 @@ window.closeEditModal = function () {
     editFedIsMaximized = false;
     const overlay = document.getElementById('editAccountModal');
     const content = overlay ? overlay.querySelector('.modal-content') : null;
-    if (overlay) overlay.style.padding = '';
-    if (content) content.style.cssText = '';
     const icon = document.getElementById('editFedResizeIcon');
     const btn = document.getElementById('editFedResizeBtn');
-    if (icon) icon.textContent = ICON_MAXIMIZE;
-    if (btn) btn.title = 'Maximize';
+    resetModalResizeState({ overlay, content, iconEl: icon, btn });
     const form = document.getElementById('editAccountForm');
     if (form) {
         form.reset();
@@ -1485,14 +1605,7 @@ window.toggleEditFedSize = function () {
     const btn = document.getElementById('editFedResizeBtn');
     if (!overlay || !content || !icon) return;
     editFedIsMaximized = !editFedIsMaximized;
-    if (editFedIsMaximized) {
-        content.style.cssText = 'width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0';
-        overlay.style.padding = '0';
-        btn.title = 'Restore Down'; icon.innerHTML = '<path d="M4 14h6v6"></path><path d="M20 10h-6V4"></path><path d="M14 10l7-7"></path><path d="M3 21l7-7"></path>';
-    } else {
-        content.style.cssText = ''; overlay.style.padding = '';
-        btn.title = 'Maximize'; icon.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>';
-    }
+    applyModalResizeState({ overlay, content, iconEl: icon, btn, isMaximized: editFedIsMaximized });
 };
 // Keep legacy aliases so any remaining references don't break
 window.toggleFullscreenEditAccountModal = window.toggleEditFedSize;
@@ -1509,12 +1622,9 @@ window.closeViewModal = function () {
     viewIsMaximized = false;
     const overlay = document.getElementById('viewAccountModal');
     const content = overlay ? overlay.querySelector('.modal-content') : null;
-    if (overlay) overlay.style.padding = '';
-    if (content) content.style.cssText = '';
     const icon = document.getElementById('viewResizeIcon');
     const btn = document.getElementById('viewToggleBtn');
-    if (icon) icon.textContent = ICON_MAXIMIZE;
-    if (btn) btn.title = 'Maximize';
+    resetModalResizeState({ overlay, content, iconEl: icon, btn });
     toggleModal('viewAccountModal', false);
 };
 window.toggleFullscreenViewModal = function () {
@@ -1524,14 +1634,7 @@ window.toggleFullscreenViewModal = function () {
     const btn = document.getElementById('viewToggleBtn');
     if (!overlay || !content || !icon) return;
     viewIsMaximized = !viewIsMaximized;
-    if (viewIsMaximized) {
-        content.style.cssText = 'width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0';
-        overlay.style.padding = '0';
-        btn.title = 'Restore Down'; icon.textContent = ICON_RESTORE;
-    } else {
-        content.style.cssText = ''; overlay.style.padding = '';
-        btn.title = 'Maximize'; icon.textContent = ICON_MAXIMIZE;
-    }
+    applyModalResizeState({ overlay, content, iconEl: icon, btn, isMaximized: viewIsMaximized });
 };
 window.toggleRestoreViewModal = window.toggleFullscreenViewModal;
 window.restoreViewModal = window.toggleFullscreenViewModal;
@@ -1566,7 +1669,9 @@ function _showEditSuccessByType() {
 // ── Batch upload panels (embedded in Add modals) ──────────────
 const BATCH_HEADER_ALIASES = {
     'first name': 'first_name', first_name: 'first_name',
-    'middle name': 'middle_name', middle_name: 'middle_name',
+    'middle name': 'middle_name',
+    middle_name: 'middle_name',
+    'middle name (optional)': 'middle_name',
     'last name': 'last_name', last_name: 'last_name',
     suffix: 'suffix',
     sex: 'sex', gender: 'sex',
@@ -1579,34 +1684,326 @@ const BATCH_HEADER_ALIASES = {
     province: 'province',
     municipality: 'municipality',
     barangay: 'barangay', 'barangay name': 'barangay', barangay_name: 'barangay',
-    'term start': 'term_start', 'term start date': 'term_start', term_start: 'term_start', 'start date': 'term_start',
-    'term end': 'term_end', 'term end date': 'term_end', term_end: 'term_end', 'end date': 'term_end',
-    'email address': 'email', email: 'email',
+    'term start': 'term_start',
+    'term start date': 'term_start',
+    'term start date (mm/dd/yyyy)': 'term_start',
+    term_start: 'term_start',
+    'start date': 'term_start',
+    'term end': 'term_end',
+    'term end date': 'term_end',
+    'term end date (mm/dd/yyyy)': 'term_end',
+    term_end: 'term_end',
+    'end date': 'term_end',
+    'email address': 'email',
+    email: 'email',
+    'middle name (optional)': 'middle_name',
 };
 
 const BATCH_TEMPLATE_HEADERS = [
-    'First Name', 'Middle Name', 'Last Name', 'Suffix', 'Sex', 'Birthdate', 'Age', 'Contact Number',
-    'Position', 'Region', 'Province', 'Municipality', 'Barangay', 'Term Start Date', 'Term End Date', 'Email Address',
+    'First Name',
+    'Middle Name (optional)',
+    'Last Name',
+    'Suffix (Type "None" if None)',
+    'Sex',
+    'Birthdate',
+    'Age',
+    'Contact Number',
+    'Position',
+    'Region',
+    'Province',
+    'Municipality',
+    'Barangay',
+    'Term Start Date (MM/DD/YYYY)',
+    'Term End Date (MM/DD/YYYY)',
+    'Email Address',
 ];
 
-const BATCH_OPTIONAL_HEADERS = new Set(['middle name', 'middle_name']);
+const BATCH_TEMPLATE_SAMPLE_ROW = [
+    '', '', '', '', '', '', '', '', '',
+    'IV-A CALABARZON',
+    'Laguna',
+    'Santa Cruz',
+    '', '', '', '',
+];
+
+const BATCH_DATE_FIELD_KEYS = new Set(['date_of_birth', 'term_start', 'term_end']);
+
+function normalizeBatchHeaderLabel(header) {
+    return String(header || '').trim().replace(/\s*\([^)]*\)\s*$/i, '').trim().toLowerCase();
+}
+
+function isOptionalBatchHeader(header) {
+    const normalized = normalizeBatchHeaderLabel(header);
+    return normalized === 'middle name' || normalized === 'suffix';
+}
+
+const BATCH_OPTIONAL_HEADERS = new Set(['middle name', 'middle_name', 'middle name (optional)']);
 
 const BATCH_REQUIRED_HEADERS = BATCH_TEMPLATE_HEADERS.filter(
-    (header) => !BATCH_OPTIONAL_HEADERS.has(header.trim().toLowerCase())
+    (header) => !isOptionalBatchHeader(header)
 );
 
-const BATCH_REQUIRED_ROW_FIELDS = [
+const BATCH_MAX_ACCOUNTS = 260;
+const BATCH_OFFICIAL_LAST_NAME_REGEX = /^[A-Z.\-']+$/;
+const BATCH_OFFICIAL_MIDDLE_NAME_REGEX = /^[A-Z.\-']*$/;
+
+const BATCH_ALL_REQUIRED_FIELDS = [
     { key: 'first_name', label: 'First Name' },
     { key: 'last_name', label: 'Last Name' },
     { key: 'sex', label: 'Sex' },
     { key: 'date_of_birth', label: 'Birthdate' },
+    { key: 'age', label: 'Age' },
     { key: 'contact_number', label: 'Contact Number' },
     { key: 'position', label: 'Position' },
+    { key: 'region', label: 'Region' },
+    { key: 'province', label: 'Province' },
+    { key: 'municipality', label: 'Municipality' },
     { key: 'barangay', label: 'Barangay' },
     { key: 'term_start', label: 'Term Start Date' },
     { key: 'term_end', label: 'Term End Date' },
     { key: 'email', label: 'Email Address' },
 ];
+
+const BATCH_REQUIRED_ROW_FIELDS = BATCH_ALL_REQUIRED_FIELDS;
+
+function batchExcelSerialToDateString(serial) {
+    const utcDays = Math.floor(Number(serial) - 25569);
+    const date = new Date(utcDays * 86400 * 1000);
+    return formatLocalDate(new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+}
+
+function parseBatchUsDateString(value) {
+    const raw = String(value || '').trim();
+    const slashMatch = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(raw);
+    if (slashMatch) {
+        const month = slashMatch[1].padStart(2, '0');
+        const day = slashMatch[2].padStart(2, '0');
+        const year = slashMatch[3];
+        return `${year}-${month}-${day}`;
+    }
+
+    return raw;
+}
+
+function normalizeBatchCellValue(fieldKey, value) {
+    if (value === null || value === undefined || value === '') return '';
+    if (value instanceof Date) return formatLocalDate(value);
+    if (typeof value === 'number' && BATCH_DATE_FIELD_KEYS.has(fieldKey)) {
+        return batchExcelSerialToDateString(value);
+    }
+
+    const stringValue = String(value).trim();
+    if (BATCH_DATE_FIELD_KEYS.has(fieldKey)) {
+        return parseBatchUsDateString(stringValue);
+    }
+
+    return stringValue;
+}
+
+function normalizeBatchAccountRow(row, role) {
+    const normalized = {};
+    Object.keys(row || {}).forEach((key) => {
+        normalized[key] = normalizeBatchCellValue(key, row[key]);
+    });
+
+    const upperFields = ['first_name', 'middle_name', 'last_name', 'suffix', 'sex', 'position', 'region', 'province', 'municipality', 'barangay'];
+    upperFields.forEach((field) => {
+        if (normalized[field]) {
+            normalized[field] = String(normalized[field]).trim().toUpperCase();
+        }
+    });
+
+    if (normalized.email) {
+        normalized.email = String(normalized.email).trim().toLowerCase();
+    }
+
+    if (role === 'sk_official') {
+        if (normalized.first_name) {
+            normalized.first_name = normalized.first_name.replace(/^\s+/, '').replace(/\s{2,}/g, ' ');
+        }
+        if (normalized.last_name) {
+            normalized.last_name = normalized.last_name.replace(/\s+/g, '');
+        }
+        if (normalized.middle_name) {
+            normalized.middle_name = normalized.middle_name.replace(/\s+/g, '');
+            if (normalized.middle_name === '') {
+                delete normalized.middle_name;
+            }
+        }
+    }
+
+    if (normalized.contact_number) {
+        let digits = String(normalized.contact_number).replace(/\D+/g, '');
+        if (!digits.startsWith('09')) {
+            digits = '09' + digits.replace(/^0+/, '');
+        }
+        normalized.contact_number = digits.slice(0, 11);
+    }
+
+    if (normalized.sex) {
+        const sex = String(normalized.sex).trim().toLowerCase();
+        if (sex === 'm' || sex === 'male') normalized.sex = 'Male';
+        if (sex === 'f' || sex === 'female') normalized.sex = 'Female';
+    }
+
+    if (normalized.suffix) {
+        const suffix = String(normalized.suffix).trim();
+        if (suffix === '' || suffix.toLowerCase() === 'none') {
+            delete normalized.suffix;
+        }
+    }
+
+    if (normalized.date_of_birth) {
+        normalized.age = calculateAge(normalized.date_of_birth);
+    }
+
+    return normalized;
+}
+
+function batchRowFingerprint(row) {
+    const keys = [
+        'first_name', 'middle_name', 'last_name', 'suffix', 'sex', 'date_of_birth', 'age',
+        'contact_number', 'email', 'position', 'region', 'province', 'municipality', 'barangay',
+        'term_start', 'term_end',
+    ];
+    return keys.map((key) => String(row[key] ?? '').trim().toLowerCase()).join('|');
+}
+
+function validateBatchAccountRow(row, rowNumber, role, seenEmails, seenFingerprints) {
+    const errors = [];
+    const data = normalizeBatchAccountRow(row, role);
+    const isOfficial = role === 'sk_official';
+
+    BATCH_ALL_REQUIRED_FIELDS.forEach(({ key, label }) => {
+        const value = data[key];
+        if (value === null || value === undefined || String(value).trim() === '') {
+            errors.push({ row: rowNumber, field: key, error: `${label} is required.` });
+        }
+    });
+
+    if (data.first_name) {
+        if (data.first_name.length < SK_OFFICIAL_NAME_MIN) {
+            errors.push({ row: rowNumber, field: 'first_name', error: 'First name must be at least 3 characters.' });
+        } else if (data.first_name.length > SK_OFFICIAL_NAME_MAX) {
+            errors.push({ row: rowNumber, field: 'first_name', error: 'First name must not exceed 50 characters.' });
+        } else if (isOfficial && !SK_OFFICIAL_FIRST_NAME_REGEX.test(data.first_name)) {
+            errors.push({ row: rowNumber, field: 'first_name', error: 'First name must use uppercase letters only, with at most one space and no leading spaces.' });
+        }
+    }
+
+    if (data.middle_name) {
+        if (data.middle_name.length < SK_OFFICIAL_NAME_MIN) {
+            errors.push({ row: rowNumber, field: 'middle_name', error: 'Middle name must be at least 3 characters when provided.' });
+        } else if (data.middle_name.length > SK_OFFICIAL_NAME_MAX) {
+            errors.push({ row: rowNumber, field: 'middle_name', error: 'Middle name must not exceed 50 characters.' });
+        } else if (isOfficial && !BATCH_OFFICIAL_MIDDLE_NAME_REGEX.test(data.middle_name)) {
+            errors.push({ row: rowNumber, field: 'middle_name', error: 'Middle name must use uppercase letters only, with no spaces.' });
+        }
+    }
+
+    if (data.last_name) {
+        if (data.last_name.length < SK_OFFICIAL_NAME_MIN) {
+            errors.push({ row: rowNumber, field: 'last_name', error: 'Last name must be at least 3 characters.' });
+        } else if (data.last_name.length > SK_OFFICIAL_NAME_MAX) {
+            errors.push({ row: rowNumber, field: 'last_name', error: 'Last name must not exceed 50 characters.' });
+        } else if (isOfficial && !BATCH_OFFICIAL_LAST_NAME_REGEX.test(data.last_name)) {
+            errors.push({ row: rowNumber, field: 'last_name', error: 'Last name must use uppercase letters only, with no spaces.' });
+        }
+    }
+
+    if (data.email) {
+        if (!SK_OFFICIAL_GMAIL_REGEX.test(String(data.email).trim())) {
+            errors.push({ row: rowNumber, field: 'email', error: 'Email must be a @gmail.com address with 6–30 characters before @.' });
+        }
+        if (seenEmails.has(data.email)) {
+            errors.push({ row: rowNumber, field: 'email', error: 'Duplicate email in upload file.' });
+        } else {
+            seenEmails.add(data.email);
+        }
+    }
+
+    const fingerprint = batchRowFingerprint(data);
+    if (fingerprint.replace(/\|/g, '') !== '') {
+        if (seenFingerprints.has(fingerprint)) {
+            errors.push({ row: rowNumber, error: 'Duplicate row: another entry has the same details.' });
+        } else {
+            seenFingerprints.add(fingerprint);
+        }
+    }
+
+    if (data.contact_number && !/^09\d{9}$/.test(data.contact_number)) {
+        errors.push({ row: rowNumber, field: 'contact_number', error: 'Contact number must be 11 digits starting with 09.' });
+    }
+
+    if (data.sex && !['Male', 'Female'].includes(data.sex)) {
+        errors.push({ row: rowNumber, field: 'sex', error: 'Sex must be Male or Female.' });
+    }
+
+    if (data.date_of_birth) {
+        const bounds = getSkOfficialBirthdateBounds();
+        if (data.date_of_birth < bounds.min || data.date_of_birth > bounds.max) {
+            errors.push({ row: rowNumber, field: 'date_of_birth', error: `Birthdate must correspond to age ${SK_OFFICIAL_AGE_MIN}–${SK_OFFICIAL_AGE_MAX}.` });
+        }
+    }
+
+    if (data.age) {
+        const ageNum = parseInt(data.age, 10);
+        if (Number.isNaN(ageNum) || ageNum < SK_OFFICIAL_AGE_MIN || ageNum > SK_OFFICIAL_AGE_MAX) {
+            errors.push({ row: rowNumber, field: 'age', error: `Age must be between ${SK_OFFICIAL_AGE_MIN} and ${SK_OFFICIAL_AGE_MAX}.` });
+        }
+    }
+
+    if (data.term_start) {
+        const termStartMin = isOfficial ? '2023-01-01' : getCurrentYearStartDate();
+        const termStartMax = isOfficial ? formatLocalDate(new Date()) : getCurrentYearEndDate();
+        if (data.term_start < termStartMin || data.term_start > termStartMax) {
+            errors.push({
+                row: rowNumber,
+                field: 'term_start',
+                error: isOfficial
+                    ? 'Term start date must be between 2023 and today.'
+                    : 'Term start date must be within the current year.',
+            });
+        }
+    }
+
+    if (data.term_start && data.term_end) {
+        if (isOfficial) {
+            const bounds = getTermEndBoundsForStart(data.term_start);
+            const endYear = parseInt(String(data.term_end).split('-')[0], 10);
+            if (endYear !== bounds.year) {
+                errors.push({
+                    row: rowNumber,
+                    field: 'term_end',
+                    error: `Term end year must be exactly ${ACCOUNT_TERM_YEARS} years after term start year.`,
+                });
+            } else if (data.term_end < bounds.min || data.term_end > bounds.max) {
+                errors.push({ row: rowNumber, field: 'term_end', error: 'Term end date must fall within the term end year.' });
+            }
+        } else {
+            const requiredEnd = addYearsToDateString(data.term_start, ACCOUNT_TERM_YEARS);
+            if (data.term_end !== requiredEnd) {
+                errors.push({ row: rowNumber, field: 'term_end', error: `Term end must be exactly ${ACCOUNT_TERM_YEARS} years after term start.` });
+            }
+        }
+    }
+
+    return { errors, data };
+}
+
+function validateMappedRows(rows, role) {
+    const errors = [];
+    const seenEmails = new Set();
+    const seenFingerprints = new Set();
+
+    rows.forEach((row, index) => {
+        const result = validateBatchAccountRow(row, index + 1, role, seenEmails, seenFingerprints);
+        errors.push(...result.errors);
+        Object.assign(row, result.data);
+    });
+
+    return errors;
+}
 
 const _batchPanelState = {};
 
@@ -1623,6 +2020,10 @@ window.resetBatchUploadPanel = function (prefix) {
     if (els.preview) { els.preview.innerHTML = ''; els.preview.style.display = 'none'; }
     renderBatchErrorReport([]);
     if (els.confirmBtn) els.confirmBtn.disabled = true;
+    if (els.fileInput) els.fileInput.disabled = false;
+    if (els.dropzone) els.dropzone.classList.remove('batch-dropzone-disabled');
+    const limitNote = document.getElementById(prefix + '_batchLimitNote');
+    if (limitNote) limitNote.hidden = true;
 };
 
 function initBatchUploadPanel(prefix, role) {
@@ -1633,8 +2034,8 @@ function initBatchUploadPanel(prefix, role) {
         preview: document.getElementById(`${prefix}_batchPreview`),
         errorReport: document.getElementById(`${prefix}_batchErrorReport`),
         confirmBtn: document.getElementById(`${prefix}_batchConfirmBtn`),
-        errorDownloadBtn: document.getElementById(`${prefix}_batchErrorDownloadBtn`),
         templateLink: document.getElementById(`${prefix}_batchTemplateDownloadLink`),
+        limitNote: document.getElementById(`${prefix}_batchLimitNote`),
     };
 
     if (!els.fileInput && !els.dropzone) return;
@@ -1644,6 +2045,7 @@ function initBatchUploadPanel(prefix, role) {
         parsedHeaders: [],
         mappedAccounts: [],
         validationErrors: [],
+        editDebounceTimer: null,
     };
 
     const templateType = role === 'sk_fed' ? 'federation' : 'officials';
@@ -1662,26 +2064,131 @@ function initBatchUploadPanel(prefix, role) {
     }
 
     function normalizeHeaderKey(header) {
-        return String(header || '').trim().toLowerCase();
+        return normalizeBatchHeaderLabel(header);
     }
 
     function resolveBatchFieldKey(header) {
         const normalized = normalizeHeaderKey(header);
-        return BATCH_HEADER_ALIASES[normalized] || normalized.replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
-    }
-
-    function excelSerialToDateString(serial) {
-        const utcDays = Math.floor(Number(serial) - 25569);
-        return new Date(utcDays * 86400 * 1000).toISOString().slice(0, 10);
-    }
-
-    function coerceBatchCellValue(fieldKey, value) {
-        if (value === null || value === undefined || value === '') return '';
-        if (value instanceof Date) return value.toISOString().slice(0, 10);
-        if (typeof value === 'number' && (fieldKey === 'term_end' || fieldKey === 'term_start' || fieldKey === 'date_of_birth')) {
-            return excelSerialToDateString(value);
+        if (BATCH_HEADER_ALIASES[normalized]) {
+            return BATCH_HEADER_ALIASES[normalized];
         }
-        return String(value).trim();
+        if (BATCH_HEADER_ALIASES[header.trim().toLowerCase()]) {
+            return BATCH_HEADER_ALIASES[header.trim().toLowerCase()];
+        }
+        return normalized.replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    }
+
+    function isTemplateSampleDataRow(row) {
+        const width = state.parsedHeaders.length || BATCH_TEMPLATE_HEADERS.length;
+        const padded = Array.from({ length: width }, (_, index) => String(row[index] ?? '').trim());
+        const mapped = mapRowToAccount(state.parsedHeaders.length ? state.parsedHeaders : BATCH_TEMPLATE_HEADERS, padded);
+        const hasOfficialData = Boolean(mapped.first_name || mapped.last_name || mapped.email || mapped.contact_number);
+        if (hasOfficialData) {
+            return false;
+        }
+
+        return mapped.region === 'IV-A CALABARZON'
+            && mapped.province === 'LAGUNA'
+            && mapped.municipality === 'SANTA CRUZ';
+    }
+
+    function getBatchRowErrors(errors, rowNumber) {
+        return (errors || []).filter((item) => Number(item.row) === rowNumber);
+    }
+
+    function getBatchInvalidFields(errors, rowNumber) {
+        return new Set(getBatchRowErrors(errors, rowNumber).map((item) => item.field).filter(Boolean));
+    }
+
+    function ensureParsedRowWidth(row) {
+        const width = state.parsedHeaders.length;
+        const next = Array.from({ length: width }, (_, index) => String(row[index] ?? '').trim());
+        return next;
+    }
+
+    function syncMappedAccountsFromParsedRows() {
+        state.mappedAccounts = state.parsedRows.map((row) => mapRowToAccount(state.parsedHeaders, row));
+    }
+
+    function revalidateBatchState() {
+        syncMappedAccountsFromParsedRows();
+        const missingHeaders = getMissingBatchHeaders(state.parsedHeaders);
+        const rowErrors = missingHeaders.length === 0 ? validateMappedRows(state.mappedAccounts, role) : [];
+        const hasHeaderErrors = missingHeaders.length > 0;
+        const hasRowErrors = rowErrors.length > 0;
+
+        let previewMessage = state.parsedRows.length + ' row' + (state.parsedRows.length !== 1 ? 's' : '') + ' ready for review';
+        if (missingHeaders.length > 0) {
+            previewMessage = 'Missing required columns: ' + missingHeaders.join(', ') + '.';
+        } else if (hasRowErrors) {
+            previewMessage = rowErrors.length + ' validation error' + (rowErrors.length !== 1 ? 's' : '') + ' found. Edit the highlighted cells below, then import again.';
+            renderBatchErrorReport(rowErrors);
+            state.validationErrors = rowErrors;
+        } else {
+            renderBatchErrorReport([]);
+            state.validationErrors = [];
+        }
+
+        renderBatchEditablePreview(state.parsedHeaders, state.parsedRows, previewMessage, {
+            hasErrors: hasHeaderErrors || hasRowErrors,
+            errors: rowErrors,
+        });
+
+        if (els.confirmBtn) {
+            els.confirmBtn.disabled = hasHeaderErrors || hasRowErrors || state.parsedRows.length === 0;
+        }
+
+        return rowErrors;
+    }
+
+    function syncBatchAgeFromBirthdate(rowIndex) {
+        const birthCol = state.parsedHeaders.findIndex((header) => resolveBatchFieldKey(header) === 'date_of_birth');
+        const ageCol = state.parsedHeaders.findIndex((header) => resolveBatchFieldKey(header) === 'age');
+        if (birthCol < 0 || ageCol < 0 || !state.parsedRows[rowIndex]) {
+            return;
+        }
+
+        state.parsedRows[rowIndex] = ensureParsedRowWidth(state.parsedRows[rowIndex]);
+        const birthValue = state.parsedRows[rowIndex][birthCol];
+        const normalizedBirth = normalizeBatchCellValue('date_of_birth', birthValue);
+        const age = normalizedBirth ? calculateAge(normalizedBirth) : '';
+        state.parsedRows[rowIndex][ageCol] = age !== null && age !== undefined ? String(age) : '';
+    }
+
+    function handleBatchCellEdit(rowIndex, colIndex, value) {
+        if (!state.parsedRows[rowIndex]) {
+            return;
+        }
+
+        state.parsedRows[rowIndex] = ensureParsedRowWidth(state.parsedRows[rowIndex]);
+        state.parsedRows[rowIndex][colIndex] = value;
+
+        const fieldKey = resolveBatchFieldKey(state.parsedHeaders[colIndex] || '');
+        if (fieldKey === 'date_of_birth') {
+            syncBatchAgeFromBirthdate(rowIndex);
+        }
+
+        window.clearTimeout(state.editDebounceTimer);
+        state.editDebounceTimer = window.setTimeout(() => {
+            revalidateBatchState();
+        }, 250);
+    }
+
+    function updateBatchUploadLimitState(rowCount) {
+        const overLimit = rowCount > BATCH_MAX_ACCOUNTS;
+        const atLimit = rowCount === BATCH_MAX_ACCOUNTS;
+        if (els.fileInput) els.fileInput.disabled = overLimit;
+        if (els.dropzone) {
+            els.dropzone.classList.toggle('batch-dropzone-disabled', overLimit);
+        }
+        if (els.limitNote) {
+            els.limitNote.hidden = !atLimit && !overLimit;
+            if (overLimit) {
+                els.limitNote.textContent = `This file has ${rowCount} rows. Maximum upload limit is ${BATCH_MAX_ACCOUNTS} accounts per file.`;
+            } else if (atLimit) {
+                els.limitNote.textContent = `Maximum upload limit reached (${BATCH_MAX_ACCOUNTS} accounts per file).`;
+            }
+        }
     }
 
     function getMissingBatchHeaders(headers) {
@@ -1691,51 +2198,14 @@ function initBatchUploadPanel(prefix, role) {
             .map((group) => group.label);
     }
 
-    function validateMappedRow(row, rowNumber) {
-        const errors = [];
-
-        BATCH_REQUIRED_ROW_FIELDS.forEach(({ key, label }) => {
-            const value = row[key];
-            if (value === null || value === undefined || String(value).trim() === '') {
-                errors.push({ row: rowNumber, error: `${label} is required.` });
-            }
-        });
-
-        if (row.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(row.email).trim())) {
-            errors.push({ row: rowNumber, error: 'Invalid email address.' });
-        }
-
-        if (row.contact_number) {
-            const digits = String(row.contact_number).replace(/\D+/g, '');
-            const normalized = digits.startsWith('09') ? digits.slice(0, 11) : ('09' + digits.replace(/^0+/, '')).slice(0, 11);
-            if (!/^09\d{9}$/.test(normalized)) {
-                errors.push({ row: rowNumber, error: 'Contact number must be 11 digits starting with 09.' });
-            }
-        }
-
-        if (row.sex && !['male', 'female', 'm', 'f'].includes(String(row.sex).trim().toLowerCase())) {
-            errors.push({ row: rowNumber, error: 'Sex must be Male or Female.' });
-        }
-
-        return errors;
-    }
-
-    function validateMappedRows(rows) {
-        const errors = [];
-        rows.forEach((row, index) => {
-            errors.push(...validateMappedRow(row, index + 1));
-        });
-        return errors;
-    }
-
     function mapRowToAccount(headers, row) {
         const mapped = {};
         headers.forEach((header, index) => {
             const key = resolveBatchFieldKey(header);
             if (!key) return;
-            mapped[key] = coerceBatchCellValue(key, row[index]);
+            mapped[key] = normalizeBatchCellValue(key, row[index]);
         });
-        return mapped;
+        return normalizeBatchAccountRow(mapped, role);
     }
 
     function formatBatchCell(value) {
@@ -1749,7 +2219,6 @@ function initBatchUploadPanel(prefix, role) {
         if (!errors || errors.length === 0) {
             els.errorReport.style.display = 'none';
             els.errorReport.innerHTML = '';
-            if (els.errorDownloadBtn) els.errorDownloadBtn.style.display = 'none';
             return;
         }
 
@@ -1758,17 +2227,18 @@ function initBatchUploadPanel(prefix, role) {
         ).join('');
 
         els.errorReport.innerHTML =
-            '<p class="batch-row-count batch-row-count-error">Validation errors found. Invalid rows were not imported.</p>' +
+            '<p class="batch-row-count batch-row-count-error">Validation errors found. Fix the highlighted cells in the table below, then click Import Accounts.</p>' +
             '<div class="batch-preview-wrap"><table class="batch-preview-table batch-error-table">' +
             '<thead><tr><th>Row</th><th>Error</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
         els.errorReport.style.display = '';
-        if (els.errorDownloadBtn) els.errorDownloadBtn.style.display = '';
         state.validationErrors = errors;
     }
 
-    function renderBatchPreview(headers, rows, message, hasHeaderErrors = false) {
+    function renderBatchEditablePreview(headers, rows, message, options = {}) {
         if (!els.preview) return;
-        renderBatchErrorReport([]);
+
+        const hasErrors = Boolean(options.hasErrors);
+        const errors = options.errors || [];
 
         if (rows.length === 0) {
             els.preview.innerHTML = '<p class="batch-row-count" style="color:#94a3b8;">' + escapeHtml(message || 'Upload an Excel file to preview rows.') + '</p>';
@@ -1777,18 +2247,59 @@ function initBatchUploadPanel(prefix, role) {
             return;
         }
 
-        const theadCells = headers.map((header) => '<th>' + escapeHtml(header) + '</th>').join('');
-        const tbodyRows = rows.map((row) => {
-            const cells = headers.map((_, index) => '<td>' + formatBatchCell(row[index]) + '</td>').join('');
-            return '<tr>' + cells + '</tr>';
+        const theadCells = headers.map((header) => '<th>' + escapeHtml(header) + '</th>').join('') + '<th class="batch-col-status">Status</th>';
+        const tbodyRows = rows.map((row, rowIndex) => {
+            const rowNumber = rowIndex + 1;
+            const rowErrors = getBatchRowErrors(errors, rowNumber);
+            const invalidFields = getBatchInvalidFields(errors, rowNumber);
+            const rowClass = rowErrors.length > 0 ? ' batch-row-has-error' : '';
+
+            const cells = headers.map((header, colIndex) => {
+                const fieldKey = resolveBatchFieldKey(header);
+                const rawValue = row[colIndex] ?? '';
+                const displayValue = fieldKey && BATCH_DATE_FIELD_KEYS.has(fieldKey)
+                    ? normalizeBatchCellValue(fieldKey, rawValue)
+                    : String(rawValue ?? '').trim();
+                const invalidClass = invalidFields.has(fieldKey) ? ' batch-cell-input-invalid' : '';
+                const inputType = fieldKey && BATCH_DATE_FIELD_KEYS.has(fieldKey) ? 'date' : 'text';
+                const placeholder = fieldKey === 'term_start' || fieldKey === 'term_end' ? 'MM/DD/YYYY' : '';
+
+                return '<td><input type="' + inputType + '" class="batch-cell-input' + invalidClass + '" data-row-index="' + rowIndex + '" data-col-index="' + colIndex + '" data-field-key="' + escapeHtml(fieldKey || '') + '" value="' + escapeHtml(displayValue) + '" placeholder="' + escapeHtml(placeholder) + '" aria-label="' + escapeHtml(header) + ' row ' + rowNumber + '"></td>';
+            }).join('');
+
+            const statusText = rowErrors.length > 0
+                ? escapeHtml(rowErrors[0].error || 'Fix this row')
+                : '<span class="batch-row-status-ok">OK</span>';
+
+            return '<tr class="batch-editable-row' + rowClass + '" data-row-number="' + rowNumber + '">' +
+                cells +
+                '<td class="batch-col-status">' + statusText + '</td>' +
+                '</tr>';
         }).join('');
 
-        const messageClass = hasHeaderErrors ? 'batch-row-count batch-row-count-error' : 'batch-row-count';
+        const messageClass = hasErrors ? 'batch-row-count batch-row-count-error' : 'batch-row-count';
         els.preview.innerHTML =
             '<p class="' + messageClass + '">' + escapeHtml(message || '') + '</p>' +
-            '<div class="batch-preview-wrap"><table class="batch-preview-table"><thead><tr>' + theadCells + '</tr></thead><tbody>' + tbodyRows + '</tbody></table></div>';
+            '<p class="batch-edit-hint">You can edit values directly in the table below. Changes are validated automatically.</p>' +
+            '<div class="batch-preview-wrap batch-preview-wrap-editable"><table class="batch-preview-table batch-preview-table-editable"><thead><tr>' + theadCells + '</tr></thead><tbody>' + tbodyRows + '</tbody></table></div>';
+
         els.preview.style.display = '';
-        if (els.confirmBtn) els.confirmBtn.disabled = hasHeaderErrors;
+
+        els.preview.querySelectorAll('.batch-cell-input').forEach((input) => {
+            input.addEventListener('input', function () {
+                handleBatchCellEdit(Number(input.dataset.rowIndex), Number(input.dataset.colIndex), input.value);
+            });
+            input.addEventListener('change', function () {
+                handleBatchCellEdit(Number(input.dataset.rowIndex), Number(input.dataset.colIndex), input.value);
+            });
+        });
+    }
+
+    function renderBatchPreview(headers, rows, message, hasHeaderErrors = false) {
+        renderBatchEditablePreview(headers, rows, message, {
+            hasErrors: hasHeaderErrors,
+            errors: state.validationErrors || [],
+        });
     }
 
     function handleBatchFile(file) {
@@ -1830,26 +2341,24 @@ function initBatchUploadPanel(prefix, role) {
                 }
 
                 state.parsedHeaders = nonEmptyRows[0].map((header) => String(header).trim());
-                state.parsedRows = nonEmptyRows.slice(1).filter((row) => row.some((cell) => String(cell).trim() !== ''));
-                state.mappedAccounts = state.parsedRows.map((row) => mapRowToAccount(state.parsedHeaders, row));
+                state.parsedRows = nonEmptyRows.slice(1)
+                    .filter((row) => row.some((cell) => String(cell).trim() !== ''))
+                    .map((row) => ensureParsedRowWidth(row))
+                    .filter((row) => !isTemplateSampleDataRow(row));
+                updateBatchUploadLimitState(state.parsedRows.length);
 
-                const missingHeaders = getMissingBatchHeaders(state.parsedHeaders);
-                const rowErrors = missingHeaders.length === 0 ? validateMappedRows(state.mappedAccounts) : [];
-                let previewMessage = state.parsedRows.length + ' row' + (state.parsedRows.length !== 1 ? 's' : '') + ' ready for review';
-                const hasHeaderErrors = missingHeaders.length > 0;
-                const hasRowErrors = rowErrors.length > 0;
-
-                if (missingHeaders.length > 0) {
-                    previewMessage = 'Missing required columns: ' + missingHeaders.join(', ') + '.';
-                } else if (hasRowErrors) {
-                    previewMessage = rowErrors.length + ' row validation error' + (rowErrors.length !== 1 ? 's' : '') + ' found.';
-                    renderBatchErrorReport(rowErrors);
+                if (state.parsedRows.length > BATCH_MAX_ACCOUNTS) {
+                    state.mappedAccounts = [];
+                    renderBatchErrorReport([{
+                        row: 0,
+                        error: `Maximum upload limit is ${BATCH_MAX_ACCOUNTS} accounts per file. This file has ${state.parsedRows.length} rows.`,
+                    }]);
+                    renderBatchEditablePreview(state.parsedHeaders, state.parsedRows.slice(0, 5), `Too many rows (${state.parsedRows.length}). Maximum is ${BATCH_MAX_ACCOUNTS} accounts per upload.`, { hasErrors: true, errors: [] });
+                    if (els.confirmBtn) els.confirmBtn.disabled = true;
+                    return;
                 }
 
-                renderBatchPreview(state.parsedHeaders, state.parsedRows, previewMessage, hasHeaderErrors || hasRowErrors);
-                if (els.confirmBtn) {
-                    els.confirmBtn.disabled = hasHeaderErrors || hasRowErrors || state.parsedRows.length === 0;
-                }
+                revalidateBatchState();
                 return;
             } catch (err) {
                 console.error('Batch upload read error:', err);
@@ -1865,48 +2374,32 @@ function initBatchUploadPanel(prefix, role) {
     function downloadBatchTemplateXlsx(event) {
         if (event) event.preventDefault();
         const XLSX = getXlsxLib();
-        if (!XLSX) {
-            window.location.href = '/accounts/batch-template/' + templateType;
+        if (XLSX) {
+            const worksheet = XLSX.utils.aoa_to_sheet([BATCH_TEMPLATE_HEADERS, BATCH_TEMPLATE_SAMPLE_ROW]);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Template');
+            const filename = role === 'sk_fed' ? 'sk-federation-batch-template.xlsx' : 'sk-officials-batch-template.xlsx';
+            XLSX.writeFile(workbook, filename);
             return;
         }
 
-        const headers = BATCH_TEMPLATE_HEADERS;
-        const worksheet = XLSX.utils.aoa_to_sheet([headers]);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Template');
-        const filename = role === 'sk_fed' ? 'sk-federation-batch-template.xlsx' : 'sk-officials-batch-template.xlsx';
-        XLSX.writeFile(workbook, filename);
+        window.location.href = '/accounts/batch-template/' + templateType;
     }
 
-    function downloadErrorReport() {
-        if (!state.validationErrors.length) return;
-        const lines = ['Row,Error', ...state.validationErrors.map((item) =>
-            `${item.row},"${String(item.error || item.message || '').replace(/"/g, '""')}"`
-        )];
-        const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'batch-upload-errors.csv';
-        link.click();
-        URL.revokeObjectURL(url);
-    }
-
-    _batchPanelState[prefix] = { els, state, renderBatchErrorReport };
+    _batchPanelState[prefix] = { els, state, renderBatchErrorReport, revalidateBatchState };
 
     if (els.confirmBtn) {
         els.confirmBtn.addEventListener('click', async function () {
-            if (state.mappedAccounts.length === 0) return;
+            if (state.parsedRows.length === 0) return;
             const missingHeaders = getMissingBatchHeaders(state.parsedHeaders);
             if (missingHeaders.length > 0) {
                 alert('Your Excel file is missing required columns:\n\n' + missingHeaders.join('\n'));
                 return;
             }
 
-            const rowErrors = validateMappedRows(state.mappedAccounts);
+            const rowErrors = revalidateBatchState();
             if (rowErrors.length > 0) {
-                renderBatchErrorReport(rowErrors);
-                alert('Please fix the validation errors in your Excel file before importing.');
+                alert('Please fix the validation errors in the table before importing.');
                 return;
             }
 
@@ -1934,10 +2427,12 @@ function initBatchUploadPanel(prefix, role) {
                     hideLoadingOverlay();
                     const errors = data.validation_errors || data.failed || [];
                     if (errors.length > 0) {
-                        renderBatchErrorReport(errors.map((item) => ({
+                        state.validationErrors = errors.map((item) => ({
                             row: item.row,
                             error: item.error || item.message,
-                        })));
+                        }));
+                        renderBatchErrorReport(state.validationErrors);
+                        revalidateBatchState();
                     }
                     alert(data.message || 'Batch account creation failed.');
                     els.confirmBtn.disabled = false;
@@ -1964,8 +2459,8 @@ function initBatchUploadPanel(prefix, role) {
         });
     }
 
-    if (els.errorDownloadBtn) {
-        els.errorDownloadBtn.addEventListener('click', downloadErrorReport);
+    if (els.templateLink) {
+        els.templateLink.addEventListener('click', downloadBatchTemplateXlsx);
     }
 
     if (els.fileInput) {
@@ -2460,6 +2955,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            if (form.id === 'editSkOfficialsForm' && !validateTermRange(form)) {
+                const first = form.querySelector('.is-invalid');
+                if (first) first.focus();
+                return;
+            }
+
             const formData = new FormData(form);
             const payload = {};
             for (const [k, v] of formData.entries()) { if (k !== '_token') payload[k] = v; }
@@ -2507,6 +3008,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const fedEditForm = document.getElementById('editAccountForm');
     const officialsEditForm = document.getElementById('editSkOfficialsForm');
+    if (officialsEditForm) {
+        applyTermDateConstraints(officialsEditForm);
+        applySkOfficialDobConstraints(officialsEditForm);
+    }
     attachEditSubmit(fedEditForm);
     attachEditSubmit(officialsEditForm);
 

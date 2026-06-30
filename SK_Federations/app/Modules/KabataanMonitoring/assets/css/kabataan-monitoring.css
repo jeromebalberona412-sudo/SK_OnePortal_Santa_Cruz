@@ -555,11 +555,37 @@
     display: flex; align-items: flex-start;
     justify-content: space-between; gap: 10px;
 }
+.km-bsc-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+.km-bsc-logo {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #eef2ff;
+    border: 1px solid #dbe3f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.km-bsc-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.km-bsc-logo-fallback {
+    font-size: 16px;
+    font-weight: 700;
+    color: #213F99;
+}
 .km-bsc-name {
     margin: 0; font-size: 1rem; font-weight: 700; color: #1e3a8a;
-    display: flex; align-items: center; gap: 6px;
 }
-.km-bsc-name i { color: #213F99; font-size: 13px; }
 
 .km-bsc-stats {
     display: grid;

@@ -23,7 +23,7 @@ class BarangayAbyipService
 
         return Abyip::query()
             ->documents()
-            ->with(['barangay:id,name', 'creator:id,name'])
+            ->with(['barangay:id,name', 'creator:id,name', 'creator.officialProfile:id,user_id,position'])
             ->orderByDesc('created_at')
             ->get()
             ->map(fn (Abyip $document) => $this->formatSubmission($document));
@@ -113,7 +113,7 @@ class BarangayAbyipService
     {
         $document = Abyip::query()
             ->documents()
-            ->with(['barangay:id,name', 'creator:id,name'])
+            ->with(['barangay:id,name', 'creator:id,name', 'creator.officialProfile:id,user_id,position'])
             ->find($id);
 
         if ($document === null) {
@@ -152,6 +152,7 @@ class BarangayAbyipService
             'date_submitted' => $document->created_at?->format('M j, Y') ?? '—',
             'date_submitted_raw' => $document->created_at?->toDateString(),
             'submitted_by' => $submittedBy !== '' ? $submittedBy : '—',
+            'submitted_by_role' => $this->formatOfficialPosition($creator?->officialProfile?->position),
             'submitted_time' => $document->created_at?->format('g:i A') ?? '—',
             'fiscal_year' => $document->fiscal_year,
             'status' => $status,
@@ -187,5 +188,20 @@ class BarangayAbyipService
         $binary = base64_decode($raw, true);
 
         return $binary === false ? null : $binary;
+    }
+
+    private function formatOfficialPosition(?string $position): ?string
+    {
+        if ($position === null || trim($position) === '') {
+            return null;
+        }
+
+        return match ($position) {
+            'Chairperson' => 'SK Chairperson',
+            'Secretary' => 'SK Secretary',
+            'Treasurer' => 'SK Treasurer',
+            'Kagawad' => 'SK Kagawad',
+            default => $position,
+        };
     }
 }

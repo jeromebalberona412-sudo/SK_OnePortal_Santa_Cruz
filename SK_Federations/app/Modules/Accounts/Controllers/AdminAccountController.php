@@ -143,6 +143,19 @@ class AdminAccountController extends Controller
             ], 422);
         }
 
+        $importService = new \App\Modules\Accounts\Services\BatchAccountImportService($tenantId);
+        $validationErrors = $importService->validateRows($validated['accounts'], $validated['role']);
+
+        if ($validationErrors !== []) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please fix the validation errors in your Excel file before importing.',
+                'created' => 0,
+                'failed' => [],
+                'validation_errors' => $validationErrors,
+            ], 422);
+        }
+
         $result = $this->accountService->batchCreateAccounts(
             $validated['accounts'],
             $validated['role'],

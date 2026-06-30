@@ -43,23 +43,23 @@
             <i class="fas fa-image"></i><span>Barangay Logos</span>
         </a>
 
+        <a href="{{ route('auditlogs.index') }}" class="menu-item {{ request()->routeIs('auditlogs*') ? 'active' : '' }}" data-tooltip="Audit Logs">
+            <i class="fas fa-clipboard-list"></i><span>Audit Logs</span>
+        </a>
+
         <button type="button" class="menu-item menu-dropdown-toggle" data-submenu-toggle="accountsSubmenu" data-tooltip="Accounts" aria-expanded="{{ $accountsOpen ? 'true' : 'false' }}" onclick="toggleSubmenuDropdown(this, event)">
             <i class="fas fa-user-cog"></i><span>Manage Accounts</span>
             <i class="fas fa-chevron-down menu-dropdown-chevron {{ $accountsOpen ? 'is-open' : '' }}" id="accountsChevron"></i>
         </button>
 
         <div id="accountsSubmenu" class="sidebar-submenu {{ $accountsOpen ? 'is-open' : '' }}">
-            <a href="{{ route('accounts.officials.index') }}" class="menu-item submenu-item {{ $isOfficialsAccountsActive ? 'active' : '' }}">
-                <i class="fas fa-users-cog"></i><span>SK Officials</span>
+            <a href="{{ route('accounts.officials.index') }}" class="menu-item submenu-item submenu-item--plain {{ $isOfficialsAccountsActive ? 'active' : '' }}">
+                <span>SK Officials</span>
             </a>
-            <a href="{{ route('accounts.federation.index') }}" class="menu-item submenu-item {{ $isFederationAccountsActive ? 'active' : '' }}">
-                <i class="fas fa-id-badge"></i><span>SK Federation</span>
+            <a href="{{ route('accounts.federation.index') }}" class="menu-item submenu-item submenu-item--plain {{ $isFederationAccountsActive ? 'active' : '' }}">
+                <span>SK Federation</span>
             </a>
         </div>
-
-        <a href="{{ route('auditlogs.index') }}" class="menu-item {{ request()->routeIs('auditlogs*') ? 'active' : '' }}" data-tooltip="Audit Logs">
-            <i class="fas fa-clipboard-list"></i><span>Audit Logs</span>
-        </a>
 
         <button type="button" class="menu-item menu-dropdown-toggle" data-submenu-toggle="archiveManagementSubmenu" data-tooltip="Archive Management" aria-expanded="{{ $archiveManagementOpen ? 'true' : 'false' }}" onclick="toggleSubmenuDropdown(this, event)">
             <i class="fas fa-box-archive"></i><span>Archive Management</span>

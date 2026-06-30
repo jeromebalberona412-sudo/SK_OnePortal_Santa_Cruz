@@ -17,6 +17,12 @@ let pendingPdfUploadFile = null;
 let filterSearchText = '';
 let filterYear = '';
 let searchDebounceTimer = null;
+let abyipSubmissionStatus = {
+    can_submit: false,
+    fiscal_year: new Date().getFullYear(),
+    message: 'ABYIP submission is not open yet. Please wait for SK Federation to create the ABYIP schedule.',
+    schedule: null,
+};
 
 const abyipCsrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
@@ -269,7 +275,11 @@ function renderRecordsTable() {
             return status === 'pending' || status === 'approved';
         });
 
-        if (rejectedRecord) {
+        if (!abyipSubmissionStatus.can_submit) {
+            createBtn.textContent = rejectedRecord ? 'Resubmit ABYIP' : 'Create New ABYIP';
+            createBtn.disabled = true;
+            createBtn.title = abyipSubmissionStatus.message || 'ABYIP submission is not available.';
+        } else if (rejectedRecord) {
             createBtn.textContent = 'Resubmit ABYIP';
             createBtn.disabled = false;
             createBtn.title = 'Upload a corrected ABYIP PDF for review';
@@ -509,7 +519,7 @@ async function saveAbyip() {
         }
     }
 
-    const calendarYear = new Date().getFullYear();
+    const calendarYear = abyipSubmissionStatus.fiscal_year || new Date().getFullYear();
     const saveBtn = document.getElementById('abyipModalSave');
     if (saveBtn) saveBtn.disabled = true;
 
@@ -596,6 +606,11 @@ async function saveResubmitAbyip() {
 }
 
 function openResubmitFlow(recordId) {
+    if (!abyipSubmissionStatus.can_submit) {
+        showNotification(abyipSubmissionStatus.message || 'ABYIP submission is not available.', 'error');
+        return;
+    }
+
     const record = abyipRecords.find(function (r) {
         return String(r.id) === String(recordId);
     });
@@ -668,6 +683,14 @@ async function loadRecords() {
         const response = await abyipApiFetch('/api/abyip');
         abyipRecords = (response.data || []).map(mapRecordFromApi);
         populateYearFilter(response.years || []);
+        if (response.submission) {
+            abyipSubmissionStatus = {
+                can_submit: Boolean(response.submission.can_submit),
+                fiscal_year: Number(response.submission.fiscal_year) || new Date().getFullYear(),
+                message: response.submission.message || null,
+                schedule: response.submission.schedule || null,
+            };
+        }
     } catch (e) {
         abyipRecords = [];
         populateYearFilter([]);
@@ -1034,6 +1057,11 @@ function resetPdfUploadModal() {
 }
 
 function openCreateOptionsModal() {
+    if (!abyipSubmissionStatus.can_submit) {
+        showNotification(abyipSubmissionStatus.message || 'ABYIP submission is not available.', 'error');
+        return;
+    }
+
     const rejectedRecord = abyipRecords.find(function (record) {
         return String(record.status || '').toLowerCase() === 'rejected';
     });

@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Modules\Authentication\Http\Responses\LoginResponse as CustomLoginResponse;
 use App\Modules\Shared\Models\User;
 use App\Modules\Authentication\Services\AuthenticationService;
+use Laravel\Fortify\Contracts\LoginResponse;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
@@ -15,7 +17,10 @@ use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
+    public function register(): void
+    {
+        $this->app->singleton(LoginResponse::class, CustomLoginResponse::class);
+    }
 
     public function boot(): void
     {
@@ -29,7 +34,7 @@ class FortifyServiceProvider extends ServiceProvider
             }
 
             if ($user->hasVerifiedEmail()) {
-                throw new HttpResponseException(redirect()->intended(route('dashboard')));
+                throw new HttpResponseException(redirect()->route('dashboard'));
             }
 
             Auth::logout();

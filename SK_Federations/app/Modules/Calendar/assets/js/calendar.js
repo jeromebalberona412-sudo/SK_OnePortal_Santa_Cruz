@@ -4,6 +4,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const CONTENT_MAX = 500;
 const TITLE_MAX = 50;
+const CALENDAR_CELL_TITLE_PREVIEW = 22;
+
+function truncateCalendarPreview(text, maxLength = CALENDAR_CELL_TITLE_PREVIEW) {
+    const value = String(text || '').trim();
+    if (value.length <= maxLength) {
+        return value;
+    }
+
+    return value.slice(0, maxLength).trimEnd() + '…';
+}
 
 function getCsrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -233,7 +243,8 @@ function initializeCalendar() {
 
             const preview = document.createElement('div');
             preview.className = 'calendar-day-notes-preview';
-            preview.textContent = hasNote ? (note.title || note.content || '').slice(0, 50) : '';
+            preview.textContent = hasNote ? truncateCalendarPreview(note.title || note.content || '') : '';
+            preview.title = hasNote ? (note.title || note.content || '') : '';
             cell.appendChild(preview);
 
             const addLabel = document.createElement('div');

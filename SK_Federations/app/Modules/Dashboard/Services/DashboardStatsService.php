@@ -7,6 +7,7 @@ use App\Modules\Accounts\Models\Barangay;
 use App\Modules\Accounts\Models\OfficialTerm;
 use App\Modules\Accounts\Services\ChairpersonFederationSyncService;
 use App\Modules\Accounts\Services\FederationRosterService;
+use App\Modules\AuditLog\Services\AuditLogQueryService;
 use App\Modules\Shared\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
@@ -81,6 +82,15 @@ class DashboardStatsService
         }
 
         return (int) $query->count();
+    }
+
+    public function totalAuditLogs(?int $tenantId = null): int
+    {
+        if (! Schema::hasTable('admin_activity_logs')) {
+            return 0;
+        }
+
+        return (int) app(AuditLogQueryService::class)->stats($tenantId)['total_logs'];
     }
 
     /**

@@ -32,6 +32,7 @@ class BarangayMonitoringController extends Controller
                 'barangay_id' => $barangayId,
                 'status' => $abyipStatus['status'],
                 'submitted_by' => $abyipStatus['submitted_by'],
+                'submitted_by_role' => $abyipStatus['submitted_by_role'] ?? null,
                 'logo_url' => $barangayId ? $logoService->resolve($barangayId) : null,
             ]);
         }
@@ -70,6 +71,7 @@ class BarangayMonitoringController extends Controller
         $barangayData['compliance_status'] = $complianceStatus['status'];
         $barangayData['compliance_details'] = $complianceStatus['details'];
         $barangayData['submitted_by'] = $complianceStatus['submitted_by'] ?? null;
+        $barangayData['submitted_by_role'] = $complianceStatus['submitted_by_role'] ?? null;
         $barangayData['warnings'] = $this->getWarningsForBarangay($complianceStatus['status']);
 
         return view('barangay_monitoring::show', [
@@ -171,22 +173,20 @@ class BarangayMonitoringController extends Controller
     private function buildStats(array $barangays): array
     {
         $count = count($barangays);
-        $activePrograms = array_sum(array_map(fn ($item) => $item['active_programs'], $barangays));
-        $participationRates = array_map(fn ($item) => $item['participation_rate'], $barangays);
         $compliant = count(array_filter($barangays, fn ($item) => $item['status'] === 'compliant'));
-        $pending = count(array_filter($barangays, fn ($item) => $item['status'] === 'pending'));
         $nonCompliant = count(array_filter($barangays, fn ($item) => $item['status'] === 'non-compliant'));
 
-        $avgParticipation = count($participationRates) > 0 ? round(array_sum($participationRates) / count($participationRates)) : 0;
         $complianceRate = $count > 0 ? round(($compliant / $count) * 100) : 0;
         $nonComplianceRate = $count > 0 ? round(($nonCompliant / $count) * 100) : 0;
+        $abyipSubmittedCount = $this->monitoringService->countBarangaysWithAbyipSubmission();
 
         return [
             'total_barangays' => $count,
-            'total_programs' => $activePrograms,
-            'average_participation_rate' => $avgParticipation,
             'compliance_rate' => $complianceRate,
+            'compliant_count' => $compliant,
             'non_compliance_rate' => $nonComplianceRate,
+            'non_compliant_count' => $nonCompliant,
+            'abyip_submitted_count' => $abyipSubmittedCount,
         ];
     }
 
@@ -288,6 +288,7 @@ class BarangayMonitoringController extends Controller
             'status' => $abyipStatus['status'],
             'details' => $details,
             'submitted_by' => $abyipStatus['submitted_by'],
+            'submitted_by_role' => $abyipStatus['submitted_by_role'] ?? null,
         ];
     }
 

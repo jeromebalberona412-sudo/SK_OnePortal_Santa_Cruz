@@ -861,6 +861,23 @@ select.form-input-light option {
     margin: 0 0 8px;
 }
 
+.batch-limit-note {
+    margin: 0 0 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: #fff7ed;
+    border: 1px solid #fdba74;
+    color: #9a3412;
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+.batch-dropzone.batch-dropzone-disabled {
+    opacity: 0.55;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
 .expected-cols-toggle {
     font-size: 12.5px;
     color: #3B82F6;
@@ -3398,6 +3415,77 @@ body.sidebar-collapsed .accounts-page-footer {
 .batch-upload-actions { margin-bottom: 0.75rem; }
 
 .batch-error-report { margin-top: 0.85rem; }
+
+.batch-edit-hint {
+    margin: 0 0 0.65rem;
+    font-size: 0.82rem;
+    color: #64748b;
+}
+
+.batch-preview-wrap-editable {
+    max-height: 420px;
+    overflow: auto;
+}
+
+.batch-preview-table-editable th,
+.batch-preview-table-editable td {
+    vertical-align: top;
+}
+
+.batch-col-rownum,
+.batch-col-status {
+    white-space: nowrap;
+    font-size: 0.78rem;
+}
+
+.batch-col-rownum {
+    width: 42px;
+    text-align: center;
+    font-weight: 700;
+    color: #475569;
+}
+
+.batch-col-status {
+    min-width: 180px;
+    max-width: 240px;
+    font-size: 0.76rem;
+    color: #b91c1c;
+}
+
+.batch-row-status-ok {
+    color: #15803d;
+    font-weight: 700;
+}
+
+.batch-cell-input {
+    width: 100%;
+    min-width: 88px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 0.35rem 0.45rem;
+    font-size: 0.78rem;
+    color: #0f172a;
+    background: #fff;
+}
+
+.batch-cell-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.batch-cell-input-invalid {
+    border-color: #dc2626;
+    background: #fff5f5;
+}
+
+.batch-preview-table-editable tr.batch-row-has-error td {
+    background: #fff1f2;
+}
+
+.batch-preview-table-editable tr.batch-row-has-error .batch-col-rownum {
+    color: #b91c1c;
+}
 
 .batch-error-table thead th {
     background: #fee2e2;

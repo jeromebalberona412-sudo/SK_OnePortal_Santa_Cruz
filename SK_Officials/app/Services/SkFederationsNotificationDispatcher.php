@@ -18,7 +18,7 @@ class SkFederationsNotificationDispatcher
         $actionUrl = $slug ? "/barangay-monitoring/{$slug}" : '/barangay-monitoring';
 
         $this->insertForAllFedUsers(
-            'barangay_monitoring',
+            'abyip',
             'New ABYIP Submission',
             "Barangay {$barangayName} submitted their ABYIP for CY {$fiscalYear}.",
             $actionUrl,

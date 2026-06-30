@@ -9,8 +9,23 @@
             <p>Welcome back, {{ $user->name ?? 'SK Official' }}</p>
         </div>
 
+        <div id="calendarReminderBanner" class="dash-reminder-banner" @if(empty($todayReminder)) hidden @endif>
+            <div class="dash-reminder-icon">
+                <i class="fas fa-calendar-day"></i>
+            </div>
+            <div class="dash-reminder-body">
+                <span class="dash-reminder-label">Today's Reminder</span>
+                <span class="dash-reminder-text" id="reminderText">
+                    @if(!empty($todayReminder))
+                        {{ $todayReminder['date_label'] }} — {{ $todayReminder['title'] }}
+                    @endif
+                </span>
+            </div>
+            <a href="{{ route('calendar') }}" class="dash-reminder-link">View Calendar</a>
+        </div>
+
         {{-- ── STAT CARDS ── --}}
-        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:16px;margin-bottom:24px;">
+        <div class="dash-stats-grid">
             <a href="{{ route('kabataan-monitoring') }}" class="stat-card stat-card-link stat-card-clickable">
                 <div class="stat-icon blue"><i class="fas fa-users"></i></div>
                 <div class="stat-info">
@@ -33,54 +48,36 @@
                 </div>
             </a>
             <a href="{{ route('barangay-monitoring') }}" class="stat-card stat-card-link stat-card-clickable">
-                <div class="stat-icon yellow"><i class="fas fa-calendar-alt"></i></div>
+                <div class="stat-icon green"><i class="fas fa-file-invoice-dollar"></i></div>
                 <div class="stat-info">
-                    <div class="stat-value">0</div>
-                    <div class="stat-label">Total Programs This Year</div>
+                    <div class="stat-value">{{ number_format($totalBarangaysAbyipSubmitted ?? 0) }}</div>
+                    <div class="stat-label">Barangays with ABYIP Submissions</div>
                 </div>
             </a>
-            <a href="{{ route('barangay-monitoring') }}" class="stat-card stat-card-link stat-card-clickable">
-                <div class="stat-icon green"><i class="fas fa-play-circle"></i></div>
+            <a href="{{ route('auditlogs.index') }}" class="stat-card stat-card-link stat-card-clickable">
+                <div class="stat-icon purple"><i class="fas fa-clipboard-list"></i></div>
                 <div class="stat-info">
-                    <div class="stat-value">0</div>
-                    <div class="stat-label">Active Programs</div>
-                </div>
-            </a>
-            <a href="{{ route('barangay-monitoring') }}" class="stat-card stat-card-link stat-card-clickable">
-                <div class="stat-icon teal"><i class="fas fa-check-circle"></i></div>
-                <div class="stat-info">
-                    <div class="stat-value">0</div>
-                    <div class="stat-label">Completed Programs</div>
-                </div>
-            </a>
-            <a href="{{ route('barangay-monitoring') }}" class="stat-card stat-card-link stat-card-clickable">
-                <div class="stat-icon orange"><i class="fas fa-map-marker-alt"></i></div>
-                <div class="stat-info">
-                    <div class="stat-value">0</div>
-                    <div class="stat-label">Barangays Reporting</div>
+                    <div class="stat-value">{{ number_format($totalAuditLogs ?? 0) }}</div>
+                    <div class="stat-label">Total Audit Logs</div>
                 </div>
             </a>
         </div>
         
         <style>
-            @media (max-width: 1400px) {
-                .stats-grid, div[style*="grid-template-columns:repeat(7,1fr)"] {
-                    grid-template-columns: repeat(4, 1fr) !important;
-                }
+            .dash-stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 16px;
+                margin-bottom: 24px;
             }
             @media (max-width: 992px) {
-                .stats-grid, div[style*="grid-template-columns:repeat(7,1fr)"] {
-                    grid-template-columns: repeat(3, 1fr) !important;
-                }
-            }
-            @media (max-width: 768px) {
-                .stats-grid, div[style*="grid-template-columns:repeat(7,1fr)"] {
-                    grid-template-columns: repeat(2, 1fr) !important;
+                .dash-stats-grid {
+                    grid-template-columns: repeat(2, 1fr);
                 }
             }
             @media (max-width: 480px) {
-                .stats-grid, div[style*="grid-template-columns:repeat(7,1fr)"] {
-                    grid-template-columns: 1fr !important;
+                .dash-stats-grid {
+                    grid-template-columns: 1fr;
                 }
             }
         </style>
@@ -149,8 +146,13 @@
         {{-- ── ROW: Sex Distribution + Federation Officers ── --}}
         <div class="dash-row">
             <div class="content-card dash-col-5">
-                <div class="card-header">
+                <div class="card-header dash-sex-chart-header">
                     <h3><i class="fas fa-venus-mars" style="color:#213F99;margin-right:8px;"></i>Sex Distribution</h3>
+                    <select id="sexDistributionFilter" class="kk-barangay-select" aria-label="Filter by sex">
+                        <option value="all">All</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
                 </div>
                 <div class="card-body chart-body dash-sex-chart-body">
                     <canvas id="sexChart"></canvas>
@@ -295,6 +297,7 @@
     window.__DASHBOARD_FEED__ = {
         recent_activity: @json($recentActivity ?? []),
         upcoming_events: @json($upcomingEvents ?? []),
+        today_reminder: @json($todayReminder ?? null),
         activities_url: @json(route('dashboard.recent-activities')),
     };
 </script>
@@ -305,14 +308,17 @@
 <script>
         const fedBlue = '#213F99', fedRed = '#d0242b';
         const sexDistribution = @json($sexDistribution);
+        const sexChartLabels = sexDistribution.labels || ['Male', 'Female'];
+        const sexChartValues = sexDistribution.values || [0, 0];
+        const sexChartColors = [fedBlue, fedRed];
 
-        new Chart(document.getElementById('sexChart'), {
+        const sexChart = new Chart(document.getElementById('sexChart'), {
             type: 'pie',
             data: {
-                labels: sexDistribution.labels || ['Male', 'Female'],
+                labels: sexChartLabels,
                 datasets: [{
-                    data: sexDistribution.values || [0, 0],
-                    backgroundColor: [fedBlue, fedRed],
+                    data: sexChartValues,
+                    backgroundColor: sexChartColors,
                     borderWidth: 2,
                     borderColor: '#fff',
                 }],
@@ -327,6 +333,28 @@
                     },
                 },
             },
+        });
+
+        document.getElementById('sexDistributionFilter')?.addEventListener('change', function () {
+            const filter = this.value;
+            let labels = sexChartLabels;
+            let values = sexChartValues;
+            let colors = sexChartColors;
+
+            if (filter === 'male') {
+                labels = [sexChartLabels[0] || 'Male'];
+                values = [sexChartValues[0] || 0];
+                colors = [fedBlue];
+            } else if (filter === 'female') {
+                labels = [sexChartLabels[1] || 'Female'];
+                values = [sexChartValues[1] || 0];
+                colors = [fedRed];
+            }
+
+            sexChart.data.labels = labels;
+            sexChart.data.datasets[0].data = values;
+            sexChart.data.datasets[0].backgroundColor = colors;
+            sexChart.update();
         });
 </script>
 <script>

@@ -764,6 +764,15 @@ body.sidebar-collapsed #archiveManagementSubmenu {
 .menu-item.submenu-item--plain i {
     display: none;
 }
+
+.menu-item.menu-item--no-icon {
+    gap: 0;
+    padding-left: 18px;
+}
+
+.menu-item.menu-item--no-icon i {
+    display: none;
+}
 .menu-item.is-disabled {
     opacity: 0.5;
     color: #94a3b8;
@@ -841,6 +850,89 @@ body.sidebar-collapsed .main-content { margin-left: var(--sidebar-collapsed); }
 .page-header { margin-bottom: 28px; }
 .page-header h1 { font-size: 24px; font-weight: 800; color: #1e293b; margin-bottom: 4px; }
 .page-header p { font-size: 14px; color: #64748b; }
+
+.dash-reminder-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #eff6ff;
+    border: 1.5px solid #3b82f6;
+    border-radius: 12px;
+    padding: 12px 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(33, 63, 153, 0.12);
+}
+
+.dash-reminder-banner[hidden] {
+    display: none !important;
+}
+
+.dash-reminder-icon {
+    width: 36px;
+    height: 36px;
+    background: #213F99;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #ffffff;
+    font-size: 16px;
+}
+
+.dash-reminder-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dash-reminder-label {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #1e40af;
+}
+
+.dash-reminder-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dash-reminder-link {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 6px 12px;
+    background: #213F99;
+    border-radius: 8px;
+}
+
+.dash-reminder-link:hover {
+    background: #1a3277;
+    color: #ffffff;
+}
+
+@media (max-width: 640px) {
+    .dash-reminder-banner {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .dash-reminder-link {
+        width: 100%;
+        text-align: center;
+    }
+}
 
 /* ── STAT CARDS ── */
 .stats-grid {
@@ -1577,6 +1669,11 @@ body.sidebar-collapsed .main-content { margin-left: var(--sidebar-collapsed); }
 .ev-action-del:hover { color: #d0242b; }
 
 /* ── Sex Distribution + Federation Officers ── */
+.dash-sex-chart-header {
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
 .dash-sex-chart-body {
     height: 320px;
     display: flex;
@@ -2270,14 +2367,40 @@ body.dash-activity-modal-open { overflow: hidden; }
     opacity: 0.85;
 }
 
+.dash-activity-modal-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.dash-activity-modal-fullscreen,
 .dash-activity-modal-close {
     border: none;
-    background: rgba(255, 255, 255, 0.12);
+    background: transparent;
     color: #fff;
     width: 36px;
     height: 36px;
     border-radius: 10px;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease;
+}
+
+.dash-activity-modal-fullscreen:hover,
+.dash-activity-modal-close:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.dash-activity-modal-dialog--fullscreen {
+    width: min(96vw, 1200px);
+    max-height: 96vh;
+}
+
+.dash-activity-modal-dialog--fullscreen .activity-list--modal {
+    max-height: calc(96vh - 180px);
 }
 
 .dash-activity-modal-body {

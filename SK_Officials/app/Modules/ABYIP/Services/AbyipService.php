@@ -130,7 +130,7 @@ class AbyipService
                 extractedText: ''
             );
 
-        $fiscalYear = (int) ($parsed['fiscal_year'] ?? $data['calendar_year'] ?? now()->year);
+        $fiscalYear = (int) ($data['calendar_year'] ?? now()->year);
         $this->assertUniqueYear($user, $fiscalYear);
 
         $signatureUserIds = $this->resolveSignatureUserIds($user->barangay_id, $parsed);

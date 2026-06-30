@@ -8,9 +8,11 @@ document.addEventListener('DOMContentLoaded', function () {
         eventsList: document.getElementById('eventsList'),
         viewAllBtn: document.getElementById('dashActivityViewAllBtn'),
         modal: document.getElementById('dashActivityModal'),
+        modalDialog: document.querySelector('#dashActivityModal .dash-activity-modal-dialog'),
         modalList: document.getElementById('dashActivityModalList'),
         modalSubtitle: document.getElementById('dashActivityModalSubtitle'),
         modalPagination: document.getElementById('dashActivityModalPagination'),
+        fullscreenBtn: document.getElementById('dashActivityFullscreenBtn'),
     };
 
     const modalState = {
@@ -21,6 +23,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
     renderActivity(feed.recent_activity || [], els.activityList);
     renderEvents(feed.upcoming_events || []);
+    renderTodayReminder(feed.today_reminder || null);
+
+    function renderTodayReminder(reminder) {
+        const banner = document.getElementById('calendarReminderBanner');
+        const textEl = document.getElementById('reminderText');
+        if (!banner || !textEl) {
+            return;
+        }
+
+        if (!reminder || !reminder.title) {
+            banner.hidden = true;
+            return;
+        }
+
+        const dateLabel = reminder.date_label ? reminder.date_label + ' — ' : '';
+        textEl.textContent = dateLabel + reminder.title;
+        banner.hidden = false;
+    }
 
     if (els.viewAllBtn) {
         els.viewAllBtn.addEventListener('click', openActivityModal);
@@ -29,6 +49,10 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('[data-dash-activity-close]').forEach(function (button) {
         button.addEventListener('click', closeActivityModal);
     });
+
+    if (els.fullscreenBtn) {
+        els.fullscreenBtn.addEventListener('click', toggleActivityFullscreen);
+    }
 
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape' && els.modal && !els.modal.hidden) {
@@ -85,13 +109,16 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         els.eventsList.innerHTML = events.map(function (event) {
+            const title = String(event.title || '');
+            const displayTitle = title.length > 40 ? title.slice(0, 40).trimEnd() + '…' : title;
+
             return '<div class="event-item">' +
                 '<div class="event-date-box">' +
                 '<span class="event-date-day">' + escapeHtml(event.day) + '</span>' +
                 '<span class="event-date-mon">' + escapeHtml(event.month_label) + '</span>' +
                 '</div>' +
                 '<div class="event-body">' +
-                '<div class="event-title">' + escapeHtml(event.title) + '</div>' +
+                '<div class="event-title" title="' + escapeHtml(title) + '">' + escapeHtml(displayTitle) + '</div>' +
                 '</div>' +
                 '</div>';
         }).join('');
@@ -103,6 +130,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         modalState.page = 1;
+        setActivityFullscreen(false);
         els.modal.hidden = false;
         document.body.classList.add('dash-activity-modal-open');
         fetchModalActivities();
@@ -113,8 +141,34 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        setActivityFullscreen(false);
         els.modal.hidden = true;
         document.body.classList.remove('dash-activity-modal-open');
+    }
+
+    function setActivityFullscreen(enabled) {
+        if (!els.modalDialog) {
+            return;
+        }
+
+        els.modalDialog.classList.toggle('dash-activity-modal-dialog--fullscreen', enabled);
+
+        if (els.fullscreenBtn) {
+            const icon = els.fullscreenBtn.querySelector('i');
+            if (icon) {
+                icon.className = enabled ? 'fas fa-compress' : 'fas fa-expand';
+            }
+            els.fullscreenBtn.setAttribute('aria-label', enabled ? 'Exit fullscreen' : 'Toggle fullscreen');
+        }
+    }
+
+    function toggleActivityFullscreen() {
+        if (!els.modalDialog) {
+            return;
+        }
+
+        const isFullscreen = els.modalDialog.classList.contains('dash-activity-modal-dialog--fullscreen');
+        setActivityFullscreen(!isFullscreen);
     }
 
     async function fetchModalActivities() {

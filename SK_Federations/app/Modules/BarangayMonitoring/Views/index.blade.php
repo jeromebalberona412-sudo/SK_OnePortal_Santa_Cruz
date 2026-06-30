@@ -19,14 +19,9 @@
                     <div class="bm-kpi-note">Active barangays in monitoring</div>
                 </article>
                 <article class="bm-kpi-card">
-                    <div class="bm-kpi-label">Total Programs</div>
-                    <div class="bm-kpi-value">{{ $stats['total_programs'] }}</div>
-                    <div class="bm-kpi-note">Cross-barangay total</div>
-                </article>
-                <article class="bm-kpi-card">
-                    <div class="bm-kpi-label">Average Participation Rate</div>
-                    <div class="bm-kpi-value">{{ $stats['average_participation_rate'] }}%</div>
-                    <div class="bm-kpi-note">Across all barangays</div>
+                    <div class="bm-kpi-label">ABYIP Submitted</div>
+                    <div class="bm-kpi-value">{{ $stats['abyip_submitted_count'] }}</div>
+                    <div class="bm-kpi-note">Barangays with ABYIP submissions</div>
                 </article>
                 <article class="bm-kpi-card">
                     <div class="bm-kpi-label">Compliance Rate</div>
@@ -34,9 +29,19 @@
                     <div class="bm-kpi-note">Compliant barangays</div>
                 </article>
                 <article class="bm-kpi-card">
+                    <div class="bm-kpi-label">Total Compliant</div>
+                    <div class="bm-kpi-value">{{ $stats['compliant_count'] }}</div>
+                    <div class="bm-kpi-note">Barangays marked compliant</div>
+                </article>
+                <article class="bm-kpi-card">
                     <div class="bm-kpi-label">Non-Compliance Rate</div>
                     <div class="bm-kpi-value">{{ $stats['non_compliance_rate'] }}%</div>
                     <div class="bm-kpi-note">Non-compliant barangays</div>
+                </article>
+                <article class="bm-kpi-card">
+                    <div class="bm-kpi-label">Total Non-Compliant</div>
+                    <div class="bm-kpi-value">{{ $stats['non_compliant_count'] }}</div>
+                    <div class="bm-kpi-note">Barangays marked non-compliant</div>
                 </article>
             </section>
 
@@ -69,7 +74,7 @@
                             </div>
                             <div class="bm-schedule-grid">
                                 <div>
-                                    <p class="bm-schedule-label">Fiscal Year</p>
+                                    <p class="bm-schedule-label">Calendar Year</p>
                                     <p class="bm-schedule-value">{{ $abyipSchedule['fiscal_year'] }}</p>
                                 </div>
                                 <div>
@@ -175,7 +180,7 @@
                                 </div>
                                 @if(!empty($barangay['submitted_by']))
                                     <div class="bm-list-meta">
-                                        <span><i class="fas fa-user"></i> Submitted by: {{ $barangay['submitted_by'] }}</span>
+                                        <span><i class="fas fa-user"></i> Submitted by: {{ $barangay['submitted_by'] }}@if(!empty($barangay['submitted_by_role'])) <span class="bm-submitted-role">({{ $barangay['submitted_by_role'] }})</span>@endif</span>
                                     </div>
                                 @endif
                                 <div class="bm-list-foot">
@@ -199,17 +204,21 @@
         <div class="bm-modal-body">
             <input type="hidden" id="scheduleId">
             <div class="bm-form-grid">
-                <label>Fiscal Year
-                    <input type="number" id="scheduleFiscalYear" min="2020" max="2100" value="{{ date('Y') }}">
+                <label>Calendar Year
+                    <input type="text" id="scheduleFiscalYear" value="{{ date('Y') + 1 }}" readonly>
                 </label>
                 <label>Title
                     <input type="text" id="scheduleTitle" value="ABYIP Submission">
                 </label>
                 <label>Start Date
                     <input type="date" id="scheduleDateStart">
+                    <span class="bm-field-hint" id="scheduleDateStartHint">Create: must be today. Edit: today through Dec 31.</span>
+                    <span class="bm-field-error" id="scheduleDateStartError" hidden></span>
                 </label>
                 <label>Deadline
                     <input type="date" id="scheduleDeadline">
+                    <span class="bm-field-hint" id="scheduleDeadlineHint">Must be on or after start date and on or before Dec 31, {{ date('Y') }}.</span>
+                    <span class="bm-field-error" id="scheduleDeadlineError" hidden></span>
                 </label>
             </div>
         </div>

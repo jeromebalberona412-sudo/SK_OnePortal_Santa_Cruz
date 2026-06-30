@@ -17,7 +17,8 @@
      data-barangay-name="{{ $barangayData['name'] }}">
 
     <a class="bm-back-link" href="{{ route('barangay-monitoring') }}">
-        <i class="fas fa-arrow-left"></i> Back to All Barangays
+        <i class="fas fa-arrow-left"></i>
+        <span>Back to All Barangays</span>
     </a>
 
     <header class="bm-show-hero">
@@ -36,22 +37,14 @@
                 </p>
                 @if(!empty($barangayData['submitted_by']))
                     <p class="bm-show-submitted-by">
-                        <i class="fas fa-user"></i> Submitted by: {{ $barangayData['submitted_by'] }}
+                        <i class="fas fa-user"></i>
+                        Submitted by: {{ $barangayData['submitted_by'] }}
+                        @if(!empty($barangayData['submitted_by_role']))
+                            <span class="bm-submitted-role">({{ $barangayData['submitted_by_role'] }})</span>
+                        @endif
                     </p>
                 @endif
             </div>
-        </div>
-        <div class="bm-show-hero-status">
-            <span class="bm-show-status-label">ABYIP Status</span>
-            <span class="bm-compliance-badge bm-compliance-{{ $barangayData['compliance_status'] }}">
-                @if($barangayData['compliance_status'] === 'compliant')
-                    <i class="fas fa-check-circle"></i> Compliant
-                @elseif($barangayData['compliance_status'] === 'pending')
-                    <i class="fas fa-clock"></i> Pending
-                @else
-                    <i class="fas fa-times-circle"></i> Non-Compliant
-                @endif
-            </span>
         </div>
     </header>
 
@@ -93,154 +86,75 @@
         </section>
     @endif
 
-    <div class="bm-tab-bar" role="tablist">
-        <button type="button" class="bm-tab-btn active" data-tab="abyip" id="tab-abyip" role="tab" aria-selected="true">
-            <i class="fas fa-file-invoice-dollar"></i>
-            <span>Barangay ABYIP</span>
-        </button>
-        <button type="button" class="bm-tab-btn" data-tab="accomplishment" id="tab-accomplishment" role="tab" aria-selected="false">
-            <i class="fas fa-trophy"></i>
-            <span>Accomplishment</span>
-        </button>
-    </div>
-
-    <div id="section-abyip" class="bm-tab-panel" role="tabpanel">
-        <section class="bm-card bm-table-card">
-            <div class="bm-table-toolbar">
-                <div class="bm-table-toolbar-title">
-                    <h3><i class="fas fa-file-invoice-dollar"></i> Submitted ABYIP Reports</h3>
-                    <p>Review ABYIP submissions from this barangay</p>
-                </div>
-                <div class="bm-table-toolbar-filters">
-                    <div class="bm-search-wrap">
-                        <i class="fas fa-search"></i>
-                        <input type="search" id="abyipSearchInput" placeholder="Search reports..." aria-label="Search ABYIP reports">
-                    </div>
-                    <select id="abyipFilterYear" aria-label="Filter by year">
-                        <option value="all">All Years</option>
-                        @foreach(collect($barangayData['abyip']['reports'] ?? [])->pluck('fiscal_year')->unique()->sortDesc() as $year)
-                            <option value="{{ $year }}">{{ $year }}</option>
-                        @endforeach
-                    </select>
-                    <select id="abyipFilterStatus" aria-label="Filter by status">
-                        <option value="all">All Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                    </select>
-                </div>
+    <section class="bm-card bm-table-card">
+        <div class="bm-table-toolbar">
+            <div class="bm-table-toolbar-title">
+                <h3><i class="fas fa-file-invoice-dollar"></i> Submitted ABYIP Reports</h3>
+                <p>Review ABYIP submissions from this barangay</p>
             </div>
-            <div class="bm-table-wrap">
-                <table class="bm-table bm-data-table bm-data-table--abyip" id="abyipTable">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Fiscal Year</th>
-                            <th>Date Submitted</th>
-                            <th>Time Submitted</th>
-                            <th>Submitted By</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($barangayData['abyip']['reports'] ?? [] as $report)
-                        <tr class="bm-abyip-row" data-year="{{ $report['fiscal_year'] ?? '' }}" data-status="{{ $report['status'] ?? 'pending' }}" data-id="{{ $report['id'] }}">
-                            <td class="bm-cell-strong" data-label="Title">{{ $report['name'] ?? 'N/A' }}</td>
-                            <td data-label="Fiscal Year">{{ $report['fiscal_year'] ?? '—' }}</td>
-                            <td data-label="Date Submitted">{{ !empty($report['date_submitted']) ? date('M d, Y', strtotime($report['date_submitted'])) : '—' }}</td>
-                            <td data-label="Time Submitted">{{ !empty($report['date_submitted']) ? date('h:i A', strtotime($report['date_submitted'])) : '—' }}</td>
-                            <td data-label="Submitted By">{{ $report['submitted_by'] ?? '—' }}</td>
-                            <td data-label="Status">
-                                <span class="bm-status-pill bm-status-{{ $report['status'] ?? 'pending' }}">
-                                    {{ ucfirst($report['status'] ?? 'pending') }}
-                                </span>
-                            </td>
-                            <td data-label="Actions">
-                                <button type="button" class="bm-view-btn" data-abyip-view="{{ $report['id'] }}">View</button>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr class="bm-empty-row-tr">
-                            <td colspan="7" class="bm-empty-row">
-                                <i class="fas fa-inbox"></i>
-                                <span>No ABYIP reports submitted yet</span>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </div>
-
-    <div id="section-accomplishment" class="bm-tab-panel" role="tabpanel" hidden>
-        <section class="bm-card bm-table-card">
-            <div class="bm-table-toolbar">
-                <div class="bm-table-toolbar-title">
-                    <h3><i class="fas fa-trophy"></i> Approved Accomplishments</h3>
-                    <p>Approved accomplishment reports from this barangay</p>
+            <div class="bm-table-toolbar-filters">
+                <div class="bm-search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="search" id="abyipSearchInput" placeholder="Search reports..." aria-label="Search ABYIP reports">
                 </div>
-                <div class="bm-table-toolbar-filters">
-                    <div class="bm-search-wrap">
-                        <i class="fas fa-search"></i>
-                        <input type="search" id="accomplishmentSearchInput" placeholder="Search programs..." aria-label="Search accomplishments">
-                    </div>
-                    <select id="accomplishmentFilterTerm" aria-label="Filter by term">
-                        <option value="all">All Terms</option>
-                        @foreach($barangayData['accomplishment_terms'] ?? [] as $term)
-                            <option value="{{ $term }}">{{ $term }}</option>
-                        @endforeach
-                    </select>
-                    <select id="accomplishmentFilterYear" aria-label="Filter by year">
-                        <option value="all">All Years</option>
-                        @foreach($barangayData['accomplishment_years'] ?? [] as $year)
-                            <option value="{{ $year }}">{{ $year }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                <select id="abyipFilterYear" aria-label="Filter by year">
+                    <option value="all">All Years</option>
+                    @foreach(collect($barangayData['abyip']['reports'] ?? [])->pluck('fiscal_year')->unique()->sortDesc() as $year)
+                        <option value="{{ $year }}">{{ $year }}</option>
+                    @endforeach
+                </select>
+                <select id="abyipFilterStatus" aria-label="Filter by status">
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                </select>
             </div>
-            <div class="bm-table-wrap">
-                <table class="bm-table bm-data-table" id="accomplishmentTable">
-                    <thead>
-                        <tr>
-                            <th>Program</th>
-                            <th>Activity</th>
-                            <th>Code</th>
-                            <th>Term</th>
-                            <th>Year</th>
-                            <th>Date Approved</th>
-                            <th>Report</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($barangayData['accomplishments'] ?? [] as $item)
-                        <tr data-term="{{ $item['term'] ?? '' }}" data-year="{{ $item['year'] ?? '' }}">
-                            <td class="bm-cell-strong" data-label="Program">{{ $item['title'] ?? 'N/A' }}</td>
-                            <td data-label="Activity">{{ $item['activity'] ?? '—' }}</td>
-                            <td data-label="Code">{{ $item['program_code'] ?? '—' }}</td>
-                            <td data-label="Term">{{ $item['term'] ?? '—' }}</td>
-                            <td data-label="Year">{{ $item['year'] ?? '—' }}</td>
-                            <td data-label="Date Approved">{{ !empty($item['start_date']) ? date('M d, Y', strtotime($item['start_date'])) : '—' }}</td>
-                            <td data-label="Report">
-                                <a href="{{ $item['file_url'] ?? '#' }}" target="_blank" rel="noopener" class="bm-link-btn">
-                                    <i class="fas fa-file-pdf"></i> View PDF
-                                </a>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr class="bm-empty-row-tr">
-                            <td colspan="7" class="bm-empty-row">
-                                <i class="fas fa-inbox"></i>
-                                <span>No approved accomplishments yet</span>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </div>
+        </div>
+        <div class="bm-table-wrap">
+            <table class="bm-table bm-data-table bm-data-table--abyip" id="abyipTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Calendar Year</th>
+                        <th>Date Submitted</th>
+                        <th>Time Submitted</th>
+                        <th>Submitted By</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($barangayData['abyip']['reports'] ?? [] as $report)
+                    <tr class="bm-abyip-row" data-year="{{ $report['fiscal_year'] ?? '' }}" data-status="{{ $report['status'] ?? 'pending' }}" data-id="{{ $report['id'] }}">
+                        <td class="bm-cell-strong" data-label="Title">{{ $report['name'] ?? 'N/A' }}</td>
+                        <td data-label="Calendar Year">{{ $report['fiscal_year'] ?? '—' }}</td>
+                        <td data-label="Date Submitted">{{ !empty($report['date_submitted']) ? date('M d, Y', strtotime($report['date_submitted'])) : '—' }}</td>
+                        <td data-label="Time Submitted">{{ !empty($report['date_submitted']) ? date('h:i A', strtotime($report['date_submitted'])) : '—' }}</td>
+                        <td data-label="Submitted By">{{ $report['submitted_by'] ?? '—' }}</td>
+                        <td data-label="Role">{{ $report['submitted_by_role'] ?? '—' }}</td>
+                        <td data-label="Status">
+                            <span class="bm-status-pill bm-status-{{ $report['status'] ?? 'pending' }}">
+                                {{ ucfirst($report['status'] ?? 'pending') }}
+                            </span>
+                        </td>
+                        <td data-label="Actions">
+                            <button type="button" class="bm-view-btn" data-abyip-view="{{ $report['id'] }}">View</button>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr class="bm-empty-row-tr">
+                        <td colspan="8" class="bm-empty-row">
+                            <i class="fas fa-inbox"></i>
+                            <span>No ABYIP reports submitted yet</span>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </section>
 </div>
 
 <div id="viewModal" class="view-modal">
@@ -266,7 +180,7 @@
                     <span class="meta-value" id="modalBarangay">{{ $barangayData['name'] }}</span>
                 </div>
                 <div class="meta-item">
-                    <span class="meta-label">Fiscal Year</span>
+                    <span class="meta-label">Calendar Year</span>
                     <span class="meta-value" id="modalFiscalYear">-</span>
                 </div>
                 <div class="meta-item">
@@ -280,6 +194,10 @@
                 <div class="meta-item">
                     <span class="meta-label">Submitted By</span>
                     <span class="meta-value" id="modalSubmittedBy">-</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Role</span>
+                    <span class="meta-value" id="modalSubmittedRole">-</span>
                 </div>
                 <div class="meta-item">
                     <span class="meta-label">Status</span>

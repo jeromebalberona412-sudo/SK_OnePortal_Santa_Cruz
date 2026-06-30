@@ -13,6 +13,8 @@ class SkFederationsNotificationService
 
     public const CATEGORY_BARANGAY_MONITORING = 'barangay_monitoring';
 
+    public const CATEGORY_ABYIP = 'abyip';
+
     public const CATEGORY_GENERAL = 'general';
 
     /**
@@ -160,7 +162,7 @@ class SkFederationsNotificationService
         $actionUrl = $slug ? "/barangay-monitoring/{$slug}" : '/barangay-monitoring';
 
         $this->notifyAllFedUsers(
-            self::CATEGORY_BARANGAY_MONITORING,
+            self::CATEGORY_ABYIP,
             'New ABYIP Submission',
             "Barangay {$barangayName} submitted their ABYIP for CY {$fiscalYear}.",
             $actionUrl,
@@ -247,6 +249,7 @@ class SkFederationsNotificationService
     {
         return match ($category) {
             self::CATEGORY_COMMUNITY_FEED => 'Community Feed',
+            self::CATEGORY_ABYIP => 'ABYIP',
             self::CATEGORY_BARANGAY_MONITORING => 'Barangay Monitoring',
             default => 'General',
         };

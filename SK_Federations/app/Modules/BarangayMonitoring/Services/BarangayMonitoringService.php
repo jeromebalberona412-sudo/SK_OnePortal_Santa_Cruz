@@ -70,7 +70,7 @@ class BarangayMonitoringService
 
         return Abyip::query()
             ->documents()
-            ->with(['creator:id,name'])
+            ->with(['creator:id,name', 'creator.officialProfile:id,user_id,position'])
             ->where('barangay_id', $barangayId)
             ->orderByDesc('created_at')
             ->get()
@@ -78,8 +78,10 @@ class BarangayMonitoringService
                 'id' => $document->id,
                 'name' => $document->document_title ?: 'ABYIP '.$document->fiscal_year,
                 'fiscal_year' => $document->fiscal_year,
+                'calendar_year' => $document->fiscal_year,
                 'date_submitted' => $document->created_at?->toDateTimeString(),
                 'submitted_by' => $document->creator?->name ?? '—',
+                'submitted_by_role' => $this->formatOfficialPosition($document->creator?->officialProfile?->position),
                 'status' => strtolower((string) ($document->status ?? Abyip::STATUS_PENDING)),
                 'rejection_reason' => $document->rejection_reason,
                 'has_pdf' => filled($document->pdf_data),
@@ -89,7 +91,7 @@ class BarangayMonitoringService
     }
 
     /**
-     * @return array{status: string, submitted_by: ?string, latest_report: ?array<string, mixed>}
+     * @return array{status: string, submitted_by: ?string, submitted_by_role: ?string, latest_report: ?array<string, mixed>}
      */
     public function resolveAbyipStatus(?int $barangayId): array
     {
@@ -99,6 +101,7 @@ class BarangayMonitoringService
             return [
                 'status' => 'non-compliant',
                 'submitted_by' => null,
+                'submitted_by_role' => null,
                 'latest_report' => null,
             ];
         }
@@ -109,6 +112,7 @@ class BarangayMonitoringService
             return [
                 'status' => 'compliant',
                 'submitted_by' => $approved['submitted_by'] ?? null,
+                'submitted_by_role' => $approved['submitted_by_role'] ?? null,
                 'latest_report' => $approved,
             ];
         }
@@ -116,8 +120,37 @@ class BarangayMonitoringService
         return [
             'status' => 'pending',
             'submitted_by' => $reports[0]['submitted_by'] ?? null,
+            'submitted_by_role' => $reports[0]['submitted_by_role'] ?? null,
             'latest_report' => $reports[0],
         ];
+    }
+
+    public function countBarangaysWithAbyipSubmission(): int
+    {
+        if (! Schema::hasTable('abyip')) {
+            return 0;
+        }
+
+        return (int) Abyip::query()
+            ->documents()
+            ->whereNotNull('barangay_id')
+            ->selectRaw('count(distinct barangay_id) as aggregate')
+            ->value('aggregate');
+    }
+
+    private function formatOfficialPosition(?string $position): ?string
+    {
+        if ($position === null || trim($position) === '') {
+            return null;
+        }
+
+        return match ($position) {
+            'Chairperson' => 'SK Chairperson',
+            'Secretary' => 'SK Secretary',
+            'Treasurer' => 'SK Treasurer',
+            'Kagawad' => 'SK Kagawad',
+            default => $position,
+        };
     }
 
     /**

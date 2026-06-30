@@ -43,7 +43,7 @@ class AbyipSubmissionScheduleService
             return null;
         }
 
-        $year = $fiscalYear ?? (int) date('Y');
+        $year = $fiscalYear ?? ((int) date('Y') + 1);
 
         $schedule = AbyipSubmissionSchedule::query()
             ->with(['histories.updater:id,name'])
@@ -256,7 +256,7 @@ class AbyipSubmissionScheduleService
 
         if ($query->exists()) {
             throw ValidationException::withMessages([
-                'fiscal_year' => ['A schedule for this fiscal year already exists.'],
+                'fiscal_year' => ['A schedule for this calendar year already exists.'],
             ]);
         }
     }
@@ -285,13 +285,21 @@ class AbyipSubmissionScheduleService
      */
     private function validateSchedulePayload(array $data, ?int $exceptId = null): array
     {
-        $fiscalYear = (int) ($data['fiscal_year'] ?? 0);
+        $tz = config('app.timezone', 'Asia/Manila');
+        $currentYear = (int) Carbon::now($tz)->format('Y');
+        $expectedFiscalYear = $currentYear + 1;
         $title = trim((string) ($data['title'] ?? 'ABYIP Submission'));
         $dateStart = (string) ($data['date_start'] ?? '');
         $deadline = (string) ($data['deadline'] ?? '');
 
-        if ($fiscalYear < 2020 || $fiscalYear > 2100) {
-            throw ValidationException::withMessages(['fiscal_year' => ['Invalid fiscal year.']]);
+        $fiscalYear = $exceptId === null
+            ? $expectedFiscalYear
+            : (int) ($data['fiscal_year'] ?? $expectedFiscalYear);
+
+        if ($fiscalYear !== $expectedFiscalYear) {
+            throw ValidationException::withMessages([
+                'fiscal_year' => ['Calendar year must be '.($currentYear + 1).' (one year ahead of the current year).'],
+            ]);
         }
 
         if ($title === '') {
@@ -302,12 +310,42 @@ class AbyipSubmissionScheduleService
             throw ValidationException::withMessages(['deadline' => ['Start date and deadline are required.']]);
         }
 
-        $tz = config('app.timezone', 'Asia/Manila');
+        $today = Carbon::now($tz)->startOfDay();
+        $yearEnd = Carbon::create($currentYear, 12, 31, 0, 0, 0, $tz)->startOfDay();
         $start = Carbon::parse($dateStart, $tz)->startOfDay();
         $end = Carbon::parse($deadline, $tz)->startOfDay();
 
+        if ($exceptId === null) {
+            $start = $today;
+            $dateStart = $start->toDateString();
+        }
+
+        if ($start->year !== $currentYear || $end->year !== $currentYear) {
+            throw ValidationException::withMessages([
+                'date_start' => ['Start date and deadline must fall within the current calendar year ('.$currentYear.').'],
+            ]);
+        }
+
+        if ($exceptId === null && ! $start->equalTo($today)) {
+            throw ValidationException::withMessages([
+                'date_start' => ['Start date must be today.'],
+            ]);
+        }
+
+        if ($exceptId !== null && $start->lt($today)) {
+            throw ValidationException::withMessages([
+                'date_start' => ['Start date cannot be earlier than today.'],
+            ]);
+        }
+
         if ($end->lt($start)) {
             throw ValidationException::withMessages(['deadline' => ['Deadline must be on or after the start date.']]);
+        }
+
+        if ($end->gt($yearEnd)) {
+            throw ValidationException::withMessages([
+                'deadline' => ['Deadline cannot be later than December 31, '.$currentYear.'.'],
+            ]);
         }
 
         if ($exceptId === null) {

@@ -5,10 +5,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     let routes = {};
+    let dateBounds = { min: '', max: '' };
     try {
         routes = JSON.parse(shell.dataset.auditRoutes || '{}');
     } catch (error) {
         routes = {};
+    }
+
+    try {
+        dateBounds = JSON.parse(shell.dataset.dateBounds || '{}');
+    } catch (error) {
+        dateBounds = { min: '', max: '' };
     }
 
     const state = {
@@ -348,6 +355,48 @@ document.addEventListener('DOMContentLoaded', function () {
             closeDetailsModal();
         }
     });
+
+    function initDateBounds() {
+        const min = String(dateBounds.min || '').trim();
+        const max = String(dateBounds.max || '').trim();
+
+        if (!min || !max) {
+            return;
+        }
+
+        [els.dateFrom, els.dateTo].forEach(function (input) {
+            if (!input) {
+                return;
+            }
+
+            input.min = min;
+            input.max = max;
+        });
+
+        els.dateFrom?.addEventListener('change', function () {
+            if (!els.dateTo || !els.dateFrom.value) {
+                return;
+            }
+
+            els.dateTo.min = els.dateFrom.value;
+            if (els.dateTo.value && els.dateTo.value < els.dateFrom.value) {
+                els.dateTo.value = els.dateFrom.value;
+            }
+        });
+
+        els.dateTo?.addEventListener('change', function () {
+            if (!els.dateFrom || !els.dateTo.value) {
+                return;
+            }
+
+            els.dateFrom.max = els.dateTo.value;
+            if (els.dateFrom.value && els.dateFrom.value > els.dateTo.value) {
+                els.dateFrom.value = els.dateTo.value;
+            }
+        });
+    }
+
+    initDateBounds();
 
     fetchLogs();
     refreshStats();

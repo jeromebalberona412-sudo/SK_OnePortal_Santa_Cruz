@@ -68,7 +68,7 @@ class SkFedDashboardActivityService
     }
 
     return SkFederationCalendarNote::query()
-      ->whereDate('note_date', '>=', now()->toDateString())
+      ->whereDate('note_date', '>', now()->toDateString())
       ->orderBy('note_date')
       ->limit($limit)
       ->get()
@@ -82,6 +82,29 @@ class SkFedDashboardActivityService
         ];
       })
       ->all();
+  }
+
+  /**
+   * @return array{title: string, date_label: string}|null
+   */
+  public function todayCalendarNote(): ?array
+  {
+    if (! Schema::hasTable('sk_federations_calendar')) {
+      return null;
+    }
+
+    $note = SkFederationCalendarNote::query()
+      ->whereDate('note_date', now()->toDateString())
+      ->first();
+
+    if (! $note) {
+      return null;
+    }
+
+    return [
+      'title' => $note->title,
+      'date_label' => now()->format('F j'),
+    ];
   }
 
   /**

@@ -55,6 +55,14 @@
 
         container.innerHTML = '<div class="km-brgy-grid">' + brgysToDisplay.map(function(brgy) {
             var members = records.filter(function(r){ return r.barangay === brgy; });
+            var logoUrl = '';
+            members.some(function(member) {
+                if (member.barangayLogoUrl) {
+                    logoUrl = member.barangayLogoUrl;
+                    return true;
+                }
+                return false;
+            });
             var total    = members.length;
             var active   = members.filter(function(r){ return r.status === 'active'; }).length;
             var moderate = members.filter(function(r){ return r.status === 'moderate'; }).length;
@@ -67,7 +75,15 @@
 
             return '<div class="km-brgy-summary-card">' +
                 '<div class="km-bsc-header">' +
-                    '<h3 class="km-bsc-name"><i class="fas fa-map-marker-alt"></i> ' + brgy + '</h3>' +
+                    '<div class="km-bsc-brand">' +
+                        '<div class="km-bsc-logo">' +
+                            (logoUrl
+                                ? '<img src="' + logoUrl + '" alt="' + brgy + ' logo" onerror="this.hidden=true;this.nextElementSibling.hidden=false;">' +
+                                  '<span class="km-bsc-logo-fallback" hidden>' + brgy.charAt(0).toUpperCase() + '</span>'
+                                : '<span class="km-bsc-logo-fallback">' + brgy.charAt(0).toUpperCase() + '</span>') +
+                        '</div>' +
+                        '<h3 class="km-bsc-name">' + brgy + '</h3>' +
+                    '</div>' +
                     '<span class="km-badge ' + statusClass + '">' + statusText + '</span>' +
                 '</div>' +
                 '<div class="km-bsc-footer">' +

@@ -3,6 +3,7 @@
 namespace App\Modules\ABYIP\Controllers;
 
 use App\Modules\ABYIP\Services\AbyipService;
+use App\Services\AbyipSubmissionScheduleGate;
 use App\Services\SkOfficialActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,6 +16,7 @@ class AbyipController extends Controller
     public function __construct(
         private readonly AbyipService $abyipService,
         private readonly SkOfficialActivityService $activityService,
+        private readonly AbyipSubmissionScheduleGate $scheduleGate,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -22,6 +24,7 @@ class AbyipController extends Controller
         return response()->json([
             'data' => $this->abyipService->listForBarangay($request->user()),
             'years' => $this->abyipService->distinctYearsForBarangay($request->user())->values()->all(),
+            'submission' => $this->scheduleGate->submissionStatus($request->user()),
         ]);
     }
 
@@ -63,6 +66,8 @@ class AbyipController extends Controller
         }
 
         try {
+            $this->scheduleGate->assertCanSubmit($request->user());
+            $validated['calendar_year'] = (int) date('Y');
             $document = $this->abyipService->store($request->user(), $validated);
         } catch (ValidationException $exception) {
             return response()->json([
@@ -151,6 +156,7 @@ class AbyipController extends Controller
         }
 
         try {
+            $this->scheduleGate->assertCanSubmit($request->user());
             $document = $this->abyipService->resubmit($request->user(), $id, $validated);
         } catch (ValidationException $exception) {
             return response()->json([

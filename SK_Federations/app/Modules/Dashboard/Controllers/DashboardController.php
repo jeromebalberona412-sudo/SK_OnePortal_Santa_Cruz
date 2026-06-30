@@ -2,6 +2,7 @@
 
 namespace App\Modules\Dashboard\Controllers;
 
+use App\Modules\BarangayMonitoring\Services\BarangayMonitoringService;
 use App\Modules\Dashboard\Services\DashboardStatsService;
 use App\Modules\Dashboard\Services\KkProfilingChartService;
 use App\Modules\Dashboard\Services\SkFedDashboardActivityService;
@@ -16,6 +17,7 @@ class DashboardController extends Controller
         private readonly DashboardStatsService $dashboardStatsService,
         private readonly KkProfilingChartService $kkProfilingChartService,
         private readonly SkFedDashboardActivityService $dashboardActivityService,
+        private readonly BarangayMonitoringService $barangayMonitoringService,
     ) {
     }
 
@@ -28,6 +30,8 @@ class DashboardController extends Controller
             'totalKabataanRegistered' => $this->dashboardStatsService->totalKabataanRegistered($tenantId),
             'totalSkOfficials' => $this->dashboardStatsService->totalSkOfficials($tenantId),
             'totalSkChairpersons' => $this->dashboardStatsService->totalSkChairpersons($tenantId),
+            'totalAuditLogs' => $this->dashboardStatsService->totalAuditLogs($tenantId),
+            'totalBarangaysAbyipSubmitted' => $this->barangayMonitoringService->countBarangaysWithAbyipSubmission(),
             'sexDistribution' => $this->dashboardStatsService->sexDistribution($tenantId),
             'federationOfficers' => $this->dashboardStatsService->federationOfficers($tenantId),
             'topBarangays' => $this->dashboardStatsService->topBarangaysByYouth($tenantId),
@@ -38,6 +42,7 @@ class DashboardController extends Controller
                 ->all(),
             'recentActivity' => $this->dashboardActivityService->recentActivity($tenantId),
             'upcomingEvents' => $this->dashboardActivityService->upcomingCalendarNotes(),
+            'todayReminder' => $this->dashboardActivityService->todayCalendarNote(),
         ]);
     }
 

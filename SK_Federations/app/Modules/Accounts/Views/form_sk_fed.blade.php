@@ -217,7 +217,6 @@
         </div>
         <div class="modal-footer account-modal-footer" id="addFedBatchFooter" style="display:none;">
             <button type="button" class="btn-cancel-light" onclick="closeAddAccountModal()">Cancel</button>
-            <button type="button" class="btn-template-download btn-error-report" id="fed_batchErrorDownloadBtn" style="display:none;">Download Error Report</button>
             <button type="button" class="btn-submit-light" id="fed_batchConfirmBtn" disabled>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16m8-8H4"/></svg>
                 Import Accounts

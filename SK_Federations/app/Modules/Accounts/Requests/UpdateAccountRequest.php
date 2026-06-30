@@ -4,8 +4,10 @@ namespace App\Modules\Accounts\Requests;
 
 use App\Modules\Accounts\Models\OfficialProfile;
 use App\Modules\Shared\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class UpdateAccountRequest extends FormRequest
 {
@@ -63,10 +65,54 @@ class UpdateAccountRequest extends FormRequest
                 Rule::in(OfficialProfile::positionsForRole($accountRole !== '' ? $accountRole : User::ROLE_SK_FED)),
             ],
             'federation_position' => ['nullable', Rule::in(OfficialProfile::FEDERATION_POSITIONS)],
-            'term_start' => ['required', 'date', 'after_or_equal:2023-01-01'],
+            'term_start' => ['required', 'date', 'after_or_equal:2023-01-01', 'before_or_equal:'.Carbon::now()->toDateString()],
             'term_end' => ['required', 'date', 'after:term_start'],
             'term_status' => ['required', Rule::in(['ACTIVE', 'INACTIVE', 'EXPIRED', 'REPLACED'])],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $accountRole = (string) ($this->route('user')?->role ?? '');
+            if ($accountRole !== User::ROLE_SK_OFFICIAL) {
+                return;
+            }
+
+            $termStart = $this->input('term_start');
+            $termEnd = $this->input('term_end');
+
+            if (! is_string($termStart) || ! is_string($termEnd) || $termStart === '' || $termEnd === '') {
+                return;
+            }
+
+            try {
+                $start = Carbon::parse($termStart)->startOfDay();
+                $end = Carbon::parse($termEnd)->startOfDay();
+            } catch (\Throwable) {
+                return;
+            }
+
+            $requiredEndYear = $start->year + 4;
+            if ($end->year !== $requiredEndYear) {
+                $validator->errors()->add(
+                    'term_end',
+                    'Term end year must be exactly 4 years after the term start year.'
+                );
+
+                return;
+            }
+
+            $endYearStart = Carbon::create($requiredEndYear, 1, 1)->startOfDay();
+            $endYearEnd = Carbon::create($requiredEndYear, 12, 31)->startOfDay();
+
+            if ($end->lt($endYearStart) || $end->gt($endYearEnd)) {
+                $validator->errors()->add(
+                    'term_end',
+                    'Term end date must fall within the term end year.'
+                );
+            }
+        });
     }
 
     /**

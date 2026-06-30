@@ -13,9 +13,7 @@
             <div class="modal-controls">
                 <button type="button" class="modal-win-btn modal-win-btn-maximize" id="addOfficialsResizeBtn"
                         onclick="toggleAddOfficialsSize()" title="Maximize">
-                    <svg id="addOfficialsResizeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-                    </svg>
+                    <span id="addOfficialsResizeIcon" class="modal-win-icon" aria-hidden="true">🗖</span>
                 </button>
                 <button type="button" class="modal-win-btn modal-win-btn-close" onclick="closeAddSkOfficialsModal()" title="Close">
                     &times;
@@ -223,7 +221,6 @@
         </div>
         <div class="modal-footer account-modal-footer" id="addOfficialBatchFooter" style="display:none;">
             <button type="button" class="btn-cancel-light" onclick="closeAddSkOfficialsModal()">Cancel</button>
-            <button type="button" class="btn-template-download btn-error-report" id="official_batchErrorDownloadBtn" style="display:none;">Download Error Report</button>
             <button type="button" class="btn-submit-light" id="official_batchConfirmBtn" disabled>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16m8-8H4"/></svg>
                 Import Accounts
@@ -241,9 +238,7 @@
             <div class="modal-controls">
                 <button type="button" class="modal-win-btn modal-win-btn-maximize" id="editOfficialsResizeBtn"
                         onclick="toggleEditOfficialsSize()" title="Maximize">
-                    <svg id="editOfficialsResizeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-                    </svg>
+                    <span id="editOfficialsResizeIcon" class="modal-win-icon" aria-hidden="true">🗖</span>
                 </button>
                 <button type="button" class="modal-win-btn modal-win-btn-close" onclick="closeEditSkOfficialsModal()" title="Close">
                     &times;

@@ -13,7 +13,6 @@
             href="{{ route('accounts.batch-template', ['type' => $templateType]) }}"
             class="btn-template-download"
             id="{{ $prefix }}_batchTemplateDownloadLink"
-            download
         >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -23,7 +22,8 @@
             Download Excel Template
         </a>
     </div>
-    <p class="batch-hint">Use the Excel template columns exactly. All fields are required except Middle Name (can be blank). Upload your own filled file — no sample rows are added by the system. Maximum <strong>{{ \App\Modules\Accounts\Requests\BatchStoreAccountsRequest::MAX_ACCOUNTS }}</strong> accounts per upload.</p>
+    <p class="batch-hint">Use the Excel template columns exactly. Middle Name is optional. Region, Province, and Municipality are pre-filled in the template (IV-A CALABARZON, Laguna, Santa Cruz). Term dates use MM/DD/YYYY format (example: 06/30/2026). Lowercase text is accepted and will be converted to uppercase automatically. Maximum <strong>{{ \App\Modules\Accounts\Requests\BatchStoreAccountsRequest::MAX_ACCOUNTS }}</strong> accounts per upload — you can fix validation errors directly in the preview table before importing.</p>
+    <p class="batch-limit-note" id="{{ $prefix }}_batchLimitNote" hidden>Maximum upload limit reached ({{ \App\Modules\Accounts\Requests\BatchStoreAccountsRequest::MAX_ACCOUNTS }} accounts per file).</p>
 </div>
 
 <div class="form-section-light">

@@ -58,7 +58,7 @@ class KabataanMonitoringService
         }
 
         return $query
-            ->selectRaw('YEAR(submitted_at) as registration_year')
+            ->selectRaw('EXTRACT(YEAR FROM submitted_at)::integer as registration_year')
             ->distinct()
             ->orderByDesc('registration_year')
             ->pluck('registration_year')
@@ -205,6 +205,7 @@ class KabataanMonitoringService
             'id' => $record->id,
             'slug' => (string) $record->id,
             'respondentNumber' => $this->displayRespondentNumber($record),
+            'barangayLogoUrl' => $record->barangay_id ? ($this->logoUrls->resolve((int) $record->barangay_id) ?: null) : null,
             'firstName' => $record->first_name,
             'middleName' => $record->middle_name,
             'lastName' => $record->last_name,

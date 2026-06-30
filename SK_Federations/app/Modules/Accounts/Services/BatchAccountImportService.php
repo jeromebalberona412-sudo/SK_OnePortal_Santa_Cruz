@@ -41,6 +41,7 @@ class BatchAccountImportService
     {
         $errors = [];
         $seenEmails = [];
+        $seenRows = [];
         $chairsInFileByBarangay = [];
         $rosterService = app(FederationRosterService::class);
 
@@ -62,6 +63,20 @@ class BatchAccountImportService
                 }
 
                 $seenEmails[$email] = true;
+
+                $fingerprint = $this->rowFingerprint(array_merge($normalized, [
+                    'barangay' => mb_strtoupper($this->stringValue($row, ['barangay', 'barangay_name', 'barangay name']), 'UTF-8'),
+                ]));
+                if (isset($seenRows[$fingerprint])) {
+                    $errors[] = [
+                        'row' => $index + 1,
+                        'error' => 'Duplicate row: another entry has the same details.',
+                    ];
+
+                    continue;
+                }
+
+                $seenRows[$fingerprint] = $index + 1;
 
                 if (User::query()->where('email', $email)->whereNull('deleted_at')->exists()) {
                     $errors[] = ['row' => $index + 1, 'error' => 'Email is already registered.'];
@@ -133,14 +148,17 @@ class BatchAccountImportService
     {
         $firstName = mb_strtoupper($this->stringValue($row, ['first_name', 'first name']), 'UTF-8');
         $lastName = mb_strtoupper($this->stringValue($row, ['last_name', 'last name']), 'UTF-8');
+        $positionRaw = mb_strtoupper($this->stringValue($row, ['position']), 'UTF-8');
+        $region = mb_strtoupper($this->stringValue($row, ['region']) ?: 'IV-A CALABARZON', 'UTF-8');
+        $province = mb_strtoupper($this->stringValue($row, ['province']) ?: 'Laguna', 'UTF-8');
+        $municipality = mb_strtoupper($this->stringValue($row, ['municipality']) ?: 'Santa Cruz', 'UTF-8');
+        $barangayName = mb_strtoupper($this->stringValue($row, ['barangay', 'barangay_name', 'barangay name']), 'UTF-8');
 
         if ($role === User::ROLE_SK_OFFICIAL) {
-            $firstName = preg_replace('/\s+/u', '', $firstName) ?? $firstName;
             $lastName = preg_replace('/\s+/u', '', $lastName) ?? $lastName;
+            $firstName = preg_replace('/\s{2,}/u', ' ', trim($firstName)) ?? $firstName;
         }
         $email = strtolower($this->stringValue($row, ['email', 'email address']));
-        $barangayName = $this->stringValue($row, ['barangay', 'barangay_name', 'barangay name']);
-        $municipality = $this->stringValue($row, ['municipality']) ?: 'Santa Cruz';
         $barangayId = $this->resolveBarangayId(
             $this->intValue($row, ['barangay_id', 'barangay id']) ?: null,
             $barangayName !== '' ? $barangayName : $municipality
@@ -151,7 +169,7 @@ class BatchAccountImportService
         }
 
         $status = User::STATUS_ACTIVE;
-        $position = $this->normalizePosition($this->stringValue($row, ['position']), $role);
+        $position = $this->normalizePosition($positionRaw, $role);
 
         $termEnd = $this->parseDate($this->rawValue($row, [
             'term_end', 'term end date', 'term end', 'term_end_date', 'end date', 'term expiry', 'term expiry date',
@@ -174,7 +192,8 @@ class BatchAccountImportService
             'date_of_birth', 'birthdate', 'date of birth', 'birth date', 'dob',
         ]));
 
-        $suffix = $this->normalizeSuffix($this->stringValue($row, ['suffix']));
+        $suffixRaw = $this->stringValue($row, ['suffix']);
+        $suffix = $this->normalizeSuffix($suffixRaw);
         $sex = $this->normalizeSex($this->stringValue($row, ['sex']));
         $contactNumber = $this->normalizeContactNumber($this->stringValue($row, ['contact_number', 'contact number']));
 
@@ -190,6 +209,7 @@ class BatchAccountImportService
             'middle_name' => $middleName,
             'last_name' => $lastName,
             'suffix' => $suffix,
+            'suffix_input' => $suffixRaw,
             'sex' => $sex,
             'date_of_birth' => $dateOfBirth,
             'age' => $this->intValue($row, ['age']) ?: ($dateOfBirth ? Carbon::parse($dateOfBirth)->age : null),
@@ -198,9 +218,10 @@ class BatchAccountImportService
             'role' => $role,
             'status' => $status,
             'barangay_id' => $barangayId,
+            'barangay_name' => $barangayName,
             'position' => $position,
-            'region' => $this->stringValue($row, ['region']) ?: 'IV-A CALABARZON',
-            'province' => $this->stringValue($row, ['province']) ?: 'Laguna',
+            'region' => $region,
+            'province' => $province,
             'municipality' => $municipality,
             'term_start' => $termStart,
             'term_end' => $termEnd,
@@ -208,6 +229,8 @@ class BatchAccountImportService
         ];
 
         $this->assertRowIsValid($data, $barangayName, $role, $strictDemographics);
+
+        unset($data['suffix_input'], $data['barangay_name']);
 
         return $data;
     }
@@ -219,8 +242,9 @@ class BatchAccountImportService
     {
         $errors = [];
         $isOfficial = $role === User::ROLE_SK_OFFICIAL;
-        $namePattern = $isOfficial ? '/^[A-Z\-']+$/u' : '/^[A-Z\s\-\']+$/u';
-        $middlePattern = $isOfficial ? '/^[A-Z\-']*$/u' : '/^[A-Z\s\-\']*$/u';
+        $firstNamePattern = $isOfficial ? '/^(?!\s)[A-Z.\-]+(?: [A-Z.\-]+)?$/u' : '/^[A-Z\s\-\']+$/u';
+        $namePattern = $isOfficial ? '/^[A-Z\-\']+$/u' : '/^[A-Z\s\-\']+$/u';
+        $middlePattern = $isOfficial ? '/^[A-Z\-\']*$/u' : '/^[A-Z\s\-\']*$/u';
         $nameMax = $isOfficial ? 50 : 35;
 
         if ($data['first_name'] === '') {
@@ -229,13 +253,15 @@ class BatchAccountImportService
             $errors[] = 'First name must be at least 3 characters.';
         } elseif (mb_strlen($data['first_name']) > $nameMax) {
             $errors[] = 'First name must not exceed '.$nameMax.' characters.';
-        } elseif (! preg_match($namePattern, $data['first_name'])) {
+        } elseif (! preg_match($firstNamePattern, $data['first_name'])) {
             $errors[] = $isOfficial
-                ? 'First name must use uppercase letters only, with no spaces.'
+                ? 'First name must use uppercase letters only, with at most one space and no leading spaces.'
                 : 'First name must use uppercase letters only.';
         }
 
-        if ($data['middle_name'] !== null && mb_strlen((string) $data['middle_name']) > $nameMax) {
+        if ($data['middle_name'] !== null && mb_strlen((string) $data['middle_name']) > 0 && mb_strlen((string) $data['middle_name']) < 3) {
+            $errors[] = 'Middle name must be at least 3 characters when provided.';
+        } elseif ($data['middle_name'] !== null && mb_strlen((string) $data['middle_name']) > $nameMax) {
             $errors[] = 'Middle name must not exceed '.$nameMax.' characters.';
         } elseif ($data['middle_name'] !== null && ! preg_match($middlePattern, (string) $data['middle_name'])) {
             $errors[] = $isOfficial
@@ -255,6 +281,10 @@ class BatchAccountImportService
                 : 'Last name must use uppercase letters only.';
         }
 
+        if ($strictDemographics && trim((string) ($data['suffix_input'] ?? '')) === '') {
+            $errors[] = 'Suffix is required.';
+        }
+
         if ($data['suffix'] !== null && mb_strlen((string) $data['suffix']) > 10) {
             $errors[] = 'Suffix must not exceed 10 characters.';
         }
@@ -263,6 +293,20 @@ class BatchAccountImportService
             $errors[] = 'Invalid email';
         } elseif (strlen($data['email']) > 254) {
             $errors[] = 'Email must not exceed 254 characters.';
+        } elseif ($isOfficial && ! preg_match('/^[a-z0-9._%+-]{6,30}@gmail\.com$/i', $data['email'])) {
+            $errors[] = 'Email must be a @gmail.com address with 6–30 characters before @.';
+        }
+
+        if ($strictDemographics && trim((string) ($data['region'] ?? '')) === '') {
+            $errors[] = 'Region is required.';
+        }
+
+        if ($strictDemographics && trim((string) ($data['province'] ?? '')) === '') {
+            $errors[] = 'Province is required.';
+        }
+
+        if ($strictDemographics && trim((string) ($data['municipality'] ?? '')) === '') {
+            $errors[] = 'Municipality is required.';
         }
 
         if ($data['position'] === null || $data['position'] === '') {
@@ -284,6 +328,16 @@ class BatchAccountImportService
                 $errors[] = 'Birthdate is required.';
             } elseif (Carbon::parse($data['date_of_birth'])->isFuture()) {
                 $errors[] = 'Birthdate must be before today.';
+            } else {
+                $minBirth = Carbon::now()->subYears(24)->format('Y-m-d');
+                $maxBirth = Carbon::now()->subYears(18)->format('Y-m-d');
+                if ($data['date_of_birth'] < $minBirth || $data['date_of_birth'] > $maxBirth) {
+                    $errors[] = 'Birthdate must correspond to age 18–24.';
+                }
+            }
+
+            if ($data['age'] === null || (int) $data['age'] < 18 || (int) $data['age'] > 24) {
+                $errors[] = 'Age must be between 18 and 24.';
             }
 
             if ($data['contact_number'] === '') {
@@ -294,8 +348,12 @@ class BatchAccountImportService
 
             if ($data['term_start'] === null) {
                 $errors[] = 'Term start date is required.';
-            } elseif ($data['term_start'] < '2023-01-01') {
-                $errors[] = 'Term start date cannot be before 2023.';
+            } else {
+                $termStartMin = '2023-01-01';
+                $termStartMax = now()->toDateString();
+                if ($data['term_start'] < $termStartMin || $data['term_start'] > $termStartMax) {
+                    $errors[] = 'Term start date must be between 2023 and today.';
+                }
             }
 
             if ($data['term_end'] === null) {
@@ -304,10 +362,14 @@ class BatchAccountImportService
         }
 
         if ($data['term_start'] !== null && $data['term_end'] !== null) {
-            if ($data['term_start'] >= $data['term_end']) {
-                $errors[] = 'Term end date must be after term start date.';
-            } elseif (Carbon::parse($data['term_end'])->gt(Carbon::parse($data['term_start'])->addYears(5))) {
-                $errors[] = 'Term end date must be within 5 years of the term start date.';
+            $start = Carbon::parse($data['term_start']);
+            $end = Carbon::parse($data['term_end']);
+            $requiredEndYear = $start->year + 4;
+
+            if ($end->year !== $requiredEndYear) {
+                $errors[] = 'Term end year must be exactly 4 years after the term start year.';
+            } elseif ($end->format('Y-m-d') < "{$requiredEndYear}-01-01" || $end->format('Y-m-d') > "{$requiredEndYear}-12-31") {
+                $errors[] = 'Term end date must fall within the term end year.';
             }
         }
 
@@ -316,6 +378,36 @@ class BatchAccountImportService
                 'row' => implode(' ', $errors),
             ]);
         }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function rowFingerprint(array $data): string
+    {
+        $parts = [
+            $data['first_name'] ?? '',
+            $data['middle_name'] ?? '',
+            $data['last_name'] ?? '',
+            $data['suffix'] ?? '',
+            $data['sex'] ?? '',
+            $data['date_of_birth'] ?? '',
+            (string) ($data['age'] ?? ''),
+            $data['contact_number'] ?? '',
+            $data['email'] ?? '',
+            $data['position'] ?? '',
+            $data['region'] ?? '',
+            $data['province'] ?? '',
+            $data['municipality'] ?? '',
+            $data['barangay'] ?? $data['barangay_name'] ?? '',
+            $data['term_start'] ?? '',
+            $data['term_end'] ?? '',
+        ];
+
+        return mb_strtolower(implode('|', array_map(
+            fn (mixed $value): string => trim((string) $value),
+            $parts
+        )), 'UTF-8');
     }
 
     private function normalizeContactNumber(string $value): string

@@ -6,6 +6,7 @@ use App\Modules\Accounts\Models\Barangay;
 use App\Modules\AuditLog\Models\AdminActivityLog;
 use App\Modules\AuditLog\Support\AuditLogPresenter;
 use App\Modules\Shared\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -154,7 +155,18 @@ class AuditLogQueryService
             ->distinct()
             ->orderBy('event_type')
             ->pluck('event_type')
+            ->filter(function (mixed $type): bool {
+                $normalized = strtolower((string) $type);
+
+                return $normalized !== '' && ! str_contains($normalized, 'upload');
+            })
             ->values();
+
+        $dateBoundsQuery = clone $logs;
+        $oldestLog = (clone $dateBoundsQuery)->orderBy('created_at')->value('created_at');
+        $newestLog = (clone $dateBoundsQuery)->orderByDesc('created_at')->value('created_at');
+        $minDate = $oldestLog ? Carbon::parse($oldestLog)->toDateString() : '';
+        $maxDate = $newestLog ? Carbon::parse($newestLog)->toDateString() : '';
 
         $actions = (clone $logs)
             ->select('action')
@@ -218,6 +230,10 @@ class AuditLogQueryService
             'event_types' => $eventTypes,
             'actions' => $actions,
             'modules' => $modules,
+            'date_bounds' => [
+                'min' => $minDate,
+                'max' => $maxDate,
+            ],
         ];
     }
 

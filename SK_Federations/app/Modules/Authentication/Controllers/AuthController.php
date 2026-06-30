@@ -39,7 +39,7 @@ class AuthController extends Controller
     public function showVerifyNotice(Request $request): View|RedirectResponse
     {
         if ($request->user()?->hasVerifiedEmail()) {
-            return redirect()->intended(route('dashboard'));
+            return redirect()->route('dashboard');
         }
 
         return redirect()->route('skfed.verification.wait');
@@ -54,7 +54,7 @@ class AuthController extends Controller
             if ($user !== null && $user->hasVerifiedEmail()) {
                 $this->clearVerificationSession($request);
 
-                return redirect()->intended(route('dashboard'));
+                return redirect()->route('dashboard');
             }
 
             if ($user !== null) {
@@ -88,7 +88,7 @@ class AuthController extends Controller
                 $this->authenticationService->completeEmailVerificationLogin($user, $request, $pending);
                 $this->clearVerificationSession($request, $pending);
 
-                return redirect()->intended(route('dashboard'));
+                return redirect()->route('dashboard');
             }
         }
 
@@ -225,7 +225,7 @@ class AuthController extends Controller
                     ]);
                 }
 
-                return redirect()->intended(route('dashboard'));
+                return redirect()->route('dashboard');
             }
 
             if ($user !== null) {
@@ -297,7 +297,7 @@ class AuthController extends Controller
                 ]);
             }
 
-            return redirect()->intended(route('dashboard'));
+            return redirect()->route('dashboard');
         }
 
         try {
@@ -341,7 +341,7 @@ class AuthController extends Controller
     public function showVerificationSuccess(Request $request): View|RedirectResponse
     {
         if (Auth::check() && $request->user()?->hasVerifiedEmail()) {
-            return redirect()->intended(route('dashboard'));
+            return redirect()->route('dashboard');
         }
 
         return view('authentication::verify-success', [
@@ -404,7 +404,7 @@ class AuthController extends Controller
         $this->authenticationService->completeEmailVerificationLogin($user, $request, $pending);
         $this->clearVerificationSession($request, is_array($pending) ? $pending : null);
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->route('dashboard');
     }
 
     public function logout(Request $request): RedirectResponse

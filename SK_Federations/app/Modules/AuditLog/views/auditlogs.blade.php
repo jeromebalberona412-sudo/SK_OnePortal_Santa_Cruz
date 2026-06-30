@@ -22,7 +22,7 @@
 @endphp
 
 <div id="mainContent" class="auditlog-page container-fluid">
-<div id="auditLogApp" class="auditlog-container" data-audit-routes='@json($routes)'>
+<div id="auditLogApp" class="auditlog-container" data-audit-routes='@json($routes)' data-date-bounds='@json($filterOptions['date_bounds'] ?? ['min' => '', 'max' => ''])'>
     <div class="page-header-modern-with-button">
         <div class="page-header-top">
             <h1 class="page-title-modern">Audit Logs</h1>
@@ -43,10 +43,10 @@
                         </div>
                     </div>
                     <div class="filter-dropdown-container">
-                        <input type="date" id="auditDateFrom" class="filter-dropdown audit-date-input" aria-label="Date from">
+                        <input type="date" id="auditDateFrom" class="filter-dropdown audit-date-input" aria-label="Date from" @if(!empty($filterOptions['date_bounds']['min'])) min="{{ $filterOptions['date_bounds']['min'] }}" @endif @if(!empty($filterOptions['date_bounds']['max'])) max="{{ $filterOptions['date_bounds']['max'] }}" @endif>
                     </div>
                     <div class="filter-dropdown-container">
-                        <input type="date" id="auditDateTo" class="filter-dropdown audit-date-input" aria-label="Date to">
+                        <input type="date" id="auditDateTo" class="filter-dropdown audit-date-input" aria-label="Date to" @if(!empty($filterOptions['date_bounds']['min'])) min="{{ $filterOptions['date_bounds']['min'] }}" @endif @if(!empty($filterOptions['date_bounds']['max'])) max="{{ $filterOptions['date_bounds']['max'] }}" @endif>
                     </div>
                     <div class="filter-dropdown-container">
                         <select id="auditRole" class="filter-dropdown form-select" aria-label="Filter by role">

@@ -9,16 +9,6 @@
         return config.csrfToken || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     }
 
-    function switchTab(tab) {
-        document.querySelectorAll('.bm-tab-btn').forEach(function (btn) {
-            const isActive = btn.dataset.tab === tab;
-            btn.classList.toggle('active', isActive);
-            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
-        });
-        document.getElementById('section-abyip').hidden = tab !== 'abyip';
-        document.getElementById('section-accomplishment').hidden = tab !== 'accomplishment';
-    }
-
     function filterTableRows(tableId, matchers) {
         const table = document.getElementById(tableId);
         if (!table) return;
@@ -29,14 +19,6 @@
                 return matcher(row);
             });
             row.hidden = !visible;
-        });
-    }
-
-    function initTabs() {
-        document.querySelectorAll('.bm-tab-btn').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                switchTab(btn.dataset.tab);
-            });
         });
     }
 
@@ -67,35 +49,6 @@
         search?.addEventListener('input', apply);
         year?.addEventListener('change', apply);
         status?.addEventListener('change', apply);
-    }
-
-    function initAccomplishmentFilters() {
-        const search = document.getElementById('accomplishmentSearchInput');
-        const term = document.getElementById('accomplishmentFilterTerm');
-        const year = document.getElementById('accomplishmentFilterYear');
-
-        function apply() {
-            const searchTerm = (search?.value || '').toLowerCase();
-            const termVal = term?.value || 'all';
-            const yearVal = year?.value || 'all';
-
-            filterTableRows('accomplishmentTable', [
-                function (row) {
-                    if (!searchTerm) return true;
-                    return row.textContent.toLowerCase().includes(searchTerm);
-                },
-                function (row) {
-                    return termVal === 'all' || row.dataset.term === termVal;
-                },
-                function (row) {
-                    return yearVal === 'all' || row.dataset.year === yearVal;
-                },
-            ]);
-        }
-
-        search?.addEventListener('input', apply);
-        term?.addEventListener('change', apply);
-        year?.addEventListener('change', apply);
     }
 
     async function apiFetch(url, options) {
@@ -162,6 +115,10 @@
             ? formatDateSubmitted(item.date_submitted)
             : (item.date_submitted_raw || '-');
         document.getElementById('modalSubmittedBy').textContent = item.submitted_by || '-';
+        const roleEl = document.getElementById('modalSubmittedRole');
+        if (roleEl) {
+            roleEl.textContent = item.submitted_by_role || '-';
+        }
         document.getElementById('modalTitle').textContent = item.title || item.name || '-';
         document.getElementById('modalSubmittedTime').textContent = item.submitted_time
             || formatSubmittedTime(item.date_submitted);
@@ -331,9 +288,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        initTabs();
         initAbyipFilters();
-        initAccomplishmentFilters();
         initAbyipViewButtons();
     });
 })();

@@ -541,9 +541,31 @@
 }
 
 .bm-show-page .bm-back-link {
-    margin-bottom: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 9px 14px;
+    border: 1px solid #dbe3f0;
+    border-radius: 10px;
+    background: #fff;
+    color: var(--bm-fed-blue);
     font-size: 13px;
-    padding: 6px 0;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.bm-show-page .bm-back-link:hover {
+    background: #f8fafc;
+    border-color: #c7d2e5;
+    transform: translateX(-1px);
+}
+
+.bm-submitted-role {
+    color: #64748b;
+    font-weight: 600;
 }
 
 /* Hero header card */
@@ -1314,6 +1336,28 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
+}
+
+.bm-field-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.bm-field-error {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    color: #dc2626;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.bm-field-error[hidden] {
+    display: none !important;
 }
 
 .bm-checkbox-label {

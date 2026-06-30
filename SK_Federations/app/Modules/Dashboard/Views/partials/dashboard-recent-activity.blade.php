@@ -31,9 +31,14 @@
                 <h3 id="dashActivityModalTitle">Recent Activity</h3>
                 <p id="dashActivityModalSubtitle">Complete federation activity history</p>
             </div>
-            <button type="button" class="dash-activity-modal-close" data-dash-activity-close aria-label="Close">
-                <i class="fas fa-times"></i>
-            </button>
+            <div class="dash-activity-modal-actions">
+                <button type="button" class="dash-activity-modal-fullscreen" id="dashActivityFullscreenBtn" aria-label="Toggle fullscreen">
+                    <i class="fas fa-expand"></i>
+                </button>
+                <button type="button" class="dash-activity-modal-close" data-dash-activity-close aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
         </div>
         <div class="dash-activity-modal-body">
             <div class="activity-list activity-list--modal" id="dashActivityModalList"></div>
