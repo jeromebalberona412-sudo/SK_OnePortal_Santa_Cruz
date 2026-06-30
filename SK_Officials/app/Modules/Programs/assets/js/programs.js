@@ -236,13 +236,16 @@ function initializeProgramsUI() {
 
     function updateSummary(list) {
         const total = list.length;
+        const planned = list.filter((p) => p.status === 'planned').length;
         const ongoing = list.filter((p) => p.status === 'ongoing').length;
         const completed = list.filter((p) => p.status === 'completed').length;
 
         const statTotal = document.getElementById('progStatTotal');
+        const statPlanned = document.getElementById('progStatPlanned');
         const statOngoing = document.getElementById('progStatOngoing');
         const statCompleted = document.getElementById('progStatCompleted');
         if (statTotal) statTotal.textContent = total;
+        if (statPlanned) statPlanned.textContent = planned;
         if (statOngoing) statOngoing.textContent = ongoing;
         if (statCompleted) statCompleted.textContent = completed;
     }

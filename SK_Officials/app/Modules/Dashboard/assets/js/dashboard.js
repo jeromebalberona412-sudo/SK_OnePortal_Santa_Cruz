@@ -67,8 +67,6 @@ function applyChartDefaults() {
 
 document.addEventListener('DOMContentLoaded', function () {
     applyChartDefaults();
-    initTermFilter();
-    initYearFilter();
     initKkChartFilters();
     initGenderEmploymentFilters();
     initModals();
@@ -197,12 +195,44 @@ function updateKkChartSubtitle() {
     if (!subtitle) return;
 
     if (kkChartGranularity === 'weekly') {
-        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        subtitle.textContent = 'Weekly view for ' + (monthNames[kkChartMonth - 1] || 'selected month');
+        const weekInfo = getWeekDateRange(kkChartMonth);
+        subtitle.textContent = weekInfo + ' - Approved, pending, and rejected submissions';
         return;
     }
 
     subtitle.textContent = 'Approved, pending, and rejected submissions';
+}
+
+function getWeekDateRange(month) {
+    const now = new Date();
+    const year = now.getFullYear();
+    
+    // Get the current date
+    const currentDate = new Date();
+    
+    // Get the week number (ISO week number)
+    const weekNum = getISOWeek(currentDate);
+    
+    // Get the start (Monday) and end (Sunday) of the current week
+    const dayOfWeek = currentDate.getDay();
+    const startOfWeek = new Date(currentDate);
+    startOfWeek.setDate(currentDate.getDate() - dayOfWeek + 1); // Monday
+    
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday
+    
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    return 'W' + weekNum + ' (' + monthNames[startOfWeek.getMonth()] + ' ' + startOfWeek.getDate() + ' - ' + 
+           monthNames[endOfWeek.getMonth()] + ' ' + endOfWeek.getDate() + ', ' + year + ')';
+}
+
+function getISOWeek(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
 }
 
 function populateZoneOptions(zones) {
@@ -392,6 +422,7 @@ function renderStats(stats) {
     setCount('statApproved', stats.approved || 0);
     setCount('statRejected', stats.rejected || 0);
     setCount('statActivePrograms', stats.active_programs || 0);
+    setCount('statPlannedPrograms', stats.planned_programs || 0);
     setCount('statDeletedKabataan', stats.deleted_kabataan || 0);
     setCount('statRejectedItems', stats.rejected_items || 0);
 }
@@ -404,6 +435,30 @@ function setCount(id, target) {
 
 function renderActivity(items) {
     const list = document.getElementById('activityList');
+    if (!list) return;
+
+    if (!items.length) {
+        list.innerHTML = '<p class="dash-empty-msg">No recent activity recorded.</p>';
+        return;
+    }
+
+    list.innerHTML = items.slice(0, 5).map(function (item) {
+        const whoLine = item.position
+            ? esc(item.who) + ' · ' + esc(item.position)
+            : esc(item.who);
+
+        return '<div class="activity-item activity-item-no-icon">' +
+            '<div class="activity-body">' +
+            '<strong>' + esc(item.text) + '</strong>' +
+            '<span>' + whoLine + '</span>' +
+            '</div>' +
+            '<div class="activity-time">' + esc(item.time) + '</div>' +
+            '</div>';
+    }).join('');
+}
+
+function renderActivityFull(items) {
+    const list = document.getElementById('activityListFull');
     if (!list) return;
 
     if (!items.length) {
@@ -893,12 +948,29 @@ function initModals() {
             }
         });
     });
+
+    // View All Activity button
+    const viewAllActivityBtn = document.getElementById('viewAllActivity');
+    if (viewAllActivityBtn) {
+        viewAllActivityBtn.addEventListener('click', function (event) {
+            event.preventDefault();
+            openModal('modalViewAllActivity');
+            renderActivityFull(dashboardData?.recent_activity || []);
+        });
+    }
 }
 
 function closeModal(id) {
     const element = document.getElementById(id);
     if (element) {
         element.classList.remove('open');
+    }
+}
+
+function openModal(id) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.classList.add('open');
     }
 }
 

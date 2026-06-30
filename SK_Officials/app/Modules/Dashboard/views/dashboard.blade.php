@@ -32,30 +32,6 @@
             <h1 class="dash-page-title">Dashboard</h1>
             <p class="dash-page-sub">Welcome back, <strong id="dashUserName">{{ $userFirstName ?? 'SK Official' }}</strong> &mdash; SK Official</p>
         </div>
-        <div class="dash-page-filters">
-            <div class="dash-year-filter">
-                <label for="termSelect" class="dash-year-label">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path>
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path>
-                    </svg>
-                    Term
-                </label>
-                <select id="termSelect" class="dash-year-select" aria-label="Select SK term"></select>
-            </div>
-            <div class="dash-year-filter">
-                <label for="yearSelect" class="dash-year-label">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                    </svg>
-                    Year
-                </label>
-                <select id="yearSelect" class="dash-year-select" aria-label="Select year"></select>
-            </div>
-        </div>
     </div>
 
     <!-- ══ Calendar Reminder Banner ═════════════════════════ -->
@@ -138,7 +114,7 @@
             <span class="stat-card-label">Rejected KK Profiles</span>
         </div>
 
-        <!-- 6. Active Programs -->
+        <!-- 6. Total Programs -->
         <div class="stat-card stat-card-teal" data-href="{{ route('programs') }}" title="View programs">
             <div class="stat-card-top">
                 <span class="stat-card-value" id="statActivePrograms">0</span>
@@ -149,7 +125,23 @@
                     </svg>
                 </div>
             </div>
-            <span class="stat-card-label">Active Programs</span>
+            <span class="stat-card-label">Total Programs</span>
+        </div>
+
+        <!-- 7. Planned Programs -->
+        <div class="stat-card stat-card-purple" data-href="{{ route('programs') }}" title="View programs">
+            <div class="stat-card-top">
+                <span class="stat-card-value" id="statPlannedPrograms">0</span>
+                <div class="stat-card-icon stat-icon-purple">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14,2 14,8 20,8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                </div>
+            </div>
+            <span class="stat-card-label">Planned Programs</span>
         </div>
 
         <!-- 7. Deleted Kabataan -->
@@ -362,8 +354,8 @@
         <div class="dash-section-card">
             <div class="dash-section-header dash-section-header--wrap dash-section-header--chart-filters">
                 <div>
-                    <h2 class="dash-section-title">Monthly KK Requests</h2>
-                    <p class="dash-section-sub" id="kkChartSubtitle">Approved, pending, and rejected submissions</p>
+                    <h2 class="dash-section-title">Weekly KK Requests</h2>
+                    <p class="dash-section-sub" id="kkChartSubtitle">W27 (Jul 1 - Jul 5, 2026) - Approved, pending, and rejected submissions</p>
                 </div>
                 <div class="dash-chart-header-actions">
                     <div class="line-chart-select-group">
@@ -502,6 +494,7 @@
                     <h2 class="dash-section-title">Recent Activity</h2>
                     <p class="dash-section-sub">Latest system actions</p>
                 </div>
+                <a href="#" class="dash-view-all" id="viewAllActivity">View all</a>
             </div>
             <div class="activity-list" id="activityList"></div>
         </div>
@@ -629,6 +622,22 @@
         <div class="dash-modal-footer">
             <button class="dash-btn-cancel" data-close="modalAddAbyip">Cancel</button>
             <button class="dash-btn-save">Save Member</button>
+        </div>
+    </div>
+</div>
+
+<!-- View All Activity -->
+<div class="dash-modal-backdrop" id="modalViewAllActivity" role="dialog" aria-modal="true" aria-labelledby="mTitleActivity">
+    <div class="dash-modal-box dash-modal-box-large">
+        <div class="dash-modal-header">
+            <h3 id="mTitleActivity">All Recent Activity</h3>
+            <button class="dash-modal-close" data-close="modalViewAllActivity" aria-label="Close">&times;</button>
+        </div>
+        <div class="dash-modal-body">
+            <div class="activity-list-full" id="activityListFull"></div>
+        </div>
+        <div class="dash-modal-footer">
+            <button class="dash-btn-cancel" data-close="modalViewAllActivity">Close</button>
         </div>
     </div>
 </div>

@@ -1189,6 +1189,7 @@ body {
 .stat-card-blue, .stat-card-indigo { border-color: #3B82F6; }
 .stat-card-orange                  { border-color: #FACC15; }
 .stat-card-green, .stat-card-teal, .stat-card-yellow { border-color: #22C55E; }
+.stat-card-purple                 { border-color: #A855F7; }
 .stat-card-red, .stat-card-slate, .stat-card-rose    { border-color: #EF4444; }
 
 .stat-card-top {
@@ -1234,6 +1235,8 @@ body {
 .stat-icon-orange svg { stroke: #ca8a04; }
 .stat-icon-green, .stat-icon-teal, .stat-icon-yellow { background: #dcfce7; }
 .stat-icon-green svg, .stat-icon-teal svg, .stat-icon-yellow svg { stroke: #16a34a; }
+.stat-icon-purple { background: #f3e8ff; }
+.stat-icon-purple svg { stroke: #9333ea; }
 .stat-icon-red, .stat-icon-slate, .stat-icon-rose { background: #fee2e2; }
 .stat-icon-red svg, .stat-icon-slate svg, .stat-icon-rose svg { stroke: #dc2626; }
 

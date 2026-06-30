@@ -358,6 +358,7 @@ class AbyipSubmissionScheduleService
             'title' => $title,
             'date_start' => $start->toDateString(),
             'deadline' => $end->toDateString(),
+            'allow_late_extension' => (bool) ($data['allow_late_extension'] ?? false),
         ];
     }
 

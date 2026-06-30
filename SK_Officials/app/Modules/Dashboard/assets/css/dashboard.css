@@ -180,6 +180,8 @@ html, body {
 .stat-card-teal,
 .stat-card-yellow  { border-color: #22C55E; }
 
+.stat-card-purple  { border-color: #A855F7; }
+
 .stat-card-red,
 .stat-card-slate,
 .stat-card-rose    { border-color: #EF4444; }
@@ -241,6 +243,9 @@ html, body {
 .stat-icon-green svg,
 .stat-icon-teal svg,
 .stat-icon-yellow svg { stroke: #16a34a; }
+
+.stat-icon-purple  { background: #f3e8ff; }
+.stat-icon-purple svg { stroke: #9333ea; }
 
 .stat-icon-red,
 .stat-icon-slate,
@@ -906,8 +911,19 @@ html, body {
     padding-right: 2px;
 }
 
+.activity-list-full {
+    display: flex;
+    flex-direction: column;
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+
 .activity-list::-webkit-scrollbar { width: 4px; }
 .activity-list::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+
+.activity-list-full::-webkit-scrollbar { width: 4px; }
+.activity-list-full::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
 
 .activity-item {
     display: flex;
@@ -1087,6 +1103,10 @@ html, body {
     transform: translateY(16px) scale(.97);
     transition: transform .25s ease;
     max-height: 90vh;
+}
+
+.dash-modal-box-large {
+    max-width: 800px;
 }
 
 .dash-modal-backdrop.open .dash-modal-box {
