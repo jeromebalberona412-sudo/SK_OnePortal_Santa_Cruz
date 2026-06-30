@@ -37,6 +37,7 @@
                 Account Email
             </label>
             <input type="email" id="cpEmail" name="email" class="form-control" placeholder="Enter your account email" autocomplete="email" maxlength="255" value="{{ old('email', $user->email ?? '') }}" required>
+            <div class="invalid-feedback d-block" id="cpEmailClientError" hidden></div>
             @error('email')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
             @enderror
@@ -96,6 +97,7 @@
                     </svg>
                 </button>
             </div>
+            <div class="invalid-feedback d-block" id="passwordConfirmClientError" hidden></div>
             @error('password_confirmation')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
             @enderror

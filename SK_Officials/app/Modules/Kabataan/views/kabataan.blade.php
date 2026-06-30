@@ -150,7 +150,7 @@
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                 </svg>
-                <span id="kabataanBulkDeleteLabel">Delete Rows</span>
+                <span id="kabataanBulkDeleteLabel">Revoke Rows</span>
             </button>
         </div>
 
@@ -1037,17 +1037,17 @@
                 <path d="M14 11v6"></path>
                 <path d="M9 6V4h6v2"></path>
             </svg>
-            <h2 class="kabataan-delete-title">Delete Record</h2>
+            <h2 class="kabataan-delete-title">Revoke Record</h2>
         </div>
         <div class="kabataan-delete-body">
-            <p class="kabataan-delete-message" id="kabataanDeleteMessage">Are you sure you want to delete</p>
+            <p class="kabataan-delete-message" id="kabataanDeleteMessage">Are you sure you want to revoke</p>
             <p class="kabataan-delete-name" id="kabataanDeleteName"></p>
             <p class="kabataan-delete-warning">This action cannot be undone.</p>
 
             <label class="kabataan-delete-confirm-label" for="kabataanDeleteConfirmInput">Confirmation Required</label>
-            <input type="text" id="kabataanDeleteConfirmInput" class="kabataan-delete-confirm-input" placeholder="Type Delete to confirm" autocomplete="off">
+            <input type="text" id="kabataanDeleteConfirmInput" class="kabataan-delete-confirm-input" placeholder="Type Revoke to confirm" autocomplete="off">
             <p class="kabataan-delete-confirm-hint kabataan-delete-confirm-hint-error" id="kabataanDeleteConfirmHintError" hidden>
-                Please type &quot;Delete&quot; exactly to continue.
+                Please type &quot;Revoke&quot; exactly to continue.
             </p>
             <p class="kabataan-delete-confirm-hint kabataan-delete-confirm-hint-success" id="kabataanDeleteConfirmHintSuccess" hidden>
                 Confirmation text matched.
@@ -1055,7 +1055,7 @@
         </div>
         <div class="kabataan-delete-footer">
             <button type="button" class="btn kabataan-cancel-btn" id="kabataanDeleteCancelBtn">Cancel</button>
-            <button type="button" class="btn kabataan-confirm-delete-btn is-disabled" id="kabataanDeleteConfirmBtn" disabled>Confirm Delete</button>
+            <button type="button" class="btn kabataan-confirm-delete-btn is-disabled" id="kabataanDeleteConfirmBtn" disabled>Confirm Revoke</button>
         </div>
     </div>
 </div>

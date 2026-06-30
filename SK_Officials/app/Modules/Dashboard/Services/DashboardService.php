@@ -8,7 +8,9 @@ use App\Models\CalendarNote;
 use App\Models\KabataanRegistration;
 use App\Models\KkSurveyResponse;
 use App\Models\OfficialTerm;
+use App\Models\ProgramApplication;
 use App\Models\RejectedKkProfiling;
+use App\Modules\Program_Management\Services\ScheduleProgramService;
 use App\Models\SkOfficialActivity;
 use App\Models\User;
 use App\Modules\Committees\Services\CommitteeService;
@@ -59,8 +61,8 @@ class DashboardService
             'user_name' => $this->resolveUserDisplayName($user),
             'stats' => array_merge($kkStats, [
                 'active_programs' => $this->activeProgramCount($abyip),
-                'deleted_kabataan' => $this->deletedKabataanCount($barangayId, $year),
-                'rejected_items' => $kkStats['rejected'],
+                'scholarships' => $this->programApplicationStats($barangayId, ScheduleProgramService::LETTER_EDUCATION),
+                'sports' => $this->programApplicationStats($barangayId, ScheduleProgramService::LETTER_SPORTS),
             ]),
             'officials' => $this->officialsStatus($user),
             'upcoming_events' => $this->upcomingCalendarNotes($barangayId),
@@ -229,8 +231,8 @@ class DashboardService
                 'approved' => 0,
                 'rejected' => 0,
                 'active_programs' => 0,
-                'deleted_kabataan' => 0,
-                'rejected_items' => 0,
+                'scholarships' => ['approved' => 0, 'pending' => 0, 'rejected' => 0],
+                'sports' => ['approved' => 0, 'pending' => 0, 'rejected' => 0],
             ],
             'purok_labels' => [],
             'purok_counts' => [],
@@ -509,36 +511,66 @@ class DashboardService
     }
 
     /**
-     * @return array{labels: list<string>, approved: list<int>, pending: list<int>, rejected: list<int>}
+     * @return array{approved: int, pending: int, rejected: int}
+     */
+    private function programApplicationStats(int $barangayId, string $letter): array
+    {
+        $baseQuery = ProgramApplication::query()
+            ->whereHas('scheduleProgram', function ($builder) use ($barangayId, $letter) {
+                $builder->where('barangay_id', $barangayId)
+                    ->where('program_letter', $letter);
+            });
+
+        return [
+            'approved' => (clone $baseQuery)->where('status', ProgramApplication::STATUS_APPROVED)->count(),
+            'pending' => (clone $baseQuery)->where('status', ProgramApplication::STATUS_PENDING)->count(),
+            'rejected' => (clone $baseQuery)->where('status', ProgramApplication::STATUS_REJECTED)->count(),
+        ];
+    }
+
+    /**
+     * @return array{labels: list<string>, approved: list<int>, pending: list<int>, rejected: list<int>, week_ranges?: list<string>}
      */
     private function weeklyKkRequestStats(int $barangayId, int $year, int $month, ?string $zone = null): array
     {
         $start = Carbon::create($year, $month, 1)->startOfMonth();
         $end = $start->copy()->endOfMonth();
         $labels = [];
+        $weekRanges = [];
         $approved = [];
         $pending = [];
         $rejected = [];
 
-        $cursor = $start->copy();
-        $weekIndex = 1;
+        $cursor = $start->copy()->startOfWeek(Carbon::MONDAY);
 
         while ($cursor->lte($end)) {
-            $weekEnd = $cursor->copy()->addDays(6);
-            if ($weekEnd->gt($end)) {
-                $weekEnd = $end->copy();
+            $weekStart = $cursor->copy();
+            $weekEnd = $cursor->copy()->endOfWeek(Carbon::SUNDAY);
+
+            if ($weekEnd->lt($start) || $weekStart->gt($end)) {
+                $cursor->addWeek();
+                continue;
             }
 
-            $labels[] = 'W'.$weekIndex;
-            $approved[] = $this->kkCountBetween($barangayId, 'approved', $cursor, $weekEnd, $zone);
-            $rejected[] = $this->kkCountBetween($barangayId, 'rejected', $cursor, $weekEnd, $zone);
-            $pending[] = $this->kkCountBetween($barangayId, 'pending', $cursor, $weekEnd, $zone);
+            $clipStart = $weekStart->lt($start) ? $start->copy() : $weekStart->copy();
+            $clipEnd = $weekEnd->gt($end) ? $end->copy() : $weekEnd->copy();
 
-            $cursor = $weekEnd->copy()->addDay();
-            $weekIndex++;
+            $isoWeek = $clipStart->isoWeek();
+            $labels[] = 'W'.$isoWeek;
+            $weekRanges[] = sprintf(
+                'W%d (%s – %s)',
+                $isoWeek,
+                $clipStart->format('M j'),
+                $clipEnd->format('M j, Y')
+            );
+            $approved[] = $this->kkCountBetween($barangayId, 'approved', $clipStart, $clipEnd, $zone);
+            $rejected[] = $this->kkCountBetween($barangayId, 'rejected', $clipStart, $clipEnd, $zone);
+            $pending[] = $this->kkCountBetween($barangayId, 'pending', $clipStart, $clipEnd, $zone);
+
+            $cursor->addWeek();
         }
 
-        return compact('labels', 'approved', 'pending', 'rejected');
+        return compact('labels', 'weekRanges', 'approved', 'pending', 'rejected');
     }
 
     private function kkCountBetween(int $barangayId, string $type, Carbon $start, Carbon $end, ?string $zone = null): int

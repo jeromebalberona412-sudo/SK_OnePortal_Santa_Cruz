@@ -190,13 +190,14 @@ function initGenderEmploymentFilters() {
     }
 }
 
-function updateKkChartSubtitle() {
+function updateKkChartSubtitle(chartData) {
     const subtitle = document.getElementById('kkChartSubtitle');
     if (!subtitle) return;
 
     if (kkChartGranularity === 'weekly') {
-        const weekInfo = getWeekDateRange(kkChartMonth);
-        subtitle.textContent = weekInfo + ' - Approved, pending, and rejected submissions';
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const monthLabel = monthNames[(kkChartMonth || 1) - 1] || 'Selected month';
+        subtitle.textContent = 'Weekly submissions for ' + monthLabel + ' — approved, pending, and rejected';
         return;
     }
 
@@ -422,9 +423,12 @@ function renderStats(stats) {
     setCount('statApproved', stats.approved || 0);
     setCount('statRejected', stats.rejected || 0);
     setCount('statActivePrograms', stats.active_programs || 0);
-    setCount('statPlannedPrograms', stats.planned_programs || 0);
-    setCount('statDeletedKabataan', stats.deleted_kabataan || 0);
-    setCount('statRejectedItems', stats.rejected_items || 0);
+    setCount('statScholarshipsApproved', stats.scholarships?.approved || 0);
+    setCount('statScholarshipsPending', stats.scholarships?.pending || 0);
+    setCount('statScholarshipsRejected', stats.scholarships?.rejected || 0);
+    setCount('statSportsApproved', stats.sports?.approved || 0);
+    setCount('statSportsPending', stats.sports?.pending || 0);
+    setCount('statSportsRejected', stats.sports?.rejected || 0);
 }
 
 function setCount(id, target) {
@@ -622,10 +626,14 @@ function renderLineChart(chartData) {
         chartLine = null;
     }
 
+    const xLabels = (kkChartGranularity === 'weekly' && chartData.week_ranges?.length)
+        ? chartData.week_ranges
+        : (chartData.labels || []);
+
     chartLine = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: chartData.labels || [],
+            labels: xLabels,
             datasets: [
                 {
                     label: 'Approved',
@@ -667,12 +675,22 @@ function renderLineChart(chartData) {
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: {
-                x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        font: { size: 10 },
+                        color: '#6b7280',
+                        maxRotation: 45,
+                        minRotation: 0,
+                        autoSkip: false,
+                    },
+                },
                 y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' }, ticks: { stepSize: 1 } },
             },
         },
     });
 
+    updateKkChartSubtitle(chartData);
     wireLineChartFilters();
 }
 

@@ -232,6 +232,35 @@ body.sk-login-page {
     border-radius: 10px;
     padding: 0.65rem 0.85rem;
     color: var(--skfed-gray-700);
+    max-height: 160px;
+    overflow-y: auto;
+    margin-top: 0.5rem;
+}
+
+.password-rules li {
+    position: relative;
+    padding-left: 1.35rem;
+    margin-bottom: 0.35rem;
+    font-size: 0.8125rem;
+    color: var(--skfed-gray-600);
+}
+
+.password-rules li::before {
+    content: '○';
+    position: absolute;
+    left: 0;
+    color: var(--skfed-gray-400);
+}
+
+.password-rules li.ok,
+.password-rules li.valid {
+    color: #15803d;
+}
+
+.password-rules li.ok::before,
+.password-rules li.valid::before {
+    content: '✓';
+    color: #15803d;
 }
 
 .password-rules li.is-valid {

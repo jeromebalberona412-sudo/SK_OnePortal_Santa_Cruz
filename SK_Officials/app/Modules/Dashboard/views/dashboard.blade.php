@@ -111,7 +111,7 @@
                     </svg>
                 </div>
             </div>
-            <span class="stat-card-label">Rejected KK Profiles</span>
+            <span class="stat-card-label">Total Rejected KK Profiling</span>
         </div>
 
         <!-- 6. Total Programs -->
@@ -128,43 +128,36 @@
             <span class="stat-card-label">Total Programs</span>
         </div>
 
-        <!-- 7. Planned Programs -->
-        <div class="stat-card stat-card-purple" data-href="{{ route('programs') }}" title="View programs">
+        <!-- Scholarships -->
+        <div class="stat-card stat-card-blue" data-href="{{ route('scholarship.applications') }}?status=approved" title="View approved scholarship applications">
             <div class="stat-card-top">
-                <span class="stat-card-value" id="statPlannedPrograms">0</span>
-                <div class="stat-card-icon stat-icon-purple">
+                <span class="stat-card-value" id="statScholarshipsApproved">0</span>
+                <div class="stat-card-icon stat-icon-blue">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14,2 14,8 20,8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                        <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
                     </svg>
                 </div>
             </div>
-            <span class="stat-card-label">Planned Programs</span>
+            <span class="stat-card-label">Scholarships Approved</span>
         </div>
 
-        <!-- 7. Deleted Kabataan -->
-        <div class="stat-card stat-card-slate" data-href="{{ route('deleted-kabataan') }}" title="View deleted Kabataan records">
+        <div class="stat-card stat-card-orange" data-href="{{ route('scholarship.applications') }}?status=pending" title="View pending scholarship applications">
             <div class="stat-card-top">
-                <span class="stat-card-value" id="statDeletedKabataan">0</span>
-                <div class="stat-card-icon stat-icon-slate">
+                <span class="stat-card-value" id="statScholarshipsPending">0</span>
+                <div class="stat-card-icon stat-icon-orange">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6l-1 14H6L5 6"></path>
-                        <path d="M10 11v6"></path><path d="M14 11v6"></path>
-                        <path d="M9 6V4h6v2"></path>
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
                     </svg>
                 </div>
             </div>
-            <span class="stat-card-label">Deleted Kabataan Records</span>
+            <span class="stat-card-label">Scholarships Pending</span>
         </div>
 
-
-        <!-- 12. Rejected Items -->
-        <div class="stat-card stat-card-rose" data-href="{{ route('rejected-kkprofiling') }}" title="View rejected items">
+        <div class="stat-card stat-card-rose" data-href="{{ route('rejected-scholars') }}" title="View rejected scholarship applications">
             <div class="stat-card-top">
-                <span class="stat-card-value" id="statRejectedItems">0</span>
+                <span class="stat-card-value" id="statScholarshipsRejected">0</span>
                 <div class="stat-card-icon stat-icon-rose">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10"></circle>
@@ -173,9 +166,50 @@
                     </svg>
                 </div>
             </div>
-            <span class="stat-card-label">Total Rejected Items</span>
+            <span class="stat-card-label">Scholarships Rejected</span>
         </div>
 
+        <!-- Sports -->
+        <div class="stat-card stat-card-green" data-href="{{ route('sports-requests') }}?status=approved" title="View approved sports applications">
+            <div class="stat-card-top">
+                <span class="stat-card-value" id="statSportsApproved">0</span>
+                <div class="stat-card-icon stat-icon-green">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+                        <path d="M2 12h20"></path>
+                    </svg>
+                </div>
+            </div>
+            <span class="stat-card-label">Sports Approved</span>
+        </div>
+
+        <div class="stat-card stat-card-yellow" data-href="{{ route('sports-requests') }}?status=pending" title="View pending sports applications">
+            <div class="stat-card-top">
+                <span class="stat-card-value" id="statSportsPending">0</span>
+                <div class="stat-card-icon stat-icon-yellow">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </div>
+            </div>
+            <span class="stat-card-label">Sports Pending</span>
+        </div>
+
+        <div class="stat-card stat-card-teal" data-href="{{ route('rejected-sports') }}" title="View rejected sports applications">
+            <div class="stat-card-top">
+                <span class="stat-card-value" id="statSportsRejected">0</span>
+                <div class="stat-card-icon stat-icon-teal">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                </div>
+            </div>
+            <span class="stat-card-label">Sports Rejected</span>
+        </div>
 
     </div><!-- /stats-2row-grid -->
 
@@ -187,150 +221,60 @@
             </div>
         </div>
         <div class="quick-actions-scroll">
-            <!-- 🔵 Records / Data -->
-            <a href="{{ route('profile') }}" class="qa-btn qa-blue">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="7" r="4"></circle>
-                    <path d="M5.5 21a6.5 6.5 0 0 1 13 0"></path>
-                </svg>
-                Profile
-            </a>
-            <a href="{{ route('kk-profiling-requests') }}" class="qa-btn qa-blue">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
-                KK Profiling Requests
-            </a>
-            <a href="{{ route('schedule-kk-profiling') }}" class="qa-btn qa-blue">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <line x1="19" y1="8" x2="19" y2="14"></line>
-                    <line x1="22" y1="11" x2="16" y2="11"></line>
-                </svg>
-                KK Profiling
-            </a>
-            <a href="{{ route('kabataan') }}" class="qa-btn qa-blue">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-                Kabataan
-            </a>
-            <a href="{{ route('abyip.index') }}" class="qa-btn qa-blue">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14,2 14,8 20,8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                    <polyline points="10,9 9,9 8,9"></polyline>
-                </svg>
-                ABYIP
-            </a>
-            <!-- 🟢 System / Tools -->
-            <a href="{{ route('calendar') }}" class="qa-btn qa-green">
+            <a href="{{ route('schedule-kk-profiling') }}" class="qa-btn qa-tone-1">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
                     <line x1="16" y1="2" x2="16" y2="6"></line>
-                </svg>
-                Calendar
-            </a>
-            <a href="{{ route('announcements') }}" class="qa-btn qa-green">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 11l18-5v6l-18 5z"></path>
-                    <path d="M6 21v-5.5"></path>
-                </svg>
-                Announcements
-            </a>
-            <a href="{{ route('schedule-programs') }}" class="qa-btn qa-green">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
                     <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
                 </svg>
-                Schedule
+                Schedule KK Profiling
             </a>
-            <!-- 🟣 Management -->
-            <a href="{{ route('committees') }}" class="qa-btn qa-purple">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-                Committees
-            </a>
-            <a href="{{ route('programs') }}" class="qa-btn qa-purple">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
-                Programs
-            </a>
-            <a href="{{ route('schedule-programs') }}" class="qa-btn qa-purple">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14,2 14,8 20,8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                </svg>
-                Programs Management
-            </a>
-            <!-- 🔴 Archive / Danger -->
-            <a href="{{ route('deleted-kabataan') }}" class="qa-btn qa-red">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6l-1 14H6L5 6"></path>
-                    <path d="M10 11v6"></path><path d="M14 11v6"></path>
-                    <path d="M9 6V4h6v2"></path>
-                </svg>
-                Deleted Items
-            </a>
-            <a href="{{ route('deleted-kabataan') }}" class="qa-btn qa-red">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-                Deleted Kabataan
-            </a>
-            <a href="{{ route('deleted-abyip') }}" class="qa-btn qa-red">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14,2 14,8 20,8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                </svg>
-                Deleted ABYIP
-            </a>
-            <a href="{{ route('rejected-kkprofiling') }}" class="qa-btn qa-red">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="15" y1="9" x2="9" y2="15"></line>
-                    <line x1="9" y1="9" x2="15" y2="15"></line>
-                </svg>
-                Rejected Items
-            </a>
-            <a href="{{ route('rejected-kkprofiling') }}" class="qa-btn qa-red">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
-                Rejected KK Profiling
-            </a>
-            <a href="{{ route('rejected-scholars') }}" class="qa-btn qa-red">
+            <a href="{{ route('scholarship.schedule') }}" class="qa-btn qa-tone-2">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
                     <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
                 </svg>
-                Rejected Scholarships
+                Create Scholarship Program
+            </a>
+            <a href="{{ route('sports-application-form') }}" class="qa-btn qa-tone-3">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+                    <path d="M2 12h20"></path>
+                </svg>
+                Create Sports Program
+            </a>
+            <a href="{{ route('announcements') }}" class="qa-btn qa-tone-4">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 11l18-5v6l-18 5z"></path>
+                    <path d="M6 21v-5.5"></path>
+                </svg>
+                Post Community Announcement
+            </a>
+            <a href="{{ route('scholarship.applications') }}" class="qa-btn qa-tone-5">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+                Review Scholarship Applications
+            </a>
+            <a href="{{ route('kabataan') }}" class="qa-btn qa-tone-6">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                    <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+                Generate Reports
+            </a>
+            <a href="{{ route('calendar') }}" class="qa-btn qa-tone-7">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Add Calendar Note
             </a>
         </div>
     </div>
@@ -354,8 +298,8 @@
         <div class="dash-section-card">
             <div class="dash-section-header dash-section-header--wrap dash-section-header--chart-filters">
                 <div>
-                    <h2 class="dash-section-title">Weekly KK Requests</h2>
-                    <p class="dash-section-sub" id="kkChartSubtitle">W27 (Jul 1 - Jul 5, 2026) - Approved, pending, and rejected submissions</p>
+                    <h2 class="dash-section-title">KK Profiling by Month</h2>
+                    <p class="dash-section-sub" id="kkChartSubtitle">Approved, pending, and rejected submissions</p>
                 </div>
                 <div class="dash-chart-header-actions">
                     <div class="line-chart-select-group">

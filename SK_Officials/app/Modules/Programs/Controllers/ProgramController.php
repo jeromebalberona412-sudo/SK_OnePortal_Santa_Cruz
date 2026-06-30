@@ -33,9 +33,17 @@ class ProgramController extends Controller
 
     public function updateDuration(Request $request, int $programId): JsonResponse
     {
+        $year = (int) now()->year;
+        $yearStart = sprintf('%d-01-01', $year);
+        $yearEnd = sprintf('%d-12-31', $year);
+
         $validated = $request->validate([
-            'start_date' => ['required', 'date'],
-            'end_date' => ['required', 'date', 'after_or_equal:start_date'],
+            'start_date' => ['required', 'date', 'after_or_equal:'.$yearStart, 'before_or_equal:'.$yearEnd],
+            'end_date' => ['required', 'date', 'after_or_equal:start_date', 'before_or_equal:'.$yearEnd],
+        ], [
+            'start_date.after_or_equal' => 'Start date must be within the current year (January 1 – December 31).',
+            'start_date.before_or_equal' => 'Start date must be within the current year (January 1 – December 31).',
+            'end_date.before_or_equal' => 'End date must be within the current year (January 1 – December 31).',
         ]);
 
         $user = $request->user();

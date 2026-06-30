@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const confirmInput = document.getElementById('password_confirmation');
     const passwordRules = document.getElementById('passwordRules');
     const clientError = document.getElementById('password-client-error');
+    const confirmError = document.getElementById('passwordConfirmClientError');
     const submitBtn = document.getElementById('cpSubmitBtn');
     const btnText = document.getElementById('cpBtnText');
 
@@ -101,12 +102,50 @@ document.addEventListener('DOMContentLoaded', function () {
             { id: 'rule-special', ok: state.hasSpecial },
         ].forEach(function (rule) {
             const node = document.getElementById(rule.id);
-            if (node) node.classList.toggle('ok', rule.ok);
+            if (node) {
+                node.classList.toggle('ok', rule.ok);
+                node.classList.toggle('valid', rule.ok);
+            }
         });
 
-        const showRules = password.length > 0 && !state.isValid;
-        passwordRules.classList.toggle('active', showRules);
-        passwordRules.hidden = !showRules;
+        if (password.length > 0) {
+            passwordRules.hidden = false;
+            passwordRules.classList.add('active');
+        } else {
+            passwordRules.hidden = true;
+            passwordRules.classList.remove('active');
+        }
+    }
+
+    function updateConfirmPasswordMatch() {
+        if (!confirmInput || !passwordInput) return;
+
+        const password = passwordInput.value;
+        const confirm = confirmInput.value;
+
+        if (!confirm) {
+            if (confirmError) {
+                confirmError.textContent = '';
+                confirmError.hidden = true;
+            }
+            confirmInput.classList.remove('is-invalid');
+            return;
+        }
+
+        if (password !== confirm) {
+            if (confirmError) {
+                confirmError.textContent = 'Passwords do not match.';
+                confirmError.hidden = false;
+            }
+            confirmInput.classList.add('is-invalid');
+            return;
+        }
+
+        if (confirmError) {
+            confirmError.textContent = '';
+            confirmError.hidden = true;
+        }
+        confirmInput.classList.remove('is-invalid');
     }
 
     function showClientError(message) {
@@ -129,6 +168,7 @@ document.addEventListener('DOMContentLoaded', function () {
         passwordInput.addEventListener('input', function () {
             clearClientError();
             updatePasswordRules(this.value);
+            updateConfirmPasswordMatch();
         });
         if (passwordInput.value) {
             updatePasswordRules(passwordInput.value);
@@ -136,7 +176,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (confirmInput) {
-        confirmInput.addEventListener('input', clearClientError);
+        confirmInput.addEventListener('input', function () {
+            clearClientError();
+            updateConfirmPasswordMatch();
+        });
     }
 
     form.addEventListener('submit', function (e) {
@@ -166,8 +209,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (confirmInput && passwordInput.value !== confirmInput.value) {
             e.preventDefault();
-            showClientError('Passwords do not match.');
-            confirmInput.classList.add('is-invalid');
+            updateConfirmPasswordMatch();
             confirmInput.focus();
             return;
         }

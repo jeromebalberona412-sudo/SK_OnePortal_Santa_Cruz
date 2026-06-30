@@ -62,11 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const [ruleId, isValid] of Object.entries(ruleElements)) {
             const ruleElement = document.getElementById(ruleId);
             if (ruleElement) {
-                if (isValid) {
-                    ruleElement.classList.add('valid');
-                } else {
-                    ruleElement.classList.remove('valid');
-                }
+                ruleElement.classList.toggle('valid', isValid);
+                ruleElement.classList.toggle('ok', isValid);
             }
         }
     }

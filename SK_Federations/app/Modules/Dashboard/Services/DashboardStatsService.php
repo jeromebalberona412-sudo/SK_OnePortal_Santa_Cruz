@@ -102,6 +102,49 @@ class DashboardStatsService
     }
 
     /**
+     * @return array{labels: list<string>, values: list<int>}
+     */
+    public function sexDistributionOfficials(?int $tenantId = null): array
+    {
+        if (! Schema::hasTable('users') || ! Schema::hasTable('official_profiles')) {
+            return ['labels' => ['Male', 'Female'], 'values' => [0, 0]];
+        }
+
+        $query = User::query()
+            ->where('role', User::ROLE_SK_OFFICIAL)
+            ->whereNull('deleted_at')
+            ->whereHas('officialProfile')
+            ->whereHas('officialProfile.terms', function ($termQuery): void {
+                $termQuery
+                    ->where('status', OfficialTerm::STATUS_ACTIVE)
+                    ->whereDate('term_end', '>=', now()->startOfDay());
+            })
+            ->with('officialProfile:id,user_id,sex');
+
+        if ($tenantId !== null) {
+            $query->where('tenant_id', $tenantId);
+        }
+
+        $male = 0;
+        $female = 0;
+
+        foreach ($query->get() as $user) {
+            $sex = mb_strtolower(trim((string) ($user->officialProfile?->sex ?? '')));
+
+            if (str_contains($sex, 'female')) {
+                $female++;
+            } elseif (str_contains($sex, 'male')) {
+                $male++;
+            }
+        }
+
+        return [
+            'labels' => ['Male', 'Female'],
+            'values' => [$male, $female],
+        ];
+    }
+
+    /**
      * @return list<array{rank: int, barangay: string, count: int}>
      */
     public function topBarangaysByYouth(?int $tenantId = null, int $limit = 5): array

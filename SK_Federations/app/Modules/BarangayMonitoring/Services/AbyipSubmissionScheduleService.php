@@ -74,7 +74,7 @@ class AbyipSubmissionScheduleService
         $this->assertNoDuplicateYear($validated['fiscal_year']);
 
         return DB::transaction(function () use ($user, $validated) {
-            $schedule = AbyipSubmissionSchedule::query()->create([
+            $schedule = new AbyipSubmissionSchedule([
                 'tenant_id' => $user->tenant_id,
                 'fiscal_year' => $validated['fiscal_year'],
                 'title' => $validated['title'],
@@ -82,10 +82,11 @@ class AbyipSubmissionScheduleService
                 'deadline' => $validated['deadline'],
                 'original_deadline' => $validated['deadline'],
                 'status' => $this->resolveStatus($validated['date_start'], $validated['deadline']),
-                'allow_late_extension' => (bool) ($validated['allow_late_extension'] ?? false),
                 'created_by_user_id' => $user->id,
                 'updated_by_user_id' => $user->id,
             ]);
+            $schedule->allow_late_extension = (bool) ($validated['allow_late_extension'] ?? false);
+            $schedule->save();
 
             $this->recordHistory($schedule, AbyipSubmissionScheduleHistory::ACTION_CREATED, null, $schedule->deadline, null, $schedule->date_start, 'Initial schedule created.', $user);
             $this->logScheduleEvent($user, 'abyip_schedule.created', $schedule, [

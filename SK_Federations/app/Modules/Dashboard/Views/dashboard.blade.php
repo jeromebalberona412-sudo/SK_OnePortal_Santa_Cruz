@@ -149,79 +149,8 @@
             }
         </style>
 
-        {{-- ── ROW: Sex Distribution + Federation Officers ── --}}
-        <div class="dash-row">
-            <div class="content-card dash-col-5">
-                <div class="card-header dash-sex-chart-header">
-                    <h3><i class="fas fa-venus-mars" style="color:#213F99;margin-right:8px;"></i>Sex Distribution of SK Officials</h3>
-                    <select id="sexDistributionTypeFilter" class="kk-barangay-select" aria-label="Filter by type">
-                        <option value="officials">SK Officials</option>
-                        <option value="kabataan">Kabataan</option>
-                    </select>
-                </div>
-                <div class="card-body chart-body dash-sex-chart-body">
-                    <canvas id="sexChart"></canvas>
-                </div>
-            </div>
-
-            <div class="content-card dash-col-7" id="federation-section">
-                <div class="card-header">
-                    <h3><i class="fas fa-sitemap" style="color:#213F99;margin-right:8px;"></i>Federation Officers</h3>
-                </div>
-                <div class="card-body federation-officers-body">
-                    <table class="federation-officers-table">
-                        <thead>
-                            <tr>
-                                <th>Position</th>
-                                <th>
-                                    Full Name
-                                    <div class="table-col-hint">LN, FN, MN, Suffix</div>
-                                </th>
-                                <th>Barangay</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($federationOfficers as $officer)
-                                <tr class="{{ $officer['name'] === 'Vacant' ? 'is-vacant' : '' }}">
-                                    <td>{{ $officer['position'] }}</td>
-                                    <td>{{ $officer['name'] }}</td>
-                                    <td>{{ $officer['barangay'] }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        {{-- ── ROW: Top 5 Barangays + KK Profiling ── --}}
-        <div class="dash-row">
-            <div class="content-card dash-col-4" id="top-barangays-section">
-                <div class="card-header">
-                    <h3><i class="fas fa-trophy" style="color:#F7D31E;margin-right:8px;"></i>Top 5 Barangays by Youth Population</h3>
-                </div>
-                <div class="card-body top-barangays-body">
-                    @forelse ($topBarangays as $row)
-                        <a href="{{ route('kabataan-monitoring') }}" class="top-barangay-item" style="text-decoration:none;cursor:pointer;">
-                            <div class="top-barangay-rank">{{ $row['rank'] }}</div>
-                            <div class="top-barangay-info">
-                                <div class="top-barangay-name">{{ $row['barangay'] }}</div>
-                                <div class="top-barangay-count">{{ number_format($row['count']) }} youth registered</div>
-                            </div>
-                            <div class="top-barangay-bar-wrap">
-                                @php
-                                    $maxCount = max(1, $topBarangays[0]['count'] ?? 1);
-                                    $width = round(($row['count'] / $maxCount) * 100);
-                                @endphp
-                                <div class="top-barangay-bar" style="width: {{ $width }}%;"></div>
-                            </div>
-                        </a>
-                    @empty
-                        <p class="dash-empty-note">No youth registration data available yet.</p>
-                    @endforelse
-                </div>
-            </div>
-
+        {{-- ── ROW 1: KK Profiling + Sex Distribution ── --}}
+        <div class="dash-row dash-row--charts">
             <div class="content-card dash-col-8" id="kk-profiling-section">
                 <div class="card-header kk-chart-section-header">
                     <div>
@@ -278,14 +207,88 @@
                     </div>
                 </div>
             </div>
+
+            <div class="content-card dash-col-4">
+                <div class="card-header dash-sex-chart-header">
+                    <h3><i class="fas fa-venus-mars" style="color:#213F99;margin-right:8px;"></i>Sex Distribution of SK Officials</h3>
+                    <select id="sexDistributionTypeFilter" class="kk-barangay-select" aria-label="Filter by type">
+                        <option value="officials">SK Officials</option>
+                        <option value="kabataan">Kabataan</option>
+                    </select>
+                </div>
+                <div class="card-body chart-body dash-sex-chart-body">
+                    <canvas id="sexChart"></canvas>
+                </div>
+            </div>
         </div>
 
-        {{-- ── Recent Activity + Upcoming Events ── --}}
-        @include('dashboard::partials.dashboard-recent-activity')
+        {{-- ── ROW 2: Federation Officers + Recent Audit Activity ── --}}
+        <div class="dash-row">
+            <div class="content-card dash-col-6" id="federation-section">
+                <div class="card-header">
+                    <h3><i class="fas fa-sitemap" style="color:#213F99;margin-right:8px;"></i>Federation Officers</h3>
+                </div>
+                <div class="card-body federation-officers-body">
+                    <table class="federation-officers-table">
+                        <thead>
+                            <tr>
+                                <th>Position</th>
+                                <th>
+                                    Full Name
+                                    <div class="table-col-hint">LN, FN, MN, Suffix</div>
+                                </th>
+                                <th>Barangay</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($federationOfficers as $officer)
+                                <tr class="{{ $officer['name'] === 'Vacant' ? 'is-vacant' : '' }}">
+                                    <td>{{ $officer['position'] }}</td>
+                                    <td>{{ $officer['name'] }}</td>
+                                    <td>{{ $officer['barangay'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-        {{-- ── Audit Logs Table (compact) ── --}}
-        <div class="dash-audit-row dash-audit-row--compact">
-            @include('dashboard::partials.dashboard-audit-table')
+            <div class="dash-col-6 dash-audit-row dash-audit-row--compact">
+                @include('dashboard::partials.dashboard-audit-table')
+            </div>
+        </div>
+
+        {{-- ── ROW 3: Top 5 Barangays + Recent Activity + Upcoming Events ── --}}
+        <div class="dash-row">
+            <div class="content-card dash-col-4" id="top-barangays-section">
+                <div class="card-header">
+                    <h3><i class="fas fa-trophy" style="color:#F7D31E;margin-right:8px;"></i>Top 5 Barangays by Youth Population</h3>
+                </div>
+                <div class="card-body top-barangays-body">
+                    @forelse ($topBarangays as $row)
+                        <a href="{{ route('kabataan-monitoring') }}" class="top-barangay-item" style="text-decoration:none;cursor:pointer;">
+                            <div class="top-barangay-rank">{{ $row['rank'] }}</div>
+                            <div class="top-barangay-info">
+                                <div class="top-barangay-name">{{ $row['barangay'] }}</div>
+                                <div class="top-barangay-count">{{ number_format($row['count']) }} youth registered</div>
+                            </div>
+                            <div class="top-barangay-bar-wrap">
+                                @php
+                                    $maxCount = max(1, $topBarangays[0]['count'] ?? 1);
+                                    $width = round(($row['count'] / $maxCount) * 100);
+                                @endphp
+                                <div class="top-barangay-bar" style="width: {{ $width }}%;"></div>
+                            </div>
+                        </a>
+                    @empty
+                        <p class="dash-empty-note">No youth registration data available yet.</p>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="dash-col-8">
+                @include('dashboard::partials.dashboard-recent-activity')
+            </div>
         </div>
 @endsection
 

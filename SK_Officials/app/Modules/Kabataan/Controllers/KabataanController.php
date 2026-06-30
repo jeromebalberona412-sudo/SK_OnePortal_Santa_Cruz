@@ -9,6 +9,7 @@ use App\Services\BarangayZoneService;
 use App\Services\KabataanProfilingHistoryService;
 use App\Services\KkSupportingDocumentService;
 use App\Services\KkProfilingRequestDataService;
+use App\Services\KkSurveyResponseService;
 use App\Services\RespondentNumberService;
 use App\Services\SkOfficialActivityService;
 use App\Support\KabataanApprovedStatuses;
@@ -382,21 +383,36 @@ class KabataanController extends Controller
         if ($this->profilingHistoryService->isHistoricalYear($year)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Historical KK Profiling records cannot be deleted.',
+                'message' => 'Historical KK Profiling records cannot be revoked.',
+            ], 422);
+        }
+
+        if (! KabataanApprovedStatuses::isListedInKabataan($registration)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only approved Kabataan records can be revoked.',
             ], 422);
         }
 
         $fullName = $registration->full_name;
-        $registration->delete();
+        $registration->update([
+            'status' => $registration->user_id ? 'active' : 'pending_verification',
+            'evaluation_status' => 'Not Profiled',
+            'reviewed_by_user_id' => null,
+            'reviewed_at' => null,
+            'review_notes' => null,
+        ]);
+
+        app(KkSurveyResponseService::class)->syncStatus($registration->fresh(), 'pending');
 
         $this->activityService->log(
             $user,
-            'kabataan.delete',
-            'Deleted Kabataan record: '.$fullName,
+            'kabataan.revoke',
+            'Revoked Kabataan record to pending KK profiling: '.$fullName,
             ['registration_id' => $id]
         );
 
-        return response()->json(['success' => true, 'message' => 'Kabataan record moved to Deleted Items.']);
+        return response()->json(['success' => true, 'message' => 'Kabataan record moved to pending KK Profiling Requests.']);
     }
 
     public function bulkDestroy(Request $request)
@@ -414,38 +430,50 @@ class KabataanController extends Controller
         if ($this->profilingHistoryService->isHistoricalYear($year)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Historical KK Profiling records cannot be deleted.',
+                'message' => 'Historical KK Profiling records cannot be revoked.',
             ], 422);
         }
 
         $registrations = KabataanRegistration::forBarangay($user->barangay_id)
             ->whereIn('id', $ids)
-            ->get();
+            ->get()
+            ->filter(fn (KabataanRegistration $registration) => KabataanApprovedStatuses::isListedInKabataan($registration));
 
         if ($registrations->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'No matching Kabataan records were found.',
+                'message' => 'No revocable Kabataan records were found.',
             ], 422);
         }
+
+        $surveyService = app(KkSurveyResponseService::class);
 
         foreach ($registrations as $registration) {
             $fullName = $registration->full_name;
             $registrationId = $registration->id;
-            $registration->delete();
+
+            $registration->update([
+                'status' => $registration->user_id ? 'active' : 'pending_verification',
+                'evaluation_status' => 'Not Profiled',
+                'reviewed_by_user_id' => null,
+                'reviewed_at' => null,
+                'review_notes' => null,
+            ]);
+
+            $surveyService->syncStatus($registration->fresh(), 'pending');
 
             $this->activityService->log(
                 $user,
-                'kabataan.delete',
-                'Deleted Kabataan record: '.$fullName,
+                'kabataan.revoke',
+                'Revoked Kabataan record to pending KK profiling: '.$fullName,
                 ['registration_id' => $registrationId]
             );
         }
 
         return response()->json([
             'success' => true,
-            'message' => $registrations->count().' Kabataan record(s) moved to Deleted Items.',
-            'deleted_count' => $registrations->count(),
+            'message' => $registrations->count().' Kabataan record(s) moved to pending KK Profiling Requests.',
+            'revoked_count' => $registrations->count(),
         ]);
     }
 

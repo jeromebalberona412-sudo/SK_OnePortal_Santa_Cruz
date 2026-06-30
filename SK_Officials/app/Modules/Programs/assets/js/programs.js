@@ -295,6 +295,7 @@ function initializeProgramsUI() {
 
             } else if (action === 'edit') {
                 if (editDurationIndex) editDurationIndex.value = index;
+                applyCurrentYearDateLimits();
                 if (editStartDate) editStartDate.value = program.startDate;
                 if (editEndDate) editEndDate.value = program.endDate;
                 updateEditDurationStatusPreview(program.startDate, program.endDate);
@@ -328,6 +329,29 @@ function initializeProgramsUI() {
         });
     }
 
+    function currentYearDateBounds() {
+        const year = new Date().getFullYear();
+        return {
+            min: `${year}-01-01`,
+            max: `${year}-12-31`,
+            year,
+        };
+    }
+
+    function applyCurrentYearDateLimits() {
+        const bounds = currentYearDateBounds();
+        if (editStartDate) {
+            editStartDate.min = bounds.min;
+            editStartDate.max = bounds.max;
+        }
+        if (editEndDate) {
+            editEndDate.min = bounds.min;
+            editEndDate.max = bounds.max;
+        }
+    }
+
+    applyCurrentYearDateLimits();
+
     function clearDurationErrors() {
         const startDateError = document.getElementById('editStartDateError');
         const endDateError = document.getElementById('editEndDateError');
@@ -344,10 +368,27 @@ function initializeProgramsUI() {
     function validateDurationDates(start, end) {
         const startDateError = document.getElementById('editStartDateError');
         const endDateError = document.getElementById('editEndDateError');
+        const bounds = currentYearDateBounds();
         clearDurationErrors();
 
         if (!start || !end) {
             showProgramToast('Both start and end dates are required.', 'error');
+            return false;
+        }
+
+        if (start < bounds.min || start > bounds.max) {
+            if (startDateError) {
+                startDateError.textContent = `Start date must be within ${bounds.year} (Jan 1 – Dec 31).`;
+                startDateError.style.display = 'block';
+            }
+            return false;
+        }
+
+        if (end < bounds.min || end > bounds.max) {
+            if (endDateError) {
+                endDateError.textContent = `End date must be within ${bounds.year} (Jan 1 – Dec 31).`;
+                endDateError.style.display = 'block';
+            }
             return false;
         }
 

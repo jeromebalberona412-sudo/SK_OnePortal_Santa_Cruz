@@ -33,6 +33,7 @@ class DashboardController extends Controller
             'totalAuditLogs' => $this->dashboardStatsService->totalAuditLogs($tenantId),
             'totalBarangaysAbyipSubmitted' => $this->barangayMonitoringService->countBarangaysWithAbyipSubmission(),
             'sexDistribution' => $this->dashboardStatsService->sexDistribution($tenantId),
+            'sexDistributionOfficials' => $this->dashboardStatsService->sexDistributionOfficials($tenantId),
             'federationOfficers' => $this->dashboardStatsService->federationOfficers($tenantId),
             'topBarangays' => $this->dashboardStatsService->topBarangaysByYouth($tenantId),
             'barangays' => $this->dashboardStatsService->getBarangays($tenantId),

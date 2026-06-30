@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
         $schedule->command('announcements:purge-archived')->daily();
         $schedule->command('sports-programs:purge-archived')->daily();
+        $schedule->command('archive:purge-expired')->daily();
         $schedule->command('kabataan:archive-aged-out')->daily();
     })
     ->withMiddleware(function (Middleware $middleware): void {

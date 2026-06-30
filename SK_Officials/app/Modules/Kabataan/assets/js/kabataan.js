@@ -403,7 +403,7 @@ function initializeKabataanUI() {
         }
 
         if (label) {
-            label.textContent = count > 1 ? `Delete Rows (${count})` : 'Delete Rows';
+            label.textContent = count > 1 ? `Revoke Rows (${count})` : 'Revoke Rows';
         }
     }
 
@@ -492,6 +492,10 @@ function initializeKabataanUI() {
                             <button type="button" class="row-actions-item row-actions-item-documents" data-action="documents" data-index="${index}" role="menuitem">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                                 <span>Documents</span>
+                            </button>
+                            <button type="button" class="row-actions-item row-actions-item-revoke" data-action="revoke" data-index="${index}" role="menuitem">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                                <span>Revoke</span>
                             </button>
                             <button type="button" class="row-actions-item row-actions-item-print" data-action="print" data-index="${index}" role="menuitem">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -974,7 +978,7 @@ function initializeKabataanUI() {
                 window.open(`/kabataan/${record.id}/print?year=${currentProfilingYear}`, '_blank');
             }
         }
-        if (action === 'delete' && !Number.isNaN(index)) openDeleteConfirm(index);
+        if (action === 'revoke' && !Number.isNaN(index)) openDeleteConfirm(index);
     });
 
     // ── Delete confirmation modal ──
@@ -1015,7 +1019,7 @@ function initializeKabataanUI() {
             return;
         }
 
-        const matched = deleteConfirmInput.value === 'Delete';
+        const matched = deleteConfirmInput.value === 'Revoke';
 
         if (deleteConfirmHintError) {
             deleteConfirmHintError.hidden = !(deleteConfirmInput.value.length > 0 && !matched);
@@ -1041,7 +1045,7 @@ function initializeKabataanUI() {
         pendingDeleteIds = k.id ? [String(k.id)] : [];
 
         if (deleteModalMessage) {
-            deleteModalMessage.textContent = 'Are you sure you want to delete';
+            deleteModalMessage.textContent = 'Are you sure you want to revoke';
         }
 
         if (deleteModalName) {
@@ -1068,7 +1072,7 @@ function initializeKabataanUI() {
         pendingDeleteIds = Array.from(selectedIds);
 
         if (deleteModalMessage) {
-            deleteModalMessage.textContent = 'Are you sure you want to delete the selected records?';
+            deleteModalMessage.textContent = 'Are you sure you want to revoke the selected records?';
         }
 
         if (deleteModalName) {
@@ -1122,7 +1126,7 @@ function initializeKabataanUI() {
 
             if (deleteMode === 'bulk' && pendingDeleteIds.length > 0) {
                 deleteConfirmBtn.disabled = true;
-                deleteConfirmBtn.innerHTML = '<span class="kabataan-delete-spinner"></span> Deleting...';
+                deleteConfirmBtn.innerHTML = '<span class="kabataan-delete-spinner"></span> Revoking...';
 
                 const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
@@ -1145,7 +1149,7 @@ function initializeKabataanUI() {
                         pendingDeleteIds.forEach((id) => selectedIds.delete(id));
                         closeDeleteConfirm();
                         loadData();
-                        showKabataanToast(res.message || 'Selected records moved to Deleted Items.', 'success');
+                        showKabataanToast(res.message || 'Selected records moved to pending KK Profiling Requests.', 'success');
                     })
                     .catch((err) => showKabataanToast(err.message || 'Failed to delete selected records.', 'error'))
                     .finally(() => {
@@ -1172,7 +1176,7 @@ function initializeKabataanUI() {
             if (!recordId) {
                 kabataan.splice(pendingDeleteIndex, 1);
                 render();
-                showKabataanToast('Kabataan record moved to Deleted Items.', 'success');
+                showKabataanToast('Kabataan record moved to pending KK Profiling Requests.', 'success');
                 return;
             }
 
@@ -1201,7 +1205,7 @@ function initializeKabataanUI() {
                     loadData();
                 }
 
-                showKabataanToast('Kabataan record moved to Deleted Items.', 'success');
+                showKabataanToast('Kabataan record moved to pending KK Profiling Requests.', 'success');
             })
             .catch(err => showKabataanToast(err.message || 'Failed to delete record.', 'error'))
             .finally(() => {

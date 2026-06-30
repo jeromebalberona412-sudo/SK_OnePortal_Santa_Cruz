@@ -594,6 +594,22 @@ html, body {
 .qa-red    { background: #ef4444; color: #fff; box-shadow: 0 4px 12px rgba(239,68,68,.35); }
 .qa-red:hover    { background: #dc2626; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(239,68,68,.5); }
 
+/* Unified blue palette — Quick Actions */
+.qa-tone-1 { background: #1e3a8a; color: #fff; box-shadow: 0 4px 12px rgba(30,58,138,.35); }
+.qa-tone-1:hover { background: #172554; color: #fff; transform: translateY(-2px); }
+.qa-tone-2 { background: #213F99; color: #fff; box-shadow: 0 4px 12px rgba(33,63,153,.35); }
+.qa-tone-2:hover { background: #1a3278; color: #fff; transform: translateY(-2px); }
+.qa-tone-3 { background: #2563eb; color: #fff; box-shadow: 0 4px 12px rgba(37,99,235,.35); }
+.qa-tone-3:hover { background: #1d4ed8; color: #fff; transform: translateY(-2px); }
+.qa-tone-4 { background: #3b82f6; color: #fff; box-shadow: 0 4px 12px rgba(59,130,246,.35); }
+.qa-tone-4:hover { background: #2563eb; color: #fff; transform: translateY(-2px); }
+.qa-tone-5 { background: #60a5fa; color: #fff; box-shadow: 0 4px 12px rgba(96,165,250,.35); }
+.qa-tone-5:hover { background: #3b82f6; color: #fff; transform: translateY(-2px); }
+.qa-tone-6 { background: #93c5fd; color: #1e3a8a; box-shadow: 0 4px 12px rgba(147,197,253,.45); }
+.qa-tone-6:hover { background: #60a5fa; color: #172554; transform: translateY(-2px); }
+.qa-tone-7 { background: #bfdbfe; color: #1e3a8a; box-shadow: 0 4px 12px rgba(191,219,254,.5); }
+.qa-tone-7:hover { background: #93c5fd; color: #172554; transform: translateY(-2px); }
+
 /* Keep dark for backward compat */
 .qa-dark   { background: #2c2c3e; color: #fff; box-shadow: 0 4px 12px rgba(44,44,62,.3); }
 .qa-dark:hover   { background: #1a1a2e; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(44,44,62,.45); }

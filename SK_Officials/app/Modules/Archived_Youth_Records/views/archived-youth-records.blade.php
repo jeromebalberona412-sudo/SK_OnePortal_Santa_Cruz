@@ -29,7 +29,7 @@
         <section class="page-header-section">
             <div class="page-header-left">
                 <h1 class="page-title">Archived Youth Records</h1>
-                <p class="page-subtitle">Youth who aged out of KK Profiling eligibility (over 30) but may still sign in to view their account. You can restore records within 30 days. After 30 days, they will be automatically deleted.</p>
+                <p class="page-subtitle">Youth who aged out of KK Profiling eligibility (over 30) but may still sign in to view their account. These records are kept permanently and are not auto-deleted.</p>
             </div>
             <div class="page-header-right">
                 <input type="text" id="ayrSearch" class="filter-input" placeholder="Search by name or respondent #…">
