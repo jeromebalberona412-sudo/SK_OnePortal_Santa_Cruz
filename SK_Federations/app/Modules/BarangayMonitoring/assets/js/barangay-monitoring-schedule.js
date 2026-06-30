@@ -39,9 +39,9 @@
 
         if (startInput) {
             startInput.min = bounds.today;
-            startInput.max = isCreate ? bounds.today : bounds.yearEnd;
-            startInput.readOnly = isCreate;
-            if (isCreate) {
+            startInput.max = bounds.yearEnd;
+            startInput.readOnly = false;
+            if (isCreate && !startInput.value) {
                 startInput.value = bounds.today;
             }
         }
@@ -75,7 +75,6 @@
     function validateScheduleForm(mode) {
         clearScheduleFieldErrors();
         const bounds = currentYearBounds();
-        const isCreate = mode !== 'edit';
         const title = document.getElementById('scheduleTitle')?.value.trim() || '';
         const dateStart = document.getElementById('scheduleDateStart')?.value || '';
         const deadline = document.getElementById('scheduleDeadline')?.value || '';
@@ -83,6 +82,11 @@
 
         if (!title) {
             alert('Title is required.');
+            return false;
+        }
+
+        if (title.length > 50) {
+            alert('Title must not exceed 50 characters.');
             return false;
         }
 
@@ -105,9 +109,6 @@
                 'scheduleDateStartError',
                 'Start date must be between today and December 31, ' + bounds.year + '.'
             );
-            valid = false;
-        } else if (isCreate && dateStart !== bounds.today) {
-            showScheduleFieldError('scheduleDateStartError', 'Start date must be today when creating a schedule.');
             valid = false;
         }
 
@@ -132,9 +133,7 @@
         const deadlineHint = document.getElementById('scheduleDeadlineHint');
 
         if (startHint) {
-            startHint.textContent = isCreate
-                ? 'Must be today (' + bounds.today + ').'
-                : 'Must be today through December 31, ' + bounds.year + '.';
+            startHint.textContent = 'Must be between today and December 31, ' + bounds.year + '.';
         }
 
         if (deadlineHint) {
@@ -206,6 +205,13 @@
         document.getElementById('scheduleDeadline').value = mode === 'edit'
             ? (schedule.deadline_raw || '')
             : defaults.end;
+
+        const startValue = document.getElementById('scheduleDateStart')?.value || bounds.today;
+        const deadlineInput = document.getElementById('scheduleDeadline');
+        if (deadlineInput) {
+            deadlineInput.min = startValue > bounds.today ? startValue : bounds.today;
+            deadlineInput.max = bounds.yearEnd;
+        }
 
         if (title) title.textContent = mode === 'edit' ? 'Edit ABYIP Schedule' : 'Create ABYIP Schedule';
         clearScheduleFieldErrors();

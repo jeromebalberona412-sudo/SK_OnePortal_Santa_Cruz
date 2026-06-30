@@ -306,6 +306,10 @@ class AbyipSubmissionScheduleService
             throw ValidationException::withMessages(['title' => ['Title is required.']]);
         }
 
+        if (mb_strlen($title) > 50) {
+            throw ValidationException::withMessages(['title' => ['Title must not exceed 50 characters.']]);
+        }
+
         if ($dateStart === '' || $deadline === '') {
             throw ValidationException::withMessages(['deadline' => ['Start date and deadline are required.']]);
         }
@@ -315,26 +319,21 @@ class AbyipSubmissionScheduleService
         $start = Carbon::parse($dateStart, $tz)->startOfDay();
         $end = Carbon::parse($deadline, $tz)->startOfDay();
 
-        if ($exceptId === null) {
-            $start = $today;
-            $dateStart = $start->toDateString();
-        }
-
         if ($start->year !== $currentYear || $end->year !== $currentYear) {
             throw ValidationException::withMessages([
                 'date_start' => ['Start date and deadline must fall within the current calendar year ('.$currentYear.').'],
             ]);
         }
 
-        if ($exceptId === null && ! $start->equalTo($today)) {
+        if ($start->lt($today)) {
             throw ValidationException::withMessages([
-                'date_start' => ['Start date must be today.'],
+                'date_start' => ['Start date cannot be earlier than today.'],
             ]);
         }
 
-        if ($exceptId !== null && $start->lt($today)) {
+        if ($start->gt($yearEnd)) {
             throw ValidationException::withMessages([
-                'date_start' => ['Start date cannot be earlier than today.'],
+                'date_start' => ['Start date cannot be later than December 31, '.$currentYear.'.'],
             ]);
         }
 

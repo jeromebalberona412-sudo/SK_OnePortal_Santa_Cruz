@@ -297,14 +297,6 @@ class BarangayMonitoringController extends Controller
      */
     private function getWarningsForBarangay(string $complianceStatus): array
     {
-        if ($complianceStatus !== 'non-compliant') {
-            return [];
-        }
-
-        return [[
-            'type' => 'critical',
-            'title' => 'Non-Compliant Status',
-            'message' => 'This barangay has not submitted an ABYIP report yet.',
-        ]];
+        return [];
     }
 }

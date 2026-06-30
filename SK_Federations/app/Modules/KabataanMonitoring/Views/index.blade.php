@@ -59,9 +59,6 @@
                             <option value="Santo Angel Norte">Santo Angel Norte</option>
                             <option value="Santo Angel Sur">Santo Angel Sur</option>
                         </select>
-                        <button class="km-export-btn" onclick="exportCSV()">
-                            <i class="fas fa-download"></i> Export CSV
-                        </button>
                     </div>
                 </div>
             </section>

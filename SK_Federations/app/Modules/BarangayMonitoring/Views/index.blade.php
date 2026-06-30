@@ -205,14 +205,14 @@
             <input type="hidden" id="scheduleId">
             <div class="bm-form-grid">
                 <label>Calendar Year
-                    <input type="text" id="scheduleFiscalYear" value="{{ date('Y') + 1 }}" readonly>
+                    <input type="text" id="scheduleFiscalYear" value="{{ (int) date('Y') + 1 }}" readonly>
                 </label>
                 <label>Title
-                    <input type="text" id="scheduleTitle" value="ABYIP Submission">
+                    <input type="text" id="scheduleTitle" value="ABYIP Submission" maxlength="50">
                 </label>
                 <label>Start Date
                     <input type="date" id="scheduleDateStart">
-                    <span class="bm-field-hint" id="scheduleDateStartHint">Create: must be today. Edit: today through Dec 31.</span>
+                    <span class="bm-field-hint" id="scheduleDateStartHint">Must be between today and December 31, {{ date('Y') }}.</span>
                     <span class="bm-field-error" id="scheduleDateStartError" hidden></span>
                 </label>
                 <label>Deadline
@@ -262,5 +262,5 @@
 </script>
 <script src="{{ url('/shared/js/loading.js') }}"></script>
 <script src="{{ url('/modules/barangay-monitoring/js/barangay-monitoring.js') }}"></script>
-<script src="{{ url('/modules/barangay-monitoring/js/barangay-monitoring-schedule.js') }}"></script>
+<script src="{{ url('/modules/barangay-monitoring/js/barangay-monitoring-schedule.js') }}?v={{ time() }}"></script>
 @endpush
