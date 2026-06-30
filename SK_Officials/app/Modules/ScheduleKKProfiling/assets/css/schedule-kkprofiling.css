@@ -57,6 +57,18 @@ body {
     min-width: 130px;
 }
 
+.skkp-year-filter-wrap {
+    min-width: 118px;
+}
+
+.skkp-year-filter {
+    min-width: 118px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    background-color: #fff;
+}
+
 .page-title {
     font-size: 28px;
     font-weight: 700;

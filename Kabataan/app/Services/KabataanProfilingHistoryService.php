@@ -58,11 +58,16 @@ class KabataanProfilingHistoryService
             }
         }
 
+        $suffix = trim((string) ($registration->suffix ?? ''));
+        if ($suffix === '' || strcasecmp($suffix, 'none') === 0) {
+            $suffix = 'None';
+        }
+
         return array_merge($prefill, [
             'last_name' => $registration->last_name,
             'first_name' => $registration->first_name,
             'middle_name' => $registration->middle_name,
-            'suffix' => $registration->suffix,
+            'suffix' => $suffix,
             'email' => $registration->email,
             'contact_number' => $registration->contact_number,
             'respondent_number' => $formData['respondent_number'] ?? $registration->respondent_number,

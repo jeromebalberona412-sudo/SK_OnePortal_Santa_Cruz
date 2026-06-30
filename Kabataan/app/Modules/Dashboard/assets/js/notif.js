@@ -2,7 +2,6 @@
    SK OnePortal — Notification Popover JS
    ============================================= */
 
-// ── Align arrow to button on mobile/tablet ────────────────────────────────────
 function npAlignArrow() {
     const btn = document.getElementById('notifNavBtn');
     const popover = document.getElementById('notifPopover');
@@ -11,14 +10,10 @@ function npAlignArrow() {
     const btnRect = btn.getBoundingClientRect();
     const btnCenter = btnRect.left + btnRect.width / 2;
 
-    // On mobile (fixed positioning): popover right edge = viewport width - 8px (right: 8px)
-    // On tablet (absolute, right: 0): popover right edge aligns with wrapper right edge
-    // On desktop (absolute positioning): use popover's actual rect
     let popRight;
     if (window.innerWidth <= 480) {
         popRight = window.innerWidth - 8;
     } else {
-        // For tablet and desktop, getBoundingClientRect is accurate since popover is visible
         popRight = popover.getBoundingClientRect().right;
     }
 
@@ -26,29 +21,150 @@ function npAlignArrow() {
     popover.style.setProperty('--np-arrow-right', arrowRight + 'px');
 }
 
+function npUpdateBadge(unread) {
+    const count = Math.max(0, parseInt(unread, 10) || 0);
+    const badge = document.getElementById('notifNavBadge');
+    const pill = document.getElementById('notifCountPill');
+
+    if (badge) {
+        badge.textContent = String(count);
+        badge.hidden = count <= 0;
+    }
+    if (pill) {
+        pill.textContent = String(count);
+        pill.hidden = count <= 0;
+    }
+}
+
+function npSyncEmptyState() {
+    const list = document.getElementById('notifList');
+    const empty = document.getElementById('notifEmpty');
+    if (!list || !empty) return;
+
+    const hasItems = list.querySelectorAll('.np-item').length > 0;
+    list.hidden = !hasItems;
+    empty.hidden = hasItems;
+}
+
+window.KabataanNotifications = {
+    updateBadge: npUpdateBadge,
+};
+
 window.toggleNotifPopover = function () {
     const popover = document.getElementById('notifPopover');
+    const btn = document.getElementById('notifNavBtn');
     if (!popover) return;
+
     if (popover.classList.contains('open')) {
         closeNotifPopover();
-    } else {
-        // Close chatbot if open
-        document.getElementById('chatbotPopover')?.classList.remove('open');
-        popover.classList.add('open');
-        npAlignArrow();
+        return;
     }
+
+    document.getElementById('chatbotPopover')?.classList.remove('open');
+    popover.classList.add('open');
+    btn?.setAttribute('aria-expanded', 'true');
+    npAlignArrow();
 };
 
 window.closeNotifPopover = function () {
-    document.getElementById('notifPopover')?.classList.remove('open');
+    const popover = document.getElementById('notifPopover');
+    const btn = document.getElementById('notifNavBtn');
+    popover?.classList.remove('open');
+    btn?.setAttribute('aria-expanded', 'false');
 };
 
-// Close on outside click
 document.addEventListener('click', function (e) {
     const popover = document.getElementById('notifPopover');
     const btn = document.getElementById('notifNavBtn');
     if (!popover || !btn) return;
     if (popover.classList.contains('open') && !popover.contains(e.target) && !btn.contains(e.target)) {
         closeNotifPopover();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const list = document.getElementById('notifList');
+    const markAllBtn = document.getElementById('notifMarkAllBtn');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+    async function markItemRead(item) {
+        const id = item?.dataset?.id;
+        if (!id || !item.classList.contains('np-unread')) return;
+
+        try {
+            const response = await fetch(`/api/kabataan/notifications/${id}/read`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({}),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (typeof data.unread_count === 'number') {
+                npUpdateBadge(data.unread_count);
+            }
+        } catch (err) {
+            // Continue navigation even if mark-read fails.
+        }
+
+        item.classList.remove('np-unread');
+        item.querySelector('.np-unread-dot')?.remove();
+        npUpdateBadge(document.querySelectorAll('#notifList .np-unread').length);
+    }
+
+    list?.addEventListener('click', async function (e) {
+        const item = e.target.closest('.np-item');
+        if (!item) return;
+
+        await markItemRead(item);
+        closeNotifPopover();
+
+        const actionUrl = (item.dataset.actionUrl || '').trim();
+        if (actionUrl) {
+            window.location.href = actionUrl;
+        }
+    });
+
+    markAllBtn?.addEventListener('click', async function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        try {
+            await fetch('/api/kabataan/notifications/read-all', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({}),
+            });
+        } catch (err) {
+            return;
+        }
+
+        list?.querySelectorAll('.np-item.np-unread').forEach((item) => {
+            item.classList.remove('np-unread');
+            item.querySelector('.np-unread-dot')?.remove();
+        });
+        npUpdateBadge(0);
+    });
+
+    npSyncEmptyState();
+    npUpdateBadge(document.querySelectorAll('#notifList .np-unread').length);
+
+    const toast = document.getElementById('kabataanHeaderToast');
+    if (toast) {
+        window.setTimeout(() => {
+            toast.classList.add('is-hiding');
+            window.setTimeout(() => {
+                toast.remove();
+                document.body.classList.remove('kabataan-has-header-toast');
+            }, 320);
+        }, 6500);
     }
 });

@@ -62,6 +62,9 @@ class DashboardController extends Controller
             'kkProfilingFormData' => $requiresKkUpdate && $registration
                 ? $this->profilingHistoryService->formDataForUpdate($registration)
                 : [],
+            'kkProfilingOriginalEmail' => $requiresKkUpdate && $registration
+                ? $registration->email
+                : null,
             'kkProfilingTargetYear' => $requiresKkUpdate && $registration
                 ? $this->kkProfilingScheduleService->targetProfilingYearForRegistration($registration)
                 : null,

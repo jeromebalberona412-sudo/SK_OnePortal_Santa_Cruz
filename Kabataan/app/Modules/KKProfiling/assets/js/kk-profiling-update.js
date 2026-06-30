@@ -13,6 +13,15 @@
     const isMandatory = window.__KK_PROFILING_UPDATE_REQUIRED === true;
     let isOpen = false;
 
+    function resetModalMaximized() {
+        modal.classList.remove('modal-maximized');
+        panel?.classList.remove('modal-maximized');
+        if (fullscreenBtn) {
+            fullscreenBtn.textContent = '□';
+            fullscreenBtn.setAttribute('aria-label', 'Maximize');
+        }
+    }
+
     function openModal() {
         if (isOpen) return;
         isOpen = true;
@@ -34,19 +43,18 @@
         modal.classList.remove('is-open');
         modal.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('kkpu-modal-open');
-        setFullscreen(false);
-    }
-
-    function setFullscreen(enabled) {
-        if (!panel) return;
-        panel.classList.toggle('is-fullscreen', enabled);
-        fullscreenBtn?.setAttribute('aria-label', enabled ? 'Exit fullscreen' : 'Fullscreen');
-        fullscreenBtn?.setAttribute('title', enabled ? 'Exit fullscreen' : 'Fullscreen');
+        resetModalMaximized();
     }
 
     function toggleFullscreen() {
         if (!panel) return;
-        setFullscreen(!panel.classList.contains('is-fullscreen'));
+        const isMax = !modal.classList.contains('modal-maximized');
+        modal.classList.toggle('modal-maximized', isMax);
+        panel.classList.toggle('modal-maximized', isMax);
+        if (fullscreenBtn) {
+            fullscreenBtn.textContent = isMax ? '⧉' : '□';
+            fullscreenBtn.setAttribute('aria-label', isMax ? 'Restore down' : 'Maximize');
+        }
     }
 
     function shouldAutoOpen() {
@@ -77,6 +85,7 @@
         if (!form || !data || typeof data !== 'object') return;
 
         Object.entries(data).forEach(([key, value]) => {
+            if (key === 'suffix' || key === 'email') return;
             if (value === null || value === undefined || value === '') return;
 
             const direct = form.querySelector(`[name="${key}"]`);
@@ -99,12 +108,18 @@
             }
         });
 
-        if (data.suffix) {
-            const suffixSelect = document.getElementById('kkpSuffix');
-            if (suffixSelect) {
-                suffixSelect.value = data.suffix;
-                suffixSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        const suffixSelect = document.getElementById('kkpSuffix');
+        if (suffixSelect) {
+            const suffixOptions = Array.from(suffixSelect.options).map((option) => option.value);
+            let suffixValue = (data.suffix || '').trim();
+            if (!suffixValue || suffixValue.toLowerCase() === 'none') {
+                suffixValue = 'None';
             }
+            if (!suffixOptions.includes(suffixValue)) {
+                suffixValue = 'None';
+            }
+            suffixSelect.value = suffixValue;
+            suffixSelect.dispatchEvent(new Event('change', { bubbles: true }));
         }
 
         if (data.age && typeof window.kkpSyncYouthAgeGroupFromAge === 'function') {
@@ -112,18 +127,16 @@
         }
 
         const emailInput = document.getElementById('kkpEmail');
-        if (emailInput && data.email) {
-            emailInput.value = data.email;
+        const lockedEmail = (window.__KK_PROFILING_ORIGINAL_EMAIL || data.email || '').trim().toLowerCase();
+        if (emailInput && lockedEmail) {
+            emailInput.value = lockedEmail;
             emailInput.readOnly = true;
+            emailInput.classList.add('kkp-readonly');
+            emailInput.dataset.originalEmail = lockedEmail;
         }
     }
 
-    if (isMandatory) {
-        closeBtn?.remove();
-    } else {
-        closeBtn?.addEventListener('click', () => closeModal());
-    }
-
+    closeBtn?.addEventListener('click', () => closeModal());
     fullscreenBtn?.addEventListener('click', toggleFullscreen);
 
     if (!isMandatory) {
@@ -136,8 +149,8 @@
         if (!isOpen) return;
         if (e.key === 'Escape') {
             if (isMandatory) return;
-            if (panel?.classList.contains('is-fullscreen')) {
-                setFullscreen(false);
+            if (modal.classList.contains('modal-maximized')) {
+                toggleFullscreen();
             } else {
                 closeModal();
             }
@@ -149,24 +162,102 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         populateUpdateForm(window.__KK_PROFILING_FORM_DATA || {});
+
+        const updateForm = document.getElementById('kkProfilingUpdateForm');
+        updateForm?.addEventListener('submit', (event) => {
+            window.handleKkProfilingUpdateSubmit(event);
+        });
+
         if (shouldAutoOpen()) {
             requestAnimationFrame(() => openModal());
         }
     });
 })();
 
-window.handleKkProfilingUpdateSubmit = function (event) {
+window.handleKkProfilingUpdateSubmit = async function (event) {
+    event.preventDefault();
+
     const form = document.getElementById('kkProfilingUpdateForm');
     if (!form) return false;
 
-    const valid = typeof window.handleFormSubmit === 'function'
-        ? window.handleFormSubmit(event)
+    const submitBtn = document.getElementById('kkpSubmitBtn');
+    const submitText = document.getElementById('kkpSubmitText');
+
+    function setSubmitting(active, label) {
+        if (submitBtn) {
+            submitBtn.disabled = active;
+            submitBtn.classList.toggle('is-submitting', active);
+        }
+        if (submitText && label) {
+            submitText.textContent = label;
+        }
+    }
+
+    function resetSubmit() {
+        setSubmitting(false, 'Update KK Profiling');
+        if (typeof window.hideLoading === 'function') {
+            window.hideLoading();
+        }
+    }
+
+    setSubmitting(true, 'Checking entries...');
+    if (typeof window.showLoading === 'function') {
+        window.showLoading('Checking your entries...');
+    }
+
+    const valid = typeof window.validateKkProfilingForm === 'function'
+        ? await window.validateKkProfilingForm({ skipEmailExistenceCheck: true })
         : true;
 
-    if (!valid) return false;
+    if (!valid) {
+        resetSubmit();
+        return false;
+    }
 
-    const submitText = document.getElementById('kkpSubmitText');
-    if (submitText) submitText.textContent = 'Updating KK Profiling...';
+    setSubmitting(true, 'Updating KK Profiling...');
+    if (typeof window.showLoading === 'function') {
+        window.showLoading('Updating KK Profiling...');
+    }
 
-    return true;
+    const formData = new FormData(form);
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            resetSubmit();
+            if (data.errors && typeof data.errors === 'object') {
+                Object.entries(data.errors).forEach(([field, messages]) => {
+                    const message = Array.isArray(messages) ? messages[0] : messages;
+                    const input = form.querySelector(`[name="${field}"]`);
+                    if (input && typeof window.showFieldError === 'function') {
+                        window.showFieldError(input, message);
+                    }
+                });
+            }
+            alert(data.message || 'Unable to update KK Profiling. Please check your entries.');
+            return false;
+        }
+
+        setSubmitting(true, 'Update complete. Refreshing...');
+        if (typeof window.showLoading === 'function') {
+            window.showLoading('Update complete. Refreshing...');
+        }
+        window.location.reload();
+        return false;
+    } catch (err) {
+        resetSubmit();
+        alert('Unable to update KK Profiling. Please check your connection and try again.');
+        return false;
+    }
 };

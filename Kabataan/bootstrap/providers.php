@@ -9,4 +9,5 @@ return [
     App\Modules\KKProfiling\Providers\KKProfilingServiceProvider::class,
     App\Modules\Programs\Providers\ProgramServiceProvider::class,
     App\Modules\Layout\Providers\LayoutServiceProvider::class,
+    App\Modules\Notifications\Providers\NotificationsServiceProvider::class,
 ];

@@ -119,6 +119,21 @@ class RegistrationEvaluationService
             report($e);
         }
 
+        if ($registration->user_id) {
+            try {
+                $registration->loadMissing('barangay');
+                $youthUser = User::query()->find($registration->user_id);
+                if ($youthUser) {
+                    app(KabataanNotificationService::class)->notifyRegistrationApproved(
+                        $youthUser,
+                        $registration->barangay?->name ?? 'your barangay',
+                    );
+                }
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
         if ($registration->email) {
             try {
                 $registration->loadMissing('barangay');

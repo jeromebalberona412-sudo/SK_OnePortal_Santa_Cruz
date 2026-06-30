@@ -34,6 +34,11 @@ class EnsureKkProfilingUpdated
         if ($request->routeIs(
             'dashboard',
             'kkprofiling.update',
+            'kkprofiling.resend-update-verification',
+            'notifications',
+            'api.kabataan.notifications',
+            'api.kabataan.notifications.read',
+            'api.kabataan.notifications.read-all',
             'logout',
         )) {
             return $next($request);

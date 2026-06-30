@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\KabataanProfilingHistory;
 use App\Models\KabataanRegistration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -18,6 +19,13 @@ class KkProfilingScheduleService
         return (int) now($this->timezone())->format('Y');
     }
 
+    /**
+     * Active KK profiling schedule for yearly kabataan updates.
+     * Accepts any profiling_year (for Supabase/manual test data). SK Officials UI
+     * still only creates current-year schedules.
+     *
+     * date_start is not required so manual DB inserts can be tested without exact dates.
+     */
     public function activeUpdateSchedule(int $barangayId): ?object
     {
         if (! Schema::hasTable('kk_profiling_schedules')) {
@@ -29,7 +37,6 @@ class KkProfilingScheduleService
         return DB::table('kk_profiling_schedules')
             ->where('barangay_id', $barangayId)
             ->where('status', 'Ongoing')
-            ->where('date_start', '<=', $today)
             ->where('date_expiry', '>=', $today)
             ->orderByDesc('profiling_year')
             ->orderByDesc('date_start')
@@ -43,33 +50,41 @@ class KkProfilingScheduleService
 
     public function lastCompletedProfilingYear(KabataanRegistration $registration): int
     {
+        $years = [];
+
         $formData = is_array($registration->form_data) ? $registration->form_data : [];
-
         if (! empty($formData['profile_updated_year'])) {
-            return (int) $formData['profile_updated_year'];
+            $years[] = (int) $formData['profile_updated_year'];
         }
 
-        if ($registration->submitted_at) {
-            $submittedDate = $registration->submitted_at
-                ->timezone($this->timezone())
-                ->toDateString();
-            $schedule = $this->activeUpdateSchedule((int) $registration->barangay_id);
+        if (Schema::hasTable('kabataan_profiling_history')) {
+            $historyYear = KabataanProfilingHistory::query()
+                ->where('kabataan_registration_id', $registration->id)
+                ->max('profiling_year');
 
-            // Initial KK registration completed during the active schedule window
-            // already satisfies that profiling cycle.
-            if ($schedule !== null
-                && $submittedDate >= (string) $schedule->date_start
-                && $submittedDate <= (string) $schedule->date_expiry
-            ) {
-                return $this->scheduleProfilingYear($schedule);
+            if ($historyYear) {
+                $years[] = (int) $historyYear;
             }
-
-            return (int) $registration->submitted_at
-                ->timezone($this->timezone())
-                ->format('Y');
         }
 
-        return 0;
+        return $years === [] ? 0 : max($years);
+    }
+
+    public function hasCompletedProfilingForYear(KabataanRegistration $registration, int $year): bool
+    {
+        $formData = is_array($registration->form_data) ? $registration->form_data : [];
+        if (! empty($formData['profile_updated_year']) && (int) $formData['profile_updated_year'] >= $year) {
+            return true;
+        }
+
+        if (! Schema::hasTable('kabataan_profiling_history')) {
+            return false;
+        }
+
+        return KabataanProfilingHistory::query()
+            ->where('kabataan_registration_id', $registration->id)
+            ->where('profiling_year', '>=', $year)
+            ->exists();
     }
 
     public function scheduleProfilingYear(?object $schedule): int
@@ -102,7 +117,7 @@ class KkProfilingScheduleService
 
         $targetYear = $this->scheduleProfilingYear($schedule);
 
-        return $this->lastCompletedProfilingYear($registration) < $targetYear;
+        return ! $this->hasCompletedProfilingForYear($registration, $targetYear);
     }
 
     public function targetProfilingYearForRegistration(KabataanRegistration $registration): ?int

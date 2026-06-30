@@ -37,6 +37,8 @@ export default defineConfig({
                 'app/Modules/Dashboard/assets/js/chatbot.js',
                 'app/Modules/Dashboard/assets/css/notif.css',
                 'app/Modules/Dashboard/assets/js/notif.js',
+                'app/Modules/Notifications/assets/css/notifications.css',
+                'app/Modules/Notifications/assets/js/notifications.js',
 
                 // Programs
                 'app/Modules/Programs/assets/css/scholarship_landing.css',

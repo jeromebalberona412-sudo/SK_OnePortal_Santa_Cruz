@@ -1561,3 +1561,22 @@ WHERE u.email = 'skoneportal@gmail.com'
   AND NOT EXISTS (
     SELECT 1 FROM public.official_terms ot WHERE ot.official_profile_id = op.id
 );
+
+-- Kabataan in-app notifications (youth portal bell)
+CREATE TABLE IF NOT EXISTS public.kabataan_notifications (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    category VARCHAR(50) NOT NULL DEFAULT 'general',
+    title VARCHAR(255) NOT NULL,
+    body TEXT NOT NULL,
+    action_url VARCHAR(255),
+    read_at TIMESTAMP(0) WITHOUT TIME ZONE,
+    created_at TIMESTAMP(0) WITHOUT TIME ZONE,
+    updated_at TIMESTAMP(0) WITHOUT TIME ZONE
+);
+
+CREATE INDEX IF NOT EXISTS kabataan_notifications_user_id_read_at_index
+    ON public.kabataan_notifications (user_id, read_at);
+
+CREATE INDEX IF NOT EXISTS kabataan_notifications_user_id_created_at_index
+    ON public.kabataan_notifications (user_id, created_at);

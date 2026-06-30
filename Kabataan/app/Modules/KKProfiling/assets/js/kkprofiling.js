@@ -326,6 +326,8 @@ function kkpValidateContact(value, touched) {
         host.appendChild(err);
     }
 
+    window.showFieldError = showFieldError;
+
     function clearFieldError(el) {
         const host = getFieldErrorHost(el);
         if (!el || !host) return;
@@ -568,6 +570,11 @@ function kkpValidateContact(value, touched) {
 
     async function checkEmailExists(value) {
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const originalEmail = (window.__KK_PROFILING_ORIGINAL_EMAIL || '').trim().toLowerCase();
+        const payload = { email: value };
+        if (originalEmail) {
+            payload.current_email = originalEmail;
+        }
         const response = await fetch('/api/kkprofiling/check-email-exists', {
             method: 'POST',
             headers: {
@@ -576,7 +583,7 @@ function kkpValidateContact(value, touched) {
                 'X-CSRF-TOKEN': csrfToken,
                 'X-Requested-With': 'XMLHttpRequest',
             },
-            body: JSON.stringify({ email: value }),
+            body: JSON.stringify(payload),
         });
         return response.json();
     }
@@ -891,6 +898,12 @@ function kkpValidateContact(value, touched) {
             }
 
             const value = (emailInput.value || '').trim();
+            const originalEmail = (window.__KK_PROFILING_ORIGINAL_EMAIL || emailInput.dataset.originalEmail || '').trim().toLowerCase();
+            if (originalEmail && value.toLowerCase() === originalEmail) {
+                delete emailInput.dataset.emailExists;
+                return;
+            }
+
             clearTimeout(emailCheckTimer);
             emailCheckTimer = setTimeout(async () => {
                 try {
@@ -1069,7 +1082,8 @@ function kkpValidateContact(value, touched) {
    FORM SUBMISSION HANDLER - Validate then Submit Form
 ═══════════════════════════════════════════════════════════════ */
 window.validateKkProfilingForm = async function (options = {}) {
-    const skipEmailExistenceCheck = options.skipEmailExistenceCheck === true;
+    const skipEmailExistenceCheck = options.skipEmailExistenceCheck === true
+        || document.getElementById('kkProfilingUpdateForm')?.dataset?.emailLocked === '1';
 
     // ── Clear previous errors ──
     document.querySelectorAll('.kkp-field-error').forEach(el => el.remove());
@@ -1184,10 +1198,13 @@ window.validateKkProfilingForm = async function (options = {}) {
     // ── 3b. Suffix ──
     const suffix = document.getElementById('kkpSuffix');
     const customSuffix = document.getElementById('kkpCustomSuffix');
-    if (!suffix || !suffix.value) {
+    const suffixValue = (suffix?.value || '').trim();
+    if (!suffix || !suffixValue) {
         errors.push('Suffix is required.');
         fieldError(suffix, 'Please select a suffix.');
-    } else if (suffix.value === 'Others') {
+    } else if (suffixValue === 'None') {
+        // "None" is a valid required selection.
+    } else if (suffixValue === 'Others') {
         const raw = (customSuffix && customSuffix.value ? customSuffix.value : '').trim();
         if (!raw) {
             errors.push('Custom suffix is required.');
@@ -1199,7 +1216,7 @@ window.validateKkProfilingForm = async function (options = {}) {
             errors.push('Only text and valid Roman numeral suffixes are allowed.');
             fieldError(customSuffix, 'Only text and valid Roman numeral suffixes are allowed.');
         }
-    } else if (suffix.value !== 'None' && !isValidSuffixText(suffix.value)) {
+    } else if (!isValidSuffixText(suffixValue)) {
         errors.push('Only text and valid Roman numeral suffixes are allowed.');
         fieldError(suffix, 'Only text and valid Roman numeral suffixes are allowed.');
     }
@@ -1255,9 +1272,13 @@ window.validateKkProfilingForm = async function (options = {}) {
     if (emailMsg) {
         errors.push(emailMsg);
         fieldError(email, emailMsg);
-    } else if (!skipEmailExistenceCheck && email?.dataset.emailExists === 'true') {
-        errors.push('This email already exists. Please use a different email address.');
-        fieldError(email, 'This email already exists. Please use a different email address.');
+    } else {
+        const originalEmail = (window.__KK_PROFILING_ORIGINAL_EMAIL || email?.dataset?.originalEmail || '').trim().toLowerCase();
+        const emailUnchanged = originalEmail && (email?.value || '').trim().toLowerCase() === originalEmail;
+        if (!skipEmailExistenceCheck && !emailUnchanged && email?.dataset.emailExists === 'true') {
+            errors.push('This email already exists. Please use a different email address.');
+            fieldError(email, 'This email already exists. Please use a different email address.');
+        }
     }
 
     // ── 8. Contact # ──
@@ -1373,9 +1394,12 @@ window.validateKkProfilingForm = async function (options = {}) {
     // ── Backend email existence check before submit (non-wizard only) ──
     const emailField = document.querySelector('input[name="email"]');
     const formEl = document.getElementById('kkProfilingForm');
+    const updateFormEl = document.getElementById('kkProfilingUpdateForm');
     const isWizardSubmit = formEl?.dataset?.wizardMode === '1';
+    const originalEmail = (window.__KK_PROFILING_ORIGINAL_EMAIL || emailField?.dataset?.originalEmail || '').trim().toLowerCase();
+    const emailUnchanged = originalEmail && (emailField?.value || '').trim().toLowerCase() === originalEmail;
 
-    if (!skipEmailExistenceCheck && !isWizardSubmit && emailField && emailField.value.trim()) {
+    if (!skipEmailExistenceCheck && !isWizardSubmit && !emailUnchanged && emailField && emailField.value.trim()) {
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
             const emailCheckResponse = await fetch('/api/kkprofiling/check-email-exists', {
@@ -1386,7 +1410,10 @@ window.validateKkProfilingForm = async function (options = {}) {
                     'X-CSRF-TOKEN': csrfToken,
                     'X-Requested-With': 'XMLHttpRequest',
                 },
-                body: JSON.stringify({ email: emailField.value.trim() }),
+                body: JSON.stringify({
+                    email: emailField.value.trim(),
+                    current_email: originalEmail || undefined,
+                }),
             });
             const emailCheckResult = await emailCheckResponse.json();
             if (emailCheckResult.exists) {

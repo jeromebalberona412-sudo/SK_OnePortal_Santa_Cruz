@@ -7,9 +7,9 @@
     align-items: center;
     justify-content: center;
     padding: 16px;
-    background: rgba(2, 42, 84, 0.55);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     opacity: 0;
     transition: opacity 0.28s ease;
 }
@@ -38,76 +38,76 @@ body.kkpu-modal-open.is-mandatory-lock {
     max-height: min(92vh, 900px);
     background: #fff;
     border-radius: 16px;
-    box-shadow: 0 24px 64px rgba(2, 42, 84, 0.28);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.4);
     overflow: hidden;
     transform: translateY(12px) scale(0.98);
-    transition: transform 0.28s ease, width 0.28s ease, height 0.28s ease, border-radius 0.28s ease;
+    transition: transform 0.28s ease, width 0.28s ease, height 0.28s ease, max-width 0.28s ease, max-height 0.28s ease, border-radius 0.28s ease;
 }
 
 .kkpu-overlay.is-open .kkpu-modal {
     transform: translateY(0) scale(1);
 }
 
-.kkpu-modal.is-fullscreen {
-    width: 100%;
-    max-width: 100%;
-    height: 100%;
-    max-height: 100%;
-    border-radius: 0;
+.kkpu-overlay.modal-maximized {
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 0;
 }
 
-.kkpu-modal-header {
+.kkpu-overlay.modal-maximized .kkpu-modal {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    transform: none;
+}
+
+.kkpu-overlay .modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 18px 22px;
-    border-bottom: 2px solid #e8eef5;
-    background: linear-gradient(135deg, #f8fafc 0%, #eef4fb 100%);
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #1a56db 0%, #1e40af 100%);
+    color: #fff;
+    border-bottom: none;
     flex-shrink: 0;
 }
 
-.kkpu-modal-header h2 {
+.kkpu-overlay .modal-title {
     margin: 0;
-    font-size: clamp(1.05rem, 2.5vw, 1.35rem);
+    font-size: 16px;
     font-weight: 700;
-    color: #022a54;
+    color: #fff;
 }
 
-.kkpu-modal-actions {
+.kkpu-overlay .modal-window-controls {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     flex-shrink: 0;
 }
 
-.kkpu-icon-btn {
-    width: 36px;
-    height: 36px;
+.kkpu-overlay .modal-toggle-btn,
+.kkpu-overlay .modal-close {
+    background: none;
     border: none;
-    border-radius: 50%;
-    background: #e8eef5;
-    color: #334155;
+    font-size: 18px;
+    font-weight: 700;
     cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
-}
-
-.kkpu-icon-btn svg {
-    width: 18px;
-    height: 18px;
-}
-
-.kkpu-icon-btn:hover {
-    background: #0450a8;
     color: #fff;
-    transform: translateY(-1px);
+    padding: 4px 8px;
+    line-height: 1;
+    width: auto;
+    height: auto;
+    border-radius: 0;
 }
 
-.kkpu-icon-btn-close:hover {
-    background: #dc2626;
+.kkpu-overlay .modal-toggle-btn:hover,
+.kkpu-overlay .modal-close:hover {
+    opacity: 0.85;
+    background: none;
 }
 
 .kkpu-instruction {
@@ -128,7 +128,14 @@ body.kkpu-modal-open.is-mandatory-lock {
     flex: 1;
     overflow: auto;
     padding: 16px;
+    min-height: 0;
     -webkit-overflow-scrolling: touch;
+}
+
+.kkpu-overlay.modal-maximized .kkpu-modal-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .kkpu-paper {
@@ -142,39 +149,23 @@ body.kkpu-modal-open.is-mandatory-lock {
     min-width: 860px;
 }
 
-.kkpu-icon-btn .kkpu-icon-expand {
-    display: block;
-}
-
-.kkpu-icon-btn .kkpu-icon-collapse {
-    display: none;
-}
-
-.kkpu-modal.is-fullscreen .kkpu-icon-expand {
-    display: none;
-}
-
-.kkpu-modal.is-fullscreen .kkpu-icon-collapse {
-    display: block;
-}
-
 body.kkpu-modal-open {
     overflow: hidden;
 }
 
 @media (max-width: 640px) {
-    .kkpu-overlay {
+    .kkpu-overlay:not(.modal-maximized) {
         padding: 0;
     }
 
-    .kkpu-modal:not(.is-fullscreen) {
+    .kkpu-overlay:not(.modal-maximized) .kkpu-modal {
         width: 100%;
         max-height: 100%;
         border-radius: 0;
         height: 100%;
     }
 
-    .kkpu-modal-header {
+    .kkpu-overlay .modal-header {
         padding: 14px 16px;
     }
 

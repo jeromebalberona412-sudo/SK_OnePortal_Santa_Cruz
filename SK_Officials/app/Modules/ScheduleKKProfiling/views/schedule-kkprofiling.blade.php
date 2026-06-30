@@ -32,9 +32,9 @@
                 </p>
             </div>
             <div class="page-header-actions">
-                <div class="filter-item filter-item-inline">
-                    <label for="skkpYearFilter" class="filter-label">Profiling Year</label>
-                    <select id="skkpYearFilter" class="filter-select filter-select-inline"></select>
+                <div class="filter-item filter-item-inline skkp-year-filter-wrap">
+                    <label for="skkpYearFilter" class="abyip-sr-only">Profiling Year</label>
+                    <select id="skkpYearFilter" class="filter-select filter-select-inline skkp-year-filter" aria-label="Profiling Year"></select>
                 </div>
                 <div class="abyip-search-inline">
                     <label for="skkpSearch" class="abyip-sr-only">Search schedules</label>
@@ -115,7 +115,7 @@
                 <div class="modal-field modal-field-full">
                     <label for="skkpFormProfilingYear">Profiling Year</label>
                     <input type="text" id="skkpFormProfilingYear" class="skkp-input skkp-input-readonly" readonly tabindex="-1" aria-readonly="true">
-                    <span class="skkp-field-note">Auto-detected from the current calendar year. Cannot be edited.</span>
+                    <span class="skkp-field-note">Auto-set to the current calendar year. Cannot be edited.</span>
                 </div>
                 <div class="modal-field">
                     <label for="skkpFormDateStartMd">Date Start <span class="required">*</span></label>

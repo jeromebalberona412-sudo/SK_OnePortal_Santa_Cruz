@@ -9,6 +9,7 @@ Route::get('/api/kkprofiling/open-barangays', [KKProfilingController::class, 'op
 
 // Email verification
 Route::get('/kkprofiling/verify/{id}/{hash}', [KKProfilingController::class, 'verifyEmail'])->name('kkprofiling.verify');
+Route::get('/kkprofiling/verify-update/{id}/{hash}', [KKProfilingController::class, 'verifyUpdateEmail'])->name('kkprofiling.verify-update');
 Route::get('/kkprofiling/check-email', [KKProfilingController::class, 'showCheckEmail'])->name('kkprofiling.check-email');
 Route::post('/api/kkprofiling/check-email-exists', [KKProfilingController::class, 'checkEmailExists'])->name('kkprofiling.check-email-exists');
 Route::post('/api/kkprofiling/resend-verification', [KKProfilingController::class, 'resendVerification'])->name('kkprofiling.resend-verification');
@@ -56,4 +57,6 @@ Route::post('/kkprofiling/{barangay}/set-password', [KKProfilingController::clas
 
 Route::middleware(['auth'])->group(function () {
     Route::put('/kkprofiling/update', [KKProfilingController::class, 'updateForUser'])->name('kkprofiling.update');
+    Route::post('/api/kkprofiling/resend-update-verification', [KKProfilingController::class, 'resendUpdateEmailVerification'])
+        ->name('kkprofiling.resend-update-verification');
 });

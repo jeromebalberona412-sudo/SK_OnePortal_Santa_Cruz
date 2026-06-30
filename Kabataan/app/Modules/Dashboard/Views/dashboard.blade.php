@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('favicon')
@@ -997,6 +997,7 @@
         window.__SHOW_KK_UPDATE_MODAL = @json($showKkUpdateModal ?? false);
         window.__KK_PROFILING_UPDATE_REQUIRED = @json($kkProfilingUpdateRequired ?? false);
         window.__KK_PROFILING_FORM_DATA = @json($kkProfilingFormData ?? []);
+        window.__KK_PROFILING_ORIGINAL_EMAIL = @json($kkProfilingOriginalEmail ?? '');
         window.__kabataanPrograms = @json($programsPayload ?? ['abyip_programs' => [], 'schedule_programs' => []]);
     </script>
 
