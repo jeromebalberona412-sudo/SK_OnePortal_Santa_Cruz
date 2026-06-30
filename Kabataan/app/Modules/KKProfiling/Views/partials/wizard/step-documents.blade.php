@@ -13,7 +13,7 @@
             <div>
                 <h2 class="kkp-wizard-panel-title">Supporting Documents <span class="kkp-wizard-optional">Optional</span></h2>
                 <p class="kkp-wizard-panel-desc">
-                    You may upload your School ID or PhilSys / National ID now, or skip this step and continue to email verification.
+                    You may upload your School ID, PhilSys / National ID, Voter's ID, PhilHealth ID, or other valid proof of identity now, or skip this step and continue to email verification.
                 </p>
             </div>
         </div>
@@ -23,8 +23,7 @@
                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
             </svg>
             <p>
-                If you upload your ID now, you may not need to submit it again for future SK programs because your record will already have a copy on file.
-                This step does <strong>not</strong> scan or verify your ID. Your registration will be checked against previous KK profiling records from your barangay after you set your password.
+                <strong>Note:</strong> Supporting documents are optional. However, uploading a valid ID or other proof of identity can help verify your information and may expedite the approval of your KK Profiling application.
             </p>
         </div>
 
@@ -63,19 +62,77 @@
                         </span>
                     </span>
                 </label>
+                <label class="kkp-wizard-doc-type-option">
+                    <input type="radio" name="document_type" value="voters_id" id="kkpDocTypeVotersId">
+                    <span class="kkp-wizard-doc-type-card">
+                        <span class="kkp-wizard-doc-type-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                                <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                                <circle cx="8" cy="12" r="2"></circle>
+                                <path d="M14 10h5M14 14h5"></path>
+                            </svg>
+                        </span>
+                        <span class="kkp-wizard-doc-type-text">
+                            <span class="kkp-wizard-doc-type-name">Voter's ID</span>
+                            <span class="kkp-wizard-doc-type-desc">Front and back · optional upload</span>
+                        </span>
+                    </span>
+                </label>
+                <label class="kkp-wizard-doc-type-option">
+                    <input type="radio" name="document_type" value="philhealth_id" id="kkpDocTypePhilhealthId">
+                    <span class="kkp-wizard-doc-type-card">
+                        <span class="kkp-wizard-doc-type-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                                <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                                <circle cx="9" cy="11" r="2"></circle>
+                                <path d="M15 9h4M15 13h4"></path>
+                            </svg>
+                        </span>
+                        <span class="kkp-wizard-doc-type-text">
+                            <span class="kkp-wizard-doc-type-name">PhilHealth ID</span>
+                            <span class="kkp-wizard-doc-type-desc">Front and back · optional upload</span>
+                        </span>
+                    </span>
+                </label>
+                <label class="kkp-wizard-doc-type-option">
+                    <input type="radio" name="document_type" value="other_id" id="kkpDocTypeOtherId">
+                    <span class="kkp-wizard-doc-type-card">
+                        <span class="kkp-wizard-doc-type-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                                <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                                <circle cx="9" cy="11" r="2"></circle>
+                                <path d="M15 9h4M15 13h4"></path>
+                            </svg>
+                        </span>
+                        <span class="kkp-wizard-doc-type-text">
+                            <span class="kkp-wizard-doc-type-name">Other valid proof of identity or residency</span>
+                            <span class="kkp-wizard-doc-type-desc">Front and back · optional upload</span>
+                        </span>
+                    </span>
+                </label>
             </div>
         </fieldset>
 
         @foreach([
             ['type' => 'school_id', 'panelId' => 'kkpSchoolIdUpload', 'label' => 'School ID'],
             ['type' => 'national_id', 'panelId' => 'kkpNationalIdUpload', 'label' => 'PhilSys / National ID'],
+            ['type' => 'voters_id', 'panelId' => 'kkpVotersIdUpload', 'label' => "Voter's ID"],
+            ['type' => 'philhealth_id', 'panelId' => 'kkpPhilhealthIdUpload', 'label' => 'PhilHealth ID'],
+            ['type' => 'other_id', 'panelId' => 'kkpOtherIdUpload', 'label' => 'Other valid proof of identity or residency'],
         ] as $doc)
         <div class="kkp-wizard-upload-panel" id="{{ $doc['panelId'] }}" hidden>
             <p class="kkp-wizard-upload-panel-title">{{ $doc['label'] }} — upload front and back</p>
             <div class="kkp-wizard-upload-grid">
                 @foreach(['front' => 'Front', 'back' => 'Back'] as $side => $sideLabel)
                 @php
-                    $prefix = $doc['type'] === 'school_id' ? 'kkpSchoolId' : 'kkpNationalId';
+                    $prefix = match($doc['type']) {
+                        'school_id' => 'kkpSchoolId',
+                        'national_id' => 'kkpNationalId',
+                        'voters_id' => 'kkpVotersId',
+                        'philhealth_id' => 'kkpPhilhealthId',
+                        'other_id' => 'kkpOtherId',
+                        default => 'kkpDoc',
+                    };
                     $inputName = $doc['type'].'_'.$side;
                     $inputId = $prefix.ucfirst($side);
                 @endphp

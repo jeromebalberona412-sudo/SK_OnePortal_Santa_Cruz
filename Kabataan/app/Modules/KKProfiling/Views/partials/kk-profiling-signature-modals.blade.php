@@ -34,7 +34,7 @@
 <div class="kkp-sig-confirm-overlay" id="kkpSigConfirmOverlay" style="display:none;">
     <div class="kkp-sig-confirm-modal">
         <h3 class="kkp-sig-confirm-title">Save Signature?</h3>
-        <p class="kkp-sig-confirm-message">Are you sure you want to save this signature? This action cannot be undone.</p>
+        <p class="kkp-sig-confirm-message">Are you sure you want to save this signature?</p>
         <div class="kkp-sig-confirm-actions">
             <button type="button" class="kkp-sig-confirm-cancel" id="kkpSigConfirmCancel">Cancel</button>
             <button type="button" class="kkp-sig-confirm-save" id="kkpSigConfirmSave">

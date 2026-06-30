@@ -21,7 +21,7 @@
         },
         2: {
             title: 'Supporting Documents',
-            desc: 'Optional: upload your School ID or PhilSys / National ID now, or skip and continue to email verification.',
+            desc: 'Optional: upload your Voter\'s ID, PhilHealth ID, or other valid proof of identity now, or skip and continue to email verification.',
         },
         3: {
             title: 'Check Your Email',
@@ -55,10 +55,16 @@
     const docTypeRadios = document.querySelectorAll('input[name="document_type"]');
     const schoolIdUploadPanel = document.getElementById('kkpSchoolIdUpload');
     const nationalIdUploadPanel = document.getElementById('kkpNationalIdUpload');
+    const votersIdUploadPanel = document.getElementById('kkpVotersIdUpload');
+    const philhealthIdUploadPanel = document.getElementById('kkpPhilhealthIdUpload');
+    const otherIdUploadPanel = document.getElementById('kkpOtherIdUpload');
 
     const DOCUMENT_INPUT_IDS = {
         school_id: ['kkpSchoolIdFront', 'kkpSchoolIdBack'],
         national_id: ['kkpNationalIdFront', 'kkpNationalIdBack'],
+        voters_id: ['kkpVotersIdFront', 'kkpVotersIdBack'],
+        philhealth_id: ['kkpPhilhealthIdFront', 'kkpPhilhealthIdBack'],
+        other_id: ['kkpOtherIdFront', 'kkpOtherIdBack'],
     };
 
     function buildPreviewConfig(inputId) {
@@ -293,12 +299,28 @@
             nationalIdUploadPanel.hidden = selectedType !== 'national_id';
         }
 
+        if (votersIdUploadPanel) {
+            votersIdUploadPanel.hidden = selectedType !== 'voters_id';
+        }
+
+        if (philhealthIdUploadPanel) {
+            philhealthIdUploadPanel.hidden = selectedType !== 'philhealth_id';
+        }
+
+        if (otherIdUploadPanel) {
+            otherIdUploadPanel.hidden = selectedType !== 'other_id';
+        }
+
         if (!selectedType) {
             clearAllDocumentInputs();
-        } else if (selectedType === 'school_id') {
-            clearDocumentInputsForType('national_id');
-        } else if (selectedType === 'national_id') {
-            clearDocumentInputsForType('school_id');
+        } else {
+            // Clear all other document types
+            const allTypes = ['school_id', 'national_id', 'voters_id', 'philhealth_id', 'other_id'];
+            allTypes.forEach(type => {
+                if (type !== selectedType) {
+                    clearDocumentInputsForType(type);
+                }
+            });
         }
 
         updateNavButtons(currentStep);
