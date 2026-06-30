@@ -14,7 +14,7 @@
     const ELEMENTARY_ONLY = ['Elementary Level', 'Elementary Grad'];
     const STRAND_COLLEGE_TRACK = ['College Level', 'College Grad', 'Vocational Grad'];
     const EMAIL_PATTERN = /^[A-Za-z0-9._%+-]{6,30}@gmail\.com$/i;
-    const UPPERCASE_FIELD_TYPES = new Set(['text', 'name', 'suffix']);
+    const UPPERCASE_FIELD_TYPES = new Set(['text', 'name', 'suffix', 'suffix_other']);
     const SCHOOL_TEXT_FIELD_IDS = new Set([
         'elementary_school', 'elementary_address',
         'secondary_school', 'secondary_address',
@@ -25,6 +25,10 @@
     const OCCUPATION_OTHER_VALUE = 'Other Occupation';
     const OCCUPATION_OTHER_MIN = 3;
     const OCCUPATION_OTHER_MAX = 100;
+
+    const SUFFIX_OPTIONS = ['Jr.', 'Sr.', 'I', 'II', 'III', 'IV', 'V', 'Other'];
+    const SUFFIX_OTHER_VALUE = 'Other';
+    const SUFFIX_OTHER_MAX = 10;
 
     const FAMILY_MONTHLY_INCOME_OPTIONS = [
         '₱5,000',
@@ -164,17 +168,26 @@
             locked: true,
             fields: [
                 { id: 'mother_first_name', label: "Mother's First Name", type: 'name', required: true, group: 'mother' },
+                { id: 'mother_middle_name', label: "Mother's Middle Name", type: 'name', required: false, group: 'mother' },
                 { id: 'mother_last_name', label: "Mother's Last Name", type: 'name', required: true, group: 'mother' },
+                { id: 'mother_suffix', label: "Mother's Suffix", type: 'suffix_select', required: false, group: 'mother', options: SUFFIX_OPTIONS },
+                { id: 'mother_suffix_other', label: "Mother's Suffix (specify)", type: 'suffix_other', required: false, group: 'mother', maxLength: SUFFIX_OTHER_MAX, showWhenField: 'mother_suffix', showWhenValue: SUFFIX_OTHER_VALUE },
                 { id: 'mother_occupation', label: "Mother's Occupation", type: 'select', required: true, group: 'mother', options: OCCUPATION_OPTIONS },
                 { id: 'mother_occupation_other', label: "Mother's Other Occupation", type: 'text', required: true, group: 'mother', minLength: OCCUPATION_OTHER_MIN, maxLength: OCCUPATION_OTHER_MAX, showWhenField: 'mother_occupation', showWhenValue: OCCUPATION_OTHER_VALUE },
                 { id: 'mother_contact_number', label: "Mother's Contact No.", type: 'contact', required: true, group: 'mother' },
                 { id: 'father_first_name', label: "Father's First Name", type: 'name', required: true, group: 'father' },
+                { id: 'father_middle_name', label: "Father's Middle Name", type: 'name', required: false, group: 'father' },
                 { id: 'father_last_name', label: "Father's Last Name", type: 'name', required: true, group: 'father' },
+                { id: 'father_suffix', label: "Father's Suffix", type: 'suffix_select', required: false, group: 'father', options: SUFFIX_OPTIONS },
+                { id: 'father_suffix_other', label: "Father's Suffix (specify)", type: 'suffix_other', required: false, group: 'father', maxLength: SUFFIX_OTHER_MAX, showWhenField: 'father_suffix', showWhenValue: SUFFIX_OTHER_VALUE },
                 { id: 'father_occupation', label: "Father's Occupation", type: 'select', required: true, group: 'father', options: OCCUPATION_OPTIONS },
                 { id: 'father_occupation_other', label: "Father's Other Occupation", type: 'text', required: true, group: 'father', minLength: OCCUPATION_OTHER_MIN, maxLength: OCCUPATION_OTHER_MAX, showWhenField: 'father_occupation', showWhenValue: OCCUPATION_OTHER_VALUE },
                 { id: 'father_contact_number', label: "Father's Contact No.", type: 'contact', required: true, group: 'father' },
                 { id: 'guardian_first_name', label: "Guardian's First Name", type: 'name', required: false, group: 'guardian' },
+                { id: 'guardian_middle_name', label: "Guardian's Middle Name", type: 'name', required: false, group: 'guardian' },
                 { id: 'guardian_last_name', label: "Guardian's Last Name", type: 'name', required: false, group: 'guardian' },
+                { id: 'guardian_suffix', label: "Guardian's Suffix", type: 'suffix_select', required: false, group: 'guardian', options: SUFFIX_OPTIONS },
+                { id: 'guardian_suffix_other', label: "Guardian's Suffix (specify)", type: 'suffix_other', required: false, group: 'guardian', maxLength: SUFFIX_OTHER_MAX, showWhenField: 'guardian_suffix', showWhenValue: SUFFIX_OTHER_VALUE },
                 { id: 'guardian_occupation', label: "Guardian's Occupation", type: 'select', required: false, group: 'guardian', options: OCCUPATION_OPTIONS },
                 { id: 'guardian_occupation_other', label: "Guardian's Other Occupation", type: 'text', required: true, group: 'guardian', minLength: OCCUPATION_OTHER_MIN, maxLength: OCCUPATION_OTHER_MAX, showWhenField: 'guardian_occupation', showWhenValue: OCCUPATION_OTHER_VALUE },
                 { id: 'guardian_relation', label: 'Relation to Guardian', type: 'text', required: false, group: 'guardian' },
@@ -318,6 +331,11 @@
             return (values[occupationKey] || '') === OCCUPATION_OTHER_VALUE;
         }
 
+        if (field.id.endsWith('_suffix_other')) {
+            const suffixKey = field.id.replace(/_other$/, '');
+            return (values[suffixKey] || '') === SUFFIX_OTHER_VALUE;
+        }
+
         if (field.showWhenEducation) {
             if (!field.showWhenEducation.includes(education)) {
                 return false;
@@ -366,6 +384,14 @@
         return '';
     }
 
+    function validateSuffixOther(value, required) {
+        const trimmed = String(value || '').trim();
+        if (!trimmed) return required ? 'Please specify the suffix.' : '';
+        if (trimmed.length > SUFFIX_OTHER_MAX) return `Suffix must not exceed ${SUFFIX_OTHER_MAX} characters.`;
+        if (!NAME_PATTERN.test(trimmed)) return 'Letters, spaces, periods, and hyphens only.';
+        return '';
+    }
+
     function validateContact(value, required) {
         const trimmed = String(value || '').trim();
         if (!trimmed) return required ? 'Contact number is required.' : '';
@@ -392,7 +418,7 @@
                 field.maxLength || OCCUPATION_OTHER_MAX,
             );
         }
-        if (SCHOOL_TEXT_FIELD_IDS.has(field.id) || (field.minLength && field.maxLength && !field.id.endsWith('_occupation_other'))) {
+        if (SCHOOL_TEXT_FIELD_IDS.has(field.id) || (field.minLength && field.maxLength && !field.id.endsWith('_occupation_other') && field.type !== 'suffix_other')) {
             return validateSchoolText(
                 value,
                 field.required,
@@ -403,6 +429,11 @@
         }
         if (field.type === 'name') return validateName(value, field.required);
         if (field.type === 'suffix') return validateSuffix(value);
+        if (field.type === 'suffix_select') {
+            if (field.required && !String(value || '').trim()) return `${field.label} is required.`;
+            return '';
+        }
+        if (field.type === 'suffix_other') return validateSuffixOther(value, field.required);
         if (field.type === 'contact') return validateContact(value, field.required);
         if (field.type === 'currency') return validateCurrency(value, field.required);
         if (field.type === 'year') {
@@ -481,7 +512,7 @@
                 </div>`;
         }
 
-        if (field.type === 'select') {
+        if (field.type === 'select' || field.type === 'suffix_select') {
             return `
                 <div class="gf-form-group schol-system-field-wrap" data-field-wrap="${field.id}" ${hiddenAttr}>
                     <label for="sys_${field.id}">${escapeHtml(fieldLabel)}${reqMark}</label>
@@ -489,6 +520,14 @@
                         <option value="">Select...</option>
                         ${(field.options || []).map((opt) => `<option value="${escapeHtml(opt)}" ${value === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
                     </select>
+                </div>`;
+        }
+
+        if (field.type === 'suffix_other') {
+            return `
+                <div class="gf-form-group schol-system-field-wrap" data-field-wrap="${field.id}" ${hiddenAttr}>
+                    <label for="sys_${field.id}">${escapeHtml(fieldLabel)}${reqMark}</label>
+                    <input class="gf-input schol-system-input schol-system-uppercase" type="text" name="${field.id}" id="sys_${field.id}" data-system-field="${field.id}" data-field-type="suffix_other" value="${escapeHtml(toUpperAnswer(rawValue))}" maxlength="${field.maxLength || SUFFIX_OTHER_MAX}" ${required ? 'required' : ''} autocomplete="off" placeholder="Specify suffix (max ${field.maxLength || SUFFIX_OTHER_MAX} chars)">
                 </div>`;
         }
 
@@ -642,6 +681,14 @@
             } else {
                 values[otherKey] = '';
             }
+
+            const suffixKey = `${prefix}_suffix`;
+            const suffixOtherKey = `${prefix}_suffix_other`;
+            if (values[suffixKey] === SUFFIX_OTHER_VALUE) {
+                values[suffixOtherKey] = toUpperAnswer(values[suffixOtherKey] || '');
+            } else {
+                values[suffixOtherKey] = '';
+            }
         });
 
         return values;
@@ -656,6 +703,7 @@
                 return;
             }
             const visible = isFieldVisible(field, values, kkEducation);
+            // Skip suffix_other fields here — they're validated via isFieldVisible + validateField
             const err = validateField(field, values[field.id], visible);
             if (err) errors.push({ field: field.id, label: field.label, message: err });
         });
@@ -763,6 +811,9 @@
         FAMILY_MONTHLY_INCOME_OPTIONS,
         OCCUPATION_OPTIONS,
         OCCUPATION_OTHER_VALUE,
+        SUFFIX_OPTIONS,
+        SUFFIX_OTHER_VALUE,
+        SUFFIX_OTHER_MAX,
         toUpperAnswer,
         formatProfileValue,
         STRAND_COLLEGE_TRACK,

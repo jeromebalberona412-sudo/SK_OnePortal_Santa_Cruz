@@ -9,7 +9,9 @@
     <meta http-equiv="Expires" content="0">
     <title>Reset Your Password</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{{ url('/modules/authentication/css/style.css') }}" rel="stylesheet">
+    @vite([
+        'app/Modules/Authentication/assets/css/style.css',
+    ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
@@ -47,10 +49,10 @@
             <div class="logo-container">
                 <div class="collab-logo-wrapper">
                     <div class="logo-glow-wrapper logo-left">
-                        <img src="{{ url('/modules/authentication/images/skoneportal_logo.webp') }}" alt="SK OnePortal Logo" class="collab-logo">
+                        <img src="{{ asset('images/SK_OnePortal_logo.png') }}" alt="SK OnePortal Logo" class="collab-logo">
                     </div>
                     <div class="logo-glow-wrapper logo-right">
-                        <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}" alt="SK Federations Logo" class="collab-logo">
+                        <img src="{{ asset('images/SK_Federations_logo.jpg') }}" alt="SK Federations Logo" class="collab-logo">
                     </div>
                 </div>
                 <h1 class="brand-title">SK OnePortal</h1>

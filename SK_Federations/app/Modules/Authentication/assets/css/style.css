@@ -49,7 +49,7 @@ html { overflow: hidden; height: 100%; scroll-behavior: smooth; }
     display: flex;
     flex-direction: column;
     position: relative;
-    background: linear-gradient(135deg, #213F99 0%, #d0242b 100%);
+    background: linear-gradient(135deg, #213F99 0%, #2563eb 100%);
     overflow: hidden;
 }
 
@@ -74,14 +74,14 @@ html { overflow: hidden; height: 100%; scroll-behavior: smooth; }
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background:
         radial-gradient(circle at 20% 50%, rgba(247, 211, 30, 0.10) 0%, transparent 50%),
-        radial-gradient(circle at 80% 30%, rgba(208, 36, 43, 0.07) 0%, transparent 50%);
+        radial-gradient(circle at 80% 30%, rgba(37, 99, 235, 0.07) 0%, transparent 50%);
 }
 
 .floating-shapes { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
 
 .shape { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.12; animation: floatShape 30s ease-in-out infinite; }
 .shape-1 { width: 600px; height: 600px; background: var(--fed-blue);   top: -10%; left: -10%; animation-delay: 0s; }
-.shape-2 { width: 500px; height: 500px; background: var(--fed-red);    bottom: -10%; left: 20%; animation-delay: 10s; }
+.shape-2 { width: 500px; height: 500px; background: #2563eb;    bottom: -10%; left: 20%; animation-delay: 10s; }
 .shape-3 { width: 400px; height: 400px; background: var(--fed-yellow); top: 30%; right: 10%; animation-delay: 20s; }
 
 @keyframes floatShape {
@@ -123,7 +123,7 @@ html { overflow: hidden; height: 100%; scroll-behavior: smooth; }
 
 .logo-glow-wrapper::before {
     content: ''; position: absolute; width: 300px; height: 300px;
-    background: radial-gradient(circle, rgba(247, 211, 30, 0.22) 0%, rgba(208, 36, 43, 0.15) 50%, transparent 70%);
+    background: radial-gradient(circle, rgba(247, 211, 30, 0.22) 0%, rgba(37, 99, 235, 0.15) 50%, transparent 70%);
     border-radius: 50%; animation: glowPulse 3s ease-in-out infinite;
 }
 
@@ -230,10 +230,10 @@ html { overflow: hidden; height: 100%; scroll-behavior: smooth; }
     position: relative; overflow: hidden;
 }
 
-/* Shimmer top bar: SK Fed tricolor - 6px like SK Officials */
+/* Shimmer top bar: Blue gradient - 6px like SK Officials */
 .login-card-inner::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px;
-    background: linear-gradient(90deg, var(--fed-blue) 0%, var(--fed-yellow) 50%, var(--fed-red) 100%);
+    background: linear-gradient(90deg, var(--fed-blue) 0%, #2563eb 50%, var(--fed-blue-light) 100%);
     background-size: 200% 100%; animation: shimmer 3s linear infinite;
 }
 
@@ -401,14 +401,14 @@ input[type="password"]::-webkit-credentials-auto-fill-button, input[type="passwo
     font-size: 0.95rem; color: var(--fed-blue-dark); text-decoration: none;
     font-weight: 600; transition: all var(--transition-fast); white-space: nowrap; position: relative;
 }
-.forgot-password::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 2px; background: var(--fed-red); transition: width var(--transition-base); }
-.forgot-password:hover { color: var(--fed-red); }
+.forgot-password::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 2px; background: #2563eb; transition: width var(--transition-base); }
+.forgot-password:hover { color: #2563eb; }
 .forgot-password:hover::after { width: 100%; }
 
 /* ── Submit Button (matches SK Officials sk-submit-btn sizing) ── */
 .login-btn {
     width: 100%; padding: 0.875rem 1.5rem; font-size: 1rem; font-weight: 700; color: var(--fed-white);
-    background: linear-gradient(135deg, var(--fed-blue) 0%, var(--fed-red) 100%);
+    background: linear-gradient(135deg, var(--fed-blue) 0%, #2563eb 100%);
     border: none; border-radius: 12px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: all var(--transition-base);
@@ -417,17 +417,18 @@ input[type="password"]::-webkit-credentials-auto-fill-button, input[type="passwo
 }
 .login-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent); transition: left 0.6s; }
 .login-btn:hover::before { left: 100%; }
-.login-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(208, 36, 43, 0.35); background: linear-gradient(135deg, var(--fed-red) 0%, var(--fed-blue) 100%); }
-.login-btn:active { transform: translateY(-1px); }
+.login-btn:hover { transform: none; box-shadow: 0 8px 24px rgba(33, 63, 153, 0.30); background: linear-gradient(135deg, var(--fed-blue) 0%, #2563eb 100%); }
+.login-btn:active { transform: none; }
 .login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 button.login-btn.btn-primary,
 button.login-btn.btn-primary:hover,
 button.login-btn.btn-primary:focus,
 button.login-btn.btn-primary:active {
-    background: linear-gradient(135deg, var(--fed-blue) 0%, var(--fed-red) 100%) !important;
+    background: linear-gradient(135deg, var(--fed-blue) 0%, #2563eb 100%) !important;
     border: none !important;
     color: var(--fed-white) !important;
-    box-shadow: 0 8px 24px rgba(33, 63, 153, 0.30);
+    box-shadow: 0 8px 24px rgba(33, 63, 153, 0.30) !important;
+    transform: none !important;
 }
 button.login-btn.btn-primary:disabled {
     opacity: 0.6;
@@ -445,8 +446,8 @@ button.login-btn.btn-primary:disabled {
     font-weight: 600; transition: all var(--transition-fast); position: relative;
     display: inline-flex; align-items: center; gap: 0.25rem;
 }
-.form-footer a::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 2px; background: var(--fed-red); transition: width var(--transition-base); }
-.form-footer a:hover { color: var(--fed-red); }
+.form-footer a::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 2px; background: #2563eb; transition: width var(--transition-base); }
+.form-footer a:hover { color: #2563eb; }
 .form-footer a:hover::after { width: 100%; }
 
 /* Alert (Bootstrap alert override for forgot password status) */

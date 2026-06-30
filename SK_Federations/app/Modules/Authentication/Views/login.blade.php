@@ -9,7 +9,11 @@
     <meta http-equiv="Expires" content="0">
     <title>OnePortal SK Federation</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{{ url('/modules/authentication/css/style.css') }}" rel="stylesheet">
+    @vite([
+        'app/Modules/Authentication/assets/css/style.css',
+        'app/Modules/Authentication/assets/css/auth-legal.css',
+        'app/Modules/Authentication/assets/js/auth-legal.js',
+    ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
@@ -46,12 +50,12 @@
             <div class="logo-container">
                 <div class="collab-logo-wrapper">
                     <div class="logo-glow-wrapper logo-left">
-                        <img src="{{ url('/modules/authentication/images/skoneportal_logo.webp') }}"
+                        <img src="{{ asset('images/SK_OnePortal_logo.png') }}"
                              alt="SK OnePortal Logo"
                              class="collab-logo">
                     </div>
                     <div class="logo-glow-wrapper logo-right">
-                        <img src="{{ url('/modules/authentication/images/Sk_Fed_logo.png') }}"
+                        <img src="{{ asset('images/SK_Federations_logo.jpg') }}"
                              alt="SK Federations Logo"
                              class="collab-logo">
                     </div>
@@ -147,6 +151,8 @@
                             <a href="{{ url('/forgot-password') }}" class="forgot-password">Forgot Password?</a>
                         </div>
 
+                        @include('authentication::partials.login-legal-consent')
+
                         <button type="submit" class="login-btn btn btn-primary w-100" id="loginBtn">
                             <span id="loginBtnText">Sign In</span>
                         </button>
@@ -158,6 +164,9 @@
 
         </div>
     </div>
+
+    @include('authentication::partials.legal-modals')
+    @include('authentication::partials.login-legal-prompt')
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url('/shared/js/loading.js') }}"></script>

@@ -66,11 +66,21 @@
         <style>
             .dash-stats-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                grid-template-columns: repeat(5, 1fr);
                 gap: 16px;
                 margin-bottom: 24px;
             }
-            @media (max-width: 992px) {
+            @media (max-width: 1400px) {
+                .dash-stats-grid {
+                    grid-template-columns: repeat(5, 1fr);
+                }
+            }
+            @media (max-width: 1200px) {
+                .dash-stats-grid {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+            }
+            @media (max-width: 768px) {
                 .dash-stats-grid {
                     grid-template-columns: repeat(2, 1fr);
                 }
@@ -104,21 +114,17 @@
             </div>
             <div class="card-body" style="padding:20px;overflow-x:auto;">
                 <div style="display:flex;gap:12px;flex-wrap:wrap;min-width:fit-content;">
-                    <a href="{{ route('profile') }}" class="qa-btn" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#8b5cf6;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap;transition:all 0.2s ease;box-shadow:0 1px 3px rgba(139,92,246,0.3);">
-                        <i class="fas fa-user"></i>
-                        <span>Profile</span>
+                    <a href="{{ route('accounts.officials.index') }}" class="qa-btn" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#213F99;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap;transition:all 0.2s ease;box-shadow:0 1px 3px rgba(33,63,153,0.3);">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Add SK Officials</span>
                     </a>
                     <a href="{{ route('barangay-monitoring') }}" class="qa-btn" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap;transition:all 0.2s ease;box-shadow:0 1px 3px rgba(37,99,235,0.3);">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span>Barangay ABYIP</span>
+                    </a>
+                    <a href="{{ route('barangay-logos.index') }}" class="qa-btn" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#2d52c4;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap;transition:all 0.2s ease;box-shadow:0 1px 3px rgba(45,82,196,0.3);">
                         <i class="fas fa-map-marker-alt"></i>
-                        <span>Barangay Monitoring</span>
-                    </a>
-                    <a href="{{ route('kabataan-monitoring') }}" class="qa-btn" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#0ea5e9;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap;transition:all 0.2s ease;box-shadow:0 1px 3px rgba(14,165,233,0.3);">
-                        <i class="fas fa-users"></i>
-                        <span>Kabataan Monitoring</span>
-                    </a>
-                    <a href="{{ route('community-feed') }}" class="qa-btn" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#10b981;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap;transition:all 0.2s ease;box-shadow:0 1px 3px rgba(16,185,129,0.3);">
-                        <i class="fas fa-rss"></i>
-                        <span>SK Community Feed</span>
+                        <span>Barangay Logo</span>
                     </a>
                 </div>
             </div>
@@ -147,11 +153,10 @@
         <div class="dash-row">
             <div class="content-card dash-col-5">
                 <div class="card-header dash-sex-chart-header">
-                    <h3><i class="fas fa-venus-mars" style="color:#213F99;margin-right:8px;"></i>Sex Distribution</h3>
-                    <select id="sexDistributionFilter" class="kk-barangay-select" aria-label="Filter by sex">
-                        <option value="all">All</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
+                    <h3><i class="fas fa-venus-mars" style="color:#213F99;margin-right:8px;"></i>Sex Distribution of SK Officials</h3>
+                    <select id="sexDistributionTypeFilter" class="kk-barangay-select" aria-label="Filter by type">
+                        <option value="officials">SK Officials</option>
+                        <option value="kabataan">Kabataan</option>
                     </select>
                 </div>
                 <div class="card-body chart-body dash-sex-chart-body">
@@ -193,11 +198,11 @@
         <div class="dash-row">
             <div class="content-card dash-col-4" id="top-barangays-section">
                 <div class="card-header">
-                    <h3><i class="fas fa-trophy" style="color:#213F99;margin-right:8px;"></i>Top 5 Barangays by Youth Population</h3>
+                    <h3><i class="fas fa-trophy" style="color:#F7D31E;margin-right:8px;"></i>Top 5 Barangays by Youth Population</h3>
                 </div>
                 <div class="card-body top-barangays-body">
                     @forelse ($topBarangays as $row)
-                        <div class="top-barangay-item">
+                        <a href="{{ route('kabataan-monitoring') }}" class="top-barangay-item" style="text-decoration:none;cursor:pointer;">
                             <div class="top-barangay-rank">{{ $row['rank'] }}</div>
                             <div class="top-barangay-info">
                                 <div class="top-barangay-name">{{ $row['barangay'] }}</div>
@@ -210,7 +215,7 @@
                                 @endphp
                                 <div class="top-barangay-bar" style="width: {{ $width }}%;"></div>
                             </div>
-                        </div>
+                        </a>
                     @empty
                         <p class="dash-empty-note">No youth registration data available yet.</p>
                     @endforelse
@@ -221,7 +226,7 @@
                 <div class="card-header kk-chart-section-header">
                     <div>
                         <h3><i class="fas fa-chart-line" style="color:#213F99;margin-right:8px;"></i>KK Profiling by Month</h3>
-                        <p class="kk-chart-subtitle" id="kkProfilingChartSubtitle">Approved, pending, and rejected submissions</p>
+                        <p class="kk-chart-subtitle" id="kkProfilingChartSubtitle">KK Profiling</p>
                     </div>
                     <div class="kk-chart-header-actions">
                         <select id="kkProfilingBarangayFilter" class="kk-barangay-select" aria-label="Filter by barangay">
@@ -248,7 +253,6 @@
                             <option value="11">November</option>
                             <option value="12">December</option>
                         </select>
-                        <button type="button" class="kk-export-btn" id="kkProfilingExportBtn">Export CSV</button>
                     </div>
                 </div>
                 <div class="card-body">
@@ -307,9 +311,15 @@
 <script src="{{ url('/modules/dashboard/js/dashboard-audit.js') }}?v={{ $dashAuditJsVersion }}"></script>
 <script>
         const fedBlue = '#213F99', fedRed = '#d0242b';
-        const sexDistribution = @json($sexDistribution);
-        const sexChartLabels = sexDistribution.labels || ['Male', 'Female'];
-        const sexChartValues = sexDistribution.values || [0, 0];
+        @php
+            $sexDistributionOfficialsData = $sexDistributionOfficials ?? ['labels' => ['Male', 'Female'], 'values' => [0, 0]];
+            $sexDistributionKabataanData = $sexDistribution ?? ['labels' => ['Male', 'Female'], 'values' => [0, 0]];
+        @endphp
+        const sexDistributionOfficials = @json($sexDistributionOfficialsData);
+        const sexDistributionKabataan = @json($sexDistributionKabataanData);
+        
+        let sexChartLabels = sexDistributionOfficials.labels || ['Male', 'Female'];
+        let sexChartValues = sexDistributionOfficials.values || [0, 0];
         const sexChartColors = [fedBlue, fedRed];
 
         const sexChart = new Chart(document.getElementById('sexChart'), {
@@ -335,25 +345,23 @@
             },
         });
 
-        document.getElementById('sexDistributionFilter')?.addEventListener('change', function () {
+        document.getElementById('sexDistributionTypeFilter')?.addEventListener('change', function () {
             const filter = this.value;
-            let labels = sexChartLabels;
-            let values = sexChartValues;
-            let colors = sexChartColors;
+            let labels, values;
 
-            if (filter === 'male') {
-                labels = [sexChartLabels[0] || 'Male'];
-                values = [sexChartValues[0] || 0];
-                colors = [fedBlue];
-            } else if (filter === 'female') {
-                labels = [sexChartLabels[1] || 'Female'];
-                values = [sexChartValues[1] || 0];
-                colors = [fedRed];
+            if (filter === 'officials') {
+                labels = sexDistributionOfficials.labels || ['Male', 'Female'];
+                values = sexDistributionOfficials.values || [0, 0];
+            } else if (filter === 'kabataan') {
+                labels = sexDistributionKabataan.labels || ['Male', 'Female'];
+                values = sexDistributionKabataan.values || [0, 0];
+            } else {
+                labels = sexDistributionOfficials.labels || ['Male', 'Female'];
+                values = sexDistributionOfficials.values || [0, 0];
             }
 
             sexChart.data.labels = labels;
             sexChart.data.datasets[0].data = values;
-            sexChart.data.datasets[0].backgroundColor = colors;
             sexChart.update();
         });
 </script>

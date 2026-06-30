@@ -632,6 +632,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
             ? SF.getAllFields()
                 .filter((f) => SF.isFieldVisible(f, systemAnswers, getKkEducation()))
                 .filter((f) => !f.id.endsWith('_occupation_other'))
+                .filter((f) => !f.id.endsWith('_suffix_other'))
                 .map((f) => {
                     const rawAnswer = systemAnswers[f.id] || '';
                     let displayAnswer = rawAnswer || '—';
@@ -640,7 +641,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
                         displayAnswer = SF.resolveOccupationFromValues?.(prefix, systemAnswers) || rawAnswer || '—';
                     } else if (f.id === 'annual_family_gross_income') {
                         displayAnswer = rawAnswer || '—';
-                    } else if (['text', 'name', 'suffix'].includes(f.type)) {
+                    } else if (['text', 'name', 'suffix', 'suffix_select', 'suffix_other'].includes(f.type)) {
                         displayAnswer = SF.toUpperAnswer?.(rawAnswer) || String(rawAnswer).toUpperCase() || '—';
                     }
                     return `
