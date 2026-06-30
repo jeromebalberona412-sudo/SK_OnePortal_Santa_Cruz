@@ -13,6 +13,32 @@
     const HIGH_SCHOOL_TRACK = ['High School Grad', 'High School Level'];
     const ELEMENTARY_ONLY = ['Elementary Level', 'Elementary Grad'];
 
+    const SCHOOL_TEXT_MIN = 20;
+    const SCHOOL_TEXT_MAX = 100;
+    const SCHOOL_TEXT_FIELD_IDS = new Set([
+        'elementary_school', 'elementary_address',
+        'secondary_school', 'secondary_address',
+        'senior_high_school', 'senior_high_address',
+    ]);
+    const OCCUPATION_OTHER_VALUE = 'Other Occupation';
+    const OCCUPATION_OTHER_MIN = 3;
+    const OCCUPATION_OTHER_MAX = 100;
+    const FAMILY_MONTHLY_INCOME_OPTIONS = [
+        '₱5,000', '₱10,000', '₱20,000', '₱30,000', '₱40,000', '₱50,000', '₱50,000 and above',
+    ];
+    const OCCUPATION_OPTIONS = [
+        'Unemployed', 'Self-employed', 'Government Employee', 'Private Employee', 'Teacher', 'Nurse', 'Doctor',
+        'Dentist', 'Pharmacist', 'Engineer', 'Architect', 'Accountant', 'Lawyer', 'Police Officer', 'Firefighter',
+        'Soldier / Military Personnel', 'Security Guard', 'Office Staff / Clerk', 'Administrative Assistant',
+        'Call Center Agent', 'Customer Service Representative', 'Sales Associate', 'Cashier', 'Store Crew',
+        'Service Crew', 'Waiter / Waitress', 'Cook / Chef', 'Baker', 'Driver', 'Delivery Rider', 'Mechanic',
+        'Electrician', 'Plumber', 'Carpenter', 'Welder', 'Construction Worker', 'Farmer', 'Fisherman', 'Vendor',
+        'Entrepreneur / Business Owner', 'Hairdresser / Barber', 'Beautician', 'Photographer', 'Graphic Designer',
+        'Web Developer', 'Software Developer', 'IT Support Specialist', 'Freelancer', 'Content Creator',
+        'Social Media Manager', 'Librarian', 'Homemaker', 'Retired', 'Overseas Filipino Worker (OFW)',
+        OCCUPATION_OTHER_VALUE,
+    ];
+
     const SCHOOL_BLOCKS = [
         { id: 'elementary', title: 'Elementary School' },
         { id: 'secondary', title: 'Secondary School' },
@@ -62,14 +88,14 @@
             title: 'Educational Background',
             locked: true,
             fields: [
-                { id: 'elementary_school', label: 'Elementary School', type: 'text', required: true, schoolBlock: 'elementary' },
-                { id: 'elementary_address', label: 'Address', type: 'text', required: true, schoolBlock: 'elementary' },
+                { id: 'elementary_school', label: 'Elementary School', type: 'text', required: true, schoolBlock: 'elementary', minLength: SCHOOL_TEXT_MIN, maxLength: SCHOOL_TEXT_MAX },
+                { id: 'elementary_address', label: 'Address', type: 'text', required: true, schoolBlock: 'elementary', minLength: SCHOOL_TEXT_MIN, maxLength: SCHOOL_TEXT_MAX },
                 { id: 'elementary_year_graduated', label: 'Year Graduated', type: 'year', required: true, schoolBlock: 'elementary' },
-                { id: 'secondary_school', label: 'Secondary School', type: 'text', required: true, schoolBlock: 'secondary' },
-                { id: 'secondary_address', label: 'Address', type: 'text', required: true, schoolBlock: 'secondary' },
+                { id: 'secondary_school', label: 'Secondary School', type: 'text', required: true, schoolBlock: 'secondary', minLength: SCHOOL_TEXT_MIN, maxLength: SCHOOL_TEXT_MAX },
+                { id: 'secondary_address', label: 'Address', type: 'text', required: true, schoolBlock: 'secondary', minLength: SCHOOL_TEXT_MIN, maxLength: SCHOOL_TEXT_MAX },
                 { id: 'secondary_year_graduated', label: 'Year Graduated', type: 'year', required: true, schoolBlock: 'secondary' },
-                { id: 'senior_high_school', label: 'Senior High School', type: 'text', required: true, schoolBlock: 'senior_high' },
-                { id: 'senior_high_address', label: 'Address', type: 'text', required: true, schoolBlock: 'senior_high' },
+                { id: 'senior_high_school', label: 'Senior High School', type: 'text', required: true, schoolBlock: 'senior_high', minLength: SCHOOL_TEXT_MIN, maxLength: SCHOOL_TEXT_MAX },
+                { id: 'senior_high_address', label: 'Address', type: 'text', required: true, schoolBlock: 'senior_high', minLength: SCHOOL_TEXT_MIN, maxLength: SCHOOL_TEXT_MAX },
                 { id: 'senior_high_year_graduated', label: 'Year Graduated', type: 'year', required: true, schoolBlock: 'senior_high' },
             ],
         },
@@ -79,24 +105,22 @@
             locked: true,
             fields: [
                 { id: 'mother_first_name', label: "Mother's First Name", type: 'name', required: true, group: 'mother' },
-                { id: 'mother_middle_name', label: "Mother's Middle Name", type: 'name', required: false, group: 'mother' },
                 { id: 'mother_last_name', label: "Mother's Last Name", type: 'name', required: true, group: 'mother' },
-                { id: 'mother_suffix', label: "Mother's Suffix", type: 'suffix', required: false, group: 'mother' },
-                { id: 'mother_occupation', label: "Mother's Occupation", type: 'text', required: true, group: 'mother' },
+                { id: 'mother_occupation', label: "Mother's Occupation", type: 'select', required: true, group: 'mother', options: OCCUPATION_OPTIONS },
+                { id: 'mother_occupation_other', label: "Mother's Other Occupation", type: 'text', required: true, group: 'mother', minLength: OCCUPATION_OTHER_MIN, maxLength: OCCUPATION_OTHER_MAX, showWhenField: 'mother_occupation', showWhenValue: OCCUPATION_OTHER_VALUE },
                 { id: 'mother_contact_number', label: "Mother's Contact No.", type: 'contact', required: true, group: 'mother' },
                 { id: 'father_first_name', label: "Father's First Name", type: 'name', required: true, group: 'father' },
-                { id: 'father_middle_name', label: "Father's Middle Name", type: 'name', required: false, group: 'father' },
                 { id: 'father_last_name', label: "Father's Last Name", type: 'name', required: true, group: 'father' },
-                { id: 'father_suffix', label: "Father's Suffix", type: 'suffix', required: false, group: 'father' },
-                { id: 'father_occupation', label: "Father's Occupation", type: 'text', required: true, group: 'father' },
+                { id: 'father_occupation', label: "Father's Occupation", type: 'select', required: true, group: 'father', options: OCCUPATION_OPTIONS },
+                { id: 'father_occupation_other', label: "Father's Other Occupation", type: 'text', required: true, group: 'father', minLength: OCCUPATION_OTHER_MIN, maxLength: OCCUPATION_OTHER_MAX, showWhenField: 'father_occupation', showWhenValue: OCCUPATION_OTHER_VALUE },
                 { id: 'father_contact_number', label: "Father's Contact No.", type: 'contact', required: true, group: 'father' },
                 { id: 'guardian_first_name', label: "Guardian's First Name", type: 'name', required: false, group: 'guardian' },
-                { id: 'guardian_middle_name', label: "Guardian's Middle Name", type: 'name', required: false, group: 'guardian' },
                 { id: 'guardian_last_name', label: "Guardian's Last Name", type: 'name', required: false, group: 'guardian' },
-                { id: 'guardian_suffix', label: "Guardian's Suffix", type: 'suffix', required: false, group: 'guardian' },
+                { id: 'guardian_occupation', label: "Guardian's Occupation", type: 'select', required: false, group: 'guardian', options: OCCUPATION_OPTIONS },
+                { id: 'guardian_occupation_other', label: "Guardian's Other Occupation", type: 'text', required: true, group: 'guardian', minLength: OCCUPATION_OTHER_MIN, maxLength: OCCUPATION_OTHER_MAX, showWhenField: 'guardian_occupation', showWhenValue: OCCUPATION_OTHER_VALUE },
                 { id: 'guardian_relation', label: 'Relation to Guardian', type: 'text', required: false, group: 'guardian' },
                 { id: 'guardian_contact_number', label: "Guardian's Contact No.", type: 'contact', required: false, group: 'guardian' },
-                { id: 'annual_family_gross_income', label: 'Annual Family Gross Income', type: 'currency', required: true },
+                { id: 'annual_family_gross_income', label: 'Family Monthly Income', type: 'select', required: true, options: FAMILY_MONTHLY_INCOME_OPTIONS },
             ],
         },
         {
@@ -156,6 +180,19 @@
         return String(education || '').trim();
     }
 
+    function formatOccupationDisplay(occupation, other) {
+        const selected = String(occupation || '').trim();
+        const otherText = String(other || '').trim();
+        if (selected === OCCUPATION_OTHER_VALUE && otherText) {
+            return otherText.toUpperCase();
+        }
+        return selected ? selected.toUpperCase() : '';
+    }
+
+    function resolveOccupationFromValues(prefix, values) {
+        return formatOccupationDisplay(values[`${prefix}_occupation`] || '', values[`${prefix}_occupation_other`] || '');
+    }
+
     function isSchoolBlockVisible(blockId, education) {
         const edu = normalizeEducation(education);
 
@@ -185,6 +222,11 @@
 
         if (field.schoolBlock) {
             return isSchoolBlockVisible(field.schoolBlock, education);
+        }
+
+        if (field.id && String(field.id).endsWith('_occupation_other')) {
+            const occupationKey = String(field.id).replace(/_other$/, '');
+            return (values[occupationKey] || '') === OCCUPATION_OTHER_VALUE;
         }
 
         if (field.showWhenEducation) {
@@ -242,8 +284,34 @@
         return '';
     }
 
+    function validateSchoolText(value, required, label, minLength = SCHOOL_TEXT_MIN, maxLength = SCHOOL_TEXT_MAX) {
+        const trimmed = String(value || '').trim();
+        if (!trimmed) return required ? `${label} is required.` : '';
+        if (trimmed.length < minLength) return `${label} must be at least ${minLength} characters.`;
+        if (trimmed.length > maxLength) return `${label} must not exceed ${maxLength} characters.`;
+        return '';
+    }
+
     function validateField(field, value, visible) {
         if (!visible) return '';
+        if (field.id && String(field.id).endsWith('_occupation_other')) {
+            return validateSchoolText(
+                value,
+                field.required,
+                field.label,
+                field.minLength || OCCUPATION_OTHER_MIN,
+                field.maxLength || OCCUPATION_OTHER_MAX,
+            );
+        }
+        if (SCHOOL_TEXT_FIELD_IDS.has(field.id) || (field.minLength && field.maxLength)) {
+            return validateSchoolText(
+                value,
+                field.required,
+                field.label,
+                field.minLength || SCHOOL_TEXT_MIN,
+                field.maxLength || SCHOOL_TEXT_MAX,
+            );
+        }
         if (field.type === 'name') return validateName(value, field.required);
         if (field.type === 'suffix') return validateSuffix(value);
         if (field.type === 'contact') return validateContact(value, field.required);
@@ -277,7 +345,7 @@
                     <h5>1. Personal Information (KK Profiling)</h5>
                     <span class="schol-system-lock-badge">System Fields · Auto-included</span>
                 </div>
-                <p class="schol-system-section-desc">All KK Profiling fields are automatically included in scholarship applications. Data is auto-filled from the applicant's KK Profile and displayed as read-only.</p>
+                <p class="schol-system-section-desc">All KK Profiling fields are automatically included in scholarship applications — including Middle Name and Suffix. Data is auto-filled from the applicant's KK Profile and displayed as read-only on the Kabataan apply form.</p>
                 <div class="schol-system-fields">${kkFieldList}</div>
             </div>
             ${editableSections.map((section, index) => `
@@ -337,13 +405,16 @@
 
         const inputType = field.type === 'number' || field.type === 'year' ? 'number' : 'text';
         const extraAttrs = field.type === 'year' ? 'min="1950" max="2100" step="1"' : '';
+        const lengthAttrs = field.minLength && field.maxLength
+            ? `minlength="${field.minLength}" maxlength="${field.maxLength}"`
+            : '';
         const inputClass = field.type === 'currency' ? 'gf-input schol-system-input schol-system-currency' : 'gf-input schol-system-input';
         const displayValue = field.type === 'currency' ? formatCurrencyDisplay(value) : escapeHtml(value);
 
         return `
             <div class="gf-form-group schol-system-field-wrap" data-field-wrap="${field.id}" ${hiddenAttr}>
                 <label for="sys_${field.id}">${escapeHtml(field.label)}${reqMark}</label>
-                <input class="${inputClass}" type="${inputType}" name="${field.id}" id="sys_${field.id}" data-system-field="${field.id}" data-field-type="${field.type}" value="${displayValue}" ${required ? 'required' : ''} ${extraAttrs} autocomplete="off">
+                <input class="${inputClass}" type="${inputType}" name="${field.id}" id="sys_${field.id}" data-system-field="${field.id}" data-field-type="${field.type}" value="${displayValue}" ${required ? 'required' : ''} ${extraAttrs} ${lengthAttrs} autocomplete="off">
             </div>`;
     }
 
@@ -469,6 +540,15 @@
             values.semester_of_graduation = 'N/A';
         }
 
+        ['mother', 'father', 'guardian'].forEach((prefix) => {
+            const otherKey = `${prefix}_occupation_other`;
+            if (values[`${prefix}_occupation`] === OCCUPATION_OTHER_VALUE) {
+                values[otherKey] = String(values[otherKey] || '').trim().toUpperCase();
+            } else {
+                values[otherKey] = '';
+            }
+        });
+
         return values;
     }
 
@@ -508,5 +588,9 @@
         parseCurrencyValue,
         validateName,
         validateContact,
+        formatOccupationDisplay,
+        resolveOccupationFromValues,
+        FAMILY_MONTHLY_INCOME_OPTIONS,
+        OCCUPATION_OPTIONS,
     };
 })(window);

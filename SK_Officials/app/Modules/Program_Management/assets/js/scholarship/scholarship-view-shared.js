@@ -434,6 +434,7 @@
     }
 
     function renderBackgroundInformationSection(systemFields) {
+        const SF = global.ScholarshipSystemFields;
         const groups = [
             { title: 'Mother', prefix: 'mother' },
             { title: 'Father', prefix: 'father' },
@@ -441,14 +442,13 @@
         ];
 
         const groupHtml = groups.map(({ title, prefix }) => {
-            const fullName = [
-                systemFields[`${prefix}_first_name`],
-                systemFields[`${prefix}_middle_name`],
-                systemFields[`${prefix}_last_name`],
-                systemFields[`${prefix}_suffix`],
-            ].filter((part) => String(part || '').trim()).join(' ');
+            const firstName = systemFields[`${prefix}_first_name`];
+            const lastName = systemFields[`${prefix}_last_name`];
+            const occupation = SF?.resolveOccupationFromValues
+                ? SF.resolveOccupationFromValues(prefix, systemFields)
+                : systemFields[`${prefix}_occupation`];
 
-            if (!fullName && !systemFields[`${prefix}_occupation`] && !systemFields[`${prefix}_contact_number`]) {
+            if (!firstName && !lastName && !occupation && !systemFields[`${prefix}_contact_number`]) {
                 return '';
             }
 
@@ -456,9 +456,10 @@
                 <div class="sch-app-view-subsection">
                     <h5 class="sch-app-view-subtitle">${title}</h5>
                     <div class="sch-app-view-grid">
-                        ${viewFieldHtml('Full Name', fullName || '—', 3)}
+                        ${viewFieldHtml('First Name', firstName)}
+                        ${viewFieldHtml('Last Name', lastName)}
                         ${prefix === 'guardian' ? viewFieldHtml('Relation', systemFields.guardian_relation) : ''}
-                        ${viewFieldHtml('Occupation', systemFields[`${prefix}_occupation`])}
+                        ${viewFieldHtml('Occupation', occupation)}
                         ${viewFieldHtml('Contact No.', systemFields[`${prefix}_contact_number`])}
                     </div>
                 </div>`;
@@ -468,7 +469,7 @@
             ${groupHtml || '<p class="sch-app-view-empty">No family background recorded.</p>'}
             <div class="sch-app-view-subsection">
                 <div class="sch-app-view-grid">
-                    ${viewFieldHtml('Annual Family Gross Income', formatCurrencyValue(systemFields.annual_family_gross_income), 3)}
+                    ${viewFieldHtml('Family Monthly Income', systemFields.annual_family_gross_income, 3)}
                 </div>
             </div>
         `);

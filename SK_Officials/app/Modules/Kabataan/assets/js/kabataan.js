@@ -764,18 +764,46 @@ function initializeKabataanUI() {
         if (toggleBtn) toggleBtn.textContent = '□';
     }
 
+    function openBatchPrintPreview(ids) {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/kabataan/batch-print';
+        form.target = '_blank';
+        form.style.display = 'none';
+
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = '_token';
+        tokenInput.value = csrf;
+        form.appendChild(tokenInput);
+
+        const yearInput = document.createElement('input');
+        yearInput.type = 'hidden';
+        yearInput.name = 'year';
+        yearInput.value = String(currentProfilingYear);
+        form.appendChild(yearInput);
+
+        ids.forEach((id) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'ids[]';
+            input.value = String(id);
+            form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+        form.remove();
+    }
+
     if (batchPrintBtn) {
         batchPrintBtn.addEventListener('click', () => {
             const ids = Array.from(selectedIds).map((id) => parseInt(id, 10)).filter((id) => !Number.isNaN(id));
             if (!ids.length) return;
 
-            ids.forEach((id, index) => {
-                window.setTimeout(() => {
-                    window.open(`/kabataan/${id}/print?year=${encodeURIComponent(currentProfilingYear)}`, `kk_print_${id}`, 'noopener');
-                }, index * 600);
-            });
-
-            showKabataanToast(`Opening ${ids.length} print preview${ids.length === 1 ? '' : 's'}...`, 'success');
+            openBatchPrintPreview(ids);
+            showKabataanToast(`Opening batch print (${ids.length} record${ids.length === 1 ? '' : 's'})...`, 'success');
         });
     }
 

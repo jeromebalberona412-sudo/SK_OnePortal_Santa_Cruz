@@ -255,12 +255,20 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         return container;
     }
 
-    function personalFieldHtml(label, value) {
-        if (isEmptyDisplayValue(value)) return '';
+    function personalFieldHtml(label, value, { alwaysShow = false } = {}) {
+        const SF = global.ScholarshipSystemFields;
+        const formatValue = SF?.formatProfileValue || ((v) => {
+            if (Array.isArray(v)) return v.map((p) => String(p ?? '').trim()).filter(Boolean).join(', ');
+            return String(v ?? '').trim();
+        });
+        const toUpper = SF?.toUpperAnswer || ((v) => String(v ?? '').trim().toUpperCase());
+        const formatted = formatValue(value);
+        if (!alwaysShow && isEmptyDisplayValue(formatted)) return '';
+        const display = isEmptyDisplayValue(formatted) ? '—' : toUpper(formatted);
         return `
             <div class="sch-wizard-field">
                 <label class="sch-wizard-field-label">${escapeHtml(label)}</label>
-                <div class="sch-wizard-field-value">${escapeHtml(String(value).trim())}</div>
+                <div class="sch-wizard-field-value">${escapeHtml(display)}</div>
             </div>`;
     }
 
@@ -268,43 +276,26 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         const container = shell?.querySelector('#schWizardPersonalFields');
         if (!container) return;
 
-        const fields = [
-            ['First Name', getKkProfileValue('first_name')],
-            ['Middle Name', getKkProfileValue('middle_name')],
-            ['Last Name', getKkProfileValue('last_name')],
-            ['Name Suffix', getKkProfileValue('suffix')],
-            ['Birth Date', getKkProfileValue('birthday')],
-            ['Birth Place', getKkProfileValue('birth_place')],
-            ['Age', getKkProfileValue('age')],
-            ['Email Address', getKkProfileValue('email')],
-            ['Contact Number', getKkProfileValue('contact_number')],
-            ['Sex', getKkProfileValue('sex')],
-            ['Civil Status', getKkProfileValue('civil_status')],
-            ['Religion', getKkProfileValue('religion')],
-            ['Province', getKkProfileValue('province')],
-            ['City/Municipality', getKkProfileValue('city') || getKkProfileValue('city_municipality')],
-            ['Barangay', getKkProfileValue('barangay')],
-        ];
+        const SF = global.ScholarshipSystemFields;
+        const defaultFields = SF?.DEFAULT_KK_FIELDS || [];
+        const fieldLabels = { ...(SF?.KK_FIELD_LABELS || {}), ...kkFieldLabels };
+        const alwaysShowKeys = SF?.PERSONAL_ALWAYS_SHOW_KEYS || new Set(['first_name', 'middle_name', 'last_name', 'suffix']);
+        const excludedKeys = new Set(['work_status', 'sk_voter', 'sk_voted', 'home_address', 'full_name']);
+        const selectedFields = (program.kk_profiling_fields?.length ? program.kk_profiling_fields : defaultFields)
+            .filter((field) => !excludedKeys.has(field));
 
-        const skipExtraKeys = new Set([
-            'first_name', 'middle_name', 'last_name', 'suffix', 'birthday', 'birth_place', 'age',
-            'email', 'contact_number', 'sex', 'civil_status', 'religion', 'home_address',
-            'purok_zone', 'province', 'city', 'city_municipality', 'barangay', 'full_name',
-        ]);
-        const shownLabels = new Set(fields.map(([l]) => l.toLowerCase()));
+        const resolveValue = (field) => {
+            if (field === 'city') {
+                return getKkProfileValue('city') || getKkProfileValue('city_municipality');
+            }
+            return getKkProfileValue(field);
+        };
 
-        let html = fields.map(([l, v]) => personalFieldHtml(l, v)).join('');
-
-        const kkProfile = program.kk_profile || {};
-        const selectedFields = program.kk_profiling_fields || Object.keys(kkProfile);
-
-        selectedFields.forEach((field) => {
-            if (skipExtraKeys.has(field)) return;
-            const value = kkProfile[field];
-            const label = kkFieldLabels[field] || field.replace(/_/g, ' ');
-            if (isEmptyDisplayValue(value) || shownLabels.has(label.toLowerCase())) return;
-            html += personalFieldHtml(label, value);
-        });
+        const html = selectedFields.map((field) => {
+            const label = fieldLabels[field] || field.replace(/_/g, ' ');
+            const value = resolveValue(field);
+            return personalFieldHtml(label, value, { alwaysShow: alwaysShowKeys.has(field) });
+        }).filter(Boolean).join('');
 
         container.innerHTML = html || '<p class="sch-preview-empty-section">No KK Profiling data available. Please complete your KK Profile first.</p>';
     }
@@ -581,7 +572,17 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
     }
 
     function isPersonalInfoComplete() {
-        return Boolean(getFullName() && getKkProfileValue('contact_number'));
+        const SF = global.ScholarshipSystemFields;
+        if (!SF?.validatePersonalProfile) {
+            return Boolean(getFullName() && getKkProfileValue('contact_number'));
+        }
+        return SF.validatePersonalProfile(program.kk_profile || {}).ok;
+    }
+
+    function getPersonalInfoErrors() {
+        const SF = global.ScholarshipSystemFields;
+        if (!SF?.validatePersonalProfile) return [];
+        return SF.validatePersonalProfile(program.kk_profile || {}).errors || [];
     }
 
     function isSystemSectionComplete(sectionId) {
@@ -630,13 +631,24 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         const systemHtml = SF
             ? SF.getAllFields()
                 .filter((f) => SF.isFieldVisible(f, systemAnswers, getKkEducation()))
-                .map((f) => `
+                .filter((f) => !f.id.endsWith('_occupation_other'))
+                .map((f) => {
+                    const rawAnswer = systemAnswers[f.id] || '';
+                    let displayAnswer = rawAnswer || '—';
+                    if (f.id.endsWith('_occupation')) {
+                        const prefix = f.id.replace('_occupation', '');
+                        displayAnswer = SF.resolveOccupationFromValues?.(prefix, systemAnswers) || rawAnswer || '—';
+                    } else if (f.id === 'annual_family_gross_income') {
+                        displayAnswer = rawAnswer || '—';
+                    } else if (['text', 'name', 'suffix'].includes(f.type)) {
+                        displayAnswer = SF.toUpperAnswer?.(rawAnswer) || String(rawAnswer).toUpperCase() || '—';
+                    }
+                    return `
                     <div class="gf-review-field">
-                        <span class="gf-review-field-label">${escapeHtml(f.label)}</span>
-                        <span class="gf-review-field-value">${escapeHtml(
-                            f.type === 'currency' ? SF.formatCurrencyDisplay(systemAnswers[f.id] || '') : (systemAnswers[f.id] || '—'),
-                        )}</span>
-                    </div>`).join('')
+                        <span class="gf-review-field-label">${escapeHtml(global.ScholarshipSystemFields?.getFieldDisplayLabel?.(f, getKkEducation()) || f.label)}</span>
+                        <span class="gf-review-field-value">${escapeHtml(displayAnswer)}</span>
+                    </div>`;
+                }).join('')
             : '';
 
         const docsHtml = getFileQuestions().length
@@ -657,7 +669,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
             <div class="gf-review-section">
                 <h3>Personal Information</h3>
                 <div class="gf-review-grid">
-                    <div class="gf-review-field"><span class="gf-review-field-label">Full Name</span><span class="gf-review-field-value">${escapeHtml(getFullName())}</span></div>
+                    <div class="gf-review-field"><span class="gf-review-field-label">Full Name</span><span class="gf-review-field-value">${escapeHtml((global.ScholarshipSystemFields?.toUpperAnswer?.(getFullName()) || getFullName()).toUpperCase())}</span></div>
                     <div class="gf-review-field"><span class="gf-review-field-label">Contact</span><span class="gf-review-field-value">${escapeHtml(getKkProfileValue('contact_number') || '—')}</span></div>
                 </div>
             </div>
@@ -729,8 +741,9 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         const kkEducation = getKkEducation();
 
         if (currentStep === 1) {
-            if (!isPersonalInfoComplete()) {
-                alert('Your KK Profiling information is incomplete. Please update your KK Profile before applying.');
+            const personalErrors = getPersonalInfoErrors();
+            if (personalErrors.length) {
+                alert(`Please complete your KK Profiling information before applying:\n${personalErrors.map((e) => e.message).join('\n')}`);
                 return false;
             }
             return true;

@@ -1149,12 +1149,12 @@ class KabataanProgramService
             'last_name' => $registration?->last_name ?? ($formData['last_name'] ?? ''),
             'first_name' => $registration?->first_name ?? ($formData['first_name'] ?? ''),
             'middle_name' => $registration?->middle_name ?? ($formData['middle_name'] ?? ''),
-            'suffix' => $this->resolveSuffixFromRegistration($registration, $formData),
+            'suffix' => $this->resolveSuffixForKkProfile($registration, $formData),
             'full_name' => $fullName !== '' ? $fullName : ($user->name ?? ''),
             'birthday' => $formData['birthday'] ?? ($formData['date_of_birth'] ?? ''),
             'age' => (string) ($formData['age'] ?? ''),
             'sex' => $formData['sex'] ?? ($formData['gender'] ?? ''),
-            'civil_status' => $formData['civil_status'] ?? '',
+            'civil_status' => $this->stringifyProfileValue($formData['civil_status'] ?? ''),
             'contact_number' => $registration?->contact_number ?? ($formData['contact_number'] ?? ''),
             'email' => $registration?->email ?? ($user->email ?? ''),
             'region' => $formData['region'] ?? '',
@@ -1163,9 +1163,9 @@ class KabataanProgramService
             'city_municipality' => $formData['city_municipality'] ?? ($formData['city'] ?? ''),
             'barangay' => $registration?->barangay?->name ?? ($formData['barangay'] ?? ''),
             'purok_zone' => $formData['purok_zone'] ?? ($formData['purok'] ?? ''),
-            'youth_classification' => $formData['youth_classification'] ?? '',
-            'youth_age_group' => $formData['youth_age_group'] ?? '',
-            'education' => $formData['education'] ?? '',
+            'youth_classification' => $this->stringifyProfileValue($formData['youth_classification'] ?? ''),
+            'youth_age_group' => $this->stringifyProfileValue($formData['youth_age_group'] ?? ''),
+            'education' => $this->stringifyProfileValue($formData['education'] ?? ''),
             'current_school' => $formData['current_school'] ?? ($formData['school'] ?? ''),
             'course_strand' => $formData['course_strand'] ?? ($formData['course'] ?? ''),
             'work_status' => $formData['work_status'] ?? '',
@@ -1182,13 +1182,50 @@ class KabataanProgramService
         $result = [];
         foreach ($selectedFields as $field) {
             $key = (string) $field;
-            $value = trim((string) ($mapped[$key] ?? ''));
-            if ($value !== '') {
-                $result[$key] = $value;
+            $value = $mapped[$key] ?? '';
+            if (is_array($value)) {
+                $parts = array_filter(
+                    array_map(fn ($part) => trim((string) $part), $value),
+                    fn ($part) => $part !== '',
+                );
+                $value = implode(', ', $parts);
             }
+            $result[$key] = trim((string) $value);
         }
 
         return $result;
+    }
+
+    private function stringifyProfileValue(mixed $value): string
+    {
+        if (is_array($value)) {
+            $parts = array_filter(
+                array_map(fn ($part) => trim((string) $part), $value),
+                fn ($part) => $part !== '',
+            );
+
+            return implode(', ', $parts);
+        }
+
+        return trim((string) ($value ?? ''));
+    }
+
+    /**
+     * Suffix value for KK profile display (includes "None" when applicable).
+     *
+     * @param  array<string, mixed>  $formData
+     */
+    private function resolveSuffixForKkProfile(?KabataanRegistration $registration, array $formData): string
+    {
+        $suffix = trim((string) ($registration?->suffix ?? ($formData['suffix'] ?? '')));
+
+        if ($suffix === 'Others') {
+            $custom = trim((string) ($formData['custom_suffix'] ?? ''));
+
+            return $custom !== '' ? $custom : 'Others';
+        }
+
+        return $suffix;
     }
 
     /**
@@ -1566,8 +1603,14 @@ class KabataanProgramService
         foreach ($fieldsToRender as $field) {
             $key = (string) $field;
             $value = trim((string) ($mapped[$key] ?? ''));
-            if ($value === '' || $value === '—') {
+            $alwaysShow = in_array($key, ['first_name', 'middle_name', 'last_name', 'suffix'], true);
+
+            if (($value === '' || $value === '—') && ! $alwaysShow) {
                 continue;
+            }
+
+            if ($value === '') {
+                $value = '—';
             }
 
             $items[] = [
@@ -1606,37 +1649,52 @@ class KabataanProgramService
     {
         $motherName = trim(implode(' ', array_filter([
             $systemFields['mother_first_name'] ?? '',
-            $systemFields['mother_middle_name'] ?? '',
             $systemFields['mother_last_name'] ?? '',
-            $systemFields['mother_suffix'] ?? '',
         ], fn ($part) => trim((string) $part) !== '')));
 
         $fatherName = trim(implode(' ', array_filter([
             $systemFields['father_first_name'] ?? '',
-            $systemFields['father_middle_name'] ?? '',
             $systemFields['father_last_name'] ?? '',
-            $systemFields['father_suffix'] ?? '',
         ], fn ($part) => trim((string) $part) !== '')));
 
         $guardianName = trim(implode(' ', array_filter([
             $systemFields['guardian_first_name'] ?? '',
-            $systemFields['guardian_middle_name'] ?? '',
             $systemFields['guardian_last_name'] ?? '',
-            $systemFields['guardian_suffix'] ?? '',
         ], fn ($part) => trim((string) $part) !== '')));
 
         $parentName = $motherName !== '' ? $motherName : ($fatherName !== '' ? $fatherName : $guardianName);
-        $parentOccupation = $systemFields['mother_occupation'] ?? ($systemFields['father_occupation'] ?? null);
-        $incomeDigits = preg_replace('/\D+/', '', (string) ($systemFields['annual_family_gross_income'] ?? '')) ?: null;
+        $parentOccupation = $this->resolveStoredOccupation($systemFields, 'mother')
+            ?? $this->resolveStoredOccupation($systemFields, 'father')
+            ?? $this->resolveStoredOccupation($systemFields, 'guardian');
+        $incomeValue = trim((string) ($systemFields['annual_family_gross_income'] ?? ''));
 
         $profileData['parent_guardian_name'] = $this->nullableString($parentName);
         $profileData['parent_occupation'] = $this->nullableString($parentOccupation);
-        $profileData['parent_income'] = $incomeDigits !== null ? (float) $incomeDigits : null;
+        $profileData['parent_income'] = $incomeValue !== '' ? $incomeValue : null;
         $profileData['school_name'] = $this->nullableString($systemFields['school_name'] ?? $profileData['school_name'] ?? null);
         $profileData['grade_level'] = $this->nullableString($systemFields['year_level'] ?? $profileData['grade_level'] ?? null);
         $profileData['course'] = $this->nullableString($systemFields['strand'] ?? $profileData['course'] ?? null);
 
         return $profileData;
+    }
+
+    /**
+     * @param  array<string, mixed>  $systemFields
+     */
+    private function resolveStoredOccupation(array $systemFields, string $prefix): ?string
+    {
+        $occupation = trim((string) ($systemFields["{$prefix}_occupation"] ?? ''));
+        $other = trim((string) ($systemFields["{$prefix}_occupation_other"] ?? ''));
+
+        if ($occupation === 'Other Occupation' && $other !== '') {
+            return mb_strtoupper($other);
+        }
+
+        if ($occupation !== '') {
+            return $occupation;
+        }
+
+        return null;
     }
 
     /**

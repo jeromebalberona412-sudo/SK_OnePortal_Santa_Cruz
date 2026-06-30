@@ -62,7 +62,8 @@
     }
 
     function fieldHtml(label, value, colSpan) {
-        const val = String(value ?? '').trim() || '—';
+        const raw = String(value ?? '').trim();
+        const val = raw ? (global.ScholarshipSystemFields?.toUpperAnswer?.(raw) || raw.toUpperCase()) : '—';
         return `
             <div class="sch-preview-field" ${colSpan ? `style="grid-column: span ${colSpan}"` : ''}>
                 <label>${escapeHtml(label)}</label>
@@ -105,7 +106,7 @@
             ['Religion', byLabel['Religion']],
             ['Contact Number', byLabel['Contact Number']],
             ['Email Address', byLabel['Email Address']],
-            ['Complete Address', byLabel['Home Address'] || byLabel['Purok / Zone']],
+            ['Purok / Zone', byLabel['Purok / Zone']],
             ['Province', byLabel['Province']],
             ['City/Municipality', byLabel['City/Municipality'] || byLabel['City']],
             ['Barangay', byLabel['Barangay']],
@@ -163,6 +164,7 @@
     }
 
     function renderBackgroundSection(systemFields) {
+        const SF = global.ScholarshipSystemFields;
         const groups = [
             { title: 'Mother', prefix: 'mother' },
             { title: 'Father', prefix: 'father' },
@@ -170,14 +172,13 @@
         ];
 
         const groupHtml = groups.map(({ title, prefix }) => {
-            const fullName = [
-                systemFields[`${prefix}_first_name`],
-                systemFields[`${prefix}_middle_name`],
-                systemFields[`${prefix}_last_name`],
-                systemFields[`${prefix}_suffix`],
-            ].filter((p) => String(p || '').trim()).join(' ');
+            const firstName = systemFields[`${prefix}_first_name`];
+            const lastName = systemFields[`${prefix}_last_name`];
+            const occupation = SF?.resolveOccupationFromValues
+                ? SF.resolveOccupationFromValues(prefix, systemFields)
+                : systemFields[`${prefix}_occupation`];
 
-            if (!fullName && !systemFields[`${prefix}_occupation`] && !systemFields[`${prefix}_contact_number`]) {
+            if (!firstName && !lastName && !occupation && !systemFields[`${prefix}_contact_number`]) {
                 return '';
             }
 
@@ -185,21 +186,22 @@
                 <div class="sch-preview-subsection">
                     <h3>${title}</h3>
                     <div class="sch-preview-grid">
-                        ${fieldHtml('Full Name', fullName || '—', 3)}
+                        ${fieldHtml('First Name', firstName)}
+                        ${fieldHtml('Last Name', lastName)}
                         ${prefix === 'guardian' ? fieldHtml('Relation', systemFields.guardian_relation) : ''}
-                        ${fieldHtml('Occupation', systemFields[`${prefix}_occupation`])}
+                        ${fieldHtml('Occupation', occupation)}
                         ${fieldHtml('Contact No.', systemFields[`${prefix}_contact_number`])}
                     </div>
                 </div>`;
         }).join('');
 
-        const income = formatCurrency(systemFields.annual_family_gross_income);
+        const income = systemFields.annual_family_gross_income || '—';
 
         return sectionCard('Background Information', `
             ${groupHtml || '<p class="sch-preview-empty-section">No family background recorded.</p>'}
             <div class="sch-preview-subsection" style="margin-top:16px;">
                 <div class="sch-preview-grid">
-                    ${fieldHtml('Annual Family Gross Income', income, 3)}
+                    ${fieldHtml('Family Monthly Income', income, 3)}
                 </div>
             </div>
         `, 'schPreviewBackground');
@@ -231,7 +233,13 @@
             const value = id === 'annual_family_gross_income'
                 ? formatCurrency(systemFields[id])
                 : systemFields[id];
-            return fieldHtml(getSystemLabel(id), value);
+            const label = id === 'strand'
+                ? (global.ScholarshipSystemFields?.getFieldDisplayLabel?.(
+                    global.ScholarshipSystemFields.getAllFields().find((f) => f.id === id),
+                    edu,
+                ) || getSystemLabel(id))
+                : getSystemLabel(id);
+            return fieldHtml(label, value);
         }).join('');
 
         return sectionCard('Additional Information', `<div class="sch-preview-grid">${grid}</div>`, 'schPreviewAdditional');
@@ -299,12 +307,18 @@
         const statusKey = String(application.status || '').toLowerCase();
         const isApproved = statusKey === 'approved';
         const isPending = statusKey === 'pending';
+        const isRejected = statusKey === 'rejected';
         const statusLabel = application.status_display || application.status || '—';
+        const statusClass = isApproved
+            ? 'sch-preview-status-badge is-approved'
+            : (isRejected ? 'sch-preview-status-badge is-rejected' : (isPending ? 'sch-preview-status-badge is-pending' : 'sch-preview-status-badge'));
         const showCancel = isPending && application.can_cancel;
 
         let asideNotice = '';
-        if (statusKey === 'rejected') {
+        if (isRejected) {
             asideNotice = `<div class="sch-preview-warning">Your application was not approved. Please check your email or contact your SK officials for details.</div>`;
+        } else if (isApproved) {
+            asideNotice = `<div class="sch-preview-success">Your application has been approved. Please monitor announcements from your SK officials.</div>`;
         } else if (isPending) {
             asideNotice = `<div class="sch-preview-warning">Your application has been submitted. You may no longer edit your responses unless you cancel and re-apply.</div>`;
         }
@@ -351,7 +365,7 @@
                             </div>
                             <div class="sch-preview-summary-row">
                                 <span class="sch-preview-summary-label">Status</span>
-                                <span class="sch-preview-summary-value">${escapeHtml(statusLabel)}</span>
+                                <span class="${statusClass}">${escapeHtml(statusLabel)}</span>
                             </div>
                             ${asideNotice}
                         </div>

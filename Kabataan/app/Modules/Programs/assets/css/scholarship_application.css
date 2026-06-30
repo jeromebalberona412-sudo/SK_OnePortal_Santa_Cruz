@@ -916,6 +916,11 @@
     background: #f8f9fa;
     border-radius: 4px;
     border: 1px solid #dadce0;
+    text-transform: uppercase;
+}
+
+.schol-system-uppercase {
+    text-transform: uppercase;
 }
 
 .gf-review-doc {
