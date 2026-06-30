@@ -626,8 +626,8 @@ function renderLineChart(chartData) {
         chartLine = null;
     }
 
-    const xLabels = (kkChartGranularity === 'weekly' && chartData.week_ranges?.length)
-        ? chartData.week_ranges
+    const xLabels = (kkChartGranularity === 'weekly' && (chartData.week_ranges?.length || chartData.labels?.length))
+        ? (chartData.week_ranges || chartData.labels)
         : (chartData.labels || []);
 
     chartLine = new Chart(ctx, {
@@ -673,19 +673,28 @@ function renderLineChart(chartData) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(10, 17, 34, 0.96)',
+                    borderColor: 'rgba(88, 130, 222, 0.7)',
+                    borderWidth: 1,
+                    titleColor: '#e8f1ff',
+                    bodyColor: '#d8e6ff',
+                },
+            },
             scales: {
                 x: {
                     grid: { display: false },
                     ticks: {
-                        font: { size: 10 },
+                        font: { size: 11 },
                         color: '#6b7280',
                         maxRotation: 45,
                         minRotation: 0,
                         autoSkip: false,
                     },
                 },
-                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' }, ticks: { stepSize: 1 } },
+                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' }, ticks: { stepSize: 1, color: '#6b7280', precision: 0 } },
             },
         },
     });

@@ -223,7 +223,7 @@
         </div>
 
         {{-- ── ROW 2: Federation Officers + Recent Audit Activity ── --}}
-        <div class="dash-row">
+        <div class="dash-row dash-row--balanced">
             <div class="content-card dash-col-6" id="federation-section">
                 <div class="card-header">
                     <h3><i class="fas fa-sitemap" style="color:#213F99;margin-right:8px;"></i>Federation Officers</h3>

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Modules\Shared\Models\User;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -41,9 +42,16 @@ class AbyipSubmissionSchedule extends Model
             'date_start' => 'date',
             'deadline' => 'date',
             'original_deadline' => 'date',
-            'allow_late_extension' => 'boolean',
             'cancelled_at' => 'datetime',
         ];
+    }
+
+    protected function allowLateExtension(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => filter_var($value, FILTER_VALIDATE_BOOLEAN),
+            set: fn ($value) => filter_var($value, FILTER_VALIDATE_BOOLEAN),
+        );
     }
 
     public function histories(): HasMany

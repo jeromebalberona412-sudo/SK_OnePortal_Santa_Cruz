@@ -144,6 +144,58 @@ html, body {
     max-width: 100%;
 }
 
+.stats-dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(140px, 1fr)) repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+    width: 100%;
+}
+
+.stats-status-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.stats-status-group-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #64748b;
+    padding-left: 2px;
+}
+
+.stats-status-group-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    min-width: 0;
+}
+
+.stats-status-group-cards .stat-card {
+    min-height: 100px;
+}
+
+.kk-chart-canvas-wrap,
+.chart-canvas-wrap--line {
+    height: 280px;
+    position: relative;
+}
+
+.kk-chart-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+}
+
 /* ── Base card ───────────────────────────────────────────── */
 .stat-card {
     background: #ffffff;
@@ -238,11 +290,12 @@ html, body {
 .stat-icon-orange svg { stroke: #ca8a04; }
 
 .stat-icon-green,
-.stat-icon-teal,
-.stat-icon-yellow  { background: #dcfce7; }
+.stat-icon-teal  { background: #dcfce7; }
 .stat-icon-green svg,
-.stat-icon-teal svg,
-.stat-icon-yellow svg { stroke: #16a34a; }
+.stat-icon-teal svg { stroke: #16a34a; }
+
+.stat-icon-yellow  { background: #fef9c3; }
+.stat-icon-yellow svg { stroke: #ca8a04; }
 
 .stat-icon-purple  { background: #f3e8ff; }
 .stat-icon-purple svg { stroke: #9333ea; }
@@ -1254,6 +1307,14 @@ html, body {
     .stats-2row-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
+
+    .stats-dashboard-grid {
+        grid-template-columns: repeat(2, minmax(140px, 1fr));
+    }
+
+    .stats-status-group {
+        grid-column: 1 / -1;
+    }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -1283,6 +1344,14 @@ html, body {
     .stats-2row-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 8px;
+    }
+
+    .stats-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-status-group-cards {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
     .stat-card { padding: 11px 12px; min-height: 96px; }
     .stat-card-icon { width: 34px; height: 34px; }

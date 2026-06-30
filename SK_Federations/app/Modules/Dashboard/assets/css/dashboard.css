@@ -2454,6 +2454,51 @@ body.dash-activity-modal-open { overflow: hidden; }
     font-size: 12px;
 }
 
+.dash-row--balanced {
+    align-items: stretch;
+}
+
+.dash-row--balanced > .dash-col-6 {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.dash-row--balanced > .dash-col-6 > .content-card,
+.dash-row--balanced > .dash-col-6 > .dash-audit-row {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.dash-row--balanced .federation-officers-body {
+    flex: 1;
+    min-height: 360px;
+    overflow-y: auto;
+}
+
+.dash-row--balanced .dash-audit-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 360px;
+}
+
+.dash-row--balanced .dash-audit-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.dash-row--balanced .dash-audit-row--compact .dash-audit-table-wrap {
+    max-height: none;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.dash-audit-col-actions { width: 72px; text-align: center; }
+
 @media (max-width: 992px) {
     .charts-grid-2 { grid-template-columns: 1fr; }
 }

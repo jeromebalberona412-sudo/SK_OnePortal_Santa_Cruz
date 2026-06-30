@@ -555,14 +555,14 @@ class DashboardService
             $clipStart = $weekStart->lt($start) ? $start->copy() : $weekStart->copy();
             $clipEnd = $weekEnd->gt($end) ? $end->copy() : $weekEnd->copy();
 
-            $isoWeek = $clipStart->isoWeek();
-            $labels[] = 'W'.$isoWeek;
-            $weekRanges[] = sprintf(
+            $isoWeek = $weekStart->isoWeek();
+            $labels[] = sprintf(
                 'W%d (%s – %s)',
                 $isoWeek,
                 $clipStart->format('M j'),
                 $clipEnd->format('M j, Y')
             );
+            $weekRanges[] = $labels[array_key_last($labels)];
             $approved[] = $this->kkCountBetween($barangayId, 'approved', $clipStart, $clipEnd, $zone);
             $rejected[] = $this->kkCountBetween($barangayId, 'rejected', $clipStart, $clipEnd, $zone);
             $pending[] = $this->kkCountBetween($barangayId, 'pending', $clipStart, $clipEnd, $zone);

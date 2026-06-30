@@ -74,7 +74,7 @@ class AbyipSubmissionScheduleService
         $this->assertNoDuplicateYear($validated['fiscal_year']);
 
         return DB::transaction(function () use ($user, $validated) {
-            $schedule = new AbyipSubmissionSchedule([
+            $schedule = AbyipSubmissionSchedule::query()->create([
                 'tenant_id' => $user->tenant_id,
                 'fiscal_year' => $validated['fiscal_year'],
                 'title' => $validated['title'],
@@ -85,8 +85,21 @@ class AbyipSubmissionScheduleService
                 'created_by_user_id' => $user->id,
                 'updated_by_user_id' => $user->id,
             ]);
-            $schedule->allow_late_extension = (bool) ($validated['allow_late_extension'] ?? false);
-            $schedule->save();
+
+            $allowLateExtension = filter_var(
+                $validated['allow_late_extension'] ?? false,
+                FILTER_VALIDATE_BOOLEAN
+            );
+
+            if ($allowLateExtension && DB::getDriverName() === 'pgsql') {
+                DB::table('abyip_submission_schedules')
+                    ->where('id', $schedule->id)
+                    ->update(['allow_late_extension' => DB::raw('TRUE')]);
+                $schedule->refresh();
+            } elseif ($allowLateExtension) {
+                $schedule->allow_late_extension = true;
+                $schedule->save();
+            }
 
             $this->recordHistory($schedule, AbyipSubmissionScheduleHistory::ACTION_CREATED, null, $schedule->deadline, null, $schedule->date_start, 'Initial schedule created.', $user);
             $this->logScheduleEvent($user, 'abyip_schedule.created', $schedule, [
@@ -359,7 +372,7 @@ class AbyipSubmissionScheduleService
             'title' => $title,
             'date_start' => $start->toDateString(),
             'deadline' => $end->toDateString(),
-            'allow_late_extension' => (bool) ($data['allow_late_extension'] ?? false),
+            'allow_late_extension' => filter_var($data['allow_late_extension'] ?? false, FILTER_VALIDATE_BOOLEAN),
         ];
     }
 

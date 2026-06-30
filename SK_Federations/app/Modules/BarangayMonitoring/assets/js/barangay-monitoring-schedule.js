@@ -256,6 +256,7 @@
             title: title,
             date_start: dateStart,
             deadline: deadline,
+            allow_late_extension: false,
         };
 
         if (saveBtn) {

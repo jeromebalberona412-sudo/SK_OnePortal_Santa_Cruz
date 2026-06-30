@@ -2,7 +2,7 @@
     <div class="card-header dash-audit-header">
         <div>
             <h3><i class="fas fa-clipboard-list" style="color:#213F99;margin-right:8px;"></i>Recent Audit Activity</h3>
-            <p class="dash-audit-subtitle" id="dashAuditTableSubtitle">Latest 5 activity records across the federation portal</p>
+            <p class="dash-audit-subtitle" id="dashAuditTableSubtitle">Latest 10 activity records across the federation portal</p>
         </div>
         <a href="{{ route('auditlogs.index') }}" class="dash-audit-view-all">View All Audit Logs</a>
     </div>
@@ -17,7 +17,7 @@
                         <th>Role</th>
                         <th>Event Type</th>
                         <th>IP Address</th>
-                        <th class="dash-audit-col-actions">View</th>
+                        <th class="dash-audit-col-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="dashAuditLogsTableBody">
