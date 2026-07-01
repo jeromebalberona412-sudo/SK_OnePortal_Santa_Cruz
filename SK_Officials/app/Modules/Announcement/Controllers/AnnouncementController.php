@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Modules\Announcement\Services\AnnouncementArchiveService;
 use App\Modules\Announcement\Services\CloudinaryService;
 use App\Services\BarangayLogoUrlService;
+use App\Services\FeedCommentRateLimiter;
 use App\Services\SkFederationsNotificationDispatcher;
 use App\Services\SkOfficialActivityService;
 use Illuminate\Http\JsonResponse;
@@ -21,7 +22,7 @@ use Throwable;
 
 class AnnouncementController extends Controller
 {
-    private const MAX_BODY_LENGTH = 10000;
+    private const MAX_BODY_LENGTH = 2000;
 
     private const MAX_IMAGES = 20;
 
@@ -200,9 +201,18 @@ class AnnouncementController extends Controller
     // POST /api/announcements/{id}/comment
     public function comment(Request $request, int $id): JsonResponse
     {
-        $request->validate(['body' => 'required|string|max:1000']);
-
         $user = Auth::user();
+        $limiter = app(FeedCommentRateLimiter::class);
+        $cooldown = $limiter->check('sk_official', (int) $user->id);
+
+        if (! $cooldown['allowed']) {
+            return response()->json([
+                'message' => $cooldown['message'],
+                'retry_after' => $cooldown['retry_after'],
+            ], 429);
+        }
+
+        $request->validate(['body' => 'required|string|max:'.FeedCommentRateLimiter::MAX_BODY_LENGTH]);
         $post = Announcement::query()->findOrFail($id);
 
         if (! in_array($user->role, self::SK_COMMENT_ROLES, true)) {
@@ -226,6 +236,8 @@ class AnnouncementController extends Controller
                 $request->body,
             );
         }
+
+        $limiter->hit('sk_official', (int) $user->id);
 
         return response()->json($this->formatComment($comment->load('user')), 201);
     }

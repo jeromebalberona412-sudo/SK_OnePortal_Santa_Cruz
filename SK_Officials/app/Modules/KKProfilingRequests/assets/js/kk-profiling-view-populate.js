@@ -136,18 +136,22 @@ export function populateKkProfilingView(request, options = {}) {
         return candidates.some((candidate) => normalized === candidate.trim().toLowerCase());
     };
 
-    const formatDisplaySuffix = (value) => {
+    const formatDisplaySuffix = (value, suffixOther) => {
         if (!value) return '';
         const normalized = String(value).trim();
         if (!normalized || normalized.toLowerCase() === 'none') return '';
+        if (normalized.toLowerCase() === 'other' || normalized.toLowerCase() === 'others') {
+            const other = String(suffixOther || '').trim();
+            return other || '';
+        }
         return normalized;
     };
 
-    const applySuffixDisplay = (elementId, value) => {
+    const applySuffixDisplay = (elementId, value, suffixOther) => {
         const el = document.getElementById(elementId);
         const col = el?.closest('.kkp-name-col, .kkf-name-col');
-        const display = formatDisplaySuffix(value);
-        if (el) el.textContent = display;
+        const display = formatDisplaySuffix(value, suffixOther);
+        if (el) el.textContent = display || '—';
         if (col) col.hidden = !display;
     };
 
@@ -163,7 +167,7 @@ export function populateKkProfilingView(request, options = {}) {
     setVal('kkViewLastName', lastName || '—');
     setVal('kkViewFirstName', firstName || '—');
     setVal('kkViewMiddleName', middleName || '—');
-    applySuffixDisplay('kkViewSuffix', suffix);
+    applySuffixDisplay('kkViewSuffix', suffix, request.suffixOther || request.suffix_other || request.custom_suffix);
     setVal('kkViewRegion', region || '—');
     setVal('kkViewProvince', province || '—');
     setVal('kkViewCity', city || '—');
@@ -242,9 +246,10 @@ export function populateKkProfilingView(request, options = {}) {
         normalizedReason === 'Not interested to Attend'
         || normalizedReason === 'Not Interested to Attend');
 
-    setVal('kkViewFacebookAccount', facebookAccount || '—');
-    setCheck('kkViewGC_Yes', willingToJoinGroupChat === 'Yes');
-    setCheck('kkViewGC_No', willingToJoinGroupChat === 'No');
+    setVal('kkViewFacebookAccount', facebookAccount && facebookAccount !== '—' ? facebookAccount : '—');
+    const groupChatAnswer = (willingToJoinGroupChat || '').trim();
+    setCheck('kkViewGC_Yes', groupChatAnswer === 'Yes');
+    setCheck('kkViewGC_No', groupChatAnswer === 'No');
 
     const logoEl = document.getElementById('kkViewBarangayLogo');
     if (logoEl && barangayLogoUrl) {

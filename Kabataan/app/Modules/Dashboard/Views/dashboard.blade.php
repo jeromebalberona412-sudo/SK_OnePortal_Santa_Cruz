@@ -927,14 +927,16 @@
             </button>
           </div>
           <div class="comments-section" id="feed-comments-${p.id}" style="display:none;">
-            <div id="feed-comments-list-${p.id}">${comments}</div>
-            <div class="comment-input-wrapper">
-              <img src="${commentAvatar}" alt="You">
-              <input type="text" class="comment-input" placeholder="Write a comment..."
-                     onkeydown="if(event.key==='Enter')feedSubmitComment(${p.id},this)">
-              <button class="send-comment-btn" onclick="feedSubmitComment(${p.id},this.previousElementSibling)">
-                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
-              </button>
+            <div class="comments-list-scroll" id="feed-comments-list-${p.id}">${comments}</div>
+            <div class="comment-compose-sticky">
+              <div class="comment-input-wrapper">
+                <img src="${commentAvatar}" alt="You">
+                <input type="text" class="comment-input" placeholder="Write a comment..." maxlength="500"
+                       onkeydown="if(event.key==='Enter')feedSubmitComment(${p.id},this)">
+                <button class="send-comment-btn" onclick="feedSubmitComment(${p.id},this.previousElementSibling)">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
+                </button>
+              </div>
             </div>
           </div>`;
     }
@@ -974,17 +976,37 @@
     async function feedSubmitComment(id, input) {
         const text = input.value.trim();
         if (!text) return;
-        const c = await apiFeed(`/api/feed/${id}/comment`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ body: text }),
-        }).catch(() => null);
-        if (!c) return;
-        input.value = '';
-        const list = document.getElementById(`feed-comments-list-${id}`);
-        if (list) list.insertAdjacentHTML('beforeend', renderCommentItem(c));
-        const cnt = document.getElementById(`feed-comment-count-${id}`);
-        if (cnt) { const n = parseInt(cnt.textContent.match(/\d+/)?.[0] ?? '0'); cnt.textContent = `Comment (${n + 1})`; }
+        if (text.length > 500) {
+            alert('Comments are limited to 500 characters.');
+            return;
+        }
+        try {
+            const r = await fetch(`/api/feed/${id}/comment`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'X-CSRF-TOKEN': CSRF,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ body: text }),
+            });
+            const payload = await r.json();
+            if (!r.ok) {
+                alert(payload.message || 'Unable to post comment.');
+                return;
+            }
+            input.value = '';
+            const list = document.getElementById(`feed-comments-list-${id}`);
+            if (list) {
+                list.insertAdjacentHTML('beforeend', renderCommentItem(payload));
+                list.scrollTop = list.scrollHeight;
+            }
+            const cnt = document.getElementById(`feed-comment-count-${id}`);
+            if (cnt) { const n = parseInt(cnt.textContent.match(/\d+/)?.[0] ?? '0'); cnt.textContent = `Comment (${n + 1})`; }
+        } catch (_) {
+            alert('Unable to post comment. Please try again.');
+        }
     }
 
     document.addEventListener('DOMContentLoaded', () => loadFeed(true));

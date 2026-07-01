@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Modules\Profile\Services\ProfileImageService;
 use App\Services\BarangayLogoUrlService;
 use App\Services\CloudinaryService;
+use App\Services\FeedCommentRateLimiter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -125,9 +126,18 @@ class AnnouncementFeedController extends Controller
 
     public function comment(Request $request, int $id): JsonResponse
     {
-        $request->validate(['body' => 'required|string|max:1000']);
-
         $user = Auth::user();
+        $limiter = app(FeedCommentRateLimiter::class);
+        $cooldown = $limiter->check('kabataan', (int) $user->id);
+
+        if (! $cooldown['allowed']) {
+            return response()->json([
+                'message' => $cooldown['message'],
+                'retry_after' => $cooldown['retry_after'],
+            ], 429);
+        }
+
+        $request->validate(['body' => 'required|string|max:'.FeedCommentRateLimiter::MAX_BODY_LENGTH]);
         $registration = KabataanRegistration::where('user_id', $user->id)->latest()->first();
         $authorName = $registration
             ? trim($registration->first_name.' '.$registration->last_name)
@@ -143,6 +153,7 @@ class AnnouncementFeedController extends Controller
 
         $comment->load('user');
         $post = Announcement::find($id);
+        $limiter->hit('kabataan', (int) $user->id);
 
         return response()->json([
             'id' => $comment->id,

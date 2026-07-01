@@ -219,7 +219,7 @@ function initializeKabataanUI() {
         });
     }
 
-    function formatDisplaySuffix(suffix) {
+    function formatDisplaySuffix(suffix, suffixOther) {
         if (!suffix) {
             return '';
         }
@@ -230,6 +230,11 @@ function initializeKabataanUI() {
             return '';
         }
 
+        if (normalized.toLowerCase() === 'other' || normalized.toLowerCase() === 'others') {
+            const other = String(suffixOther || '').trim();
+            return other || '';
+        }
+
         return normalized;
     }
 
@@ -237,7 +242,7 @@ function initializeKabataanUI() {
         const parts = [k.firstName, k.middleName].filter(Boolean);
         const firstMiddle = parts.length ? parts.join(' ') : '';
         const last = k.lastName || '';
-        const suffixPart = formatDisplaySuffix(k.suffix);
+        const suffixPart = formatDisplaySuffix(k.suffix, k.suffixOther || k.suffix_other || k.custom_suffix);
         const suffix = suffixPart ? ' ' + suffixPart : '';
 
         if (last && firstMiddle) {
@@ -624,7 +629,7 @@ function initializeKabataanUI() {
         setVal('vLastName', k.lastName);
         setVal('vFirstName', k.firstName);
         setVal('vMiddleName', k.middleName);
-        setVal('vSuffix', formatDisplaySuffix(k.suffix));
+        setVal('vSuffix', formatDisplaySuffix(k.suffix, k.suffixOther || k.suffix_other || k.custom_suffix) || '—');
         setVal('vRegion', k.region);
         setVal('vProvince', k.province);
         setVal('vCity', k.city);
@@ -989,15 +994,61 @@ function initializeKabataanUI() {
     const deleteConfirmHintError = document.getElementById('kabataanDeleteConfirmHintError');
     const deleteConfirmHintSuccess = document.getElementById('kabataanDeleteConfirmHintSuccess');
     const deleteConfirmBtn = document.getElementById('kabataanDeleteConfirmBtn');
+    const revokeAccidentalCb = document.getElementById('kabataanRevokeAccidental');
+    const revokeOtherCb = document.getElementById('kabataanRevokeOther');
+    const revokeOtherWrap = document.getElementById('kabataanRevokeOtherWrap');
+    const revokeOtherText = document.getElementById('kabataanRevokeOtherText');
+    const revokeOtherCount = document.getElementById('kabataanRevokeOtherCount');
+    const revokeReasonError = document.getElementById('kabataanRevokeReasonError');
     const deleteCancelBtn = document.getElementById('kabataanDeleteCancelBtn');
     let deleteMode = 'single';
     let pendingDeleteIndex = null;
     let pendingDeleteIds = [];
 
+    function resetRevokeReasonFields() {
+        if (revokeAccidentalCb) revokeAccidentalCb.checked = false;
+        if (revokeOtherCb) revokeOtherCb.checked = false;
+        if (revokeOtherWrap) revokeOtherWrap.hidden = true;
+        if (revokeOtherText) revokeOtherText.value = '';
+        if (revokeOtherCount) revokeOtherCount.textContent = '0';
+        if (revokeReasonError) revokeReasonError.hidden = true;
+    }
+
+    function collectRevokeReason() {
+        if (revokeAccidentalCb?.checked) {
+            return 'Accidentally approved';
+        }
+
+        if (revokeOtherCb?.checked) {
+            const text = (revokeOtherText?.value || '').trim();
+            return text ? `Other: ${text}` : '';
+        }
+
+        return '';
+    }
+
+    function validateRevokeReason() {
+        const reason = collectRevokeReason();
+        const valid = reason !== '';
+
+        if (revokeReasonError) {
+            revokeReasonError.hidden = valid;
+            if (!valid && revokeOtherCb?.checked) {
+                revokeReasonError.textContent = 'Please enter a reason (max 500 characters).';
+            } else if (!valid) {
+                revokeReasonError.textContent = 'Please select a revoke reason.';
+            }
+        }
+
+        return valid ? reason : null;
+    }
+
     function resetDeleteConfirmInput() {
         if (deleteConfirmInput) {
             deleteConfirmInput.value = '';
         }
+
+        resetRevokeReasonFields();
 
         if (deleteConfirmHintError) {
             deleteConfirmHintError.hidden = true;
@@ -1019,7 +1070,7 @@ function initializeKabataanUI() {
             return;
         }
 
-        const matched = deleteConfirmInput.value === 'Revoke';
+        const matched = deleteConfirmInput.value === 'Confirm';
 
         if (deleteConfirmHintError) {
             deleteConfirmHintError.hidden = !(deleteConfirmInput.value.length > 0 && !matched);
@@ -1100,6 +1151,36 @@ function initializeKabataanUI() {
         }
     }
 
+    if (revokeAccidentalCb && revokeOtherCb) {
+        revokeAccidentalCb.addEventListener('change', () => {
+            if (revokeAccidentalCb.checked) {
+                revokeOtherCb.checked = false;
+                if (revokeOtherWrap) revokeOtherWrap.hidden = true;
+                if (revokeOtherText) revokeOtherText.value = '';
+                if (revokeOtherCount) revokeOtherCount.textContent = '0';
+            }
+            if (revokeReasonError) revokeReasonError.hidden = true;
+        });
+
+        revokeOtherCb.addEventListener('change', () => {
+            if (revokeOtherCb.checked) {
+                revokeAccidentalCb.checked = false;
+                if (revokeOtherWrap) revokeOtherWrap.hidden = false;
+                revokeOtherText?.focus();
+            } else if (revokeOtherWrap) {
+                revokeOtherWrap.hidden = true;
+            }
+            if (revokeReasonError) revokeReasonError.hidden = true;
+        });
+    }
+
+    if (revokeOtherText && revokeOtherCount) {
+        revokeOtherText.addEventListener('input', () => {
+            revokeOtherCount.textContent = String(revokeOtherText.value.length);
+            if (revokeReasonError) revokeReasonError.hidden = true;
+        });
+    }
+
     if (deleteConfirmInput) {
         deleteConfirmInput.addEventListener('input', updateDeleteConfirmState);
     }
@@ -1124,6 +1205,11 @@ function initializeKabataanUI() {
                 return;
             }
 
+            const revokeReason = validateRevokeReason();
+            if (!revokeReason) {
+                return;
+            }
+
             if (deleteMode === 'bulk' && pendingDeleteIds.length > 0) {
                 deleteConfirmBtn.disabled = true;
                 deleteConfirmBtn.innerHTML = '<span class="kabataan-delete-spinner"></span> Revoking...';
@@ -1138,7 +1224,11 @@ function initializeKabataanUI() {
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify({ ids: pendingDeleteIds.map((id) => parseInt(id, 10)), year: currentProfilingYear }),
+                    body: JSON.stringify({
+                        ids: pendingDeleteIds.map((id) => parseInt(id, 10)),
+                        year: currentProfilingYear,
+                        revoke_reason: revokeReason,
+                    }),
                 })
                     .then((r) => r.json())
                     .then((res) => {
@@ -1171,9 +1261,8 @@ function initializeKabataanUI() {
                 ? tbody.querySelector(`tr[data-record-id="${recordId}"]`)
                 : null;
 
-            closeDeleteConfirm();
-
             if (!recordId) {
+                closeDeleteConfirm();
                 kabataan.splice(pendingDeleteIndex, 1);
                 render();
                 showKabataanToast('Kabataan record moved to pending KK Profiling Requests.', 'success');
@@ -1181,16 +1270,18 @@ function initializeKabataanUI() {
             }
 
             deleteConfirmBtn.disabled = true;
-            deleteConfirmBtn.innerHTML = '<span class="kabataan-delete-spinner"></span> Deleting...';
+            deleteConfirmBtn.innerHTML = '<span class="kabataan-delete-spinner"></span> Revoking...';
 
             const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
             fetch(`/kabataan/${recordId}`, {
                 method: 'DELETE',
                 headers: {
+                    'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrf,
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
                 },
+                body: JSON.stringify({ revoke_reason: revokeReason, year: currentProfilingYear }),
             })
             .then(r => r.json())
             .then(res => {
@@ -1205,6 +1296,7 @@ function initializeKabataanUI() {
                     loadData();
                 }
 
+                closeDeleteConfirm();
                 showKabataanToast('Kabataan record moved to pending KK Profiling Requests.', 'success');
             })
             .catch(err => showKabataanToast(err.message || 'Failed to delete record.', 'error'))
@@ -1689,6 +1781,7 @@ function initializeKabataanUI() {
                     firstName: r.first_name,
                     middleName: r.middle_name,
                     suffix: r.suffix,
+                    suffixOther: r.suffix_other || r.custom_suffix,
                     age: r.age,
                     sex: r.sex,
                     birthday: r.birthday,

@@ -1044,10 +1044,28 @@
             <p class="kabataan-delete-name" id="kabataanDeleteName"></p>
             <p class="kabataan-delete-warning">This action cannot be undone.</p>
 
+            <div class="kabataan-revoke-reasons">
+                <p class="kabataan-revoke-reasons-label">Revoke reason <span class="required">*</span></p>
+                <label class="kabataan-revoke-reason-item">
+                    <input type="checkbox" class="kabataan-revoke-reason-cb" id="kabataanRevokeAccidental" value="Accidentally approved">
+                    <span>Accidentally approved</span>
+                </label>
+                <label class="kabataan-revoke-reason-item">
+                    <input type="checkbox" class="kabataan-revoke-reason-cb" id="kabataanRevokeOther" value="Other">
+                    <span>Other</span>
+                </label>
+                <div class="kabataan-revoke-other-wrap" id="kabataanRevokeOtherWrap" hidden>
+                    <label for="kabataanRevokeOtherText">Specify reason</label>
+                    <textarea id="kabataanRevokeOtherText" class="kabataan-revoke-other-text" maxlength="500" rows="4" placeholder="Enter revoke reason (max 500 characters)"></textarea>
+                    <p class="kabataan-revoke-other-count"><span id="kabataanRevokeOtherCount">0</span>/500</p>
+                </div>
+                <p class="kabataan-revoke-reason-error" id="kabataanRevokeReasonError" hidden>Please select a revoke reason.</p>
+            </div>
+
             <label class="kabataan-delete-confirm-label" for="kabataanDeleteConfirmInput">Confirmation Required</label>
-            <input type="text" id="kabataanDeleteConfirmInput" class="kabataan-delete-confirm-input" placeholder="Type Revoke to confirm" autocomplete="off">
+            <input type="text" id="kabataanDeleteConfirmInput" class="kabataan-delete-confirm-input" placeholder="Type Confirm to confirm" autocomplete="off">
             <p class="kabataan-delete-confirm-hint kabataan-delete-confirm-hint-error" id="kabataanDeleteConfirmHintError" hidden>
-                Please type &quot;Revoke&quot; exactly to continue.
+                Please type &quot;Confirm&quot; exactly to continue.
             </p>
             <p class="kabataan-delete-confirm-hint kabataan-delete-confirm-hint-success" id="kabataanDeleteConfirmHintSuccess" hidden>
                 Confirmation text matched.

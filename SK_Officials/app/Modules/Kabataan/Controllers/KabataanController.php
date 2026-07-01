@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
 use App\Services\BarangayLogoUrlService;
 use App\Services\BarangayZoneService;
+use App\Services\KabataanInAppNotificationService;
 use App\Services\KabataanProfilingHistoryService;
 use App\Services\KkSupportingDocumentService;
 use App\Services\KkProfilingRequestDataService;
@@ -376,10 +377,15 @@ class KabataanController extends Controller
 
     public function destroy(Request $request, int $id)
     {
+        $validated = $request->validate([
+            'revoke_reason' => ['required', 'string', 'max:500'],
+            'year' => ['nullable', 'integer'],
+        ]);
+
         $user = Auth::user();
         $registration = KabataanRegistration::forBarangay($user->barangay_id)->findOrFail($id);
 
-        $year = (int) $request->input('year', $this->profilingHistoryService->currentProfilingYear());
+        $year = (int) ($validated['year'] ?? $this->profilingHistoryService->currentProfilingYear());
         if ($this->profilingHistoryService->isHistoricalYear($year)) {
             return response()->json([
                 'success' => false,
@@ -395,21 +401,29 @@ class KabataanController extends Controller
         }
 
         $fullName = $registration->full_name;
+        $revokeReason = trim($validated['revoke_reason']);
         $registration->update([
             'status' => $registration->user_id ? 'active' : 'pending_verification',
             'evaluation_status' => 'Not Profiled',
             'reviewed_by_user_id' => null,
             'reviewed_at' => null,
-            'review_notes' => null,
+            'review_notes' => 'Revoked: '.$revokeReason,
         ]);
 
         app(KkSurveyResponseService::class)->syncStatus($registration->fresh(), 'pending');
 
+        if ($registration->user_id) {
+            app(KabataanInAppNotificationService::class)->notifyKkProfilingRevoked(
+                (int) $registration->user_id,
+                $revokeReason,
+            );
+        }
+
         $this->activityService->log(
             $user,
             'kabataan.revoke',
-            'Revoked Kabataan record to pending KK profiling: '.$fullName,
-            ['registration_id' => $id]
+            'Revoked Kabataan record to pending KK profiling: '.$fullName.' ('.$revokeReason.')',
+            ['registration_id' => $id, 'revoke_reason' => $revokeReason]
         );
 
         return response()->json(['success' => true, 'message' => 'Kabataan record moved to pending KK Profiling Requests.']);
@@ -421,6 +435,7 @@ class KabataanController extends Controller
             'ids'   => ['required', 'array', 'min:1'],
             'ids.*' => ['integer'],
             'year'  => ['nullable', 'integer'],
+            'revoke_reason' => ['required', 'string', 'max:500'],
         ]);
 
         $user = Auth::user();
@@ -447,6 +462,8 @@ class KabataanController extends Controller
         }
 
         $surveyService = app(KkSurveyResponseService::class);
+        $notificationService = app(KabataanInAppNotificationService::class);
+        $revokeReason = trim($validated['revoke_reason']);
 
         foreach ($registrations as $registration) {
             $fullName = $registration->full_name;
@@ -457,16 +474,20 @@ class KabataanController extends Controller
                 'evaluation_status' => 'Not Profiled',
                 'reviewed_by_user_id' => null,
                 'reviewed_at' => null,
-                'review_notes' => null,
+                'review_notes' => 'Revoked: '.$revokeReason,
             ]);
 
             $surveyService->syncStatus($registration->fresh(), 'pending');
 
+            if ($registration->user_id) {
+                $notificationService->notifyKkProfilingRevoked((int) $registration->user_id, $revokeReason);
+            }
+
             $this->activityService->log(
                 $user,
                 'kabataan.revoke',
-                'Revoked Kabataan record to pending KK profiling: '.$fullName,
-                ['registration_id' => $registrationId]
+                'Revoked Kabataan record to pending KK profiling: '.$fullName.' ('.$revokeReason.')',
+                ['registration_id' => $registrationId, 'revoke_reason' => $revokeReason]
             );
         }
 

@@ -341,7 +341,7 @@ body.kabataan-has-view-only-banner {
     align-items: center;
     gap: 12px;
     padding: 11px 16px;
-    color: #374151;
+    color: #1a56db;
     text-decoration: none;
     font-size: 14px;
     font-weight: 500;
@@ -391,8 +391,8 @@ body.kabataan-has-view-only-banner {
 .kabataan-header__dropdown-icon--logout svg { stroke: #ef4444; }
 
 .kabataan-header__dropdown-link:hover {
-    background: #f5f7fa;
-    color: #111827;
+    background: #eff6ff;
+    color: #1e40af;
 }
 
 .kabataan-header__dropdown-link--logout,

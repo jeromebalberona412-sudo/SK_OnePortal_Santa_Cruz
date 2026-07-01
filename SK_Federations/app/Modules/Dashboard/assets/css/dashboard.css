@@ -500,7 +500,7 @@ body.sidebar-collapsed .toggle-icon-collapse { display: block; }
     align-items: center;
     gap: 12px;
     padding: 11px 16px;
-    color: #374151;
+    color: #1a56db;
     font-size: 14px;
     font-weight: 500;
     text-decoration: none;
@@ -514,8 +514,8 @@ body.sidebar-collapsed .toggle-icon-collapse { display: block; }
 }
 
 .profile-dropdown-item:hover {
-    background: #f5f7fa;
-    color: #111827;
+    background: #eff6ff;
+    color: #1e40af;
 }
 
 .profile-dropdown-item--logout {

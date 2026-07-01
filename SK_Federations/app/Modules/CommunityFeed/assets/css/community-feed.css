@@ -154,6 +154,64 @@
 }
 .feed-tab.active, .feed-tab:hover { background: var(--fed-grad); color: white; }
 
+.feed-tab--icon {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 8px 12px;
+    min-width: 48px;
+}
+.feed-tab-icon { display: inline-flex; align-items: center; justify-content: center; line-height: 0; }
+.feed-tab-icon svg { width: 22px; height: 22px; color: #1a56db; transition: color 0.2s, transform 0.2s; }
+.feed-tab-text {
+    font-size: 0; line-height: 1.2; max-width: 0; overflow: hidden; opacity: 0;
+    white-space: nowrap; color: #1e40af; font-weight: 600;
+    transition: font-size 0.2s ease, opacity 0.2s ease, max-width 0.2s ease;
+}
+.feed-tab--icon:hover .feed-tab-icon svg,
+.feed-tab--icon:focus-visible .feed-tab-icon svg { color: #1e40af; transform: translateY(-1px); }
+.feed-tab--icon.active .feed-tab-icon svg { color: #1e40af; }
+@media (min-width: 769px) {
+    .feed-tab--icon:hover .feed-tab-text,
+    .feed-tab--icon:focus-visible .feed-tab-text,
+    .feed-tab--icon.active .feed-tab-text { font-size: 11px; max-width: 120px; opacity: 1; }
+}
+@media (max-width: 768px) {
+    .feed-filter-bar { overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; }
+    .feed-filter-bar::-webkit-scrollbar { display: none; }
+    .feed-tab--icon { padding: 10px 12px 12px; min-width: 44px; }
+    .feed-tab-text { display: none; }
+}
+
+.comments-section {
+    display: flex;
+    flex-direction: column;
+    max-height: 320px;
+}
+.comments-list-scroll {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding-right: 4px;
+    margin-bottom: 10px;
+    min-height: 0;
+}
+.comment-compose-sticky {
+    flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    padding-top: 8px;
+    border-top: 1px solid #eef1f5;
+}
+.post-actions { align-items: center; }
+.action-btn { flex: 0 1 auto; padding: 8px 12px; }
+@media (max-width: 768px) {
+    .post-actions { flex-direction: row; flex-wrap: wrap; }
+    .action-btn { font-size: 12px; padding: 6px 10px; }
+}
+
 /* ── POST CONTENT ── */
 .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
 .post-info { flex: 1; min-width: 0; }

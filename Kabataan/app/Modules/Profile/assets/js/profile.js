@@ -10,19 +10,22 @@ document.addEventListener('DOMContentLoaded', function() {
         toast.textContent = message;
         toast.style.cssText = `
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%);
             background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
             color: white;
             padding: 16px 24px;
-            border-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.18);
             z-index: 9999;
-            animation: slideIn 0.3s ease;
+            animation: profileToastIn 0.3s ease;
+            max-width: min(90vw, 420px);
+            text-align: center;
         `;
         document.body.appendChild(toast);
         setTimeout(() => {
-            toast.style.animation = 'slideOut 0.3s ease';
+            toast.style.animation = 'profileToastOut 0.3s ease';
             setTimeout(() => toast.remove(), 300);
         }, 3000);
     }
@@ -34,13 +37,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const style = document.createElement('style');
         style.id = 'profileToastStyles';
         style.textContent = `
-            @keyframes slideIn {
-                from { transform: translateX(400px); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
+            @keyframes profileToastIn {
+                from { transform: translate(-50%, -12px); opacity: 0; }
+                to { transform: translate(-50%, 0); opacity: 1; }
             }
-            @keyframes slideOut {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(400px); opacity: 0; }
+            @keyframes profileToastOut {
+                from { transform: translate(-50%, 0); opacity: 1; }
+                to { transform: translate(-50%, -12px); opacity: 0; }
             }
         `;
         document.head.appendChild(style);

@@ -66,6 +66,7 @@ function initializeKKProfilingRequestsUI() {
     const sexFilter = document.getElementById('kkSexFilter');
     const youthAgeGroupFilter = document.getElementById('kkYouthAgeGroupFilter');
     const viewModal = document.getElementById('kkViewModal');
+    const documentsModal = document.getElementById('kkDocumentsModal');
     const approveModal = document.getElementById('kkApproveModal');
     const rejectModal = document.getElementById('kkRejectModal');
     const compareModal = null; // removed — Compare button is now a direct link
@@ -93,7 +94,7 @@ function initializeKKProfilingRequestsUI() {
         });
     }
 
-    function formatDisplaySuffix(suffix) {
+    function formatDisplaySuffix(suffix, suffixOther) {
         if (!suffix) {
             return '';
         }
@@ -104,14 +105,114 @@ function initializeKKProfilingRequestsUI() {
             return '';
         }
 
+        if (normalized.toLowerCase() === 'other' || normalized.toLowerCase() === 'others') {
+            const other = String(suffixOther || '').trim();
+            return other || '';
+        }
+
         return normalized;
+    }
+
+    function populateSupportingDocumentsPanel(request) {
+        const wrap = document.getElementById('kkViewDocumentsWrap');
+        const grid = document.getElementById('kkViewDocumentsGrid');
+        const verificationEl = document.getElementById('kkViewIdVerification');
+        const emptyEl = document.getElementById('kkViewDocumentsEmpty');
+        const documents = request.supportingDocuments || request.supporting_documents || [];
+        const idVerification = request.idVerification || request.id_verification || null;
+
+        if (!grid) {
+            return;
+        }
+
+        grid.innerHTML = '';
+
+        if (!Array.isArray(documents) || documents.length === 0) {
+            if (wrap) wrap.style.display = 'none';
+            if (emptyEl) emptyEl.hidden = false;
+            if (verificationEl) {
+                verificationEl.hidden = true;
+                verificationEl.textContent = '';
+            }
+            return;
+        }
+
+        if (wrap) wrap.style.display = 'block';
+        if (emptyEl) emptyEl.hidden = true;
+
+        if (verificationEl) {
+            if (idVerification) {
+                const nameOk = idVerification.name_match !== false;
+                const barangayOk = Boolean(idVerification.barangay_match);
+                const matched = nameOk && barangayOk && !idVerification.duplicate_detected;
+                verificationEl.hidden = false;
+                verificationEl.className = `kk-view-id-verification ${matched ? 'is-match' : 'is-mismatch'}`;
+
+                if (idVerification.duplicate_detected) {
+                    verificationEl.textContent = 'ID verification: Duplicate registration detected (same name, date of birth, and barangay).';
+                } else if (matched) {
+                    verificationEl.textContent = `ID verification passed: Name and barangay match the registration form. ${idVerification.match_reason || idVerification.message || ''}`.trim();
+                } else if (!nameOk) {
+                    verificationEl.textContent = 'ID verification: Name on the uploaded School ID does not match the KK Profiling form.';
+                } else {
+                    verificationEl.textContent = `ID verification: ${idVerification.message || idVerification.match_reason || 'Barangay not matched on ID.'}`;
+                }
+            } else {
+                verificationEl.hidden = true;
+                verificationEl.textContent = '';
+            }
+        }
+
+        documents.forEach((docItem) => {
+            const card = document.createElement('div');
+            card.className = 'kk-view-document-card';
+
+            const title = document.createElement('div');
+            title.className = 'kk-view-document-card-title';
+            title.textContent = docItem.label || docItem.type || 'Supporting Document';
+            card.appendChild(title);
+
+            (docItem.sides || []).forEach((side) => {
+                if (!side?.url) {
+                    return;
+                }
+
+                const sideWrap = document.createElement('div');
+                sideWrap.className = 'kk-view-document-side';
+
+                const sideLabel = document.createElement('div');
+                sideLabel.className = 'kk-view-document-side-label';
+                sideLabel.textContent = side.label || side.side || 'Image';
+                sideWrap.appendChild(sideLabel);
+
+                const img = document.createElement('img');
+                img.className = 'kk-view-document-preview';
+                img.src = side.url;
+                img.alt = `${title.textContent} ${sideLabel.textContent}`;
+                img.loading = 'lazy';
+                img.addEventListener('click', () => window.open(side.url, '_blank', 'noopener'));
+                sideWrap.appendChild(img);
+
+                const link = document.createElement('a');
+                link.className = 'kk-view-document-link';
+                link.href = side.url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = 'Open full size';
+                sideWrap.appendChild(link);
+
+                card.appendChild(sideWrap);
+            });
+
+            grid.appendChild(card);
+        });
     }
 
     function formatFullName(r) {
         const parts = [r.firstName, r.middleName].filter(Boolean);
         const firstMiddle = parts.length ? parts.join(',') : '';
         const last = r.lastName || '';
-        const suffixPart = formatDisplaySuffix(r.suffix);
+        const suffixPart = formatDisplaySuffix(r.suffix, r.suffixOther);
         const suffix = suffixPart ? ',' + suffixPart : '';
 
         if (last && firstMiddle) return `${last},${firstMiddle}${suffix}`;
@@ -285,11 +386,11 @@ function initializeKKProfilingRequestsUI() {
         setVal('vDate', request.date);
         setVal('vLastName', request.lastName);
         setVal('vFirstName', request.firstName);
-        setVal('vMiddleName', request.middleName);
+        setVal('vMiddleName', request.middleName || '—');
         const suffixEl = document.getElementById('vSuffix');
         const suffixCol = suffixEl?.closest('.kkf-name-col');
-        const suffixDisplay = formatDisplaySuffix(request.suffix);
-        if (suffixEl) suffixEl.textContent = suffixDisplay;
+        const suffixDisplay = formatDisplaySuffix(request.suffix, request.suffixOther);
+        if (suffixEl) suffixEl.textContent = suffixDisplay || '—';
         if (suffixCol) suffixCol.hidden = !suffixDisplay;
         setVal('vRegion', request.region);
         setVal('vProvince', request.province);
@@ -300,7 +401,7 @@ function initializeKKProfilingRequestsUI() {
         setVal('vDob', request.birthday);
         setVal('vEmail', request.emailAddress);
         setVal('vContact', request.contactNumber);
-        setVal('vFacebook', request.facebookAccount);
+        setVal('vFacebook', request.facebookAccount || '—');
 
         const logoEl = document.getElementById('kkRequestBarangayLogo');
         if (logoEl && request.barangayLogoUrl) {
@@ -311,7 +412,7 @@ function initializeKKProfilingRequestsUI() {
         const vSignatureImg = document.getElementById('vSignature');
         const vSignatureOverlay = document.getElementById('vSignatureOverlay');
         const vSignatureText = document.getElementById('vSignatureText');
-        const nameParts = [request.firstName, request.middleName, request.lastName, formatDisplaySuffix(request.suffix)].filter(Boolean);
+        const nameParts = [request.firstName, request.middleName, request.lastName, formatDisplaySuffix(request.suffix, request.suffixOther)].filter(Boolean);
         const fullName = nameParts.join(' ');
 
         if (request.signature && String(request.signature).startsWith('data:image')) {
@@ -350,6 +451,11 @@ function initializeKKProfilingRequestsUI() {
                 vGroupChat: request.willingToJoinGroupChat,
             };
             const stored = fieldMap[field] || '';
+            if (field === 'vGroupChat') {
+                const gc = String(stored).trim();
+                chk.checked = gc !== '' && gc !== '—' && stored.trim().toLowerCase() === chk.value.trim().toLowerCase();
+                return;
+            }
             chk.checked = stored.trim().toLowerCase() === chk.value.trim().toLowerCase();
         });
     }
@@ -360,6 +466,10 @@ function initializeKKProfilingRequestsUI() {
                 <div class="row-actions-menu">
                     <button type="button" class="row-actions-trigger" aria-label="Actions" aria-haspopup="true" aria-expanded="false">${window.ROW_ACTIONS_ELLIPSIS || '⋯'}</button>
                     <div class="row-actions-dropdown" role="menu">
+                        <button type="button" class="row-actions-item row-actions-item-view" data-action="documents" data-id="${requestId}" role="menuitem">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            <span>Documents</span>
+                        </button>
                         <button type="button" class="row-actions-item row-actions-item-view" data-action="view" data-id="${requestId}" role="menuitem">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                             <span>View Details</span>
@@ -381,7 +491,7 @@ function initializeKKProfilingRequestsUI() {
     function openModal(modalElement) { if (modalElement) modalElement.style.display = 'flex'; }
     function closeModal(modalElement) { if (modalElement) modalElement.style.display = 'none'; }
     function closeAllModals() {
-        [viewModal, approveModal, rejectModal].forEach((m) => {
+        [viewModal, documentsModal, approveModal, rejectModal].forEach((m) => {
             if (m) m.style.display = 'none';
         });
     }
@@ -737,6 +847,9 @@ function initializeKKProfilingRequestsUI() {
             if (oldSaveRow) oldSaveRow.remove();
             populateViewModal(request);
             openModal(viewModal);
+        } else if (action === 'documents') {
+            populateSupportingDocumentsPanel(request);
+            openModal(documentsModal);
         } else if (action === 'approve') {
             openModal(approveModal);
         } else if (action === 'reject') {
@@ -773,7 +886,7 @@ function initializeKKProfilingRequestsUI() {
         });
     });
 
-    [viewModal, approveModal, rejectModal].forEach((modal) => {
+    [viewModal, documentsModal, approveModal, rejectModal].forEach((modal) => {
         if (!modal) return;
         modal.addEventListener('click', (e) => {
             const target = e.target;
@@ -933,6 +1046,7 @@ function initializeKKProfilingRequestsUI() {
                     firstName: r.first_name,
                     middleName: r.middle_name,
                     suffix: r.suffix,
+                    suffixOther: r.suffix_other || r.custom_suffix,
                     age: r.age,
                     birthday: r.birthday,
                     sex: r.sex,

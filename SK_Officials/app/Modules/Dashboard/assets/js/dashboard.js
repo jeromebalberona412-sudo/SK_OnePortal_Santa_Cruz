@@ -195,12 +195,12 @@ function updateKkChartSubtitle(chartData) {
     if (!subtitle) return;
 
     if (kkChartGranularity === 'weekly') {
-        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        const monthLabel = monthNames[(kkChartMonth || 1) - 1] || 'Selected month';
-        subtitle.textContent = 'Weekly submissions for ' + monthLabel + ' — approved, pending, and rejected';
+        subtitle.textContent = '';
+        subtitle.hidden = true;
         return;
     }
 
+    subtitle.hidden = false;
     subtitle.textContent = 'Approved, pending, and rejected submissions';
 }
 

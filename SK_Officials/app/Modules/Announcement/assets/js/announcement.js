@@ -1,7 +1,7 @@
 'use strict';
 
 const POSTS_PER_PAGE = 10;
-const MAX_BODY_CHARS = 10000;
+const MAX_BODY_CHARS = 2000;
 const MAX_IMAGES = 20;
 
 let currentFilter = 'all';
@@ -303,13 +303,15 @@ function buildPost(p) {
         </button>
       </div>
       <div class="comments-section" id="comments-${p.id}" style="display:none;">
-        <div id="comments-list-${p.id}">${commentsHtml}</div>
-        <div class="comment-input-wrapper">
-          <img src="${escapeHtml(SK_AVATAR())}" alt="You" class="comment-avatar">
-          <input type="text" class="comment-input" placeholder="Write a comment..." onkeydown="if(event.key==='Enter')submitComment(${p.id},this)">
-          <button class="send-comment-btn" onclick="submitComment(${p.id},this.previousElementSibling)">
-            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
-          </button>
+        <div class="comments-list-scroll" id="comments-list-${p.id}">${commentsHtml}</div>
+        <div class="comment-compose-sticky">
+          <div class="comment-input-wrapper">
+            <img src="${escapeHtml(SK_AVATAR())}" alt="You" class="comment-avatar">
+            <input type="text" class="comment-input" placeholder="Write a comment..." maxlength="500" onkeydown="if(event.key==='Enter')submitComment(${p.id},this)">
+            <button class="send-comment-btn" onclick="submitComment(${p.id},this.previousElementSibling)">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
+            </button>
+          </div>
         </div>
       </div>`;
 }
@@ -423,29 +425,38 @@ function toggleComments(id) {
 async function submitComment(id, input) {
     const text = input.value.trim();
     if (!text) return;
-    const comment = await apiFetch(`/api/announcements/${id}/comment`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body: text }),
-    });
-    input.value = '';
-    const list = document.getElementById(`comments-list-${id}`);
-    if (list) {
-        list.insertAdjacentHTML('beforeend',
-            `<div class="comment-item">
-               <img src="${escapeHtml(commentAvatarUrl(comment))}" alt="${escapeHtml(comment.author_name)}" class="comment-avatar">
-               <div class="comment-content">
-                 <p class="comment-author">${escapeHtml(comment.author_name)}</p>
-                 <p class="comment-text">${escapeHtml(comment.body)}</p>
-                 <span class="comment-time">${escapeHtml(comment.time)}</span>
-               </div>
-             </div>`
-        );
+    if (text.length > 500) {
+        alert('Comments are limited to 500 characters.');
+        return;
     }
-    const countEl = document.getElementById(`comment-count-${id}`);
-    if (countEl) {
-        const cur = parseInt(countEl.textContent.match(/\d+/)?.[0] ?? '0', 10);
-        countEl.textContent = `Comment (${cur + 1})`;
+    try {
+        const comment = await apiFetch(`/api/announcements/${id}/comment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ body: text }),
+        });
+        input.value = '';
+        const list = document.getElementById(`comments-list-${id}`);
+        if (list) {
+            list.insertAdjacentHTML('beforeend',
+                `<div class="comment-item">
+                   <img src="${escapeHtml(commentAvatarUrl(comment))}" alt="${escapeHtml(comment.author_name)}" class="comment-avatar">
+                   <div class="comment-content">
+                     <p class="comment-author">${escapeHtml(comment.author_name)}</p>
+                     <p class="comment-text">${escapeHtml(comment.body)}</p>
+                     <span class="comment-time">${escapeHtml(comment.time)}</span>
+                   </div>
+                 </div>`
+            );
+            list.scrollTop = list.scrollHeight;
+        }
+        const countEl = document.getElementById(`comment-count-${id}`);
+        if (countEl) {
+            const cur = parseInt(countEl.textContent.match(/\d+/)?.[0] ?? '0', 10);
+            countEl.textContent = `Comment (${cur + 1})`;
+        }
+    } catch (err) {
+        alert(err?.message || 'Unable to post comment.');
     }
 }
 

@@ -5,6 +5,7 @@ namespace App\Modules\CommunityFeed\Controllers;
 use App\Modules\CommunityFeed\Services\CloudinaryService;
 use App\Modules\Shared\Controllers\Controller;
 use App\Services\CommunityFeedAvatarService;
+use App\Services\FeedCommentRateLimiter;
 use App\Services\SkFederationsNotificationService;
 use App\Modules\Shared\Models\Announcement;
 use App\Modules\Shared\Models\AnnouncementComment;
@@ -61,7 +62,7 @@ class CommunityFeedPostController extends Controller
         $validated = $request->validate([
             'type'      => 'required|in:announcement,event,activity,program,update',
             'title'     => 'nullable|string|max:255',
-            'body'      => 'required|string',
+            'body'      => 'required|string|max:2000',
             'image_url' => 'nullable|string|max:4096',
             'link_url'  => 'nullable|url|max:4096',
         ]);
@@ -91,7 +92,7 @@ class CommunityFeedPostController extends Controller
         $validated = $request->validate([
             'type'      => 'sometimes|in:announcement,event,activity,program,update',
             'title'     => 'nullable|string|max:255',
-            'body'      => 'sometimes|string',
+            'body'      => 'sometimes|string|max:2000',
             'image_url' => 'nullable|string|max:4096',
             'link_url'  => 'nullable|url|max:4096',
         ]);
@@ -190,9 +191,19 @@ class CommunityFeedPostController extends Controller
     // POST /api/community-feed/{id}/comment
     public function comment(Request $request, int $id): JsonResponse
     {
-        $request->validate(['body' => 'required|string|max:1000']);
+        $user = Auth::user();
+        $limiter = app(FeedCommentRateLimiter::class);
+        $cooldown = $limiter->check('sk_fed', (int) $user->id);
 
-        $user    = Auth::user();
+        if (! $cooldown['allowed']) {
+            return response()->json([
+                'message' => $cooldown['message'],
+                'retry_after' => $cooldown['retry_after'],
+            ], 429);
+        }
+
+        $request->validate(['body' => 'required|string|max:'.FeedCommentRateLimiter::MAX_BODY_LENGTH]);
+
         $post    = Announcement::query()->findOrFail($id);
         $comment = AnnouncementComment::create([
             'announcement_id' => $id,
@@ -211,6 +222,8 @@ class CommunityFeedPostController extends Controller
                 $request->body,
             );
         }
+
+        $limiter->hit('sk_fed', (int) $user->id);
 
         return response()->json($this->formatComment($comment->load('user')), 201);
     }
@@ -246,7 +259,7 @@ class CommunityFeedPostController extends Controller
             'type'               => $post->type,
             'title'              => $post->title,
             'body'               => $post->body,
-            'image_url'          => app(\App\Services\CloudinaryService::class)->normalizeUrl($post->image_url),
+            'image_url'          => $this->cloudinary->normalizeUrl($post->image_url),
             'link_url'           => $post->link_url,
             'is_federation_wide' => (bool) $post->is_federation_wide,
             'barangay_name'      => $post->barangay?->name,

@@ -197,6 +197,19 @@
     </div>
 </div>
 
+<!-- Supporting Documents Modal -->
+<div class="modal-backdrop kk-modal-backdrop" id="kkDocumentsModal" style="display:none;">
+    <div class="modal-box kk-modal-box kk-modal-animate kk-modal-no-border kk-view-modal-wide">
+        <div class="modal-header">
+            <h2 class="modal-title">Supporting Documents</h2>
+            <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body kk-view-modal-body">
+            @include('KKProfilingRequests::partials.kk-profiling-view-documents')
+        </div>
+    </div>
+</div>
+
 <!-- Approve Confirmation Modal -->
 <div class="modal-backdrop kk-modal-backdrop" id="kkApproveModal" style="display:none;">
     <div class="modal-box kk-modal-box kk-modal-animate-small kk-modal-no-border">
@@ -226,16 +239,8 @@
             </p>
             <div class="reject-reasons">
                 <label class="reject-reason-item">
-                    <input type="checkbox" class="kk-reject-reason" value="Invalid birthdate / age mismatch">
-                    <span>Invalid birthdate / age mismatch</span>
-                </label>
-                <label class="reject-reason-item">
-                    <input type="checkbox" class="kk-reject-reason" value="Incorrect Purok / Address">
-                    <span>Incorrect Purok / Address</span>
-                </label>
-                <label class="reject-reason-item">
-                    <input type="checkbox" class="kk-reject-reason" value="Duplicate submission">
-                    <span>Duplicate submission</span>
+                    <input type="checkbox" class="kk-reject-reason" value="Incorrect Purok / Zone">
+                    <span>Incorrect Purok / Zone</span>
                 </label>
                 <label class="reject-reason-item">
                     <input type="checkbox" class="kk-reject-reason kk-reject-other-checkbox" value="Other" id="kkRejectOtherCheckbox">

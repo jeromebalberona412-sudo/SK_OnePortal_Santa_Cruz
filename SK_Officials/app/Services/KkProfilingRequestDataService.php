@@ -50,6 +50,14 @@ class KkProfilingRequestDataService
     }
 
     /**
+     * @param  array<string, mixed>  $formData
+     */
+    public function resolveSuffixForDisplay(?string $suffix, array $formData): ?string
+    {
+        return $this->resolveDisplaySuffix($suffix, $formData);
+    }
+
+    /**
      * Prefer structured kk_survey_responses values when present.
      *
      * @param  array<string, mixed>  $payload
@@ -62,6 +70,7 @@ class KkProfilingRequestDataService
         }
 
         $bool = static fn (?bool $value): string => $value ? 'Yes' : 'No';
+        $formData = is_array($payload['form_data'] ?? null) ? $payload['form_data'] : [];
 
         return array_merge($payload, array_filter([
             'respondent_number' => $survey->respondent_number ?? $payload['respondent_number'] ?? null,
@@ -72,7 +81,12 @@ class KkProfilingRequestDataService
             'last_name' => $survey->last_name ?: ($payload['last_name'] ?? null),
             'first_name' => $survey->first_name ?: ($payload['first_name'] ?? null),
             'middle_name' => $survey->middle_name ?: ($payload['middle_name'] ?? null),
-            'suffix' => $survey->suffix ?: ($payload['suffix'] ?? null),
+            'suffix' => $this->resolveDisplaySuffix(
+                $survey->suffix ?: ($payload['suffix'] ?? null),
+                $formData,
+            ),
+            'suffix_other' => $this->extractFormValue($formData, 'custom_suffix')
+                ?: $this->extractFormValue($formData, 'suffix_other'),
             'age' => $survey->age ?? ($payload['age'] ?? null),
             'birthday' => $survey->birthdate?->format('m/d/Y') ?? ($payload['birthday'] ?? null),
             'sex' => $survey->sex_assigned_at_birth ?: ($payload['sex'] ?? null),
@@ -99,9 +113,7 @@ class KkProfilingRequestDataService
             'kk_times' => $survey->kk_assembly_attendance_count ?: ($payload['kk_times'] ?? null),
             'kk_reason' => $survey->kk_assembly_non_attendance_reason ?: ($payload['kk_reason'] ?? null),
             'facebook' => $survey->facebook_profile_url ?: ($payload['facebook'] ?? null),
-            'group_chat' => $survey->willing_to_join_group_chat !== null
-                ? $bool($survey->willing_to_join_group_chat)
-                : ($payload['group_chat'] ?? null),
+            'group_chat' => $this->resolveGroupChat($survey, $payload),
             'signature' => $survey->participant_signature ?: ($payload['signature'] ?? null),
             'submitted_at' => $survey->survey_date?->format('m/d/Y') ?? ($payload['submitted_at'] ?? null),
             'survey_response_id' => $survey->id,
@@ -135,8 +147,11 @@ class KkProfilingRequestDataService
             ),
             'last_name' => $registration->last_name,
             'first_name' => $registration->first_name,
-            'middle_name' => $registration->middle_name,
-            'suffix' => $registration->suffix,
+            'middle_name' => $registration->middle_name ?: $this->extractFormValue($formData, 'middle_name'),
+            'suffix' => $this->resolveDisplaySuffix($registration->suffix, $formData),
+            'suffix_other' => $this->extractFormValue($formData, 'custom_suffix')
+                ?: $this->extractFormValue($formData, 'suffix_other'),
+            'form_data' => $formData,
             'full_name' => $registration->full_name,
             'age' => $val('age'),
             'birthday' => $val('birthday'),
@@ -171,5 +186,60 @@ class KkProfilingRequestDataService
         ];
 
         return $this->mergeSurveyIntoRegistrationPayload($payload, $survey);
+    }
+
+    /**
+     * @param  array<string, mixed>  $formData
+     */
+    private function extractFormValue(array $formData, string $key): ?string
+    {
+        $raw = $formData[$key] ?? null;
+
+        if (is_array($raw)) {
+            $raw = $raw[0] ?? null;
+        }
+
+        $value = trim((string) ($raw ?? ''));
+
+        return $value !== '' && $value !== '—' ? $value : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $formData
+     */
+    private function resolveDisplaySuffix(?string $suffix, array $formData): ?string
+    {
+        $normalized = trim((string) ($suffix ?? ''));
+
+        if ($normalized === '' || strcasecmp($normalized, 'none') === 0) {
+            return null;
+        }
+
+        if (in_array(strtolower($normalized), ['other', 'others'], true)) {
+            $custom = $this->extractFormValue($formData, 'custom_suffix')
+                ?: $this->extractFormValue($formData, 'suffix_other');
+
+            return $custom ?: null;
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function resolveGroupChat(?KkSurveyResponse $survey, array $payload): ?string
+    {
+        $fromPayload = trim((string) ($payload['group_chat'] ?? ''));
+
+        if (in_array($fromPayload, ['Yes', 'No'], true)) {
+            return $fromPayload;
+        }
+
+        if ($survey === null || $survey->willing_to_join_group_chat === null) {
+            return null;
+        }
+
+        return $survey->willing_to_join_group_chat ? 'Yes' : 'No';
     }
 }

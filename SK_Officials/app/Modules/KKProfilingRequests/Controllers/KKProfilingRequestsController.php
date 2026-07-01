@@ -117,8 +117,12 @@ class KKProfilingRequestsController extends Controller
                 ),
                 'last_name'       => $r->last_name,
                 'first_name'      => $r->first_name,
-                'middle_name'     => $r->middle_name,
-                'suffix'          => $r->suffix,
+                'middle_name'     => $r->middle_name ?: ($val('middle_name') !== '—' ? $val('middle_name') : null),
+                'suffix'          => $this->profilingDataService->resolveSuffixForDisplay($r->suffix, $formData),
+                'suffix_other'    => is_array($formData['custom_suffix'] ?? null)
+                    ? ($formData['custom_suffix'][0] ?? null)
+                    : ($formData['custom_suffix'] ?? ($formData['suffix_other'] ?? null)),
+                'form_data'       => $formData,
                 'full_name'       => $r->full_name,
                 'age'             => $val('age'),
                 'birthday'        => $val('birthday'),

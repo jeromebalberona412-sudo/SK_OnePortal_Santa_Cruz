@@ -74,7 +74,7 @@ class KkSurveyResponseService
             return $raw;
         };
 
-        $yesNo = fn (?string $input) => in_array(strtolower(trim((string) $input)), ['yes', 'true', '1'], true);
+        $yesNo = fn (?string $input) => $this->triStateYesNo($input);
 
         $birthday = $value('birthday');
         $birthdate = null;
@@ -141,5 +141,24 @@ class KkSurveyResponseService
         }
 
         return array_values($documents);
+    }
+
+    private function triStateYesNo(?string $input): ?bool
+    {
+        $value = strtolower(trim((string) $input));
+
+        if ($value === '' || $value === '—') {
+            return null;
+        }
+
+        if (in_array($value, ['yes', 'true', '1'], true)) {
+            return true;
+        }
+
+        if (in_array($value, ['no', 'false', '0'], true)) {
+            return false;
+        }
+
+        return null;
     }
 }

@@ -47,11 +47,36 @@
 
             {{-- Filter Tabs --}}
             <div class="feed-filter-bar">
-                <button type="button" class="feed-tab active" data-filter="all">All</button>
-                <button type="button" class="feed-tab" data-filter="announcement">Announcements</button>
-                <button type="button" class="feed-tab" data-filter="event">Events</button>
-                <button type="button" class="feed-tab" data-filter="activity">Activities</button>
-                <button type="button" class="feed-tab" data-filter="program">Programs</button>
+                <button type="button" class="feed-tab feed-tab--icon active" data-filter="all" aria-label="All">
+                    <span class="feed-tab-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    </span>
+                    <span class="feed-tab-text">All</span>
+                </button>
+                <button type="button" class="feed-tab feed-tab--icon" data-filter="announcement" aria-label="Announcements">
+                    <span class="feed-tab-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11 13v8a2 2 0 004 0v-6"/></svg>
+                    </span>
+                    <span class="feed-tab-text">Announcements</span>
+                </button>
+                <button type="button" class="feed-tab feed-tab--icon" data-filter="event" aria-label="Events">
+                    <span class="feed-tab-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                    </span>
+                    <span class="feed-tab-text">Events</span>
+                </button>
+                <button type="button" class="feed-tab feed-tab--icon" data-filter="activity" aria-label="Activities">
+                    <span class="feed-tab-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"/></svg>
+                    </span>
+                    <span class="feed-tab-text">Activities</span>
+                </button>
+                <button type="button" class="feed-tab feed-tab--icon" data-filter="program" aria-label="Programs">
+                    <span class="feed-tab-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                    </span>
+                    <span class="feed-tab-text">Programs</span>
+                </button>
             </div>
 
             <div id="feed-posts"></div>
@@ -121,9 +146,9 @@
                     <option value="program">Youth Program</option>
                 </select>
             </div>
-            <textarea class="compose-textarea" id="compose-content" placeholder="What's on your mind?" rows="6" maxlength="10000"></textarea>
+            <textarea class="compose-textarea" id="compose-content" placeholder="What's on your mind?" rows="6" maxlength="2000"></textarea>
             <div class="compose-char-row">
-                <span id="compose-char-count" class="compose-char-count">0 / 10000</span>
+                <span id="compose-char-count" class="compose-char-count">0 / 2000</span>
             </div>
             <div class="compose-attach-row">
                 <label class="compose-attach-btn" for="compose-image-input"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/></svg> Photo</label>

@@ -52,7 +52,7 @@
     </div>
 
     <!-- ══ Stat Cards ═══════════════════════════════════════ -->
-    <div class="stats-dashboard-grid mb-3">
+    <div class="stats-2row-grid mb-3">
 
         <div class="stat-card stat-card-blue" data-href="{{ route('kabataan') }}" title="View Kabataan records">
             <div class="stat-card-top">
@@ -69,119 +69,107 @@
             <span class="stat-card-label">Total KK Profiles</span>
         </div>
 
+        <div class="stat-card stat-card-green" data-href="{{ route('kabataan') }}" title="View approved KK profiles">
+            <div class="stat-card-top">
+                <span class="stat-card-value" id="statApproved">0</span>
+                <div class="stat-card-icon stat-icon-green">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+            </div>
+            <span class="stat-card-label">Total KK Profiling Approved</span>
+        </div>
+
+        <div class="stat-card stat-card-yellow" data-href="{{ route('kk-profiling-requests') }}" title="View pending KK profiling requests">
+            <div class="stat-card-top">
+                <span class="stat-card-value" id="statPending">0</span>
+                <div class="stat-card-icon stat-icon-yellow">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </div>
+            </div>
+            <span class="stat-card-label">Total KK Profiling Pending</span>
+        </div>
+
+        <div class="stat-card stat-card-rose" data-href="{{ route('rejected-kkprofiling') }}" title="View rejected KK profiling records">
+            <div class="stat-card-top">
+                <span class="stat-card-value" id="statRejected">0</span>
+                <div class="stat-card-icon stat-icon-rose">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                </div>
+            </div>
+            <span class="stat-card-label">Total KK Profiling Rejected</span>
+        </div>
+
         <div class="stat-card stat-card-teal" data-href="{{ route('programs') }}" title="View programs">
             <div class="stat-card-top">
                 <span class="stat-card-value" id="statActivePrograms">0</span>
                 <div class="stat-card-icon stat-icon-teal">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                 </div>
             </div>
             <span class="stat-card-label">Total Programs</span>
         </div>
 
-        <div class="stats-status-group">
-            <span class="stats-status-group-title">KK Profiling</span>
-            <div class="stats-status-group-cards">
-                <div class="stat-card stat-card-green" data-href="{{ route('kabataan') }}" title="View approved KK profiles">
-                    <div class="stat-card-top">
-                        <span class="stat-card-value" id="statApproved">0</span>
-                        <div class="stat-card-icon stat-icon-green">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        </div>
-                    </div>
-                    <span class="stat-card-label">Total Approved</span>
-                </div>
-                <div class="stat-card stat-card-yellow" data-href="{{ route('kk-profiling-requests') }}" title="View pending KK profiling requests">
-                    <div class="stat-card-top">
-                        <span class="stat-card-value" id="statPending">0</span>
-                        <div class="stat-card-icon stat-icon-yellow">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                        </div>
-                    </div>
-                    <span class="stat-card-label">Total Pending</span>
-                </div>
-                <div class="stat-card stat-card-rose" data-href="{{ route('rejected-kkprofiling') }}" title="View rejected KK profiling records">
-                    <div class="stat-card-top">
-                        <span class="stat-card-value" id="statRejected">0</span>
-                        <div class="stat-card-icon stat-icon-rose">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-                        </div>
-                    </div>
-                    <span class="stat-card-label">Total Rejected</span>
+        <div class="stat-card stat-card-green" data-href="{{ route('scholarship.applications') }}?status=approved" title="View approved scholarship applications">
+            <div class="stat-card-top">
+                <span class="stat-card-value" id="statScholarshipsApproved">0</span>
+                <div class="stat-card-icon stat-icon-green">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
                 </div>
             </div>
+            <span class="stat-card-label">Total Scholarships Approved</span>
         </div>
 
-        <div class="stats-status-group">
-            <span class="stats-status-group-title">Scholarships</span>
-            <div class="stats-status-group-cards">
-                <div class="stat-card stat-card-green" data-href="{{ route('scholarship.applications') }}?status=approved" title="View approved scholarship applications">
-                    <div class="stat-card-top">
-                        <span class="stat-card-value" id="statScholarshipsApproved">0</span>
-                        <div class="stat-card-icon stat-icon-green">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
-                        </div>
-                    </div>
-                    <span class="stat-card-label">Total Approved</span>
-                </div>
-                <div class="stat-card stat-card-yellow" data-href="{{ route('scholarship.applications') }}?status=pending" title="View pending scholarship applications">
-                    <div class="stat-card-top">
-                        <span class="stat-card-value" id="statScholarshipsPending">0</span>
-                        <div class="stat-card-icon stat-icon-yellow">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                        </div>
-                    </div>
-                    <span class="stat-card-label">Total Pending</span>
-                </div>
-                <div class="stat-card stat-card-rose" data-href="{{ route('rejected-scholars') }}" title="View rejected scholarship applications">
-                    <div class="stat-card-top">
-                        <span class="stat-card-value" id="statScholarshipsRejected">0</span>
-                        <div class="stat-card-icon stat-icon-rose">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-                        </div>
-                    </div>
-                    <span class="stat-card-label">Total Rejected</span>
+        <div class="stat-card stat-card-yellow" data-href="{{ route('scholarship.applications') }}?status=pending" title="View pending scholarship applications">
+            <div class="stat-card-top">
+                <span class="stat-card-value" id="statScholarshipsPending">0</span>
+                <div class="stat-card-icon stat-icon-yellow">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 </div>
             </div>
+            <span class="stat-card-label">Total Scholarships Pending</span>
         </div>
 
-        <div class="stats-status-group">
-            <span class="stats-status-group-title">Sports</span>
-            <div class="stats-status-group-cards">
-                <div class="stat-card stat-card-green" data-href="{{ route('sports-requests') }}?status=approved" title="View approved sports applications">
-                    <div class="stat-card-top">
-                        <span class="stat-card-value" id="statSportsApproved">0</span>
-                        <div class="stat-card-icon stat-icon-green">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
-                        </div>
-                    </div>
-                    <span class="stat-card-label">Total Approved</span>
-                </div>
-                <div class="stat-card stat-card-yellow" data-href="{{ route('sports-requests') }}?status=pending" title="View pending sports applications">
-                    <div class="stat-card-top">
-                        <span class="stat-card-value" id="statSportsPending">0</span>
-                        <div class="stat-card-icon stat-icon-yellow">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                        </div>
-                    </div>
-                    <span class="stat-card-label">Total Pending</span>
-                </div>
-                <div class="stat-card stat-card-rose" data-href="{{ route('rejected-sports') }}" title="View rejected sports applications">
-                    <div class="stat-card-top">
-                        <span class="stat-card-value" id="statSportsRejected">0</span>
-                        <div class="stat-card-icon stat-icon-rose">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-                        </div>
-                    </div>
-                    <span class="stat-card-label">Total Rejected</span>
+        <div class="stat-card stat-card-rose" data-href="{{ route('rejected-scholars') }}" title="View rejected scholarship applications">
+            <div class="stat-card-top">
+                <span class="stat-card-value" id="statScholarshipsRejected">0</span>
+                <div class="stat-card-icon stat-icon-rose">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
                 </div>
             </div>
+            <span class="stat-card-label">Total Scholarships Rejected</span>
         </div>
 
-    </div><!-- /stats-dashboard-grid -->
+        <div class="stat-card stat-card-green" data-href="{{ route('sports-requests') }}?status=approved" title="View approved sports applications">
+            <div class="stat-card-top">
+                <span class="stat-card-value" id="statSportsApproved">0</span>
+                <div class="stat-card-icon stat-icon-green">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
+                </div>
+            </div>
+            <span class="stat-card-label">Total Sports Approved</span>
+        </div>
+
+        <div class="stat-card stat-card-yellow" data-href="{{ route('sports-requests') }}?status=pending" title="View pending sports applications">
+            <div class="stat-card-top">
+                <span class="stat-card-value" id="statSportsPending">0</span>
+                <div class="stat-card-icon stat-icon-yellow">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </div>
+            </div>
+            <span class="stat-card-label">Total Sports Pending</span>
+        </div>
+
+        <div class="stat-card stat-card-rose" data-href="{{ route('rejected-sports') }}" title="View rejected sports applications">
+            <div class="stat-card-top">
+                <span class="stat-card-value" id="statSportsRejected">0</span>
+                <div class="stat-card-icon stat-icon-rose">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                </div>
+            </div>
+            <span class="stat-card-label">Total Sports Rejected</span>
+        </div>
+
+    </div><!-- /stats-2row-grid -->
 
     <!-- ══ Quick Actions ═════════════════════════════════════ -->
     <div class="dash-section-card">
