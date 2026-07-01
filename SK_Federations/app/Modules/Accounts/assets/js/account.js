@@ -371,14 +371,14 @@ function toggleModal(modalId, show) {
 // ── Top toast notification ─────────────────────────────────────
 let _toastTimer = null;
 function showAccountToast(msg, type) {
-    // type: 'success' | 'edit' | 'delete'
-    const idMap = { success: 'accountToast', edit: 'accountToastEdit', delete: 'accountToastDelete' };
-    const msgMap = { success: 'accountToastMsg', edit: 'accountToastEditMsg', delete: 'accountToastDeleteMsg' };
+    // type: 'success' | 'edit' | 'delete' | 'error'
+    const idMap = { success: 'accountToast', edit: 'accountToastEdit', delete: 'accountToastDelete', error: 'accountToastError' };
+    const msgMap = { success: 'accountToastMsg', edit: 'accountToastEditMsg', delete: 'accountToastDeleteMsg', error: 'accountToastErrorMsg' };
     const toastId = idMap[type] || 'accountToast';
     const msgId = msgMap[type] || 'accountToastMsg';
 
     // Hide all toasts first
-    ['accountToast', 'accountToastEdit', 'accountToastDelete'].forEach(id => {
+    ['accountToast', 'accountToastEdit', 'accountToastDelete', 'accountToastError'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove('show');
     });
@@ -390,6 +390,18 @@ function showAccountToast(msg, type) {
     toast.classList.add('show');
     if (_toastTimer) clearTimeout(_toastTimer);
     _toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+function displayFormValidationErrors(form, errors) {
+    if (!form || !errors) return '';
+    let firstMessage = '';
+    Object.keys(errors).forEach((field) => {
+        const message = Array.isArray(errors[field]) ? errors[field][0] : String(errors[field]);
+        if (!firstMessage) firstMessage = message;
+        const input = form.querySelector(`[name="${field}"]`);
+        if (input) _showErr(input, message);
+    });
+    return firstMessage;
 }
 
 function getCurrentAccountType() {
@@ -438,41 +450,12 @@ function setFormFieldValue(form, name, value) {
 function showLoadingOverlay(message = 'Processing...', subtext = 'Please wait') {
     if (typeof window.showLoading === 'function') {
         window.showLoading(message, subtext);
-        return;
     }
-
-    let overlay = document.getElementById('loadingOverlay');
-    if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'loadingOverlay';
-        overlay.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>${message}</p></div>`;
-        document.body.appendChild(overlay);
-    } else {
-        const label = overlay.querySelector('p');
-        if (label) label.textContent = message;
-    }
-    overlay.style.display = 'flex';
-    lockBodyScroll();
 }
 
 function hideLoadingOverlay() {
     if (typeof window.hideLoading === 'function') {
         window.hideLoading();
-    }
-
-    const globalOverlay = document.getElementById('globalLoadingOverlay');
-    if (globalOverlay) {
-        globalOverlay.classList.remove('gl-visible');
-        globalOverlay.setAttribute('aria-hidden', 'true');
-    }
-
-    const overlay = document.getElementById('loadingOverlay');
-    if (overlay) {
-        overlay.style.display = 'none';
-    }
-
-    if (typeof window.LoadingScreen !== 'undefined' && window.LoadingScreen.hide) {
-        window.LoadingScreen.hide();
     }
 
     if (!isAnyModalOpen()) {
@@ -2852,20 +2835,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (!ok || !data.success) {
                         cleanupAccountUiState();
                         if (data.errors) {
-                            let handledError = false;
-                            Object.keys(data.errors).forEach(f => {
-                                const input = officialsForm.querySelector(`[name="${f}"]`);
-                                if (input) {
-                                    _showErr(input, data.errors[f][0]);
-                                    handledError = true;
-                                }
-                            });
-                            if (!handledError) {
-                                const firstError = Object.values(data.errors).flat()[0] || 'Failed to create account. Please try again.';
-                                alert(firstError);
-                            }
+                            const firstError = displayFormValidationErrors(officialsForm, data.errors)
+                                || Object.values(data.errors).flat()[0]
+                                || 'Failed to create account. Please try again.';
+                            showAccountToast(firstError, 'error');
+                            const invalid = officialsForm.querySelector('.is-invalid');
+                            if (invalid) invalid.focus();
                         } else {
-                            alert(data.message || 'Failed to create account. Please try again.');
+                            showAccountToast(data.message || 'Failed to create account. Please try again.', 'error');
                         }
                         return;
                     }
@@ -2984,19 +2961,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     hideLoadingOverlay();
                     if (!ok || !data.success) {
                         if (data.errors) {
-                            let handledError = false;
-                            Object.keys(data.errors).forEach(f => {
-                                const input = form.querySelector(`[name="${f}"]`);
-                                if (input) {
-                                    _showErr(input, data.errors[f][0]);
-                                    handledError = true;
-                                }
-                            });
-                            if (!handledError) {
-                                const firstError = Object.values(data.errors).flat()[0] || 'Failed to update account. Please try again.';
-                                alert(firstError);
-                            }
-                        } else alert('Failed to update account. Please try again.');
+                            const firstError = displayFormValidationErrors(form, data.errors)
+                                || Object.values(data.errors).flat()[0]
+                                || 'Failed to update account. Please try again.';
+                            showAccountToast(firstError, 'error');
+                            const invalid = form.querySelector('.is-invalid');
+                            if (invalid) invalid.focus();
+                        } else {
+                            showAccountToast('Failed to update account. Please try again.', 'error');
+                        }
                         return;
                     }
                     _closeEditByType();

@@ -12,9 +12,8 @@
         'app/Modules/KKProfiling/assets/css/kkprofiling-wizard.css',
         'app/Modules/KKProfiling/assets/js/kkprofiling.js',
         'app/Modules/KKProfiling/assets/js/kkprofiling-wizard.js',
-        'app/Modules/Shared/assets/css/loading.css',
-        'app/Modules/Shared/assets/js/loading.js',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="homepage-body kkp-form-page kkp-wizard-mode">
 
@@ -141,5 +140,6 @@
         </div>
     </div>
 
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

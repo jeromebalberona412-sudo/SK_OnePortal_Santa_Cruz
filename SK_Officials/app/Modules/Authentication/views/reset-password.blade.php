@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -42,7 +42,7 @@
                     </div>
                 </div>
                 <h1 class="sk-main-title">SK OnePortal</h1>
-                <p class="sk-tagline">SK Officials Portal – Santa Cruz, Laguna</p>
+                <p class="sk-tagline">SK Officials Portal � Santa Cruz, Laguna</p>
             </div>
         </div>
 
@@ -52,7 +52,7 @@
                 <div class="card-header">
                     <h2 class="card-title">
                         Reset Password
-                        <span class="wave-emoji">🔐</span>
+                        <span class="wave-emoji">??</span>
                     </h2>
                     <p class="card-subtitle">Create a new secure password</p>
                 </div>
@@ -174,6 +174,5 @@
     </main>
 
     <script src="{{ url('/shared/js/loading.js') }}"></script>
-    @vite(['app/Modules/Authentication/assets/js/loader.js'])
 </body>
 </html>

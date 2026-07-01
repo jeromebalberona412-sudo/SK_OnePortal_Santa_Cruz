@@ -1061,9 +1061,11 @@ select.form-input-light option {
     position: relative;
     box-sizing: border-box;
     min-height: calc(100vh - var(--navbar-height, 64px));
-    padding: calc(var(--topbar-height) + 16px) 20px calc(var(--accounts-footer-height, 36px) + 20px);
+    padding: calc(var(--topbar-height) + 16px) 20px calc(var(--accounts-footer-height, 36px) + 28px);
     background: transparent;
     color: var(--accounts-text);
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 .manage-account-container {
@@ -1282,7 +1284,8 @@ select.form-input-light option {
 
 .accounts-page .table-card-modern,
 .accounts-page .table-responsive {
-    overflow: visible !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .accounts-table {
@@ -1691,6 +1694,18 @@ body.sidebar-collapsed .accounts-page-footer {
 
 .assign-fed-position-modal {
     max-width: 480px;
+    width: calc(100vw - 32px);
+}
+
+#assignFederationPositionModal.modal-overlay {
+    align-items: flex-start;
+    padding: 12px;
+}
+
+#assignFederationPositionModal .modal-content {
+    max-height: calc(100dvh - 24px);
+    margin-top: auto;
+    margin-bottom: auto;
 }
 
 .assign-fed-summary {
@@ -1848,7 +1863,7 @@ body.sidebar-collapsed .accounts-page-footer {
 
 @media (max-width: 768px) {
     .main-content-modern.accounts-page {
-        padding: calc(var(--topbar-height) + 12px) 12px calc(var(--accounts-footer-height, 36px) + 14px);
+        padding: calc(var(--topbar-height) + 12px) 12px calc(var(--accounts-footer-height, 36px) + 20px);
         width: 100%;
     }
 
@@ -1865,17 +1880,55 @@ body.sidebar-collapsed .accounts-page-footer {
         font-size: 0.88rem;
     }
 
-    .search-add-container {
-        grid-template-columns: 1fr;
+    .accounts-filter-grid {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        gap: 0.5rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 2px;
+    }
+
+    .accounts-filter-grid::-webkit-scrollbar {
+        display: none;
+    }
+
+    .accounts-filter-grid .filter-dropdown-container {
+        flex: 0 0 150px;
+        min-width: 150px;
+    }
+
+    .accounts-filter-grid .search-container {
+        flex: 1 0 190px;
+        min-width: 190px;
+        grid-column: auto;
+    }
+
+    .accounts-filter-grid .header-action-buttons {
+        flex: 0 0 auto;
+        grid-column: auto;
     }
 
     .filter-dropdown,
     .search-input {
         width: 100%;
+        min-height: 40px;
+    }
+
+    .btn-primary-modern {
+        white-space: nowrap;
+        min-height: 40px;
+        padding: 0 14px;
+    }
+
+    .search-add-container {
+        grid-template-columns: 1fr;
     }
 
     .accounts-table {
-        min-width: 740px;
+        min-width: 640px;
     }
 
     .accounts-table thead th,
@@ -2195,7 +2248,8 @@ body.sidebar-collapsed .accounts-page-footer {
 /* ── Top success toast — solid background, white text, no icon ── */
 #accountToast,
 #accountToastEdit,
-#accountToastDelete {
+#accountToastDelete,
+#accountToastError {
     position: fixed;
     top: calc(var(--topbar-height, 64px) + 12px);
     left: 50%;
@@ -2230,9 +2284,17 @@ body.sidebar-collapsed .accounts-page-footer {
     background: #dc2626;
 }
 
+#accountToastError {
+    background: #dc2626;
+    white-space: normal;
+    max-width: min(92vw, 520px);
+    text-align: center;
+}
+
 #accountToast.show,
 #accountToastEdit.show,
-#accountToastDelete.show {
+#accountToastDelete.show,
+#accountToastError.show {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
     pointer-events: auto;
@@ -2247,6 +2309,10 @@ body.sidebar-collapsed .accounts-page-footer {
 }
 
 :root.dark #accountToastDelete {
+    background: #b91c1c;
+}
+
+:root.dark #accountToastError {
     background: #b91c1c;
 }
 
@@ -2678,58 +2744,6 @@ body.sidebar-collapsed .accounts-page-footer {
     background: #3f4f63;
     border-color: #64748b;
     color: #f1f5f9;
-}
-
-/* ── Loading Overlay ─────────────────────────────────────────
-   Shown while Create Account / Update Account requests are
-   in-flight for both SK Federation and SK Officials forms.
-   ─────────────────────────────────────────────────────────── */
-#loadingOverlay {
-    position: fixed;
-    inset: 0;
-    z-index: 99999;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(15, 30, 60, 0.55);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
-}
-
-.loading-spinner {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 2.25rem 3rem;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-    min-width: 180px;
-    text-align: center;
-}
-
-.loading-spinner .spinner {
-    width: 48px;
-    height: 48px;
-    border: 4px solid #e5e7eb;
-    border-top-color: #255fa8;
-    border-radius: 50%;
-    animation: accountSpinnerRotate 0.75s linear infinite;
-}
-
-.loading-spinner p {
-    margin: 0;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #255fa8;
-    letter-spacing: 0.02em;
-}
-
-@keyframes accountSpinnerRotate {
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 /* ── Accounts refactor: bulk actions, checkboxes, delete modal ── */
@@ -3211,7 +3225,9 @@ body.sidebar-collapsed .accounts-page-footer {
 }
 
 .accounts-page .table-card-modern .table-responsive {
-    overflow: visible !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch;
 }
 
 @media (max-width: 768px) {
@@ -3666,5 +3682,89 @@ body.sidebar-collapsed .accounts-page-footer {
 
     .account-modal-scroll {
         padding: 0.9rem;
+    }
+}
+
+/* ── Mobile modal controls + layout (accounts module) ─────── */
+@media (max-width: 768px) {
+    .modal-overlay {
+        padding: 8px;
+        align-items: flex-start;
+    }
+
+    .modal-content,
+    .modal-large,
+    .assign-fed-position-modal {
+        width: calc(100vw - 16px) !important;
+        max-width: calc(100vw - 16px) !important;
+        max-height: calc(100dvh - 16px);
+        margin: auto;
+    }
+
+    .modal-header,
+    .modal-header-blue-grad,
+    .modal-header-yellow {
+        padding: 12px 14px;
+        gap: 8px;
+        flex-wrap: nowrap;
+    }
+
+    .modal-header h2,
+    .modal-header h3,
+    .modal-title {
+        font-size: 1rem;
+        line-height: 1.3;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .modal-controls {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .modal-win-btn {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+        flex-shrink: 0;
+    }
+
+    .modal-win-icon {
+        font-size: 18px;
+    }
+
+    .modal-body,
+    .modal-body-light {
+        padding: 1rem;
+    }
+
+    .account-modal-footer,
+    .modal-footer-btns {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .account-modal-footer .btn-cancel-light,
+    .account-modal-footer .btn-submit-light,
+    .modal-footer-btns .btn-secondary,
+    .modal-footer-btns .btn-primary {
+        flex: 1 1 calc(50% - 0.25rem);
+        min-width: 120px;
+    }
+
+    .modal-overlay.modal-fullscreen {
+        padding: 0;
+    }
+
+    .modal-overlay.modal-fullscreen .modal-content {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        border-radius: 0;
     }
 }

@@ -24,9 +24,8 @@
         'app/Modules/Programs/assets/js/kabataan-programs.js',
         'app/Modules/Programs/assets/js/sports-applications-history.js',
         'app/Modules/Programs/assets/js/sports_landing.js',
-        'app/Modules/Shared/assets/css/loading.css',
-        'app/Modules/Shared/assets/js/loading.js',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="sl-body sports-landing-page kabataan-app-page">
     @include('dashboard::loading')
@@ -84,5 +83,6 @@
         window.__scheduleProgramId = @json($scheduleProgramId);
         window.__kkFieldLabels = @json($kkFieldLabels);
     </script>
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

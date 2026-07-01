@@ -482,6 +482,16 @@ body.youth-profile {
     line-height: 1.6;
 }
 
+.kkp-docs-locked-note {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+    font-weight: 600;
+}
+
 .kkp-docs-upload-actions {
     display: flex;
     justify-content: flex-end;

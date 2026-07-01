@@ -489,6 +489,9 @@ function initProfileSupportingDocuments() {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const submitBtn = document.getElementById('profileSupportingDocSubmitBtn');
     const errorEl = document.getElementById('profileSupportingDocUploadError');
+    if (!submitBtn) {
+        return;
+    }
     const schoolIdPanel = document.getElementById('profileSchoolIdUpload');
     const nationalIdPanel = document.getElementById('profileNationalIdUpload');
     const docTypeRadios = uploadModal.querySelectorAll('input[name="profile_document_type"]');

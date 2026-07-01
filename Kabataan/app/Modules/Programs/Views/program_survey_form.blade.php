@@ -18,9 +18,8 @@
         'app/Modules/Dashboard/assets/js/notif.js',
         'app/Modules/Programs/assets/css/scholarship_application.css',
         'app/Modules/Programs/assets/js/program_survey_form.js',
-        'app/Modules/Shared/assets/css/loading.css',
-        'app/Modules/Shared/assets/js/loading.js',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="sch-app-body kabataan-app-page" data-skip-initial-loading>
     @include('dashboard::loading')
@@ -87,5 +86,6 @@
         window.__programSurvey = @json($survey);
         window.__surveyId = @json($surveyId);
     </script>
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

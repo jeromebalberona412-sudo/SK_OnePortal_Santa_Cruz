@@ -5,6 +5,8 @@ let currentFilter = 'all';
 let feedSearch = '';
 let editingPostId = null;
 let pendingFiles = [];
+let existingImages = [];
+let removedImageIds = [];
 const MAX_IMAGES = 20;
 let lightboxImages = [];
 let lightboxIndex = 0;
@@ -593,17 +595,35 @@ function editPost(id) {
     if (!p) return;
     editingPostId = id;
     pendingFiles = [];
+    removedImageIds = [];
+    existingImages = [];
+    if (p.image_items && p.image_items.length) {
+        existingImages = p.image_items.map(function(item) {
+            return { id: item.id, url: item.url };
+        });
+    } else if (p.images && p.images.length) {
+        existingImages = p.images.map(function(url, idx) {
+            return { id: null, url: url, legacyIndex: idx };
+        });
+    }
     document.getElementById('compose-modal-title').textContent = 'Edit Post';
     document.getElementById('edit-post-id').value = id;
-    document.getElementById('compose-content').value = p.body;
-    document.getElementById('compose-type').value = p.type;
-    refreshPreviewGrid();
+    document.getElementById('compose-content').value = p.body || '';
+    document.getElementById('compose-type').value = p.type || 'update';
+    document.getElementById('compose-link-input-wrap').style.display = 'none';
+    document.getElementById('compose-link-input').value = '';
     if (p.link_url) {
         document.getElementById('compose-link-input').value = p.link_url;
         document.getElementById('compose-link-input-wrap').style.display = 'block';
     }
+    refreshPreviewGrid();
+    updateCharCount();
     document.querySelectorAll('.post-options-menu.open').forEach(function(m) { m.classList.remove('open'); });
     document.getElementById('composeModal').classList.add('active');
+}
+
+function totalSelectedImages() {
+    return existingImages.length + pendingFiles.length;
 }
 
 function submitPost() {
@@ -621,6 +641,7 @@ function submitPost() {
     if (titleVal) fd.append('title', titleVal);
     if (linkVal) fd.append('link_url', linkVal);
     pendingFiles.forEach(function (file) { fd.append('images[]', file); });
+    removedImageIds.forEach(function (imageId) { fd.append('removed_image_ids[]', imageId); });
 
     savePostForm(fd);
 }
@@ -630,6 +651,10 @@ function savePostForm(formData) {
     var url = isEdit ? '/api/community-feed/' + editingPostId : '/api/community-feed';
     var method = isEdit ? 'POST' : 'POST';
     if (isEdit) formData.append('_method', 'PUT');
+
+    if (typeof window.showLoading === 'function') {
+        window.showLoading(isEdit ? 'Saving post' : 'Publishing post', 'Please wait');
+    }
 
     fetch(url, {
         method: method,
@@ -649,17 +674,24 @@ function savePostForm(formData) {
         .then(function(saved) {
             if (!saved || !saved.id) throw new Error('Invalid response from server.');
             closeComposeModal();
-            if (typeof showFeedToast === 'function') showFeedToast('Post published successfully.', 'success');
+            if (typeof showFeedToast === 'function') {
+                showFeedToast(isEdit ? 'Post updated successfully.' : 'Post published successfully.', 'success');
+            }
             renderPosts(true);
         })
         .catch(function(err) {
             alert(err.message || 'Unable to save post.');
+        })
+        .finally(function () {
+            if (typeof window.hideLoading === 'function') window.hideLoading();
         });
 }
 
 function openComposeModal(type) {
     editingPostId = null;
     pendingFiles = [];
+    existingImages = [];
+    removedImageIds = [];
     document.getElementById('compose-modal-title').textContent = 'Create Post';
     document.getElementById('edit-post-id').value = '';
     document.getElementById('compose-content').value = '';
@@ -693,6 +725,8 @@ function closeComposeModal() {
     if (modal) modal.classList.remove('active', 'compose-maximized');
     editingPostId = null;
     pendingFiles = [];
+    existingImages = [];
+    removedImageIds = [];
 }
 
 function toggleComposeFullscreen() {
@@ -723,7 +757,7 @@ function previewImages(input) {
     var files = Array.from(input.files || []);
     if (!files.length) return;
 
-    var remaining = MAX_IMAGES - pendingFiles.length;
+    var remaining = MAX_IMAGES - totalSelectedImages();
     if (remaining <= 0) {
         alert('You can upload up to ' + MAX_IMAGES + ' images per post.');
         input.value = '';
@@ -737,22 +771,36 @@ function previewImages(input) {
 
     toAdd.forEach(function (file) {
         pendingFiles.push(file);
-        var reader = new FileReader();
-        reader.onload = function (e) {
-            appendPreviewThumb(e.target.result, pendingFiles.length - 1);
-        };
-        reader.readAsDataURL(file);
     });
 
     input.value = '';
-    updateImagesMeta();
+    refreshPreviewGrid();
+}
+
+function appendExistingThumb(image) {
+    var wrap = document.getElementById('compose-images-preview');
+    if (!wrap || !image || !image.url) return;
+    var item = document.createElement('div');
+    item.className = 'compose-preview-item compose-preview-item--existing';
+    item.innerHTML = '<img src="' + escapeHtml(image.url) + '" alt="Existing photo"><button type="button" class="compose-preview-remove" aria-label="Remove image">&times;</button>';
+    item.querySelector('.compose-preview-remove').addEventListener('click', function () {
+        if (image.id) {
+            removedImageIds.push(image.id);
+        }
+        existingImages = existingImages.filter(function (img) {
+            if (image.id) return img.id !== image.id;
+            return img.url !== image.url;
+        });
+        refreshPreviewGrid();
+    });
+    wrap.appendChild(item);
 }
 
 function appendPreviewThumb(src, index) {
     var wrap = document.getElementById('compose-images-preview');
     if (!wrap) return;
     var item = document.createElement('div');
-    item.className = 'compose-preview-item';
+    item.className = 'compose-preview-item compose-preview-item--new';
     item.innerHTML = '<img src="' + src + '" alt="Preview"><button type="button" class="compose-preview-remove" data-index="' + index + '" aria-label="Remove image">&times;</button>';
     item.querySelector('.compose-preview-remove').addEventListener('click', function () {
         pendingFiles.splice(parseInt(this.getAttribute('data-index'), 10), 1);
@@ -765,6 +813,9 @@ function refreshPreviewGrid() {
     var wrap = document.getElementById('compose-images-preview');
     if (!wrap) return;
     wrap.innerHTML = '';
+    existingImages.forEach(function (image) {
+        appendExistingThumb(image);
+    });
     pendingFiles.forEach(function (file, idx) {
         var reader = new FileReader();
         reader.onload = function (e) { appendPreviewThumb(e.target.result, idx); };
@@ -776,8 +827,9 @@ function refreshPreviewGrid() {
 function updateImagesMeta() {
     var meta = document.getElementById('compose-images-meta');
     if (!meta) return;
-    meta.textContent = pendingFiles.length
-        ? pendingFiles.length + ' image' + (pendingFiles.length === 1 ? '' : 's') + ' selected (max ' + MAX_IMAGES + ')'
+    var total = totalSelectedImages();
+    meta.textContent = total
+        ? total + ' image' + (total === 1 ? '' : 's') + ' selected (max ' + MAX_IMAGES + ')'
         : '';
 }
 

@@ -36,9 +36,8 @@
         'app/Modules/KKProfiling/assets/css/kk-profiling-update.css',
         'app/Modules/KKProfiling/assets/js/kkprofiling.js',
         'app/Modules/KKProfiling/assets/js/kk-profiling-update.js',
-        'app/Modules/Shared/assets/css/loading.css',
-        'app/Modules/Shared/assets/js/loading.js',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="youth-dashboard">
     @include('dashboard::loading')
@@ -1022,5 +1021,6 @@
     </script>
 
     @include('programs::scholarship.partials.data-privacy-modal')
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

@@ -791,7 +791,7 @@ body.sidebar-collapsed #archiveManagementSubmenu {
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 0 0 8px;
+    padding: 0 0 24px;
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
     overscroll-behavior: contain;

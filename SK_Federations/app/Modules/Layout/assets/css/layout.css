@@ -90,7 +90,13 @@ body.sidebar-collapsed .sidebar-profile {
 }
 
 .sidebar-submenu.is-open {
-    max-height: 400px;
+    max-height: 520px;
+}
+
+@media (max-width: 1024px) {
+    .sidebar-submenu.is-open {
+        max-height: 640px;
+    }
 }
 
 body:not(.sidebar-collapsed) .sidebar-nav .sidebar-submenu.is-open {

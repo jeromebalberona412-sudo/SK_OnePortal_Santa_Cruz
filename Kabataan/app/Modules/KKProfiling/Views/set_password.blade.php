@@ -10,9 +10,8 @@
         'app/Modules/Authentication/assets/css/youth-login.css',
         'app/Modules/KKProfiling/assets/css/kkprofiling.css',
         'app/Modules/KKProfiling/assets/js/kkprofiling.js',
-        'app/Modules/Shared/assets/css/loading.css',
-        'app/Modules/Shared/assets/js/loading.js',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="youth-login-page kkp-setpw-page">
 
@@ -154,5 +153,6 @@
         </div>
     </div>
 
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

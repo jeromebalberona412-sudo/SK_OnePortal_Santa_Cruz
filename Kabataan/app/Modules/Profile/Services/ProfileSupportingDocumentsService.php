@@ -77,8 +77,11 @@ class ProfileSupportingDocumentsService
         $this->assertValidFile($front);
         $this->assertValidFile($back);
 
-        $existingEntry = $this->findStoredDocument($registration, $documentType)
-            ?? $this->findAnyStoredDocument($registration);
+        if ($this->findAnyStoredDocument($registration)) {
+            throw ValidationException::withMessages([
+                'document' => ['Supporting documents have already been uploaded and cannot be replaced.'],
+            ]);
+        }
 
         $emailSlug = Str::slug(strtolower($registration->email), '_') ?: 'user_'.$user->id;
         $timestamp = now()->format('YmdHis');
@@ -122,10 +125,6 @@ class ProfileSupportingDocumentsService
                 (new KkSurveyResponseService)->syncFromRegistration($registration->fresh(), 'pending');
             }
         });
-
-        if ($existingEntry) {
-            $this->deleteStoredDocument($existingEntry);
-        }
 
         $freshRegistration = $registration->fresh();
         $documents = $this->profileService->resolveSupportingDocuments($freshRegistration);

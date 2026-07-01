@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -8,9 +8,8 @@
     <title>Forgot Password - SK OnePortal</title>
     @vite([
         'app/Modules/Authentication/assets/css/youth-login.css',
-        'app/Modules/Shared/assets/css/loading.css',
-        'app/Modules/Shared/assets/js/loading.js',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="youth-login-page">
     @include('dashboard::loading')
@@ -37,7 +36,7 @@
                     >
                 </div>
                 <h1 class="youth-main-title">SK OnePortal</h1>
-                <p class="youth-tagline">Official Youth Portal – Santa Cruz, Laguna</p>
+                <p class="youth-tagline">Official Youth Portal � Santa Cruz, Laguna</p>
             </div>
         </div>
 
@@ -46,7 +45,7 @@
             <div class="youth-login-card">
                 <div class="card-header">
                     <h2 class="card-title">
-                        Forgot Your Password? 🔑
+                        Forgot Your Password? ??
                     </h2>
                     <p class="card-subtitle">Enter the email address associated with your account and we will send you a link to reset your password.</p>
                 </div>
@@ -193,5 +192,6 @@
             }
         })();
     </script>
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

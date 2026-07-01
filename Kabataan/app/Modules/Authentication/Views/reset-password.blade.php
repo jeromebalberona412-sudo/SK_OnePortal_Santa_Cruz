@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -9,9 +9,8 @@
     @vite([
         'app/Modules/Authentication/assets/css/youth-login.css',
         'app/Modules/Authentication/assets/js/youth-login.js',
-        'app/Modules/Shared/assets/css/loading.css',
-        'app/Modules/Shared/assets/js/loading.js',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="youth-login-page">
     @include('dashboard::loading')
@@ -38,7 +37,7 @@
                     >
                 </div>
                 <h1 class="youth-main-title">SK OnePortal</h1>
-                <p class="youth-tagline">Official Youth Portal – Santa Cruz, Laguna</p>
+                <p class="youth-tagline">Official Youth Portal � Santa Cruz, Laguna</p>
             </div>
         </div>
 
@@ -47,7 +46,7 @@
             <div class="youth-login-card">
                 <div class="card-header">
                     <h2 class="card-title">
-                        Reset Your Password 🔐
+                        Reset Your Password ??
                     </h2>
                     <p class="card-subtitle">Enter your new password below</p>
                 </div>
@@ -157,7 +156,7 @@
                         <path d="M9 12l2 2 4-4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
-                <h2 style="font-size: 2rem; font-weight: 800; color: #0450a8; margin-bottom: 1rem;">Password Reset Successful! 🎉</h2>
+                <h2 style="font-size: 2rem; font-weight: 800; color: #0450a8; margin-bottom: 1rem;">Password Reset Successful! ??</h2>
                 <p style="font-size: 1.125rem; color: #334155; margin-bottom: 0.75rem; font-weight: 500;">
                     Your password has been reset successfully.
                 </p>
@@ -371,7 +370,7 @@
         }
 
         .password-rules li::before {
-            content: '•';
+            content: '�';
             position: absolute;
             left: 6px;
             color: #94a3b8;
@@ -382,7 +381,7 @@
         }
 
         .password-rules li.ok::before {
-            content: '✓';
+            content: '?';
             color: #16a34a;
             font-weight: 700;
         }
@@ -397,5 +396,6 @@
         }
     </style>
 
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

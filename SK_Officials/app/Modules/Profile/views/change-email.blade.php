@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -32,7 +32,7 @@
 
     <main class="sk-login-container">
 
-        <!-- Left Side — Logo & Branding -->
+        <!-- Left Side � Logo & Branding -->
         <div class="sk-branding-section">
             <div class="branding-content">
                 <div class="logo-wrapper">
@@ -41,17 +41,17 @@
                          class="sk-logo">
                 </div>
                 <h1 class="sk-main-title">SK OnePortal</h1>
-                <p class="sk-tagline">SK Officials Portal – Santa Cruz, Laguna</p>
+                <p class="sk-tagline">SK Officials Portal � Santa Cruz, Laguna</p>
             </div>
         </div>
 
-        <!-- Right Side — Card -->
+        <!-- Right Side � Card -->
         <div class="sk-login-section">
             <div class="sk-login-card">
 
                 <div id="ceStep1">
                     <div class="card-header">
-                        <h2 class="card-title">Change Email ✉️</h2>
+                        <h2 class="card-title">Change Email ??</h2>
                         <p class="card-subtitle">Enter your current email, new email address, and current password to request a change.</p>
                     </div>
 
@@ -157,7 +157,7 @@
 
                     <div class="youth-register-section ce-back-section">
                         <p class="register-text">
-                            <a href="{{ route('profile') }}" class="register-link">← Back to Profile</a>
+                            <a href="{{ route('profile') }}" class="register-link">? Back to Profile</a>
                         </p>
                     </div>
                 </div>
@@ -168,6 +168,5 @@
     </main>
 
     <script src="{{ url('/shared/js/loading.js') }}"></script>
-    @vite(['app/Modules/Authentication/assets/js/loader.js'])
 </body>
 </html>

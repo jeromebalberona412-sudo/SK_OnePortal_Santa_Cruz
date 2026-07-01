@@ -1,13 +1,12 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Email Verified - SK Kabataan Portal</title>
-    @vite(['app/Modules/Authentication/assets/css/youth-login.css',
-             'app/Modules/Shared/assets/css/loading.css',
-             'app/Modules/Shared/assets/js/loading.js'])
+    @vite(['app/Modules/Authentication/assets/css/youth-login.css'])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
         .success-container {
             background: white;
@@ -189,5 +188,6 @@
     </div>
     </main>
 
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

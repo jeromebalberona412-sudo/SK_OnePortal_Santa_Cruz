@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -95,8 +96,13 @@ class CommunityFeedPostController extends Controller
             'link_url'           => $validated['link_url'] ?? null,
             'user_id'            => $user->id,
             'barangay_id'        => null,
-            'is_federation_wide' => true,
         ]);
+
+        DB::table('announcements')
+            ->where('id', $post->id)
+            ->update(['is_federation_wide' => DB::raw('true')]);
+
+        $post->refresh();
 
         $this->storePostImages($post, $request);
 
@@ -127,19 +133,27 @@ class CommunityFeedPostController extends Controller
         ]);
 
         $validated = $request->validate([
-            'type'      => 'sometimes|in:announcement,event,activity,program,update',
-            'title'     => 'nullable|string|max:255',
-            'body'      => 'sometimes|string|max:'.self::MAX_BODY_LENGTH,
-            'link_url'  => 'nullable|url|max:4096',
-            'images'    => 'nullable|array|max:'.self::MAX_IMAGES,
-            'images.*'  => 'image|max:5120',
+            'type'              => 'sometimes|in:announcement,event,activity,program,update',
+            'title'             => 'nullable|string|max:255',
+            'body'              => 'sometimes|string|max:'.self::MAX_BODY_LENGTH,
+            'link_url'          => 'nullable|url|max:4096',
+            'images'            => 'nullable|array|max:'.self::MAX_IMAGES,
+            'images.*'          => 'image|max:5120',
+            'removed_image_ids'   => 'nullable|array',
+            'removed_image_ids.*' => 'integer',
         ]);
 
-        $post->update(collect($validated)->except(['images'])->all());
+        $post->update(collect($validated)->except(['images', 'removed_image_ids'])->all());
 
-        if ($request->hasFile('images')) {
-            $post->images()->delete();
-            $this->storePostImages($post, $request);
+        $removedIds = array_values(array_filter(array_map('intval', (array) $request->input('removed_image_ids', []))));
+        if ($removedIds !== []) {
+            $post->images()->whereIn('id', $removedIds)->delete();
+        }
+
+        $currentCount = $post->images()->count();
+        if ($request->hasFile('images') && $currentCount < self::MAX_IMAGES) {
+            $remaining = self::MAX_IMAGES - $currentCount;
+            $this->storePostImages($post, $request, $currentCount, $remaining);
         }
 
         return response()->json($this->formatPost(
@@ -298,12 +312,15 @@ class CommunityFeedPostController extends Controller
             ?? ($post->is_federation_wide ? 'SK Federation' : ('SK Brgy. ' . ($post->barangay?->name ?? '')));
 
         $imageRecords = $post->relationLoaded('images') ? $post->images : collect();
-        $images = $imageRecords
-            ->map(fn ($img) => $this->cloudinary->normalizeUrl($img->image_url))
-            ->filter()
+        $imageItems = $imageRecords
+            ->map(fn ($img) => [
+                'id'  => $img->id,
+                'url' => $this->cloudinary->normalizeUrl($img->image_url),
+            ])
+            ->filter(fn ($item) => ! empty($item['url']))
             ->values()
             ->all();
-        $images = array_values(array_unique($images));
+        $images = array_values(array_unique(array_column($imageItems, 'url')));
 
         return [
             'id'                 => $post->id,
@@ -312,6 +329,7 @@ class CommunityFeedPostController extends Controller
             'body'               => $post->body,
             'image_url'          => $images[0] ?? null,
             'images'             => $images,
+            'image_items'        => $imageItems,
             'link_url'           => $post->link_url,
             'is_federation_wide' => (bool) $post->is_federation_wide,
             'barangay_name'      => $post->barangay?->name,
@@ -385,19 +403,24 @@ class CommunityFeedPostController extends Controller
     /**
      * @return list<array{url: string, public_id: string}>
      */
-    private function storePostImages(Announcement $post, Request $request): array
+    private function storePostImages(Announcement $post, Request $request, int $sortStart = 0, ?int $maxNew = null): array
     {
         $files = $request->file('images', []);
         if (! is_array($files)) {
             $files = [$files];
         }
 
+        $files = array_values(array_filter($files));
+        if ($maxNew !== null) {
+            $files = array_slice($files, 0, max(0, $maxNew));
+        }
+
         $uploaded = [];
-        $sort = 0;
+        $sort = $sortStart;
         $now = now();
 
-        foreach (array_slice($files, 0, self::MAX_IMAGES) as $file) {
-            if ($file === null) {
+        foreach ($files as $file) {
+            if ($file === null || $sort >= self::MAX_IMAGES) {
                 continue;
             }
 

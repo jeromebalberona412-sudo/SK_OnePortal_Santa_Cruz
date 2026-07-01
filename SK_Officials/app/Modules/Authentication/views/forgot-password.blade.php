@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -45,7 +45,7 @@
                     </div>
                 </div>
                 <h1 class="sk-main-title">SK OnePortal</h1>
-                <p class="sk-tagline">SK Officials Portal – Santa Cruz, Laguna</p>
+                <p class="sk-tagline">SK Officials Portal � Santa Cruz, Laguna</p>
             </div>
         </div>
 
@@ -58,7 +58,7 @@
 
                 <div id="fpStep1" @if($linkSent) hidden @endif>
                     <div class="card-header">
-                        <h2 class="card-title">Forgot Password? 🔑</h2>
+                        <h2 class="card-title">Forgot Password? ??</h2>
                         <p class="card-subtitle">Enter the email address associated with your account and we'll send you a link to reset your password.</p>
                     </div>
 
@@ -104,7 +104,7 @@
 
                 <div id="fpStep2" @if(! $linkSent) hidden @endif>
                     <div class="card-header">
-                        <h2 class="card-title">Check Your Email ✉️</h2>
+                        <h2 class="card-title">Check Your Email ??</h2>
                         <p class="card-subtitle">
                             A password reset link was sent to
                             <strong id="fpSentEmail">{{ $sentEmail }}</strong>.
@@ -155,6 +155,5 @@
     </main>
 
     <script src="{{ url('/shared/js/loading.js') }}"></script>
-    @vite(['app/Modules/Authentication/assets/js/loader.js'])
 </body>
 </html>

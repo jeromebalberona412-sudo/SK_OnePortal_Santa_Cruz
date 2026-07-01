@@ -137,7 +137,6 @@
     'app/Modules/layout/js/header.js',
     'app/Modules/layout/js/sidebar.js',
     'app/Modules/layout/js/table-row-actions-menu.js',
-    'app/Modules/Authentication/assets/js/loader.js',
     'app/Modules/Announcement/assets/js/announcement-archive.js',
 ])
 

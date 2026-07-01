@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('favicon')
@@ -8,9 +8,8 @@
     <title>Check Your Email - KK Profiling</title>
     @vite([
         'app/Modules/Authentication/assets/css/youth-login.css',
-        'app/Modules/Shared/assets/css/loading.css',
-        'app/Modules/Shared/assets/js/loading.js',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
         #globalLoadingOverlay {
             opacity: 0;
@@ -341,7 +340,7 @@
                     >
                 </div>
                 <h1 class="youth-main-title">SK OnePortal</h1>
-                <p class="youth-tagline">Official Youth Portal – Santa Cruz, Laguna</p>
+                <p class="youth-tagline">Official Youth Portal � Santa Cruz, Laguna</p>
             </div>
         </div>
 
@@ -355,7 +354,7 @@
                             <path d="M3 7l9 6 9-6"></path>
                         </svg>
                     </div>
-                    <h2 class="card-title">Check Your Email ✉️</h2>
+                    <h2 class="card-title">Check Your Email ??</h2>
                     <p class="card-subtitle">Verify your email to continue</p>
                 </div>
 
@@ -544,5 +543,6 @@
             }
         }
     </script>
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

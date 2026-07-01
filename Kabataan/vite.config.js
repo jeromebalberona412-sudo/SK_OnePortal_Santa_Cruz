@@ -99,10 +99,6 @@ export default defineConfig({
                 'app/Modules/KKProfiling/assets/js/kk-profiling-update.js',
                 'app/Modules/KKProfiling/assets/css/kkprofiling-wizard.css',
                 'app/Modules/KKProfiling/assets/js/kkprofiling-wizard.js',
-
-                // Shared
-                'app/Modules/Shared/assets/css/loading.css',
-                'app/Modules/Shared/assets/js/loading.js',
             ],
             refresh: true,
         }),

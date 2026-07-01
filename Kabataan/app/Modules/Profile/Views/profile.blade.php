@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('favicon')
@@ -26,9 +26,8 @@
         'app/Modules/Dashboard/assets/js/chatbot.js',
         'app/Modules/Dashboard/assets/css/notif.css',
         'app/Modules/Dashboard/assets/js/notif.js',
-        'app/Modules/Shared/assets/css/loading.css',
-        'app/Modules/Shared/assets/js/loading.js',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <script>
         function closeProfilePictureLockModal() {
             const modal = document.getElementById('profilePictureLockModal');
@@ -67,7 +66,7 @@
 </head>
 <body class="youth-profile kabataan-app-page">
     @include('dashboard::loading')
-    @include('layout::kabataan-header', ['user' => $user, 'pageBadge' => 'My Profile'])
+    @include('layout::kabataan-header', ['user' => $user])
 
     <!-- Main Content -->
     <main class="profile-main">
@@ -161,7 +160,7 @@
                                 </h2>
                                 @if(!empty($supportingDocuments))
                                     <p class="kkp-docs-summary" id="profileSupportingDocsSummary">
-                                        {{ count($supportingDocuments) }} document{{ count($supportingDocuments) === 1 ? '' : 's' }} on file from your KK Profiling registration.
+                                        {{ count($supportingDocuments) }} document{{ count($supportingDocuments) === 1 ? '' : 's' }} on file. Uploads are locked and cannot be replaced.
                                     </p>
                                 @else
                                     <p class="kkp-docs-summary" id="profileSupportingDocsSummary">
@@ -454,7 +453,7 @@
             <div class="modal-header">
                 <h2 class="modal-title">Supporting Documents</h2>
                 <div class="modal-window-controls">
-                    <button type="button" class="modal-toggle-btn" id="supportingDocsFullscreenBtn" aria-label="Maximize">□</button>
+                    <button type="button" class="modal-toggle-btn" id="supportingDocsFullscreenBtn" aria-label="Maximize">?</button>
                     <button type="button" class="modal-close" onclick="closeSupportingDocsModal()" aria-label="Close">&times;</button>
                 </div>
             </div>
@@ -473,13 +472,17 @@
                         </div>
                     @endforeach
                 </div>
-                <div class="kkp-docs-modal-divider" role="separator" aria-hidden="true"></div>
-                @endif
-
+                <p class="kkp-docs-upload-intro kkp-docs-locked-note">
+                    Your supporting documents are on file and cannot be changed or replaced.
+                </p>
+                <div class="kkp-docs-upload-actions">
+                    <button type="button" class="btn-secondary" onclick="closeSupportingDocsModal()">Close</button>
+                </div>
+                @else
                 <div class="kkp-docs-upload-section">
-                    <h3 class="kkp-docs-upload-heading">{{ !empty($supportingDocuments) ? 'Replace document' : 'Upload document' }}</h3>
+                    <h3 class="kkp-docs-upload-heading">Upload document</h3>
                     <p class="kkp-docs-upload-intro">
-                        Upload <strong>one</strong> optional supporting ID — School ID or PhilSys / National ID. Provide front and back images. JPG or PNG, max 10MB each.
+                        Upload <strong>one</strong> optional supporting ID � School ID or PhilSys / National ID. Provide front and back images. JPG or PNG, max 10MB each.
                     </p>
 
                     <fieldset class="kkp-wizard-doc-type-fieldset" id="profileDocTypeFieldset">
@@ -493,7 +496,7 @@
                                     </span>
                                     <span class="kkp-wizard-doc-type-text">
                                         <span class="kkp-wizard-doc-type-name">School ID</span>
-                                        <span class="kkp-wizard-doc-type-desc">Front and back · optional upload</span>
+                                        <span class="kkp-wizard-doc-type-desc">Front and back � optional upload</span>
                                     </span>
                                 </span>
                             </label>
@@ -505,7 +508,7 @@
                                     </span>
                                     <span class="kkp-wizard-doc-type-text">
                                         <span class="kkp-wizard-doc-type-name">PhilSys / National ID</span>
-                                        <span class="kkp-wizard-doc-type-desc">Front and back · optional upload</span>
+                                        <span class="kkp-wizard-doc-type-desc">Front and back � optional upload</span>
                                     </span>
                                 </span>
                             </label>
@@ -517,7 +520,7 @@
                         ['type' => 'national_id', 'panelId' => 'profileNationalIdUpload', 'label' => 'PhilSys / National ID', 'prefix' => 'profileNationalId'],
                     ] as $doc)
                     <div class="kkp-wizard-upload-panel" id="{{ $doc['panelId'] }}" hidden>
-                        <p class="kkp-wizard-upload-panel-title">{{ $doc['label'] }} — upload front and back</p>
+                        <p class="kkp-wizard-upload-panel-title">{{ $doc['label'] }} � upload front and back</p>
                         <div class="kkp-wizard-upload-grid">
                             @foreach(['front' => 'Front', 'back' => 'Back'] as $side => $sideLabel)
                             @php $inputId = $doc['prefix'].ucfirst($side); @endphp
@@ -526,10 +529,10 @@
                                 <label class="kkp-wizard-dropzone" for="{{ $inputId }}">
                                     <input type="file" id="{{ $inputId }}" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="kkp-wizard-file-input" data-doc-side="{{ $side }}">
                                     <span class="kkp-wizard-dropzone-empty">
-                                        <span class="kkp-wizard-dropzone-icon" aria-hidden="true">📷</span>
+                                        <span class="kkp-wizard-dropzone-icon" aria-hidden="true">??</span>
                                         <span class="kkp-wizard-dropzone-title">{{ $sideLabel }} image</span>
                                         <span class="kkp-wizard-dropzone-sub">Drop or <span class="kkp-wizard-dropzone-link">browse</span></span>
-                                        <span class="kkp-wizard-dropzone-hint">JPG or PNG · max 10MB</span>
+                                        <span class="kkp-wizard-dropzone-hint">JPG or PNG � max 10MB</span>
                                     </span>
                                 </label>
                                 <div class="kkp-wizard-dropzone-preview" id="{{ $inputId }}Preview" hidden>
@@ -548,10 +551,11 @@
                     <p class="kkp-docs-upload-error" id="profileSupportingDocUploadError" hidden></p>
 
                     <div class="kkp-docs-upload-actions">
-                        <button type="button" class="btn-secondary" onclick="closeSupportingDocsModal()">Cancel</button>
+                        <button type="button" class="btn-secondary" onclick="closeSupportingDocsModal()">Close</button>
                         <button type="button" class="btn-primary" id="profileSupportingDocSubmitBtn" disabled>Upload Document</button>
                     </div>
                 </div>
+                @endif
             </div>
         </div>
     </div>
@@ -562,7 +566,7 @@
             <div class="modal-header">
                 <h2 class="modal-title">Personal Information</h2>
                 <div class="modal-window-controls">
-                    <button type="button" class="modal-toggle-btn" id="kkPreviewFullscreenBtn" data-modal-toggle aria-label="Maximize">□</button>
+                    <button type="button" class="modal-toggle-btn" id="kkPreviewFullscreenBtn" data-modal-toggle aria-label="Maximize">?</button>
                     <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
                 </div>
             </div>
@@ -594,7 +598,7 @@
         if (backdrop) backdrop.classList.remove('modal-maximized');
         if (panel) panel.classList.remove('modal-maximized');
         if (toggleBtn) {
-            toggleBtn.textContent = '□';
+            toggleBtn.textContent = '?';
             toggleBtn.setAttribute('aria-label', 'Maximize');
         }
     }
@@ -624,7 +628,7 @@
         if (backdrop) backdrop.classList.remove('modal-maximized');
         if (panel) panel.classList.remove('modal-maximized');
         if (toggleBtn) {
-            toggleBtn.textContent = '□';
+            toggleBtn.textContent = '?';
             toggleBtn.setAttribute('aria-label', 'Maximize');
         }
     }
@@ -702,7 +706,7 @@
         const isMax = !backdrop.classList.contains('modal-maximized');
         backdrop.classList.toggle('modal-maximized', isMax);
         panel.classList.toggle('modal-maximized', isMax);
-        this.textContent = isMax ? '⧉' : '□';
+        this.textContent = isMax ? '?' : '?';
         this.setAttribute('aria-label', isMax ? 'Restore down' : 'Maximize');
     });
 
@@ -713,7 +717,7 @@
         const isMax = !backdrop.classList.contains('modal-maximized');
         backdrop.classList.toggle('modal-maximized', isMax);
         panel.classList.toggle('modal-maximized', isMax);
-        this.textContent = isMax ? '⧉' : '□';
+        this.textContent = isMax ? '?' : '?';
         this.setAttribute('aria-label', isMax ? 'Restore down' : 'Maximize');
     });
 
@@ -721,5 +725,6 @@
         btn.addEventListener('click', closeKkPreviewModal);
     });
     </script>
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

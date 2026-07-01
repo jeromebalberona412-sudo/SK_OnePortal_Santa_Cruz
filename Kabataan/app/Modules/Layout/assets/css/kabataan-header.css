@@ -468,4 +468,40 @@ body.kabataan-has-view-only-banner {
         padding: 0 12px;
         gap: 10px;
     }
+
+    .kabataan-header__actions {
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    .kabataan-header__dropdown {
+        position: fixed;
+        top: calc(var(--kab-nav-h) + 8px);
+        right: 12px;
+        left: auto;
+        min-width: 260px;
+        max-width: calc(100vw - 24px);
+        z-index: 500;
+    }
+}
+
+/* Keep Kabataan header dropdown click-only (override legacy dashboard hover menu) */
+.kabataan-header .user-menu:hover .user-dropdown,
+.kabataan-header__user:not(.is-open) .kabataan-header__dropdown {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transform: translateY(-8px);
+    pointer-events: none;
+}
+
+.kabataan-header__user.is-open .kabataan-header__dropdown {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.kabataan-header__user {
+    position: relative;
+    flex-shrink: 0;
 }

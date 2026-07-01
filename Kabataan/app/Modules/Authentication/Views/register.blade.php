@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -10,9 +10,8 @@
         'app/Modules/Authentication/assets/css/youth-login.css',
         'app/Modules/Authentication/assets/css/youth-register.css',
         'app/Modules/Authentication/assets/js/youth-register.js',
-        'app/Modules/Shared/assets/css/loading.css',
-        'app/Modules/Shared/assets/js/loading.js',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="youth-login-page">
     @include('dashboard::loading')
@@ -39,7 +38,7 @@
                     >
                 </div>
                 <h1 class="youth-main-title">SK OnePortal</h1>
-                <p class="youth-tagline">Official Youth Portal – Santa Cruz, Laguna</p>
+                <p class="youth-tagline">Official Youth Portal � Santa Cruz, Laguna</p>
             </div>
         </div>
 
@@ -49,7 +48,7 @@
                 <div class="card-header">
                     <h2 class="card-title">
                         Create Your Account
-                        <span class="wave-emoji">✨</span>
+                        <span class="wave-emoji">?</span>
                     </h2>
                     <p class="card-subtitle">Join the SK OnePortal community</p>
                 </div>
@@ -472,7 +471,7 @@
                         <path d="M9 12l2 2 4-4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
-                <h2 class="success-title">Registration Successful! 🎉</h2>
+                <h2 class="success-title">Registration Successful! ??</h2>
                 <p class="success-message">
                     Welcome to SK OnePortal, Kabataan! Your account has been created successfully.
                 </p>
@@ -490,5 +489,6 @@
             </div>
         </div>
     </div>
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

@@ -126,6 +126,5 @@
         window.ceResendCooldown = {{ (int) $resendCooldown }};
     </script>
     <script src="{{ url('/shared/js/loading.js') }}"></script>
-    @vite(['app/Modules/Authentication/assets/js/loader.js'])
 </body>
 </html>

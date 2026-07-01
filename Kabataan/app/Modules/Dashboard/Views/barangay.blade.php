@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -20,9 +20,8 @@
         'app/Modules/Dashboard/assets/js/notif.js',
         'app/Modules/Dashboard/assets/css/chatbot.css',
         'app/Modules/Dashboard/assets/js/chatbot.js',
-        'app/Modules/Shared/assets/css/loading.css',
-        'app/Modules/Shared/assets/js/loading.js',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
         body.youth-profile {
             background: linear-gradient(135deg,#f5f7fa 0%,#e8eef5 100%);
@@ -37,7 +36,7 @@
         .cover-gradient { display: none; }
         .profile-header-card { transform: none !important; }
 
-        /* Normal page scroll â€” left column sticky, right column scrolls with page */
+        /* Normal page scroll — left column sticky, right column scrolls with page */
         .profile-main {
             position: static !important;
             overflow: visible !important;
@@ -224,7 +223,7 @@
                         <div class="brgy-stat-row">
                             <div class="brgy-stat-item"><strong>{{ $post_count ?? 0 }}</strong><span>Posts</span></div>
                             <div class="brgy-stat-item"><strong>{{ $officer_count ?? 0 }}</strong><span>Officers</span></div>
-                            <div class="brgy-stat-item"><strong>{{ $term_label ?? 'â€”' }}</strong><span>SK Term</span></div>
+                            <div class="brgy-stat-item"><strong>{{ $term_label ?? '—' }}</strong><span>SK Term</span></div>
                         </div>
                     </div>
                 </div>
@@ -269,7 +268,7 @@
 
                 </div>
 
-                {{-- RIGHT COLUMN â€” FEED --}}
+                {{-- RIGHT COLUMN — FEED --}}
                 <div class="profile-right-column">
                     <div class="info-card">
                         <div class="card-header" style="border-bottom:none;padding-bottom:0;">
@@ -434,5 +433,6 @@
         if (e.persisted) { window.location.replace(window.location.href); }
     });
     </script>
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

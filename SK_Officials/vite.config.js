@@ -25,7 +25,6 @@ export default defineConfig({
                 'app/Modules/Authentication/assets/js/verify-success.js',
                 'app/Modules/Authentication/assets/css/verify-wait.css',
                 'app/Modules/Authentication/assets/js/verify-wait.js',
-                'app/Modules/Authentication/assets/js/loader.js',
                 // Dashboard module assets
                 'app/Modules/Dashboard/assets/css/dashboard.css',
                 'app/Modules/Dashboard/assets/js/dashboard.js',

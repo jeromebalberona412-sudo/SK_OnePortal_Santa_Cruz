@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -18,9 +18,8 @@
         'app/Modules/Dashboard/assets/js/notif.js',
         'app/Modules/Programs/assets/css/programs-pre-survey.css',
         'app/Modules/Programs/assets/js/programs-pre-survey.js',
-        'app/Modules/Shared/assets/css/loading.css',
-        'app/Modules/Shared/assets/js/loading.js',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="pps-body kabataan-app-page" data-program-slug="{{ $slug }}" data-program-title="{{ $program['title'] }}">
     @include('dashboard::loading')
@@ -55,10 +54,10 @@
                     <h2>Profile Preview</h2>
                     <dl>
                         <div><dt>Name</dt><dd id="ppsPreviewName">{{ $displayName }}</dd></div>
-                        <div><dt>Email</dt><dd id="ppsPreviewEmail">{{ $user->email ?? '—' }}</dd></div>
+                        <div><dt>Email</dt><dd id="ppsPreviewEmail">{{ $user->email ?? '�' }}</dd></div>
                         <div><dt>Status</dt><dd><span class="pps-badge">From KK Profiling</span></dd></div>
                     </dl>
-                    <p class="pps-profile-card__hint">Displayed for confirmation only — sourced automatically from your profiling record.</p>
+                    <p class="pps-profile-card__hint">Displayed for confirmation only � sourced automatically from your profiling record.</p>
                 </div>
             </aside>
 
@@ -115,11 +114,12 @@
     <div id="ppsSuccessModal" class="pps-modal" role="dialog" aria-modal="true" aria-labelledby="ppsSuccessTitle" hidden>
         <div class="pps-modal__backdrop"></div>
         <div class="pps-modal__panel">
-            <div class="pps-modal__icon" aria-hidden="true">✓</div>
+            <div class="pps-modal__icon" aria-hidden="true">?</div>
             <h2 id="ppsSuccessTitle">Pre-Survey Submitted!</h2>
             <p>Thank you for your response. Your profiling information will be linked automatically when the program opens for final registration.</p>
             <button type="button" class="pps-btn pps-btn--primary" id="ppsSuccessClose">Back to Dashboard</button>
         </div>
     </div>
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

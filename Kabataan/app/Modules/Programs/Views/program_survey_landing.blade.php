@@ -18,9 +18,8 @@
         'app/Modules/Dashboard/assets/js/notif.js',
         'app/Modules/Programs/assets/css/scholarship_landing.css',
         'app/Modules/Programs/assets/js/program_survey_landing.js',
-        'app/Modules/Shared/assets/css/loading.css',
-        'app/Modules/Shared/assets/js/loading.js',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="sl-body kabataan-app-page">
     @include('dashboard::loading')
@@ -126,5 +125,6 @@
     <script>
         window.__abyipProgramId = @json($abyipProgramId);
     </script>
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

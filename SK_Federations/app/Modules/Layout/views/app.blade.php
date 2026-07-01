@@ -28,6 +28,7 @@
     @stack('styles')
 </head>
 <body @stack('body-attributes')>
+    @include('partials.loading')
     @include('layout::anti-back')
     @include('layout::header')
     @include('layout::sidebar-overlay')

@@ -24,9 +24,8 @@
         'app/Modules/Dashboard/assets/js/notif.js',
         'app/Modules/Notifications/assets/css/notifications.css',
         'app/Modules/Notifications/assets/js/notifications.js',
-        'app/Modules/Shared/assets/css/loading.css',
-        'app/Modules/Shared/assets/js/loading.js',
     ])
+    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="youth-notifications-page">
     @include('dashboard::loading')
@@ -129,5 +128,6 @@
             </section>
         </div>
     </main>
+    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>
