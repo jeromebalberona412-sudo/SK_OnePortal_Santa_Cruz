@@ -43,6 +43,7 @@
             <i class="fas fa-eye" aria-hidden="true"></i>
             <span>View Details</span>
         </button>
+        @if(empty($readOnlyActions))
         <button type="button"
                 class="account-actions-item account-actions-item-edit btn-edit-account"
                 role="menuitem"
@@ -59,6 +60,12 @@
             <i class="fas fa-trash" aria-hidden="true"></i>
             <span>Delete Account</span>
         </button>
+        @endif
+        @else
+        <div class="account-actions-item account-actions-item-muted" role="presentation">
+            <i class="fas fa-lock" aria-hidden="true"></i>
+            <span>Incoming Officer (read-only)</span>
+        </div>
         @endif
     </div>
 </div>

@@ -3214,6 +3214,24 @@ body.sidebar-collapsed .accounts-page-footer {
     color: #b91c1c;
 }
 
+.account-actions-item-muted {
+    color: #64748b;
+    cursor: default;
+    pointer-events: none;
+    font-size: 12px;
+}
+
+.account-actions-item-muted i {
+    color: #94a3b8;
+}
+
+.account-checkbox-placeholder {
+    display: inline-block;
+    width: 16px;
+    color: #cbd5e1;
+    text-align: center;
+}
+
 .td-actions {
     text-align: center;
     overflow: visible;

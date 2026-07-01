@@ -78,9 +78,19 @@ class AdminAccountController extends Controller
             ->where('tenant_id', $tenantId)
             ->where('role', User::ROLE_SK_OFFICIAL)
             ->whereHas('officialProfile.terms', function ($termQuery) {
-                $termQuery
-                    ->where('status', OfficialTerm::STATUS_ACTIVE)
-                    ->whereDate('term_end', '>=', now()->startOfDay());
+                $today = now()->startOfDay();
+
+                $termQuery->where(function ($scope) use ($today) {
+                    $scope->where(function ($active) use ($today) {
+                        $active
+                            ->where('status', OfficialTerm::STATUS_ACTIVE)
+                            ->whereDate('term_end', '>=', $today);
+                    })->orWhere(function ($upcoming) use ($today) {
+                        $upcoming
+                            ->where('status', OfficialTerm::STATUS_INACTIVE)
+                            ->whereDate('term_start', '>=', $today);
+                    });
+                });
             })
             ->orderByDesc('created_at');
 

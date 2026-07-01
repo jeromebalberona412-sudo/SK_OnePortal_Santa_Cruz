@@ -224,6 +224,9 @@ class AccountService
                 (int) $admin->tenant_id,
                 $barangayId,
                 $position,
+                null,
+                (string) ($normalizedData['term_start'] ?? ''),
+                (string) ($normalizedData['term_end'] ?? ''),
             );
         }
 
@@ -332,6 +335,12 @@ class AccountService
     {
         $this->assertSameTenant($account->tenant_id, $admin->tenant_id, 'Target account is outside your tenant scope.');
 
+        if ($account->isIncomingTurnoverOfficer()) {
+            throw ValidationException::withMessages([
+                'account' => 'Incoming turnover officers cannot be edited until federation turnover is completed.',
+            ]);
+        }
+
         $normalizedData = $this->withNormalizedMiddleName($data);
 
         if ($account->role === User::ROLE_SK_OFFICIAL) {
@@ -340,6 +349,8 @@ class AccountService
                 (int) ($normalizedData['barangay_id'] ?? $account->barangay_id),
                 (string) ($normalizedData['position'] ?? $account->officialProfile?->position ?? ''),
                 (int) $account->id,
+                (string) ($normalizedData['term_start'] ?? ''),
+                (string) ($normalizedData['term_end'] ?? ''),
             );
         }
 
@@ -625,6 +636,12 @@ class AccountService
         if ($target->is($admin)) {
             throw ValidationException::withMessages([
                 'account' => 'You cannot deactivate your own admin account.',
+            ]);
+        }
+
+        if ($target->isIncomingTurnoverOfficer()) {
+            throw ValidationException::withMessages([
+                'account' => 'Incoming turnover officers cannot be deleted until federation turnover is completed.',
             ]);
         }
 

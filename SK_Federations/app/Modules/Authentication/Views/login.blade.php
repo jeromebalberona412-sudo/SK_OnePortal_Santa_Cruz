@@ -82,6 +82,13 @@
                             </div>
                         @endif
 
+                        @error('auth')
+                            <div class="alert alert-danger access-denied-alert" role="alert">
+                                <strong>Login Not Available</strong>
+                                <p style="margin:0.35rem 0 0;">{{ $message }}</p>
+                            </div>
+                        @enderror
+
                         <div class="form-group">
                             <label for="email">
                                 <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">

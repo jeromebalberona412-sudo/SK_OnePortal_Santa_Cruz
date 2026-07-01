@@ -295,3 +295,59 @@ it('requires letters numbers and symbols for reset password', function () {
         ])
         ->assertSessionHasErrors('password');
 });
+
+it('sends a password reset link for an incoming turnover officer awaiting setup', function () {
+    Notification::fake();
+
+    $tenantId = (int) DB::table('tenants')->where('code', config('sk_fed_auth.tenant_code'))->value('id');
+
+    $user = User::factory()->create([
+        'email' => 'incoming-forgot@example.com',
+        'password' => 'Password123!',
+        'tenant_id' => $tenantId,
+        'role' => 'sk_official',
+        'status' => 'INACTIVE',
+        'turnover_status' => 'awaiting_setup',
+        'account_status' => 'turnover_pending',
+        'email_verified_at' => null,
+    ]);
+
+    post(route('password.email', [], false), [
+        'email' => $user->email,
+        'cf-turnstile-response' => 'valid-token',
+    ])->assertSessionHas('status');
+
+    Notification::assertSentTo(
+        $user,
+        \App\Modules\Turnover\Notifications\TurnoverForgotPasswordSetupNotification::class,
+    );
+});
+
+it('allows incoming turnover sk officials to set a password from the federation portal reset link', function () {
+    $tenantId = (int) DB::table('tenants')->where('code', config('sk_fed_auth.tenant_code'))->value('id');
+
+    $user = User::factory()->create([
+        'email' => 'incoming-president@example.com',
+        'password' => 'Password123!',
+        'tenant_id' => $tenantId,
+        'role' => 'sk_official',
+        'status' => 'INACTIVE',
+        'turnover_status' => 'awaiting_setup',
+        'account_status' => 'turnover_pending',
+        'email_verified_at' => null,
+    ]);
+
+    $token = Password::createToken($user);
+
+    from(route('password.reset', ['token' => $token, 'email' => $user->email], false))
+        ->post(route('password.update', [], false), [
+            'token' => $token,
+            'email' => $user->email,
+            'password' => 'NewPass1!',
+            'password_confirmation' => 'NewPass1!',
+        ])
+        ->assertRedirect(route('password.reset.success', [], false));
+
+    expect(Hash::check('NewPass1!', (string) $user->fresh()->password))->toBeTrue();
+    expect(DB::table('password_reset_tokens')->where('email', $user->email)->exists())->toBeFalse();
+});

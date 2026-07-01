@@ -68,7 +68,7 @@
                 @endif
 
                 <!-- Reset Password Form -->
-                <form id="reset-password-form" method="POST" action="{{ route('password.update', [], false) }}" class="sk-login-form" data-password-min-length="{{ (int) config('sk_official_auth.password_reset.password.min_length', 12) }}" data-password-max-length="{{ (int) config('sk_official_auth.password_reset.password.max_length', 64) }}" novalidate>
+                <form id="reset-password-form" method="POST" action="{{ route('password.update', [], false) }}" class="sk-login-form" data-password-min-length="{{ (int) config('sk_official_auth.password_reset.password.min_length', 8) }}" data-password-max-length="{{ (int) config('sk_official_auth.password_reset.password.max_length', 64) }}" novalidate>
                     @csrf
                     <input type="hidden" name="token" value="{{ old('token', $token) }}">
                     <input type="hidden" name="email" value="{{ old('email', $email) }}">

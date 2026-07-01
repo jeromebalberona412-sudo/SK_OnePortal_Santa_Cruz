@@ -27,7 +27,7 @@
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}?v={{ $loadingCssVersion }}">
     @stack('styles')
 </head>
-<body @stack('body-attributes')>
+<body @stack('body-attributes') @if(!empty($turnoverModal['show']) && !empty($turnoverModal['portal_locked'])) class="turnover-portal-locked" @endif>
     @include('partials.loading')
     @include('layout::anti-back')
     @include('layout::header')
@@ -39,6 +39,13 @@
     </main>
 
     @include('layout::logout-modal')
+
+    @if(!empty($turnoverModal['show']))
+        <link rel="stylesheet" href="{{ url('/modules/turnover/css/turnover.css') }}?v={{ $turnoverModal['cssVersion'] }}">
+        @include('turnover::partials.global-modal', ['turnoverModal' => $turnoverModal])
+        <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+        <script src="{{ url('/modules/turnover/js/turnover.js') }}?v={{ $turnoverModal['jsVersion'] }}"></script>
+    @endif
 
     <script src="{{ url('/shared/js/loading.js') }}?v={{ $loadingJsVersion }}"></script>
     <script src="{{ url('/modules/layout/js/layout.js') }}?v={{ $layoutJsVersion }}"></script>

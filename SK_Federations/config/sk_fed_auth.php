@@ -22,7 +22,7 @@ return [
             'reset_form_per_minute' => (int) env('SK_FED_PASSWORD_RESET_FORM_PER_MINUTE', 20),
         ],
         'password' => [
-            'min_length' => (int) env('SK_FED_PASSWORD_RESET_MIN_LENGTH', 12),
+            'min_length' => (int) env('SK_FED_PASSWORD_RESET_MIN_LENGTH', 8),
             'max_length' => (int) env('SK_FED_PASSWORD_RESET_MAX_LENGTH', 64),
         ],
     ],

@@ -37,7 +37,7 @@
             <polyline points="17 8 12 3 7 8"/>
             <line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
-        <p class="dropzone-text">Drop file here or <label for="{{ $prefix }}_batchFileInput" class="dropzone-browse">browse</label></p>
+        <p class="dropzone-text">Drop file here or tap anywhere to upload</p>
         <p class="dropzone-sub" id="{{ $prefix }}_batchFileName">Supported: .xlsx, .xls</p>
         <input type="file" id="{{ $prefix }}_batchFileInput" accept=".xlsx,.xls" style="display:none;">
     </div>

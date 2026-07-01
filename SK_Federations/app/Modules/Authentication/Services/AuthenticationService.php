@@ -93,6 +93,28 @@ class AuthenticationService
             );
         }
 
+        if ($user->turnover_status === 'archived') {
+            $this->auditLogService->log(
+                event: 'login_blocked_archived',
+                user: $user,
+                request: $request,
+                outcome: AuthAuditLogService::OUTCOME_BLOCKED,
+                resourceType: 'authentication',
+                resourceId: $user->getKey(),
+            );
+
+            throw new HttpResponseException(
+                redirect()->route('login')->with('access_denied', [
+                    'title' => 'Account Archived',
+                    'message' => 'Your term has ended. Your account has been archived. Thank you for your service.',
+                ])
+            );
+        }
+
+        if ($user->isIncomingTurnoverOfficer()) {
+            $this->blockIncomingTurnoverLogin($user, $request);
+        }
+
         if (
             ! $user->canAccessFederationPortal()
             || $tenantId === null
@@ -590,6 +612,32 @@ class AuthenticationService
         } catch (\Throwable) {
             return false;
         }
+    }
+
+    protected function blockIncomingTurnoverLogin(User $user, Request $request): never
+    {
+        $awaitingSetup = $user->turnover_status === 'awaiting_setup'
+            || $user->account_status === 'turnover_pending';
+
+        $this->auditLogService->log(
+            event: $awaitingSetup ? 'login_blocked_turnover_awaiting_setup' : 'login_blocked_turnover_pending_confirmation',
+            user: $user,
+            request: $request,
+            outcome: AuthAuditLogService::OUTCOME_BLOCKED,
+            resourceType: 'authentication',
+            resourceId: $user->getKey(),
+        );
+
+        $message = $awaitingSetup
+            ? 'Sorry, login is not available yet. Please complete your account setup using the email link sent to you. If the link expired after 24 hours, use Forgot Password on this page. You may sign in once federation turnover is completed and your new term starts.'
+            : 'Sorry, your new term has not started yet. Please wait until the outgoing Federation President and Vice President complete the turnover process. You may log in once your term is activated.';
+
+        throw new HttpResponseException(
+            redirect()->route('login')->with('access_denied', [
+                'title' => 'Please Wait for Your Term',
+                'message' => $message,
+            ])
+        );
     }
 
     protected function hasEndedTerm(User $user): bool

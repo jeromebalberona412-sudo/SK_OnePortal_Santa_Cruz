@@ -153,7 +153,9 @@ class PasswordResetService
 
     protected function findUserByEmail(string $email): ?User
     {
-        return User::query()->where('email', $email)->first();
+        return User::query()
+            ->whereRaw('LOWER(email) = ?', [Str::lower(trim($email))])
+            ->first();
     }
 
     protected function isResettableUser(User $user): bool

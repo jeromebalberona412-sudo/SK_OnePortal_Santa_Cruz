@@ -163,6 +163,7 @@
                                     $profile?->position,
                                     $federationPosition,
                                 ])->filter()->implode(' ')));
+                                $isIncomingTurnover = $account->isIncomingTurnoverOfficer();
                             @endphp
                             <tr data-account-id="{{ $account->id }}"
                                 data-barangay-id="{{ $account->barangay_id ?? '' }}"
@@ -173,14 +174,19 @@
                                 data-sort-barangay="{{ strtolower($account->barangay?->name ?? '') }}"
                                 data-sort-position="{{ strtolower($profile?->position ?? '') }}"
                                 data-sort-federation-position="{{ strtolower($federationPosition ?? '') }}"
-                                data-sort-term="{{ $term?->term_end?->format('Y-m-d') ?? '' }}">
+                                data-sort-term="{{ $term?->term_end?->format('Y-m-d') ?? '' }}"
+                                @if($isIncomingTurnover) data-incoming-turnover="1" @endif>
                                 @if($isOfficials)
                                 <td class="td-checkbox">
+                                    @if($isIncomingTurnover)
+                                        <span class="account-checkbox-placeholder" aria-hidden="true">—</span>
+                                    @else
                                     <input type="checkbox" class="account-checkbox account-row-checkbox"
                                            value="{{ $account->id }}"
                                            @change="toggleRow({{ $account->id }}, $event.target.checked)"
                                            :checked="selectedRows.includes({{ $account->id }})"
                                            aria-label="Select {{ $displayName }}">
+                                    @endif
                                 </td>
                                 @endif
                                 <td class="td-name">{{ $displayName }}</td>
@@ -215,6 +221,7 @@
                                         'lastName' => $lastName,
                                         'middleName' => $middleName,
                                         'hideDelete' => ! $isOfficials,
+                                        'readOnlyActions' => $isIncomingTurnover,
                                     ])
                                 </td>
                             </tr>

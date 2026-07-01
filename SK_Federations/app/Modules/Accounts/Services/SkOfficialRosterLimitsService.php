@@ -23,10 +23,18 @@ class SkOfficialRosterLimitsService
         int $barangayId,
         string $position,
         ?int $ignoreUserId = null,
+        ?string $proposedTermStart = null,
+        ?string $proposedTermEnd = null,
     ): void {
         $normalized = $this->normalizePosition($position);
 
-        $activeQuery = $this->activeOfficialsQuery($tenantId, $barangayId, $ignoreUserId);
+        $activeQuery = $this->activeOfficialsQuery(
+            $tenantId,
+            $barangayId,
+            $ignoreUserId,
+            $proposedTermStart,
+            $proposedTermEnd,
+        );
         $total = (clone $activeQuery)->count();
 
         if ($total >= self::MAX_OFFICIALS_PER_BARANGAY) {
@@ -78,17 +86,29 @@ class SkOfficialRosterLimitsService
     /**
      * @return Builder<User>
      */
-    private function activeOfficialsQuery(int $tenantId, int $barangayId, ?int $ignoreUserId): Builder
-    {
+    private function activeOfficialsQuery(
+        int $tenantId,
+        int $barangayId,
+        ?int $ignoreUserId,
+        ?string $proposedTermStart = null,
+        ?string $proposedTermEnd = null,
+    ): Builder {
         $query = User::query()
             ->where('tenant_id', $tenantId)
             ->where('barangay_id', $barangayId)
             ->where('role', User::ROLE_SK_OFFICIAL)
             ->whereNull('deleted_at')
-            ->whereHas('officialProfile.terms', function ($termQuery) {
+            ->whereHas('officialProfile.terms', function ($termQuery) use ($proposedTermStart, $proposedTermEnd) {
                 $termQuery
                     ->where('status', OfficialTerm::STATUS_ACTIVE)
                     ->whereDate('term_end', '>=', now()->startOfDay());
+
+                if ($proposedTermStart !== null && $proposedTermEnd !== null
+                    && $proposedTermStart !== '' && $proposedTermEnd !== '') {
+                    $termQuery
+                        ->whereDate('term_start', '<=', $proposedTermEnd)
+                        ->whereDate('term_end', '>=', $proposedTermStart);
+                }
             });
 
         if ($ignoreUserId !== null) {

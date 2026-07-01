@@ -19,6 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'single.session' => \App\Modules\Authentication\Middleware\EnsureSingleSession::class,
             'turnstile' => \App\Modules\Authentication\Middleware\VerifyTurnstile::class,
             'prevent.back' => \App\Http\Middleware\PreventBackHistory::class,
+            'turnover.waiting' => \App\Modules\Turnover\Middleware\EnsureTurnoverWaitingOnly::class,
+            'turnover.leadership' => \App\Modules\Turnover\Middleware\EnsureFederationLeadershipForTurnover::class,
+            'turnover.term.lock' => \App\Modules\Turnover\Middleware\EnsureTurnoverTermLock::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

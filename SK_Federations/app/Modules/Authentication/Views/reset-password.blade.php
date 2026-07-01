@@ -72,7 +72,7 @@
                         </div>
                     @endif
 
-                    <form id="reset-password-form" method="POST" action="{{ route('password.update', [], false) }}" class="login-form" data-password-min-length="{{ (int) config('sk_fed_auth.password_reset.password.min_length', 12) }}" data-password-max-length="{{ (int) config('sk_fed_auth.password_reset.password.max_length', 64) }}" novalidate>
+                    <form id="reset-password-form" method="POST" action="{{ route('password.update', [], false) }}" class="login-form" data-password-min-length="{{ (int) config('sk_fed_auth.password_reset.password.min_length', 8) }}" data-password-max-length="{{ (int) config('sk_fed_auth.password_reset.password.max_length', 64) }}" novalidate>
                         @csrf
                         <input type="hidden" name="token" value="{{ old('token', $token) }}">
                         <input type="hidden" name="email" value="{{ old('email', $email) }}">
@@ -92,7 +92,7 @@
                                     class="form-control @error('password') is-invalid @enderror"
                                     required
                                     placeholder="Enter new password"
-                                    minlength="{{ (int) config('sk_fed_auth.password_reset.password.min_length', 12) }}"
+                                    minlength="{{ (int) config('sk_fed_auth.password_reset.password.min_length', 8) }}"
                                     maxlength="{{ (int) config('sk_fed_auth.password_reset.password.max_length', 64) }}"
                                     autocomplete="new-password"
                                 >
@@ -108,7 +108,13 @@
                                     </svg>
                                 </button>
                             </div>
-                            <div style="font-size: 12px; color: #64748b; margin-top: 6px;">Minimum 12 characters with letters, numbers, and symbols.</div>
+                            <ul class="password-rules" id="passwordRules" aria-live="polite" hidden>
+                                <li id="rule-length">At least 8 characters</li>
+                                <li id="rule-lowercase">At least one lowercase letter</li>
+                                <li id="rule-uppercase">At least one uppercase letter</li>
+                                <li id="rule-number">At least one number</li>
+                                <li id="rule-special">At least one special character</li>
+                            </ul>
                             @error('password')
                                 <div class="invalid-feedback d-block" data-server-error="true">{{ $message }}</div>
                             @enderror
@@ -130,7 +136,7 @@
                                     class="form-control @error('password_confirmation') is-invalid @enderror"
                                     required
                                     placeholder="Confirm new password"
-                                    minlength="{{ (int) config('sk_fed_auth.password_reset.password.min_length', 12) }}"
+                                    minlength="{{ (int) config('sk_fed_auth.password_reset.password.min_length', 8) }}"
                                     maxlength="{{ (int) config('sk_fed_auth.password_reset.password.max_length', 64) }}"
                                     autocomplete="new-password"
                                 >
@@ -179,6 +185,7 @@
         const confirmPasswordInput = document.getElementById('confirm-password');
         const newPasswordError = document.getElementById('new-password-error');
         const confirmPasswordError = document.getElementById('confirm-password-error');
+        const passwordRules = document.getElementById('passwordRules');
 
         function clearError(input, errorElement) {
             input.classList.remove('is-invalid');
@@ -192,8 +199,51 @@
             errorElement.style.display = 'block';
         }
 
+        function validatePasswordStrength(password) {
+            const minLength = Number.parseInt(resetPasswordForm.dataset.passwordMinLength || '8', 10);
+
+            return {
+                isValid: password.length >= minLength
+                    && /[a-z]/.test(password)
+                    && /[A-Z]/.test(password)
+                    && /\d/.test(password)
+                    && /[^A-Za-z0-9]/.test(password),
+                hasMinLength: password.length >= minLength,
+                hasLowerCase: /[a-z]/.test(password),
+                hasUpperCase: /[A-Z]/.test(password),
+                hasNumber: /\d/.test(password),
+                hasSpecial: /[^A-Za-z0-9]/.test(password),
+            };
+        }
+
+        function updatePasswordRules(password) {
+            if (!passwordRules) {
+                return;
+            }
+
+            const state = validatePasswordStrength(password);
+            [
+                { id: 'rule-length', ok: state.hasMinLength },
+                { id: 'rule-lowercase', ok: state.hasLowerCase },
+                { id: 'rule-uppercase', ok: state.hasUpperCase },
+                { id: 'rule-number', ok: state.hasNumber },
+                { id: 'rule-special', ok: state.hasSpecial },
+            ].forEach(function (rule) {
+                const node = document.getElementById(rule.id);
+                if (node) {
+                    node.classList.toggle('ok', rule.ok);
+                    node.classList.toggle('valid', rule.ok);
+                }
+            });
+
+            const showRules = password.length > 0 && !state.isValid;
+            passwordRules.hidden = !showRules;
+            passwordRules.classList.toggle('active', showRules);
+        }
+
         newPasswordInput.addEventListener('input', function() {
             clearError(this, newPasswordError);
+            updatePasswordRules(this.value);
         });
 
         confirmPasswordInput.addEventListener('input', function() {
@@ -201,28 +251,21 @@
         });
 
         resetPasswordForm.addEventListener('submit', function(e) {
-            const minLength = Number.parseInt(resetPasswordForm.dataset.passwordMinLength || '12', 10);
             const maxLength = Number.parseInt(resetPasswordForm.dataset.passwordMaxLength || '64', 10);
-            const hasLetters = /[A-Za-z]/.test(newPasswordInput.value);
-            const hasNumbers = /\d/.test(newPasswordInput.value);
-            const hasSymbols = /[^A-Za-z0-9]/.test(newPasswordInput.value);
-            
+            const strength = validatePasswordStrength(newPasswordInput.value);
             let isValid = true;
 
             clearError(newPasswordInput, newPasswordError);
             clearError(confirmPasswordInput, confirmPasswordError);
 
-            if (newPasswordInput.value.length < minLength) {
+            if (!strength.isValid) {
                 e.preventDefault();
-                showError(newPasswordInput, newPasswordError, `Password must be at least ${minLength} characters.`);
+                showError(newPasswordInput, newPasswordError, 'Please meet all password requirements.');
+                updatePasswordRules(newPasswordInput.value);
                 isValid = false;
             } else if (newPasswordInput.value.length > maxLength) {
                 e.preventDefault();
-                showError(newPasswordInput, newPasswordError, `Password must not exceed ${maxLength} characters.`);
-                isValid = false;
-            } else if (!(hasLetters && hasNumbers && hasSymbols)) {
-                e.preventDefault();
-                showError(newPasswordInput, newPasswordError, 'Password must include letters, numbers, and symbols.');
+                showError(newPasswordInput, newPasswordError, 'Password must not exceed ' + maxLength + ' characters.');
                 isValid = false;
             }
 

@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Password strength validation
     function validatePassword(password) {
         const rules = {
-            length: password.length >= 12,
+            length: password.length >= 8,
             lowercase: /[a-z]/.test(password),
             uppercase: /[A-Z]/.test(password),
             number: /[0-9]/.test(password),
@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             const rules = validatePassword(password);
             if (!rules.length) {
-                setFieldError('cePassword', 'cePasswordError', 'Password must be at least 12 characters long.');
+                setFieldError('cePassword', 'cePasswordError', 'Password must be at least 8 characters long.');
                 valid = false;
             } else if (!rules.lowercase || !rules.uppercase || !rules.number || !rules.special) {
                 setFieldError('cePassword', 'cePasswordError', 'Password must contain uppercase, lowercase, number, and special character.');

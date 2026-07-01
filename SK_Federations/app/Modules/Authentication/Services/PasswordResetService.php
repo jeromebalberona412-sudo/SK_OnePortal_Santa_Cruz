@@ -3,6 +3,8 @@
 namespace App\Modules\Authentication\Services;
 
 use App\Modules\Shared\Models\User;
+use App\Modules\Turnover\Models\FederationTurnoverRegistration;
+use App\Modules\Turnover\Notifications\TurnoverForgotPasswordSetupNotification;
 use Illuminate\Auth\Passwords\PasswordBroker as LaravelPasswordBroker;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
@@ -10,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -74,9 +77,17 @@ class PasswordResetService
         $status = $this->broker()->sendResetLink(
             ['email' => $normalizedEmail],
             function (CanResetPasswordContract $notifiable, #[\SensitiveParameter] string $token): void {
-                if ($notifiable instanceof User) {
-                    $notifiable->sendPasswordResetNotification($token);
+                if (! $notifiable instanceof User) {
+                    return;
                 }
+
+                if ($this->shouldSendTurnoverSetupResetNotification($notifiable)) {
+                    $this->sendTurnoverSetupResetNotification($notifiable, $token);
+
+                    return;
+                }
+
+                $notifiable->sendPasswordResetNotification($token);
             },
         );
 
@@ -93,6 +104,12 @@ class PasswordResetService
                 reason: $reason,
                 outcome: $outcome,
             );
+
+            throw ValidationException::withMessages([
+                'email' => [$status === Password::RESET_THROTTLED
+                    ? 'Please wait before requesting another password reset link.'
+                    : 'We could not send a password reset link right now. Please try again later.'],
+            ]);
         }
     }
 
@@ -215,17 +232,61 @@ class PasswordResetService
             return false;
         }
 
-        $requiredRole = (string) config('sk_fed_auth.required_role', User::ROLE_SK_FED);
-
-        if ($this->usersTableHasColumn('role') && ! $user->hasRole($requiredRole)) {
-            return false;
-        }
-
         if ($this->usersTableHasColumn('tenant_id') && (int) ($user->tenant_id ?? 0) !== $tenantId) {
             return false;
         }
 
-        return true;
+        $requiredRole = (string) config('sk_fed_auth.required_role', User::ROLE_SK_FED);
+
+        if ($this->usersTableHasColumn('role') && $user->hasRole($requiredRole)) {
+            return true;
+        }
+
+        return $this->isIncomingTurnoverSetupUser($user);
+    }
+
+    protected function isIncomingTurnoverSetupUser(User $user): bool
+    {
+        if (! $this->usersTableHasColumn('role') || ! $user->hasRole(User::ROLE_SK_OFFICIAL)) {
+            return false;
+        }
+
+        if ($user->turnover_status === 'awaiting_setup') {
+            return true;
+        }
+
+        if ($user->turnover_status === 'pending_confirmation' || $user->account_status === 'turnover_waiting') {
+            return true;
+        }
+
+        return $user->account_status === 'turnover_pending';
+    }
+
+    protected function shouldSendTurnoverSetupResetNotification(User $user): bool
+    {
+        return $user->turnover_status === 'awaiting_setup'
+            && $this->isIncomingTurnoverSetupUser($user);
+    }
+
+    protected function sendTurnoverSetupResetNotification(User $user, string $token): void
+    {
+        $registration = FederationTurnoverRegistration::query()
+            ->where('user_id', $user->id)
+            ->whereIn('status', [
+                FederationTurnoverRegistration::STATUS_PENDING,
+                FederationTurnoverRegistration::STATUS_INVITED,
+            ])
+            ->latest('id')
+            ->first();
+
+        Notification::sendNow(
+            $user,
+            new TurnoverForgotPasswordSetupNotification(
+                $token,
+                rtrim((string) config('app.url'), '/'),
+                $registration?->position ?? 'Federation Officer',
+            ),
+        );
     }
 
     protected function broker(): LaravelPasswordBroker

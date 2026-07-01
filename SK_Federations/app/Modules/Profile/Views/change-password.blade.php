@@ -3,7 +3,7 @@
 @section('title', 'Change Password')
 
 @php
-    $pwMin = (int) config('sk_fed_auth.password_reset.password.min_length', 12);
+    $pwMin = (int) config('sk_fed_auth.password_reset.password.min_length', 8);
     $pwMax = (int) config('sk_fed_auth.password_reset.password.max_length', 64);
 @endphp
 

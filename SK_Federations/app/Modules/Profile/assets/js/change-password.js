@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const maxLength = Number.parseInt(form.dataset.passwordMaxLength || '64', 10);
-    const minLength = Number.parseInt(form.dataset.passwordMinLength || '12', 10);
+    const minLength = Number.parseInt(form.dataset.passwordMinLength || '8', 10);
     const accountEmail = emailInput
         ? (emailInput.defaultValue || emailInput.value || '').trim().toLowerCase()
         : '';

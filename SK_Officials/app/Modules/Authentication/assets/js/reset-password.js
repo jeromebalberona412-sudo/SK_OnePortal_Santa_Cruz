@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const maxLength = Number.parseInt(resetPasswordForm.dataset.passwordMaxLength || '64', 10);
-    const minLength = 8;
+    const minLength = Number.parseInt(resetPasswordForm.dataset.passwordMinLength || '8', 10);
 
     function clearError(input, errorElement) {
         input.classList.remove('is-invalid');

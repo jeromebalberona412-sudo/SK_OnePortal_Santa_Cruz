@@ -17,6 +17,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 
@@ -80,6 +81,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'password_change_token_expires_at',
         'password_change_last_sent_at',
         'must_change_password',
+        'account_status',
+        'turnover_status',
+        'activated_term_id',
+        'turnover_notice_dismissed_until',
     ];
 
     /**
@@ -113,7 +118,28 @@ class User extends Authenticatable implements MustVerifyEmail
             'must_change_password' => 'boolean',
             'has_federation_access' => 'boolean',
             'deleted_at' => 'datetime',
+            'turnover_notice_dismissed_until' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (User $user): void {
+            $driver = config('database.connections.'.config('database.default').'.driver');
+
+            if ($driver !== 'pgsql') {
+                return;
+            }
+
+            foreach (['has_federation_access', 'must_change_password'] as $booleanColumn) {
+                if (! $user->isDirty($booleanColumn)) {
+                    continue;
+                }
+
+                $enabled = (bool) $user->{$booleanColumn};
+                $user->attributes[$booleanColumn] = DB::raw($enabled ? 'true' : 'false');
+            }
+        });
     }
 
     public function barangay(): BelongsTo
@@ -148,17 +174,8 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function setHasFederationAccess(bool $enabled): void
     {
-        $driver = config('database.connections.'.config('database.default').'.driver');
-
-        if ($driver === 'pgsql') {
-            $this->forceFill([
-                'has_federation_access' => \Illuminate\Support\Facades\DB::raw($enabled ? 'true' : 'false'),
-            ])->save();
-
-            return;
-        }
-
-        $this->forceFill(['has_federation_access' => $enabled])->save();
+        $this->has_federation_access = $enabled;
+        $this->save();
     }
 
     public function hasRole(string ...$roles): bool
@@ -199,6 +216,28 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isFederationAdministrator(): bool
     {
         return $this->isSkFed() || $this->hasFederationLeadershipAccess();
+    }
+
+    public function isIncomingTurnoverOfficer(): bool
+    {
+        if (in_array($this->turnover_status, ['awaiting_setup', 'pending_confirmation'], true)) {
+            return true;
+        }
+
+        return in_array($this->account_status, ['turnover_pending', 'turnover_waiting'], true);
+    }
+
+    public function canLoginToPortal(): bool
+    {
+        if ($this->isIncomingTurnoverOfficer()) {
+            return false;
+        }
+
+        if ($this->turnover_status === 'archived') {
+            return false;
+        }
+
+        return true;
     }
 
     public function isAdmin(): bool

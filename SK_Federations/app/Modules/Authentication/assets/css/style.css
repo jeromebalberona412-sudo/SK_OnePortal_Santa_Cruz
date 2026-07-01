@@ -591,14 +591,20 @@ button.login-btn.btn-primary:disabled {
     flex-shrink: 0;
 }
 
-.password-rules li.valid {
+.password-rules li.valid,
+.password-rules li.ok {
     color: #22c55e;
 }
 
-.password-rules li.valid::before {
+.password-rules li.valid::before,
+.password-rules li.ok::before {
     content: '✓';
     color: #22c55e;
     font-weight: 700;
+}
+
+.password-rules.active {
+    display: flex;
 }
 
 .back-link {

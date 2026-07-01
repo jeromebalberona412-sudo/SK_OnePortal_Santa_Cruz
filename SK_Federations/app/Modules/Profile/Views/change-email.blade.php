@@ -59,7 +59,7 @@
                 Current Password
             </label>
             <div class="password-input-container">
-                <input type="password" id="cePassword" name="password" class="form-control" placeholder="Enter your current password" autocomplete="current-password" minlength="12" maxlength="64" required>
+                <input type="password" id="cePassword" name="password" class="form-control" placeholder="Enter your current password" autocomplete="current-password" minlength="8" maxlength="64" required>
                 <button type="button" class="pw-toggle-btn" data-target="cePassword" aria-label="Show password" tabindex="-1">
                     <svg class="pw-eye pw-eye-show" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -73,7 +73,7 @@
                 </button>
             </div>
             <ul class="password-rules" id="cePasswordRules" aria-live="polite" hidden>
-                <li id="ce-rule-length">At least 12 characters</li>
+                <li id="ce-rule-length">At least 8 characters</li>
                 <li id="ce-rule-lowercase">At least one lowercase letter</li>
                 <li id="ce-rule-uppercase">At least one uppercase letter</li>
                 <li id="ce-rule-number">At least one number</li>

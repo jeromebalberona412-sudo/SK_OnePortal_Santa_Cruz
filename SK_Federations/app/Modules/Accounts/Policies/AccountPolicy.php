@@ -43,6 +43,10 @@ class AccountPolicy
 
     private function userCanManageAccount(User $user, User $target): bool
     {
+        if ($target->isIncomingTurnoverOfficer()) {
+            return false;
+        }
+
         if ($user->isSkFed()) {
             return $user->tenant_id !== null
                 && $target->tenant_id !== null

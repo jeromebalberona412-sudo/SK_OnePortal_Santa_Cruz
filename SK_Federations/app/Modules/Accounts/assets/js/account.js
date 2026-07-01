@@ -2528,9 +2528,12 @@ function initBatchUploadPanel(prefix, role) {
     }
 
     if (els.dropzone) {
-        els.dropzone.addEventListener('click', function (e) {
-            if (!e.target.classList.contains('dropzone-browse') && els.fileInput) els.fileInput.click();
+        els.dropzone.addEventListener('click', function () {
+            if (els.fileInput && !els.fileInput.disabled) {
+                els.fileInput.click();
+            }
         });
+        els.dropzone.style.cursor = 'pointer';
         els.dropzone.addEventListener('dragover', function (e) { e.preventDefault(); els.dropzone.classList.add('drag-over'); });
         els.dropzone.addEventListener('dragleave', function () { els.dropzone.classList.remove('drag-over'); });
         els.dropzone.addEventListener('drop', function (e) {
