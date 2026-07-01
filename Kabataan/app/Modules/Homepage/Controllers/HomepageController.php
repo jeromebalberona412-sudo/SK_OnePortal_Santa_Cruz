@@ -11,7 +11,7 @@ class HomepageController extends Controller
         $scrollTo = match ($section) {
             'about' => 'about',
             'faqs' => 'faq',
-            'contact' => 'contact',
+            'contact' => 'kabataanFooter',
             default => 'hero',
         };
 
@@ -127,134 +127,37 @@ class HomepageController extends Controller
 
     private function getFaqs(): array
     {
-        return cache()->remember('kabataan_faqs_v2', 3600, function () {
+        return cache()->remember('kabataan_faqs_v3', 3600, function () {
             return [
                 [
-                    'id' => 101,
-                    'category' => 'general',
-                    'question' => 'What is the SK OnePortal System?',
-                    'answer' => 'SK OnePortal is the official digital platform for Sangguniang Kabataan in Santa Cruz, Laguna. Kabataan is the youth portal where KK members aged 15–30 can browse programs, apply online, read official announcements, and manage their youth profile. SK Officials and SK Federation use connected portals to review submissions and monitor barangay compliance.',
-                ],
-                [
-                    'id' => 102,
-                    'category' => 'account',
-                    'question' => 'How do I sign up on Kabataan?',
-                    'answer' => 'Click Sign Up on the homepage, complete KK Profiling registration for your barangay, verify your email, and set your password. After SK Officials review your registration, you can sign in and access programs, announcements, and your dashboard.',
-                ],
-                [
-                    'id' => 103,
-                    'category' => 'account',
-                    'question' => 'How do I sign in?',
-                    'answer' => 'Go to Sign In, enter the email and password you used during registration, and submit. If you forgot your password, use Forgot Password on the login page to receive a reset link by email.',
-                ],
-                [
-                    'id' => 104,
-                    'category' => 'account',
-                    'question' => 'What are the requirements to register?',
-                    'answer' => 'You must be a Katipunan ng Kabataan member aged 15–30 residing in Santa Cruz, Laguna. Prepare a valid Gmail address, mobile number (09XXXXXXXXX), and accurate personal details for KK Profiling. Supporting ID documents may be requested depending on your barangay registration flow.',
-                ],
-                [
-                    'id' => 105,
-                    'category' => 'programs',
-                    'question' => 'How do I apply for a program?',
-                    'answer' => 'Sign in to Kabataan, open Programs, choose a category such as Scholarship or Sports, and select an open program. Read the requirements, complete the application form, upload any required documents, and submit. Track your application status from your dashboard.',
-                ],
-                // Account FAQs
-                [
                     'id' => 1,
-                    'category' => 'account',
-                    'question' => 'Who can join SK OnePortal Kabataan?',
-                    'answer' => "Youth aged 15-30 residing in Santa Cruz, Laguna can join SK OnePortal Kabataan. You'll need a valid email address and contact number to register. Residents from any of the 26 barangays are welcome to participate.",
+                    'category' => 'general',
+                    'question' => 'What is SKonePortal?',
+                    'answer' => 'SKonePortal is the official digital platform of the Municipality of Santa Cruz that connects the Kabataan, Sangguniang Kabataan (SK) Officials, SK Federation, and the Local Youth Development Office (LYDO). It provides online access to youth programs, scholarship applications, events, announcements, surveys, profiling, and other SK-related services in one centralized system.',
                 ],
                 [
                     'id' => 2,
                     'category' => 'account',
-                    'question' => 'Is registration free?',
-                    'answer' => 'Yes! Registration and all participation in SK OnePortal Kabataan is completely free. There are no hidden fees or charges. We believe in making community engagement accessible to all youth.',
+                    'question' => 'How do I create an account?',
+                    'answer' => 'Click the Sign Up button on the homepage and complete the registration form with accurate personal information. Verify your email address if required, then submit the form. Once your registration is approved or verified, you can sign in and access the system.',
                 ],
                 [
                     'id' => 3,
                     'category' => 'account',
-                    'question' => 'How do I reset my password?',
-                    'answer' => 'Click on the "Forgot Password" link on the login page. Enter your registered email address, and we\'ll send you a password reset link. Follow the instructions in the email to create a new password. The link expires in 1 hour for security.',
+                    'question' => 'How do I sign in to my account?',
+                    'answer' => 'Click the Sign In button, enter your registered email address and password, then click Login. If you forget your password, use the Forgot Password option to receive a reset link by email.',
                 ],
                 [
                     'id' => 4,
-                    'category' => 'account',
-                    'question' => 'Can I delete my account?',
-                    'answer' => 'You can request account deletion by going to Account Settings > Privacy. Your data will be securely deleted within 30 days. Some anonymized data may be retained for program statistics.',
+                    'category' => 'services',
+                    'question' => 'What services can I access through SKonePortal?',
+                    'answer' => 'Registered users can complete the KK Profiling Form, apply for scholarship programs, join events and activities, receive announcements, answer surveys, submit required documents, track application status, and access other youth-related services offered by the Municipality of Santa Cruz.',
                 ],
-                
-                // Programs FAQs
                 [
                     'id' => 5,
-                    'category' => 'programs',
-                    'question' => 'How do I find programs in my barangay?',
-                    'answer' => 'After signing in, browse available programs from your dashboard or the programs section. Use barangay and category filters to find activities near you. New listings are posted by your barangay SK as they become available.',
-                ],
-                [
-                    'id' => 6,
-                    'category' => 'programs',
-                    'question' => 'Can I apply for programs from other barangays?',
-                    'answer' => 'Yes! While each barangay has its own SK office, many programs are open to youth from other barangays. Check the program details to see if cross-barangay participation is allowed. Some programs may have residency requirements.',
-                ],
-                [
-                    'id' => 7,
-                    'category' => 'programs',
-                    'question' => 'How do I track my program applications?',
-                    'answer' => 'Once you\'re logged in, go to your Dashboard to see all your applications and their statuses. You\'ll also receive email notifications when SK officials respond to your application or when the program status changes.',
-                ],
-                [
-                    'id' => 8,
-                    'category' => 'programs',
-                    'question' => 'What does the progress bar in programs mean?',
-                    'answer' => 'The progress bar shows how many youth have joined relative to the program capacity. For example, 45/100 means 45 youth have registered out of 100 slots. When a program reaches capacity, it may close to new registrations.',
-                ],
-                
-                // Technical FAQs
-                [
-                    'id' => 9,
-                    'category' => 'technical',
-                    'question' => 'I\'m having trouble logging in. What should I do?',
-                    'answer' => 'First, double-check your email and password. If you\'re still having issues, try clearing your browser cache and cookies. If the problem persists, use the "Forgot Password" feature. For additional support, scroll to the Contact section on this page.',
-                ],
-                [
-                    'id' => 10,
-                    'category' => 'technical',
-                    'question' => 'What browsers are supported?',
-                    'answer' => 'SK OnePortal works best on modern browsers including Chrome, Firefox, Safari, and Edge (latest 2 versions). For mobile, use the latest versions of Chrome or Safari on your phone. Some older browsers may have compatibility issues.',
-                ],
-                [
-                    'id' => 11,
-                    'category' => 'technical',
-                    'question' => 'Why am I being logged out frequently?',
-                    'answer' => 'For security, SK OnePortal logs you out after 30 minutes of inactivity. If you\'re being logged out too frequently, check if cookies are enabled in your browser. You can also enable "Remember Me" for longer sessions on trusted devices.',
-                ],
-                
-                // Privacy FAQs
-                [
-                    'id' => 12,
-                    'category' => 'privacy',
-                    'question' => 'Is my personal data safe?',
-                    'answer' => 'Yes, we take data security seriously. All data is encrypted during transmission and at rest. We comply with data protection laws and regularly audit our security measures. We never sell or share your personal data with third parties.',
-                ],
-                [
-                    'id' => 13,
-                    'category' => 'privacy',
-                    'question' => 'What information is visible to SK officials?',
-                    'answer' => 'SK officials can see your name, barangay, contact information, and program application history. Your password is never visible to officials. Program-specific information may be shared with officials overseeing programs you\'ve joined.',
-                ],
-                [
-                    'id' => 14,
-                    'category' => 'privacy',
-                    'question' => 'Can I control my profile visibility?',
-                    'answer' => 'Yes! In Settings > Privacy, you can control who sees your profile information. You can choose between public (all users), barangay only (users in your barangay), or private (only you and SK officials). Your email is never publicly displayed.',
-                ],
-                [
-                    'id' => 15,
-                    'category' => 'privacy',
-                    'question' => 'How do I report inappropriate content?',
-                    'answer' => 'Click the report button (three dots) on any post or comment. Select a reason and provide details. Our moderation team will review reports within 24 hours. Serious violations may result in account suspension.',
+                    'category' => 'general',
+                    'question' => 'Who can use SKonePortal?',
+                    'answer' => 'SKonePortal is intended for Kabataan residing in the Municipality of Santa Cruz, SK Officials, SK Federation members, the Local Youth Development Office (LYDO), and other authorized municipal personnel, depending on their assigned roles and permissions.',
                 ],
             ];
         });

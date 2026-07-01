@@ -37,8 +37,8 @@
                 <article class="bm-kpi-card">
                     <div class="bm-kpi-icon bm-kpi-icon--green"><i class="fas fa-thumbs-up"></i></div>
                     <div class="bm-kpi-body">
-                        <div class="bm-kpi-label">Total Compliant</div>
-                        <div class="bm-kpi-value">{{ $stats['compliant_count'] }}</div>
+                        <div class="bm-kpi-label">Total Approved</div>
+                        <div class="bm-kpi-value">{{ $stats['approved_count'] }}</div>
                     </div>
                 </article>
                 <article class="bm-kpi-card">
@@ -51,8 +51,8 @@
                 <article class="bm-kpi-card">
                     <div class="bm-kpi-icon bm-kpi-icon--amber"><i class="fas fa-times-circle"></i></div>
                     <div class="bm-kpi-body">
-                        <div class="bm-kpi-label">Total Non-Compliant</div>
-                        <div class="bm-kpi-value">{{ $stats['non_compliant_count'] }}</div>
+                        <div class="bm-kpi-label">Total Not Submitted</div>
+                        <div class="bm-kpi-value">{{ $stats['not_submitted_count'] }}</div>
                     </div>
                 </article>
             </section>

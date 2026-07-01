@@ -10,7 +10,7 @@
                     <div class="faq-hero-copy h-100" aria-labelledby="faqHeading">
                         <span class="faq-eyebrow">Help Center</span>
                         <h1 id="faqHeading">Frequently Asked Questions</h1>
-                        <p>Answers about registration, youth programs, applications, and your privacy on SK OnePortal Kabataan.</p>
+                        <p>Find clear answers about SKonePortal — registration, sign-in, available services, and who can use the platform.</p>
                     </div>
                 </div>
                 <div class="col-lg-6">

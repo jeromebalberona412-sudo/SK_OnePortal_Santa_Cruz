@@ -245,7 +245,7 @@
                         <span class="about-eyebrow about-eyebrow--cta">Get started</span>
                         <h2>Ready to join your barangay SK community online?</h2>
                         <p>
-                            Scroll to <a href="#faq">FAQs</a> for common questions or <a href="#contact">Contact</a> for SK Federation details.
+                            Scroll to <a href="#faq">FAQs</a> for common questions or <a href="#kabataanFooter">Contact</a> for SK Federation details.
                             Sign in to apply for programs and track your participation.
                         </p>
                     </div>

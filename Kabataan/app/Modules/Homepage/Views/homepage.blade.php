@@ -180,5 +180,4 @@
 
         @include('homepage::about')
         @include('homepage::faqs')
-        @include('homepage::contact')
 @endsection

@@ -84,7 +84,6 @@ export default defineConfig({
                 'app/Modules/Homepage/assets/css/about.css',
                 'app/Modules/Homepage/assets/css/pages.css',
                 'app/Modules/Homepage/assets/css/faqs.css',
-                'app/Modules/Homepage/assets/css/contact.css',
                 'app/Modules/Homepage/assets/css/homepage-interactions.css',
                 'app/Modules/Homepage/assets/css/homepage-responsive.css',
                 'app/Modules/Homepage/assets/js/homepage.js',

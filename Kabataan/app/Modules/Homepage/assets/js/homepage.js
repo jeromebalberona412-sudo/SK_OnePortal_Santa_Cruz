@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const setActiveLink = (sectionId) => {
-        if (!sectionId || sectionId === 'contact') {
+        if (!sectionId || sectionId === 'kabataanFooter') {
             clearActiveLinks();
             return;
         }
@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         applyFilters();
     });
 
-    const trackedSections = ['hero', 'about', 'faq']
+    const trackedSections = ['hero', 'about', 'faq', 'kabataanFooter']
         .map((id) => document.getElementById(id))
         .filter(Boolean);
 
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     navLinks.forEach((link) => {
         link.addEventListener('click', () => {
             const sectionId = link.dataset.section;
-            if (sectionId === 'contact') {
+            if (sectionId === 'kabataanFooter') {
                 clearActiveLinks();
             } else if (sectionId) {
                 setActiveLink(sectionId);
@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const initialSection = document.body.dataset.scrollTo || 'hero';
     if (initialSection && initialSection !== 'hero') {
         requestAnimationFrame(() => scrollToSection(initialSection));
-        setActiveLink(initialSection === 'contact' ? '' : initialSection);
+        setActiveLink(initialSection === 'kabataanFooter' ? '' : initialSection);
     } else {
         setActiveLink('hero');
     }

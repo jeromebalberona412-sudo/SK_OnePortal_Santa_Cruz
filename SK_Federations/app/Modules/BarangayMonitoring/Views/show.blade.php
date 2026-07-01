@@ -143,14 +143,16 @@
                         </td>
                         <td data-label="Actions">
                             <div class="bm-row-actions">
-                                <button type="button" class="bm-view-btn" data-abyip-view="{{ $report['id'] }}">View</button>
                                 @php $reportStatus = strtolower($report['status'] ?? 'pending'); @endphp
                                 @if(in_array($reportStatus, ['pending', 'approved'], true))
                                 <div class="bm-actions-menu" data-report-id="{{ $report['id'] }}" data-report-status="{{ $reportStatus }}">
                                     <button type="button" class="bm-actions-toggle" aria-label="More actions" aria-haspopup="true" aria-expanded="false">
-                                        <i class="fas fa-ellipsis-v"></i>
+                                        <i class="fas fa-ellipsis-h"></i>
                                     </button>
                                     <div class="bm-actions-dropdown" hidden>
+                                        <button type="button" class="bm-actions-item bm-actions-view" data-abyip-view="{{ $report['id'] }}">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
                                         @if($reportStatus === 'pending')
                                             <button type="button" class="bm-actions-item bm-actions-approve" data-abyip-approve="{{ $report['id'] }}">
                                                 <i class="fas fa-check"></i> Approve
@@ -165,6 +167,8 @@
                                         @endif
                                     </div>
                                 </div>
+                                @else
+                                <button type="button" class="bm-view-btn" data-abyip-view="{{ $report['id'] }}">View</button>
                                 @endif
                             </div>
                         </td>

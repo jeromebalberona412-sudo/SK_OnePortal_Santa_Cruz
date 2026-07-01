@@ -18,7 +18,6 @@
         'app/Modules/Homepage/assets/css/about.css',
         'app/Modules/Homepage/assets/css/pages.css',
         'app/Modules/Homepage/assets/css/faqs.css',
-        'app/Modules/Homepage/assets/css/contact.css',
         'app/Modules/Homepage/assets/css/kabataan-footer.css',
         'app/Modules/Homepage/assets/css/homepage-interactions.css',
         'app/Modules/Homepage/assets/css/homepage-responsive.css',
@@ -43,7 +42,7 @@
                 <a href="{{ route('homepage') }}" class="kabataan-nav-link" data-section="hero">Home</a>
                 <a href="{{ route('homepage.section', ['section' => 'about']) }}" class="kabataan-nav-link" data-section="about">About</a>
                 <a href="{{ route('homepage.section', ['section' => 'faqs']) }}" class="kabataan-nav-link" data-section="faq">FAQs</a>
-                <a href="{{ route('homepage.section', ['section' => 'contact']) }}" class="kabataan-nav-link" data-section="contact">Contact</a>
+                <a href="{{ route('homepage.section', ['section' => 'contact']) }}" class="kabataan-nav-link" data-section="kabataanFooter">Contact</a>
             </div>
 
             <div class="kabataan-nav-actions">
@@ -60,7 +59,7 @@
         <a href="{{ route('homepage') }}" class="kabataan-drawer-link" data-section="hero">Home</a>
         <a href="{{ route('homepage.section', ['section' => 'about']) }}" class="kabataan-drawer-link" data-section="about">About</a>
         <a href="{{ route('homepage.section', ['section' => 'faqs']) }}" class="kabataan-drawer-link" data-section="faq">FAQs</a>
-        <a href="{{ route('homepage.section', ['section' => 'contact']) }}" class="kabataan-drawer-link" data-section="contact">Contact</a>
+        <a href="{{ route('homepage.section', ['section' => 'contact']) }}" class="kabataan-drawer-link" data-section="kabataanFooter">Contact</a>
         <div class="kabataan-drawer-actions">
             <a href="{{ route('login') }}" class="kabataan-nav-secondary">Sign In</a>
             <a href="{{ route('register') }}" class="kabataan-nav-primary">Sign Up</a>
