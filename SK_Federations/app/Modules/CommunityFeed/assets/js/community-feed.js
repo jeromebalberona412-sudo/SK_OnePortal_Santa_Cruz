@@ -4,9 +4,14 @@
 let currentFilter = 'all';
 let feedSearch = '';
 let editingPostId = null;
-let pendingImageDataUrl = null;
-let pendingLinkUrl = null;
-let isUploading = false;
+let pendingFiles = [];
+const MAX_IMAGES = 20;
+let lightboxImages = [];
+let lightboxIndex = 0;
+let lightboxZoom = 1;
+const LIGHTBOX_ZOOM_MIN = 0.5;
+const LIGHTBOX_ZOOM_MAX = 4;
+const LIGHTBOX_ZOOM_STEP = 0.25;
 const commentSections = new Set();
 const expandedComments = new Set();
 
@@ -61,6 +66,7 @@ function loadPosts(reset) {
                     el.className = 'post-card';
                     el.dataset.postId = p.id;
                     el.innerHTML = buildPost(p);
+                    bindPostImageClicks(el, p);
                     container.appendChild(el);
                 });
             }
@@ -90,8 +96,152 @@ function postAvatarUrl(p) {
 
 function commentAvatarUrl(c) {
     if (c.avatar_url) return c.avatar_url;
+    if (c.author_avatar_url) return c.author_avatar_url;
     return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(c.author_name || 'Member') + '&background=213F99&color=fff&size=80';
 }
+
+function buildImageGrid(images, postId) {
+    if (!images || !images.length) return '';
+
+    var unique = [];
+    images.forEach(function (url) {
+        if (url && unique.indexOf(url) === -1) unique.push(url);
+    });
+    var count = unique.length;
+    var gridClass = 'post-media-grid';
+    var slots = [];
+
+    if (count === 1) {
+        gridClass += ' grid-1';
+        slots = [{ index: 0 }];
+    } else if (count === 2) {
+        gridClass += ' grid-2 fit-contain';
+        slots = [{ index: 0 }, { index: 1 }];
+    } else if (count === 3) {
+        gridClass += ' grid-3 fit-contain';
+        slots = [{ index: 0 }, { index: 1 }, { index: 2 }];
+    } else if (count === 4) {
+        gridClass += ' grid-4 fit-contain';
+        slots = [{ index: 0 }, { index: 1 }, { index: 2 }, { index: 3 }];
+    } else {
+        gridClass += ' grid-4-plus fit-contain';
+        slots = [
+            { index: 0 },
+            { index: 1 },
+            { index: 2 },
+            { index: 3, overlay: '+' + (count - 3), moreOnly: true },
+        ];
+    }
+
+    var tiles = slots.map(function (slot) {
+        var overlayHtml = slot.overlay
+            ? '<span class="post-media-more">' + escapeHtml(slot.overlay) + '</span>'
+            : '';
+        var tileClass = slot.moreOnly ? 'post-media-tile post-media-more-tile' : 'post-media-tile';
+        var imgHtml = slot.moreOnly
+            ? '<img src="' + escapeHtml(unique[slot.index]) + '" alt="" loading="lazy" aria-hidden="true">'
+            : '<img src="' + escapeHtml(unique[slot.index]) + '" alt="Post image ' + (slot.index + 1) + '" loading="lazy">';
+        return '<button type="button" class="' + tileClass + '" data-post-id="' + postId + '" data-index="' + slot.index + '" aria-label="View photo ' + (slot.index + 1) + '">'
+            + imgHtml + overlayHtml + '</button>';
+    }).join('');
+
+    return '<div class="' + gridClass + '" data-all-images=\'' + JSON.stringify(unique).replace(/'/g, '&#39;') + '\'>' + tiles + '</div>';
+}
+
+function bindPostImageClicks(postEl, post) {
+    var grid = postEl.querySelector('.post-media-grid');
+    if (!grid) return;
+
+    var images = [];
+    try {
+        images = JSON.parse(grid.getAttribute('data-all-images') || '[]');
+    } catch (_) {
+        images = [];
+    }
+    if (!images.length) {
+        images = (post.images && post.images.length) ? post.images : (post.image_url ? [post.image_url] : []);
+    }
+
+    grid.querySelectorAll('.post-media-tile').forEach(function (tile) {
+        tile.addEventListener('click', function () {
+            openLightbox(images, parseInt(tile.getAttribute('data-index'), 10) || 0);
+        });
+    });
+}
+
+function openLightbox(images, startIndex) {
+    lightboxImages = images || [];
+    lightboxIndex = startIndex || 0;
+    lightboxZoom = 1;
+    var lb = document.getElementById('imageLightbox');
+    if (!lb) return;
+    lb.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    renderLightboxImage();
+    applyLightboxZoom();
+}
+
+function closeLightbox() {
+    var lb = document.getElementById('imageLightbox');
+    if (lb) lb.classList.remove('active');
+    document.body.style.overflow = '';
+    lightboxZoom = 1;
+    applyLightboxZoom();
+}
+
+function applyLightboxZoom() {
+    var img = document.getElementById('lightboxImage');
+    var label = document.getElementById('lightboxZoomLevel');
+    if (img) img.style.transform = 'scale(' + lightboxZoom + ')';
+    if (label) label.textContent = Math.round(lightboxZoom * 100) + '%';
+}
+
+function lightboxZoomIn() {
+    lightboxZoom = Math.min(LIGHTBOX_ZOOM_MAX, +(lightboxZoom + LIGHTBOX_ZOOM_STEP).toFixed(2));
+    applyLightboxZoom();
+}
+
+function lightboxZoomOut() {
+    lightboxZoom = Math.max(LIGHTBOX_ZOOM_MIN, +(lightboxZoom - LIGHTBOX_ZOOM_STEP).toFixed(2));
+    applyLightboxZoom();
+}
+
+function lightboxZoomReset() {
+    lightboxZoom = 1;
+    applyLightboxZoom();
+}
+
+function renderLightboxImage() {
+    var img = document.getElementById('lightboxImage');
+    var counter = document.getElementById('lightboxCounter');
+    if (!img || !lightboxImages.length) return;
+    img.src = lightboxImages[lightboxIndex] || '';
+    if (counter) counter.textContent = (lightboxIndex + 1) + ' / ' + lightboxImages.length;
+}
+
+function lightboxPrev() {
+    if (!lightboxImages.length) return;
+    lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length;
+    lightboxZoom = 1;
+    renderLightboxImage();
+    applyLightboxZoom();
+}
+
+function lightboxNext() {
+    if (!lightboxImages.length) return;
+    lightboxIndex = (lightboxIndex + 1) % lightboxImages.length;
+    lightboxZoom = 1;
+    renderLightboxImage();
+    applyLightboxZoom();
+}
+
+window.openLightbox = openLightbox;
+window.closeLightbox = closeLightbox;
+window.lightboxPrev = lightboxPrev;
+window.lightboxNext = lightboxNext;
+window.lightboxZoomIn = lightboxZoomIn;
+window.lightboxZoomOut = lightboxZoomOut;
+window.lightboxZoomReset = lightboxZoomReset;
 
 function buildReactionAvatarsHtml(summary) {
     if (!summary || !summary.reactors || !summary.reactors.length) return '';
@@ -244,10 +394,13 @@ function buildPost(p) {
     var liked = p.liked || false;
     var avatar = postAvatarUrl(p);
 
-    var mediaHtml = '';
-    if (p.image_url) {
-        mediaHtml += '<div class="post-image"><img src="' + escapeHtml(p.image_url) + '" alt="Post image" loading="lazy"></div>';
+    var images = [];
+    if (p.images && p.images.length) {
+        images = p.images.slice();
+    } else if (p.image_url) {
+        images = [p.image_url];
     }
+    var mediaHtml = buildImageGrid(images, p.id);
     if (p.link_url) {
         mediaHtml += '<a href="' + escapeHtml(p.link_url) + '" target="_blank" rel="noopener" class="post-link-preview">'
             + '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"/></svg>'
@@ -439,56 +592,51 @@ function editPost(id) {
     var p = posts.find(function(x) { return x.id === id; });
     if (!p) return;
     editingPostId = id;
+    pendingFiles = [];
     document.getElementById('compose-modal-title').textContent = 'Edit Post';
     document.getElementById('edit-post-id').value = id;
     document.getElementById('compose-content').value = p.body;
     document.getElementById('compose-type').value = p.type;
-    pendingImageDataUrl = p.image_url || null;
-    pendingLinkUrl = p.link_url || null;
-
-    if (p.image_url) {
-        document.getElementById('compose-preview-img').src = p.image_url;
-        document.getElementById('compose-image-preview').style.display = 'block';
-    }
+    refreshPreviewGrid();
     if (p.link_url) {
         document.getElementById('compose-link-input').value = p.link_url;
         document.getElementById('compose-link-input-wrap').style.display = 'block';
     }
-
     document.querySelectorAll('.post-options-menu.open').forEach(function(m) { m.classList.remove('open'); });
     document.getElementById('composeModal').classList.add('active');
 }
 
 function submitPost() {
-    if (isUploading) { alert('Please wait for the image to finish uploading.'); return; }
     var content = document.getElementById('compose-content').value.trim();
     if (!content) { alert('Please write something.'); return; }
     if (content.length > 2000) { alert('Posts are limited to 2000 characters.'); return; }
 
-    var type     = document.getElementById('compose-type').value;
-    var linkVal  = document.getElementById('compose-link-input').value.trim();
+    var type = document.getElementById('compose-type').value;
+    var linkVal = document.getElementById('compose-link-input').value.trim();
     var titleVal = document.getElementById('compose-title') ? document.getElementById('compose-title').value.trim() : '';
-    pendingLinkUrl = linkVal || null;
 
-    var payload = { type: type, body: content, title: titleVal || null };
-    if (pendingLinkUrl) payload.link_url = pendingLinkUrl;
-    if (pendingImageDataUrl) payload.image_url = pendingImageDataUrl;
-    savePost(payload);
+    var fd = new FormData();
+    fd.append('type', type);
+    fd.append('body', content);
+    if (titleVal) fd.append('title', titleVal);
+    if (linkVal) fd.append('link_url', linkVal);
+    pendingFiles.forEach(function (file) { fd.append('images[]', file); });
+
+    savePostForm(fd);
 }
 
-function dataURLtoFile(dataUrl, filename) {
-    var arr = dataUrl.split(','), mime = arr[0].match(/:(.*?);/)[1];
-    var bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
-    while (n--) u8arr[n] = bstr.charCodeAt(n);
-    return new File([u8arr], filename, { type: mime });
-}
+function savePostForm(formData) {
+    var isEdit = editingPostId !== null;
+    var url = isEdit ? '/api/community-feed/' + editingPostId : '/api/community-feed';
+    var method = isEdit ? 'POST' : 'POST';
+    if (isEdit) formData.append('_method', 'PUT');
 
-function savePost(payload) {
-    var isEdit  = editingPostId !== null;
-    var url     = isEdit ? '/api/community-feed/' + editingPostId : '/api/community-feed';
-    var method  = isEdit ? 'PUT' : 'POST';
-
-    apiFetch(url, { method: method, body: JSON.stringify(payload) })
+    fetch(url, {
+        method: method,
+        headers: { 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json' },
+        credentials: 'same-origin',
+        body: formData,
+    })
         .then(function(r) {
             return r.json().then(function(body) {
                 if (!r.ok) {
@@ -499,10 +647,9 @@ function savePost(payload) {
             });
         })
         .then(function(saved) {
-            if (!saved || !saved.id) {
-                throw new Error('Invalid response from server.');
-            }
+            if (!saved || !saved.id) throw new Error('Invalid response from server.');
             closeComposeModal();
+            if (typeof showFeedToast === 'function') showFeedToast('Post published successfully.', 'success');
             renderPosts(true);
         })
         .catch(function(err) {
@@ -512,91 +659,126 @@ function savePost(payload) {
 
 function openComposeModal(type) {
     editingPostId = null;
-    pendingImageDataUrl = null;
-    pendingLinkUrl = null;
+    pendingFiles = [];
     document.getElementById('compose-modal-title').textContent = 'Create Post';
     document.getElementById('edit-post-id').value = '';
     document.getElementById('compose-content').value = '';
-    document.getElementById('compose-image-preview').style.display = 'none';
+    var previewWrap = document.getElementById('compose-images-preview');
+    if (previewWrap) previewWrap.innerHTML = '';
+    var meta = document.getElementById('compose-images-meta');
+    if (meta) meta.textContent = '';
     document.getElementById('compose-link-input-wrap').style.display = 'none';
     document.getElementById('compose-link-input').value = '';
+    var fileInput = document.getElementById('compose-image-input');
+    if (fileInput) fileInput.value = '';
     if (type && document.getElementById('compose-type')) {
         var sel = document.getElementById('compose-type');
         var map = { announcement:'announcement', event:'event', photo:'activity' };
         sel.value = map[type] || 'update';
     }
-    document.getElementById('composeModal').classList.add('active');
+    var modal = document.getElementById('composeModal');
+    modal.classList.add('active');
+    modal.classList.remove('compose-maximized');
+    var btn = document.getElementById('composeFullscreenBtn');
+    if (btn) {
+        btn.title = 'Full screen';
+        btn.setAttribute('aria-label', 'Full screen');
+        btn.innerHTML = '<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M3 3h5v2H5v3H3V3zm9 0h5v5h-2V5h-3V3zM3 12h2v3h3v2H3v-5zm12 0h2v5h-5v-2h3v-3z"/></svg>';
+    }
+    updateCharCount();
 }
 
 function closeComposeModal() {
-    document.getElementById('composeModal').classList.remove('active');
+    var modal = document.getElementById('composeModal');
+    if (modal) modal.classList.remove('active', 'compose-maximized');
     editingPostId = null;
-    pendingImageDataUrl = null;
-    pendingLinkUrl = null;
-    isUploading = false;
+    pendingFiles = [];
 }
 
-function previewImage(input) {
-    var file = input.files[0];
-    if (!file) return;
+function toggleComposeFullscreen() {
+    var modal = document.getElementById('composeModal');
+    var btn = document.getElementById('composeFullscreenBtn');
+    if (!modal) return;
+    modal.classList.toggle('compose-maximized');
+    var isMax = modal.classList.contains('compose-maximized');
+    if (btn) {
+        btn.title = isMax ? 'Restore down' : 'Full screen';
+        btn.setAttribute('aria-label', btn.title);
+        btn.innerHTML = isMax
+            ? '<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M7 7H3v4h2V9h2V7zm6 0v2h2v2h2V7h-4zM7 13H5v-2H3v4h4v-2zm6 2v-2h2v-2h2v4h-4v-2z"/></svg>'
+            : '<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M3 3h5v2H5v3H3V3zm9 0h5v5h-2V5h-3V3zM3 12h2v3h3v2H3v-5zm12 0h2v5h-5v-2h3v-3z"/></svg>';
+    }
+}
 
-    // Show local preview immediately
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        document.getElementById('compose-preview-img').src = e.target.result;
-        document.getElementById('compose-image-preview').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
+function updateCharCount() {
+    var el = document.getElementById('compose-content');
+    var counter = document.getElementById('compose-char-count');
+    if (!el || !counter) return;
+    var len = el.value.length;
+    counter.textContent = len + ' / 2000';
+    counter.classList.toggle('over-limit', len > 2000);
+}
 
-    // Upload to server and store the returned URL
-    isUploading = true;
-    var postBtn = document.querySelector('.modal-footer-btns .btn-primary');
-    if (postBtn) { postBtn.disabled = true; postBtn.textContent = 'Uploading…'; }
+function previewImages(input) {
+    var files = Array.from(input.files || []);
+    if (!files.length) return;
 
-    var fd = new FormData();
-    fd.append('image', file);
-    fetch('/api/community-feed/upload-image', {
-        method: 'POST',
-        headers: { 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json' },
-        credentials: 'same-origin',
-        body: fd,
-    })
-    .then(function(r) {
-        if (!r.ok) {
-            return r.text().then(function(text) {
-                try {
-                    var json = JSON.parse(text);
-                    throw new Error(json.message || 'HTTP ' + r.status);
-                } catch (e) {
-                    throw new Error('HTTP ' + r.status + ': ' + text.substring(0, 200));
-                }
-            });
-        }
-        return r.json();
-    })
-    .then(function(data) {
-        if (data.url) {
-            pendingImageDataUrl = data.url;
-            document.getElementById('compose-preview-img').src = data.url;
-        } else {
-            pendingImageDataUrl = null;
-            alert('Image upload failed: ' + (data.message || 'No URL returned'));
-        }
-    })
-    .catch(function(err) {
-        pendingImageDataUrl = null;
-        alert('Image upload failed: ' + err.message);
-    })
-    .finally(function() {
-        isUploading = false;
-        if (postBtn) { postBtn.disabled = false; postBtn.textContent = 'Post'; }
+    var remaining = MAX_IMAGES - pendingFiles.length;
+    if (remaining <= 0) {
+        alert('You can upload up to ' + MAX_IMAGES + ' images per post.');
+        input.value = '';
+        return;
+    }
+
+    var toAdd = files.slice(0, remaining);
+    if (files.length > remaining) {
+        alert('Only ' + remaining + ' more image(s) can be added (max ' + MAX_IMAGES + ').');
+    }
+
+    toAdd.forEach(function (file) {
+        pendingFiles.push(file);
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            appendPreviewThumb(e.target.result, pendingFiles.length - 1);
+        };
+        reader.readAsDataURL(file);
     });
+
+    input.value = '';
+    updateImagesMeta();
 }
 
-function removeImagePreview() {
-    pendingImageDataUrl = null;
-    document.getElementById('compose-image-preview').style.display = 'none';
-    document.getElementById('compose-image-input').value = '';
+function appendPreviewThumb(src, index) {
+    var wrap = document.getElementById('compose-images-preview');
+    if (!wrap) return;
+    var item = document.createElement('div');
+    item.className = 'compose-preview-item';
+    item.innerHTML = '<img src="' + src + '" alt="Preview"><button type="button" class="compose-preview-remove" data-index="' + index + '" aria-label="Remove image">&times;</button>';
+    item.querySelector('.compose-preview-remove').addEventListener('click', function () {
+        pendingFiles.splice(parseInt(this.getAttribute('data-index'), 10), 1);
+        refreshPreviewGrid();
+    });
+    wrap.appendChild(item);
+}
+
+function refreshPreviewGrid() {
+    var wrap = document.getElementById('compose-images-preview');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    pendingFiles.forEach(function (file, idx) {
+        var reader = new FileReader();
+        reader.onload = function (e) { appendPreviewThumb(e.target.result, idx); };
+        reader.readAsDataURL(file);
+    });
+    updateImagesMeta();
+}
+
+function updateImagesMeta() {
+    var meta = document.getElementById('compose-images-meta');
+    if (!meta) return;
+    meta.textContent = pendingFiles.length
+        ? pendingFiles.length + ' image' + (pendingFiles.length === 1 ? '' : 's') + ' selected (max ' + MAX_IMAGES + ')'
+        : '';
 }
 
 function toggleLinkInput() {
@@ -611,6 +793,8 @@ function toggleLinkInput() {
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', function() {
     renderPosts(true);
+    document.getElementById('compose-content')?.addEventListener('input', updateCharCount);
+    updateCharCount();
     var searchInput = document.getElementById('feed-search-input') || document.getElementById('feedSearchInput');
     if (searchInput) {
         var searchTimer = null;
@@ -630,6 +814,19 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeLikesModal();
+        if (e.key === 'Escape') {
+            closeLikesModal();
+            closeLightbox();
+        }
+    });
+
+    document.getElementById('lightboxClose')?.addEventListener('click', closeLightbox);
+    document.getElementById('lightboxPrev')?.addEventListener('click', lightboxPrev);
+    document.getElementById('lightboxNext')?.addEventListener('click', lightboxNext);
+    document.getElementById('lightboxZoomIn')?.addEventListener('click', lightboxZoomIn);
+    document.getElementById('lightboxZoomOut')?.addEventListener('click', lightboxZoomOut);
+    document.getElementById('lightboxZoomReset')?.addEventListener('click', lightboxZoomReset);
+    document.getElementById('imageLightbox')?.addEventListener('click', function (e) {
+        if (e.target && e.target.id === 'imageLightbox') closeLightbox();
     });
 });

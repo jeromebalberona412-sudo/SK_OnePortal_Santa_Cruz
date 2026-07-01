@@ -137,14 +137,19 @@
 
 @push('scripts')
     {{-- ── COMPOSE / EDIT POST MODAL ── --}}
-    <div id="composeModal" class="program-modal">
+    <div id="composeModal" class="program-modal compose-modal">
         <div class="modal-overlay" onclick="closeComposeModal()"></div>
-        <div class="modal-container" style="max-width:560px;">
+        <div class="modal-container compose-modal-container" id="composeModalContainer">
             <div class="modal-header">
                 <h2 id="compose-modal-title">Create Post</h2>
-                <button class="modal-close" onclick="closeComposeModal()">
-                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                </button>
+                <div class="compose-modal-window-actions">
+                    <button type="button" id="composeFullscreenBtn" class="compose-window-btn" onclick="toggleComposeFullscreen()" title="Full screen" aria-label="Full screen">
+                        <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M3 3h5v2H5v3H3V3zm9 0h5v5h-2V5h-3V3zM3 12h2v3h3v2H3v-5zm12 0h2v5h-5v-2h3v-3z"/></svg>
+                    </button>
+                    <button class="modal-close" onclick="closeComposeModal()" aria-label="Close">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                    </button>
+                </div>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="edit-post-id" value="">
@@ -168,24 +173,23 @@
                         <option value="program">Youth Program</option>
                     </select>
                 </div>
-                <textarea class="compose-textarea" id="compose-content" placeholder="Write something..." rows="4" maxlength="2000"></textarea>
+                <textarea class="compose-textarea" id="compose-content" placeholder="Write something..." rows="6" maxlength="2000"></textarea>
+                <div class="compose-char-row">
+                    <span id="compose-char-count" class="compose-char-count">0 / 2000</span>
+                </div>
                 <div class="compose-attach-row">
                     <label class="compose-attach-btn" for="compose-image-input" title="Upload Image">
                         <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/></svg>
                         Photo
                     </label>
-                    <input type="file" id="compose-image-input" accept="image/*" style="display:none;" onchange="previewImage(this)">
+                    <input type="file" id="compose-image-input" accept="image/*" multiple style="display:none;" onchange="previewImages(this)">
                     <label class="compose-attach-btn" id="compose-link-btn" onclick="toggleLinkInput()" title="Add Link">
                         <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"/></svg>
                         Link
                     </label>
                 </div>
-                <div id="compose-image-preview" style="display:none;margin-top:10px;position:relative;">
-                    <img id="compose-preview-img" src="" alt="Preview" style="width:100%;border-radius:10px;max-height:220px;object-fit:cover;">
-                    <button onclick="removeImagePreview()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.55);border:none;border-radius:50%;width:28px;height:28px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-                        <svg viewBox="0 0 20 20" fill="currentColor" style="width:14px;height:14px;"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                    </button>
-                </div>
+                <p id="compose-images-meta" class="compose-images-meta"></p>
+                <div id="compose-images-preview" class="compose-images-preview"></div>
                 <div id="compose-link-input-wrap" style="display:none;margin-top:10px;">
                     <input type="url" id="compose-link-input" class="compose-link-field" placeholder="Paste a link (https://...)">
                 </div>
@@ -198,6 +202,25 @@
                 </button>
             </div>
         </div>
+    </div>
+
+    <div id="feedToast" class="feed-toast" role="status" aria-live="polite"></div>
+
+    {{-- Image Lightbox --}}
+    <div id="imageLightbox" class="image-lightbox" aria-hidden="true">
+        <button type="button" id="lightboxClose" class="lightbox-close" aria-label="Close">&times;</button>
+        <div class="lightbox-toolbar">
+            <button type="button" id="lightboxZoomOut" class="lightbox-tool-btn" aria-label="Zoom out">−</button>
+            <span id="lightboxZoomLevel" class="lightbox-zoom-level">100%</span>
+            <button type="button" id="lightboxZoomIn" class="lightbox-tool-btn" aria-label="Zoom in">+</button>
+            <button type="button" id="lightboxZoomReset" class="lightbox-tool-btn lightbox-reset-btn" aria-label="Reset zoom">Reset</button>
+        </div>
+        <button type="button" id="lightboxPrev" class="lightbox-nav lightbox-prev" aria-label="Previous">&#10094;</button>
+        <div class="lightbox-viewport" id="lightboxViewport">
+            <img id="lightboxImage" src="" alt="Full size photo" draggable="false">
+        </div>
+        <button type="button" id="lightboxNext" class="lightbox-nav lightbox-next" aria-label="Next">&#10095;</button>
+        <div id="lightboxCounter" class="lightbox-counter"></div>
     </div>
 
     {{-- ── LIKES MODAL ── --}}
@@ -229,6 +252,16 @@
 
     <script>
         window.currentAvatar = @json($avatar ?? '');
+        function showFeedToast(message, type) {
+            var el = document.getElementById('feedToast');
+            if (!el) return;
+            el.textContent = message;
+            el.className = 'feed-toast feed-toast--' + (type || 'success') + ' is-visible';
+            clearTimeout(window._feedToastTimer);
+            window._feedToastTimer = setTimeout(function () {
+                el.classList.remove('is-visible');
+            }, 3200);
+        }
     </script>
     <script src="{{ url('/shared/js/loading.js') }}"></script>
     @php

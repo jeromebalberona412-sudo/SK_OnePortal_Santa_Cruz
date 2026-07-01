@@ -24,6 +24,13 @@ class CommunityFeedAvatarService
     {
         $type = $userType ?? $user?->role;
 
+        if ($type === 'kabataan' && $user) {
+            $profileUrl = trim((string) ($user->profile_image_url ?? ''));
+            if ($profileUrl !== '') {
+                return $profileUrl;
+            }
+        }
+
         if ($type === 'sk_official' && $user?->barangay_id) {
             $logo = $this->barangayLogos->resolve((int) $user->barangay_id);
             if ($logo) {

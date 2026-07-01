@@ -114,22 +114,46 @@ body {
 }
 .feed-header__search-input:focus { outline: none; border-color: #1a56db; }
 
-/* Filter Tabs — sticky while scrolling feed */
+/* Filter Tabs — match Kabataan community feed */
 .feed-filter-bar {
-    display: flex; gap: 10px; flex-wrap: wrap;
-    justify-content: center; align-items: center;
-    background: white; border-radius: 12px; padding: 14px 18px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    position: sticky; top: 72px; z-index: 40;
-    margin-bottom: 4px;
-    border: 1px solid #eef1f5;
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 0;
+    width: 100%;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    position: static;
+    border: none;
 }
 .feed-tab {
-    padding: 10px 22px; border: none; border-radius: 10px;
-    background: transparent; color: #666; font-size: 15px;
-    font-family: inherit; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    padding: 12px 24px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #64748b;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    position: relative;
+    bottom: -2px;
+    flex: 1;
+    text-align: center;
+    border-radius: 0;
 }
-.feed-tab.active, .feed-tab:hover { background: var(--sk-grad); color: var(--sk-gold); }
+.feed-tab:hover {
+    color: #1a56db;
+    background: #f8fafc;
+}
+.feed-tab.active {
+    color: #1a56db;
+    border-bottom-color: #1a56db;
+    background: transparent;
+}
 .feed-tab:disabled { opacity: 0.65; cursor: wait; }
 
 .feed-tab--icon {
@@ -205,14 +229,31 @@ body {
 .view-details-btn:hover { box-shadow: 0 6px 20px rgba(245,197,24,0.4); }
 .view-details-btn svg { width: 15px; height: 15px; }
 
-.post-actions { display: flex; gap: 8px; padding-top: 12px; border-top: 1px solid #e8ecf0; }
-.action-btn {
-    flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
-    padding: 8px; background: none; border: none; border-radius: 8px;
-    color: #666; font-size: 13px; font-weight: 500; cursor: pointer;
-    transition: all 0.2s; font-family: inherit;
+.post-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 14px;
+    border-top: 1px solid #e8ecf0;
+    align-items: center;
 }
-.action-btn svg { width: 16px; height: 16px; }
+.action-btn {
+    flex: 0 1 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    color: #666;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+.action-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
 .action-btn:hover { background: #f5f7fa; color: var(--sk-dark); }
 .action-btn.liked { color: var(--sk-gold-deeper); }
 
@@ -245,8 +286,6 @@ body {
     border-top: 1px solid #e8ecf0;
 }
 .comments-list { margin-bottom: 10px; }
-.post-actions { align-items: center; }
-.action-btn { flex: 0 1 auto; }
 .comment-item { display: flex; gap: 10px; margin-bottom: 10px; }
 .comment-item img { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; }
 .comment-content { flex: 1; background: #f5f7fa; padding: 8px 12px; border-radius: 12px; }
@@ -345,6 +384,7 @@ body {
     width: 100%; border: 2px solid #e0e0e0; border-radius: 10px;
     padding: 12px; font-size: 14px; font-family: inherit; color: #333;
     resize: vertical; outline: none; transition: border-color 0.2s; box-sizing: border-box;
+    min-height: 120px; max-height: 50vh;
 }
 .compose-textarea:focus { border-color: var(--sk-gold); }
 .compose-attach-row { display: flex; gap: 8px; margin-top: 12px; }
@@ -642,10 +682,27 @@ body {
 /* Compose modal fullscreen */
 .compose-modal-container { max-width: 560px; transition: all 0.25s ease; }
 .compose-modal.compose-maximized .compose-modal-container { max-width: min(960px, 96vw); width: 96vw; height: 92vh; display: flex; flex-direction: column; }
-.compose-modal.compose-maximized .modal-body { flex: 1; overflow-y: auto; }
-.compose-modal.compose-maximized .compose-textarea { min-height: 280px; }
+.compose-modal.compose-maximized .modal-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+.compose-modal.compose-maximized .compose-textarea { min-height: 40vh; flex: 1; }
+.compose-modal .modal-header {
+    background: linear-gradient(135deg, #2c2c3e, #3a3a4a);
+    border-bottom: 3px solid #f5c518;
+    padding: 16px 20px;
+}
+.compose-modal .modal-header h2 { color: #fff; font-size: 17px; }
 .compose-modal-window-actions { display: flex; align-items: center; gap: 6px; }
-.compose-window-btn { background: #f3f4f6; border: none; border-radius: 6px; width: 32px; height: 32px; cursor: pointer; font-size: 14px; color: #374151; }
+.compose-window-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 8px;
+    width: 32px; height: 32px;
+    cursor: pointer; font-size: 14px; color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.compose-window-btn:hover { background: rgba(255,255,255,0.18); }
+.compose-modal .modal-close { background: rgba(255,255,255,0.15); }
+.compose-modal .modal-close svg { color: #fff; }
+.compose-modal .modal-close:hover { background: rgba(245,197,24,0.35); }
 .compose-char-row { display: flex; justify-content: flex-end; margin-top: 6px; }
 .compose-char-count { font-size: 12px; color: #9ca3af; }
 .compose-char-count.over-limit { color: #ef4444; font-weight: 700; }
@@ -659,3 +716,13 @@ body {
 @keyframes ann-spin { to { transform: rotate(360deg); } }
 
 .feed-section { display: flex; flex-direction: column; gap: 16px; }
+
+.feed-toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(16px);
+    padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600;
+    color: #1a1a2e; background: #f5c518; box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 4000; max-width: min(92vw, 420px); text-align: center;
+}
+.feed-toast.is-visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+.feed-toast--error { background: #ef4444; color: #fff; }

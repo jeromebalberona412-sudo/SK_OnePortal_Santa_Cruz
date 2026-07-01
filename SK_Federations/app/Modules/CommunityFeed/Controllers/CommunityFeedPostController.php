@@ -19,6 +19,10 @@ use Throwable;
 
 class CommunityFeedPostController extends Controller
 {
+    private const MAX_IMAGES = 20;
+
+    private const MAX_BODY_LENGTH = 2000;
+
     public function __construct(
         private readonly CloudinaryService $cloudinary,
         private readonly SkFederationsNotificationService $notificationService,
@@ -34,6 +38,7 @@ class CommunityFeedPostController extends Controller
             'barangay',
             'comments.user',
             'user',
+            'images',
             'reactions' => fn ($q) => $q->with('user')->latest()->limit(12),
         ])
             ->withCount('reactions')
@@ -69,30 +74,37 @@ class CommunityFeedPostController extends Controller
     public function store(Request $request): JsonResponse
     {
         $request->merge([
-            'link_url'  => filled($request->input('link_url')) ? $request->input('link_url') : null,
-            'image_url' => filled($request->input('image_url')) ? $request->input('image_url') : null,
-            'title'     => filled($request->input('title')) ? $request->input('title') : null,
+            'link_url' => filled($request->input('link_url')) ? $request->input('link_url') : null,
+            'title'    => filled($request->input('title')) ? $request->input('title') : null,
         ]);
 
         $validated = $request->validate([
             'type'      => 'required|in:announcement,event,activity,program,update',
             'title'     => 'nullable|string|max:255',
-            'body'      => 'required|string|max:2000',
-            'image_url' => 'nullable|string|max:4096',
+            'body'      => 'required|string|max:'.self::MAX_BODY_LENGTH,
             'link_url'  => 'nullable|url|max:4096',
+            'images'    => 'nullable|array|max:'.self::MAX_IMAGES,
+            'images.*'  => 'image|max:5120',
         ]);
 
         $user = Auth::user();
-        $post = Announcement::create(array_merge($validated, [
+        $post = Announcement::create([
+            'type'               => $validated['type'],
+            'title'              => $validated['title'] ?? null,
+            'body'               => $validated['body'],
+            'link_url'           => $validated['link_url'] ?? null,
             'user_id'            => $user->id,
             'barangay_id'        => null,
             'is_federation_wide' => true,
-        ]));
+        ]);
+
+        $this->storePostImages($post, $request);
 
         $fresh = Announcement::with([
             'barangay',
             'comments.user',
             'user',
+            'images',
             'reactions' => fn ($q) => $q->with('user')->latest()->limit(12),
         ])
             ->withCount('reactions')
@@ -110,23 +122,28 @@ class CommunityFeedPostController extends Controller
             ->firstOrFail();
 
         $request->merge([
-            'link_url'  => filled($request->input('link_url')) ? $request->input('link_url') : null,
-            'image_url' => filled($request->input('image_url')) ? $request->input('image_url') : null,
-            'title'     => filled($request->input('title')) ? $request->input('title') : null,
+            'link_url' => filled($request->input('link_url')) ? $request->input('link_url') : null,
+            'title'    => filled($request->input('title')) ? $request->input('title') : null,
         ]);
 
         $validated = $request->validate([
             'type'      => 'sometimes|in:announcement,event,activity,program,update',
             'title'     => 'nullable|string|max:255',
-            'body'      => 'sometimes|string|max:2000',
-            'image_url' => 'nullable|string|max:4096',
+            'body'      => 'sometimes|string|max:'.self::MAX_BODY_LENGTH,
             'link_url'  => 'nullable|url|max:4096',
+            'images'    => 'nullable|array|max:'.self::MAX_IMAGES,
+            'images.*'  => 'image|max:5120',
         ]);
 
-        $post->update($validated);
+        $post->update(collect($validated)->except(['images'])->all());
+
+        if ($request->hasFile('images')) {
+            $post->images()->delete();
+            $this->storePostImages($post, $request);
+        }
 
         return response()->json($this->formatPost(
-            $post->load(['barangay', 'comments', 'user', 'reactions' => fn ($q) => $q->with('user')->latest()->limit(12)])
+            $post->load(['barangay', 'comments.user', 'user', 'images', 'reactions' => fn ($q) => $q->with('user')->latest()->limit(12)])
                 ->loadCount('reactions'),
             Auth::id()
         ));
@@ -280,12 +297,21 @@ class CommunityFeedPostController extends Controller
         $authorName = $post->user?->name
             ?? ($post->is_federation_wide ? 'SK Federation' : ('SK Brgy. ' . ($post->barangay?->name ?? '')));
 
+        $imageRecords = $post->relationLoaded('images') ? $post->images : collect();
+        $images = $imageRecords
+            ->map(fn ($img) => $this->cloudinary->normalizeUrl($img->image_url))
+            ->filter()
+            ->values()
+            ->all();
+        $images = array_values(array_unique($images));
+
         return [
             'id'                 => $post->id,
             'type'               => $post->type,
             'title'              => $post->title,
             'body'               => $post->body,
-            'image_url'          => $this->cloudinary->normalizeUrl($post->image_url),
+            'image_url'          => $images[0] ?? null,
+            'images'             => $images,
             'link_url'           => $post->link_url,
             'is_federation_wide' => (bool) $post->is_federation_wide,
             'barangay_name'      => $post->barangay?->name,
@@ -354,5 +380,46 @@ class CommunityFeedPostController extends Controller
             'kabataan' => 'Kabataan Member',
             default => 'Member',
         };
+    }
+
+    /**
+     * @return list<array{url: string, public_id: string}>
+     */
+    private function storePostImages(Announcement $post, Request $request): array
+    {
+        $files = $request->file('images', []);
+        if (! is_array($files)) {
+            $files = [$files];
+        }
+
+        $uploaded = [];
+        $sort = 0;
+        $now = now();
+
+        foreach (array_slice($files, 0, self::MAX_IMAGES) as $file) {
+            if ($file === null) {
+                continue;
+            }
+
+            try {
+                $publicId = 'fed_post_'.$post->id.'_'.Str::random(10);
+                $result = $this->cloudinary->upload($file, $publicId);
+
+                \App\Modules\Shared\Models\AnnouncementImage::create([
+                    'announcement_id' => $post->id,
+                    'image_url'       => $result['url'],
+                    'public_id'       => $result['public_id'],
+                    'sort_order'      => $sort,
+                    'created_at'      => $now,
+                ]);
+
+                $uploaded[] = ['url' => $result['url'], 'public_id' => $result['public_id']];
+                $sort++;
+            } catch (Throwable) {
+                continue;
+            }
+        }
+
+        return $uploaded;
     }
 }

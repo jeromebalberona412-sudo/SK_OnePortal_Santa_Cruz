@@ -1997,6 +1997,24 @@ body.youth-profile {
     color: #111827;
 }
 
+@media (max-width: 768px) {
+    .kk-preview-modal-container .modal-body {
+        overflow-x: auto;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .kk-preview-modal-container .kkp-paper {
+        min-width: 860px;
+        width: 860px;
+        max-width: none;
+    }
+
+    .kk-preview-modal-container .kkp-personal-row {
+        grid-template-columns: minmax(100px, auto) minmax(0, 1fr) minmax(210px, 250px);
+    }
+}
+
 @media print {
     .top-navbar,
     .profile-header-card,

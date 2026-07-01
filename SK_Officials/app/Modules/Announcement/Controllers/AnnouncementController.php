@@ -248,7 +248,7 @@ class AnnouncementController extends Controller
 
         $limiter->hit('sk_official', (int) $user->id);
 
-        return response()->json($this->formatComment($comment->load('user')), 201);
+        return response()->json($this->formatComment($comment->load('user'), $post->barangay_id), 201);
     }
 
     // POST /api/announcements/upload-image (legacy single upload)
@@ -345,23 +345,23 @@ class AnnouncementController extends Controller
             'liked'              => $liked,
             'time'               => $post->created_at->diffForHumans(),
             'created_at'         => $post->created_at->toIso8601String(),
-            'comments'           => $post->comments->map(fn ($c) => $this->formatComment($c))->values(),
+            'comments'           => $post->comments->map(fn ($c) => $this->formatComment($c, $post->barangay_id))->values(),
         ];
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function formatComment(AnnouncementComment $comment): array
+    private function formatComment(AnnouncementComment $comment, ?int $barangayId = null): array
     {
+        $avatarUrl = $this->resolveCommentAvatar($comment, $barangayId);
         $logoUrl = null;
 
         if (
-            $comment->user_type === 'sk_official'
+            in_array($comment->user_type, ['sk_official', 'sk_fed'], true)
             && $comment->user
-            && in_array($comment->user->role, self::SK_COMMENT_ROLES, true)
         ) {
-            $logoUrl = $this->barangayLogoUrlService->resolve($comment->user->barangay_id);
+            $logoUrl = $this->barangayLogoUrlService->resolve($comment->user->barangay_id ?? $barangayId);
         }
 
         return [
@@ -370,7 +370,33 @@ class AnnouncementController extends Controller
             'body'              => $comment->body,
             'time'              => $comment->created_at->diffForHumans(),
             'user_type'         => $comment->user_type,
+            'author_avatar_url' => $avatarUrl,
             'barangay_logo_url' => $logoUrl,
         ];
+    }
+
+    private function resolveCommentAvatar(AnnouncementComment $comment, ?int $barangayId): string
+    {
+        if ($comment->user_type === 'kabataan' && $comment->user) {
+            $profileUrl = trim((string) ($comment->user->profile_image_url ?? ''));
+            if ($profileUrl !== '') {
+                return $profileUrl;
+            }
+        }
+
+        if (in_array($comment->user_type, ['sk_official', 'sk_fed'], true) && $comment->user) {
+            $logo = $this->barangayLogoUrlService->resolve($comment->user->barangay_id ?? $barangayId);
+            if ($logo) {
+                return $logo;
+            }
+        }
+
+        if ($comment->user_type === 'sk_fed') {
+            return asset('images/logo.png');
+        }
+
+        $name = $comment->author_name ?? 'Member';
+
+        return 'https://ui-avatars.com/api/?name='.urlencode($name).'&background=2c2c3e&color=f5c518&size=80';
     }
 }

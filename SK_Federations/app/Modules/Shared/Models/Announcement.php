@@ -11,7 +11,7 @@ class Announcement extends Model
 {
     protected $fillable = [
         'user_id', 'barangay_id', 'type', 'title', 'body',
-        'image_url', 'link_url', 'is_federation_wide',
+        'link_url', 'is_federation_wide',
     ];
 
     protected $casts = [
@@ -36,5 +36,10 @@ class Announcement extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(AnnouncementComment::class)->orderBy('created_at');
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(AnnouncementImage::class)->orderBy('sort_order');
     }
 }

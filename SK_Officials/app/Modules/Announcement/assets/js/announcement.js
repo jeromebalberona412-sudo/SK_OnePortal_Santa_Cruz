@@ -164,7 +164,9 @@ function postAvatarUrl(p) {
 }
 
 function commentAvatarUrl(c) {
+    if (c.author_avatar_url) return c.author_avatar_url;
     if (c.user_type === 'sk_official' && c.barangay_logo_url) return c.barangay_logo_url;
+    if (c.user_type === 'sk_fed' && c.barangay_logo_url) return c.barangay_logo_url;
     const name = c.author_name || 'SK';
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2c2c3e&color=f5c518&size=80`;
 }
@@ -213,7 +215,7 @@ function buildImageGrid(images, postId) {
         </button>`;
     }).join('');
 
-    return `<div class="${gridClass}" data-all-images='${escapeHtml(JSON.stringify(unique))}'>${tiles}</div>`;
+    return `<div class="${gridClass}" data-all-images='${JSON.stringify(unique).replace(/'/g, '&#39;')}'>${tiles}</div>`;
 }
 
 function loadMorePosts() {
@@ -484,6 +486,12 @@ function openComposeModal(type) {
     const modal = document.getElementById('composeModal');
     modal.classList.add('active');
     modal.classList.remove('compose-maximized');
+    const btn = document.getElementById('composeFullscreenBtn');
+    if (btn) {
+        btn.title = 'Full screen';
+        btn.setAttribute('aria-label', 'Full screen');
+        btn.innerHTML = '<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M3 3h5v2H5v3H3V3zm9 0h5v5h-2V5h-3V3zM3 12h2v3h3v2H3v-5zm12 0h2v5h-5v-2h3v-3z"/></svg>';
+    }
 }
 
 function closeComposeModal() {
@@ -492,7 +500,18 @@ function closeComposeModal() {
 }
 
 function toggleComposeFullscreen() {
-    document.getElementById('composeModal').classList.toggle('compose-maximized');
+    const modal = document.getElementById('composeModal');
+    const btn = document.getElementById('composeFullscreenBtn');
+    if (!modal) return;
+    modal.classList.toggle('compose-maximized');
+    const isMax = modal.classList.contains('compose-maximized');
+    if (btn) {
+        btn.title = isMax ? 'Restore down' : 'Full screen';
+        btn.setAttribute('aria-label', btn.title);
+        btn.innerHTML = isMax
+            ? '<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M7 7H3v4h2V9h2V7zm6 0v2h2v2h2V7h-4zM7 13H5v-2H3v4h4v-2zm6 2v-2h2v-2h2v4h-4v-2z"/></svg>'
+            : '<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M3 3h5v2H5v3H3V3zm9 0h5v5h-2V5h-3V3zM3 12h2v3h3v2H3v-5zm12 0h2v5h-5v-2h3v-3z"/></svg>';
+    }
 }
 
 async function editPost(id) {
@@ -605,6 +624,9 @@ async function submitPost() {
 
             knownPostIds.add(Number(created.id));
             upsertPost(created, 'prepend');
+            if (typeof showFeedToast === 'function') {
+                showFeedToast('Post published successfully.', 'success');
+            }
         }
         closeComposeModal();
     } catch (e) {
