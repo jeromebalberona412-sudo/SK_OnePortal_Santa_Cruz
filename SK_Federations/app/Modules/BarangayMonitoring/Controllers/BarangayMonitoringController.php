@@ -190,20 +190,26 @@ class BarangayMonitoringController extends Controller
     private function buildStats(array $barangays): array
     {
         $count = count($barangays);
-        $compliant = count(array_filter($barangays, fn ($item) => $item['status'] === 'compliant'));
-        $nonCompliant = count(array_filter($barangays, fn ($item) => $item['status'] === 'non-compliant'));
+        $approved = count(array_filter($barangays, fn ($item) => ($item['status'] ?? '') === 'approved'));
+        $pending = count(array_filter($barangays, fn ($item) => ($item['status'] ?? '') === 'pending'));
+        $rejected = count(array_filter($barangays, fn ($item) => ($item['status'] ?? '') === 'rejected'));
+        $notSubmitted = count(array_filter($barangays, fn ($item) => ($item['status'] ?? '') === 'not_submitted'));
 
-        $complianceRate = $count > 0 ? round(($compliant / $count) * 100) : 0;
-        $nonComplianceRate = $count > 0 ? round(($nonCompliant / $count) * 100) : 0;
+        $complianceRate = $count > 0 ? round(($approved / $count) * 100) : 0;
+        $nonComplianceRate = $count > 0 ? round((($notSubmitted + $rejected) / $count) * 100) : 0;
         $abyipSubmittedCount = $this->monitoringService->countBarangaysWithAbyipSubmission();
 
         return [
             'total_barangays' => $count,
             'compliance_rate' => $complianceRate,
-            'compliant_count' => $compliant,
+            'compliant_count' => $approved,
             'non_compliance_rate' => $nonComplianceRate,
-            'non_compliant_count' => $nonCompliant,
+            'non_compliant_count' => $notSubmitted + $rejected,
             'abyip_submitted_count' => $abyipSubmittedCount,
+            'approved_count' => $approved,
+            'pending_count' => $pending,
+            'rejected_count' => $rejected,
+            'not_submitted_count' => $notSubmitted,
         ];
     }
 
@@ -216,7 +222,7 @@ class BarangayMonitoringController extends Controller
             $catalog[$slug] = [
                 'slug' => $slug,
                 'name' => $name,
-                'status' => 'non-compliant',
+                'status' => 'not_submitted',
                 'reports' => 0,
                 'on_time' => 0,
                 'active_programs' => 0,
@@ -296,8 +302,9 @@ class BarangayMonitoringController extends Controller
         $abyipStatus = $this->monitoringService->resolveAbyipStatus($barangayId);
 
         $details = match ($abyipStatus['status']) {
-            'compliant' => 'ABYIP report approved',
+            'approved' => 'ABYIP report approved',
             'pending' => 'ABYIP report submitted and awaiting review',
+            'rejected' => 'ABYIP report rejected',
             default => 'No ABYIP report submitted',
         };
 

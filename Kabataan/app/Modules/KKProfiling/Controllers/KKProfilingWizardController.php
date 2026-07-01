@@ -61,27 +61,40 @@ class KKProfilingWizardController extends Controller
         }
 
         $skipDocuments = $request->boolean('skip_documents');
-        $allowedTypes = implode(',', SupportingDocumentTypes::allowed());
         $fileRule = ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'];
 
-        $request->validate([
+        $validationRules = [
             'skip_documents' => ['sometimes', 'boolean'],
-            'document_type' => [$skipDocuments ? 'nullable' : 'sometimes', 'nullable', 'in:'.$allowedTypes],
-            'school_id_front' => $fileRule,
-            'school_id_back' => $fileRule,
-            'national_id_front' => $fileRule,
-            'national_id_back' => $fileRule,
-        ]);
+            'document_type' => [
+                $skipDocuments ? 'nullable' : 'sometimes',
+                'nullable',
+                Rule::in(SupportingDocumentTypes::allowed()),
+            ],
+        ];
+
+        foreach (SupportingDocumentTypes::allowed() as $type) {
+            $validationRules[$type.'_front'] = $fileRule;
+            $validationRules[$type.'_back'] = $fileRule;
+        }
+
+        $request->validate($validationRules);
 
         $documentType = $request->input('document_type');
-        $schoolFront = $request->file('school_id_front');
-        $schoolBack = $request->file('school_id_back');
-        $nationalFront = $request->file('national_id_front');
-        $nationalBack = $request->file('national_id_back');
 
-        $hasSchoolUpload = $schoolFront || $schoolBack;
-        $hasNationalUpload = $nationalFront || $nationalBack;
-        $hasAnyUpload = $hasSchoolUpload || $hasNationalUpload;
+        $uploadsByType = [];
+        foreach (SupportingDocumentTypes::allowed() as $type) {
+            $front = $request->file($type.'_front');
+            $back = $request->file($type.'_back');
+            if ($front || $back) {
+                $uploadsByType[$type] = [
+                    'front' => $front,
+                    'back' => $back,
+                ];
+            }
+        }
+
+        $typesWithUpload = array_keys($uploadsByType);
+        $hasAnyUpload = $typesWithUpload !== [];
 
         if ($skipDocuments && $hasAnyUpload) {
             throw ValidationException::withMessages([
@@ -90,41 +103,33 @@ class KKProfilingWizardController extends Controller
         }
 
         if (! $skipDocuments && $hasAnyUpload) {
-            if ($hasSchoolUpload && $hasNationalUpload) {
+            if (count($typesWithUpload) > 1) {
                 throw ValidationException::withMessages([
                     'document_type' => ['You can only upload one ID type at a time.'],
                 ]);
             }
 
+            $uploadedType = $typesWithUpload[0] ?? null;
+
             if (! $documentType) {
                 throw ValidationException::withMessages([
-                    'document_type' => ['Please select School ID or PhilSys / National ID.'],
+                    'document_type' => ['Please select a document type.'],
                 ]);
             }
 
-            if ($documentType === SupportingDocumentTypes::SCHOOL_ID && $hasNationalUpload) {
+            if ($uploadedType !== null && $documentType !== $uploadedType) {
                 throw ValidationException::withMessages([
-                    'document_type' => ['Selected School ID but National ID files were uploaded.'],
+                    'document_type' => [
+                        'Selected '.SupportingDocumentTypes::label((string) $documentType)
+                        .' but files were uploaded for a different document type.',
+                    ],
                 ]);
             }
 
-            if ($documentType === SupportingDocumentTypes::NATIONAL_ID && $hasSchoolUpload) {
-                throw ValidationException::withMessages([
-                    'document_type' => ['Selected National ID but School ID files were uploaded.'],
-                ]);
-            }
-
-            $sides = match ($documentType) {
-                SupportingDocumentTypes::SCHOOL_ID => [
-                    'front' => $schoolFront,
-                    'back' => $schoolBack,
-                ],
-                SupportingDocumentTypes::NATIONAL_ID => [
-                    'front' => $nationalFront,
-                    'back' => $nationalBack,
-                ],
-                default => [],
-            };
+            $sides = $uploadsByType[$documentType] ?? [
+                'front' => null,
+                'back' => null,
+            ];
 
             $uploadedSides = collect($sides)->filter(fn ($file) => $file instanceof \Illuminate\Http\UploadedFile);
 
@@ -196,7 +201,11 @@ class KKProfilingWizardController extends Controller
         }
 
         if (empty($wizard['email_verified_at'])) {
-            $this->draftService->clearCompletedRegistration();
+            $email = strtolower(trim($wizard['email'] ?? $wizard['step1_data']['email'] ?? ''));
+
+            if ($email === '' || ! $this->draftService->isEmailRegistrationComplete($email, (int) $barangayRecord->id)) {
+                $this->draftService->clearCompletedRegistration();
+            }
         }
 
         $email = strtolower(trim($wizard['email'] ?? $wizard['step1_data']['email'] ?? ''));
@@ -246,11 +255,18 @@ class KKProfilingWizardController extends Controller
             $emailFromCache = strtolower(trim($completed['email'] ?? ''));
 
             if ($completed && $emailFromCache !== '' && hash_equals($hash, sha1($emailFromCache))) {
-                $message = ($completed['auto_approved'] ?? false)
-                    ? 'Your registration is verified. You can log in now.'
-                    : 'Your registration has been submitted. Please wait for SK officials to verify your account before logging in.';
+                $barangayRecord = Barangay::find((int) ($completed['barangay_id'] ?? 0));
 
-                return redirect()->route('login')->with('success', $message);
+                if ($barangayRecord) {
+                    $registration = KabataanRegistration::query()
+                        ->where('barangay_id', $barangayRecord->id)
+                        ->where('email', $emailFromCache)
+                        ->whereIn('status', ['password_set', 'active'])
+                        ->latest('id')
+                        ->first();
+
+                    return $this->renderRegistrationCompleteView($barangayRecord, $emailFromCache, $registration);
+                }
             }
 
             return redirect()->route('login')->with('success', 'Your registration has already been submitted. Please wait for SK officials to verify your account before logging in.');
@@ -262,6 +278,25 @@ class KKProfilingWizardController extends Controller
             return redirect()->route('kkprofiling.signup')->withErrors([
                 'verification' => 'The verification link is invalid.',
             ]);
+        }
+
+        $barangayRecord = Barangay::find((int) $wizard['barangay_id']);
+
+        if (! $barangayRecord) {
+            return redirect()->route('kkprofiling.signup')->withErrors([
+                'verification' => 'Barangay not found for this registration.',
+            ]);
+        }
+
+        if ($this->draftService->isEmailRegistrationComplete($email, (int) $barangayRecord->id)) {
+            $registration = KabataanRegistration::query()
+                ->where('barangay_id', $barangayRecord->id)
+                ->where('email', $email)
+                ->whereIn('status', ['password_set', 'active'])
+                ->latest('id')
+                ->first();
+
+            return $this->renderRegistrationCompleteView($barangayRecord, $email, $registration);
         }
 
         if ($this->draftService->isExpiredWizard($wizard)) {
@@ -284,18 +319,10 @@ class KKProfilingWizardController extends Controller
         $wizard = $this->draftService->markEmailVerified($wizard);
         $this->draftService->syncWizardSession($wizard);
 
-        $barangayRecord = Barangay::find((int) $wizard['barangay_id']);
-
-        if (! $barangayRecord) {
-            return redirect()->route('kkprofiling.signup')->withErrors([
-                'verification' => 'Barangay not found for this registration.',
-            ]);
-        }
-
         return view('kkprofiling::set_password', [
             'wizardToken' => $token,
             'barangay' => $barangayRecord->name,
-            'slug' => $this->barangaySlugFromId((int) $wizard['barangay_id']),
+            'slug' => $this->barangaySlugFromId((int) $barangayRecord->id),
             'email' => $email,
             'emailVerified' => true,
             'barangayLogoUrl' => KKProfilingController::getBarangayLogoUrl($barangayRecord->id),
@@ -309,6 +336,21 @@ class KKProfilingWizardController extends Controller
         $wizard = $this->draftService->loadByToken($token);
 
         if (! $wizard) {
+            $completed = $this->draftService->resolveCompletedByWizardToken($token);
+
+            if (is_array($completed) && ! empty($completed['email'])) {
+                $registration = KabataanRegistration::query()
+                    ->where('barangay_id', (int) ($completed['barangay_id'] ?? 0))
+                    ->where('email', strtolower(trim((string) $completed['email'])))
+                    ->whereIn('status', ['password_set', 'active'])
+                    ->latest('id')
+                    ->first();
+
+                if ($registration) {
+                    return $this->finalizeRegistrationResponse($registration);
+                }
+            }
+
             throw ValidationException::withMessages([
                 'draft' => ['This registration link has expired or was already completed.'],
             ]);
@@ -870,5 +912,26 @@ class KKProfilingWizardController extends Controller
         ];
 
         return $slugMap[$name] ?? strtolower(str_replace(' ', '-', $name));
+    }
+
+    private function renderRegistrationCompleteView(
+        Barangay $barangayRecord,
+        string $email,
+        ?KabataanRegistration $registration = null,
+    ): \Illuminate\View\View {
+        $this->draftService->markRegistrationComplete($email, (int) $barangayRecord->id, $registration);
+
+        $autoApproved = $registration
+            ? RegistrationEvaluationService::isAutoApprovedStatus($registration->evaluation_status)
+            : false;
+
+        return view('kkprofiling::set_password', [
+            'barangay' => $barangayRecord->name,
+            'slug' => $this->barangaySlugFromId((int) $barangayRecord->id),
+            'email' => $email,
+            'registrationAlreadyComplete' => true,
+            'registrationAutoApproved' => $autoApproved,
+            'barangayLogoUrl' => KKProfilingController::getBarangayLogoUrl($barangayRecord->id),
+        ]);
     }
 }

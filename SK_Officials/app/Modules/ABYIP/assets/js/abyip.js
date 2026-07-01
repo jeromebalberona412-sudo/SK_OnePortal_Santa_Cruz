@@ -289,23 +289,20 @@ function renderRecordsTable() {
         const rejectedRecord = abyipRecords.find(function (record) {
             return String(record.status || '').toLowerCase() === 'rejected';
         });
-        const hasBlockingRecord = abyipRecords.some(function (record) {
-            const status = String(record.status || '').toLowerCase();
-            return status === 'pending' || status === 'approved';
-        });
+        const blockingRecord = getBlockingRecordForYear();
 
         if (!abyipSubmissionStatus.can_submit) {
             createBtn.textContent = 'Upload ABYIP';
-            createBtn.disabled = true;
+            createBtn.disabled = false;
             createBtn.title = abyipSubmissionStatus.message || 'ABYIP submission is not available.';
         } else if (rejectedRecord) {
             createBtn.textContent = 'Upload ABYIP';
             createBtn.disabled = false;
             createBtn.title = 'Upload a corrected ABYIP PDF for review';
-        } else if (hasBlockingRecord) {
+        } else if (blockingRecord) {
             createBtn.textContent = 'Create New ABYIP';
-            createBtn.disabled = true;
-            createBtn.title = 'Delete or wait for review of the existing ABYIP before creating another';
+            createBtn.disabled = false;
+            createBtn.title = 'Only one ABYIP submission is allowed per calendar year';
         } else {
             createBtn.textContent = 'Upload ABYIP';
             createBtn.disabled = false;
@@ -1107,6 +1104,40 @@ function resetPdfUploadModal() {
     }
 }
 
+function getBlockingRecordForYear() {
+    const calendarYear = Number(abyipSubmissionStatus.fiscal_year) || new Date().getFullYear();
+
+    return abyipRecords.find(function (record) {
+        const recordYear = Number(record.fiscal_year || record.calendar_year) || calendarYear;
+        if (recordYear !== calendarYear) {
+            return false;
+        }
+
+        const status = String(record.status || '').toLowerCase();
+        return status === 'pending' || status === 'approved';
+    }) || null;
+}
+
+function notifyExistingAbyipBlocked() {
+    const calendarYear = Number(abyipSubmissionStatus.fiscal_year) || new Date().getFullYear();
+    const existing = getBlockingRecordForYear();
+    const status = existing ? String(existing.status || 'pending').toLowerCase() : 'pending';
+
+    if (status === 'rejected') {
+        showNotification(
+            'Your ABYIP submission for CY ' + calendarYear + ' was rejected. Please use Upload ABYIP to submit a corrected file.',
+            'error',
+        );
+        return;
+    }
+
+    showNotification(
+        'Only one ABYIP submission is allowed per calendar year (CY ' + calendarYear + '). '
+        + 'Delete the existing record or wait for the current submission to be reviewed before creating another.',
+        'error',
+    );
+}
+
 function openCreateOptionsModal() {
     if (!abyipSubmissionStatus.can_submit) {
         showNotification(abyipSubmissionStatus.message || 'ABYIP submission is not available.', 'error');
@@ -1122,8 +1153,8 @@ function openCreateOptionsModal() {
         return;
     }
 
-    if (abyipRecords.length >= 1) {
-        showNotification('Cannot create a new ABYIP. An existing record is already present. Please delete it first before creating a new one.', 'error');
+    if (getBlockingRecordForYear()) {
+        notifyExistingAbyipBlocked();
         return;
     }
 

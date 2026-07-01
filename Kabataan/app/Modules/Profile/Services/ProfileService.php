@@ -8,6 +8,7 @@ use App\Models\KkSurveyResponse;
 use App\Models\User;
 use App\Modules\KKProfiling\Controllers\KKProfilingController;
 use App\Services\CloudinaryService;
+use App\Support\SupportingDocumentTypes;
 
 class ProfileService
 {
@@ -86,12 +87,7 @@ class ProfileService
         return collect($documents)
             ->flatMap(function (array $document) use ($cloudinary) {
                 $type = (string) ($document['type'] ?? 'document');
-                $baseLabel = match ($type) {
-                    'school_id' => 'School ID',
-                    'barangay_clearance' => 'Barangay Clearance',
-                    'national_id' => 'PhilSys / National ID',
-                    default => 'Supporting Document',
-                };
+                $baseLabel = SupportingDocumentTypes::label($type);
 
                 if (isset($document['sides']) && is_array($document['sides'])) {
                     return collect($document['sides'])->map(function (array $sideDoc, string $side) use ($type, $baseLabel, $cloudinary) {

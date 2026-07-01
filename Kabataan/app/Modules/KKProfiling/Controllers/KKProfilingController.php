@@ -1179,9 +1179,27 @@ class KKProfilingController extends Controller
 
         $registration = KabataanRegistration::find($registrationId);
         
-        if (!$registration || $registration->status !== 'email_verified') {
+        if (!$registration || !in_array($registration->status, ['email_verified', 'password_set', 'active'], true)) {
             return redirect()->route('kkprofiling.signup')->withErrors([
                 'password' => 'Invalid registration session.',
+            ]);
+        }
+
+        if (in_array($registration->status, ['password_set', 'active'], true)) {
+            $draftService = app(KkRegistrationDraftService::class);
+            $draftService->markRegistrationComplete(
+                strtolower(trim($registration->email)),
+                (int) $registration->barangay_id,
+                $registration,
+            );
+
+            return view('kkprofiling::set_password', [
+                'barangay' => $registration->barangay->name,
+                'slug' => $barangay,
+                'email' => $registration->email,
+                'registrationAlreadyComplete' => true,
+                'registrationAutoApproved' => RegistrationEvaluationService::isAutoApprovedStatus($registration->evaluation_status),
+                'barangayLogoUrl' => self::getBarangayLogoUrl($registration->barangay_id),
             ]);
         }
 

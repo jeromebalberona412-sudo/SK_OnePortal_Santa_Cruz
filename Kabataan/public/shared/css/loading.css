@@ -69,10 +69,13 @@ body.gl-loading-active input[readonly] {
     border-right-color: #fdc020;
     border-bottom-color: #0450a8;
     border-radius: 50%;
-    animation: glSpin 1s linear infinite;
+    box-sizing: border-box;
+    transform-origin: center center;
+    animation: glSpin 0.9s linear infinite;
 }
 
 @keyframes glSpin {
+    from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
 

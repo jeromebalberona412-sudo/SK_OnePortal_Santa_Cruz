@@ -99,29 +99,29 @@ class BarangayMonitoringService
 
         if ($reports === []) {
             return [
-                'status' => 'non-compliant',
+                'status' => 'not_submitted',
                 'submitted_by' => null,
                 'submitted_by_role' => null,
                 'latest_report' => null,
             ];
         }
 
-        $approved = collect($reports)->first(fn (array $report) => ($report['status'] ?? '') === 'approved');
+        $currentYear = (int) now()->format('Y');
+        $currentYearReport = collect($reports)->first(
+            fn (array $report) => (int) ($report['fiscal_year'] ?? 0) === $currentYear
+        );
+        $latest = $currentYearReport ?? $reports[0];
+        $status = strtolower((string) ($latest['status'] ?? Abyip::STATUS_PENDING));
 
-        if ($approved !== null) {
-            return [
-                'status' => 'compliant',
-                'submitted_by' => $approved['submitted_by'] ?? null,
-                'submitted_by_role' => $approved['submitted_by_role'] ?? null,
-                'latest_report' => $approved,
-            ];
+        if (! in_array($status, [Abyip::STATUS_PENDING, Abyip::STATUS_APPROVED, Abyip::STATUS_REJECTED], true)) {
+            $status = Abyip::STATUS_PENDING;
         }
 
         return [
-            'status' => 'pending',
-            'submitted_by' => $reports[0]['submitted_by'] ?? null,
-            'submitted_by_role' => $reports[0]['submitted_by_role'] ?? null,
-            'latest_report' => $reports[0],
+            'status' => $status,
+            'submitted_by' => $latest['submitted_by'] ?? null,
+            'submitted_by_role' => $latest['submitted_by_role'] ?? null,
+            'latest_report' => $latest,
         ];
     }
 

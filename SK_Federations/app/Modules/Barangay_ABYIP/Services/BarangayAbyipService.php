@@ -131,7 +131,7 @@ class BarangayAbyipService
                 'status' => Abyip::STATUS_PENDING,
                 'reviewed_at' => null,
                 'reviewed_by_user_id' => null,
-                'rejection_reason' => 'Revoked: '.$reason,
+                'rejection_reason' => null,
             ]);
         });
 

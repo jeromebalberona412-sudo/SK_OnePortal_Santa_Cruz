@@ -1822,8 +1822,52 @@ function showEmailVerification(email) {
    SET PASSWORD PAGE (wizard token + legacy)
 ═══════════════════════════════════════════════════════════════ */
 (function () {
+    if (!document.body.classList.contains('kkp-setpw-page')) {
+        return;
+    }
+
+    const successModal = document.getElementById('kkpRegSuccessModal');
+    const successMessageEl = document.getElementById('kkpRegSuccessMessage');
+
+    function showSuccessModal(message, autoApproved = false) {
+        if (!successModal) return;
+
+        const titleEl = document.getElementById('kkpRegSuccessTitle');
+        const loginBtn = successModal.querySelector('.kkp-reg-success-modal-btn');
+
+        if (titleEl) {
+            titleEl.textContent = autoApproved
+                ? 'Registration Verified!'
+                : 'Registration Submitted Successfully';
+        }
+
+        if (successMessageEl) {
+            successMessageEl.textContent = message || (autoApproved
+                ? 'Your details match a previous KK profiling record. You can log in now.'
+                : 'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.');
+        }
+
+        if (loginBtn) {
+            loginBtn.textContent = 'Go to Login';
+        }
+
+        successModal.hidden = false;
+        successModal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('kkp-wizard-success-modal-open');
+    }
+
+    if (document.body.dataset.registrationAlreadyComplete === '1') {
+        showSuccessModal(
+            document.body.dataset.autoApproved === '1'
+                ? 'Your details match a previous KK profiling record. You can log in now.'
+                : 'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.',
+            document.body.dataset.autoApproved === '1',
+        );
+        return;
+    }
+
     const form = document.getElementById('setPasswordForm');
-    if (!form || !document.body.classList.contains('kkp-setpw-page')) {
+    if (!form) {
         return;
     }
 
@@ -1833,8 +1877,6 @@ function showEmailVerification(email) {
     const passwordError = document.getElementById('passwordError');
     const confirmPasswordError = document.getElementById('confirmPasswordError');
     const submitBtn = document.getElementById('setpwSubmitBtn');
-    const successModal = document.getElementById('kkpRegSuccessModal');
-    const successMessageEl = document.getElementById('kkpRegSuccessMessage');
     const finalizeUrl = form.dataset.finalizeUrl || '';
     const isWizardToken = Boolean(form.dataset.wizardToken);
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -1901,33 +1943,6 @@ function showEmailVerification(email) {
     function clearErrors() {
         setFieldError(passwordInput, passwordError, '');
         setFieldError(confirmInput, confirmPasswordError, '');
-    }
-
-    function showSuccessModal(message, autoApproved = false) {
-        if (!successModal) return;
-
-        const titleEl = document.getElementById('kkpRegSuccessTitle');
-        const loginBtn = successModal.querySelector('.kkp-reg-success-modal-btn');
-
-        if (titleEl) {
-            titleEl.textContent = autoApproved
-                ? 'Registration Verified!'
-                : 'Registration Submitted Successfully';
-        }
-
-        if (successMessageEl) {
-            successMessageEl.textContent = message || (autoApproved
-                ? 'Your details match a previous KK profiling record. You can log in now.'
-                : 'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.');
-        }
-
-        if (loginBtn) {
-            loginBtn.textContent = 'Go to Login';
-        }
-
-        successModal.hidden = false;
-        successModal.setAttribute('aria-hidden', 'false');
-        document.body.classList.add('kkp-wizard-success-modal-open');
     }
 
     function updateConfirmMatch() {

@@ -184,9 +184,7 @@ class KKProfilingRequestsController extends Controller
                 continue;
             }
 
-            $surveyPayload['supporting_documents'] = is_array($survey->supporting_documents)
-                ? $survey->supporting_documents
-                : [];
+            $surveyPayload['supporting_documents'] = $this->supportingDocumentService->formatForApi($registration);
             $surveyPayload['id_verification'] = null;
 
             $data->push($surveyPayload);

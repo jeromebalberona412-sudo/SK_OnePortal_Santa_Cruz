@@ -13,7 +13,7 @@
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
-<body class="youth-login-page kkp-setpw-page">
+<body class="youth-login-page kkp-setpw-page" @if(!empty($registrationAlreadyComplete)) data-registration-already-complete="1" data-auto-approved="{{ !empty($registrationAutoApproved) ? '1' : '0' }}" @endif>
 
     @include('dashboard::loading')
 
@@ -71,6 +71,7 @@
                     <div class="kkp-setpw-alert kkp-setpw-alert-error">{{ $errors->first() }}</div>
                 @endif
 
+                @if(empty($registrationAlreadyComplete))
                 <form
                     id="setPasswordForm"
                     class="kkp-setpw-form"
@@ -133,6 +134,9 @@
                         <span class="setpw-btn-text">Complete Registration</span>
                     </button>
                 </form>
+                @else
+                    <p class="kkp-setpw-alert kkp-setpw-alert-success">Your password is already set. You can proceed to login.</p>
+                @endif
             </div>
         </div>
     </main>

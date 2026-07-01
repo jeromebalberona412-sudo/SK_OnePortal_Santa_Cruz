@@ -87,30 +87,32 @@
     @endif
 
     <section class="bm-card bm-table-card">
-        <div class="bm-table-toolbar">
-            <div class="bm-table-toolbar-title">
+        <div class="bm-table-header">
+            <div class="bm-table-header-title">
                 <h3><i class="fas fa-file-invoice-dollar"></i> Submitted ABYIP Reports</h3>
                 <p>Review ABYIP submissions from this barangay</p>
             </div>
-            <div class="bm-table-toolbar-filters">
-                <div class="bm-search-wrap">
-                    <i class="fas fa-search"></i>
-                    <input type="search" id="abyipSearchInput" placeholder="Search reports..." aria-label="Search ABYIP reports">
-                </div>
-                <select id="abyipFilterYear" aria-label="Filter by year">
-                    <option value="all">All Years</option>
-                    @foreach(collect($barangayData['abyip']['reports'] ?? [])->pluck('fiscal_year')->unique()->sortDesc() as $year)
-                        <option value="{{ $year }}">{{ $year }}</option>
-                    @endforeach
-                </select>
-                <select id="abyipFilterStatus" aria-label="Filter by status">
-                    <option value="all">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
-                </select>
-            </div>
         </div>
+
+        <div class="bm-table-filters">
+            <div class="bm-search-wrap">
+                <i class="fas fa-search"></i>
+                <input type="search" id="abyipSearchInput" placeholder="Search reports..." aria-label="Search ABYIP reports">
+            </div>
+            <select id="abyipFilterYear" aria-label="Filter by year">
+                <option value="all">All Years</option>
+                @foreach(collect($barangayData['abyip']['reports'] ?? [])->pluck('fiscal_year')->unique()->sortDesc() as $year)
+                    <option value="{{ $year }}">{{ $year }}</option>
+                @endforeach
+            </select>
+            <select id="abyipFilterStatus" aria-label="Filter by status">
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+            </select>
+        </div>
+
         <div class="bm-table-wrap">
             <table class="bm-table bm-data-table bm-data-table--abyip" id="abyipTable">
                 <thead>
@@ -140,7 +142,12 @@
                             </span>
                         </td>
                         <td data-label="Actions">
-                            <button type="button" class="bm-view-btn" data-abyip-view="{{ $report['id'] }}">View</button>
+                            <div class="bm-row-actions">
+                                <button type="button" class="bm-view-btn" data-abyip-view="{{ $report['id'] }}">View</button>
+                                @if(strtolower($report['status'] ?? '') === 'approved')
+                                    <button type="button" class="bm-revoke-btn" data-abyip-revoke="{{ $report['id'] }}">Revoked</button>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -239,14 +246,23 @@
                 <button type="button" class="action-btn reject-btn" onclick="showRejectForm()">Reject</button>
                 <button type="button" class="action-btn approve-btn" onclick="submitApproval()">Approve</button>
             </div>
+        </div>
+    </div>
+</div>
 
-            <div class="modal-actions" id="revokeActions" style="display:none;">
-                <button type="button" class="action-btn revoke-btn" onclick="showRevokeForm()">Revoke Approval</button>
+<div id="revokeModal" class="view-modal bm-revoke-modal">
+    <div class="view-modal-content bm-revoke-modal-content">
+        <div class="view-modal-header">
+            <h3 class="view-modal-title">Revoke ABYIP Approval</h3>
+            <div class="view-modal-controls">
+                <button type="button" class="view-modal-control-btn" onclick="closeRevokeModal()" title="Close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-
-            <div class="rejection-form" id="revokeForm" style="display:none;">
-                <h4 class="form-title">Revoke Approval</h4>
-                <p class="form-help">Type <strong>Confirm to revoked</strong> below to continue.</p>
+        </div>
+        <div class="view-modal-body">
+            <div class="rejection-form" id="revokeForm">
+                <p class="form-help">Type <strong>Confirm to revoked</strong> below to continue. The submission will return to <strong>Pending</strong> status.</p>
                 <div class="form-group">
                     <label for="abyipRevokeConfirm">Confirmation <span class="required">*</span></label>
                     <input type="text" id="abyipRevokeConfirm" class="form-control" maxlength="20" placeholder="Confirm to revoked">
@@ -265,7 +281,7 @@
                     <span class="error-message" id="revokeReasonError"></span>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="form-btn cancel-btn" onclick="hideRevokeForm()">Cancel</button>
+                    <button type="button" class="form-btn cancel-btn" onclick="closeRevokeModal()">Cancel</button>
                     <button type="button" class="form-btn submit-btn revoke-submit-btn" onclick="submitRevocation()">Revoke Approval</button>
                 </div>
             </div>

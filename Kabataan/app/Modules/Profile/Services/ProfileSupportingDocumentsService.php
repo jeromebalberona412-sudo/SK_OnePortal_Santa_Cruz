@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use App\Support\SupportingDocumentTypes;
 
 class ProfileSupportingDocumentsService
 {
@@ -59,9 +60,9 @@ class ProfileSupportingDocumentsService
             ]);
         }
 
-        if (! in_array($documentType, ['school_id', 'national_id'], true)) {
+        if (! in_array($documentType, SupportingDocumentTypes::allowed(), true)) {
             throw ValidationException::withMessages([
-                'document_type' => ['Invalid document type selected.'],
+                'document_type' => ['The selected document type is invalid.'],
             ]);
         }
 

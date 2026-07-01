@@ -10,11 +10,13 @@ use App\Modules\Profile\Services\ProfileImageService;
 use App\Modules\Profile\Services\ProfileParticipationService;
 use App\Modules\Profile\Services\ProfileService;
 use App\Modules\Profile\Services\ProfileSupportingDocumentsService;
+use App\Support\SupportingDocumentTypes;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -394,21 +396,20 @@ class ProfileController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         }
 
-        $request->validate([
-            'document_type' => ['required', 'in:school_id,national_id'],
-            'school_id_front' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
-            'school_id_back' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
-            'national_id_front' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
-            'national_id_back' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
-        ]);
+        $validationRules = [
+            'document_type' => ['required', Rule::in(SupportingDocumentTypes::allowed())],
+        ];
+
+        foreach (SupportingDocumentTypes::allowed() as $type) {
+            $validationRules[$type.'_front'] = ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'];
+            $validationRules[$type.'_back'] = ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'];
+        }
+
+        $request->validate($validationRules);
 
         $documentType = (string) $request->input('document_type');
-        $front = $documentType === 'school_id'
-            ? $request->file('school_id_front')
-            : $request->file('national_id_front');
-        $back = $documentType === 'school_id'
-            ? $request->file('school_id_back')
-            : $request->file('national_id_back');
+        $front = $request->file($documentType.'_front');
+        $back = $request->file($documentType.'_back');
 
         if (! $front || ! $back) {
             return response()->json([

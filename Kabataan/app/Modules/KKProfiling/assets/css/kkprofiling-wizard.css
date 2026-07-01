@@ -687,7 +687,10 @@
 }
 
 .kkp-wizard-registration-complete .kkp-wizard-progress,
-.kkp-wizard-registration-complete #kkpWizardStep3 .verify-help {
+.kkp-wizard-registration-complete #kkpWizardStep3 .verify-help,
+.kkp-wizard-registration-complete #kkpWizardStep3 .verify-card,
+.kkp-wizard-registration-complete #kkpWizardStep3 .setpw-card,
+.kkp-wizard-registration-complete #kkpWizardStep3 .kkp-wizard-email-error {
     display: none !important;
 }
 

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\KabataanRegistration;
+use App\Models\KkSurveyResponse;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -16,10 +17,9 @@ class KkSupportingDocumentService
      */
     public function formatForApi(KabataanRegistration $registration, string $documentRouteName = 'kkprofiling-requests.document'): array
     {
-        $formData = $registration->form_data ?? [];
-        $documents = $formData['supporting_documents'] ?? [];
+        $documents = $this->resolveStoredDocuments($registration);
 
-        if (! is_array($documents) || $documents === []) {
+        if ($documents === []) {
             return [];
         }
 
@@ -67,13 +67,38 @@ class KkSupportingDocumentService
         return $formatted;
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function resolveStoredDocuments(KabataanRegistration $registration): array
+    {
+        $formData = $registration->form_data ?? [];
+        $documents = $formData['supporting_documents'] ?? [];
+
+        if (is_array($documents) && $documents !== []) {
+            return array_values($documents);
+        }
+
+        $survey = KkSurveyResponse::query()
+            ->where('kabataan_registration_id', $registration->id)
+            ->first();
+
+        $surveyDocuments = $survey?->supporting_documents;
+
+        if (! is_array($surveyDocuments) || $surveyDocuments === []) {
+            return [];
+        }
+
+        return array_values($surveyDocuments);
+    }
+
     public function streamForOfficial(
         KabataanRegistration $registration,
         int $documentIndex,
         string $side,
         bool $download = false,
     ): Response {
-        $documents = $registration->form_data['supporting_documents'] ?? [];
+        $documents = $this->resolveStoredDocuments($registration);
 
         if (! is_array($documents) || ! isset($documents[$documentIndex])) {
             abort(404, 'Document not found.');
@@ -172,6 +197,9 @@ class KkSupportingDocumentService
         return match ($type) {
             'school_id' => 'School ID',
             'national_id' => 'PhilSys / National ID',
+            'voters_id' => "Voter's ID",
+            'philhealth_id' => 'PhilHealth ID',
+            'other_id' => 'Other valid proof of identity or residency',
             'barangay_clearance' => 'Barangay Clearance',
             default => 'Supporting Document',
         };

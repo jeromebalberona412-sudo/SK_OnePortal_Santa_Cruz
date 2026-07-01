@@ -429,11 +429,9 @@
     }
 
     function showRegistrationCompleteState(autoApproved = registrationAutoApproved) {
-        if (registrationCompleted) {
-            return;
-        }
-
         registrationCompleted = true;
+        root.dataset.registrationComplete = '1';
+        root.dataset.autoApproved = autoApproved ? '1' : '0';
         stopRegistrationCompletionPoll();
 
         if (window.kkpStopResendTimer) {
@@ -762,6 +760,30 @@
         }
     }
 
+    function lockResendButton() {
+        const resendBtn = document.getElementById('resendEmailBtn');
+        const timer = document.getElementById('resendTimer');
+
+        if (resendBtn) {
+            resendBtn.disabled = true;
+            resendBtn.hidden = false;
+        }
+
+        if (timer) {
+            timer.hidden = true;
+            timer.textContent = '';
+        }
+    }
+
+    function startResendCooldownAfterSend() {
+        if (window.startResendTimer) {
+            window.startResendTimer();
+            return;
+        }
+
+        lockResendButton();
+    }
+
     async function prepareStep3(options = {}) {
         const skipAutoSend = options.skipAutoSend === true;
         const email = getDraftEmail();
@@ -781,15 +803,23 @@
                 enableResendButton();
             }
         } else if (verificationSent) {
-            if (window.restoreResendTimer) {
-                window.restoreResendTimer();
+            const email = (displayEmail?.textContent || getDraftEmail() || 'default').trim().toLowerCase();
+            const cooldownKey = 'kkp_setpw_resend_' + email;
+            const until = parseInt(sessionStorage.getItem(cooldownKey) || '0', 10);
+            const remaining = Math.ceil((until - Date.now()) / 1000);
+
+            if (remaining > 0 && window.startResendTimer) {
+                window.startResendTimer({ seconds: remaining, persist: false });
+            } else if (until > 0 && remaining <= 0) {
+                sessionStorage.removeItem(cooldownKey);
+                enableResendButton();
             } else if (window.startResendTimer) {
                 window.startResendTimer();
             } else {
-                enableResendButton();
+                lockResendButton();
             }
         } else {
-            enableResendButton();
+            lockResendButton();
         }
 
         if (!registrationCompleted) {
@@ -1037,7 +1067,7 @@
         const files = getActiveDocumentFiles();
 
         if (!documentType) {
-            showDocUploadError('Please select School ID or PhilSys / National ID.');
+            showDocUploadError('Please select a document type.');
             return false;
         }
 
@@ -1056,16 +1086,8 @@
         try {
             const formData = new FormData();
             formData.append('document_type', documentType);
-
-            if (documentType === 'school_id') {
-                formData.append('school_id_front', files.front);
-                formData.append('school_id_back', files.back);
-            }
-
-            if (documentType === 'national_id') {
-                formData.append('national_id_front', files.front);
-                formData.append('national_id_back', files.back);
-            }
+            formData.append(`${documentType}_front`, files.front);
+            formData.append(`${documentType}_back`, files.back);
 
             const response = await postFormData(`${apiBase}/step-2`, formData);
 
@@ -1096,10 +1118,7 @@
         } catch (error) {
             const message = error.errors?.document_type?.[0]
                 || error.errors?.registration?.[0]
-                || error.errors?.school_id_front?.[0]
-                || error.errors?.school_id_back?.[0]
-                || error.errors?.national_id_front?.[0]
-                || error.errors?.national_id_back?.[0]
+                || Object.values(error.errors || {}).flat?.()?.[0]
                 || error.message;
 
             showDocUploadError(message);
@@ -1311,6 +1330,15 @@
 
     async function clearDraftOnRefresh() {
         if (!isBrowserReload() || registrationCompleted) {
+            return false;
+        }
+
+        const preserveStep = Math.max(1, Math.min(3, restoredStep || initialStep));
+        const shouldPreserveStep3 = preserveStep >= 3
+            || verificationSentOnLoad
+            || root.dataset.verificationSent === '1';
+
+        if (shouldPreserveStep3) {
             return false;
         }
 

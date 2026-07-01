@@ -215,19 +215,27 @@ document.addEventListener('DOMContentLoaded', function() {
             if (submitBtn && !submitBtn.disabled) {
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = `
-                    <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                         <circle cx="12" cy="12" r="10" stroke-width="4" stroke-opacity="0.25"/>
                         <path d="M12 2a10 10 0 0 1 10 10" stroke-width="4" stroke-linecap="round"/>
                     </svg>
                     <span>Logging in...</span>
                 `;
 
-                const style = document.createElement('style');
-                style.textContent = `
-                    @keyframes spin { to { transform: rotate(360deg); } }
-                    .spinner { animation: spin 1s linear infinite; }
-                `;
-                document.head.appendChild(style);
+                if (!document.getElementById('youth-login-spinner-style')) {
+                    const style = document.createElement('style');
+                    style.id = 'youth-login-spinner-style';
+                    style.textContent = `
+                        @keyframes youthLoginSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                        .youth-submit-btn .spinner {
+                            display: inline-block;
+                            vertical-align: middle;
+                            transform-origin: center center;
+                            animation: youthLoginSpin 0.9s linear infinite;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
             }
         });
     }

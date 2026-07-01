@@ -15,7 +15,7 @@
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
-<body class="homepage-body kkp-form-page kkp-wizard-mode">
+<body class="homepage-body kkp-form-page kkp-wizard-mode @if($registrationComplete ?? false) kkp-wizard-registration-complete kkp-wizard-success-modal-open @endif">
 
     @include('dashboard::loading')
 
@@ -118,7 +118,7 @@
 
     @include('kkprofiling::partials.kk-profiling-signature-modals')
 
-    <div class="kkp-reg-success-overlay" id="kkpRegSuccessModal" hidden aria-hidden="true">
+    <div class="kkp-reg-success-overlay" id="kkpRegSuccessModal" @if(empty($registrationComplete ?? false)) hidden @endif aria-hidden="{{ ($registrationComplete ?? false) ? 'false' : 'true' }}">
         <div class="kkp-reg-success-modal" role="dialog" aria-labelledby="kkpRegSuccessTitle" aria-modal="true">
             <div class="kkp-reg-success-modal-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

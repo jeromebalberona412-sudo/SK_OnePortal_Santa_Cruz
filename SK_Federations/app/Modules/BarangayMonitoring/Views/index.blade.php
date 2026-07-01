@@ -103,9 +103,10 @@
                     <div style="display:flex;gap:8px;flex-wrap:wrap;">
                         <select id="bmFilterStatus" onchange="bmFilterBarangays()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#475569;background:#fff;cursor:pointer;">
                             <option value="all">All Status</option>
-                            <option value="compliant">Compliant</option>
+                            <option value="approved">Approved</option>
                             <option value="pending">Pending</option>
-                            <option value="non-compliant">Non-Compliant</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="not_submitted">Not Submitted</option>
                         </select>
                         <select id="bmFilterBarangay" onchange="bmFilterBarangays()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#475569;background:#fff;cursor:pointer;">
                             <option value="all">All Barangays</option>
@@ -157,7 +158,15 @@
                                         </div>
                                         <h4>{{ $barangay['name'] }}</h4>
                                     </div>
-                                    <span class="bm-status {{ $barangay['status'] }}">{{ ucfirst(str_replace('-', ' ', $barangay['status'])) }}</span>
+                                    @php
+                                        $statusLabel = match ($barangay['status'] ?? 'not_submitted') {
+                                            'approved' => 'Approved',
+                                            'pending' => 'Pending',
+                                            'rejected' => 'Rejected',
+                                            default => 'Not Submitted',
+                                        };
+                                    @endphp
+                                    <span class="bm-status {{ $barangay['status'] }}">{{ $statusLabel }}</span>
                                 </div>
                                 @if(!empty($barangay['submitted_by']))
                                     <div class="bm-list-meta">
