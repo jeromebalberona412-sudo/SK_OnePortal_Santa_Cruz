@@ -28,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(User::class, AccountPolicy::class);
         Gate::policy(OfficialProfile::class, AccountPolicy::class);
-        Gate::define('manage-accounts', fn (User $user) => $user->isSkFed());
+        Gate::define('manage-accounts', fn (User $user) => $user->isFederationAdministrator());
 
         $applicationUrl = (string) config('app.url');
 
@@ -49,12 +49,15 @@ class AppServiceProvider extends ServiceProvider
         ], function ($view): void {
             $user = Auth::user();
 
+            $user?->loadMissing('officialProfile');
+
             $view->with([
                 'user' => $user,
                 'avatar' => asset('Images/SK_Fed_profile.png'),
-                'formattedRole' => match ((string) ($user?->role ?? '')) {
-                    'sk_fed' => 'SK Federation',
-                    'admin' => 'Administrator',
+                'formattedRole' => match (true) {
+                    $user?->isSkFed() => 'SK Federation',
+                    $user?->hasFederationLeadershipAccess() => (string) ($user->officialProfile?->federation_position ?? 'SK Federation'),
+                    (string) ($user?->role ?? '') === 'admin' => 'Administrator',
                     default => $user?->role
                         ? ucwords(str_replace('_', ' ', (string) $user->role))
                         : 'SK Federation',

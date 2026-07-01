@@ -2,6 +2,7 @@
 
 namespace App\Modules\Accounts\Services;
 
+use App\Modules\Accounts\Models\OfficialProfile;
 use App\Modules\Accounts\Models\OfficialTerm;
 use App\Modules\Shared\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,8 +30,23 @@ class ChairpersonFederationSyncService
             return;
         }
 
-        if (! $user->has_federation_access) {
-            $user->setHasFederationAccess(true);
+        $this->syncPortalAccessFromFederationPosition(
+            $user,
+            $user->officialProfile?->federation_position,
+        );
+    }
+
+    public function syncPortalAccessFromFederationPosition(User $user, ?string $federationPosition): void
+    {
+        if ($user->role !== User::ROLE_SK_OFFICIAL) {
+            return;
+        }
+
+        $normalized = trim((string) $federationPosition);
+        $shouldHaveAccess = in_array($normalized, OfficialProfile::FEDERATION_PORTAL_ACCESS_POSITIONS, true);
+
+        if ((bool) $user->has_federation_access !== $shouldHaveAccess) {
+            $user->setHasFederationAccess($shouldHaveAccess);
         }
     }
 
@@ -76,14 +92,23 @@ class ChairpersonFederationSyncService
     {
         User::query()
             ->where('tenant_id', $tenantId)
-            ->tap(function (Builder $query): void {
-                $this->applyFederationRosterMemberConstraint($query);
-            })
+            ->where('role', User::ROLE_SK_OFFICIAL)
+            ->whereNull('deleted_at')
             ->with('officialProfile')
             ->each(function (User $user): void {
                 $position = (string) ($user->officialProfile?->position ?? '');
-                if ($position !== '') {
-                    $this->syncForUser($user, $position);
+
+                if ($position !== '' && $this->isChairpersonPosition($position)) {
+                    $this->syncPortalAccessFromFederationPosition(
+                        $user,
+                        $user->officialProfile?->federation_position,
+                    );
+
+                    return;
+                }
+
+                if ($user->has_federation_access) {
+                    $user->setHasFederationAccess(false);
                 }
             });
     }

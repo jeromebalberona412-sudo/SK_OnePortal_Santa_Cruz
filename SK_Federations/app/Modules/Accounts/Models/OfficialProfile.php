@@ -23,6 +23,12 @@ class OfficialProfile extends Model
         'Sergeant at Arms',
     ];
 
+    /** Federation portal login is limited to these assigned roles for SK Officials chairpersons. */
+    public const FEDERATION_PORTAL_ACCESS_POSITIONS = [
+        'President',
+        'Vice President',
+    ];
+
     public const OFFICIAL_POSITIONS = [
         'Chairperson',
         'Secretary',

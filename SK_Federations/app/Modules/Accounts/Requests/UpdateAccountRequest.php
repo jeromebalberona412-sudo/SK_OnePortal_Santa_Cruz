@@ -13,14 +13,19 @@ class UpdateAccountRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isSkFed() ?? false;
+        return $this->user()?->isFederationAdministrator() ?? false;
     }
 
     protected function prepareForValidation(): void
     {
         $suffix = $this->input('suffix');
 
-        if ($suffix === '' || $suffix === 'None') {
+        if ($suffix === '__other__') {
+            $other = trim((string) $this->input('suffix_other', ''));
+            if ($other !== '') {
+                $this->merge(['suffix' => mb_strtoupper($other, 'UTF-8')]);
+            }
+        } elseif ($suffix === '' || $suffix === 'None') {
             $this->merge(['suffix' => null]);
         }
 
@@ -42,7 +47,15 @@ class UpdateAccountRequest extends FormRequest
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
             'middle_name' => ['nullable', 'string', 'max:100'],
-            'suffix' => ['nullable', Rule::in(['Jr.', 'Sr.', 'II', 'III', 'IV', 'V'])],
+            'suffix' => ['nullable', Rule::in(['Jr.', 'Sr.', 'II', 'III', 'IV', 'V', '__other__'])],
+            'suffix_other' => [
+                Rule::requiredIf(fn (): bool => $this->input('suffix') === '__other__'),
+                'nullable',
+                'string',
+                'min:1',
+                'max:10',
+                'regex:/^\S+$/u',
+            ],
             'sex' => [$requiresDemographics ? 'required' : 'nullable', Rule::in(['Male', 'Female'])],
             'date_of_birth' => [$requiresDemographics ? 'required' : 'nullable', 'date', 'before:today'],
             'age' => ['nullable', 'integer', 'min:0', 'max:150'],

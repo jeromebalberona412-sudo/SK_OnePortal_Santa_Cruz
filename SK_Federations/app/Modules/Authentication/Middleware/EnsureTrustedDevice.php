@@ -32,6 +32,10 @@ class EnsureTrustedDevice
             return $next($request);
         }
 
+        if ($user->isSkFed() || $user->hasFederationLeadershipAccess()) {
+            return $next($request);
+        }
+
         if ($request->routeIs(
             'verification.notice',
             'skfed.verification.wait',

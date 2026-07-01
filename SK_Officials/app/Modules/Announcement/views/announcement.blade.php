@@ -14,6 +14,7 @@
         'app/Modules/Announcement/assets/css/announcement.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <link rel="stylesheet" href="{{ url('/shared/css/sk-archive-terms.css') }}">
 </head>
 <body>
 
@@ -34,7 +35,7 @@
                     <div class="sk-fed-card-info">
                         <h2 class="sk-fed-card-name">SK Barangay {{ $name }}</h2>
                         <p class="sk-fed-card-sub">SK Officials Portal · Santa Cruz, Laguna</p>
-                        <p style="font-size:11px;color:rgba(255,255,255,0.85);font-weight:600;margin-top:4px;cursor:pointer;" onclick="openProfilePreviewModal()">View Your Barangay Profile →</p>
+                        <a href="{{ route('sk-officials.barangay-profile', ['slug' => $slug]) }}" style="font-size:11px;color:rgba(255,255,255,0.85);font-weight:600;margin-top:4px;text-decoration:none;display:inline-block;">View Your Barangay Profile →</a>
                     </div>
                 </div>
                 {{-- Create Post button --}}
@@ -237,6 +238,7 @@ window.AnnConfig = {
     defaultLogo: @json(asset('images/logo.png')),
     barangayLogo: @json($barangayLogoUrl),
     feedPollMs: 30000,
+    profilePreview: @json($profilePreview ?? null),
 };
 
 function showFeedToast(message, type) {
@@ -251,84 +253,41 @@ window.showFeedToast = showFeedToast;
 </script>
 
 {{-- Barangay Profile Preview Modal --}}
-<div id="profilePreviewModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);overflow-y:auto;padding:24px 16px;">
-    <div style="max-width:760px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.25);">
-        {{-- Header --}}
-        <div style="background:linear-gradient(135deg,#2c2c3e,#3a3a4a);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #f5c518;">
+<div class="restore-modal-backdrop" id="profilePreviewModal" style="display:none;">
+    <div class="restore-modal-box view-modal-box" id="profilePreviewModalBox">
+        <div class="restore-modal-header view-modal-header">
             <div>
-                <p style="font-size:11px;color:#f5c518;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;">Preview — What Kabataan Sees</p>
-                <h2 style="color:#fff;font-size:18px;font-weight:800;margin:0;">SK Barangay {{ $name }}</h2>
-                <p style="color:rgba(255,255,255,.7);font-size:12px;margin-top:2px;">Barangay {{ $name }}, Santa Cruz, Laguna</p>
+                <p class="profile-preview-kicker">Preview — What Kabataan Sees</p>
+                <h2 class="restore-modal-title" id="profilePreviewTitle">SK Barangay {{ $name }}</h2>
+                <span class="dk-view-subtitle" id="profilePreviewLocation">Barangay {{ $name }}, Santa Cruz, Laguna</span>
             </div>
-            <button onclick="closeProfilePreviewModal()" style="background:rgba(255,255,255,.1);border:none;border-radius:50%;width:36px;height:36px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">&times;</button>
+            <div class="view-modal-controls">
+                <button type="button" class="view-modal-toggle" id="profilePreviewToggle" aria-label="Full screen">□</button>
+                <button type="button" class="view-modal-close" id="profilePreviewClose" aria-label="Close">&times;</button>
+            </div>
         </div>
-        {{-- Stats bar --}}
-        <div style="display:flex;gap:32px;padding:16px 24px;border-bottom:1px solid #f1f5f9;background:#fafafa;">
-            <div><strong id="preview-post-count" style="font-size:20px;font-weight:800;color:#2c2c3e;">—</strong><br><span style="font-size:11px;color:#94a3b8;">Posts</span></div>
-            <div><strong style="font-size:20px;font-weight:800;color:#2c2c3e;">2023–2026</strong><br><span style="font-size:11px;color:#94a3b8;">SK Term</span></div>
-        </div>
-        {{-- Feed preview --}}
-        <div style="padding:20px 24px;">
-            <p style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:12px;">Recent Posts</p>
-            <div id="preview-feed" style="display:flex;flex-direction:column;gap:12px;">
-                <div style="text-align:center;color:#aaa;padding:24px;font-size:13px;">Loading posts…</div>
+        <div class="view-modal-body">
+            <div class="record-view-profile-layout" id="profilePreviewContent">
+                <div class="profile-field-group">
+                    <div class="profile-field-group-label">Overview</div>
+                    <div class="profile-field-row">
+                        <div class="profile-field"><label>Posts</label><p id="profilePreviewPostCount">—</p></div>
+                        <div class="profile-field"><label>SK Term</label><p id="profilePreviewTerm">—</p></div>
+                        <div class="profile-field"><label>Officials</label><p id="profilePreviewOfficialCount">—</p></div>
+                    </div>
+                </div>
+                <div class="profile-field-group">
+                    <div class="profile-field-group-label">SK Officials</div>
+                    <div id="profilePreviewOfficials" class="profile-preview-list"></div>
+                </div>
+                <div class="profile-field-group">
+                    <div class="profile-field-group-label">Recent Posts</div>
+                    <div id="profilePreviewPosts" class="profile-preview-list"></div>
+                </div>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-function openProfilePreviewModal() {
-    document.getElementById('profilePreviewModal').style.display = 'block';
-    document.body.style.overflow = 'hidden';
-    loadPreviewFeed();
-}
-function closeProfilePreviewModal() {
-    document.getElementById('profilePreviewModal').style.display = 'none';
-    document.body.style.overflow = '';
-}
-document.getElementById('profilePreviewModal').addEventListener('click', function(e) {
-    if (e.target === this) closeProfilePreviewModal();
-});
-
-async function loadPreviewFeed() {
-    const container = document.getElementById('preview-feed');
-    container.innerHTML = '<div style="text-align:center;color:#aaa;padding:24px;font-size:13px;">Loading posts…</div>';
-    try {
-        const data = await fetch('/api/announcements?page=1&filter=all', {
-            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
-        }).then(r => r.json());
-
-        document.getElementById('preview-post-count').textContent = data.total ?? (data.data?.length ?? 0);
-
-        if (!data.data?.length) {
-            container.innerHTML = '<div style="text-align:center;color:#aaa;padding:24px;font-size:13px;">No posts yet.</div>';
-            return;
-        }
-        container.innerHTML = data.data.slice(0, 5).map(p => {
-            const fallbackLogo = window.AnnConfig?.barangayLogo || window.AnnConfig?.defaultLogo || '';
-            const logo = p.barangay_logo_url || fallbackLogo;
-            return `
-            <div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                    ${logo ? `<img src="${logo}" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">` : ''}
-                    <span style="display:inline-block;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#f5c51820;color:#b88600;border:1px solid #f5c51840;">${p.type}</span>
-                    <span style="font-size:11px;color:#94a3b8;">${p.time}</span>
-                </div>
-                ${p.title ? `<p style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:4px;">${p.title}</p>` : ''}
-                <p style="font-size:13px;color:#475569;line-height:1.5;">${p.body}</p>
-                ${p.image_url || (p.images && p.images[0]) ? `<img src="${p.images?.[0] || p.image_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:160px;object-fit:cover;">` : ''}
-                <div style="display:flex;gap:16px;margin-top:10px;font-size:12px;color:#94a3b8;">
-                    <span>👍 ${p.likes} likes</span>
-                    <span>💬 ${p.comments?.length ?? 0} comments</span>
-                </div>
-            </div>`;
-        }).join('');
-    } catch(e) {
-        container.innerHTML = '<div style="text-align:center;color:#aaa;padding:24px;font-size:13px;">Could not load posts.</div>';
-    }
-}
-</script>
 <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

@@ -1217,6 +1217,38 @@
     flex-wrap: wrap;
 }
 
+.bm-schedule-summary-note {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.bm-schedule-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.bm-schedule-compact-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.bm-schedule-compact-dates {
+    margin: 0;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.bm-schedule-view-footer {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
 .bm-btn-schedule {
     border: none;
     border-radius: 8px;
@@ -1415,4 +1447,117 @@
     .bm-form-grid {
         grid-template-columns: 1fr;
     }
+}
+
+.bm-schedule-role {
+    color: #64748b;
+    font-weight: 600;
+}
+
+.bm-schedule-toast {
+    position: fixed;
+    top: calc(var(--navbar-height, 64px) + 16px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-12px);
+    z-index: 1400;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border-radius: 999px;
+    background: #16a34a;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 12px 30px rgba(22, 163, 74, 0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.bm-schedule-toast.is-visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.bm-schedule-toast i {
+    font-size: 16px;
+}
+
+.bm-cancel-schedule-dialog {
+    max-width: 520px;
+}
+
+.bm-cancel-schedule-header {
+    align-items: flex-start;
+    border-bottom: none;
+    padding-bottom: 0;
+    gap: 14px;
+}
+
+.bm-cancel-schedule-header > div:nth-child(2) {
+    flex: 1;
+    min-width: 0;
+    padding-right: 28px;
+}
+
+.bm-cancel-schedule-header h3 {
+    margin: 0 0 6px;
+    font-size: 18px;
+    color: #1e293b;
+}
+
+.bm-cancel-schedule-subtitle {
+    margin: 0;
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.bm-cancel-schedule-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #fef2f2;
+    color: #dc2626;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+}
+
+.bm-cancel-schedule-body {
+    padding-top: 8px;
+}
+
+.bm-cancel-schedule-body p {
+    margin: 0;
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.6;
+}
+
+.bm-cancel-schedule-footer {
+    gap: 10px;
+}
+
+.bm-btn-danger-solid {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #dc2626;
+    color: #fff;
+}
+
+.bm-btn-danger-solid:hover {
+    background: #b91c1c;
+}
+
+.bm-btn-danger-solid:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }

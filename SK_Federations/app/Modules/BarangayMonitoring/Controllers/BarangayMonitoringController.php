@@ -45,6 +45,7 @@ class BarangayMonitoringController extends Controller
             'stats' => $stats,
             'abyipSchedule' => $this->scheduleService->currentSchedule(),
             'abyipSchedules' => $this->scheduleService->listSchedules()->values()->all(),
+            'canCreateAbyipSchedule' => $this->scheduleService->canCreateForCurrentYear(),
         ]);
     }
 

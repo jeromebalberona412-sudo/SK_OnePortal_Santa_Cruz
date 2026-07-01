@@ -23,9 +23,14 @@ class EnsureSkFedAccess
             return redirect()->route('login');
         }
 
-        $tenantId = $this->tenantContextService->tenantId();
+        $user->loadMissing('officialProfile');
 
-        if ($tenantId === null || ! $user->canAccessFederationPortal() || (int) ($user->tenant_id ?? 0) !== $tenantId) {
+        $tenantId = $this->tenantContextService->tenantId();
+        $tenantMismatch = $tenantId !== null
+            && (int) ($user->tenant_id ?? 0) !== $tenantId
+            && ! $user->hasFederationLeadershipAccess();
+
+        if ($tenantId === null || ! $user->canAccessFederationPortal() || $tenantMismatch) {
             Auth::guard('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

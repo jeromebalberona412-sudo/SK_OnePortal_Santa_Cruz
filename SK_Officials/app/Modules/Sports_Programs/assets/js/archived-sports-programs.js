@@ -1,6 +1,9 @@
 'use strict';
 
 let aspRecords = [];
+let aspFiltered = [];
+let aspCurrentPage = 1;
+const aspPerPage = 10;
 let aspPendingRestoreId = null;
 
 function csrfToken() {
@@ -55,10 +58,17 @@ function renderTable(records) {
 
     if (!records.length) {
         tbody.innerHTML = '<tr><td colspan="7" class="saf-table-empty">No archived sports programs found.</td></tr>';
+        renderPagination(0, 0, 0, 1);
         return;
     }
 
-    tbody.innerHTML = records.map((record) => {
+    const total = records.length;
+    const lastPage = Math.max(1, Math.ceil(total / aspPerPage));
+    if (aspCurrentPage > lastPage) aspCurrentPage = lastPage;
+    const start = (aspCurrentPage - 1) * aspPerPage;
+    const pageRows = records.slice(start, start + aspPerPage);
+
+    tbody.innerHTML = pageRows.map((record) => {
         const days = record.days_remaining ?? 0;
         const daysClass = days <= 7 ? 'asp-days-badge is-urgent' : 'asp-days-badge';
 
@@ -85,6 +95,37 @@ function renderTable(records) {
     tbody.querySelectorAll('[data-restore]').forEach((button) => {
         button.addEventListener('click', () => openRestoreModal(Number(button.dataset.restore)));
     });
+
+    renderPagination(start + 1, Math.min(start + aspPerPage, total), total, lastPage);
+}
+
+function renderPagination(from, to, total, lastPage) {
+    const info = document.getElementById('aspPaginationInfo');
+    const prev = document.getElementById('aspPrevBtn');
+    const next = document.getElementById('aspNextBtn');
+    const nums = document.getElementById('aspPageNumbers');
+
+    if (info) {
+        info.textContent = total
+            ? `Showing ${from} to ${to} of ${total} archived programs`
+            : 'No archived programs found';
+    }
+    if (prev) prev.disabled = aspCurrentPage <= 1;
+    if (next) next.disabled = aspCurrentPage >= lastPage;
+
+    if (!nums) return;
+    nums.innerHTML = '';
+    for (let i = 0; i < lastPage; i += 1) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `pagination-btn${i + 1 === aspCurrentPage ? ' active' : ''}`;
+        btn.textContent = String(i + 1);
+        btn.addEventListener('click', () => {
+            aspCurrentPage = i + 1;
+            renderTable(aspFiltered);
+        });
+        nums.appendChild(btn);
+    }
 }
 
 async function loadArchivedPrograms(search = '') {
@@ -92,8 +133,10 @@ async function loadArchivedPrograms(search = '') {
     if (search) params.set('search', search);
     const data = await apiFetch(`/sports-programs/archived/data?${params.toString()}`);
     aspRecords = data.data || [];
+    aspFiltered = aspRecords.slice();
+    aspCurrentPage = 1;
     renderStats(data.stats || {});
-    renderTable(aspRecords);
+    renderTable(aspFiltered);
 }
 
 function findRecord(id) {
@@ -131,6 +174,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('aspRestoreClose')?.addEventListener('click', closeRestoreModal);
     document.getElementById('aspRestoreCancel')?.addEventListener('click', closeRestoreModal);
+
+    document.getElementById('aspPrevBtn')?.addEventListener('click', () => {
+        if (aspCurrentPage > 1) {
+            aspCurrentPage -= 1;
+            renderTable(aspFiltered);
+        }
+    });
+    document.getElementById('aspNextBtn')?.addEventListener('click', () => {
+        const lastPage = Math.max(1, Math.ceil(aspFiltered.length / aspPerPage));
+        if (aspCurrentPage < lastPage) {
+            aspCurrentPage += 1;
+            renderTable(aspFiltered);
+        }
+    });
 
     document.getElementById('aspRestoreConfirm')?.addEventListener('click', async () => {
         if (!aspPendingRestoreId) return;

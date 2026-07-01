@@ -13,7 +13,7 @@ class StoreAccountRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isSkFed() ?? false;
+        return $this->user()?->isFederationAdministrator() ?? false;
     }
 
     protected function prepareForValidation(): void

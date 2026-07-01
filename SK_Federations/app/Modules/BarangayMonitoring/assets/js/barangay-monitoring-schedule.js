@@ -9,8 +9,52 @@
 
     function closeModals() {
         document.querySelectorAll('.bm-modal').forEach(function (modal) {
-            modal.hidden = true;
+            if (modal.id !== 'cancelScheduleModal') {
+                modal.hidden = true;
+            }
         });
+    }
+
+    function openScheduleViewModal() {
+        const modal = document.getElementById('scheduleViewModal');
+        if (modal) modal.hidden = false;
+    }
+
+    function closeScheduleViewModal() {
+        const modal = document.getElementById('scheduleViewModal');
+        if (modal) modal.hidden = true;
+    }
+
+    function openCancelScheduleModal() {
+        const modal = document.getElementById('cancelScheduleModal');
+        if (modal) modal.hidden = false;
+    }
+
+    function closeCancelScheduleModal() {
+        const modal = document.getElementById('cancelScheduleModal');
+        if (modal) modal.hidden = true;
+    }
+
+    function showScheduleToast(message) {
+        const existing = document.querySelector('.bm-schedule-toast');
+        if (existing) existing.remove();
+
+        const toast = document.createElement('div');
+        toast.className = 'bm-schedule-toast';
+        toast.setAttribute('role', 'status');
+        toast.innerHTML = '<i class="fas fa-check-circle" aria-hidden="true"></i><span>' + message + '</span>';
+        document.body.appendChild(toast);
+
+        requestAnimationFrame(function () {
+            toast.classList.add('is-visible');
+        });
+
+        setTimeout(function () {
+            toast.classList.remove('is-visible');
+            setTimeout(function () {
+                toast.remove();
+            }, 350);
+        }, 2600);
     }
 
     function formatDateInput(date) {
@@ -128,7 +172,6 @@
 
     function updateScheduleFieldHints(mode) {
         const bounds = currentYearBounds();
-        const isCreate = mode !== 'edit';
         const startHint = document.getElementById('scheduleDateStartHint');
         const deadlineHint = document.getElementById('scheduleDeadlineHint');
 
@@ -219,20 +262,6 @@
         if (modal) modal.hidden = false;
     }
 
-    function openExtendModal() {
-        const schedule = config.currentSchedule || {};
-        const modal = document.getElementById('extendModal');
-        const bounds = currentYearBounds();
-        const extendInput = document.getElementById('extendNewDeadline');
-        document.getElementById('extendScheduleId').value = schedule.id || '';
-        if (extendInput) {
-            extendInput.min = bounds.today;
-            extendInput.max = bounds.yearEnd;
-            extendInput.value = '';
-        }
-        if (modal) modal.hidden = false;
-    }
-
     async function saveSchedule() {
         const saveBtn = document.getElementById('scheduleSaveBtn');
         const id = document.getElementById('scheduleId').value;
@@ -242,14 +271,16 @@
             return;
         }
 
+        if (mode === 'create' && !config.canCreateSchedule) {
+            alert('A schedule for this calendar year already exists. You can only create one schedule per year.');
+            return;
+        }
+
         const bounds = currentYearBounds();
         const calendarYear = bounds.calendarYear;
         const title = document.getElementById('scheduleTitle').value.trim();
         const dateStart = document.getElementById('scheduleDateStart').value;
         const deadline = document.getElementById('scheduleDeadline').value;
-
-        if (!title) throw new Error('Title is required.');
-        if (!dateStart || !deadline) throw new Error('Start date and deadline are required.');
 
         const payload = {
             fiscal_year: calendarYear,
@@ -265,7 +296,7 @@
         }
 
         if (typeof window.showLoading === 'function') {
-            window.showLoading('Saving ABYIP Schedule', 'Please wait...');
+            window.showLoading('Saving ABYIP Schedule', 'Please wait while we save your schedule...');
         }
 
         try {
@@ -274,8 +305,14 @@
             } else {
                 await apiRequest(config.storeUrl, 'POST', payload);
             }
-            window.location.reload();
-        } finally {
+
+            closeModals();
+            showScheduleToast('ABYIP schedule saved successfully.');
+
+            setTimeout(function () {
+                window.location.reload();
+            }, 1400);
+        } catch (error) {
             if (typeof window.hideLoading === 'function') {
                 window.hideLoading();
             }
@@ -283,28 +320,7 @@
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Save Schedule';
             }
-        }
-    }
-
-    async function extendSchedule() {
-        const id = document.getElementById('extendScheduleId').value;
-        const newDeadline = document.getElementById('extendNewDeadline').value;
-
-        if (!newDeadline) throw new Error('New deadline is required.');
-
-        if (typeof window.showLoading === 'function') {
-            window.showLoading('Extending Deadline', 'Please wait...');
-        }
-
-        try {
-            await apiRequest(config.updateUrl + '/' + id + '/extend', 'POST', {
-                new_deadline: newDeadline,
-            });
-            window.location.reload();
-        } finally {
-            if (typeof window.hideLoading === 'function') {
-                window.hideLoading();
-            }
+            throw error;
         }
     }
 
@@ -312,29 +328,58 @@
         const schedule = config.currentSchedule || {};
         if (!schedule.id) return;
 
-        const reason = window.prompt('Reason for cancelling this schedule (optional):');
-        if (reason === null) return;
+        const confirmBtn = document.getElementById('confirmCancelScheduleBtn');
+        if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Cancelling...';
+        }
 
         if (typeof window.showLoading === 'function') {
             window.showLoading('Cancelling Schedule', 'Please wait...');
         }
 
         try {
-            await apiRequest(config.updateUrl + '/' + schedule.id + '/cancel', 'POST', { reason: reason || null });
-            window.location.reload();
-        } finally {
+            await apiRequest(config.updateUrl + '/' + schedule.id + '/cancel', 'POST', { reason: null });
+            closeCancelScheduleModal();
+            closeScheduleViewModal();
+            showScheduleToast('ABYIP schedule cancelled successfully.');
+
+            setTimeout(function () {
+                window.location.reload();
+            }, 1400);
+        } catch (error) {
             if (typeof window.hideLoading === 'function') {
                 window.hideLoading();
             }
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Yes, Cancel Schedule';
+            }
+            throw error;
         }
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('btnViewSchedule')?.addEventListener('click', openScheduleViewModal);
+
         document.getElementById('btnCreateSchedule')?.addEventListener('click', function () {
+            closeScheduleViewModal();
+
+            if (config.currentSchedule?.id) {
+                openScheduleModal('edit');
+                return;
+            }
+
+            if (!config.canCreateSchedule) {
+                alert('A schedule for this calendar year already exists. You can only create one schedule per year.');
+                return;
+            }
+
             openScheduleModal('create');
         });
 
         document.getElementById('btnEditSchedule')?.addEventListener('click', function () {
+            closeScheduleViewModal();
             openScheduleModal('edit');
         });
 
@@ -352,13 +397,14 @@
             clearScheduleFieldErrors();
         });
 
-        document.getElementById('btnExtendSchedule')?.addEventListener('click', openExtendModal);
         document.getElementById('btnCancelSchedule')?.addEventListener('click', function () {
-            if (window.confirm('Cancel the current ABYIP submission schedule?')) {
-                cancelSchedule().catch(function (error) {
-                    alert(error.message);
-                });
-            }
+            openCancelScheduleModal();
+        });
+
+        document.getElementById('confirmCancelScheduleBtn')?.addEventListener('click', function () {
+            cancelSchedule().catch(function (error) {
+                alert(error.message);
+            });
         });
 
         document.getElementById('scheduleSaveBtn')?.addEventListener('click', function () {
@@ -367,14 +413,16 @@
             });
         });
 
-        document.getElementById('extendSaveBtn')?.addEventListener('click', function () {
-            extendSchedule().catch(function (error) {
-                alert(error.message);
-            });
-        });
-
         document.querySelectorAll('[data-schedule-close]').forEach(function (btn) {
             btn.addEventListener('click', closeModals);
+        });
+
+        document.querySelectorAll('[data-schedule-view-close]').forEach(function (btn) {
+            btn.addEventListener('click', closeScheduleViewModal);
+        });
+
+        document.querySelectorAll('[data-cancel-schedule-close]').forEach(function (btn) {
+            btn.addEventListener('click', closeCancelScheduleModal);
         });
     });
 })();

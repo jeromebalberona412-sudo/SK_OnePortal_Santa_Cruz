@@ -24,6 +24,10 @@ class EnsureSingleSession
             return $next($request);
         }
 
+        if ($user->hasFederationLeadershipAccess()) {
+            return $next($request);
+        }
+
         if (! Schema::hasColumn('users', 'active_session_id')) {
             return $next($request);
         }

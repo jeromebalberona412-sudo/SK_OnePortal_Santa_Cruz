@@ -683,8 +683,14 @@ function showSkOfficialMaxMessage(input) {
 }
 
 function toggleSkOfficialSuffixOther(form) {
+    toggleSuffixOtherField(form);
+}
+
+function toggleSuffixOtherField(form) {
     const suffixSelect = form.querySelector('[name="suffix"]');
-    const otherGroup = form.querySelector('#official_suffix_other_group');
+    const otherGroup = form.querySelector('#official_suffix_other_group')
+        || form.querySelector('#fed_suffix_other_group')
+        || form.querySelector('#edit_fed_suffix_other_group');
     const otherInput = form.querySelector('[name="suffix_other"]');
     if (!suffixSelect || !otherGroup) return;
     const show = suffixSelect.value === '__other__';
@@ -698,6 +704,53 @@ function toggleSkOfficialSuffixOther(form) {
             _clearErr(otherInput);
         }
     }
+}
+
+const STANDARD_SUFFIX_VALUES = ['', 'NONE', 'None', 'Jr.', 'Sr.', 'II', 'III', 'IV', 'V'];
+
+function setSuffixFieldValue(form, suffixValue) {
+    const suffixSelect = form.querySelector('[name="suffix"]');
+    const otherInput = form.querySelector('[name="suffix_other"]');
+    if (!suffixSelect) return;
+
+    const raw = String(suffixValue ?? '').trim();
+    const normalized = raw.toUpperCase() === 'NONE' ? '' : raw;
+
+    if (!normalized || STANDARD_SUFFIX_VALUES.includes(normalized)) {
+        suffixSelect.value = normalized || '';
+        if (otherInput) otherInput.value = '';
+    } else {
+        suffixSelect.value = '__other__';
+        if (otherInput) otherInput.value = normalized;
+    }
+
+    toggleSuffixOtherField(form);
+}
+
+function _validateFedSuffix(form) {
+    const suffixSelect = form.querySelector('[name="suffix"]');
+    const otherInput = form.querySelector('[name="suffix_other"]');
+    if (!suffixSelect) return true;
+
+    if (suffixSelect.value === '__other__') {
+        const other = (otherInput?.value || '').trim();
+        if (!other) {
+            _showErr(otherInput || suffixSelect, 'Other suffix is required');
+            return false;
+        }
+        if (other.length > SK_OFFICIAL_SUFFIX_OTHER_MAX) {
+            _showErr(otherInput, `Other suffix must not exceed ${SK_OFFICIAL_SUFFIX_OTHER_MAX} characters`);
+            return false;
+        }
+        if (/\s/.test(other)) {
+            _showErr(otherInput, 'Other suffix cannot contain spaces');
+            return false;
+        }
+        _markValid(otherInput);
+    }
+
+    _markValid(suffixSelect);
+    return true;
 }
 
 function _validateSkOfficialFirstName(input) {
@@ -858,6 +911,23 @@ function wireSkFedManualValidation(form) {
             input.addEventListener('blur', () => validateTermRange(form));
         }
     });
+
+    const suffixSelect = form.querySelector('[name="suffix"]');
+    if (suffixSelect) {
+        suffixSelect.addEventListener('change', () => {
+            toggleSuffixOtherField(form);
+            _validateFedSuffix(form);
+        });
+    }
+
+    const suffixOther = form.querySelector('[name="suffix_other"]');
+    if (suffixOther) {
+        suffixOther.addEventListener('input', () => {
+            suffixOther.value = suffixOther.value.replace(/[^a-zA-Z\-'.]/g, '').toUpperCase().slice(0, SK_OFFICIAL_SUFFIX_OTHER_MAX);
+            _validateFedSuffix(form);
+        });
+        suffixOther.addEventListener('blur', () => _validateFedSuffix(form));
+    }
 }
 
 function validateSkFedManualForm(form) {
@@ -869,6 +939,7 @@ function validateSkFedManualForm(form) {
         }
         if (!_validateField(el)) valid = false;
     });
+    if (!_validateFedSuffix(form)) valid = false;
     if (!validateTermRange(form)) valid = false;
     return valid;
 }
@@ -2987,6 +3058,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     attachEditSubmit(fedEditForm);
     attachEditSubmit(officialsEditForm);
+    if (fedEditForm) {
+        wireCreateAccountForm(fedEditForm);
+    }
 
     // DOB → age auto-fill
     attachDobAgeAutoFill(fedForm, 'date_of_birth', 'age');
@@ -3005,7 +3079,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function populateEditForm(form, data) {
         if (!form) return;
         form.dataset.accountId = data.accountId || '';
-        ['first_name', 'last_name', 'middle_name', 'suffix', 'sex', 'date_of_birth', 'age', 'contact_number', 'email', 'position', 'barangay_id', 'term_start', 'term_end', 'term_status'].forEach(n => setFormFieldValue(form, n, data[_camel(n)] ?? data[n] ?? ''));
+        ['first_name', 'last_name', 'middle_name', 'sex', 'date_of_birth', 'age', 'contact_number', 'email', 'position', 'barangay_id', 'term_start', 'term_end', 'term_status'].forEach(n => setFormFieldValue(form, n, data[_camel(n)] ?? data[n] ?? ''));
+        setSuffixFieldValue(form, data[_camel('suffix')] ?? data.suffix ?? data.suffix ?? '');
         const statusField = form.querySelector('[name="status"]');
         if (statusField) statusField.value = 'ACTIVE';
         clearAllErrors(form);

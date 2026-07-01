@@ -10,7 +10,7 @@ class ExtendTermRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isSkFed() ?? false;
+        return $this->user()?->isFederationAdministrator() ?? false;
     }
 
     public function rules(): array

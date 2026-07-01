@@ -232,3 +232,161 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Shared archive / rejected table pagination */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.pagination-info {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.pagination-btn {
+    padding: 7px 14px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #374151;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    border-color: #2c2c3e;
+    color: #111827;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.pagination-btn.active {
+    background: #2c2c3e;
+    border-color: #2c2c3e;
+    color: #f5c518;
+}
+
+.pagination-numbers {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+    .pagination-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pagination-controls {
+        justify-content: center;
+    }
+}
+
+/* Community feed profile preview modal */
+.profile-preview-kicker {
+    font-size: 11px;
+    color: #b88600;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0 0 4px;
+}
+
+.profile-preview-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.profile-preview-list-item,
+.profile-preview-post-item {
+    padding: 12px 14px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+}
+
+.profile-preview-list-item strong {
+    display: block;
+    font-size: 14px;
+    color: #111827;
+}
+
+.profile-preview-list-item span {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.profile-preview-post-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.profile-preview-post-type {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #b88600;
+}
+
+.profile-preview-post-time {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.profile-preview-post-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    color: #1e293b;
+}
+
+.profile-preview-post-body {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #475569;
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.profile-preview-post-image {
+    width: 100%;
+    max-height: 180px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+.profile-preview-empty {
+    font-size: 13px;
+    color: #94a3b8;
+    margin: 0;
+}

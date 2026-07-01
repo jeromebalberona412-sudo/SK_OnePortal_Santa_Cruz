@@ -45,73 +45,42 @@
                 </article>
             </section>
 
-            <section class="bm-card" id="abyipScheduleSection" aria-label="ABYIP submission schedule">
+            <section class="bm-card bm-schedule-summary-card" id="abyipScheduleSection" aria-label="ABYIP submission schedule">
                 <div class="bm-card-head bm-card-head-flex">
-                    <h3><i class="fas fa-calendar-check"></i> ABYIP Submission Schedule</h3>
+                    <div>
+                        <h3><i class="fas fa-calendar-check"></i> ABYIP Submission Schedule</h3>
+                        <p class="bm-schedule-summary-note">Set when barangay SK Officials may upload ABYIP documents.</p>
+                    </div>
                     <div class="bm-schedule-actions">
+                        @if(!empty($abyipSchedule))
+                        <button type="button" class="bm-btn-schedule secondary" id="btnViewSchedule">
+                            <i class="fas fa-eye"></i> View Schedule
+                        </button>
+                        <button type="button" class="bm-btn-schedule secondary" id="btnCreateSchedule">
+                            <i class="fas fa-edit"></i> Edit Schedule
+                        </button>
+                        @elseif(!empty($canCreateAbyipSchedule))
                         <button type="button" class="bm-btn-schedule" id="btnCreateSchedule">
                             <i class="fas fa-plus"></i> Create Schedule
                         </button>
-                        @if(!empty($abyipSchedule))
-                        <button type="button" class="bm-btn-schedule secondary" id="btnEditSchedule" data-id="{{ $abyipSchedule['id'] }}">
-                            <i class="fas fa-edit"></i> Edit Schedule
-                        </button>
-                        <button type="button" class="bm-btn-schedule secondary" id="btnExtendSchedule" data-id="{{ $abyipSchedule['id'] }}">
-                            <i class="fas fa-clock"></i> Extend Deadline
-                        </button>
-                        <button type="button" class="bm-btn-schedule danger" id="btnCancelSchedule" data-id="{{ $abyipSchedule['id'] }}">
-                            <i class="fas fa-ban"></i> Cancel Schedule
+                        @else
+                        <button type="button" class="bm-btn-schedule secondary" id="btnViewSchedule" disabled title="A schedule for this calendar year already exists.">
+                            <i class="fas fa-eye"></i> View Schedule
                         </button>
                         @endif
                     </div>
                 </div>
                 <div class="bm-card-body">
                     @if(!empty($abyipSchedule))
-                        <div class="bm-schedule-current">
-                            <div class="bm-schedule-current-head">
-                                <h4>{{ $abyipSchedule['title'] }}</h4>
-                                <span class="bm-schedule-status">{{ $abyipSchedule['status_label'] }}</span>
-                            </div>
-                            <div class="bm-schedule-grid">
-                                <div>
-                                    <p class="bm-schedule-label">Calendar Year</p>
-                                    <p class="bm-schedule-value">{{ $abyipSchedule['fiscal_year'] }}</p>
-                                </div>
-                                <div>
-                                    <p class="bm-schedule-label">Start</p>
-                                    <p class="bm-schedule-value">{{ $abyipSchedule['date_start'] }}</p>
-                                </div>
-                                <div>
-                                    <p class="bm-schedule-label">Deadline</p>
-                                    <p class="bm-schedule-value">{{ $abyipSchedule['deadline'] }}</p>
-                                </div>
-                                <div>
-                                    <p class="bm-schedule-label">Original Deadline</p>
-                                    <p class="bm-schedule-value">{{ $abyipSchedule['original_deadline'] }}</p>
-                                </div>
-                            </div>
-                            @if(!empty($abyipSchedule['histories']))
-                                <div class="bm-schedule-history">
-                                    <h5>Schedule History</h5>
-                                    <div class="bm-schedule-history-list">
-                                        @foreach($abyipSchedule['histories'] as $history)
-                                            <div class="bm-schedule-history-item">
-                                                <div class="bm-schedule-history-top">
-                                                    <strong>{{ $history['action_label'] }}</strong>
-                                                    <span>{{ $history['created_at'] }}</span>
-                                                </div>
-                                                @if($history['old_deadline'] || $history['new_deadline'])
-                                                    <p>Deadline: {{ $history['old_deadline'] ?? '—' }} → {{ $history['new_deadline'] ?? '—' }}</p>
-                                                @endif
-                                                <p class="bm-schedule-history-meta">By {{ $history['updated_by'] }}@if($history['reason']) — {{ $history['reason'] }}@endif</p>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
+                        <div class="bm-schedule-compact">
+                            <span class="bm-schedule-status">{{ $abyipSchedule['status_label'] }}</span>
+                            <p class="bm-schedule-compact-title">{{ $abyipSchedule['title'] }} · CY {{ $abyipSchedule['fiscal_year'] }}</p>
+                            <p class="bm-schedule-compact-dates">
+                                Open: {{ $abyipSchedule['date_start'] }} — Deadline: {{ $abyipSchedule['deadline'] }}
+                            </p>
                         </div>
                     @else
-                        <p class="bm-empty">No ABYIP submission schedule yet. Create one to set the deadline for all barangays.</p>
+                        <p class="bm-empty">No ABYIP submission schedule yet. Create one before barangay SK Officials can upload ABYIP.</p>
                     @endif
                 </div>
             </section>
@@ -194,6 +163,79 @@
             </section>
         </div>
 
+<div id="scheduleViewModal" class="bm-modal" hidden>
+    <div class="bm-modal-backdrop" data-schedule-view-close></div>
+    <div class="bm-modal-dialog bm-modal-lg">
+        <div class="bm-modal-header">
+            <h3>ABYIP Submission Schedule</h3>
+            <button type="button" class="bm-modal-close" data-schedule-view-close>&times;</button>
+        </div>
+        <div class="bm-modal-body" id="scheduleViewModalBody">
+            @if(!empty($abyipSchedule))
+                <div class="bm-schedule-current">
+                    <div class="bm-schedule-current-head">
+                        <h4>{{ $abyipSchedule['title'] }}</h4>
+                        <span class="bm-schedule-status">{{ $abyipSchedule['status_label'] }}</span>
+                    </div>
+                    <div class="bm-schedule-grid">
+                        <div>
+                            <p class="bm-schedule-label">Calendar Year</p>
+                            <p class="bm-schedule-value">{{ $abyipSchedule['fiscal_year'] }}</p>
+                        </div>
+                        <div>
+                            <p class="bm-schedule-label">Start</p>
+                            <p class="bm-schedule-value">{{ $abyipSchedule['date_start'] }}</p>
+                        </div>
+                        <div>
+                            <p class="bm-schedule-label">Deadline</p>
+                            <p class="bm-schedule-value">{{ $abyipSchedule['deadline'] }}</p>
+                        </div>
+                        <div>
+                            <p class="bm-schedule-label">Original Deadline</p>
+                            <p class="bm-schedule-value">{{ $abyipSchedule['original_deadline'] }}</p>
+                        </div>
+                        <div>
+                            <p class="bm-schedule-label">Created By</p>
+                            <p class="bm-schedule-value">{{ $abyipSchedule['created_by'] }}@if(!empty($abyipSchedule['created_by_role'])) <span class="bm-schedule-role">({{ $abyipSchedule['created_by_role'] }})</span>@endif</p>
+                        </div>
+                    </div>
+                    @if(!empty($abyipSchedule['histories']))
+                        <div class="bm-schedule-history">
+                            <h5>Schedule History</h5>
+                            <div class="bm-schedule-history-list">
+                                @foreach($abyipSchedule['histories'] as $history)
+                                    <div class="bm-schedule-history-item">
+                                        <div class="bm-schedule-history-top">
+                                            <strong>{{ $history['action_label'] }}</strong>
+                                            <span>{{ $history['created_at'] }}</span>
+                                        </div>
+                                        @if($history['old_deadline'] || $history['new_deadline'])
+                                            <p>Deadline: {{ $history['old_deadline'] ?? '—' }} → {{ $history['new_deadline'] ?? '—' }}</p>
+                                        @endif
+                                        <p class="bm-schedule-history-meta">By {{ $history['updated_by'] }}</p>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            @else
+                <p class="bm-empty">No schedule has been created yet.</p>
+            @endif
+        </div>
+        <div class="bm-modal-footer bm-schedule-view-footer">
+            @if(!empty($abyipSchedule))
+            <button type="button" class="bm-btn-schedule secondary" id="btnEditSchedule" data-id="{{ $abyipSchedule['id'] }}">
+                <i class="fas fa-edit"></i> Edit Schedule
+            </button>
+            <button type="button" class="bm-btn-schedule danger" id="btnCancelSchedule" data-id="{{ $abyipSchedule['id'] }}">
+                <i class="fas fa-ban"></i> Cancel Schedule
+            </button>
+            @endif
+        </div>
+    </div>
+</div>
+
 <div id="scheduleModal" class="bm-modal" hidden>
     <div class="bm-modal-backdrop" data-schedule-close></div>
     <div class="bm-modal-dialog bm-modal-lg">
@@ -229,6 +271,29 @@
     </div>
 </div>
 
+<div id="cancelScheduleModal" class="bm-modal" hidden>
+    <div class="bm-modal-backdrop" data-cancel-schedule-close></div>
+    <div class="bm-modal-dialog bm-cancel-schedule-dialog">
+        <div class="bm-modal-header bm-cancel-schedule-header">
+            <div class="bm-cancel-schedule-icon" aria-hidden="true">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div>
+                <h3>Cancel ABYIP Schedule?</h3>
+                <p class="bm-cancel-schedule-subtitle">This will stop barangay SK Officials from submitting ABYIP documents for the current schedule period.</p>
+            </div>
+            <button type="button" class="bm-modal-close" data-cancel-schedule-close>&times;</button>
+        </div>
+        <div class="bm-modal-body bm-cancel-schedule-body">
+            <p>Are you sure you want to cancel the current ABYIP submission schedule? This action cannot be undone.</p>
+        </div>
+        <div class="bm-modal-footer bm-cancel-schedule-footer">
+            <button type="button" class="bm-btn-secondary" data-cancel-schedule-close>No, Keep Schedule</button>
+            <button type="button" class="bm-btn-danger-solid" id="confirmCancelScheduleBtn">Yes, Cancel Schedule</button>
+        </div>
+    </div>
+</div>
+
 <div id="extendModal" class="bm-modal" hidden>
     <div class="bm-modal-backdrop" data-schedule-close></div>
     <div class="bm-modal-dialog">
@@ -258,6 +323,7 @@
         updateUrl: @json(url('/api/barangay-monitoring/abyip-schedules')),
         csrfToken: @json(csrf_token()),
         currentSchedule: @json($abyipSchedule),
+        canCreateSchedule: @json($canCreateAbyipSchedule ?? true),
     };
 </script>
 <script src="{{ url('/shared/js/loading.js') }}"></script>

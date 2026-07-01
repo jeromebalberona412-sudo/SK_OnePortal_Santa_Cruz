@@ -74,7 +74,13 @@
                                 <option value="III">III</option>
                                 <option value="IV">IV</option>
                                 <option value="V">V</option>
+                                <option value="__other__">Other Suffix</option>
                             </select>
+                            <span class="form-error-light"></span>
+                        </div>
+                        <div class="form-group-light" id="fed_suffix_other_group" style="display:none;">
+                            <label class="form-label-light required">Other Suffix</label>
+                            <input type="text" name="suffix_other" id="fed_suffix_other" class="form-input-light input-uppercase" maxlength="10" placeholder="OTHER" autocomplete="off" style="text-transform:uppercase;">
                             <span class="form-error-light"></span>
                         </div>
                         <div class="form-group-light">
@@ -276,7 +282,13 @@
                                 <option value="III">III</option>
                                 <option value="IV">IV</option>
                                 <option value="V">V</option>
+                                <option value="__other__">Other Suffix</option>
                             </select>
+                            <span class="form-error-light"></span>
+                        </div>
+                        <div class="form-group-light" id="edit_fed_suffix_other_group" style="display:none;">
+                            <label for="edit_fed_suffix_other" class="form-label-light required">Other Suffix</label>
+                            <input type="text" name="suffix_other" id="edit_fed_suffix_other" class="form-input-light input-uppercase" maxlength="10" placeholder="OTHER" autocomplete="off" style="text-transform:uppercase;">
                             <span class="form-error-light"></span>
                         </div>
                         <div class="form-group-light">

@@ -260,6 +260,25 @@ function getFilteredRecords() {
     return abyipRecords.filter(recordMatchesFilters);
 }
 
+function renderScheduleRestrictionNotice() {
+    const notice = document.getElementById('abyipScheduleNotice');
+    const messageEl = document.getElementById('abyipScheduleNoticeMessage');
+    if (!notice || !messageEl) {
+        return;
+    }
+
+    if (abyipSubmissionStatus.can_submit) {
+        notice.hidden = true;
+        return;
+    }
+
+    const message = abyipSubmissionStatus.message
+        || 'No ABYIP submission schedule has been set by SK Federation. Please contact SK Federation.';
+
+    messageEl.textContent = message;
+    notice.hidden = false;
+}
+
 function renderRecordsTable() {
     const tbody = document.getElementById('recordsTableBody');
     if (!tbody) return;
@@ -276,11 +295,11 @@ function renderRecordsTable() {
         });
 
         if (!abyipSubmissionStatus.can_submit) {
-            createBtn.textContent = rejectedRecord ? 'Resubmit ABYIP' : 'Create New ABYIP';
+            createBtn.textContent = 'Upload ABYIP';
             createBtn.disabled = true;
             createBtn.title = abyipSubmissionStatus.message || 'ABYIP submission is not available.';
         } else if (rejectedRecord) {
-            createBtn.textContent = 'Resubmit ABYIP';
+            createBtn.textContent = 'Upload ABYIP';
             createBtn.disabled = false;
             createBtn.title = 'Upload a corrected ABYIP PDF for review';
         } else if (hasBlockingRecord) {
@@ -288,11 +307,13 @@ function renderRecordsTable() {
             createBtn.disabled = true;
             createBtn.title = 'Delete or wait for review of the existing ABYIP before creating another';
         } else {
-            createBtn.textContent = 'Create New ABYIP';
+            createBtn.textContent = 'Upload ABYIP';
             createBtn.disabled = false;
-            createBtn.title = '';
+            createBtn.title = 'Upload your ABYIP PDF document';
         }
     }
+
+    renderScheduleRestrictionNotice();
 
     if (abyipRecords.length === 0) {
         tbody.innerHTML =
@@ -1034,6 +1055,19 @@ async function confirmDeleteRecord() {
     }
 }
 
+function setUploadModalPreviewMode(isPreviewing) {
+    const modal = document.getElementById('createOptionsModal');
+    const inner = modal?.querySelector('.abyip-pdf-upload-inner');
+    const heading = document.getElementById('createOptionsHeading');
+
+    if (inner) {
+        inner.classList.toggle('is-previewing', isPreviewing);
+    }
+    if (heading) {
+        heading.textContent = isPreviewing ? 'ABYIP Document Preview' : 'Upload ABYIP (PDF)';
+    }
+}
+
 function resetPdfUploadModal() {
     pendingPdfUploadFile = null;
     const fileInput = document.getElementById('pdfFileInput');
@@ -1042,14 +1076,20 @@ function resetPdfUploadModal() {
     }
 
     const zone = document.getElementById('abyipPdfUploadZone');
-    const selected = document.getElementById('abyipPdfSelected');
+    const previewMount = document.getElementById('abyipPdfPreviewMount');
+    const pagesContainer = document.getElementById('abyipUploadPdfPages');
     const continueBtn = document.getElementById('abyipPdfUploadContinueBtn');
+
+    setUploadModalPreviewMode(false);
 
     if (zone) {
         zone.hidden = false;
     }
-    if (selected) {
-        selected.hidden = true;
+    if (previewMount) {
+        previewMount.hidden = true;
+    }
+    if (pagesContainer) {
+        pagesContainer.innerHTML = '';
     }
     if (continueBtn) {
         continueBtn.disabled = true;
@@ -1097,6 +1137,32 @@ function openImportPdfFilePicker() {
     document.getElementById('pdfFileInput')?.click();
 }
 
+function renderUploadModalPdfPreview(file) {
+    const previewMount = document.getElementById('abyipPdfPreviewMount');
+    const pagesContainer = document.getElementById('abyipUploadPdfPages');
+    if (!previewMount || !pagesContainer || typeof pdfjsLib === 'undefined') {
+        return;
+    }
+
+    previewMount.hidden = false;
+    pagesContainer.innerHTML = '<p class="abyip-pdf-loading">Loading PDF preview...</p>';
+
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        const loadingTask = pdfjsLib.getDocument({ data: event.target.result });
+        loadingTask.promise.then(function (pdf) {
+            pagesContainer.innerHTML = '';
+            renderAllPdfPages(pdf, pagesContainer);
+        }).catch(function () {
+            pagesContainer.innerHTML = '<div class="pdf-error">Unable to preview this PDF.</div>';
+        });
+    };
+    reader.onerror = function () {
+        pagesContainer.innerHTML = '<div class="pdf-error">Unable to read this PDF.</div>';
+    };
+    reader.readAsArrayBuffer(file);
+}
+
 function handlePdfFileChosen(event) {
     const fileInput = event.target;
     const file = fileInput?.files?.[0];
@@ -1119,20 +1185,16 @@ function handlePdfFileChosen(event) {
 
     pendingPdfUploadFile = file;
 
-    const zone = document.getElementById('abyipPdfUploadZone');
-    const selected = document.getElementById('abyipPdfSelected');
-    const nameEl = document.getElementById('abyipPdfSelectedName');
     const continueBtn = document.getElementById('abyipPdfUploadContinueBtn');
 
-    if (zone) {
-        zone.hidden = true;
+    setUploadModalPreviewMode(true);
+
+    if (continueBtn) {
+        continueBtn.disabled = true;
     }
-    if (selected) {
-        selected.hidden = false;
-    }
-    if (nameEl) {
-        nameEl.textContent = file.name;
-    }
+
+    renderUploadModalPdfPreview(file);
+
     if (continueBtn) {
         continueBtn.disabled = false;
     }
@@ -2059,8 +2121,8 @@ function openAbyipModalWithPdfPreview(pdfDoc, filename) {
     showNotification('PDF loaded successfully! Scroll to view all pages.', 'success');
 }
 
-function renderAllPdfPages(pdfDoc) {
-    const container = document.querySelector('.pdf-pages-wrapper');
+function renderAllPdfPages(pdfDoc, containerEl) {
+    const container = containerEl || document.querySelector('.pdf-pages-wrapper');
     if (!container) return;
     
     const totalPages = pdfDoc.numPages;

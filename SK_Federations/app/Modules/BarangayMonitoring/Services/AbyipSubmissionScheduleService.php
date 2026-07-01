@@ -28,7 +28,7 @@ class AbyipSubmissionScheduleService
         }
 
         return AbyipSubmissionSchedule::query()
-            ->with(['creator:id,name', 'updater:id,name'])
+            ->with(['creator:id,name', 'creator.officialProfile:id,user_id,federation_position,position', 'updater:id,name'])
             ->orderByDesc('fiscal_year')
             ->get()
             ->map(fn (AbyipSubmissionSchedule $schedule) => $this->formatSchedule($schedule));
@@ -46,20 +46,31 @@ class AbyipSubmissionScheduleService
         $year = $fiscalYear ?? ((int) date('Y') + 1);
 
         $schedule = AbyipSubmissionSchedule::query()
-            ->with(['histories.updater:id,name'])
+            ->with(['creator:id,name', 'creator.officialProfile:id,user_id,federation_position,position', 'histories.updater:id,name'])
             ->where('fiscal_year', $year)
             ->where('status', '!=', AbyipSubmissionSchedule::STATUS_CANCELLED)
             ->first();
 
         if ($schedule === null) {
             $schedule = AbyipSubmissionSchedule::query()
-                ->with(['histories.updater:id,name'])
+                ->with(['creator:id,name', 'creator.officialProfile:id,user_id,federation_position,position', 'histories.updater:id,name'])
                 ->where('status', '!=', AbyipSubmissionSchedule::STATUS_CANCELLED)
                 ->orderByDesc('fiscal_year')
                 ->first();
         }
 
         return $schedule ? $this->formatSchedule($schedule, includeHistory: true) : null;
+    }
+
+    public function canCreateForCurrentYear(): bool
+    {
+        if (! Schema::hasTable('abyip_submission_schedules')) {
+            return true;
+        }
+
+        $year = (int) date('Y') + 1;
+
+        return ! AbyipSubmissionSchedule::query()->where('fiscal_year', $year)->exists();
     }
 
     /**
@@ -455,6 +466,7 @@ class AbyipSubmissionScheduleService
             'status_label' => $this->statusLabel($schedule->status),
             'allow_late_extension' => (bool) $schedule->allow_late_extension,
             'created_by' => $schedule->creator?->name ?? '—',
+            'created_by_role' => $this->creatorRoleLabel($schedule->creator),
             'updated_by' => $schedule->updater?->name ?? '—',
             'cancelled_at' => $schedule->cancelled_at?->format('M j, Y g:i A'),
             'cancellation_reason' => $schedule->cancellation_reason,
@@ -490,5 +502,27 @@ class AbyipSubmissionScheduleService
             AbyipSubmissionSchedule::STATUS_CANCELLED => 'Cancelled',
             default => ucwords(str_replace('_', ' ', $status)),
         };
+    }
+
+    private function creatorRoleLabel(?User $user): string
+    {
+        if ($user === null) {
+            return '—';
+        }
+
+        if ($user->isSkFed()) {
+            return 'SK Federation';
+        }
+
+        $user->loadMissing('officialProfile');
+        $federationPosition = trim((string) ($user->officialProfile?->federation_position ?? ''));
+
+        if ($federationPosition !== '') {
+            return $federationPosition;
+        }
+
+        $position = trim((string) ($user->officialProfile?->position ?? ''));
+
+        return $position !== '' ? $position : '—';
     }
 }

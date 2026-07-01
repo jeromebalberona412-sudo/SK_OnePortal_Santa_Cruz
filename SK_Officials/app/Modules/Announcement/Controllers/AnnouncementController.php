@@ -121,6 +121,21 @@ class AnnouncementController extends Controller
         );
     }
 
+    // GET /api/announcements/{id}
+    public function show(int $id): JsonResponse
+    {
+        $user = Auth::user();
+        $post = Announcement::query()
+            ->active()
+            ->with(['barangay', 'comments.user', 'user', 'images'])
+            ->withCount('reactions')
+            ->where('id', $id)
+            ->where('user_id', $user->id)
+            ->firstOrFail();
+
+        return response()->json($this->formatPost($post, $user->id, 'sk_official'));
+    }
+
     // PUT /api/announcements/{id}
     public function update(Request $request, int $id): JsonResponse
     {
@@ -133,12 +148,19 @@ class AnnouncementController extends Controller
             'link_url'  => 'nullable|url',
             'images'    => 'nullable|array|max:'.self::MAX_IMAGES,
             'images.*'  => 'image|max:5120',
+            'removed_image_ids'   => 'nullable|array',
+            'removed_image_ids.*' => 'integer',
         ]);
 
-        $post->update(collect($validated)->except(['images'])->all());
+        $post->update(collect($validated)->except(['images', 'removed_image_ids'])->all());
 
-        if ($request->hasFile('images')) {
-            $post->images()->delete();
+        $removedIds = array_values(array_filter(array_map('intval', (array) $request->input('removed_image_ids', []))));
+        if ($removedIds !== []) {
+            $post->images()->whereIn('id', $removedIds)->delete();
+        }
+
+        $currentCount = $post->images()->count();
+        if ($request->hasFile('images') && $currentCount < self::MAX_IMAGES) {
             $this->storePostImages($post, $request);
         }
 
@@ -326,6 +348,10 @@ class AnnouncementController extends Controller
         $imageRecords = $post->relationLoaded('images') ? $post->images : collect();
         $images = $imageRecords->map(fn ($img) => $normalizer->normalizeUrl($img->image_url))->values()->all();
         $images = array_values(array_unique(array_filter($images)));
+        $imageItems = $imageRecords->map(fn ($img) => [
+            'id' => $img->id,
+            'url' => $normalizer->normalizeUrl($img->image_url),
+        ])->values()->all();
 
         return [
             'id'                 => $post->id,
@@ -334,6 +360,7 @@ class AnnouncementController extends Controller
             'body'               => $post->body,
             'image_url'          => $images[0] ?? null,
             'images'             => $images,
+            'image_items'        => $imageItems,
             'link_url'           => $post->link_url,
             'is_federation_wide' => (bool) $post->is_federation_wide,
             'barangay_name'      => $post->barangay?->name,

@@ -52,9 +52,23 @@
                         </div>
                     </div>
                 </div>
-                <button type="button" class="btn primary-btn" id="addAbyipBtn">Create New ABYIP</button>
+                <button type="button" class="btn primary-btn" id="addAbyipBtn">Upload ABYIP</button>
             </div>
         </section>
+
+        <div class="abyip-schedule-notice" id="abyipScheduleNotice" hidden role="alert">
+            <div class="abyip-schedule-notice-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </div>
+            <div class="abyip-schedule-notice-content">
+                <strong id="abyipScheduleNoticeTitle">ABYIP submission is restricted</strong>
+                <p id="abyipScheduleNoticeMessage">No ABYIP submission schedule has been set by SK Federation. Please contact SK Federation.</p>
+            </div>
+        </div>
 
         <section class="page-content-section">
             <div class="section-heading-row">
@@ -458,15 +472,21 @@
                     <p class="abyip-pdf-upload-title">Click to browse or drag and drop</p>
                     <p class="abyip-pdf-upload-hint">PDF files only · Maximum 15MB</p>
                 </div>
-                <div class="abyip-pdf-selected" id="abyipPdfSelected" hidden>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    <span id="abyipPdfSelectedName"></span>
-                    <button type="button" class="abyip-pdf-clear-btn" id="abyipPdfClearBtn">Remove</button>
+                <div class="abyip-pdf-preview-mount" id="abyipPdfPreviewMount" hidden>
+                    <div class="pdf-viewer-container abyip-upload-pdf-viewer">
+                        <div class="pdf-viewer-header abyip-upload-pdf-header">
+                            <span>Document Preview</span>
+                            <button type="button" class="abyip-pdf-clear-btn" id="abyipPdfClearBtn">Remove</button>
+                        </div>
+                        <div class="pdf-viewer-canvas-container abyip-upload-pdf-canvas">
+                            <div class="pdf-pages-wrapper" id="abyipUploadPdfPages"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="abyip-pdf-upload-footer">
                 <button type="button" class="btn-cancel" id="createOptionsCancelBtn">Cancel</button>
-                <button type="button" class="btn primary-btn" id="abyipPdfUploadContinueBtn" disabled>Continue</button>
+                <button type="button" class="btn primary-btn" id="abyipPdfUploadContinueBtn" disabled>Upload ABYIP</button>
             </div>
         </div>
     </div>

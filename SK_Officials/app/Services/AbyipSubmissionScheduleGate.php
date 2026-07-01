@@ -35,7 +35,7 @@ class AbyipSubmissionScheduleGate
             return [
                 'can_submit' => false,
                 'fiscal_year' => $calendarYear,
-                'message' => 'ABYIP submission is not open yet. Please wait for SK Federation to create the ABYIP schedule.',
+                'message' => 'No ABYIP submission schedule has been set by SK Federation. Please contact SK Federation.',
                 'schedule' => null,
             ];
         }

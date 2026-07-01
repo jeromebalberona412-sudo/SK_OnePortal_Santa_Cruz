@@ -25,6 +25,20 @@ class AnnouncementPageController extends Controller
         $color = '#f5c518';
         $barangayProfiles = $this->barangayProfileService->listForTenant((int) $user->tenant_id);
         $barangayLogoUrl = app(BarangayLogoUrlService::class)->resolve($user->barangay_id);
+        $profilePreview = null;
+
+        if ($brgy !== null) {
+            $built = $this->barangayProfileService->buildProfile($brgy);
+            $profilePreview = [
+                'name' => $built['name'],
+                'location' => $built['location'],
+                'logo_url' => $built['logo_url'],
+                'term_label' => $built['term_label'],
+                'post_count' => $built['post_count'],
+                'officials' => $built['officials'],
+                'posts' => collect($built['posts'])->take(5)->values()->all(),
+            ];
+        }
 
         return view('Announcement::announcement', compact(
             'slug',
@@ -33,6 +47,7 @@ class AnnouncementPageController extends Controller
             'user',
             'barangayProfiles',
             'barangayLogoUrl',
+            'profilePreview',
         ));
     }
 }

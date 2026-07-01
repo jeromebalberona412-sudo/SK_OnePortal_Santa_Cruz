@@ -106,16 +106,49 @@ function initSidebarNavigation() {
         });
     }
 
-    if (window.innerWidth > 1024 && localStorage.getItem('sidebarCollapsed') === 'true') {
+    syncSidebarForViewport();
+}
+
+function syncSidebarForViewport() {
+    var mobile = isMobileSidebar();
+    var narrowDesktop = window.innerWidth <= 1280;
+
+    if (mobile) {
+        document.body.classList.remove('sidebar-collapsed');
+        document.body.classList.remove('sidebar-open');
+        collapseSidebarExtras();
+        return;
+    }
+
+    document.body.classList.remove('sidebar-open');
+
+    if (narrowDesktop) {
         document.body.classList.add('sidebar-collapsed');
         collapseSidebarExtras();
+        return;
+    }
+
+    if (localStorage.getItem('sidebarCollapsed') === 'true') {
+        document.body.classList.add('sidebar-collapsed');
+        collapseSidebarExtras();
+    } else {
+        document.body.classList.remove('sidebar-collapsed');
     }
 }
+
+var sidebarResizeTimer = null;
+window.addEventListener('resize', function () {
+    window.clearTimeout(sidebarResizeTimer);
+    sidebarResizeTimer = window.setTimeout(syncSidebarForViewport, 120);
+});
 
 window.toggleSidebar = function () {
     var isMobile = isMobileSidebar();
     if (isMobile) {
         document.body.classList.toggle('sidebar-open');
+        if (document.body.classList.contains('sidebar-open')) {
+            document.body.classList.remove('sidebar-collapsed');
+        }
     } else {
         document.body.classList.toggle('sidebar-collapsed');
         var collapsed = document.body.classList.contains('sidebar-collapsed');

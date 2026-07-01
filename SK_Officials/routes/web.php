@@ -116,6 +116,7 @@ Route::middleware([
     // Announcement API
     Route::prefix('api/announcements')->group(function () {
         Route::get('/', [AnnouncementController::class, 'feed'])->name('api.announcements.feed');
+        Route::get('/{id}', [AnnouncementController::class, 'show'])->name('api.announcements.show');
         Route::post('/', [AnnouncementController::class, 'store'])->name('api.announcements.store');
         Route::post('/upload-image', [AnnouncementController::class, 'uploadImage'])->name('api.announcements.upload-image');
         Route::put('/{id}', [AnnouncementController::class, 'update'])->name('api.announcements.update');

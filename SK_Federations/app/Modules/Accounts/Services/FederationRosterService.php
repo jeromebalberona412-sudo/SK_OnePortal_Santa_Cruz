@@ -4,8 +4,10 @@ namespace App\Modules\Accounts\Services;
 
 use App\Modules\Accounts\Models\OfficialProfile;
 use App\Modules\Accounts\Models\OfficialTerm;
+use App\Modules\Accounts\Notifications\FederationPositionAssignedNotification;
 use App\Modules\Shared\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class FederationRosterService
@@ -164,6 +166,27 @@ class FederationRosterService
         $profile->forceFill([
             'federation_position' => $normalizedPosition !== '' ? $normalizedPosition : null,
         ])->save();
+
+        $this->chairpersonFederationSyncService->syncPortalAccessFromFederationPosition(
+            $account->fresh(),
+            $normalizedPosition !== '' ? $normalizedPosition : null,
+        );
+
+        if (
+            $normalizedPosition !== ''
+            && in_array($normalizedPosition, OfficialProfile::FEDERATION_PORTAL_ACCESS_POSITIONS, true)
+        ) {
+            try {
+                $portalUrl = rtrim((string) config('app.url'), '/');
+                $account->notify(new FederationPositionAssignedNotification($normalizedPosition, $portalUrl));
+            } catch (\Throwable $exception) {
+                Log::warning('Failed to send federation position assignment email.', [
+                    'user_id' => $account->getKey(),
+                    'position' => $normalizedPosition,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
 
         return $account->fresh(['officialProfile.latestTerm', 'barangay']);
     }

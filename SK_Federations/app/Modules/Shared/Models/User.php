@@ -177,13 +177,33 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function canAccessFederationPortal(): bool
     {
-        return $this->isSkFed()
-            || ($this->hasRole(self::ROLE_SK_OFFICIAL) && (bool) $this->has_federation_access);
+        if ($this->isSkFed()) {
+            return true;
+        }
+
+        if (! $this->hasRole(self::ROLE_SK_OFFICIAL) || ! (bool) $this->has_federation_access) {
+            return false;
+        }
+
+        $this->loadMissing('officialProfile');
+        $federationPosition = trim((string) ($this->officialProfile?->federation_position ?? ''));
+
+        return in_array($federationPosition, OfficialProfile::FEDERATION_PORTAL_ACCESS_POSITIONS, true);
+    }
+
+    public function hasFederationLeadershipAccess(): bool
+    {
+        return $this->canAccessFederationPortal() && $this->hasRole(self::ROLE_SK_OFFICIAL);
+    }
+
+    public function isFederationAdministrator(): bool
+    {
+        return $this->isSkFed() || $this->hasFederationLeadershipAccess();
     }
 
     public function isAdmin(): bool
     {
-        return $this->isSkFed();
+        return $this->isFederationAdministrator();
     }
 
     public function isLocked(): bool

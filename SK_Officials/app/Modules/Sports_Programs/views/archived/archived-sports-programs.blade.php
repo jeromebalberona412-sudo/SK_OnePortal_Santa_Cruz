@@ -14,6 +14,7 @@
         'app/Modules/Sports_Programs/assets/css/archived-sports-programs.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <link rel="stylesheet" href="{{ url('/shared/css/sk-archive-terms.css') }}">
 </head>
 <body>
 @include('loading')
@@ -82,6 +83,16 @@
                             <tr><td colspan="7" class="saf-table-empty">Loading archived programs…</td></tr>
                         </tbody>
                     </table>
+                </div>
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        <span id="aspPaginationInfo">Loading archived programs…</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <button type="button" id="aspPrevBtn" class="pagination-btn" disabled>Previous</button>
+                        <div class="pagination-numbers" id="aspPageNumbers"></div>
+                        <button type="button" id="aspNextBtn" class="pagination-btn" disabled>Next</button>
+                    </div>
                 </div>
             </div>
         </section>

@@ -9,6 +9,8 @@ let currentPage = 1;
 let lastPage = 1;
 let editingPostId = null;
 let pendingFiles = [];
+let existingImages = [];
+let removedImageIds = [];
 let pendingLinkUrl = null;
 let currentUserId = null;
 let lightboxImages = [];
@@ -465,6 +467,8 @@ async function submitComment(id, input) {
 function resetComposeForm() {
     editingPostId = null;
     pendingFiles = [];
+    existingImages = [];
+    removedImageIds = [];
     pendingLinkUrl = null;
     document.getElementById('edit-post-id').value = '';
     document.getElementById('compose-content').value = '';
@@ -473,7 +477,12 @@ function resetComposeForm() {
     document.getElementById('compose-link-input-wrap').style.display = 'none';
     document.getElementById('compose-link-input').value = '';
     document.getElementById('compose-image-input').value = '';
+    renderPreviewMeta();
     setPostButtonLoading(false);
+}
+
+function totalSelectedImages() {
+    return existingImages.length + pendingFiles.length;
 }
 
 function openComposeModal(type) {
@@ -515,16 +524,33 @@ function toggleComposeFullscreen() {
 }
 
 async function editPost(id) {
-    const card = document.querySelector(`.post-card[data-post-id="${id}"]`);
-    if (!card) return;
-    editingPostId = id;
-    document.getElementById('compose-modal-title').textContent = 'Edit Post';
-    document.getElementById('edit-post-id').value = id;
-    const text = card.querySelector('.post-text')?.textContent ?? '';
-    document.getElementById('compose-content').value = text;
-    updateCharCount();
-    document.getElementById('composeModal').classList.add('active');
     document.querySelectorAll('.post-options-menu.open').forEach((m) => m.classList.remove('open'));
+
+    try {
+        const post = await apiFetch(`/api/announcements/${id}`);
+        editingPostId = id;
+        pendingFiles = [];
+        removedImageIds = [];
+        existingImages = [];
+
+        if (post.image_items?.length) {
+            existingImages = post.image_items.map((item) => ({ id: item.id, url: item.url }));
+        } else if (post.images?.length) {
+            existingImages = post.images.map((url, idx) => ({ id: null, url, legacyIndex: idx }));
+        }
+
+        document.getElementById('compose-modal-title').textContent = 'Edit Post';
+        document.getElementById('edit-post-id').value = id;
+        document.getElementById('compose-content').value = post.body || '';
+        document.getElementById('compose-type').value = post.type || 'update';
+        document.getElementById('compose-link-input-wrap').style.display = post.link_url ? 'block' : 'none';
+        document.getElementById('compose-link-input').value = post.link_url || '';
+        refreshPreviewGrid();
+        updateCharCount();
+        document.getElementById('composeModal').classList.add('active');
+    } catch (err) {
+        alert(err.message || 'Unable to load post for editing.');
+    }
 }
 
 let pendingArchivePostId = null;
@@ -594,11 +620,25 @@ async function submitPost() {
 
     try {
         if (editingPostId) {
-            const updated = await apiFetch(`/api/announcements/${editingPostId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type, title: '', body, link_url: link }),
+            const fd = new FormData();
+            fd.append('type', type);
+            fd.append('body', body);
+            if (link) fd.append('link_url', link);
+            fd.append('_method', 'PUT');
+            pendingFiles.forEach((file) => fd.append('images[]', file));
+            removedImageIds.forEach((imageId) => fd.append('removed_image_ids[]', imageId));
+
+            const res = await fetch(`/api/announcements/${editingPostId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken(),
+                    Accept: 'application/json',
+                },
+                body: fd,
             });
+            const updated = await res.json();
+            if (!res.ok) throw new Error(updated.message || 'Failed to update post.');
+
             const card = document.querySelector(`.post-card[data-post-id="${editingPostId}"]`);
             if (card) {
                 card.innerHTML = buildPost(updated);
@@ -649,7 +689,7 @@ function previewImages(input) {
     const files = Array.from(input.files || []);
     if (!files.length) return;
 
-    const remaining = MAX_IMAGES - pendingFiles.length;
+    const remaining = MAX_IMAGES - totalSelectedImages();
     if (remaining <= 0) {
         alert(`You can upload up to ${MAX_IMAGES} images per post.`);
         input.value = '';
@@ -661,37 +701,49 @@ function previewImages(input) {
         alert(`Only ${remaining} more image(s) can be added (max ${MAX_IMAGES}).`);
     }
 
-    toAdd.forEach((file) => {
-        pendingFiles.push(file);
-        const reader = new FileReader();
-        reader.onload = (e) => appendPreviewThumb(e.target.result, pendingFiles.length - 1);
-        reader.readAsDataURL(file);
-    });
-
+    toAdd.forEach((file) => pendingFiles.push(file));
     input.value = '';
-    renderPreviewMeta();
+    refreshPreviewGrid();
+}
+
+function appendExistingThumb(image) {
+    const wrap = document.getElementById('compose-images-preview');
+    if (!wrap || !image?.url) return;
+    const item = document.createElement('div');
+    item.className = 'compose-preview-item compose-preview-item--existing';
+    item.innerHTML = `
+        <img src="${escapeHtml(image.url)}" alt="Existing photo">
+        <button type="button" class="compose-preview-remove" aria-label="Remove photo">&times;</button>`;
+    item.querySelector('.compose-preview-remove').addEventListener('click', () => {
+        if (image.id) removedImageIds.push(image.id);
+        existingImages = existingImages.filter((img) => {
+            if (image.id) return img.id !== image.id;
+            return img.url !== image.url;
+        });
+        refreshPreviewGrid();
+    });
+    wrap.appendChild(item);
 }
 
 function appendPreviewThumb(src, index) {
     const wrap = document.getElementById('compose-images-preview');
     const item = document.createElement('div');
-    item.className = 'compose-preview-item';
-    item.dataset.index = String(index);
+    item.className = 'compose-preview-item compose-preview-item--new';
     item.innerHTML = `
         <img src="${src}" alt="Preview">
         <button type="button" class="compose-preview-remove" aria-label="Remove photo">&times;</button>`;
-    item.querySelector('.compose-preview-remove').addEventListener('click', () => removePendingImage(index));
+    item.querySelector('.compose-preview-remove').addEventListener('click', () => {
+        pendingFiles.splice(index, 1);
+        refreshPreviewGrid();
+    });
     wrap.appendChild(item);
 }
 
-function removePendingImage(index) {
-    pendingFiles.splice(index, 1);
-    rerenderPreviewThumbs();
-}
-
-function rerenderPreviewThumbs() {
+function refreshPreviewGrid() {
     const wrap = document.getElementById('compose-images-preview');
+    if (!wrap) return;
     wrap.innerHTML = '';
+    existingImages.forEach((image) => appendExistingThumb(image));
     pendingFiles.forEach((file, index) => {
         const reader = new FileReader();
         reader.onload = (e) => appendPreviewThumb(e.target.result, index);
@@ -700,9 +752,15 @@ function rerenderPreviewThumbs() {
     renderPreviewMeta();
 }
 
+function rerenderPreviewThumbs() {
+    refreshPreviewGrid();
+}
+
 function renderPreviewMeta() {
     const meta = document.getElementById('compose-images-meta');
-    if (meta) meta.textContent = pendingFiles.length ? `${pendingFiles.length} / ${MAX_IMAGES} photos selected (uploads on Post)` : '';
+    if (!meta) return;
+    const total = totalSelectedImages();
+    meta.textContent = total ? `${total} / ${MAX_IMAGES} photos selected` : '';
 }
 
 function toggleLinkInput() {
@@ -816,3 +874,89 @@ window.setFeedFilter = setFeedFilter;
 window.toggleNotifPopover = toggleNotifPopover;
 window.toggleProfileDropdown = toggleProfileDropdown;
 window.toggleSidebar = toggleSidebar;
+
+function renderProfilePreviewModal() {
+    const profile = window.AnnConfig?.profilePreview;
+    if (!profile) return;
+
+    const title = document.getElementById('profilePreviewTitle');
+    const location = document.getElementById('profilePreviewLocation');
+    if (title) title.textContent = `SK Barangay ${profile.name}`;
+    if (location) location.textContent = profile.location || '';
+
+    const postCount = document.getElementById('profilePreviewPostCount');
+    const term = document.getElementById('profilePreviewTerm');
+    const officialCount = document.getElementById('profilePreviewOfficialCount');
+    if (postCount) postCount.textContent = String(profile.post_count ?? 0);
+    if (term) term.textContent = profile.term_label || '—';
+    if (officialCount) officialCount.textContent = String((profile.officials || []).length);
+
+    const officialsEl = document.getElementById('profilePreviewOfficials');
+    if (officialsEl) {
+        const officials = profile.officials || [];
+        officialsEl.innerHTML = officials.length
+            ? officials.map((o) => `
+                <div class="profile-preview-list-item">
+                    <strong>${escapeHtml(o.name)}</strong>
+                    <span>${escapeHtml(o.role)}</span>
+                </div>`).join('')
+            : '<p class="profile-preview-empty">No officials listed.</p>';
+    }
+
+    const postsEl = document.getElementById('profilePreviewPosts');
+    if (postsEl) {
+        const posts = profile.posts || [];
+        postsEl.innerHTML = posts.length
+            ? posts.map((p) => `
+                <div class="profile-preview-post-item">
+                    <div class="profile-preview-post-head">
+                        <span class="profile-preview-post-type">${escapeHtml(p.type || 'update')}</span>
+                        <span class="profile-preview-post-time">${escapeHtml(p.posted_time || p.time || '')}</span>
+                    </div>
+                    ${p.title ? `<p class="profile-preview-post-title">${escapeHtml(p.title)}</p>` : ''}
+                    <p class="profile-preview-post-body">${escapeHtml(p.body || '')}</p>
+                    ${p.image_url ? `<img src="${escapeHtml(p.image_url)}" alt="" class="profile-preview-post-image">` : ''}
+                </div>`).join('')
+            : '<p class="profile-preview-empty">No posts yet.</p>';
+    }
+}
+
+function openProfilePreviewModal() {
+    const modal = document.getElementById('profilePreviewModal');
+    if (!modal) return;
+    renderProfilePreviewModal();
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeProfilePreviewModal() {
+    const modal = document.getElementById('profilePreviewModal');
+    const box = document.getElementById('profilePreviewModalBox');
+    if (modal) modal.style.display = 'none';
+    if (box) box.classList.remove('view-modal-maximized');
+    document.body.style.overflow = '';
+}
+
+function toggleProfilePreviewFullscreen() {
+    const backdrop = document.getElementById('profilePreviewModal');
+    const box = document.getElementById('profilePreviewModalBox');
+    const btn = document.getElementById('profilePreviewToggle');
+    if (!backdrop || !box) return;
+    const isMax = box.classList.toggle('view-modal-maximized');
+    backdrop.classList.toggle('view-modal-maximized', isMax);
+    if (btn) {
+        btn.textContent = isMax ? '❐' : '□';
+        btn.setAttribute('aria-label', isMax ? 'Restore down' : 'Full screen');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('profilePreviewClose')?.addEventListener('click', closeProfilePreviewModal);
+    document.getElementById('profilePreviewToggle')?.addEventListener('click', toggleProfilePreviewFullscreen);
+    document.getElementById('profilePreviewModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'profilePreviewModal') closeProfilePreviewModal();
+    });
+});
+
+window.openProfilePreviewModal = openProfilePreviewModal;
+window.closeProfilePreviewModal = closeProfilePreviewModal;

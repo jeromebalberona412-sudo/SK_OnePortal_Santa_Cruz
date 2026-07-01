@@ -3670,3 +3670,100 @@ html {
     border-top: 1px solid #e5e7eb;
     background: #f8fafc;
 }
+
+.abyip-schedule-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 0 0 20px;
+    padding: 14px 16px;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    background: #fef2f2;
+    color: #991b1b;
+}
+
+.abyip-schedule-notice[hidden] {
+    display: none !important;
+}
+
+.abyip-schedule-notice-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.abyip-schedule-notice-content strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.abyip-schedule-notice-content p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.abyip-pdf-upload-inner.is-previewing .abyip-meta-hint,
+.abyip-pdf-upload-inner.is-previewing .abyip-pdf-upload-zone {
+    display: none !important;
+}
+
+.abyip-pdf-upload-inner.is-previewing .abyip-pdf-preview-mount {
+    margin-top: 0;
+}
+
+.abyip-upload-modal-box:has(.abyip-pdf-upload-inner.is-previewing) .create-options-modal-header h4 {
+    font-size: 15px;
+}
+
+.abyip-upload-modal-box:has(.abyip-pdf-upload-inner.is-previewing) .abyip-upload-pdf-viewer {
+    max-height: min(62vh, 560px);
+}
+
+.abyip-upload-modal-box:has(.abyip-pdf-upload-inner.is-previewing) .abyip-upload-pdf-canvas {
+    max-height: calc(min(62vh, 560px) - 48px);
+}
+
+.abyip-pdf-preview-mount {
+    margin-top: 12px;
+}
+
+.abyip-upload-pdf-viewer {
+    max-height: 420px;
+}
+
+.abyip-upload-pdf-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.abyip-upload-pdf-canvas {
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.abyip-pdf-loading {
+    margin: 0;
+    padding: 24px 16px;
+    text-align: center;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.abyip-upload-pdf-canvas .pdf-page-canvas {
+    width: 100%;
+    height: auto;
+}
+
+@media (max-width: 768px) {
+    .abyip-upload-pdf-viewer {
+        max-height: 320px;
+    }
+
+    .abyip-upload-pdf-canvas {
+        max-height: 260px;
+    }
+}
