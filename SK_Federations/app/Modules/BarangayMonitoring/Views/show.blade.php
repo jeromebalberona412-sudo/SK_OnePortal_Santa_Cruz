@@ -239,6 +239,36 @@
                 <button type="button" class="action-btn reject-btn" onclick="showRejectForm()">Reject</button>
                 <button type="button" class="action-btn approve-btn" onclick="submitApproval()">Approve</button>
             </div>
+
+            <div class="modal-actions" id="revokeActions" style="display:none;">
+                <button type="button" class="action-btn revoke-btn" onclick="showRevokeForm()">Revoke Approval</button>
+            </div>
+
+            <div class="rejection-form" id="revokeForm" style="display:none;">
+                <h4 class="form-title">Revoke Approval</h4>
+                <p class="form-help">Type <strong>Confirm to revoked</strong> below to continue.</p>
+                <div class="form-group">
+                    <label for="abyipRevokeConfirm">Confirmation <span class="required">*</span></label>
+                    <input type="text" id="abyipRevokeConfirm" class="form-control" maxlength="20" placeholder="Confirm to revoked">
+                    <span class="error-message" id="revokeConfirmError"></span>
+                </div>
+                <div class="form-group">
+                    <label>Reason</label>
+                    <div class="revoke-reason-options">
+                        <label class="revoke-check"><input type="checkbox" id="revokeReasonAccidental"> Accidentally approved</label>
+                        <label class="revoke-check"><input type="checkbox" id="revokeReasonOther"> Other</label>
+                    </div>
+                </div>
+                <div class="form-group" id="revokeReasonFieldWrap" style="display:none;">
+                    <label for="abyipRevokeReason">Revoke Reason <span class="required">*</span></label>
+                    <textarea id="abyipRevokeReason" class="form-control revoke-reason-input" rows="3" maxlength="100" placeholder="Explain why this approval is being revoked..."></textarea>
+                    <span class="error-message" id="revokeReasonError"></span>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="form-btn cancel-btn" onclick="hideRevokeForm()">Cancel</button>
+                    <button type="button" class="form-btn submit-btn revoke-submit-btn" onclick="submitRevocation()">Revoke Approval</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -256,6 +286,7 @@
             showUrl: @json(url('/api/barangay-abyip/__ID__')),
             approveUrl: @json(url('/api/barangay-abyip/__ID__/approve')),
             rejectUrl: @json(url('/api/barangay-abyip/__ID__/reject')),
+            revokeUrl: @json(url('/api/barangay-abyip/__ID__/revoke')),
             csrfToken: @json(csrf_token()),
             abyipReports: @json($barangayData['abyip']['reports'] ?? []),
         };

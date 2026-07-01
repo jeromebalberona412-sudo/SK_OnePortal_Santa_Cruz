@@ -55,10 +55,6 @@
                     <label for="prevKabYearFilter" class="filter-label">Previous Kabataan</label>
                     <select id="prevKabYearFilter" class="filter-select">
                         <option value="">All Years</option>
-                        <option value="2023">2023</option>
-                        <option value="2024">2024</option>
-                        <option value="2025">2025</option>
-                        <option value="2026">2026</option>
                     </select>
                 </div>
                 <div class="filter-item">
@@ -205,7 +201,7 @@
                 </div>
                 <div class="upload-zone-title">Click to upload or drag and drop</div>
                 <div class="upload-zone-hint">Excel files only (.xlsx, .xls)</div>
-                <div class="upload-zone-limit">Maximum file size: 10MB</div>
+                <div class="upload-zone-limit">Maximum file size: 10MB · Maximum 5,000 rows per upload</div>
             </div>
 
             <input type="file" id="prevKabFileInput" class="upload-file-input" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">

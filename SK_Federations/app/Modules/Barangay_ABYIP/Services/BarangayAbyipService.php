@@ -109,6 +109,35 @@ class BarangayAbyipService
         return $this->formatSubmission($document->fresh(['barangay', 'creator']));
     }
 
+    public function revoke(User $reviewer, int $id, string $reason): array
+    {
+        $document = $this->findDocument($id);
+
+        if (strtolower((string) ($document->status ?? '')) !== Abyip::STATUS_APPROVED) {
+            throw ValidationException::withMessages([
+                'document' => ['Only approved ABYIP submissions can be revoked.'],
+            ]);
+        }
+
+        $reason = trim($reason);
+        if ($reason === '') {
+            throw ValidationException::withMessages([
+                'reason' => ['A revoke reason is required.'],
+            ]);
+        }
+
+        DB::transaction(function () use ($document, $reviewer, $reason) {
+            $document->update([
+                'status' => Abyip::STATUS_PENDING,
+                'reviewed_at' => null,
+                'reviewed_by_user_id' => null,
+                'rejection_reason' => 'Revoked: '.$reason,
+            ]);
+        });
+
+        return $this->formatSubmission($document->fresh(['barangay', 'creator']));
+    }
+
     private function findDocument(int $id): Abyip
     {
         $document = Abyip::query()

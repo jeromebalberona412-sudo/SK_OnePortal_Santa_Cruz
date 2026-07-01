@@ -71,6 +71,7 @@ const SORT_COLUMN_KEYS = [
 ];
 
 const NUMERIC_SORT_COLUMNS = new Set(['rowNum', 'age', 'votingFrequency']);
+const MAX_UPLOAD_ROWS = 5000;
 
 /* ── DOM refs ── */
 const tableBody      = document.getElementById('prevKabTableBody');
@@ -82,6 +83,33 @@ const bulkDeleteBtn  = document.getElementById('prevKabBulkDeleteBtn');
 const bulkDeleteLabel = document.getElementById('prevKabBulkDeleteLabel');
 const tableActionsBar = document.getElementById('prevKabTableActions');
 const selectAllCheckbox = document.getElementById('prevKabSelectAll');
+
+function populateYearFilter(years) {
+    if (!yearFilter) {
+        return;
+    }
+
+    const currentVal = yearFilter.value;
+    const list = Array.isArray(years)
+        ? years.filter((year) => year !== null && year !== undefined && String(year).trim() !== '')
+        : [];
+
+    yearFilter.innerHTML = '<option value="">All Years</option>';
+    list.forEach((year) => {
+        const option = document.createElement('option');
+        option.value = String(year);
+        option.textContent = String(year);
+        if (String(year) === currentVal) {
+            option.selected = true;
+        }
+        yearFilter.appendChild(option);
+    });
+
+    yearFilter.disabled = list.length === 0;
+    if (!list.some((year) => String(year) === currentVal)) {
+        yearFilter.value = '';
+    }
+}
 
 /* ── Helpers ── */
 function cell(value) {
@@ -147,14 +175,7 @@ function loadData() {
             date: r.date,
         }));
 
-        // Populate year filter dynamically
-        if (yearFilter && response.years?.length) {
-            const currentVal = yearFilter.value;
-            yearFilter.innerHTML = '<option value="">All Years</option>';
-            response.years.forEach(y => {
-                yearFilter.innerHTML += `<option value="${y}" ${String(y) === currentVal ? 'selected' : ''}>${y}</option>`;
-            });
-        }
+        populateYearFilter(response.years || []);
 
         filteredData = [...PREV_KAB_DATA];
         currentPage = 1;
@@ -163,6 +184,7 @@ function loadData() {
     })
     .catch(() => {
         filteredData = [];
+        populateYearFilter([]);
         renderTable();
     });
 }
@@ -848,6 +870,19 @@ function handleFileSelected(file) {
                 };
             }).filter(r => r.lastName || r.firstName || r.name);
 
+            if (uploadedRows.length > MAX_UPLOAD_ROWS) {
+                uploadedRows = [];
+                alert(`This file has too many rows. Maximum allowed is ${MAX_UPLOAD_ROWS.toLocaleString()} rows per upload.`);
+                resetUploadModal();
+                return;
+            }
+
+            if (!uploadedRows.length) {
+                alert('No valid records found in the uploaded file.');
+                resetUploadModal();
+                return;
+            }
+
             renderFullPreviewTable(uploadedRows);
 
             if (inlinePreview) inlinePreview.style.display = 'block';
@@ -976,6 +1011,11 @@ if (confirmSaveBtn) {
     confirmSaveBtn.addEventListener('click', () => {
         if (!uploadedRows.length) return;
 
+        if (uploadedRows.length > MAX_UPLOAD_ROWS) {
+            showToast(`Upload exceeds the maximum of ${MAX_UPLOAD_ROWS.toLocaleString()} rows.`, 'error');
+            return;
+        }
+
         showUploadProgress();
         updateUploadProgress(0, uploadedRows.length, true);
 
@@ -1023,11 +1063,12 @@ if (confirmSaveBtn) {
                 body: JSON.stringify({
                     rows: batches[idx],
                     replace_existing: idx === 0,
+                    total_rows: idx === 0 ? uploadedRows.length : undefined,
                 }),
             })
-            .then(r => r.json())
-            .then(res => {
-                if (res.success) {
+            .then(r => r.json().then(res => ({ ok: r.ok, res })))
+            .then(({ ok, res }) => {
+                if (ok && res.success) {
                     totalSaved += res.saved;
                     sendBatch(idx + 1);
                 } else {
@@ -1038,7 +1079,7 @@ if (confirmSaveBtn) {
                         window.hideLoading();
                     }
 
-                    showToast('Upload failed. Please try again.', 'error');
+                    showToast(res.message || 'Upload failed. Please try again.', 'error');
                 }
             })
             .catch(() => {

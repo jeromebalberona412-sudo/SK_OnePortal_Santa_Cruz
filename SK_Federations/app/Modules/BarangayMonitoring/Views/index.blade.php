@@ -14,34 +14,46 @@
 <div class="bm-container">
             <section class="bm-kpi-grid" aria-label="Monitoring summary">
                 <article class="bm-kpi-card">
-                    <div class="bm-kpi-label">Total Barangay</div>
-                    <div class="bm-kpi-value">{{ $stats['total_barangays'] }}</div>
-                    <div class="bm-kpi-note">Active barangays in monitoring</div>
+                    <div class="bm-kpi-icon bm-kpi-icon--blue"><i class="fas fa-map-marked-alt"></i></div>
+                    <div class="bm-kpi-body">
+                        <div class="bm-kpi-label">Total Barangay</div>
+                        <div class="bm-kpi-value">{{ $stats['total_barangays'] }}</div>
+                    </div>
                 </article>
                 <article class="bm-kpi-card">
-                    <div class="bm-kpi-label">ABYIP Submitted</div>
-                    <div class="bm-kpi-value">{{ $stats['abyip_submitted_count'] }}</div>
-                    <div class="bm-kpi-note">Barangays with ABYIP submissions</div>
+                    <div class="bm-kpi-icon bm-kpi-icon--indigo"><i class="fas fa-file-invoice-dollar"></i></div>
+                    <div class="bm-kpi-body">
+                        <div class="bm-kpi-label">ABYIP Submitted</div>
+                        <div class="bm-kpi-value">{{ $stats['abyip_submitted_count'] }}</div>
+                    </div>
                 </article>
                 <article class="bm-kpi-card">
-                    <div class="bm-kpi-label">Compliance Rate</div>
-                    <div class="bm-kpi-value">{{ $stats['compliance_rate'] }}%</div>
-                    <div class="bm-kpi-note">Compliant barangays</div>
+                    <div class="bm-kpi-icon bm-kpi-icon--green"><i class="fas fa-check-circle"></i></div>
+                    <div class="bm-kpi-body">
+                        <div class="bm-kpi-label">Compliance Rate</div>
+                        <div class="bm-kpi-value">{{ $stats['compliance_rate'] }}%</div>
+                    </div>
                 </article>
                 <article class="bm-kpi-card">
-                    <div class="bm-kpi-label">Total Compliant</div>
-                    <div class="bm-kpi-value">{{ $stats['compliant_count'] }}</div>
-                    <div class="bm-kpi-note">Barangays marked compliant</div>
+                    <div class="bm-kpi-icon bm-kpi-icon--green"><i class="fas fa-thumbs-up"></i></div>
+                    <div class="bm-kpi-body">
+                        <div class="bm-kpi-label">Total Compliant</div>
+                        <div class="bm-kpi-value">{{ $stats['compliant_count'] }}</div>
+                    </div>
                 </article>
                 <article class="bm-kpi-card">
-                    <div class="bm-kpi-label">Non-Compliance Rate</div>
-                    <div class="bm-kpi-value">{{ $stats['non_compliance_rate'] }}%</div>
-                    <div class="bm-kpi-note">Non-compliant barangays</div>
+                    <div class="bm-kpi-icon bm-kpi-icon--rose"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="bm-kpi-body">
+                        <div class="bm-kpi-label">Non-Compliance Rate</div>
+                        <div class="bm-kpi-value">{{ $stats['non_compliance_rate'] }}%</div>
+                    </div>
                 </article>
                 <article class="bm-kpi-card">
-                    <div class="bm-kpi-label">Total Non-Compliant</div>
-                    <div class="bm-kpi-value">{{ $stats['non_compliant_count'] }}</div>
-                    <div class="bm-kpi-note">Barangays marked non-compliant</div>
+                    <div class="bm-kpi-icon bm-kpi-icon--amber"><i class="fas fa-times-circle"></i></div>
+                    <div class="bm-kpi-body">
+                        <div class="bm-kpi-label">Total Non-Compliant</div>
+                        <div class="bm-kpi-value">{{ $stats['non_compliant_count'] }}</div>
+                    </div>
                 </article>
             </section>
 

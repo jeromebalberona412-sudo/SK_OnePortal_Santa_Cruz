@@ -216,8 +216,8 @@ class AnnouncementController extends Controller
 
             if ($post->is_federation_wide && (int) $post->user_id !== (int) $user->id) {
                 $dispatcher = app(SkFederationsNotificationDispatcher::class);
-                $dispatcher->notifyCommunityFeedLike(
-                    (int) $post->user_id,
+                $dispatcher->notifyFederationPortalCommunityFeedLike(
+                    (int) $user->id,
                     (string) $user->name,
                     $dispatcher->postLabel($post->title, $post->body),
                 );
@@ -271,8 +271,8 @@ class AnnouncementController extends Controller
 
         if ($post->is_federation_wide && (int) $post->user_id !== (int) $user->id) {
             $dispatcher = app(SkFederationsNotificationDispatcher::class);
-            $dispatcher->notifyCommunityFeedComment(
-                (int) $post->user_id,
+            $dispatcher->notifyFederationPortalCommunityFeedComment(
+                (int) $user->id,
                 (string) $user->name,
                 $dispatcher->postLabel($post->title, $post->body),
                 $request->body,

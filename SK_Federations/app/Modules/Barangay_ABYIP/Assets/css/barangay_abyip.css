@@ -426,6 +426,44 @@
     box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
+.revoke-btn {
+    background: #b45309;
+    color: #fff;
+}
+
+.revoke-btn:hover {
+    background: #92400e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(180, 83, 9, 0.3);
+}
+
+.revoke-reason-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.revoke-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #334155;
+    cursor: pointer;
+}
+
+.revoke-reason-input {
+    resize: none;
+    min-height: 84px;
+    max-height: 84px;
+}
+
+.form-help {
+    margin: 0 0 16px;
+    font-size: 13px;
+    color: #64748b;
+}
+
 /* Approval/Rejection Forms */
 .approval-form,
 .rejection-form {

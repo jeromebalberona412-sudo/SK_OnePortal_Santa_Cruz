@@ -128,8 +128,14 @@
         statusBadge.className = 'status-badge ' + statusClass(item.status);
 
         const modalActions = document.getElementById('modalActions');
+        const revokeActions = document.getElementById('revokeActions');
+        const normalizedStatus = String(item.status || 'pending').toLowerCase();
+
         if (modalActions) {
-            modalActions.style.display = String(item.status).toLowerCase() === 'pending' ? 'flex' : 'none';
+            modalActions.style.display = normalizedStatus === 'pending' ? 'flex' : 'none';
+        }
+        if (revokeActions) {
+            revokeActions.style.display = normalizedStatus === 'approved' ? 'flex' : 'none';
         }
 
         const rejectionNotice = document.getElementById('modalRejectionReason');
@@ -178,6 +184,7 @@
         populateModalFields(cached);
         document.getElementById('abyipPreviewMount').innerHTML = '<p class="preview-loading">Loading document preview...</p>';
         hideRejectForm();
+        hideRevokeForm();
         document.getElementById('viewModal').classList.add('active');
         document.body.style.overflow = 'hidden';
 
@@ -196,6 +203,7 @@
 
     window.showRejectForm = function () {
         document.getElementById('modalActions').style.display = 'none';
+        document.getElementById('revokeActions').style.display = 'none';
         document.getElementById('rejectForm').style.display = 'block';
     };
 
@@ -204,8 +212,108 @@
         document.getElementById('abyipRejectReason').value = '';
         document.getElementById('rejectReasonError').textContent = '';
         const item = findCachedSubmission(currentSubmissionId);
+        const normalizedStatus = item ? String(item.status).toLowerCase() : '';
         document.getElementById('modalActions').style.display =
-            item && String(item.status).toLowerCase() === 'pending' ? 'flex' : 'none';
+            normalizedStatus === 'pending' ? 'flex' : 'none';
+        document.getElementById('revokeActions').style.display =
+            normalizedStatus === 'approved' ? 'flex' : 'none';
+    };
+
+    function bindRevokeReasonControls() {
+        const accidental = document.getElementById('revokeReasonAccidental');
+        const other = document.getElementById('revokeReasonOther');
+        const wrap = document.getElementById('revokeReasonFieldWrap');
+        const reasonInput = document.getElementById('abyipRevokeReason');
+
+        function syncRevokeReasonField() {
+            const showField = Boolean(accidental?.checked || other?.checked);
+            if (wrap) {
+                wrap.style.display = showField ? 'block' : 'none';
+            }
+            if (!showField && reasonInput) {
+                reasonInput.value = '';
+            }
+        }
+
+        accidental?.addEventListener('change', syncRevokeReasonField);
+        other?.addEventListener('change', syncRevokeReasonField);
+    }
+
+    window.showRevokeForm = function () {
+        document.getElementById('revokeActions').style.display = 'none';
+        document.getElementById('revokeForm').style.display = 'block';
+    };
+
+    window.hideRevokeForm = function () {
+        document.getElementById('revokeForm').style.display = 'none';
+        document.getElementById('abyipRevokeConfirm').value = '';
+        document.getElementById('abyipRevokeReason').value = '';
+        document.getElementById('revokeConfirmError').textContent = '';
+        document.getElementById('revokeReasonError').textContent = '';
+        const accidental = document.getElementById('revokeReasonAccidental');
+        const other = document.getElementById('revokeReasonOther');
+        if (accidental) accidental.checked = false;
+        if (other) other.checked = false;
+        document.getElementById('revokeReasonFieldWrap').style.display = 'none';
+        const item = findCachedSubmission(currentSubmissionId);
+        document.getElementById('revokeActions').style.display =
+            item && String(item.status).toLowerCase() === 'approved' ? 'flex' : 'none';
+    };
+
+    window.submitRevocation = async function () {
+        if (!currentSubmissionId) return;
+
+        const confirmInput = document.getElementById('abyipRevokeConfirm');
+        const confirmError = document.getElementById('revokeConfirmError');
+        const reasonError = document.getElementById('revokeReasonError');
+        const accidental = document.getElementById('revokeReasonAccidental');
+        const other = document.getElementById('revokeReasonOther');
+        const reasonInput = document.getElementById('abyipRevokeReason');
+
+        confirmError.textContent = '';
+        reasonError.textContent = '';
+
+        if ((confirmInput?.value || '').trim() !== 'Confirm to revoked') {
+            confirmError.textContent = 'Type Confirm to revoked to continue.';
+            return;
+        }
+
+        if (!accidental?.checked && !other?.checked) {
+            reasonError.textContent = 'Select a revoke reason.';
+            return;
+        }
+
+        let reason = '';
+        if (accidental?.checked) {
+            reason = 'Accidentally approved';
+        }
+        if (other?.checked) {
+            const customReason = (reasonInput?.value || '').trim();
+            if (!customReason) {
+                reasonError.textContent = 'Please provide a revoke reason.';
+                return;
+            }
+            reason = reason ? reason + ': ' + customReason : customReason;
+        }
+
+        reason = reason.slice(0, 100);
+
+        const revokeBtn = document.querySelector('.revoke-submit-btn');
+        if (revokeBtn) revokeBtn.disabled = true;
+
+        try {
+            await apiFetch((config.revokeUrl || '/api/barangay-abyip/__ID__/revoke').replace('__ID__', currentSubmissionId), {
+                method: 'POST',
+                body: { reason: reason },
+            });
+            showToast('ABYIP approval revoked.', 'success');
+            closeViewModal();
+            window.location.reload();
+        } catch (error) {
+            showToast(error.message || 'Revocation failed.', 'error');
+        } finally {
+            if (revokeBtn) revokeBtn.disabled = false;
+        }
     };
 
     window.submitApproval = async function () {
@@ -263,6 +371,7 @@
         document.getElementById('viewModal').classList.remove('active', 'fullscreen');
         document.body.style.overflow = '';
         hideRejectForm();
+        hideRevokeForm();
         currentSubmissionId = null;
         document.getElementById('abyipPreviewMount').innerHTML = '';
     };
@@ -290,5 +399,6 @@
     document.addEventListener('DOMContentLoaded', function () {
         initAbyipFilters();
         initAbyipViewButtons();
+        bindRevokeReasonControls();
     });
 })();

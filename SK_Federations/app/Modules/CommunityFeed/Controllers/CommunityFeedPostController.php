@@ -228,11 +228,20 @@ class CommunityFeedPostController extends Controller
             ]);
             $liked = true;
 
-            if ((int) $post->user_id !== (int) $user->id) {
+            $postLabel = $this->notificationService->postLabel($post->title, $post->body);
+            if ($post->is_federation_wide) {
+                $this->notificationService->notifyFederationPortalUsersExcept(
+                    [(int) $user->id],
+                    SkFederationsNotificationService::CATEGORY_COMMUNITY_FEED,
+                    "{$user->name} liked a federation post",
+                    $postLabel,
+                    '/community-feed',
+                );
+            } elseif ((int) $post->user_id !== (int) $user->id) {
                 $this->notificationService->notifyCommunityFeedLike(
                     (int) $post->user_id,
                     (string) $user->name,
-                    $this->notificationService->postLabel($post->title, $post->body),
+                    $postLabel,
                     $post->id,
                 );
             }
@@ -291,13 +300,24 @@ class CommunityFeedPostController extends Controller
         ]);
 
         if ((int) $post->user_id !== (int) $user->id) {
-            $this->notificationService->notifyCommunityFeedComment(
-                (int) $post->user_id,
-                (string) $user->name,
-                $this->notificationService->postLabel($post->title, $post->body),
-                $post->id,
-                $request->body,
-            );
+            $postLabel = $this->notificationService->postLabel($post->title, $post->body);
+            if ($post->is_federation_wide) {
+                $this->notificationService->notifyFederationPortalUsersExcept(
+                    [(int) $user->id],
+                    SkFederationsNotificationService::CATEGORY_COMMUNITY_FEED,
+                    "{$user->name} commented on a federation post",
+                    Str::limit(trim((string) $request->body), 160) ?: $postLabel,
+                    '/community-feed',
+                );
+            } else {
+                $this->notificationService->notifyCommunityFeedComment(
+                    (int) $post->user_id,
+                    (string) $user->name,
+                    $postLabel,
+                    $post->id,
+                    $request->body,
+                );
+            }
         }
 
         $limiter->hit('sk_fed', (int) $user->id);

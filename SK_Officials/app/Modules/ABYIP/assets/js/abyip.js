@@ -1216,8 +1216,108 @@ function continuePdfUpload() {
     }
 
     const file = pendingPdfUploadFile;
-    closeCreateOptionsModal();
-    processPdfImportFile(file);
+    const continueBtn = document.getElementById('abyipPdfUploadContinueBtn');
+    if (continueBtn) {
+        continueBtn.disabled = true;
+    }
+
+    if (typeof window.showLoading === 'function') {
+        window.showLoading(resubmitRecordId ? 'Resubmitting ABYIP' : 'Saving ABYIP');
+    }
+
+    prepareAndUploadPdfFile(file)
+        .then(function () {
+            const wasResubmit = Boolean(resubmitRecordId);
+            resubmitRecordId = null;
+            closeCreateOptionsModal();
+            return loadRecords().then(function () {
+                renderRecordsTable();
+                showNotification(
+                    wasResubmit ? 'ABYIP resubmitted for federation review.' : 'ABYIP record saved.',
+                    'success'
+                );
+            });
+        })
+        .catch(function (error) {
+            showNotification(error.message || 'Failed to save ABYIP record.', 'error');
+        })
+        .finally(function () {
+            if (typeof window.hideLoading === 'function') {
+                window.hideLoading();
+            }
+            if (continueBtn) {
+                continueBtn.disabled = false;
+            }
+        });
+}
+
+function prepareAndUploadPdfFile(file) {
+    return new Promise(function (resolve, reject) {
+        if (typeof pdfjsLib === 'undefined') {
+            reject(new Error('PDF library is not available.'));
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+            const arrayBuffer = event.target.result;
+            const base64String = btoa(
+                new Uint8Array(arrayBuffer).reduce(function (data, byte) {
+                    return data + String.fromCharCode(byte);
+                }, '')
+            );
+
+            pdfjsLib.getDocument({ data: arrayBuffer }).promise
+                .then(function (pdf) {
+                    return extractPdfTextForPrograms(pdf).then(function (extractedText) {
+                        if (!extractedText || !String(extractedText).trim()) {
+                            throw new Error('Could not read program data from this PDF. Please re-upload the file.');
+                        }
+
+                        if (resubmitRecordId) {
+                            return abyipApiFetch('/api/abyip/' + resubmitRecordId + '/resubmit', {
+                                method: 'POST',
+                                body: {
+                                    title: DEFAULT_RECORD_TITLE,
+                                    source_type: 'pdf',
+                                    pdf_data: base64String,
+                                    extracted_text: extractedText,
+                                },
+                            });
+                        }
+
+                        const calendarYear = abyipSubmissionStatus.fiscal_year || new Date().getFullYear();
+                        return abyipApiFetch('/api/abyip', {
+                            method: 'POST',
+                            body: {
+                                title: DEFAULT_RECORD_TITLE,
+                                source_type: 'pdf',
+                                calendar_year: calendarYear,
+                                document_html: null,
+                                pdf_data: base64String,
+                                extracted_text: extractedText,
+                            },
+                        });
+                    });
+                })
+                .then(function () {
+                    pendingPdfData = null;
+                    pendingPdfExtractedText = null;
+                    pendingPdfUploadFile = null;
+                    resolve();
+                })
+                .catch(function (error) {
+                    reject(error instanceof Error ? error : new Error('Failed to upload ABYIP PDF.'));
+                });
+        };
+
+        reader.onerror = function () {
+            reject(new Error('Error reading file. Please try again.'));
+        };
+
+        reader.readAsArrayBuffer(file);
+    });
 }
 
 function openImportWordFilePicker() {

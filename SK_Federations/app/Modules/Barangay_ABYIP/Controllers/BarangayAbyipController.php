@@ -97,4 +97,25 @@ class BarangayAbyipController extends Controller
             'data' => $submission,
         ]);
     }
+
+    public function revoke(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'max:100'],
+        ]);
+
+        try {
+            $submission = $this->service->revoke($request->user(), $id, $validated['reason']);
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'message' => collect($exception->errors())->flatten()->first(),
+                'errors' => $exception->errors(),
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'ABYIP approval revoked.',
+            'data' => $submission,
+        ]);
+    }
 }

@@ -17,7 +17,6 @@
         'app/Modules/layout/css/header.css',
         'app/Modules/layout/css/sidebar.css',
         'app/Modules/ABYIP/assets/css/abyip.css',
-        'app/Modules/ABYIP/assets/js/abyip.js'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>

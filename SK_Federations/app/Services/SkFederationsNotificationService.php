@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\SkFederationsNotification;
+use App\Modules\Accounts\Models\OfficialProfile;
 use App\Modules\Shared\Models\User;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class SkFederationsNotificationService
@@ -105,12 +107,28 @@ class SkFederationsNotificationService
         string $body,
         ?string $actionUrl = null,
     ): void {
-        $users = User::query()
-            ->where('role', User::ROLE_SK_FED)
-            ->where('status', User::STATUS_ACTIVE)
-            ->get();
+        foreach ($this->federationPortalUsers() as $user) {
+            $this->notifyUser($user, $category, $title, $body, $actionUrl);
+        }
+    }
 
-        foreach ($users as $user) {
+    /**
+     * @param  list<int>  $excludeUserIds
+     */
+    public function notifyFederationPortalUsersExcept(
+        array $excludeUserIds,
+        string $category,
+        string $title,
+        string $body,
+        ?string $actionUrl = null,
+    ): void {
+        $exclude = array_fill_keys(array_map('intval', $excludeUserIds), true);
+
+        foreach ($this->federationPortalUsers() as $user) {
+            if (isset($exclude[(int) $user->id])) {
+                continue;
+            }
+
             $this->notifyUser($user, $category, $title, $body, $actionUrl);
         }
     }
@@ -169,16 +187,6 @@ class SkFederationsNotificationService
         );
     }
 
-    public function postLabel(?string $title, ?string $body): string
-    {
-        $title = trim((string) $title);
-        if ($title !== '') {
-            return Str::limit($title, 80);
-        }
-
-        return Str::limit(trim(strip_tags((string) $body)), 80, '…') ?: 'your post';
-    }
-
     private function resolveBarangaySlug(string $barangayName): ?string
     {
         $map = [
@@ -216,6 +224,33 @@ class SkFederationsNotificationService
         }
 
         return null;
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, User>
+     */
+    private function federationPortalUsers()
+    {
+        return User::query()
+            ->where('status', User::STATUS_ACTIVE)
+            ->where(function ($query) {
+                $query->where('role', User::ROLE_SK_FED)
+                    ->orWhere(function ($nested) {
+                        $nested->where('role', User::ROLE_SK_OFFICIAL)
+                            ->whereHas('officialProfile', function ($profile) {
+                                $profile->whereIn('federation_position', OfficialProfile::FEDERATION_PORTAL_ACCESS_POSITIONS);
+                            });
+
+                        if (Schema::hasColumn('users', 'has_federation_access')) {
+                            $nested->whereRaw('has_federation_access IS TRUE');
+                        }
+                    });
+            })
+            ->with('officialProfile')
+            ->get()
+            ->filter(fn (User $user) => $user->canAccessFederationPortal())
+            ->unique('id')
+            ->values();
     }
 
     /**

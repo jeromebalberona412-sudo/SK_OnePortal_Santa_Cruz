@@ -30,4 +30,5 @@ Route::middleware(['auth', 'verified', 'single.session', 'sk_fed.access', 'trust
         Route::get('/api/barangay-abyip/{id}', [BarangayAbyipController::class, 'show'])->name('api.barangay-abyip.show');
         Route::post('/api/barangay-abyip/{id}/approve', [BarangayAbyipController::class, 'approve'])->name('api.barangay-abyip.approve');
         Route::post('/api/barangay-abyip/{id}/reject', [BarangayAbyipController::class, 'reject'])->name('api.barangay-abyip.reject');
+        Route::post('/api/barangay-abyip/{id}/revoke', [BarangayAbyipController::class, 'revoke'])->name('api.barangay-abyip.revoke');
     });

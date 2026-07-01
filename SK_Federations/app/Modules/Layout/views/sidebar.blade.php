@@ -10,7 +10,7 @@
         <a href="{{ route('profile') }}" class="sidebar-profile sidebar-profile-link" id="sidebar-profile-link">
             <img src="{{ $avatar }}" alt="Profile" class="sidebar-avatar">
             <div class="sidebar-user-info">
-                <div class="s-name">{{ $user->name ?? 'User' }}</div>
+                <div class="s-name">{{ $displayName ?? ($user->name ?? 'User') }}</div>
                 <div class="s-role">{{ $formattedRole }}</div>
             </div>
         </a>

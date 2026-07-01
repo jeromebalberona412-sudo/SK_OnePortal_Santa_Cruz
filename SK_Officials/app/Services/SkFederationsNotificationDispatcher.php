@@ -40,6 +40,47 @@ class SkFederationsNotificationDispatcher
         );
     }
 
+    public function notifyFederationPortalCommunityFeedLike(
+        int $excludeUserId,
+        string $reactorName,
+        string $postLabel,
+    ): void {
+        if (! Schema::hasTable('sk_federations_notifications')) {
+            return;
+        }
+
+        $this->insertForFederationPortalUsersExcept(
+            [$excludeUserId],
+            'community_feed',
+            "{$reactorName} liked a federation post",
+            $postLabel,
+            '/community-feed',
+        );
+    }
+
+    public function notifyFederationPortalCommunityFeedComment(
+        int $excludeUserId,
+        string $commenterName,
+        string $postLabel,
+        ?string $commentBody = null,
+    ): void {
+        if (! Schema::hasTable('sk_federations_notifications')) {
+            return;
+        }
+
+        $preview = trim((string) $commentBody) !== ''
+            ? Str::limit(trim((string) $commentBody), 160)
+            : $postLabel;
+
+        $this->insertForFederationPortalUsersExcept(
+            [$excludeUserId],
+            'community_feed',
+            "{$commenterName} commented on a federation post",
+            $preview,
+            '/community-feed',
+        );
+    }
+
     public function notifyCommunityFeedComment(
         int $ownerUserId,
         string $commenterName,
@@ -99,17 +140,14 @@ class SkFederationsNotificationDispatcher
         string $body,
         string $actionUrl,
     ): void {
-        $fedUserIds = DB::table('users')
-            ->where('role', 'sk_fed')
-            ->where('status', 'ACTIVE')
-            ->pluck('id');
+        $userIds = $this->federationPortalUserIds();
 
-        if ($fedUserIds->isEmpty()) {
+        if ($userIds->isEmpty()) {
             return;
         }
 
         $now = now();
-        $rows = $fedUserIds->map(fn ($userId) => [
+        $rows = $userIds->map(fn ($userId) => [
             'user_id' => $userId,
             'category' => $category,
             'title' => $title,
@@ -120,6 +158,60 @@ class SkFederationsNotificationDispatcher
         ])->all();
 
         DB::table('sk_federations_notifications')->insert($rows);
+    }
+
+    /**
+     * @param  list<int>  $excludeUserIds
+     */
+    private function insertForFederationPortalUsersExcept(
+        array $excludeUserIds,
+        string $category,
+        string $title,
+        string $body,
+        string $actionUrl,
+    ): void {
+        $exclude = array_fill_keys(array_map('intval', $excludeUserIds), true);
+        $userIds = $this->federationPortalUserIds()->reject(fn ($id) => isset($exclude[(int) $id]));
+
+        if ($userIds->isEmpty()) {
+            return;
+        }
+
+        $now = now();
+        $rows = $userIds->map(fn ($userId) => [
+            'user_id' => $userId,
+            'category' => $category,
+            'title' => $title,
+            'body' => $body,
+            'action_url' => $actionUrl,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ])->all();
+
+        DB::table('sk_federations_notifications')->insert($rows);
+    }
+
+    private function federationPortalUserIds()
+    {
+        $skFedIds = DB::table('users')
+            ->where('role', 'sk_fed')
+            ->where('status', 'ACTIVE')
+            ->pluck('id');
+
+        $officialQuery = DB::table('users')
+            ->join('official_profiles', 'users.id', '=', 'official_profiles.user_id')
+            ->where('users.role', 'sk_official')
+            ->where('users.status', 'ACTIVE')
+            ->whereIn('official_profiles.federation_position', ['President', 'Vice President']);
+
+        if (Schema::hasColumn('users', 'has_federation_access')) {
+            $officialQuery->whereRaw('users.has_federation_access IS TRUE');
+        }
+
+        return $skFedIds
+            ->merge($officialQuery->pluck('users.id'))
+            ->unique()
+            ->values();
     }
 
     private function resolveBarangaySlug(string $barangayName): ?string

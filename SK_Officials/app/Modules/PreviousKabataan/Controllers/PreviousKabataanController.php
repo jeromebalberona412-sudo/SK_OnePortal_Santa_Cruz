@@ -70,9 +70,12 @@ class PreviousKabataanController extends Controller
         );
 
         $years = PreviousKabataan::forBarangay($user->barangay_id)
+            ->whereNotNull('profiling_year')
             ->distinct()
             ->orderByDesc('profiling_year')
-            ->pluck('profiling_year');
+            ->pluck('profiling_year')
+            ->filter(fn ($year) => $year !== null && $year !== '')
+            ->values();
 
         return response()->json(['data' => $data, 'years' => $years]);
     }
@@ -83,9 +86,17 @@ class PreviousKabataanController extends Controller
     public function upload(Request $request)
     {
         $request->validate([
-            'rows' => 'required|array|min:1',
+            'rows' => 'required|array|min:1|max:5000',
             'replace_existing' => 'sometimes|boolean',
+            'total_rows' => 'nullable|integer|min:1|max:5000',
         ]);
+
+        if ($request->filled('total_rows') && (int) $request->total_rows > 5000) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Upload exceeds the maximum of 5,000 rows.',
+            ], 422);
+        }
 
         $user = Auth::user();
         $user->loadMissing('barangay');

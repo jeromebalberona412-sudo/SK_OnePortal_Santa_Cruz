@@ -440,7 +440,7 @@ body.kabataan-has-view-only-banner {
 /* Legacy aliases for dashboard compatibility */
 .top-navbar { display: none; }
 
-@media (max-width: 900px) {
+@media (max-width: 1200px) {
     .kabataan-header__page-badge {
         display: inline-block;
     }
@@ -453,7 +453,7 @@ body.kabataan-has-view-only-banner {
         display: flex;
     }
 
-    /* Show programs button on mobile */
+    /* Show programs drawer when dashboard sidebars collapse */
     .programs-drawer-btn {
         display: flex;
     }

@@ -281,10 +281,6 @@
     <!-- Scholarship Application Form Modal (New PDF-style) -->
     @include('dashboard::remaining_modals')
 
-
-    <!-- Programs Drawer Backdrop -->
-    <div class="programs-drawer-backdrop" id="programsDrawerBackdrop"></div>
-
     <!-- Program Registration Success Modal -->
     <div id="programSuccessModal" class="program-modal">
         <div class="modal-overlay"></div>

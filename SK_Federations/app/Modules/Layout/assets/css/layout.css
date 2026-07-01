@@ -20,23 +20,31 @@
     box-shadow: 0 4px 12px rgba(33, 63, 153, 0.18);
 }
 
+.sidebar-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
 .sidebar-user-info .s-name {
     font-size: 13px;
     font-weight: 700;
     line-height: 1.35;
     color: #1e293b;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow: visible;
+    word-break: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
 }
 
 .sidebar-user-info .s-role {
     font-size: 11px;
     margin-top: 3px;
     color: #64748b;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow: visible;
+    word-break: break-word;
     line-height: 1.35;
 }
 

@@ -54,6 +54,7 @@ class AppServiceProvider extends ServiceProvider
             $view->with([
                 'user' => $user,
                 'avatar' => asset('Images/SK_Fed_profile.png'),
+                'displayName' => $this->resolveSidebarDisplayName($user),
                 'formattedRole' => match (true) {
                     $user?->isSkFed() => 'SK Federation',
                     $user?->hasFederationLeadershipAccess() => (string) ($user->officialProfile?->federation_position ?? 'SK Federation'),
@@ -64,5 +65,30 @@ class AppServiceProvider extends ServiceProvider
                 },
             ]);
         });
+    }
+
+    private function resolveSidebarDisplayName(?User $user): string
+    {
+        if (! $user) {
+            return 'User';
+        }
+
+        $profile = $user->officialProfile;
+        if ($profile) {
+            $parts = array_filter([
+                trim((string) $profile->first_name),
+                trim((string) $profile->middle_name),
+                trim((string) $profile->last_name),
+                trim((string) $profile->suffix),
+            ], fn ($part) => $part !== '');
+
+            if ($parts !== []) {
+                return implode(' ', $parts);
+            }
+        }
+
+        $name = trim((string) $user->name);
+
+        return $name !== '' ? $name : 'User';
     }
 }
