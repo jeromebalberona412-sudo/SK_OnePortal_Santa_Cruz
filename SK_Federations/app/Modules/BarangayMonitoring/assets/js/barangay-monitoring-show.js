@@ -168,6 +168,51 @@
         }) || {};
     }
 
+    function resetActionDropdown(menu) {
+        const dropdown = menu?.querySelector('.bm-actions-dropdown');
+        if (!dropdown) return;
+
+        dropdown.classList.remove('is-floating', 'bm-actions-dropdown-up');
+        dropdown.style.position = '';
+        dropdown.style.top = '';
+        dropdown.style.left = '';
+        dropdown.style.right = '';
+        dropdown.style.bottom = '';
+        dropdown.style.zIndex = '';
+    }
+
+    function positionActionDropdown(menu) {
+        const toggle = menu.querySelector('.bm-actions-toggle');
+        const dropdown = menu.querySelector('.bm-actions-dropdown');
+        if (!toggle || !dropdown) return;
+
+        dropdown.hidden = false;
+        dropdown.classList.add('is-floating');
+        dropdown.style.position = 'fixed';
+        dropdown.style.zIndex = '1400';
+
+        const rect = toggle.getBoundingClientRect();
+        const gap = 8;
+        const dropdownHeight = dropdown.offsetHeight || 160;
+        const dropdownWidth = dropdown.offsetWidth || 168;
+
+        let top = rect.top - dropdownHeight - gap;
+        dropdown.classList.add('bm-actions-dropdown-up');
+
+        if (top < 8) {
+            top = rect.bottom + gap;
+            dropdown.classList.remove('bm-actions-dropdown-up');
+        }
+
+        let right = window.innerWidth - rect.right;
+        right = Math.max(8, Math.min(right, window.innerWidth - dropdownWidth - 8));
+
+        dropdown.style.top = `${Math.max(8, top)}px`;
+        dropdown.style.right = `${right}px`;
+        dropdown.style.left = 'auto';
+        dropdown.style.bottom = 'auto';
+    }
+
     function closeAllActionMenus(exceptMenu) {
         document.querySelectorAll('.bm-actions-menu').forEach(function (menu) {
             if (exceptMenu && menu === exceptMenu) return;
@@ -176,6 +221,7 @@
             if (dropdown) dropdown.hidden = true;
             if (toggle) toggle.setAttribute('aria-expanded', 'false');
             menu.classList.remove('is-open');
+            resetActionDropdown(menu);
         });
     }
 
@@ -183,14 +229,33 @@
         const wrongPdf = document.getElementById('rejectReasonWrongPdf');
         const other = document.getElementById('rejectReasonOther');
         const reasonInput = document.getElementById('abyipRejectReason');
+        const confirmInput = document.getElementById('abyipRejectConfirm');
         const wrap = document.getElementById('rejectReasonFieldWrap');
         const error = document.getElementById('rejectReasonError');
+        const confirmError = document.getElementById('rejectConfirmError');
 
         if (wrongPdf) wrongPdf.checked = false;
         if (other) other.checked = false;
         if (reasonInput) reasonInput.value = '';
+        if (confirmInput) confirmInput.value = '';
         if (wrap) wrap.style.display = 'none';
         if (error) error.textContent = '';
+        if (confirmError) confirmError.textContent = '';
+        syncRejectSubmitState();
+    }
+
+    function syncRejectSubmitState() {
+        const confirmInput = document.getElementById('abyipRejectConfirm');
+        const rejectBtn = document.querySelector('.reject-submit-btn');
+        if (!rejectBtn) return;
+        rejectBtn.disabled = (confirmInput?.value || '').trim() !== 'Confirm';
+    }
+
+    function syncRevokeSubmitState() {
+        const confirmInput = document.getElementById('abyipRevokeConfirm');
+        const revokeBtn = document.querySelector('.revoke-submit-btn');
+        if (!revokeBtn) return;
+        revokeBtn.disabled = (confirmInput?.value || '').trim() !== 'Confirm';
     }
 
     function resetRevokeForm() {
@@ -204,6 +269,7 @@
         if (other) other.checked = false;
         const wrap = document.getElementById('revokeReasonFieldWrap');
         if (wrap) wrap.style.display = 'none';
+        syncRevokeSubmitState();
     }
 
     function openViewModal(id) {
@@ -292,6 +358,7 @@
         const other = document.getElementById('rejectReasonOther');
         const wrap = document.getElementById('rejectReasonFieldWrap');
         const reasonInput = document.getElementById('abyipRejectReason');
+        const confirmInput = document.getElementById('abyipRejectConfirm');
 
         function syncRejectReasonField() {
             const showField = Boolean(other?.checked);
@@ -308,6 +375,8 @@
             if (other.checked && wrongPdf) wrongPdf.checked = false;
             syncRejectReasonField();
         });
+
+        confirmInput?.addEventListener('input', syncRejectSubmitState);
     }
 
     function bindRevokeReasonControls() {
@@ -315,6 +384,7 @@
         const other = document.getElementById('revokeReasonOther');
         const wrap = document.getElementById('revokeReasonFieldWrap');
         const reasonInput = document.getElementById('abyipRevokeReason');
+        const confirmInput = document.getElementById('abyipRevokeConfirm');
 
         function syncRevokeReasonField() {
             const showField = Boolean(other?.checked);
@@ -324,6 +394,19 @@
 
         accidental?.addEventListener('change', syncRevokeReasonField);
         other?.addEventListener('change', syncRevokeReasonField);
+        confirmInput?.addEventListener('input', syncRevokeSubmitState);
+    }
+
+    function showActionLoading(message, subtext) {
+        if (typeof window.showLoading === 'function') {
+            window.showLoading(message, subtext);
+        }
+    }
+
+    function hideActionLoading() {
+        if (typeof window.hideLoading === 'function') {
+            window.hideLoading();
+        }
     }
 
     window.confirmApproval = async function () {
@@ -332,18 +415,24 @@
         const approveBtn = document.querySelector('.approve-submit-btn');
         if (approveBtn) approveBtn.disabled = true;
 
+        let succeeded = false;
         try {
+            showActionLoading('Approving Submission', 'Please wait while we approve this ABYIP report...');
             await apiFetch((config.approveUrl || '/api/barangay-abyip/__ID__/approve').replace('__ID__', approveSubmissionId), {
                 method: 'POST',
                 body: {},
             });
+            succeeded = true;
             showToast('Submission successfully approved!', 'success');
             closeApproveModal();
             window.location.reload();
         } catch (error) {
             showToast(error.message || 'Approval failed.', 'error');
         } finally {
-            if (approveBtn) approveBtn.disabled = false;
+            if (!succeeded) {
+                hideActionLoading();
+                if (approveBtn) approveBtn.disabled = false;
+            }
         }
     };
 
@@ -388,18 +477,24 @@
         const revokeBtn = document.querySelector('.revoke-submit-btn');
         if (revokeBtn) revokeBtn.disabled = true;
 
+        let succeeded = false;
         try {
+            showActionLoading('Revoking Approval', 'Please wait while we revoke this ABYIP approval...');
             await apiFetch((config.revokeUrl || '/api/barangay-abyip/__ID__/revoke').replace('__ID__', revokeSubmissionId), {
                 method: 'POST',
                 body: { reason: reason },
             });
+            succeeded = true;
             showToast('ABYIP approval revoked. Status is now Pending.', 'success');
             closeRevokeModal();
             window.location.reload();
         } catch (error) {
             showToast(error.message || 'Revocation failed.', 'error');
         } finally {
-            if (revokeBtn) revokeBtn.disabled = false;
+            if (!succeeded) {
+                hideActionLoading();
+                if (revokeBtn) revokeBtn.disabled = false;
+            }
         }
     };
 
@@ -409,8 +504,16 @@
         const wrongPdf = document.getElementById('rejectReasonWrongPdf');
         const other = document.getElementById('rejectReasonOther');
         const reasonInput = document.getElementById('abyipRejectReason');
+        const confirmInput = document.getElementById('abyipRejectConfirm');
         const reasonError = document.getElementById('rejectReasonError');
+        const confirmError = document.getElementById('rejectConfirmError');
         reasonError.textContent = '';
+        confirmError.textContent = '';
+
+        if ((confirmInput?.value || '').trim() !== 'Confirm') {
+            confirmError.textContent = 'Type Confirm to continue.';
+            return;
+        }
 
         if (!wrongPdf?.checked && !other?.checked) {
             reasonError.textContent = 'Select a rejection reason.';
@@ -433,18 +536,24 @@
         const rejectBtn = document.querySelector('.reject-submit-btn');
         if (rejectBtn) rejectBtn.disabled = true;
 
+        let succeeded = false;
         try {
+            showActionLoading('Rejecting Submission', 'Please wait while we reject this ABYIP report...');
             await apiFetch((config.rejectUrl || '/api/barangay-abyip/__ID__/reject').replace('__ID__', rejectSubmissionId), {
                 method: 'POST',
                 body: { reason: reason },
             });
+            succeeded = true;
             showToast('Submission successfully rejected!', 'error');
             closeRejectModal();
             window.location.reload();
         } catch (error) {
             showToast(error.message || 'Rejection failed.', 'error');
         } finally {
-            if (rejectBtn) rejectBtn.disabled = false;
+            if (!succeeded) {
+                hideActionLoading();
+                if (rejectBtn) rejectBtn.disabled = false;
+            }
         }
     };
 
@@ -466,9 +575,14 @@
     window.showToast = function (message, type) {
         const toast = document.getElementById('toast');
         if (!toast) return;
+        const icon = toast.querySelector('.toast-icon');
+        const normalized = type || 'success';
         toast.querySelector('.toast-message').textContent = message;
-        toast.className = 'toast show ' + (type || 'success');
-        setTimeout(function () { toast.classList.remove('show'); }, 3000);
+        toast.className = 'toast bm-page-toast show ' + normalized;
+        if (icon) {
+            icon.className = 'toast-icon fas ' + (normalized === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle');
+        }
+        setTimeout(function () { toast.classList.remove('show'); }, 3200);
     };
 
     function initAbyipViewButtons() {
@@ -508,10 +622,17 @@
                 closeAllActionMenus();
                 if (!isOpen) {
                     menu.classList.add('is-open');
-                    if (dropdown) dropdown.hidden = false;
                     toggle.setAttribute('aria-expanded', 'true');
+                    positionActionDropdown(menu);
                 }
             });
+        });
+
+        window.addEventListener('resize', function () {
+            const openMenu = document.querySelector('.bm-actions-menu.is-open');
+            if (openMenu) {
+                positionActionDropdown(openMenu);
+            }
         });
 
         document.addEventListener('click', function () {

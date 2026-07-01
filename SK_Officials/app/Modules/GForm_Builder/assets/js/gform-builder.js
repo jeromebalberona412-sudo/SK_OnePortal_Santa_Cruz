@@ -8,6 +8,11 @@
     let spfbEditingId = null;
     let showToast = function (msg) { if (msg) console.warn(msg); };
     let excludedQuestionTypes = [];
+    let maxFileQuestions = null;
+
+    function countFileQuestions(excludeId = null) {
+        return spfbQuestions.filter((question) => question.type === 'file' && question.id !== excludeId).length;
+    }
     const QUESTION_TYPES = [
         { value: 'text',      label: 'Short Answer'    },
         { value: 'paragraph', label: 'Paragraph'       },
@@ -135,7 +140,19 @@
 
         // Read type
         const typeSelect = card.querySelector('.spfb-q-type-select');
-        if (typeSelect) q.type = typeSelect.value;
+        if (typeSelect) {
+            const nextType = typeSelect.value;
+            if (
+                nextType === 'file'
+                && maxFileQuestions !== null
+                && countFileQuestions(qid) >= maxFileQuestions
+            ) {
+                showToast(`You can add up to ${maxFileQuestions} file upload questions only.`);
+                typeSelect.value = q.type;
+            } else {
+                q.type = nextType;
+            }
+        }
 
         // Read options (for checkbox/radio/dropdown)
         if (q.type === 'checkbox' || q.type === 'radio' || q.type === 'dropdown') {
@@ -402,6 +419,7 @@
         options = options || {};
         if (typeof options.showToast === 'function') showToast = options.showToast;
         excludedQuestionTypes = Array.isArray(options.excludeTypes) ? options.excludeTypes : [];
+        maxFileQuestions = Number.isFinite(options.maxFileQuestions) ? options.maxFileQuestions : null;
         const spfbAddBtn = document.getElementById('spfbAddQuestionBtn');
         if (spfbAddBtn && !spfbAddBtn.dataset.spfbBound) {
             spfbAddBtn.dataset.spfbBound = '1';

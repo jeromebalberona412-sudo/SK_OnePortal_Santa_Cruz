@@ -195,16 +195,20 @@ class BarangayMonitoringController extends Controller
         $rejected = count(array_filter($barangays, fn ($item) => ($item['status'] ?? '') === 'rejected'));
         $notSubmitted = count(array_filter($barangays, fn ($item) => ($item['status'] ?? '') === 'not_submitted'));
 
-        $complianceRate = $count > 0 ? round(($approved / $count) * 100) : 0;
-        $nonComplianceRate = $count > 0 ? round((($notSubmitted + $rejected) / $count) * 100) : 0;
+        $submitted = $approved + $pending + $rejected;
+        $submissionRate = $count > 0 ? round(($submitted / $count) * 100) : 0;
+        $notSubmittedRate = $count > 0 ? round(($notSubmitted / $count) * 100) : 0;
         $abyipSubmittedCount = $this->monitoringService->countBarangaysWithAbyipSubmission();
 
         return [
             'total_barangays' => $count,
-            'compliance_rate' => $complianceRate,
+            'compliance_rate' => $submissionRate,
+            'submission_rate' => $submissionRate,
             'compliant_count' => $approved,
-            'non_compliance_rate' => $nonComplianceRate,
+            'non_compliance_rate' => $notSubmittedRate,
+            'not_submitted_rate' => $notSubmittedRate,
             'non_compliant_count' => $notSubmitted + $rejected,
+            'submitted_count' => $submitted,
             'abyip_submitted_count' => $abyipSubmittedCount,
             'approved_count' => $approved,
             'pending_count' => $pending,

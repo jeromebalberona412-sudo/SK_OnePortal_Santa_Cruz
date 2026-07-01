@@ -88,6 +88,18 @@
     outline: none;
 }
 
+.programs-sidebar .program-category:hover .category-content h3,
+.programs-sidebar .program-category:hover .category-content p,
+.programs-sidebar .program-category:focus-visible .category-content h3,
+.programs-sidebar .program-category:focus-visible .category-content p {
+    color: #1e293b;
+}
+
+.programs-sidebar .program-category:hover .chevron,
+.programs-sidebar .program-category:focus-visible .chevron {
+    color: #1a73e8;
+}
+
 .programs-sidebar .category-icon {
     width: 40px;
     height: 40px;

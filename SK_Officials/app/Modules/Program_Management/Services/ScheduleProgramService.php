@@ -126,6 +126,10 @@ class ScheduleProgramService
 
     public const SCHOLARSHIP_QUICK_GUIDELINE_MAX_STEPS = 10;
 
+    public const SCHOLARSHIP_CUSTOM_FILE_MAX = 15;
+
+    public const SCHOLARSHIP_PERIOD_MAX_DAYS = 30;
+
     /** @var list<string> */
     public const DEFAULT_SPORTS_KK_FIELDS = [
         'last_name', 'first_name', 'middle_name', 'suffix',
@@ -677,10 +681,23 @@ class ScheduleProgramService
         }
 
         if ($letter === self::LETTER_EDUCATION) {
-            $customQuestions = collect($customQuestions)
-                ->reject(fn ($question) => ($question['type'] ?? '') === 'file')
-                ->values()
-                ->all();
+            $fileQuestionCount = collect($customQuestions)
+                ->filter(fn (array $question) => ($question['type'] ?? '') === 'file')
+                ->count();
+
+            if ($fileQuestionCount > self::SCHOLARSHIP_CUSTOM_FILE_MAX) {
+                throw ValidationException::withMessages([
+                    'custom_questions' => [
+                        'You can add up to '.self::SCHOLARSHIP_CUSTOM_FILE_MAX.' file upload questions only.',
+                    ],
+                ]);
+            }
+
+            if ($participationQuantity === null) {
+                throw ValidationException::withMessages([
+                    'participation_quantity' => ['Maximum beneficiaries is required.'],
+                ]);
+            }
         }
 
         $sportsDetails = $letter === self::LETTER_SPORTS
@@ -731,6 +748,8 @@ class ScheduleProgramService
                     'scholarship_details' => ['Renewal application types are only available after at least one scholar has applied.'],
                 ]);
             }
+
+            $this->assertScholarshipPeriodRules($scholarshipDetails);
         }
 
         if ($letter === self::LETTER_SPORTS && $sportsDetails === null) {
@@ -945,9 +964,15 @@ class ScheduleProgramService
                 continue;
             }
 
+            if ($en === '' || $tl === '') {
+                throw ValidationException::withMessages([
+                    'scholarship_details' => ['Each Quick Guidelines step must include both English and Tagalog content.'],
+                ]);
+            }
+
             $steps[] = [
-                'en' => $en !== '' ? $en : $tl,
-                'tl' => $tl !== '' ? $tl : $en,
+                'en' => $en,
+                'tl' => $tl,
             ];
 
             if (count($steps) >= self::SCHOLARSHIP_QUICK_GUIDELINE_MAX_STEPS) {
@@ -976,7 +1001,15 @@ class ScheduleProgramService
 
         foreach ($guidelines as $index => $step) {
             foreach (['en' => 'English', 'tl' => 'Tagalog'] as $field => $label) {
-                $text = (string) ($step[$field] ?? '');
+                $text = trim((string) ($step[$field] ?? ''));
+                if ($text === '') {
+                    throw ValidationException::withMessages([
+                        'scholarship_details' => [
+                            sprintf('Quick Guidelines step #%d (%s) cannot be empty.', $index + 1, $label),
+                        ],
+                    ]);
+                }
+
                 if (mb_strlen($text) > self::SCHOLARSHIP_QUICK_GUIDELINE_MAX_CHARS) {
                     throw ValidationException::withMessages([
                         'scholarship_details' => [
@@ -1072,6 +1105,82 @@ class ScheduleProgramService
             'youth_age_groups' => $ageGroups,
             'education_levels' => $educationLevels,
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $scholarshipDetails
+     */
+    protected function assertScholarshipPeriodRules(array $scholarshipDetails): void
+    {
+        $submission = is_array($scholarshipDetails['submission_period'] ?? null)
+            ? $scholarshipDetails['submission_period']
+            : null;
+        $verification = is_array($scholarshipDetails['verification_period'] ?? null)
+            ? $scholarshipDetails['verification_period']
+            : null;
+
+        $submissionStart = $this->nullableDateString($submission['start'] ?? null);
+        $submissionEnd = $this->nullableDateString($submission['end'] ?? null);
+        $verificationStart = $this->nullableDateString($verification['start'] ?? null);
+        $verificationEnd = $this->nullableDateString($verification['end'] ?? null);
+
+        if ($submissionStart === null || $submissionEnd === null) {
+            throw ValidationException::withMessages([
+                'scholarship_details' => ['Submission period start and end dates are required.'],
+            ]);
+        }
+
+        if ($verificationStart === null || $verificationEnd === null) {
+            throw ValidationException::withMessages([
+                'scholarship_details' => ['Assessment/Verification start and end dates are required.'],
+            ]);
+        }
+
+        $today = now()->toDateString();
+        $submissionEndMax = now()->addDays(self::SCHOLARSHIP_PERIOD_MAX_DAYS)->toDateString();
+        $yearEnd = now()->endOfYear()->toDateString();
+
+        if ($submissionStart !== $today) {
+            throw ValidationException::withMessages([
+                'scholarship_details' => ['Submission period start must be today\'s date.'],
+            ]);
+        }
+
+        if ($submissionEnd < $today || $submissionEnd > $submissionEndMax) {
+            throw ValidationException::withMessages([
+                'scholarship_details' => [
+                    'Submission period end must be between today and '.self::SCHOLARSHIP_PERIOD_MAX_DAYS.' days from today.',
+                ],
+            ]);
+        }
+
+        $verificationStartMin = now()->parse($submissionEnd)->addDay()->toDateString();
+        if ($verificationStart < $verificationStartMin) {
+            throw ValidationException::withMessages([
+                'scholarship_details' => ['Assessment/Verification start must be after the submission period end date.'],
+            ]);
+        }
+
+        if ($verificationStart > $yearEnd) {
+            throw ValidationException::withMessages([
+                'scholarship_details' => ['Assessment/Verification start must be within the current year.'],
+            ]);
+        }
+
+        if ($verificationEnd < $verificationStart) {
+            throw ValidationException::withMessages([
+                'scholarship_details' => ['Assessment/Verification end cannot be before the start date.'],
+            ]);
+        }
+
+        $verificationEndMax = now()->parse($verificationStart)->addDays(self::SCHOLARSHIP_PERIOD_MAX_DAYS)->toDateString();
+        if ($verificationEnd > $verificationEndMax || $verificationEnd > $yearEnd) {
+            throw ValidationException::withMessages([
+                'scholarship_details' => [
+                    'Assessment/Verification end must be within '.self::SCHOLARSHIP_PERIOD_MAX_DAYS.' days after the start date and within the current year.',
+                ],
+            ]);
+        }
     }
 
     /**

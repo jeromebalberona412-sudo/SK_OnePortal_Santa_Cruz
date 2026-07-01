@@ -57,13 +57,13 @@ class ScholarshipSystemFieldsService
     {
         return [
             ['id' => 'elementary_school', 'label' => 'Elementary School', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
-            ['id' => 'elementary_address', 'label' => 'Address', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
+            ['id' => 'elementary_address', 'label' => 'School Address', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
             ['id' => 'elementary_year_graduated', 'label' => 'Year Graduated', 'type' => 'year', 'required' => true, 'section' => 'educational_background'],
             ['id' => 'secondary_school', 'label' => 'Secondary School', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
-            ['id' => 'secondary_address', 'label' => 'Address', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
+            ['id' => 'secondary_address', 'label' => 'School Address', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
             ['id' => 'secondary_year_graduated', 'label' => 'Year Graduated', 'type' => 'year', 'required' => true, 'section' => 'educational_background'],
             ['id' => 'senior_high_school', 'label' => 'Senior High School', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
-            ['id' => 'senior_high_address', 'label' => 'Address', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
+            ['id' => 'senior_high_address', 'label' => 'School Address', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
             ['id' => 'senior_high_year_graduated', 'label' => 'Year Graduated', 'type' => 'year', 'required' => true, 'section' => 'educational_background'],
             ['id' => 'mother_first_name', 'label' => "Mother's First Name", 'type' => 'name', 'required' => true, 'section' => 'background_information'],
             ['id' => 'mother_last_name', 'label' => "Mother's Last Name", 'type' => 'name', 'required' => true, 'section' => 'background_information'],
@@ -310,6 +310,14 @@ class ScholarshipSystemFieldsService
             }
             if ($stringValue !== '' && ! in_array($stringValue, self::FAMILY_MONTHLY_INCOME_OPTIONS, true)) {
                 return "{$field['label']} must be a valid income bracket.";
+            }
+
+            return '';
+        }
+
+        if ($field['id'] === 'guardian_relation') {
+            if ($stringValue !== '' && strlen($stringValue) > 50) {
+                return "{$field['label']} must not exceed 50 characters.";
             }
 
             return '';

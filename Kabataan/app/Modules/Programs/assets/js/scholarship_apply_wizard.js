@@ -69,7 +69,20 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         const v = String(value ?? '').trim();
         if (!v) return true;
         const lower = v.toLowerCase();
-        return ['none', 'n/a', 'na', '—', '-', 'null'].includes(lower);
+        return ['n/a', 'na', '—', '-', 'null'].includes(lower);
+    }
+
+    function formatPersonalDisplayValue(field, value) {
+        const formatted = String(value ?? '').trim();
+        if (field === 'suffix' && formatted.toLowerCase() === 'none') {
+            return 'None';
+        }
+        if (isEmptyDisplayValue(formatted)) {
+            return '—';
+        }
+        const SF = global.ScholarshipSystemFields;
+        const toUpper = SF?.toUpperAnswer || ((v) => String(v ?? '').trim().toUpperCase());
+        return toUpper(formatted);
     }
 
     function getFullName() {
@@ -255,16 +268,15 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         return container;
     }
 
-    function personalFieldHtml(label, value, { alwaysShow = false } = {}) {
+    function personalFieldHtml(label, value, { alwaysShow = false, fieldKey = '' } = {}) {
         const SF = global.ScholarshipSystemFields;
         const formatValue = SF?.formatProfileValue || ((v) => {
             if (Array.isArray(v)) return v.map((p) => String(p ?? '').trim()).filter(Boolean).join(', ');
             return String(v ?? '').trim();
         });
-        const toUpper = SF?.toUpperAnswer || ((v) => String(v ?? '').trim().toUpperCase());
         const formatted = formatValue(value);
-        if (!alwaysShow && isEmptyDisplayValue(formatted)) return '';
-        const display = isEmptyDisplayValue(formatted) ? '—' : toUpper(formatted);
+        if (!alwaysShow && isEmptyDisplayValue(formatted) && !(fieldKey === 'suffix' && String(value ?? '').trim().toLowerCase() === 'none')) return '';
+        const display = formatPersonalDisplayValue(fieldKey, formatted !== '' ? formatted : value);
         return `
             <div class="sch-wizard-field">
                 <label class="sch-wizard-field-label">${escapeHtml(label)}</label>
@@ -294,7 +306,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         const html = selectedFields.map((field) => {
             const label = fieldLabels[field] || field.replace(/_/g, ' ');
             const value = resolveValue(field);
-            return personalFieldHtml(label, value, { alwaysShow: alwaysShowKeys.has(field) });
+            return personalFieldHtml(label, value, { alwaysShow: alwaysShowKeys.has(field), fieldKey: field });
         }).filter(Boolean).join('');
 
         container.innerHTML = html || '<p class="sch-preview-empty-section">No KK Profiling data available. Please complete your KK Profile first.</p>';
@@ -303,6 +315,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
     function loadSystemFields() {
         const SF = global.ScholarshipSystemFields;
         if (!SF) return;
+        SF.setApplicantContext?.(program.kk_profile || {});
 
         const draft = loadDraft();
         const saved = { ...(draft?.system_field_answers || {}), ...(program.system_field_answers || {}) };
@@ -889,6 +902,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         scheduleProgramId = Number(program.id || global.__scheduleProgramId || 0);
         kkFieldLabels = global.__kkFieldLabels || {};
         uploadedDocuments = { ...(program.uploaded_documents || {}) };
+        global.ScholarshipSystemFields?.setApplicantContext?.(program.kk_profile || {});
 
         const draft = loadDraft();
         if (draft?.savedAt) draftSavedAt = draft.savedAt;

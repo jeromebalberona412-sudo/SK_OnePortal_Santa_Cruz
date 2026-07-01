@@ -141,34 +141,41 @@
                                 {{ ucfirst($report['status'] ?? 'pending') }}
                             </span>
                         </td>
-                        <td data-label="Actions">
+                        <td data-label="Actions" class="bm-col-actions">
                             <div class="bm-row-actions">
                                 @php $reportStatus = strtolower($report['status'] ?? 'pending'); @endphp
                                 @if(in_array($reportStatus, ['pending', 'approved'], true))
-                                <div class="bm-actions-menu" data-report-id="{{ $report['id'] }}" data-report-status="{{ $reportStatus }}">
-                                    <button type="button" class="bm-actions-toggle" aria-label="More actions" aria-haspopup="true" aria-expanded="false">
-                                        <i class="fas fa-ellipsis-h"></i>
+                                <div class="bm-actions-menu row-actions-menu" data-report-id="{{ $report['id'] }}" data-report-status="{{ $reportStatus }}">
+                                    <button type="button" class="bm-actions-toggle row-actions-trigger" aria-label="More actions" aria-haspopup="true" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-h" aria-hidden="true"></i>
                                     </button>
-                                    <div class="bm-actions-dropdown" hidden>
-                                        <button type="button" class="bm-actions-item bm-actions-view" data-abyip-view="{{ $report['id'] }}">
-                                            <i class="fas fa-eye"></i> View
+                                    <div class="bm-actions-dropdown row-actions-dropdown" role="menu" hidden>
+                                        <button type="button" class="bm-actions-item row-actions-item row-actions-item-view bm-actions-view" data-abyip-view="{{ $report['id'] }}" role="menuitem">
+                                            <i class="fas fa-eye" aria-hidden="true"></i>
+                                            <span>View</span>
                                         </button>
                                         @if($reportStatus === 'pending')
-                                            <button type="button" class="bm-actions-item bm-actions-approve" data-abyip-approve="{{ $report['id'] }}">
-                                                <i class="fas fa-check"></i> Approve
+                                            <button type="button" class="bm-actions-item row-actions-item row-actions-item-approve bm-actions-approve" data-abyip-approve="{{ $report['id'] }}" role="menuitem">
+                                                <i class="fas fa-check" aria-hidden="true"></i>
+                                                <span>Approve</span>
                                             </button>
-                                            <button type="button" class="bm-actions-item bm-actions-reject" data-abyip-reject="{{ $report['id'] }}">
-                                                <i class="fas fa-times"></i> Reject
+                                            <button type="button" class="bm-actions-item row-actions-item row-actions-item-danger bm-actions-reject" data-abyip-reject="{{ $report['id'] }}" role="menuitem">
+                                                <i class="fas fa-times" aria-hidden="true"></i>
+                                                <span>Reject</span>
                                             </button>
                                         @elseif($reportStatus === 'approved')
-                                            <button type="button" class="bm-actions-item bm-actions-revoke" data-abyip-revoke="{{ $report['id'] }}">
-                                                <i class="fas fa-undo"></i> Revoke
+                                            <button type="button" class="bm-actions-item row-actions-item row-actions-item-revoke bm-actions-revoke" data-abyip-revoke="{{ $report['id'] }}" role="menuitem">
+                                                <i class="fas fa-undo" aria-hidden="true"></i>
+                                                <span>Revoke</span>
                                             </button>
                                         @endif
                                     </div>
                                 </div>
                                 @else
-                                <button type="button" class="bm-view-btn" data-abyip-view="{{ $report['id'] }}">View</button>
+                                <button type="button" class="bm-actions-item row-actions-item row-actions-item-view bm-view-btn" data-abyip-view="{{ $report['id'] }}">
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                    <span>View</span>
+                                </button>
                                 @endif
                             </div>
                         </td>
@@ -260,21 +267,16 @@
 </div>
 
 <div id="approveModal" class="view-modal bm-confirm-modal">
-    <div class="view-modal-content bm-confirm-modal-content">
-        <div class="view-modal-header">
-            <h3 class="view-modal-title">Approve ABYIP Submission</h3>
-            <div class="view-modal-controls">
-                <button type="button" class="view-modal-control-btn" onclick="closeApproveModal()" title="Close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
+    <div class="bm-kk-modal-box">
+        <div class="bm-kk-modal-header">
+            <h2 class="bm-kk-modal-title">Approve ABYIP Submission</h2>
+            <button type="button" class="bm-kk-modal-close" onclick="closeApproveModal()" aria-label="Close">&times;</button>
         </div>
-        <div class="view-modal-body">
-            <p class="form-help">Are you sure you want to approve this ABYIP submission? This action will mark the report as <strong>Approved</strong>.</p>
-            <div class="form-actions">
-                <button type="button" class="form-btn cancel-btn" onclick="closeApproveModal()">Cancel</button>
-                <button type="button" class="form-btn submit-btn approve-submit-btn" onclick="confirmApproval()">Confirm Approval</button>
-            </div>
+        <div class="bm-kk-modal-body">
+            <p>Are you sure you want to approve this ABYIP submission?</p>
+        </div>
+        <div class="bm-kk-modal-footer">
+            <button type="button" class="bm-kk-btn-approve approve-submit-btn" onclick="confirmApproval()">Confirm Approve</button>
         </div>
     </div>
 </div>
@@ -291,7 +293,12 @@
         </div>
         <div class="view-modal-body">
             <div class="rejection-form" id="rejectForm">
-                <p class="form-help">Select a rejection reason below.</p>
+                <p class="form-help">Type <strong>Confirm</strong> below, then select a rejection reason.</p>
+                <div class="form-group">
+                    <label for="abyipRejectConfirm">Confirmation <span class="required">*</span></label>
+                    <input type="text" id="abyipRejectConfirm" class="form-control" maxlength="20" placeholder="Confirm" autocomplete="off">
+                    <span class="error-message" id="rejectConfirmError"></span>
+                </div>
                 <div class="form-group">
                     <label>Rejection Reason <span class="required">*</span></label>
                     <div class="revoke-reason-options">
@@ -306,7 +313,7 @@
                 </div>
                 <div class="form-actions">
                     <button type="button" class="form-btn cancel-btn" onclick="closeRejectModal()">Cancel</button>
-                    <button type="button" class="form-btn submit-btn reject-submit-btn" onclick="submitRejection()">Submit Rejection</button>
+                    <button type="button" class="form-btn submit-btn reject-submit-btn" onclick="submitRejection()" disabled>Submit Rejection</button>
                 </div>
             </div>
         </div>
@@ -314,21 +321,17 @@
 </div>
 
 <div id="revokeModal" class="view-modal bm-revoke-modal">
-    <div class="view-modal-content bm-revoke-modal-content">
-        <div class="view-modal-header">
-            <h3 class="view-modal-title">Revoke ABYIP Approval</h3>
-            <div class="view-modal-controls">
-                <button type="button" class="view-modal-control-btn" onclick="closeRevokeModal()" title="Close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
+    <div class="bm-kk-modal-box bm-kk-modal-box--compact">
+        <div class="bm-kk-modal-header">
+            <h2 class="bm-kk-modal-title">Revoke ABYIP Approval</h2>
+            <button type="button" class="bm-kk-modal-close" onclick="closeRevokeModal()" aria-label="Close">&times;</button>
         </div>
-        <div class="view-modal-body">
+        <div class="bm-kk-modal-body bm-kk-modal-body--form">
             <div class="rejection-form" id="revokeForm">
                 <p class="form-help">Type <strong>Confirm</strong> below to continue. The submission will return to <strong>Pending</strong> status.</p>
                 <div class="form-group">
                     <label for="abyipRevokeConfirm">Confirmation <span class="required">*</span></label>
-                    <input type="text" id="abyipRevokeConfirm" class="form-control" maxlength="20" placeholder="Confirm">
+                    <input type="text" id="abyipRevokeConfirm" class="form-control" maxlength="20" placeholder="Confirm" autocomplete="off">
                     <span class="error-message" id="revokeConfirmError"></span>
                 </div>
                 <div class="form-group">
@@ -343,17 +346,18 @@
                     <textarea id="abyipRevokeReason" class="form-control revoke-reason-input" rows="3" maxlength="100" placeholder="Explain why this approval is being revoked..."></textarea>
                     <span class="error-message" id="revokeReasonError"></span>
                 </div>
-                <div class="form-actions">
-                    <button type="button" class="form-btn cancel-btn" onclick="closeRevokeModal()">Cancel</button>
-                    <button type="button" class="form-btn submit-btn revoke-submit-btn" onclick="submitRevocation()">Revoke Approval</button>
-                </div>
             </div>
+        </div>
+        <div class="bm-kk-modal-footer bm-kk-modal-footer--split">
+            <button type="button" class="bm-kk-btn-cancel" onclick="closeRevokeModal()">Cancel</button>
+            <button type="button" class="bm-kk-btn-revoke revoke-submit-btn" onclick="submitRevocation()" disabled>Revoke Approval</button>
         </div>
     </div>
 </div>
 
-<div id="toast" class="toast">
+<div id="toast" class="toast bm-page-toast">
     <div class="toast-content">
+        <i class="toast-icon fas fa-check-circle" aria-hidden="true"></i>
         <span class="toast-message"></span>
     </div>
 </div>

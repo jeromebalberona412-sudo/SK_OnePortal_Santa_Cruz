@@ -175,8 +175,8 @@
             <div class="modal-header">
                 <h2>Education Programs</h2>
                 <div class="modal-header-actions">
-                    <a href="{{ route('scholarship.apply') }}" class="modal-header-btn modal-header-btn-guide" id="educationHistoryBtn" title="View application history">Application History</a>
-                    <button type="button" class="modal-header-btn modal-header-btn-guide" id="educationQuickGuideBtn" title="Quick Guidelines">Quick Guidelines</button>
+                    <a href="{{ route('scholarship.apply') }}" class="modal-header-btn modal-header-btn-guide" id="educationHistoryBtn" title="View application history" hidden>Application History</a>
+                    <button type="button" class="modal-header-btn modal-header-btn-guide" id="educationQuickGuideBtn" title="Quick Guidelines" hidden>Quick Guidelines</button>
                     <button type="button" class="modal-toggle-btn education-modal-toggle-btn" id="educationModalMaximize" aria-label="Maximize">□</button>
                     <button type="button" class="modal-close education-modal-close-btn" onclick="closeEducationModal()" aria-label="Close">&times;</button>
                 </div>
@@ -1051,10 +1051,26 @@
         window.__KK_PROFILING_FORM_DATA = @json($kkProfilingFormData ?? []);
         window.__KK_PROFILING_ORIGINAL_EMAIL = @json($kkProfilingOriginalEmail ?? '');
         window.__kabataanPrograms = @json($programsPayload ?? ['abyip_programs' => [], 'schedule_programs' => []]);
+        const educationHistoryBtn = document.getElementById('educationHistoryBtn');
+        const hasScholarshipHistory = Boolean(window.__kabataanPrograms?.has_scholarship_application_history)
+            || (window.__kabataanPrograms?.schedule_programs || []).some((schedule) => schedule.has_applied);
+        if (educationHistoryBtn) {
+            educationHistoryBtn.hidden = !hasScholarshipHistory;
+        }
         document.getElementById('educationQuickGuideBtn')?.addEventListener('click', function () {
-            if (typeof window.openScholarshipQuickGuidelines === 'function') {
-                window.openScholarshipQuickGuidelines();
+            if (!window.ScholarshipQuickGuidelines) {
+                return;
             }
+            const stepsRaw = this.dataset.schQgSteps;
+            if (stepsRaw) {
+                try {
+                    window.ScholarshipQuickGuidelines.open(JSON.parse(stepsRaw));
+                    return;
+                } catch (error) {
+                    // fall through
+                }
+            }
+            window.ScholarshipQuickGuidelines.open();
         });
     </script>
 

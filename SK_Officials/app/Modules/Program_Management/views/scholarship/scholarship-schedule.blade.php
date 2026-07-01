@@ -172,11 +172,11 @@
                                 </select>
                             </div>
                             <div class="schol-field">
-                                <label for="participationQty">Maximum Beneficiaries</label>
-                                <input type="text" id="participationQty" class="schol-input" placeholder="e.g. 100" inputmode="numeric" autocomplete="off" maxlength="4">
+                                <label for="participationQty">Maximum Beneficiaries <span class="schol-req">*</span></label>
+                                <input type="text" id="participationQty" class="schol-input" placeholder="e.g. 100" inputmode="numeric" autocomplete="off" maxlength="4" required>
                             </div>
                             <div class="schol-field">
-                                <label for="programStatus">Status</label>
+                                <label for="programStatus">Status <span class="schol-req">*</span></label>
                                 <select id="programStatus" class="schol-input">
                                     <option value="open" selected>Open</option>
                                     <option value="closed">Closed</option>
@@ -234,12 +234,12 @@
                                 <input type="date" id="schSubmissionEnd" class="schol-input" required>
                             </div>
                             <div class="schol-field">
-                                <label for="schVerificationStart">Assessment/Verification — Start</label>
-                                <input type="date" id="schVerificationStart" class="schol-input">
+                                <label for="schVerificationStart">Assessment/Verification — Start <span class="schol-req">*</span></label>
+                                <input type="date" id="schVerificationStart" class="schol-input" required>
                             </div>
                             <div class="schol-field">
-                                <label for="schVerificationEnd">Assessment/Verification — End</label>
-                                <input type="date" id="schVerificationEnd" class="schol-input">
+                                <label for="schVerificationEnd">Assessment/Verification — End <span class="schol-req">*</span></label>
+                                <input type="date" id="schVerificationEnd" class="schol-input" required>
                             </div>
                         </div>
                     </div>
@@ -257,10 +257,10 @@
                 {{-- Custom Questions --}}
                 <div class="sch-program-tab-panel" data-sch-panel="custom-questions" hidden>
                     <div class="schol-schedule-card">
-                        <p class="schol-details-hint">Add optional questions after the default application form.</p>
+                        <p class="schol-details-hint">Add optional questions after the default application form. Supported: Text, Textarea, Number, Radio, Checkbox, Dropdown, and File Upload (max 15).</p>
                         @include('GForm_Builder::partials.custom-questions-builder', [
                             'sectionTitle' => 'Custom Questions',
-                            'hint' => 'Supported: Text, Textarea, Number, Radio, Checkbox, Dropdown, Date.',
+                            'hint' => 'Supported: Text, Textarea, Number, Radio, Checkbox, Dropdown, File Upload.',
                             'emptyMessage' => 'No custom questions yet. Click <strong>Add Question</strong> to add one.',
                         ])
                     </div>
@@ -270,7 +270,7 @@
                 <div class="sch-program-tab-panel" data-sch-panel="quick-guidelines" hidden>
                     <div class="schol-schedule-card schol-quick-guidelines-card">
                         <h4 class="schol-schedule-title">Quick Guidelines</h4>
-                        <p class="schol-details-hint">Optional bilingual quick guide for Kabataan applicants (English + Tagalog). Add up to 10 steps; leave empty if not needed. Maximum 2,000 characters per field.</p>
+                        <p class="schol-details-hint">Bilingual quick guide for Kabataan applicants (English + Tagalog). Add up to 10 steps. Both English and Tagalog fields are required for each step you add.</p>
                         <div id="schQuickGuidelinesBuilder" class="sch-qg-builder"></div>
                         <button type="button" class="schol-btn schol-btn-secondary" id="schAddQuickGuidelineBtn">+ Add Step</button>
                     </div>
@@ -469,7 +469,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     if (window.GFormBuilder) {
         window.GFormBuilder.init({
-            excludeTypes: ['file'],
+            excludeTypes: ['date'],
+            maxFileQuestions: 15,
             showToast: (msg) => {
                 if (typeof window.showScholarshipToast === 'function') {
                     window.showScholarshipToast(msg);
@@ -479,50 +480,8 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Form builder initialized and button bound');
     }
     
-    // Setup submission period date validation
-    setupSubmissionPeriodValidation();
-    
-    // Setup filter
     setupProgramFilter();
 });
-
-function setupCharacterCounter(inputId, counterId) {
-    const input = document.getElementById(inputId);
-    const counter = document.getElementById(counterId);
-    if (input && counter) {
-        input.addEventListener('input', () => {
-            counter.textContent = input.value.length;
-        });
-    }
-}
-
-function setupSubmissionPeriodValidation() {
-    const startDate = document.getElementById('schSubmissionStart');
-    const endDate = document.getElementById('schSubmissionEnd');
-
-    if (startDate) {
-        const today = new Date().toISOString().split('T')[0];
-        startDate.setAttribute('min', today);
-
-        startDate.addEventListener('change', () => {
-            if (endDate && startDate.value) {
-                endDate.setAttribute('min', startDate.value);
-                if (endDate.value && endDate.value < startDate.value) {
-                    endDate.value = startDate.value;
-                }
-            }
-        });
-    }
-
-    if (endDate) {
-        endDate.addEventListener('change', () => {
-            if (startDate && startDate.value && endDate.value < startDate.value) {
-                alert('Submission end date cannot be before start date');
-                endDate.value = startDate.value;
-            }
-        });
-    }
-}
 
 function setupProgramFilter() {
     const filterSelect = document.getElementById('programFilter');

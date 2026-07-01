@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 
 class ScholarshipSystemFieldsService
@@ -60,13 +61,13 @@ class ScholarshipSystemFieldsService
     {
         return [
             ['id' => 'elementary_school', 'label' => 'Elementary School', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
-            ['id' => 'elementary_address', 'label' => 'Address', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
+            ['id' => 'elementary_address', 'label' => 'School Address', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
             ['id' => 'elementary_year_graduated', 'label' => 'Year Graduated', 'type' => 'year', 'required' => true, 'section' => 'educational_background'],
             ['id' => 'secondary_school', 'label' => 'Secondary School', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
-            ['id' => 'secondary_address', 'label' => 'Address', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
+            ['id' => 'secondary_address', 'label' => 'School Address', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
             ['id' => 'secondary_year_graduated', 'label' => 'Year Graduated', 'type' => 'year', 'required' => true, 'section' => 'educational_background'],
             ['id' => 'senior_high_school', 'label' => 'Senior High School', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
-            ['id' => 'senior_high_address', 'label' => 'Address', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
+            ['id' => 'senior_high_address', 'label' => 'School Address', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
             ['id' => 'senior_high_year_graduated', 'label' => 'Year Graduated', 'type' => 'year', 'required' => true, 'section' => 'educational_background'],
             ['id' => 'mother_first_name', 'label' => "Mother's First Name", 'type' => 'name', 'required' => true, 'section' => 'background_information'],
             ['id' => 'mother_last_name', 'label' => "Mother's Last Name", 'type' => 'name', 'required' => true, 'section' => 'background_information'],
@@ -101,11 +102,16 @@ class ScholarshipSystemFieldsService
         ];
     }
 
+    private const UNITS_ENROLLED_MAX = 100;
+
+    private const GRADUATION_YEAR_AHEAD_LIMIT = 1;
+
     /**
      * @param  array<string, mixed>  $answers
+     * @param  array<string, mixed>  $applicantContext
      * @return array<string, mixed>
      */
-    public function validate(array $answers, string $kkEducation): array
+    public function validate(array $answers, string $kkEducation, array $applicantContext = []): array
     {
         $normalized = [];
         foreach ($answers as $key => $value) {
@@ -120,7 +126,7 @@ class ScholarshipSystemFieldsService
             }
 
             $value = $normalized[$field['id']] ?? '';
-            $message = $this->validateField($field, $value);
+            $message = $this->validateField($field, $value, $normalized, $kkEducation, $applicantContext);
 
             if ($message !== '') {
                 $errors[$field['id']] = [$message];
@@ -254,9 +260,16 @@ class ScholarshipSystemFieldsService
 
     /**
      * @param  array{id: string, label: string, type: string, required: bool}  $field
+     * @param  array<string, mixed>  $allAnswers
+     * @param  array<string, mixed>  $applicantContext
      */
-    private function validateField(array $field, mixed $value): string
-    {
+    private function validateField(
+        array $field,
+        mixed $value,
+        array $allAnswers = [],
+        string $kkEducation = '',
+        array $applicantContext = [],
+    ): string {
         $stringValue = trim((string) ($value ?? ''));
 
         if ($field['type'] === 'name') {
@@ -307,17 +320,6 @@ class ScholarshipSystemFieldsService
             return '';
         }
 
-        if ($field['type'] === 'year') {
-            if ($stringValue === '' && $field['required']) {
-                return "{$field['label']} is required.";
-            }
-            if ($stringValue !== '' && ! preg_match('/^\d{4}$/', $stringValue)) {
-                return "{$field['label']} must be a valid 4-digit year.";
-            }
-
-            return '';
-        }
-
         if (in_array($field['id'], self::SCHOOL_TEXT_FIELDS, true)) {
             if ($stringValue === '' && $field['required']) {
                 return "{$field['label']} is required.";
@@ -357,10 +359,134 @@ class ScholarshipSystemFieldsService
             return '';
         }
 
+        if ($field['type'] === 'year') {
+            if ($stringValue === '' && $field['required']) {
+                return "{$field['label']} is required.";
+            }
+            if ($stringValue !== '' && ! preg_match('/^\d{4}$/', $stringValue)) {
+                return "{$field['label']} must be a valid 4-digit year.";
+            }
+            if ($stringValue !== '') {
+                $year = (int) $stringValue;
+                if ($field['id'] === 'expected_graduation_year') {
+                    $bounds = $this->expectedGraduationYearBounds();
+                    if ($year < $bounds['min'] || $year > $bounds['max']) {
+                        return "{$field['label']} must be between {$bounds['min']} and {$bounds['max']}.";
+                    }
+                } elseif (str_ends_with($field['id'], '_year_graduated')) {
+                    $bounds = $this->graduationYearBounds($field['id'], $allAnswers, $applicantContext);
+                    if ($year < $bounds['min'] || $year > $bounds['max']) {
+                        return "{$field['label']} must be between {$bounds['min']} and {$bounds['max']} based on your age and education history.";
+                    }
+                }
+            }
+
+            return '';
+        }
+
+        if ($field['id'] === 'units_enrolled') {
+            if ($stringValue === '' && $field['required']) {
+                return "{$field['label']} is required.";
+            }
+            if ($stringValue !== '') {
+                if (! preg_match('/^\d+$/', $stringValue)) {
+                    return "{$field['label']} must contain numbers only.";
+                }
+                $units = (int) $stringValue;
+                if ($units < 1) {
+                    return "{$field['label']} cannot be negative or zero.";
+                }
+                if ($units > self::UNITS_ENROLLED_MAX) {
+                    return "{$field['label']} must not exceed ".self::UNITS_ENROLLED_MAX.'.';
+                }
+            }
+
+            return '';
+        }
+
+        if ($field['id'] === 'guardian_relation') {
+            if ($stringValue !== '' && strlen($stringValue) > 50) {
+                return "{$field['label']} must not exceed 50 characters.";
+            }
+
+            return '';
+        }
+
         if ($field['required'] && $stringValue === '') {
             return "{$field['label']} is required.";
         }
 
         return '';
+    }
+
+    /**
+     * @param  array<string, mixed>  $answers
+     * @param  array<string, mixed>  $applicantContext
+     * @return array{min: int, max: int}
+     */
+    private function graduationYearBounds(string $fieldId, array $answers, array $applicantContext): array
+    {
+        $currentYear = (int) date('Y');
+        $birthYear = $this->resolveBirthYear($applicantContext);
+        $minAges = [
+            'elementary_year_graduated' => 10,
+            'secondary_year_graduated' => 13,
+            'senior_high_year_graduated' => 15,
+        ];
+        $min = $birthYear !== null
+            ? $birthYear + ($minAges[$fieldId] ?? 10)
+            : 1950;
+        $max = $currentYear;
+
+        if ($fieldId === 'secondary_year_graduated') {
+            $elementaryYear = (int) ($answers['elementary_year_graduated'] ?? 0);
+            if ($elementaryYear > 0) {
+                $min = max($min, $elementaryYear + 1);
+            }
+        }
+
+        if ($fieldId === 'senior_high_year_graduated') {
+            $secondaryYear = (int) ($answers['secondary_year_graduated'] ?? 0);
+            if ($secondaryYear > 0) {
+                $min = max($min, $secondaryYear + 1);
+            }
+        }
+
+        return ['min' => $min, 'max' => $max];
+    }
+
+    /**
+     * @return array{min: int, max: int}
+     */
+    private function expectedGraduationYearBounds(): array
+    {
+        $currentYear = (int) date('Y');
+
+        return [
+            'min' => $currentYear,
+            'max' => $currentYear + self::GRADUATION_YEAR_AHEAD_LIMIT,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $applicantContext
+     */
+    private function resolveBirthYear(array $applicantContext): ?int
+    {
+        $birthday = trim((string) ($applicantContext['birthday'] ?? ''));
+        if ($birthday !== '') {
+            try {
+                return (int) Carbon::parse($birthday)->year;
+            } catch (\Throwable) {
+                // fall through
+            }
+        }
+
+        $age = $applicantContext['age'] ?? null;
+        if (is_numeric($age) && (int) $age > 0) {
+            return (int) date('Y') - (int) $age;
+        }
+
+        return null;
     }
 }

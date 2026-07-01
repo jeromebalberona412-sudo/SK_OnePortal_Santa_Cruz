@@ -22,6 +22,8 @@
     ]);
     const SCHOOL_TEXT_MIN = 20;
     const SCHOOL_TEXT_MAX = 100;
+    const UNITS_ENROLLED_MAX = 100;
+    const NAME_MAX_LENGTH = 50;
     const OCCUPATION_OTHER_VALUE = 'Other Occupation';
     const OCCUPATION_OTHER_MIN = 3;
     const OCCUPATION_OTHER_MAX = 100;
@@ -138,6 +140,120 @@
 
     const PERSONAL_ALWAYS_SHOW_KEYS = new Set(['first_name', 'middle_name', 'last_name', 'suffix']);
 
+    let applicantContext = {
+        birthYear: null,
+        age: null,
+        currentYear: new Date().getFullYear(),
+    };
+
+    function setApplicantContext(profile = {}) {
+        const currentYear = new Date().getFullYear();
+        let birthYear = null;
+        const birthday = String(profile.birthday || profile.date_of_birth || '').trim();
+        if (birthday) {
+            const parsed = new Date(birthday);
+            if (!Number.isNaN(parsed.getTime())) {
+                birthYear = parsed.getFullYear();
+            }
+        }
+        const age = parseInt(profile.age, 10);
+        if (!birthYear && !Number.isNaN(age) && age > 0) {
+            birthYear = currentYear - age;
+        }
+        applicantContext = {
+            birthYear,
+            age: Number.isNaN(age) ? null : age,
+            currentYear,
+        };
+    }
+
+    function getYearGraduatedBounds(fieldId, values = {}) {
+        const { birthYear, currentYear } = applicantContext;
+        const minAges = {
+            elementary_year_graduated: 10,
+            secondary_year_graduated: 13,
+            senior_high_year_graduated: 15,
+        };
+        let min = birthYear ? birthYear + (minAges[fieldId] || 10) : 1950;
+        let max = currentYear;
+
+        const elementaryYear = parseInt(values.elementary_year_graduated, 10);
+        if (fieldId === 'secondary_year_graduated' && !Number.isNaN(elementaryYear)) {
+            min = Math.max(min, elementaryYear + 1);
+        }
+
+        const secondaryYear = parseInt(values.secondary_year_graduated, 10);
+        if (fieldId === 'senior_high_year_graduated' && !Number.isNaN(secondaryYear)) {
+            min = Math.max(min, secondaryYear + 1);
+        }
+
+        return { min, max };
+    }
+
+    function getExpectedGraduationBounds() {
+        const { currentYear } = applicantContext;
+        return { min: currentYear, max: currentYear + 1 };
+    }
+
+    function getFieldMaxLength(field) {
+        if (field.type === 'name') return NAME_MAX_LENGTH;
+        if (field.maxLength) return field.maxLength;
+        return null;
+    }
+
+    function sanitizeContactValue(raw) {
+        let digits = String(raw || '').replace(/\D/g, '');
+        if (!digits) return '';
+        if (!digits.startsWith('09')) {
+            digits = `09${digits.replace(/^0+/, '')}`;
+        }
+        return digits.slice(0, 11);
+    }
+
+    function applyFieldInputConstraints(el, container, kkEducation) {
+        const field = getAllFields().find((item) => item.id === el.name);
+        if (!field) return;
+
+        if (field.type === 'contact') {
+            el.value = sanitizeContactValue(el.value);
+            return;
+        }
+
+        if (field.id === 'units_enrolled') {
+            let digits = String(el.value || '').replace(/\D/g, '').slice(0, 3);
+            if (digits !== '') {
+                const num = parseInt(digits, 10);
+                if (!Number.isNaN(num) && num > UNITS_ENROLLED_MAX) {
+                    digits = String(UNITS_ENROLLED_MAX);
+                }
+            }
+            el.value = digits;
+            return;
+        }
+
+        if (field.type === 'year') {
+            const values = collectAnswers(container, kkEducation);
+            const bounds = field.id === 'expected_graduation_year'
+                ? getExpectedGraduationBounds()
+                : getYearGraduatedBounds(field.id, values);
+            let year = String(el.value || '').replace(/\D/g, '').slice(0, 4);
+            if (year.length === 4) {
+                const parsed = parseInt(year, 10);
+                if (!Number.isNaN(parsed)) {
+                    if (parsed < bounds.min) year = String(bounds.min);
+                    if (parsed > bounds.max) year = String(bounds.max);
+                }
+            }
+            el.value = year;
+            return;
+        }
+
+        const maxLen = getFieldMaxLength(field);
+        if (maxLen && el.value.length > maxLen) {
+            el.value = el.value.slice(0, maxLen);
+        }
+    }
+
     const SECTIONS = [
         {
             id: 'personal_information',
@@ -152,13 +268,13 @@
             locked: true,
             fields: [
                 { id: 'elementary_school', label: 'Elementary School', type: 'text', required: true, schoolBlock: 'elementary', minLength: SCHOOL_TEXT_MIN, maxLength: SCHOOL_TEXT_MAX },
-                { id: 'elementary_address', label: 'Address', type: 'text', required: true, schoolBlock: 'elementary', minLength: SCHOOL_TEXT_MIN, maxLength: SCHOOL_TEXT_MAX },
+                { id: 'elementary_address', label: 'School Address', type: 'text', required: true, schoolBlock: 'elementary', minLength: SCHOOL_TEXT_MIN, maxLength: SCHOOL_TEXT_MAX },
                 { id: 'elementary_year_graduated', label: 'Year Graduated', type: 'year', required: true, schoolBlock: 'elementary' },
                 { id: 'secondary_school', label: 'Secondary School', type: 'text', required: true, schoolBlock: 'secondary', minLength: SCHOOL_TEXT_MIN, maxLength: SCHOOL_TEXT_MAX },
-                { id: 'secondary_address', label: 'Address', type: 'text', required: true, schoolBlock: 'secondary', minLength: SCHOOL_TEXT_MIN, maxLength: SCHOOL_TEXT_MAX },
+                { id: 'secondary_address', label: 'School Address', type: 'text', required: true, schoolBlock: 'secondary', minLength: SCHOOL_TEXT_MIN, maxLength: SCHOOL_TEXT_MAX },
                 { id: 'secondary_year_graduated', label: 'Year Graduated', type: 'year', required: true, schoolBlock: 'secondary' },
                 { id: 'senior_high_school', label: 'Senior High School', type: 'text', required: true, schoolBlock: 'senior_high', minLength: SCHOOL_TEXT_MIN, maxLength: SCHOOL_TEXT_MAX },
-                { id: 'senior_high_address', label: 'Address', type: 'text', required: true, schoolBlock: 'senior_high', minLength: SCHOOL_TEXT_MIN, maxLength: SCHOOL_TEXT_MAX },
+                { id: 'senior_high_address', label: 'School Address', type: 'text', required: true, schoolBlock: 'senior_high', minLength: SCHOOL_TEXT_MIN, maxLength: SCHOOL_TEXT_MAX },
                 { id: 'senior_high_year_graduated', label: 'Year Graduated', type: 'year', required: true, schoolBlock: 'senior_high' },
             ],
         },
@@ -190,7 +306,7 @@
                 { id: 'guardian_suffix_other', label: "Guardian's Suffix (specify)", type: 'suffix_other', required: false, group: 'guardian', maxLength: SUFFIX_OTHER_MAX, showWhenField: 'guardian_suffix', showWhenValue: SUFFIX_OTHER_VALUE },
                 { id: 'guardian_occupation', label: "Guardian's Occupation", type: 'select', required: false, group: 'guardian', options: OCCUPATION_OPTIONS },
                 { id: 'guardian_occupation_other', label: "Guardian's Other Occupation", type: 'text', required: true, group: 'guardian', minLength: OCCUPATION_OTHER_MIN, maxLength: OCCUPATION_OTHER_MAX, showWhenField: 'guardian_occupation', showWhenValue: OCCUPATION_OTHER_VALUE },
-                { id: 'guardian_relation', label: 'Relation to Guardian', type: 'text', required: false, group: 'guardian' },
+                { id: 'guardian_relation', label: 'Relation to Guardian', type: 'text', required: false, group: 'guardian', maxLength: 50 },
                 { id: 'guardian_contact_number', label: "Guardian's Contact No.", type: 'contact', required: false, group: 'guardian' },
                 { id: 'annual_family_gross_income', label: 'Family Monthly Income', type: 'select', required: true, options: FAMILY_MONTHLY_INCOME_OPTIONS },
             ],
@@ -407,7 +523,7 @@
         return '';
     }
 
-    function validateField(field, value, visible) {
+    function validateField(field, value, visible, values = {}) {
         if (!visible) return '';
         if (field.id.endsWith('_occupation_other')) {
             return validateSchoolText(
@@ -436,10 +552,38 @@
         if (field.type === 'suffix_other') return validateSuffixOther(value, field.required);
         if (field.type === 'contact') return validateContact(value, field.required);
         if (field.type === 'currency') return validateCurrency(value, field.required);
+        if (field.maxLength && !field.minLength && field.type === 'text') {
+            const trimmed = String(value || '').trim();
+            if (!trimmed && field.required) {
+                return `${field.label} is required.`;
+            }
+            if (trimmed.length > field.maxLength) {
+                return `${field.label} must not exceed ${field.maxLength} characters.`;
+            }
+            return '';
+        }
+        if (field.id === 'units_enrolled') {
+            const trimmed = String(value || '').trim();
+            if (!trimmed) return field.required ? `${field.label} is required.` : '';
+            if (!/^\d+$/.test(trimmed)) return `${field.label} must contain numbers only.`;
+            const units = parseInt(trimmed, 10);
+            if (Number.isNaN(units) || units < 1) return `${field.label} cannot be negative or zero.`;
+            if (units > UNITS_ENROLLED_MAX) return `${field.label} must not exceed ${UNITS_ENROLLED_MAX}.`;
+            return '';
+        }
         if (field.type === 'year') {
             const year = String(value || '').trim();
             if (!year && field.required) return 'Year is required.';
             if (year && !/^\d{4}$/.test(year)) return 'Enter a valid 4-digit year.';
+            if (year) {
+                const parsed = parseInt(year, 10);
+                const bounds = field.id === 'expected_graduation_year'
+                    ? getExpectedGraduationBounds()
+                    : getYearGraduatedBounds(field.id, values);
+                if (parsed < bounds.min || parsed > bounds.max) {
+                    return `${field.label} must be between ${bounds.min} and ${bounds.max}.`;
+                }
+            }
             return '';
         }
         if (field.required && !String(value || '').trim()) return `${field.label} is required.`;
@@ -528,14 +672,39 @@
                 <div class="gf-form-group schol-system-field-wrap" data-field-wrap="${field.id}" ${hiddenAttr}>
                     <label for="sys_${field.id}">${escapeHtml(fieldLabel)}${reqMark}</label>
                     <input class="gf-input schol-system-input schol-system-uppercase" type="text" name="${field.id}" id="sys_${field.id}" data-system-field="${field.id}" data-field-type="suffix_other" value="${escapeHtml(toUpperAnswer(rawValue))}" maxlength="${field.maxLength || SUFFIX_OTHER_MAX}" ${required ? 'required' : ''} autocomplete="off" placeholder="Specify suffix (max ${field.maxLength || SUFFIX_OTHER_MAX} chars)">
+                    <span class="sch-field-hint">Maximum ${field.maxLength || SUFFIX_OTHER_MAX} characters</span>
+                    <p class="sch-field-inline-error" hidden></p>
                 </div>`;
         }
 
-        const inputType = field.type === 'number' || field.type === 'year' ? 'number' : 'text';
-        const extraAttrs = field.type === 'year' ? 'min="1950" max="2100" step="1"' : '';
+        if (field.type === 'contact') {
+            const contactValue = sanitizeContactValue(rawValue) || (required ? '09' : '');
+            return `
+                <div class="gf-form-group schol-system-field-wrap" data-field-wrap="${field.id}" ${hiddenAttr}>
+                    <label for="sys_${field.id}">${escapeHtml(fieldLabel)}${reqMark}</label>
+                    <input class="gf-input schol-system-input" type="tel" name="${field.id}" id="sys_${field.id}" data-system-field="${field.id}" data-field-type="contact" value="${escapeHtml(contactValue)}" maxlength="11" inputmode="numeric" pattern="09[0-9]{9}" ${required ? 'required' : ''} autocomplete="off" placeholder="09XXXXXXXXX">
+                    <span class="sch-field-hint">Starts with 09, 11 digits total</span>
+                    <p class="sch-field-inline-error" hidden></p>
+                </div>`;
+        }
+
+        const inputType = field.type === 'number' ? 'text' : (field.type === 'year' ? 'text' : 'text');
+        let extraAttrs = '';
+        let yearHint = '';
+        if (field.type === 'year') {
+            const bounds = field.id === 'expected_graduation_year'
+                ? getExpectedGraduationBounds()
+                : getYearGraduatedBounds(field.id, values);
+            extraAttrs = `minlength="4" maxlength="4" inputmode="numeric" data-year-min="${bounds.min}" data-year-max="${bounds.max}"`;
+            yearHint = `<span class="sch-field-hint">Allowed years: ${bounds.min}–${bounds.max}</span>`;
+        } else if (field.id === 'units_enrolled') {
+            extraAttrs = `inputmode="numeric" maxlength="3" data-units-max="${UNITS_ENROLLED_MAX}"`;
+            yearHint = `<span class="sch-field-hint">Numbers only, maximum ${UNITS_ENROLLED_MAX}</span>`;
+        }
+        const maxLen = getFieldMaxLength(field);
         const lengthAttrs = field.minLength && field.maxLength
             ? `minlength="${field.minLength}" maxlength="${field.maxLength}"`
-            : '';
+            : (maxLen ? `maxlength="${maxLen}"` : '');
         const inputClass = field.type === 'currency'
             ? 'gf-input schol-system-input schol-system-currency'
             : `gf-input schol-system-input${uppercaseClass}`;
@@ -545,6 +714,10 @@
             <div class="gf-form-group schol-system-field-wrap" data-field-wrap="${field.id}" ${hiddenAttr}>
                 <label for="sys_${field.id}">${escapeHtml(fieldLabel)}${reqMark}</label>
                 <input class="${inputClass}" type="${inputType}" name="${field.id}" id="sys_${field.id}" data-system-field="${field.id}" data-field-type="${field.type}" value="${displayValue}" ${required ? 'required' : ''} ${extraAttrs} ${lengthAttrs} autocomplete="off">
+                ${field.type === 'name' ? `<span class="sch-field-hint">3–${NAME_MAX_LENGTH} characters</span>` : ''}
+                ${field.minLength && field.maxLength ? `<span class="sch-field-hint">${field.minLength}–${field.maxLength} characters</span>` : (field.maxLength ? `<span class="sch-field-hint">Maximum ${field.maxLength} characters</span>` : '')}
+                ${yearHint}
+                <p class="sch-field-inline-error" hidden></p>
             </div>`;
     }
 
@@ -612,19 +785,71 @@
         bindApplicantEvents(container, kkEducation);
     }
 
+    function showInlineFieldError(wrap, message) {
+        if (!wrap) return;
+        const errorEl = wrap.querySelector('.sch-field-inline-error');
+        if (!errorEl) return;
+        const text = String(message || '').trim();
+        errorEl.textContent = text;
+        errorEl.hidden = text === '';
+        wrap.classList.toggle('has-inline-error', text !== '');
+    }
+
+    function validateInputRealtime(el, container, kkEducation) {
+        const field = getAllFields().find((item) => item.id === el.name);
+        const wrap = el.closest('[data-field-wrap]');
+        if (!field || !wrap) return;
+
+        const values = collectAnswers(container, kkEducation);
+        const visible = isFieldVisible(field, values, kkEducation);
+        if (!visible) {
+            showInlineFieldError(wrap, '');
+            return;
+        }
+
+        showInlineFieldError(wrap, validateField(field, values[field.id], visible, values));
+    }
+
     function bindApplicantEvents(container, kkEducation) {
         container.querySelectorAll('.schol-system-input').forEach((el) => {
+            const runValidation = () => validateInputRealtime(el, container, kkEducation);
+
             el.addEventListener('input', () => {
+                applyFieldInputConstraints(el, container, kkEducation);
                 if (el.dataset.fieldType === 'currency') {
                     const raw = parseCurrencyValue(el.value);
                     el.value = raw ? formatCurrencyDisplay(raw) : '';
                     el.setSelectionRange(el.value.length, el.value.length);
                 } else if (UPPERCASE_FIELD_TYPES.has(el.dataset.fieldType)) {
                     el.value = el.value.toUpperCase();
+                    applyFieldInputConstraints(el, container, kkEducation);
                 }
                 refreshApplicantVisibility(container, kkEducation);
+                runValidation();
             });
-            el.addEventListener('change', () => refreshApplicantVisibility(container, kkEducation));
+            el.addEventListener('focus', () => {
+                if (el.dataset.fieldType === 'contact' && !String(el.value || '').trim()) {
+                    el.value = '09';
+                }
+            });
+            el.addEventListener('keydown', (event) => {
+                const field = getAllFields().find((item) => item.id === el.name);
+                if (!field) return;
+                const maxLen = field.type === 'contact'
+                    ? 11
+                    : (field.type === 'year' ? 4 : getFieldMaxLength(field));
+                if (!maxLen) return;
+                if (event.key.length !== 1) return;
+                const selection = el.selectionEnd - el.selectionStart;
+                if (el.value.length - selection >= maxLen) {
+                    event.preventDefault();
+                }
+            });
+            el.addEventListener('blur', runValidation);
+            el.addEventListener('change', () => {
+                refreshApplicantVisibility(container, kkEducation);
+                runValidation();
+            });
         });
         container.querySelectorAll('input[type="radio"]').forEach((el) => {
             el.addEventListener('change', () => refreshApplicantVisibility(container, kkEducation));
@@ -648,6 +873,29 @@
             const blockId = blockEl.getAttribute('data-school-block') || '';
             blockEl.hidden = !isSchoolBlockVisible(blockId, kkEducation);
         });
+
+        refreshYearFieldHints(container, kkEducation);
+    }
+
+    function refreshYearFieldHints(container, kkEducation) {
+        const values = collectAnswers(container, kkEducation);
+        getAllFields()
+            .filter((field) => field.type === 'year')
+            .forEach((field) => {
+                const wrap = container.querySelector(`[data-field-wrap="${field.id}"]`);
+                const input = wrap?.querySelector('input[data-field-type="year"]');
+                const hint = wrap?.querySelector('.sch-field-hint');
+                if (!input) return;
+
+                const bounds = field.id === 'expected_graduation_year'
+                    ? getExpectedGraduationBounds()
+                    : getYearGraduatedBounds(field.id, values);
+                input.dataset.yearMin = String(bounds.min);
+                input.dataset.yearMax = String(bounds.max);
+                if (hint) {
+                    hint.textContent = `Allowed years: ${bounds.min}–${bounds.max}`;
+                }
+            });
     }
 
     function collectAnswers(root, kkEducation = '') {
@@ -657,6 +905,8 @@
         root.querySelectorAll('.schol-system-input').forEach((el) => {
             if (el.dataset.fieldType === 'currency') {
                 values[el.name] = parseCurrencyValue(el.value);
+            } else if (el.dataset.fieldType === 'contact') {
+                values[el.name] = sanitizeContactValue(el.value);
             } else if (UPPERCASE_FIELD_TYPES.has(el.dataset.fieldType)) {
                 values[el.name] = toUpperAnswer(el.value);
             } else {
@@ -704,7 +954,7 @@
             }
             const visible = isFieldVisible(field, values, kkEducation);
             // Skip suffix_other fields here — they're validated via isFieldVisible + validateField
-            const err = validateField(field, values[field.id], visible);
+            const err = validateField(field, values[field.id], visible, values);
             if (err) errors.push({ field: field.id, label: field.label, message: err });
         });
 
@@ -803,6 +1053,9 @@
         parseCurrencyValue,
         validateName,
         validateContact,
+        setApplicantContext,
+        getYearGraduatedBounds,
+        getExpectedGraduationBounds,
         validatePersonalProfile,
         validateSchoolText,
         getFieldDisplayLabel,

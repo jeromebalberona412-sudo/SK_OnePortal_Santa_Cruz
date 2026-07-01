@@ -156,10 +156,17 @@ class KabataanProgramService
             ->values()
             ->all();
 
+        $hasScholarshipApplicationHistory = ProgramApplication::query()
+            ->where('kabataan_id', $user->id)
+            ->whereNot('status', ProgramApplication::STATUS_CANCELLED)
+            ->whereHas('scheduleProgram', fn ($query) => $query->where('program_letter', 'A'))
+            ->exists();
+
         return [
             'calendar_year' => $document?->fiscal_year,
             'abyip_programs' => $abyipPrograms,
             'schedule_programs' => $schedulePrograms,
+            'has_scholarship_application_history' => $hasScholarshipApplicationHistory,
         ];
     }
 
@@ -352,7 +359,8 @@ class KabataanProgramService
             $isSports ? $questions : $questions->filter(fn ($q) => ($q['type'] ?? '') === 'file')
         );
         $profileData = $this->buildApplicationProfileData($user, $registration);
-        $kkEducation = trim((string) ($this->resolveKkProfile($user, ['education'])['education'] ?? ''));
+        $kkProfile = $this->resolveKkProfile($user, ['education', 'birthday', 'age']);
+        $kkEducation = trim((string) ($kkProfile['education'] ?? ''));
 
         if ($isSports) {
             $validatedSystemFields = [];
@@ -362,7 +370,14 @@ class KabataanProgramService
                 $validatedSystemFields['sports_classification_id'] = $matchedClassification['id'] ?? null;
             }
         } else {
-            $validatedSystemFields = $this->scholarshipSystemFields->validate($systemFieldAnswers, $kkEducation);
+            $validatedSystemFields = $this->scholarshipSystemFields->validate(
+                $systemFieldAnswers,
+                $kkEducation,
+                [
+                    'birthday' => $kkProfile['birthday'] ?? null,
+                    'age' => is_numeric($kkProfile['age'] ?? null) ? (int) $kkProfile['age'] : null,
+                ],
+            );
         }
 
         $profileData = $this->mergeSystemFieldsIntoProfile($profileData, $validatedSystemFields);

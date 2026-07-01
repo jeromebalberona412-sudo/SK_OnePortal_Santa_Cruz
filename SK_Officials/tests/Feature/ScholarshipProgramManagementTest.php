@@ -58,7 +58,7 @@ it('builds combined eligibility when both levels are selected', function () {
         ->and($eligibility['education_levels'])->toBe(['High School Level', 'College Level']);
 });
 
-it('sanitizes quick guidelines as optional empty steps', function () {
+it('sanitizes quick guidelines and requires both languages per step', function () {
     expect(ScheduleProgramService::sanitizeQuickGuidelines(null))->toBe([])
         ->and(ScheduleProgramService::sanitizeQuickGuidelines([]))->toBe([])
         ->and(ScheduleProgramService::sanitizeQuickGuidelines([
@@ -66,6 +66,10 @@ it('sanitizes quick guidelines as optional empty steps', function () {
         ]))->toBe([
             ['en' => 'Step one', 'tl' => 'Hakbang isa'],
         ]);
+
+    expect(fn () => ScheduleProgramService::sanitizeQuickGuidelines([
+        ['en' => 'Only English', 'tl' => ''],
+    ]))->toThrow(ValidationException::class);
 });
 
 it('limits quick guidelines to ten steps when sanitizing', function () {

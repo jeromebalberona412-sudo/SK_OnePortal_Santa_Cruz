@@ -213,6 +213,152 @@ function buildEligibilityForTargetLevels(targetLevels) {
 
 const QUICK_GUIDELINE_MAX_CHARS = 2000;
 const QUICK_GUIDELINE_MAX_STEPS = 10;
+const SCHOLARSHIP_CUSTOM_FILE_MAX = 15;
+const SCHOLARSHIP_PERIOD_MAX_DAYS = 30;
+
+function formatDateOnly(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+function addDaysToDate(dateStr, days) {
+    const date = new Date(`${dateStr}T00:00:00`);
+    date.setDate(date.getDate() + days);
+    return formatDateOnly(date);
+}
+
+function currentYearEndDate() {
+    return `${new Date().getFullYear()}-12-31`;
+}
+
+function setupScholarshipPeriodValidation() {
+    const submissionStart = document.getElementById('schSubmissionStart');
+    const submissionEnd = document.getElementById('schSubmissionEnd');
+    const verificationStart = document.getElementById('schVerificationStart');
+    const verificationEnd = document.getElementById('schVerificationEnd');
+    const today = formatDateOnly(new Date());
+    const submissionEndMax = addDaysToDate(today, SCHOLARSHIP_PERIOD_MAX_DAYS);
+
+    if (submissionStart) {
+        submissionStart.min = today;
+        submissionStart.max = today;
+        submissionStart.readOnly = true;
+        if (!submissionStart.value) {
+            submissionStart.value = today;
+        }
+    }
+
+    if (submissionEnd) {
+        submissionEnd.min = today;
+        submissionEnd.max = submissionEndMax;
+    }
+
+    const syncVerificationConstraints = () => {
+        const subEnd = submissionEnd?.value || '';
+        const yearEnd = currentYearEndDate();
+
+        if (verificationStart) {
+            verificationStart.min = subEnd ? addDaysToDate(subEnd, 1) : '';
+            verificationStart.max = yearEnd;
+            if (verificationStart.value && verificationStart.min && verificationStart.value < verificationStart.min) {
+                verificationStart.value = verificationStart.min;
+            }
+        }
+
+        if (verificationEnd && verificationStart?.value) {
+            const verMin = verificationStart.value;
+            const verMax = addDaysToDate(verMin, SCHOLARSHIP_PERIOD_MAX_DAYS);
+            verificationEnd.min = verMin;
+            verificationEnd.max = verMax < yearEnd ? verMax : yearEnd;
+            if (verificationEnd.value && verificationEnd.value < verificationEnd.min) {
+                verificationEnd.value = verificationEnd.min;
+            }
+            if (verificationEnd.value && verificationEnd.value > verificationEnd.max) {
+                verificationEnd.value = verificationEnd.max;
+            }
+        }
+    };
+
+    submissionEnd?.addEventListener('change', () => {
+        if (submissionStart?.value && submissionEnd.value < submissionStart.value) {
+            submissionEnd.value = submissionStart.value;
+        }
+        if (submissionEnd.value > submissionEndMax) {
+            submissionEnd.value = submissionEndMax;
+        }
+        syncVerificationConstraints();
+    });
+
+    verificationStart?.addEventListener('change', syncVerificationConstraints);
+
+    syncVerificationConstraints();
+}
+
+function applyDefaultScholarshipDates() {
+    const today = formatDateOnly(new Date());
+    const submissionStart = document.getElementById('schSubmissionStart');
+    const submissionEnd = document.getElementById('schSubmissionEnd');
+    const verificationStart = document.getElementById('schVerificationStart');
+    const verificationEnd = document.getElementById('schVerificationEnd');
+
+    if (submissionStart) submissionStart.value = today;
+    if (submissionEnd && !submissionEnd.value) submissionEnd.value = today;
+    if (verificationStart) verificationStart.value = '';
+    if (verificationEnd) verificationEnd.value = '';
+    setupScholarshipPeriodValidation();
+}
+
+function validateScholarshipPeriods() {
+    const submissionStart = document.getElementById('schSubmissionStart')?.value?.trim() || '';
+    const submissionEnd = document.getElementById('schSubmissionEnd')?.value?.trim() || '';
+    const verificationStart = document.getElementById('schVerificationStart')?.value?.trim() || '';
+    const verificationEnd = document.getElementById('schVerificationEnd')?.value?.trim() || '';
+    const today = formatDateOnly(new Date());
+    const submissionEndMax = addDaysToDate(today, SCHOLARSHIP_PERIOD_MAX_DAYS);
+    const yearEnd = currentYearEndDate();
+
+    if (!submissionStart || !submissionEnd) {
+        return { valid: false, message: 'Submission period start and end dates are required.' };
+    }
+
+    if (submissionStart !== today) {
+        return { valid: false, message: 'Submission period start must be today\'s date.' };
+    }
+
+    if (submissionEnd < today || submissionEnd > submissionEndMax) {
+        return { valid: false, message: `Submission period end must be between today and ${SCHOLARSHIP_PERIOD_MAX_DAYS} days from today.` };
+    }
+
+    if (!verificationStart || !verificationEnd) {
+        return { valid: false, message: 'Assessment/Verification start and end dates are required.' };
+    }
+
+    const verificationStartMin = addDaysToDate(submissionEnd, 1);
+    if (verificationStart < verificationStartMin) {
+        return { valid: false, message: 'Assessment/Verification start must be after the submission period end date.' };
+    }
+
+    if (verificationStart > yearEnd) {
+        return { valid: false, message: 'Assessment/Verification start must be within the current year.' };
+    }
+
+    if (verificationEnd < verificationStart) {
+        return { valid: false, message: 'Assessment/Verification end cannot be before the start date.' };
+    }
+
+    const verificationEndMax = addDaysToDate(verificationStart, SCHOLARSHIP_PERIOD_MAX_DAYS);
+    if (verificationEnd > verificationEndMax || verificationEnd > yearEnd) {
+        return { valid: false, message: `Assessment/Verification end must be within ${SCHOLARSHIP_PERIOD_MAX_DAYS} days after the start date and within the current year.` };
+    }
+
+    return { valid: true, message: '' };
+}
+
+function countCustomFileQuestions(questions) {
+    return (Array.isArray(questions) ? questions : []).filter((question) => question.type === 'file').length;
+}
 
 function renderQuickGuidelineCharCount(value) {
     const length = [...String(value ?? '')].length;
@@ -338,7 +484,14 @@ function validateQuickGuidelines() {
         ];
         for (const field of fields) {
             const textarea = card.querySelector(field.selector);
-            const length = [...(textarea?.value || '')].length;
+            const value = (textarea?.value || '').trim();
+            if (!value) {
+                return {
+                    valid: false,
+                    message: `Quick Guidelines step #${index + 1} (${field.label}) cannot be empty.`,
+                };
+            }
+            const length = [...value].length;
             if (length > QUICK_GUIDELINE_MAX_CHARS) {
                 return {
                     valid: false,
@@ -353,8 +506,7 @@ function validateQuickGuidelines() {
 function collectQuickGuidelines() {
     return snapshotQuickGuidelinesFromDom()
         .map(({ en, tl }) => ({ en: en.trim(), tl: tl.trim() }))
-        .filter(({ en, tl }) => en || tl)
-        .map(({ en, tl }) => ({ en: en || tl, tl: tl || en }));
+        .filter(({ en, tl }) => en && tl);
 }
 
 function applyCommitteeHeadDisplay(savedHead = '') {
@@ -412,7 +564,7 @@ function renderInlineProgramPreview() {
 
     let customQuestions = [];
     if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.getQuestions === 'function') {
-        customQuestions = window.SpfbFormBuilder.getQuestions().filter((question) => question.type !== 'file');
+        customQuestions = window.SpfbFormBuilder.getQuestions();
     }
 
     const fakeProgram = {
@@ -566,6 +718,7 @@ function populateScholarshipDetails(details, customQuestions = []) {
     setScholarshipTargetLevels(targetLevels);
     renderQuickGuidelinesBuilder(data.quick_guidelines || []);
     applyCommitteeHeadDisplay(data.committee_head || '');
+    setupScholarshipPeriodValidation();
 }
 
 function resetScholarshipDetailsForm() {
@@ -752,6 +905,7 @@ function openModal(forEditId) {
 
     if (!forEditId) {
         resetModalForm();
+        applyDefaultScholarshipDates();
         if (modalTitle) {
             modalTitle.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
@@ -947,7 +1101,7 @@ function renderProgramViewHtml(program) {
     const statusStyle = statusColors[status] || statusColors.open;
     const kkFields = (program.kk_profiling_fields?.length ? program.kk_profiling_fields : getDefaultKkFields())
         .filter((field) => !SCHOLARSHIP_EXCLUDED_KK_FIELDS.includes(field));
-    const allQuestions = (program.custom_questions || []).filter((question) => question.type !== 'file');
+    const allQuestions = program.custom_questions || [];
     const details = program.scholarship_details || {};
     const groups = Array.isArray(details.requirement_groups) ? details.requirement_groups : [];
     const targetLevels = Array.isArray(details.scholarship_target_levels) && details.scholarship_target_levels.length
@@ -1215,10 +1369,28 @@ async function handleSave() {
         return;
     }
 
+    const periodCheck = validateScholarshipPeriods();
+    if (!periodCheck.valid) {
+        showToast(periodCheck.message, 'error');
+        switchBuilderTab('details');
+        return;
+    }
+
+    if (!document.getElementById('programStatus')?.value) {
+        showToast('Please select a program status.', 'error');
+        switchBuilderTab('details');
+        return;
+    }
+
     let participationQuantity = null;
     const participationCheck = parseParticipationQuantity(participationQtyRaw);
     if (!participationCheck.valid) {
         showToast(participationCheck.message, 'error');
+        switchBuilderTab('details');
+        return;
+    }
+    if (participationCheck.value === null) {
+        showToast('Maximum beneficiaries is required.', 'error');
         switchBuilderTab('details');
         return;
     }
@@ -1233,7 +1405,13 @@ async function handleSave() {
 
     let customQuestions = [];
     if (window.SpfbFormBuilder && typeof window.SpfbFormBuilder.getQuestions === 'function') {
-        customQuestions = window.SpfbFormBuilder.getQuestions().filter((question) => question.type !== 'file');
+        customQuestions = window.SpfbFormBuilder.getQuestions();
+    }
+
+    if (countCustomFileQuestions(customQuestions) > SCHOLARSHIP_CUSTOM_FILE_MAX) {
+        showToast(`You can add up to ${SCHOLARSHIP_CUSTOM_FILE_MAX} file upload questions only.`, 'error');
+        switchBuilderTab('custom-questions');
+        return;
     }
 
     const payload = {
@@ -1281,6 +1459,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     bindBuilderTabs();
     bindScholarshipLevelControls();
     bindParticipationQtyInput();
+    setupScholarshipPeriodValidation();
 
     const tableBody = document.getElementById('safFormsTableBody');
     if (!tableBody) return;

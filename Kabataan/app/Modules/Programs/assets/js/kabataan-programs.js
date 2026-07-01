@@ -521,6 +521,18 @@
             .map((schedule) => renderScheduleCard(program, schedule, EDUCATION_HEADER_GRADIENT, true))
             .join('');
         bindScheduleCardActions(container);
+
+        const quickGuidelines = schedules
+            .map((schedule) => resolveScheduleQuickGuidelines(schedule))
+            .find((steps) => steps.length) || [];
+        const quickGuideBtn = document.getElementById('educationQuickGuideBtn');
+        if (quickGuideBtn) {
+            quickGuideBtn.hidden = quickGuidelines.length === 0;
+            quickGuideBtn.dataset.schQgSteps = quickGuidelines.length ? JSON.stringify(quickGuidelines) : '';
+        }
+        if (window.ScholarshipQuickGuidelines && quickGuidelines.length) {
+            window.ScholarshipQuickGuidelines.setSteps(quickGuidelines);
+        }
     }
 
     function resolveSportKey(schedule) {
@@ -1014,10 +1026,6 @@
                 </div>
                 ${renderScheduleInfoSections(schedule)}
                 <div class="program-action">
-                    ${scholarship && quickGuidelines.length ? `
-                    <button type="button" class="sch-quick-guidelines-btn" data-open-sch-quick-guidelines data-schedule-qg="${schedule.id}" style="margin-bottom:10px;">
-                        Quick Guidelines
-                    </button>` : ''}
                     ${actionButton}
                 </div>
             </div>

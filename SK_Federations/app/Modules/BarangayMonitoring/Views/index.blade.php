@@ -30,22 +30,22 @@
                 <article class="bm-kpi-card">
                     <div class="bm-kpi-icon bm-kpi-icon--green"><i class="fas fa-check-circle"></i></div>
                     <div class="bm-kpi-body">
-                        <div class="bm-kpi-label">Compliance Rate</div>
-                        <div class="bm-kpi-value">{{ $stats['compliance_rate'] }}%</div>
+                        <div class="bm-kpi-label">Submission Rate</div>
+                        <div class="bm-kpi-value">{{ $stats['submission_rate'] }}%</div>
                     </div>
                 </article>
                 <article class="bm-kpi-card">
                     <div class="bm-kpi-icon bm-kpi-icon--green"><i class="fas fa-thumbs-up"></i></div>
                     <div class="bm-kpi-body">
-                        <div class="bm-kpi-label">Total Approved</div>
-                        <div class="bm-kpi-value">{{ $stats['approved_count'] }}</div>
+                        <div class="bm-kpi-label">Total Submitted</div>
+                        <div class="bm-kpi-value">{{ $stats['submitted_count'] }}</div>
                     </div>
                 </article>
                 <article class="bm-kpi-card">
                     <div class="bm-kpi-icon bm-kpi-icon--rose"><i class="fas fa-exclamation-triangle"></i></div>
                     <div class="bm-kpi-body">
-                        <div class="bm-kpi-label">Non-Compliance Rate</div>
-                        <div class="bm-kpi-value">{{ $stats['non_compliance_rate'] }}%</div>
+                        <div class="bm-kpi-label">Not Submitted Rate</div>
+                        <div class="bm-kpi-value">{{ $stats['not_submitted_rate'] }}%</div>
                     </div>
                 </article>
                 <article class="bm-kpi-card">
