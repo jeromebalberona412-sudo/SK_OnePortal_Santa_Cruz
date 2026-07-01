@@ -105,8 +105,13 @@ class AbyipSubmissionScheduleGate
 
         return DB::table('abyip_submission_schedules')
             ->where('status', '!=', 'cancelled')
+            ->where('fiscal_year', (int) date('Y'))
             ->orderByDesc('fiscal_year')
-            ->first();
+            ->first()
+            ?? DB::table('abyip_submission_schedules')
+                ->where('status', '!=', 'cancelled')
+                ->orderByDesc('fiscal_year')
+                ->first();
     }
 
     /**

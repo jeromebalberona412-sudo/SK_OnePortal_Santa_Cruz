@@ -37,5 +37,6 @@ Route::middleware(['auth', 'verified', 'single.session', 'sk_fed.access', 'trust
             Route::put('/abyip-schedules/{id}', [BarangayMonitoringController::class, 'scheduleUpdate'])->name('api.barangay-monitoring.schedules.update');
             Route::post('/abyip-schedules/{id}/extend', [BarangayMonitoringController::class, 'scheduleExtend'])->name('api.barangay-monitoring.schedules.extend');
             Route::post('/abyip-schedules/{id}/cancel', [BarangayMonitoringController::class, 'scheduleCancel'])->name('api.barangay-monitoring.schedules.cancel');
+            Route::delete('/abyip-schedules/{id}', [BarangayMonitoringController::class, 'scheduleDestroy'])->name('api.barangay-monitoring.schedules.destroy');
         });
     });

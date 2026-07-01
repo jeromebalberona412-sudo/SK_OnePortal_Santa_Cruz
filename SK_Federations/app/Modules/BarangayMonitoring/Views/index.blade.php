@@ -231,6 +231,9 @@
             <button type="button" class="bm-btn-schedule danger" id="btnCancelSchedule" data-id="{{ $abyipSchedule['id'] }}">
                 <i class="fas fa-ban"></i> Cancel Schedule
             </button>
+            <button type="button" class="bm-btn-schedule danger" id="btnDeleteSchedule" data-id="{{ $abyipSchedule['id'] }}">
+                <i class="fas fa-trash"></i> Delete Schedule
+            </button>
             @endif
         </div>
     </div>
@@ -247,7 +250,7 @@
             <input type="hidden" id="scheduleId">
             <div class="bm-form-grid">
                 <label>Calendar Year
-                    <input type="text" id="scheduleFiscalYear" value="{{ (int) date('Y') + 1 }}" readonly>
+                    <input type="text" id="scheduleFiscalYear" value="{{ date('Y') }}" readonly>
                 </label>
                 <label>Title
                     <input type="text" id="scheduleTitle" value="ABYIP Submission" maxlength="50">
@@ -267,6 +270,29 @@
         <div class="bm-modal-footer">
             <button type="button" class="bm-btn-secondary" data-schedule-close>Cancel</button>
             <button type="button" class="bm-btn-primary" id="scheduleSaveBtn">Save Schedule</button>
+        </div>
+    </div>
+</div>
+
+<div id="deleteScheduleModal" class="bm-modal" hidden>
+    <div class="bm-modal-backdrop" data-delete-schedule-close></div>
+    <div class="bm-modal-dialog bm-cancel-schedule-dialog">
+        <div class="bm-modal-header bm-cancel-schedule-header">
+            <div class="bm-cancel-schedule-icon" aria-hidden="true">
+                <i class="fas fa-trash"></i>
+            </div>
+            <div>
+                <h3>Delete ABYIP Schedule?</h3>
+                <p class="bm-cancel-schedule-subtitle">This permanently removes the schedule record for this calendar year.</p>
+            </div>
+            <button type="button" class="bm-modal-close" data-delete-schedule-close>&times;</button>
+        </div>
+        <div class="bm-modal-body bm-cancel-schedule-body">
+            <p>Are you sure you want to delete this ABYIP submission schedule? Barangay SK Officials will not be able to upload until a new schedule is created.</p>
+        </div>
+        <div class="bm-modal-footer bm-cancel-schedule-footer">
+            <button type="button" class="bm-btn-secondary" data-delete-schedule-close>No, Keep Schedule</button>
+            <button type="button" class="bm-btn-danger-solid" id="confirmDeleteScheduleBtn">Yes, Delete Schedule</button>
         </div>
     </div>
 </div>

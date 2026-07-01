@@ -1,4 +1,41 @@
-/* Show Archive dropdown — shared archive modules */
+/* Shared red table headers for archive/rejected modules */
+.ap-archive-table thead,
+.asp-table thead,
+.saf-forms-table thead,
+.rkk-table thead,
+.rs-table thead,
+.sk-archive-table thead {
+    background: #dc2626 !important;
+}
+
+.ap-archive-table thead th,
+.asp-table thead th,
+.saf-forms-table thead th,
+.rkk-table thead th,
+.rs-table thead th,
+.sk-archive-table thead th {
+    color: #ffffff !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.ap-archive-table tbody tr:nth-child(even),
+.asp-table tbody tr:nth-child(even),
+.saf-forms-table tbody tr:nth-child(even),
+.rkk-table tbody tr:nth-child(even),
+.rs-table tbody tr:nth-child(even) {
+    background: #f9fafb;
+}
+
+.ap-archive-table tbody tr:hover,
+.asp-table tbody tr:hover,
+.saf-forms-table tbody tr:hover,
+.rkk-table tbody tr:hover,
+.rs-table tbody tr:hover {
+    background: #fef2f2;
+}
+
 .filter-tabs-row--with-archive {
     display: flex;
     align-items: center;

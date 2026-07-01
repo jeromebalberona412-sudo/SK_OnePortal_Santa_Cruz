@@ -175,6 +175,8 @@
             <div class="modal-header">
                 <h2>Education Programs</h2>
                 <div class="modal-header-actions">
+                    <a href="{{ route('scholarship.apply') }}" class="modal-header-btn modal-header-btn-guide" id="educationHistoryBtn" title="View application history">Application History</a>
+                    <button type="button" class="modal-header-btn modal-header-btn-guide" id="educationQuickGuideBtn" title="Quick Guidelines">Quick Guidelines</button>
                     <button type="button" class="modal-toggle-btn education-modal-toggle-btn" id="educationModalMaximize" aria-label="Maximize">□</button>
                     <button type="button" class="modal-close education-modal-close-btn" onclick="closeEducationModal()" aria-label="Close">&times;</button>
                 </div>
@@ -877,30 +879,66 @@
           </div>`;
     }
 
-    function renderCommentItem(comment) {
-        const avatar = feedAvatarUrl(comment.author_avatar_url, comment.author_name);
+    function feedImgTag(url, name, className) {
+        const src = feedEscape(feedAvatarUrl(url, name));
+        const fallback = feedEscape(feedAvatarUrl('', name));
+        return `<img src="${src}" alt="${feedEscape(name)}" class="${className || ''}" onerror="this.onerror=null;this.src='${fallback}'">`;
+    }
+
+    function countFeedComments(comments) {
+        let total = 0;
+        (comments || []).forEach(function (c) {
+            total += 1;
+            total += countFeedComments(c.replies || []);
+        });
+        return total;
+    }
+
+    window.feedReplyTarget = null;
+
+    function feedStartReply(postId, commentId, authorName) {
+        window.feedReplyTarget = { postId: postId, commentId: commentId };
+        feedToggleComments(postId);
+        const input = document.querySelector('#feed-comments-' + postId + ' .comment-input');
+        if (input) {
+            input.placeholder = 'Reply to ' + authorName + '...';
+            input.focus();
+        }
+    }
+
+    function renderCommentItem(comment, postId, depth) {
+        depth = depth || 0;
+        const replies = (comment.replies || []).map(function (reply) {
+            return renderCommentItem(reply, postId, depth + 1);
+        }).join('');
+
         return `
-            <div class="comment-item">
-               <img src="${feedEscape(avatar)}" alt="${feedEscape(comment.author_name)}">
+            <div class="comment-item${depth ? ' comment-item--reply' : ''}" data-comment-id="${comment.id}">
+               ${feedImgTag(comment.author_avatar_url, comment.author_name, '')}
                <div class="comment-content">
                  <p class="comment-author">${feedEscape(comment.author_name)}</p>
                  <p class="comment-text">${feedEscape(comment.body)}</p>
-                 <span class="comment-time">${feedEscape(comment.time)}</span>
+                 <div class="comment-meta-row">
+                   <span class="comment-time">${feedEscape(comment.time)}</span>
+                   <button type="button" class="comment-reply-btn" onclick="feedStartReply(${postId}, ${comment.id}, '${feedEscape(comment.author_name).replace(/'/g, "\\'")}')">Reply</button>
+                 </div>
                </div>
-             </div>`;
+             </div>
+             ${replies ? `<div class="comment-replies">${replies}</div>` : ''}`;
     }
 
     function buildFeedPost(p) {
         const avatar = feedAvatarUrl(p.author_avatar_url, p.author_name);
-        const media  = p.image_url ? `<div class="post-image"><img src="${feedEscape(p.image_url)}" loading="lazy" alt=""></div>` : '';
+        const media  = p.image_url ? `<div class="post-image"><img src="${feedEscape(p.image_url)}" loading="lazy" alt="" onerror="this.parentElement.style.display='none'"></div>` : '';
         const link   = p.link_url  ? `<a href="${feedEscape(p.link_url)}" target="_blank" rel="noopener" class="post-link-preview">${feedEscape(p.link_url)}</a>` : '';
-        const comments = (p.comments ?? []).map(renderCommentItem).join('');
+        const comments = (p.comments ?? []).map(function (c) { return renderCommentItem(c, p.id, 0); }).join('');
         const reactionsSummary = renderReactionsSummary(p);
         const commentAvatar = feedEscape(feedAvatarUrl(FEED_USER_AVATAR, 'You'));
+        const commentTotal = countFeedComments(p.comments || []);
 
         return `
           <div class="post-header">
-            <img src="${feedEscape(avatar)}" alt="${feedEscape(p.author_name)}" class="post-avatar">
+            ${feedImgTag(p.author_avatar_url, p.author_name, 'post-avatar')}
             <div class="post-info">
               <h3 class="post-author">${feedEscape(p.author_name ?? ('SK Brgy. ' + (p.barangay_name ?? '')))}</h3>
               <p class="post-meta">
@@ -922,13 +960,13 @@
             </button>
             <button class="action-btn comment-btn" onclick="feedToggleComments(${p.id})">
               <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>
-              <span id="feed-comment-count-${p.id}">Comment (${(p.comments ?? []).length})</span>
+              <span id="feed-comment-count-${p.id}">Comment (${commentTotal})</span>
             </button>
           </div>
           <div class="comments-section" id="feed-comments-${p.id}" style="display:none;">
             <div class="comments-list" id="feed-comments-list-${p.id}">${comments}</div>
             <div class="comment-input-wrapper">
-              <img src="${commentAvatar}" alt="You">
+              ${feedImgTag(FEED_USER_AVATAR, 'You', '')}
               <input type="text" class="comment-input" placeholder="Write a comment..." maxlength="500"
                      onkeydown="if(event.key==='Enter')feedSubmitComment(${p.id},this)">
               <button class="send-comment-btn" onclick="feedSubmitComment(${p.id},this.previousElementSibling)">
@@ -986,7 +1024,10 @@
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ body: text }),
+                body: JSON.stringify({
+                    body: text,
+                    parent_id: (window.feedReplyTarget && window.feedReplyTarget.postId === id) ? window.feedReplyTarget.commentId : null,
+                }),
             });
             const payload = await r.json();
             if (!r.ok) {
@@ -994,13 +1035,9 @@
                 return;
             }
             input.value = '';
-            const list = document.getElementById(`feed-comments-list-${id}`);
-            if (list) {
-                list.insertAdjacentHTML('beforeend', renderCommentItem(payload));
-                list.scrollTop = list.scrollHeight;
-            }
-            const cnt = document.getElementById(`feed-comment-count-${id}`);
-            if (cnt) { const n = parseInt(cnt.textContent.match(/\d+/)?.[0] ?? '0'); cnt.textContent = `Comment (${n + 1})`; }
+            window.feedReplyTarget = null;
+            input.placeholder = 'Write a comment...';
+            await loadFeed(true);
         } catch (_) {
             alert('Unable to post comment. Please try again.');
         }
@@ -1018,6 +1055,11 @@
         window.__KK_PROFILING_FORM_DATA = @json($kkProfilingFormData ?? []);
         window.__KK_PROFILING_ORIGINAL_EMAIL = @json($kkProfilingOriginalEmail ?? '');
         window.__kabataanPrograms = @json($programsPayload ?? ['abyip_programs' => [], 'schedule_programs' => []]);
+        document.getElementById('educationQuickGuideBtn')?.addEventListener('click', function () {
+            if (typeof window.openScholarshipQuickGuidelines === 'function') {
+                window.openScholarshipQuickGuidelines();
+            }
+        });
     </script>
 
     @include('programs::scholarship.partials.data-privacy-modal')

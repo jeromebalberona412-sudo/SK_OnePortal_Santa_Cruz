@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Archive_Management\Controllers\DeletedPostsArchiveController;
 use App\Modules\Archive_Management\Controllers\DeletedArchiveController;
 use App\Modules\Archive_Management\Controllers\TermRecordsArchiveController;
 use Illuminate\Support\Facades\Route;
@@ -55,4 +56,18 @@ Route::middleware(['auth', 'verified', 'single.session', 'sk_fed.access', 'trust
         Route::post('/archived/deleted-sk-officials/{account}/restore', [DeletedArchiveController::class, 'restoreOfficial'])
             ->whereNumber('account')
             ->name('archived.deleted-sk-officials.restore');
+
+        Route::get('/archived/deleted-posts', [DeletedPostsArchiveController::class, 'index'])
+            ->name('archived.deleted-posts');
+
+        Route::get('/archived/deleted-posts/data', [DeletedPostsArchiveController::class, 'data'])
+            ->name('archived.deleted-posts.data');
+
+        Route::post('/archived/deleted-posts/{id}/restore', [DeletedPostsArchiveController::class, 'restore'])
+            ->whereNumber('id')
+            ->name('archived.deleted-posts.restore');
+
+        Route::delete('/archived/deleted-posts/{id}', [DeletedPostsArchiveController::class, 'destroy'])
+            ->whereNumber('id')
+            ->name('archived.deleted-posts.destroy');
     });

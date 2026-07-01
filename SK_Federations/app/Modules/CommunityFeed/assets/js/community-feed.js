@@ -52,8 +52,13 @@ function loadPosts(reset) {
 
     apiFetch(url, { method: 'GET' })
         .then(function(r) {
-            if (!r.ok) throw new Error('Failed to load posts');
-            return r.json();
+            return r.json().catch(function () { return {}; }).then(function(data) {
+                if (!r.ok) {
+                    var message = data.message || data.error || ('Failed to load posts (HTTP ' + r.status + ').');
+                    throw new Error(message);
+                }
+                return data;
+            });
         })
         .then(function(data) {
             if (reset) container.innerHTML = '';
@@ -73,8 +78,12 @@ function loadPosts(reset) {
                 });
             }
         })
-        .catch(function() {
-            if (reset) container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">Failed to load posts.</div>';
+        .catch(function(err) {
+            if (reset) {
+                container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">'
+                    + escapeHtml(err && err.message ? err.message : 'Failed to load posts.')
+                    + '</div>';
+            }
         })
         .finally(function() { isLoading = false; });
 }

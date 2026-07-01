@@ -43,7 +43,7 @@ class AbyipSubmissionScheduleService
             return null;
         }
 
-        $year = $fiscalYear ?? ((int) date('Y') + 1);
+        $year = $fiscalYear ?? (int) date('Y');
 
         $schedule = AbyipSubmissionSchedule::query()
             ->with(['creator:id,name', 'creator.officialProfile:id,user_id,federation_position,position', 'histories.updater:id,name'])
@@ -68,7 +68,7 @@ class AbyipSubmissionScheduleService
             return true;
         }
 
-        $year = (int) date('Y') + 1;
+        $year = (int) date('Y');
 
         return ! AbyipSubmissionSchedule::query()->where('fiscal_year', $year)->exists();
     }
@@ -255,6 +255,24 @@ class AbyipSubmissionScheduleService
         });
     }
 
+    public function destroy(User $user, int $id): void
+    {
+        $schedule = $this->findSchedule($id);
+
+        DB::transaction(function () use ($schedule) {
+            if (Schema::hasTable('abyip_submission_schedule_histories')) {
+                $schedule->histories()->delete();
+            }
+
+            $schedule->delete();
+        });
+
+        $this->logScheduleEvent($user, 'abyip_schedule.deleted', $schedule, [
+            'action' => 'deleted',
+            'fiscal_year' => $schedule->fiscal_year,
+        ]);
+    }
+
     private function findSchedule(int $id): AbyipSubmissionSchedule
     {
         $this->assertTableExists();
@@ -312,7 +330,7 @@ class AbyipSubmissionScheduleService
     {
         $tz = config('app.timezone', 'Asia/Manila');
         $currentYear = (int) Carbon::now($tz)->format('Y');
-        $expectedFiscalYear = $currentYear + 1;
+        $expectedFiscalYear = $currentYear;
         $title = trim((string) ($data['title'] ?? 'ABYIP Submission'));
         $dateStart = (string) ($data['date_start'] ?? '');
         $deadline = (string) ($data['deadline'] ?? '');
@@ -323,7 +341,7 @@ class AbyipSubmissionScheduleService
 
         if ($fiscalYear !== $expectedFiscalYear) {
             throw ValidationException::withMessages([
-                'fiscal_year' => ['Calendar year must be '.($currentYear + 1).' (one year ahead of the current year).'],
+                'fiscal_year' => ['Calendar year must be '.$currentYear.' (current year).'],
             ]);
         }
 

@@ -254,9 +254,63 @@ body.youth-dashboard {
     max-width: 1400px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: 320px 1fr 320px;
-    gap: 24px;
+    grid-template-columns: minmax(0, 280px) minmax(0, 1fr) minmax(0, 280px);
+    gap: clamp(12px, 1.4vw, 24px);
     height: calc(100vh - var(--nav-h) - 48px);
+}
+
+.programs-sidebar-left,
+.profiles-sidebar-right,
+.barangay-sidebar-right {
+    min-width: 0;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .programs-sidebar-left,
+    .profiles-sidebar-right,
+    .barangay-sidebar-right {
+        display: none;
+    }
+
+    .dashboard-container {
+        grid-template-columns: minmax(0, 1fr);
+        height: auto;
+    }
+
+    body.youth-dashboard {
+        overflow: auto;
+        height: auto;
+    }
+
+    .dashboard-main {
+        height: auto;
+        overflow: visible;
+    }
+
+    .feed-section {
+        height: auto;
+        overflow: visible;
+        padding-right: 0;
+    }
+}
+
+@media (max-width: 900px) {
+    .feed-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .feed-header__search {
+        flex: 1 1 auto;
+        width: 100%;
+    }
+
+    .feed-filter-bar {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 4px;
+    }
 }
 
 /* ── FEED ── */
@@ -1962,4 +2016,50 @@ body.youth-dashboard {
 .sports-program-card__action {
     margin-top: 20px;
     padding-top: 4px;
+}
+
+.comment-replies {
+    margin-left: 28px;
+    border-left: 2px solid #e2e8f0;
+    padding-left: 12px;
+}
+
+.comment-item--reply {
+    margin-top: 10px;
+}
+
+.comment-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.comment-reply-btn {
+    border: none;
+    background: none;
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+}
+
+#educationModal .modal-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+#educationModal .modal-header-btn-guide {
+    border: 1px solid #dbeafe;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
 }

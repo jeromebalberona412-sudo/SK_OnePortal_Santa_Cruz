@@ -76,6 +76,9 @@
             <a href="{{ route('archived.sk-officials-records') }}" class="menu-item submenu-item submenu-item--plain {{ request()->routeIs('archived.sk-officials-records') ? 'active' : '' }}">
                 <span>SK Officials Records</span>
             </a>
+            <a href="{{ route('archived.deleted-posts') }}" class="menu-item submenu-item submenu-item--plain {{ request()->routeIs('archived.deleted-posts*') ? 'active' : '' }}">
+                <span>Deleted Posts</span>
+            </a>
         </div>
 
         <div class="menu-divider"></div>

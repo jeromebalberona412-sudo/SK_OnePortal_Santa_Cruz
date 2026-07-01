@@ -35,6 +35,9 @@
         if (modal) modal.hidden = true;
     }
 
+    const LOADING_FADE_MS = 450;
+    const TOAST_VISIBLE_MS = 2600;
+
     function showScheduleToast(message) {
         const existing = document.querySelector('.bm-schedule-toast');
         if (existing) existing.remove();
@@ -54,7 +57,23 @@
             setTimeout(function () {
                 toast.remove();
             }, 350);
-        }, 2600);
+        }, TOAST_VISIBLE_MS);
+    }
+
+    function finishScheduleAction(toastMessage) {
+        if (typeof window.hideLoading === 'function') {
+            window.hideLoading();
+        }
+
+        return new Promise(function (resolve) {
+            setTimeout(function () {
+                showScheduleToast(toastMessage);
+                setTimeout(function () {
+                    window.location.reload();
+                    resolve();
+                }, TOAST_VISIBLE_MS);
+            }, LOADING_FADE_MS);
+        });
     }
 
     function formatDateInput(date) {
@@ -69,7 +88,7 @@
         const year = now.getFullYear();
         return {
             year: year,
-            calendarYear: year + 1,
+            calendarYear: year,
             today: formatDateInput(now),
             yearEnd: `${year}-12-31`,
         };
@@ -307,11 +326,7 @@
             }
 
             closeModals();
-            showScheduleToast('ABYIP schedule saved successfully.');
-
-            setTimeout(function () {
-                window.location.reload();
-            }, 1400);
+            await finishScheduleAction('ABYIP schedule saved successfully.');
         } catch (error) {
             if (typeof window.hideLoading === 'function') {
                 window.hideLoading();
@@ -342,11 +357,7 @@
             await apiRequest(config.updateUrl + '/' + schedule.id + '/cancel', 'POST', { reason: null });
             closeCancelScheduleModal();
             closeScheduleViewModal();
-            showScheduleToast('ABYIP schedule cancelled successfully.');
-
-            setTimeout(function () {
-                window.location.reload();
-            }, 1400);
+            await finishScheduleAction('ABYIP schedule cancelled successfully.');
         } catch (error) {
             if (typeof window.hideLoading === 'function') {
                 window.hideLoading();
@@ -354,6 +365,47 @@
             if (confirmBtn) {
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = 'Yes, Cancel Schedule';
+            }
+            throw error;
+        }
+    }
+
+    function closeDeleteScheduleModal() {
+        const modal = document.getElementById('deleteScheduleModal');
+        if (modal) modal.hidden = true;
+    }
+
+    function openDeleteScheduleModal() {
+        const modal = document.getElementById('deleteScheduleModal');
+        if (modal) modal.hidden = false;
+    }
+
+    async function deleteSchedule() {
+        const schedule = config.currentSchedule || {};
+        if (!schedule.id) return;
+
+        const confirmBtn = document.getElementById('confirmDeleteScheduleBtn');
+        if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Deleting...';
+        }
+
+        if (typeof window.showLoading === 'function') {
+            window.showLoading('Deleting Schedule', 'Please wait...');
+        }
+
+        try {
+            await apiRequest(config.updateUrl + '/' + schedule.id, 'DELETE');
+            closeDeleteScheduleModal();
+            closeScheduleViewModal();
+            await finishScheduleAction('ABYIP schedule deleted successfully.');
+        } catch (error) {
+            if (typeof window.hideLoading === 'function') {
+                window.hideLoading();
+            }
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Yes, Delete Schedule';
             }
             throw error;
         }
@@ -395,6 +447,20 @@
 
         document.getElementById('scheduleDeadline')?.addEventListener('change', function () {
             clearScheduleFieldErrors();
+        });
+
+        document.getElementById('btnDeleteSchedule')?.addEventListener('click', function () {
+            openDeleteScheduleModal();
+        });
+
+        document.getElementById('confirmDeleteScheduleBtn')?.addEventListener('click', function () {
+            deleteSchedule().catch(function (error) {
+                alert(error.message);
+            });
+        });
+
+        document.querySelectorAll('[data-delete-schedule-close]').forEach(function (btn) {
+            btn.addEventListener('click', closeDeleteScheduleModal);
         });
 
         document.getElementById('btnCancelSchedule')?.addEventListener('click', function () {

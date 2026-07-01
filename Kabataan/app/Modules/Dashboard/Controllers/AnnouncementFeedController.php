@@ -50,6 +50,9 @@ class AnnouncementFeedController extends Controller
             'reactions' => fn ($q) => $q->with('user')->latest()->limit(12),
         ])
             ->withCount('reactions')
+            ->where(function ($q) {
+                $q->where('is_archived', false)->orWhereNull('is_archived');
+            })
             ->where(function ($q) use ($barangayId) {
                 $q->where('barangay_id', $barangayId)
                     ->orWhereRaw('"is_federation_wide" = true');
@@ -137,7 +140,17 @@ class AnnouncementFeedController extends Controller
             ], 429);
         }
 
-        $request->validate(['body' => 'required|string|max:'.FeedCommentRateLimiter::MAX_BODY_LENGTH]);
+        $request->validate([
+            'body' => 'required|string|max:'.FeedCommentRateLimiter::MAX_BODY_LENGTH,
+            'parent_id' => 'nullable|integer',
+        ]);
+
+        if ($request->filled('parent_id')) {
+            AnnouncementComment::query()
+                ->where('id', (int) $request->parent_id)
+                ->where('announcement_id', $id)
+                ->firstOrFail();
+        }
         $registration = KabataanRegistration::where('user_id', $user->id)->latest()->first();
         $authorName = $registration
             ? trim($registration->first_name.' '.$registration->last_name)
@@ -145,6 +158,7 @@ class AnnouncementFeedController extends Controller
 
         $comment = AnnouncementComment::create([
             'announcement_id' => $id,
+            'parent_id' => $request->input('parent_id'),
             'user_id' => $user->id,
             'user_type' => 'kabataan',
             'author_name' => $authorName,
@@ -157,6 +171,7 @@ class AnnouncementFeedController extends Controller
 
         return response()->json([
             'id' => $comment->id,
+            'parent_id' => $comment->parent_id,
             'author_name' => $comment->author_name,
             'author_avatar_url' => $this->resolveCommentAvatar($comment, $post?->barangay_id),
             'body' => $comment->body,
@@ -198,14 +213,43 @@ class AnnouncementFeedController extends Controller
                 $post->barangay_id,
                 $registrations,
             ),
-            'comments' => $post->comments->map(fn ($c) => [
-                'id' => $c->id,
-                'author_name' => $c->author_name,
-                'author_avatar_url' => $this->resolveCommentAvatar($c, $post->barangay_id),
-                'body' => $c->body,
-                'time' => $c->created_at->diffForHumans(),
-            ])->values(),
+            'comments' => $this->formatThreadedComments($post->comments, $post->barangay_id),
         ];
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, AnnouncementComment>  $comments
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    private function formatThreadedComments(Collection $comments, ?int $barangayId): Collection
+    {
+        $items = [];
+
+        foreach ($comments as $comment) {
+            $items[$comment->id] = [
+                'id' => $comment->id,
+                'parent_id' => $comment->parent_id,
+                'author_name' => $comment->author_name,
+                'author_avatar_url' => $this->resolveCommentAvatar($comment, $barangayId),
+                'body' => $comment->body,
+                'time' => $comment->created_at->diffForHumans(),
+                'replies' => [],
+            ];
+        }
+
+        $roots = [];
+
+        foreach ($items as $id => &$item) {
+            $parentId = $item['parent_id'] ?? null;
+            if ($parentId && isset($items[$parentId])) {
+                $items[$parentId]['replies'][] = &$item;
+            } else {
+                $roots[] = &$item;
+            }
+        }
+        unset($item);
+
+        return collect($roots);
     }
 
     /**
@@ -242,8 +286,11 @@ class AnnouncementFeedController extends Controller
 
     private function resolvePostAuthorAvatar(Announcement $post): string
     {
-        if ($post->user?->profile_image_url) {
-            return $this->profileImages->resolveDisplayUrl($post->user);
+        if ($post->user) {
+            return $this->profileImages->resolveDisplayUrl(
+                $post->user,
+                $post->user->name ?? ($post->is_federation_wide ? 'SK Federation' : 'SK Official')
+            );
         }
 
         $logo = $this->logoUrls->resolve($post->barangay_id);
@@ -251,8 +298,7 @@ class AnnouncementFeedController extends Controller
             return $logo;
         }
 
-        $name = $post->user?->name
-            ?? ($post->is_federation_wide ? 'SK Federation' : ('SK '.($post->barangay?->name ?? '')));
+        $name = $post->is_federation_wide ? 'SK Federation' : ('SK '.($post->barangay?->name ?? ''));
 
         return $this->uiAvatarUrl($name);
     }

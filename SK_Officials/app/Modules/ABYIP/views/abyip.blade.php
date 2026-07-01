@@ -451,14 +451,14 @@
         </div>
     </div>
 
-    <!-- Create ABYIP — PDF Upload Modal -->
-    <div class="modal-backdrop" id="createOptionsModal" aria-hidden="true">
-        <div class="modal-box create-options-modal-box abyip-upload-modal-box" role="dialog" aria-labelledby="createOptionsHeading">
-            <div class="create-options-modal-header">
+    <!-- Create ABYIP — PDF Upload / Immersive Preview -->
+    <div class="modal-backdrop abyip-upload-backdrop" id="createOptionsModal" aria-hidden="true">
+        <div class="modal-box create-options-modal-box abyip-upload-modal-box" id="abyipUploadModalBox" role="dialog" aria-labelledby="createOptionsHeading">
+            <div class="create-options-modal-header abyip-upload-modal-header" id="abyipUploadModalHeader">
                 <h4 id="createOptionsHeading">Upload ABYIP (PDF)</h4>
                 <button type="button" class="modal-close-btn" id="createOptionsClose">&times;</button>
             </div>
-            <div class="abyip-meta-modal-inner abyip-pdf-upload-inner">
+            <div class="abyip-meta-modal-inner abyip-pdf-upload-inner" id="abyipUploadInner">
                 <p class="abyip-meta-hint">Upload your Annual Barangay Youth Investment Program document in PDF format. The file will be saved for viewing and printing.</p>
                 <div class="abyip-pdf-upload-zone" id="abyipPdfUploadZone" role="button" tabindex="0" aria-label="Upload ABYIP PDF">
                     <div class="abyip-pdf-upload-icon" aria-hidden="true">
@@ -472,21 +472,18 @@
                     <p class="abyip-pdf-upload-title">Click to browse or drag and drop</p>
                     <p class="abyip-pdf-upload-hint">PDF files only · Maximum 15MB</p>
                 </div>
-                <div class="abyip-pdf-preview-mount" id="abyipPdfPreviewMount" hidden>
-                    <div class="pdf-viewer-container abyip-upload-pdf-viewer">
-                        <div class="pdf-viewer-header abyip-upload-pdf-header">
-                            <span>Document Preview</span>
-                            <button type="button" class="abyip-pdf-clear-btn" id="abyipPdfClearBtn">Remove</button>
-                        </div>
-                        <div class="pdf-viewer-canvas-container abyip-upload-pdf-canvas">
-                            <div class="pdf-pages-wrapper" id="abyipUploadPdfPages"></div>
-                        </div>
-                    </div>
+            </div>
+            <div class="abyip-pdf-preview-stage" id="abyipPdfPreviewStage" hidden>
+                <div class="abyip-preview-canvas-wrap">
+                    <div class="pdf-pages-wrapper" id="abyipUploadPdfPages"></div>
+                </div>
+                <div class="abyip-preview-action-bar">
+                    <button type="button" class="btn-cancel" id="createOptionsCancelBtn">Cancel</button>
+                    <button type="button" class="btn primary-btn" id="abyipPdfUploadContinueBtn" disabled>Upload ABYIP</button>
                 </div>
             </div>
-            <div class="abyip-pdf-upload-footer">
-                <button type="button" class="btn-cancel" id="createOptionsCancelBtn">Cancel</button>
-                <button type="button" class="btn primary-btn" id="abyipPdfUploadContinueBtn" disabled>Upload ABYIP</button>
+            <div class="abyip-pdf-upload-footer" id="abyipUploadFooter">
+                <button type="button" class="btn-cancel" id="abyipUploadFooterCancelBtn">Cancel</button>
             </div>
         </div>
     </div>

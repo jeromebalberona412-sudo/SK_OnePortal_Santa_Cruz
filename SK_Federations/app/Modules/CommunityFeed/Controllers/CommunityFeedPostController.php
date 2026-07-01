@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -42,8 +43,13 @@ class CommunityFeedPostController extends Controller
             'images',
             'reactions' => fn ($q) => $q->with('user')->latest()->limit(12),
         ])
-            ->withCount('reactions')
-            ->orderByDesc('created_at');
+            ->withCount('reactions');
+
+        if (Schema::hasColumn((new Announcement)->getTable(), 'is_archived')) {
+            $query->active();
+        }
+
+        $query->orderByDesc('created_at');
 
         $perPage = min(100, max(1, (int) $request->get('per_page', 100)));
 
@@ -166,11 +172,13 @@ class CommunityFeedPostController extends Controller
     // DELETE /api/community-feed/{id}
     public function destroy(int $id): JsonResponse
     {
-        Announcement::where('id', $id)
+        $post = Announcement::where('id', $id)
             ->where('user_id', Auth::id())
             ->whereRaw('"is_federation_wide" = true')
-            ->firstOrFail()
-            ->delete();
+            ->firstOrFail();
+
+        app(\App\Modules\Archive_Management\Services\FederationPostArchiveService::class)
+            ->archive($post, Auth::user());
 
         return response()->json(['success' => true]);
     }
@@ -259,11 +267,23 @@ class CommunityFeedPostController extends Controller
             ], 429);
         }
 
-        $request->validate(['body' => 'required|string|max:'.FeedCommentRateLimiter::MAX_BODY_LENGTH]);
+        $request->validate([
+            'body' => 'required|string|max:'.FeedCommentRateLimiter::MAX_BODY_LENGTH,
+            'parent_id' => 'nullable|integer',
+        ]);
 
         $post    = Announcement::query()->findOrFail($id);
+
+        if ($request->filled('parent_id')) {
+            AnnouncementComment::query()
+                ->where('id', (int) $request->parent_id)
+                ->where('announcement_id', $id)
+                ->firstOrFail();
+        }
+
         $comment = AnnouncementComment::create([
             'announcement_id' => $id,
+            'parent_id' => $request->input('parent_id'),
             'user_id'         => $user->id,
             'user_type'       => 'sk_fed',
             'author_name'     => $user->name,

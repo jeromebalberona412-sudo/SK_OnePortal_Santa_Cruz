@@ -243,15 +243,26 @@ class AnnouncementController extends Controller
             ], 429);
         }
 
-        $request->validate(['body' => 'required|string|max:'.FeedCommentRateLimiter::MAX_BODY_LENGTH]);
+        $request->validate([
+            'body' => 'required|string|max:'.FeedCommentRateLimiter::MAX_BODY_LENGTH,
+            'parent_id' => 'nullable|integer',
+        ]);
         $post = Announcement::query()->findOrFail($id);
 
         if (! in_array($user->role, self::SK_COMMENT_ROLES, true)) {
             return response()->json(['message' => 'Only SK Officials may comment on this feed.'], 403);
         }
 
+        if ($request->filled('parent_id')) {
+            AnnouncementComment::query()
+                ->where('id', (int) $request->parent_id)
+                ->where('announcement_id', $id)
+                ->firstOrFail();
+        }
+
         $comment = AnnouncementComment::create([
             'announcement_id' => $id,
+            'parent_id' => $request->input('parent_id'),
             'user_id'         => $user->id,
             'user_type'       => 'sk_official',
             'author_name'     => $user->name,

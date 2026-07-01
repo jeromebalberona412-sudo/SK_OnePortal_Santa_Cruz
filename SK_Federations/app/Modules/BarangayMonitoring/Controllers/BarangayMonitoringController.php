@@ -171,6 +171,22 @@ class BarangayMonitoringController extends Controller
         ]);
     }
 
+    public function scheduleDestroy(Request $request, int $id): JsonResponse
+    {
+        try {
+            $this->scheduleService->destroy($request->user(), $id);
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'message' => collect($exception->errors())->flatten()->first(),
+                'errors' => $exception->errors(),
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'ABYIP submission schedule deleted.',
+        ]);
+    }
+
     private function buildStats(array $barangays): array
     {
         $count = count($barangays);

@@ -11,11 +11,13 @@ class Announcement extends Model
 {
     protected $fillable = [
         'user_id', 'barangay_id', 'type', 'title', 'body',
-        'link_url', 'is_federation_wide',
+        'link_url', 'is_federation_wide', 'is_archived', 'archived_at',
     ];
 
     protected $casts = [
         'is_federation_wide' => 'boolean',
+        'is_archived' => 'boolean',
+        'archived_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -41,5 +43,23 @@ class Announcement extends Model
     public function images(): HasMany
     {
         return $this->hasMany(AnnouncementImage::class)->orderBy('sort_order');
+    }
+
+    public function scopeArchived($query)
+    {
+        return $query->whereRaw('"is_archived" = true');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereRaw('"is_archived" = false')
+                ->orWhereNull('is_archived');
+        });
+    }
+
+    public function scopeFederationWide($query)
+    {
+        return $query->whereRaw('"is_federation_wide" = true');
     }
 }

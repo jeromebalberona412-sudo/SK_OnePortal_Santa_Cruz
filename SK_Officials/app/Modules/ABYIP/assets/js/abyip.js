@@ -1057,14 +1057,33 @@ async function confirmDeleteRecord() {
 
 function setUploadModalPreviewMode(isPreviewing) {
     const modal = document.getElementById('createOptionsModal');
-    const inner = modal?.querySelector('.abyip-pdf-upload-inner');
-    const heading = document.getElementById('createOptionsHeading');
+    const modalBox = document.getElementById('abyipUploadModalBox');
+    const uploadInner = document.getElementById('abyipUploadInner');
+    const uploadHeader = document.getElementById('abyipUploadModalHeader');
+    const uploadFooter = document.getElementById('abyipUploadFooter');
+    const previewStage = document.getElementById('abyipPdfPreviewStage');
+    const continueBtn = document.getElementById('abyipPdfUploadContinueBtn');
 
-    if (inner) {
-        inner.classList.toggle('is-previewing', isPreviewing);
+    if (modal) {
+        modal.classList.toggle('is-immersive-preview', isPreviewing);
     }
-    if (heading) {
-        heading.textContent = isPreviewing ? 'ABYIP Document Preview' : 'Upload ABYIP (PDF)';
+    if (modalBox) {
+        modalBox.classList.toggle('is-immersive-preview', isPreviewing);
+    }
+    if (uploadInner) {
+        uploadInner.hidden = isPreviewing;
+    }
+    if (uploadHeader) {
+        uploadHeader.hidden = isPreviewing;
+    }
+    if (uploadFooter) {
+        uploadFooter.hidden = isPreviewing;
+    }
+    if (previewStage) {
+        previewStage.hidden = !isPreviewing;
+    }
+    if (continueBtn && isPreviewing) {
+        continueBtn.disabled = !pendingPdfUploadFile;
     }
 }
 
@@ -1075,19 +1094,11 @@ function resetPdfUploadModal() {
         fileInput.value = '';
     }
 
-    const zone = document.getElementById('abyipPdfUploadZone');
-    const previewMount = document.getElementById('abyipPdfPreviewMount');
     const pagesContainer = document.getElementById('abyipUploadPdfPages');
     const continueBtn = document.getElementById('abyipPdfUploadContinueBtn');
 
     setUploadModalPreviewMode(false);
 
-    if (zone) {
-        zone.hidden = false;
-    }
-    if (previewMount) {
-        previewMount.hidden = true;
-    }
     if (pagesContainer) {
         pagesContainer.innerHTML = '';
     }
@@ -1138,13 +1149,12 @@ function openImportPdfFilePicker() {
 }
 
 function renderUploadModalPdfPreview(file) {
-    const previewMount = document.getElementById('abyipPdfPreviewMount');
     const pagesContainer = document.getElementById('abyipUploadPdfPages');
-    if (!previewMount || !pagesContainer || typeof pdfjsLib === 'undefined') {
+    if (!pagesContainer || typeof pdfjsLib === 'undefined') {
         return;
     }
 
-    previewMount.hidden = false;
+    setUploadModalPreviewMode(true);
     pagesContainer.innerHTML = '<p class="abyip-pdf-loading">Loading PDF preview...</p>';
 
     const reader = new FileReader();
@@ -2236,9 +2246,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             openImportPdfFilePicker();
         }
     });
-    document.getElementById('abyipPdfClearBtn')?.addEventListener('click', resetPdfUploadModal);
     document.getElementById('abyipPdfUploadContinueBtn')?.addEventListener('click', continuePdfUpload);
     document.getElementById('createOptionsCancelBtn')?.addEventListener('click', closeCreateOptionsModal);
+    document.getElementById('abyipUploadFooterCancelBtn')?.addEventListener('click', closeCreateOptionsModal);
     document.getElementById('createOptionsClose')?.addEventListener('click', closeCreateOptionsModal);
     document.getElementById('createOptionsModal')?.addEventListener('click', function (e) {
         if (e.target === e.currentTarget) closeCreateOptionsModal();
