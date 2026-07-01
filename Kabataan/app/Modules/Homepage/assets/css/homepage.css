@@ -644,9 +644,19 @@ body.homepage-body {
     cursor: pointer; transition: all 0.18s ease;
 }
 
-.program-category:hover { background: #eff6ff; border-color: #bfdbfe; }
-.program-category:hover .category-content h3 { color: var(--brand-mid); }
-.program-category:hover .chevron { color: var(--brand-mid); }
+.program-category:hover,
+.program-category:focus-visible {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    box-shadow: 0 0 0 2px rgba(4, 80, 168, 0.12);
+    outline: none;
+}
+
+.program-category:hover .category-content h3,
+.program-category:focus-visible .category-content h3 { color: var(--brand-mid); }
+
+.program-category:hover .chevron,
+.program-category:focus-visible .chevron { color: var(--brand-mid); }
 
 .category-icon {
     width: 36px; height: 36px; border-radius: var(--radius-sm);

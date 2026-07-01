@@ -1148,6 +1148,104 @@
     justify-content: center;
     gap: 8px;
     flex-wrap: wrap;
+    position: relative;
+}
+
+.bm-show-page .bm-actions-menu {
+    position: relative;
+}
+
+.bm-show-page .bm-actions-toggle {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #475569;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.bm-show-page .bm-actions-toggle:hover,
+.bm-show-page .bm-actions-menu.is-open .bm-actions-toggle {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+.bm-show-page .bm-actions-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 148px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+    z-index: 30;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.bm-show-page .bm-actions-item {
+    appearance: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+    color: #334155;
+    transition: background 0.15s ease;
+}
+
+.bm-show-page .bm-actions-item:hover {
+    background: #f8fafc;
+}
+
+.bm-show-page .bm-actions-approve {
+    color: #15803d;
+}
+
+.bm-show-page .bm-actions-approve:hover {
+    background: #dcfce7;
+}
+
+.bm-show-page .bm-actions-reject,
+.bm-show-page .bm-actions-revoke {
+    color: #dc2626;
+}
+
+.bm-show-page .bm-actions-reject:hover,
+.bm-show-page .bm-actions-revoke:hover {
+    background: #fee2e2;
+}
+
+.bm-show-page .bm-confirm-modal-content,
+.bm-show-page .bm-reject-modal-content {
+    max-width: 520px;
+}
+
+.bm-show-page .revoke-reason-input {
+    resize: none;
+    max-width: 100%;
+}
+
+.bm-show-page .modal-actions-view-only {
+    justify-content: flex-end;
 }
 
 .bm-show-page .bm-revoke-btn {

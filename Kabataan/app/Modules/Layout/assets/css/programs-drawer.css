@@ -64,6 +64,7 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    overflow: visible;
 }
 
 .programs-sidebar .program-category {
@@ -74,14 +75,17 @@
     background: #f8fafc;
     border-radius: 12px;
     cursor: pointer;
-    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
     border: 1.5px solid transparent;
+    overflow: visible;
 }
 
-.programs-sidebar .program-category:hover {
+.programs-sidebar .program-category:hover,
+.programs-sidebar .program-category:focus-visible {
     background: #e8f0fe;
     border-color: #1a73e8;
-    transform: translateX(-2px);
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.18);
+    outline: none;
 }
 
 .programs-sidebar .category-icon {

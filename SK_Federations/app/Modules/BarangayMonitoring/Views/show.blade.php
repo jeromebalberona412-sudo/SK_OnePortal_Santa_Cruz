@@ -144,8 +144,27 @@
                         <td data-label="Actions">
                             <div class="bm-row-actions">
                                 <button type="button" class="bm-view-btn" data-abyip-view="{{ $report['id'] }}">View</button>
-                                @if(strtolower($report['status'] ?? '') === 'approved')
-                                    <button type="button" class="bm-revoke-btn" data-abyip-revoke="{{ $report['id'] }}">Revoked</button>
+                                @php $reportStatus = strtolower($report['status'] ?? 'pending'); @endphp
+                                @if(in_array($reportStatus, ['pending', 'approved'], true))
+                                <div class="bm-actions-menu" data-report-id="{{ $report['id'] }}" data-report-status="{{ $reportStatus }}">
+                                    <button type="button" class="bm-actions-toggle" aria-label="More actions" aria-haspopup="true" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <div class="bm-actions-dropdown" hidden>
+                                        @if($reportStatus === 'pending')
+                                            <button type="button" class="bm-actions-item bm-actions-approve" data-abyip-approve="{{ $report['id'] }}">
+                                                <i class="fas fa-check"></i> Approve
+                                            </button>
+                                            <button type="button" class="bm-actions-item bm-actions-reject" data-abyip-reject="{{ $report['id'] }}">
+                                                <i class="fas fa-times"></i> Reject
+                                            </button>
+                                        @elseif($reportStatus === 'approved')
+                                            <button type="button" class="bm-actions-item bm-actions-revoke" data-abyip-revoke="{{ $report['id'] }}">
+                                                <i class="fas fa-undo"></i> Revoke
+                                            </button>
+                                        @endif
+                                    </div>
+                                </div>
                                 @endif
                             </div>
                         </td>
@@ -229,22 +248,62 @@
         </div>
 
         <div class="view-modal-footer" id="viewModalFooter">
-            <div class="rejection-form" id="rejectForm" style="display:none;">
-                <h4 class="form-title">Reject Submission</h4>
+            <div class="modal-actions modal-actions-view-only" id="modalActions">
+                <button type="button" class="action-btn cancel-btn" onclick="closeViewModal()">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="approveModal" class="view-modal bm-confirm-modal">
+    <div class="view-modal-content bm-confirm-modal-content">
+        <div class="view-modal-header">
+            <h3 class="view-modal-title">Approve ABYIP Submission</h3>
+            <div class="view-modal-controls">
+                <button type="button" class="view-modal-control-btn" onclick="closeApproveModal()" title="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="view-modal-body">
+            <p class="form-help">Are you sure you want to approve this ABYIP submission? This action will mark the report as <strong>Approved</strong>.</p>
+            <div class="form-actions">
+                <button type="button" class="form-btn cancel-btn" onclick="closeApproveModal()">Cancel</button>
+                <button type="button" class="form-btn submit-btn approve-submit-btn" onclick="confirmApproval()">Confirm Approval</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="rejectModal" class="view-modal bm-reject-modal">
+    <div class="view-modal-content bm-reject-modal-content">
+        <div class="view-modal-header">
+            <h3 class="view-modal-title">Reject ABYIP Submission</h3>
+            <div class="view-modal-controls">
+                <button type="button" class="view-modal-control-btn" onclick="closeRejectModal()" title="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="view-modal-body">
+            <div class="rejection-form" id="rejectForm">
+                <p class="form-help">Select a rejection reason below.</p>
                 <div class="form-group">
                     <label>Rejection Reason <span class="required">*</span></label>
-                    <textarea id="abyipRejectReason" class="form-control" rows="4" maxlength="1000" placeholder="Provide a reason for rejection..."></textarea>
+                    <div class="revoke-reason-options">
+                        <label class="revoke-check"><input type="checkbox" id="rejectReasonWrongPdf"> Wrong PDF file</label>
+                        <label class="revoke-check"><input type="checkbox" id="rejectReasonOther"> Other</label>
+                    </div>
+                </div>
+                <div class="form-group" id="rejectReasonFieldWrap" style="display:none;">
+                    <label for="abyipRejectReason">Other Reason <span class="required">*</span></label>
+                    <textarea id="abyipRejectReason" class="form-control revoke-reason-input" rows="3" maxlength="100" placeholder="Explain the rejection reason..."></textarea>
                     <span class="error-message" id="rejectReasonError"></span>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="form-btn cancel-btn" onclick="hideRejectForm()">Cancel</button>
+                    <button type="button" class="form-btn cancel-btn" onclick="closeRejectModal()">Cancel</button>
                     <button type="button" class="form-btn submit-btn reject-submit-btn" onclick="submitRejection()">Submit Rejection</button>
                 </div>
-            </div>
-
-            <div class="modal-actions" id="modalActions">
-                <button type="button" class="action-btn reject-btn" onclick="showRejectForm()">Reject</button>
-                <button type="button" class="action-btn approve-btn" onclick="submitApproval()">Approve</button>
             </div>
         </div>
     </div>
@@ -262,10 +321,10 @@
         </div>
         <div class="view-modal-body">
             <div class="rejection-form" id="revokeForm">
-                <p class="form-help">Type <strong>Confirm to revoked</strong> below to continue. The submission will return to <strong>Pending</strong> status.</p>
+                <p class="form-help">Type <strong>Confirm</strong> below to continue. The submission will return to <strong>Pending</strong> status.</p>
                 <div class="form-group">
                     <label for="abyipRevokeConfirm">Confirmation <span class="required">*</span></label>
-                    <input type="text" id="abyipRevokeConfirm" class="form-control" maxlength="20" placeholder="Confirm to revoked">
+                    <input type="text" id="abyipRevokeConfirm" class="form-control" maxlength="20" placeholder="Confirm">
                     <span class="error-message" id="revokeConfirmError"></span>
                 </div>
                 <div class="form-group">

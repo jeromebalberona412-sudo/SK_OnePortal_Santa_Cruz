@@ -127,8 +127,38 @@ class HomepageController extends Controller
 
     private function getFaqs(): array
     {
-        return cache()->remember('kabataan_faqs', 3600, function () {
+        return cache()->remember('kabataan_faqs_v2', 3600, function () {
             return [
+                [
+                    'id' => 101,
+                    'category' => 'general',
+                    'question' => 'What is the SK OnePortal System?',
+                    'answer' => 'SK OnePortal is the official digital platform for Sangguniang Kabataan in Santa Cruz, Laguna. Kabataan is the youth portal where KK members aged 15–30 can browse programs, apply online, read official announcements, and manage their youth profile. SK Officials and SK Federation use connected portals to review submissions and monitor barangay compliance.',
+                ],
+                [
+                    'id' => 102,
+                    'category' => 'account',
+                    'question' => 'How do I sign up on Kabataan?',
+                    'answer' => 'Click Sign Up on the homepage, complete KK Profiling registration for your barangay, verify your email, and set your password. After SK Officials review your registration, you can sign in and access programs, announcements, and your dashboard.',
+                ],
+                [
+                    'id' => 103,
+                    'category' => 'account',
+                    'question' => 'How do I sign in?',
+                    'answer' => 'Go to Sign In, enter the email and password you used during registration, and submit. If you forgot your password, use Forgot Password on the login page to receive a reset link by email.',
+                ],
+                [
+                    'id' => 104,
+                    'category' => 'account',
+                    'question' => 'What are the requirements to register?',
+                    'answer' => 'You must be a Katipunan ng Kabataan member aged 15–30 residing in Santa Cruz, Laguna. Prepare a valid Gmail address, mobile number (09XXXXXXXXX), and accurate personal details for KK Profiling. Supporting ID documents may be requested depending on your barangay registration flow.',
+                ],
+                [
+                    'id' => 105,
+                    'category' => 'programs',
+                    'question' => 'How do I apply for a program?',
+                    'answer' => 'Sign in to Kabataan, open Programs, choose a category such as Scholarship or Sports, and select an open program. Read the requirements, complete the application form, upload any required documents, and submit. Track your application status from your dashboard.',
+                ],
                 // Account FAQs
                 [
                     'id' => 1,

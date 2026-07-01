@@ -20,7 +20,7 @@
         </div>
         <div class="contact-info-content">
             <h3>Phone</h3>
-            <p>SK Federation: +63 (49) 501-8400<br>Email Support: sk@santacruz.gov.ph</p>
+            <p>SK Federation: +63 9081137315</p>
         </div>
     </div>
 
@@ -33,7 +33,7 @@
         </div>
         <div class="contact-info-content">
             <h3>Email</h3>
-            <p>General Inquiries:<br>info@skoneportal.ph<br>Support: support@skoneportal.ph</p>
+            <p>General Inquiries:<br>skoneportal@gmail.com</p>
         </div>
     </div>
 

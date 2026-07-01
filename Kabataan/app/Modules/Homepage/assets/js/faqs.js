@@ -75,8 +75,16 @@ document.addEventListener('DOMContentLoaded', () => {
             toggle.setAttribute('aria-controls', answerId);
 
             const questionSpan = document.createElement('span');
+            questionSpan.className = 'faq-question-text';
             questionSpan.textContent = item.question;
+
+            const chevron = document.createElement('span');
+            chevron.className = 'faq-chevron';
+            chevron.setAttribute('aria-hidden', 'true');
+            chevron.innerHTML = '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>';
+
             toggle.appendChild(questionSpan);
+            toggle.appendChild(chevron);
 
             const answer = document.createElement('div');
             answer.className = 'faq-answer';
@@ -91,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             toggle.addEventListener('click', () => {
                 const expanded = toggle.getAttribute('aria-expanded') === 'true';
                 toggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+                article.classList.toggle('is-open', !expanded);
                 answer.hidden = expanded;
             });
 

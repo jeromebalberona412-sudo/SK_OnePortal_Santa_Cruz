@@ -3,6 +3,8 @@
 
     const config = window.barangayMonitoringShowConfig || {};
     let currentSubmissionId = null;
+    let approveSubmissionId = null;
+    let rejectSubmissionId = null;
     let revokeSubmissionId = null;
     const submissions = Array.isArray(config.abyipReports) ? config.abyipReports : [];
 
@@ -128,13 +130,6 @@
         statusBadge.textContent = statusLabel(item.status);
         statusBadge.className = 'status-badge ' + statusClass(item.status);
 
-        const modalActions = document.getElementById('modalActions');
-        const normalizedStatus = String(item.status || 'pending').toLowerCase();
-
-        if (modalActions) {
-            modalActions.style.display = normalizedStatus === 'pending' ? 'flex' : 'none';
-        }
-
         const rejectionNotice = document.getElementById('modalRejectionReason');
         if (rejectionNotice) {
             const reason = String(item.rejection_reason || '').trim();
@@ -173,6 +168,31 @@
         }) || {};
     }
 
+    function closeAllActionMenus(exceptMenu) {
+        document.querySelectorAll('.bm-actions-menu').forEach(function (menu) {
+            if (exceptMenu && menu === exceptMenu) return;
+            const dropdown = menu.querySelector('.bm-actions-dropdown');
+            const toggle = menu.querySelector('.bm-actions-toggle');
+            if (dropdown) dropdown.hidden = true;
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+            menu.classList.remove('is-open');
+        });
+    }
+
+    function resetRejectForm() {
+        const wrongPdf = document.getElementById('rejectReasonWrongPdf');
+        const other = document.getElementById('rejectReasonOther');
+        const reasonInput = document.getElementById('abyipRejectReason');
+        const wrap = document.getElementById('rejectReasonFieldWrap');
+        const error = document.getElementById('rejectReasonError');
+
+        if (wrongPdf) wrongPdf.checked = false;
+        if (other) other.checked = false;
+        if (reasonInput) reasonInput.value = '';
+        if (wrap) wrap.style.display = 'none';
+        if (error) error.textContent = '';
+    }
+
     function resetRevokeForm() {
         document.getElementById('abyipRevokeConfirm').value = '';
         document.getElementById('abyipRevokeReason').value = '';
@@ -190,10 +210,10 @@
         if (!id) return;
 
         currentSubmissionId = id;
+        closeAllActionMenus();
         const cached = findCachedSubmission(id);
         populateModalFields(cached);
         document.getElementById('abyipPreviewMount').innerHTML = '<p class="preview-loading">Loading document preview...</p>';
-        hideRejectForm();
         document.getElementById('viewModal').classList.add('active');
         document.body.style.overflow = 'hidden';
 
@@ -210,11 +230,48 @@
             });
     }
 
+    function openApproveModal(id) {
+        approveSubmissionId = id;
+        closeAllActionMenus();
+        document.getElementById('approveModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    window.closeApproveModal = function () {
+        document.getElementById('approveModal').classList.remove('active');
+        approveSubmissionId = null;
+        if (!document.getElementById('viewModal').classList.contains('active')
+            && !document.getElementById('rejectModal').classList.contains('active')
+            && !document.getElementById('revokeModal').classList.contains('active')) {
+            document.body.style.overflow = '';
+        }
+    };
+
+    function openRejectModal(id) {
+        rejectSubmissionId = id;
+        resetRejectForm();
+        closeAllActionMenus();
+        document.getElementById('rejectModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    window.closeRejectModal = function () {
+        document.getElementById('rejectModal').classList.remove('active');
+        rejectSubmissionId = null;
+        resetRejectForm();
+        if (!document.getElementById('viewModal').classList.contains('active')
+            && !document.getElementById('approveModal').classList.contains('active')
+            && !document.getElementById('revokeModal').classList.contains('active')) {
+            document.body.style.overflow = '';
+        }
+    };
+
     function openRevokeModal(id) {
         if (!id) return;
 
         revokeSubmissionId = id;
         resetRevokeForm();
+        closeAllActionMenus();
         document.getElementById('revokeModal').classList.add('active');
         document.body.style.overflow = 'hidden';
     }
@@ -223,25 +280,35 @@
         document.getElementById('revokeModal').classList.remove('active');
         revokeSubmissionId = null;
         resetRevokeForm();
-        if (!document.getElementById('viewModal').classList.contains('active')) {
+        if (!document.getElementById('viewModal').classList.contains('active')
+            && !document.getElementById('approveModal').classList.contains('active')
+            && !document.getElementById('rejectModal').classList.contains('active')) {
             document.body.style.overflow = '';
         }
     };
 
-    window.showRejectForm = function () {
-        document.getElementById('modalActions').style.display = 'none';
-        document.getElementById('rejectForm').style.display = 'block';
-    };
+    function bindRejectReasonControls() {
+        const wrongPdf = document.getElementById('rejectReasonWrongPdf');
+        const other = document.getElementById('rejectReasonOther');
+        const wrap = document.getElementById('rejectReasonFieldWrap');
+        const reasonInput = document.getElementById('abyipRejectReason');
 
-    window.hideRejectForm = function () {
-        document.getElementById('rejectForm').style.display = 'none';
-        document.getElementById('abyipRejectReason').value = '';
-        document.getElementById('rejectReasonError').textContent = '';
-        const item = findCachedSubmission(currentSubmissionId);
-        const normalizedStatus = item ? String(item.status).toLowerCase() : '';
-        document.getElementById('modalActions').style.display =
-            normalizedStatus === 'pending' ? 'flex' : 'none';
-    };
+        function syncRejectReasonField() {
+            const showField = Boolean(other?.checked);
+            if (wrap) wrap.style.display = showField ? 'block' : 'none';
+            if (!showField && reasonInput) reasonInput.value = '';
+        }
+
+        wrongPdf?.addEventListener('change', function () {
+            if (wrongPdf.checked && other) other.checked = false;
+            syncRejectReasonField();
+        });
+
+        other?.addEventListener('change', function () {
+            if (other.checked && wrongPdf) wrongPdf.checked = false;
+            syncRejectReasonField();
+        });
+    }
 
     function bindRevokeReasonControls() {
         const accidental = document.getElementById('revokeReasonAccidental');
@@ -251,17 +318,34 @@
 
         function syncRevokeReasonField() {
             const showField = Boolean(other?.checked);
-            if (wrap) {
-                wrap.style.display = showField ? 'block' : 'none';
-            }
-            if (!showField && reasonInput) {
-                reasonInput.value = '';
-            }
+            if (wrap) wrap.style.display = showField ? 'block' : 'none';
+            if (!showField && reasonInput) reasonInput.value = '';
         }
 
         accidental?.addEventListener('change', syncRevokeReasonField);
         other?.addEventListener('change', syncRevokeReasonField);
     }
+
+    window.confirmApproval = async function () {
+        if (!approveSubmissionId) return;
+
+        const approveBtn = document.querySelector('.approve-submit-btn');
+        if (approveBtn) approveBtn.disabled = true;
+
+        try {
+            await apiFetch((config.approveUrl || '/api/barangay-abyip/__ID__/approve').replace('__ID__', approveSubmissionId), {
+                method: 'POST',
+                body: {},
+            });
+            showToast('Submission successfully approved!', 'success');
+            closeApproveModal();
+            window.location.reload();
+        } catch (error) {
+            showToast(error.message || 'Approval failed.', 'error');
+        } finally {
+            if (approveBtn) approveBtn.disabled = false;
+        }
+    };
 
     window.submitRevocation = async function () {
         if (!revokeSubmissionId) return;
@@ -276,8 +360,8 @@
         confirmError.textContent = '';
         reasonError.textContent = '';
 
-        if ((confirmInput?.value || '').trim() !== 'Confirm to revoked') {
-            confirmError.textContent = 'Type Confirm to revoked to continue.';
+        if ((confirmInput?.value || '').trim() !== 'Confirm') {
+            confirmError.textContent = 'Type Confirm to continue.';
             return;
         }
 
@@ -319,49 +403,43 @@
         }
     };
 
-    window.submitApproval = async function () {
-        if (!currentSubmissionId) return;
-
-        const approveBtn = document.querySelector('#modalActions .approve-btn');
-        if (approveBtn) approveBtn.disabled = true;
-
-        try {
-            await apiFetch((config.approveUrl || '/api/barangay-abyip/__ID__/approve').replace('__ID__', currentSubmissionId), {
-                method: 'POST',
-                body: {},
-            });
-            showToast('Submission successfully approved!', 'success');
-            closeViewModal();
-            window.location.reload();
-        } catch (error) {
-            showToast(error.message || 'Approval failed.', 'error');
-        } finally {
-            if (approveBtn) approveBtn.disabled = false;
-        }
-    };
-
     window.submitRejection = async function () {
-        if (!currentSubmissionId) return;
+        if (!rejectSubmissionId) return;
 
-        const reason = document.getElementById('abyipRejectReason').value.trim();
+        const wrongPdf = document.getElementById('rejectReasonWrongPdf');
+        const other = document.getElementById('rejectReasonOther');
+        const reasonInput = document.getElementById('abyipRejectReason');
         const reasonError = document.getElementById('rejectReasonError');
         reasonError.textContent = '';
 
-        if (!reason) {
-            reasonError.textContent = 'Please provide a rejection reason';
+        if (!wrongPdf?.checked && !other?.checked) {
+            reasonError.textContent = 'Select a rejection reason.';
             return;
+        }
+
+        let reason = '';
+        if (wrongPdf?.checked) {
+            reason = 'Wrong PDF file';
+        }
+        if (other?.checked) {
+            const customReason = (reasonInput?.value || '').trim();
+            if (!customReason) {
+                reasonError.textContent = 'Please provide a rejection reason.';
+                return;
+            }
+            reason = customReason.slice(0, 100);
         }
 
         const rejectBtn = document.querySelector('.reject-submit-btn');
         if (rejectBtn) rejectBtn.disabled = true;
 
         try {
-            await apiFetch((config.rejectUrl || '/api/barangay-abyip/__ID__/reject').replace('__ID__', currentSubmissionId), {
+            await apiFetch((config.rejectUrl || '/api/barangay-abyip/__ID__/reject').replace('__ID__', rejectSubmissionId), {
                 method: 'POST',
                 body: { reason: reason },
             });
             showToast('Submission successfully rejected!', 'error');
-            closeViewModal();
+            closeRejectModal();
             window.location.reload();
         } catch (error) {
             showToast(error.message || 'Rejection failed.', 'error');
@@ -372,10 +450,11 @@
 
     window.closeViewModal = function () {
         document.getElementById('viewModal').classList.remove('active', 'fullscreen');
-        if (!document.getElementById('revokeModal').classList.contains('active')) {
+        if (!document.getElementById('approveModal').classList.contains('active')
+            && !document.getElementById('rejectModal').classList.contains('active')
+            && !document.getElementById('revokeModal').classList.contains('active')) {
             document.body.style.overflow = '';
         }
-        hideRejectForm();
         currentSubmissionId = null;
         document.getElementById('abyipPreviewMount').innerHTML = '';
     };
@@ -399,6 +478,18 @@
             });
         });
 
+        document.querySelectorAll('[data-abyip-approve]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                openApproveModal(btn.getAttribute('data-abyip-approve'));
+            });
+        });
+
+        document.querySelectorAll('[data-abyip-reject]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                openRejectModal(btn.getAttribute('data-abyip-reject'));
+            });
+        });
+
         document.querySelectorAll('[data-abyip-revoke]').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 openRevokeModal(btn.getAttribute('data-abyip-revoke'));
@@ -406,9 +497,39 @@
         });
     }
 
+    function initActionMenus() {
+        document.querySelectorAll('.bm-actions-menu').forEach(function (menu) {
+            const toggle = menu.querySelector('.bm-actions-toggle');
+            const dropdown = menu.querySelector('.bm-actions-dropdown');
+
+            toggle?.addEventListener('click', function (event) {
+                event.stopPropagation();
+                const isOpen = menu.classList.contains('is-open');
+                closeAllActionMenus();
+                if (!isOpen) {
+                    menu.classList.add('is-open');
+                    if (dropdown) dropdown.hidden = false;
+                    toggle.setAttribute('aria-expanded', 'true');
+                }
+            });
+        });
+
+        document.addEventListener('click', function () {
+            closeAllActionMenus();
+        });
+
+        document.querySelectorAll('.bm-actions-dropdown').forEach(function (dropdown) {
+            dropdown.addEventListener('click', function (event) {
+                event.stopPropagation();
+            });
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         initAbyipFilters();
         initAbyipViewButtons();
+        initActionMenus();
+        bindRejectReasonControls();
         bindRevokeReasonControls();
     });
 })();
