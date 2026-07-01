@@ -43,12 +43,13 @@ class ProfileSupportingDocumentsService
     }
 
     /**
+     * @param  array{front: UploadedFile, back: UploadedFile}  $files
      * @return array{
      *     documents: array<int, array{type: string, label: string, url: string, display_name: string}>,
      *     message: string
      * }
      */
-    public function upload(User $user, UploadedFile $file, string $documentType): array
+    public function upload(User $user, array $files, string $documentType): array
     {
         $registration = $this->findRegistration($user);
 
@@ -58,34 +59,51 @@ class ProfileSupportingDocumentsService
             ]);
         }
 
-        if (! in_array($documentType, ['school_id', 'national_id', 'barangay_clearance'], true)) {
+        if (! in_array($documentType, ['school_id', 'national_id'], true)) {
             throw ValidationException::withMessages([
                 'document_type' => ['Invalid document type selected.'],
             ]);
         }
 
-        $this->assertValidFile($file);
+        $front = $files['front'] ?? null;
+        $back = $files['back'] ?? null;
 
-        $existingDocuments = $this->profileService->resolveSupportingDocuments($registration);
+        if (! $front instanceof UploadedFile || ! $back instanceof UploadedFile) {
+            throw ValidationException::withMessages([
+                'document' => ['Please upload both front and back images of your selected ID.'],
+            ]);
+        }
+
+        $this->assertValidFile($front);
+        $this->assertValidFile($back);
+
         $existingEntry = $this->findStoredDocument($registration, $documentType)
-            ?? ($existingDocuments !== [] ? $this->findAnyStoredDocument($registration) : null);
+            ?? $this->findAnyStoredDocument($registration);
 
-        $originalName = $file->getClientOriginalName();
-        $displayName = pathinfo($originalName, PATHINFO_FILENAME);
         $emailSlug = Str::slug(strtolower($registration->email), '_') ?: 'user_'.$user->id;
-        $publicId = $emailSlug.'_'.Str::slug($documentType, '_').'_'.now()->format('YmdHis');
+        $timestamp = now()->format('YmdHis');
+        $sides = [];
 
-        $uploaded = $this->uploadToCloudOrLocal($file, $publicId, $displayName);
+        foreach (['front' => $front, 'back' => $back] as $side => $file) {
+            $originalName = $file->getClientOriginalName();
+            $displayName = pathinfo($originalName, PATHINFO_FILENAME);
+            $publicId = $emailSlug.'_'.Str::slug($documentType, '_').'_'.$side.'_'.$timestamp;
+            $uploaded = $this->uploadToCloudOrLocal($file, $publicId, $displayName);
+
+            $sides[$side] = [
+                'path' => $uploaded['public_id'],
+                'url' => $uploaded['url'],
+                'public_id' => $uploaded['public_id'],
+                'cloudinary_version' => $uploaded['version'] ?? null,
+                'original_name' => $originalName,
+                'display_name' => $displayName,
+                'storage' => $uploaded['storage'],
+            ];
+        }
 
         $document = [
             'type' => $documentType,
-            'path' => $uploaded['public_id'],
-            'url' => $uploaded['url'],
-            'public_id' => $uploaded['public_id'],
-            'cloudinary_version' => $uploaded['version'] ?? null,
-            'original_name' => $originalName,
-            'display_name' => $displayName,
-            'storage' => $uploaded['storage'],
+            'sides' => $sides,
         ];
 
         DB::transaction(function () use ($registration, $document) {
@@ -105,7 +123,7 @@ class ProfileSupportingDocumentsService
             }
         });
 
-        if ($existingEntry && ($existingEntry['public_id'] ?? null) !== $document['public_id']) {
+        if ($existingEntry) {
             $this->deleteStoredDocument($existingEntry);
         }
 
@@ -120,7 +138,7 @@ class ProfileSupportingDocumentsService
 
         return [
             'documents' => $documents,
-            'message' => 'Supporting document uploaded successfully.',
+            'message' => 'Supporting documents uploaded successfully.',
         ];
     }
 
@@ -167,6 +185,16 @@ class ProfileSupportingDocumentsService
      */
     private function deleteStoredDocument(array $document): void
     {
+        if (isset($document['sides']) && is_array($document['sides'])) {
+            foreach ($document['sides'] as $sideDoc) {
+                if (is_array($sideDoc)) {
+                    $this->deleteStoredDocument($sideDoc);
+                }
+            }
+
+            return;
+        }
+
         $publicId = (string) ($document['public_id'] ?? $document['path'] ?? '');
 
         if ($publicId === '') {

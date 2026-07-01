@@ -84,30 +84,52 @@ class ProfileService
         $cloudinary = app(CloudinaryService::class);
 
         return collect($documents)
-            ->map(function (array $document) use ($cloudinary) {
-                $url = $document['url'] ?? null;
+            ->flatMap(function (array $document) use ($cloudinary) {
+                $type = (string) ($document['type'] ?? 'document');
+                $baseLabel = match ($type) {
+                    'school_id' => 'School ID',
+                    'barangay_clearance' => 'Barangay Clearance',
+                    'national_id' => 'PhilSys / National ID',
+                    default => 'Supporting Document',
+                };
 
+                if (isset($document['sides']) && is_array($document['sides'])) {
+                    return collect($document['sides'])->map(function (array $sideDoc, string $side) use ($type, $baseLabel, $cloudinary) {
+                        $url = $sideDoc['url'] ?? null;
+                        if (! $url) {
+                            return null;
+                        }
+
+                        if (($sideDoc['storage'] ?? '') === 'cloudinary' && $cloudinary->isConfigured()) {
+                            $url = $cloudinary->normalizeUrl($url) ?? $url;
+                        }
+
+                        return [
+                            'type' => $type,
+                            'side' => $side,
+                            'label' => $baseLabel.' ('.ucfirst($side).')',
+                            'url' => $url,
+                            'display_name' => (string) ($sideDoc['display_name'] ?? $sideDoc['original_name'] ?? ucfirst($side)),
+                        ];
+                    });
+                }
+
+                $url = $document['url'] ?? null;
                 if (! $url) {
-                    return null;
+                    return collect([null]);
                 }
 
                 if (($document['storage'] ?? '') === 'cloudinary' && $cloudinary->isConfigured()) {
                     $url = $cloudinary->normalizeUrl($url) ?? $url;
                 }
 
-                $type = (string) ($document['type'] ?? 'document');
-
-                return [
+                return collect([[
                     'type' => $type,
-                    'label' => match ($type) {
-                        'school_id' => 'School ID',
-                        'barangay_clearance' => 'PhilSys / National ID',
-                        'national_id' => 'PhilSys / National ID',
-                        default => 'Supporting Document',
-                    },
+                    'side' => null,
+                    'label' => $baseLabel,
                     'url' => $url,
                     'display_name' => (string) ($document['display_name'] ?? $document['original_name'] ?? 'Document'),
-                ];
+                ]]);
             })
             ->filter()
             ->values()

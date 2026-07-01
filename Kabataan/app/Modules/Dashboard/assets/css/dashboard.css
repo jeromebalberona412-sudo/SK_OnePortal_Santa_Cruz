@@ -541,30 +541,9 @@ body.youth-dashboard {
     margin-top: 14px;
     padding-top: 14px;
     border-top: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    max-height: 320px;
 }
 
-.comments-list-scroll {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    padding-right: 4px;
-    margin-bottom: 10px;
-    min-height: 0;
-}
-
-.comments-list-scroll::-webkit-scrollbar { width: 6px; }
-.comments-list-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
-
-.comment-compose-sticky {
-    flex-shrink: 0;
-    position: sticky;
-    bottom: 0;
-    background: #fff;
-    padding-top: 8px;
-    border-top: 1px solid var(--border);
-}
+.comments-list { margin-bottom: 10px; }
 
 .comment-item { display: flex; gap: 10px; margin-bottom: 14px; }
 .comment-item img { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; object-fit: cover; border: 1px solid #dbeafe; background: #eff6ff; }

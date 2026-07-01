@@ -396,25 +396,33 @@ class ProfileController extends Controller
 
         $request->validate([
             'document_type' => ['required', 'in:school_id,national_id'],
-            'school_id' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
-            'national_id' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
+            'school_id_front' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
+            'school_id_back' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
+            'national_id_front' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
+            'national_id_back' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
         ]);
 
         $documentType = (string) $request->input('document_type');
-        $file = $documentType === 'school_id'
-            ? $request->file('school_id')
-            : $request->file('national_id');
+        $front = $documentType === 'school_id'
+            ? $request->file('school_id_front')
+            : $request->file('national_id_front');
+        $back = $documentType === 'school_id'
+            ? $request->file('school_id_back')
+            : $request->file('national_id_back');
 
-        if (! $file) {
+        if (! $front || ! $back) {
             return response()->json([
                 'success' => false,
-                'message' => 'Please select a document image to upload.',
-                'errors' => ['document' => ['Please select a document image to upload.']],
+                'message' => 'Please upload both front and back images of your selected ID.',
+                'errors' => ['document' => ['Please upload both front and back images of your selected ID.']],
             ], 422);
         }
 
         try {
-            $result = $this->supportingDocumentsService->upload($user, $file, $documentType);
+            $result = $this->supportingDocumentsService->upload($user, [
+                'front' => $front,
+                'back' => $back,
+            ], $documentType);
 
             return response()->json([
                 'success' => true,

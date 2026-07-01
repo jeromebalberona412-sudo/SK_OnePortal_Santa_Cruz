@@ -61,6 +61,15 @@ class AnnouncementController extends Controller
             $query->where('type', $request->filter);
         }
 
+        if ($search = trim((string) $request->query('search', ''))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', '%'.$search.'%')
+                    ->orWhere('body', 'like', '%'.$search.'%')
+                    ->orWhere('type', 'like', '%'.$search.'%')
+                    ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', '%'.$search.'%'));
+            });
+        }
+
         $posts = $query->paginate(10);
 
         return response()->json([

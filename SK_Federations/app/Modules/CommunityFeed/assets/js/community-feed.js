@@ -2,6 +2,7 @@
 'use strict';
 
 let currentFilter = 'all';
+let feedSearch = '';
 let editingPostId = null;
 let pendingImageDataUrl = null;
 let pendingLinkUrl = null;
@@ -38,14 +39,19 @@ function loadPosts(reset) {
     var container = document.getElementById('feed-posts');
     if (reset) { posts = []; container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">Loading...</div>'; }
 
-    var url = '/api/community-feed?per_page=100&page=1' + (currentFilter !== 'all' ? '&filter=' + currentFilter : '');
+    var url = '/api/community-feed?per_page=100&page=1'
+        + (currentFilter !== 'all' ? '&filter=' + encodeURIComponent(currentFilter) : '')
+        + (feedSearch ? '&search=' + encodeURIComponent(feedSearch) : '');
 
     apiFetch(url, { method: 'GET' })
-        .then(function(r) { return r.json(); })
+        .then(function(r) {
+            if (!r.ok) throw new Error('Failed to load posts');
+            return r.json();
+        })
         .then(function(data) {
             if (reset) container.innerHTML = '';
 
-            posts = data.data || [];
+            posts = (data.data || []).filter(function(p) { return p && p.id; });
 
             if (!posts.length) {
                 container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">No posts found.</div>';
@@ -144,12 +150,12 @@ function buildCommentsList(p) {
 
 function buildCommentInput(p) {
     var userAvatar = window.currentAvatar || FED_AVATAR;
-    return '<div class="comment-compose-sticky"><div class="comment-input-wrapper">'
+    return '<div class="comment-input-wrapper">'
         + '<img src="' + escapeHtml(userAvatar) + '" alt="You" class="comment-avatar">'
         + '<input type="text" class="comment-input" placeholder="Write a comment..." maxlength="500" onkeydown="submitComment(event,' + p.id + ',this)">'
         + '<button type="button" class="send-comment-btn" onclick="submitCommentBtn(' + p.id + ',this)">'
         + '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>'
-        + '</button></div></div>';
+        + '</button></div>';
 }
 
 function refreshCommentsSection(p) {
@@ -274,12 +280,12 @@ function buildPost(p) {
     return '<div class="post-header">'
         + '<img src="' + escapeHtml(avatar) + '" alt="' + escapeHtml(p.author_name) + '" class="post-avatar">'
         + '<div class="post-info">'
-        + '<h3 class="post-author">' + p.author_name + (p.barangay_name && !p.is_federation_wide ? ' <small style="font-weight:400;color:#888;">· ' + p.barangay_name + '</small>' : '') + '</h3>'
-        + '<p class="post-meta"><span class="post-type ' + p.type + '">' + p.type + '</span><span class="post-time">' + p.time + '</span></p>'
+        + '<h3 class="post-author">' + escapeHtml(p.author_name || 'SK Federation') + (p.barangay_name && !p.is_federation_wide ? ' <small style="font-weight:400;color:#888;">· ' + escapeHtml(p.barangay_name) + '</small>' : '') + '</h3>'
+        + '<p class="post-meta"><span class="post-type ' + escapeHtml(p.type || 'update') + '">' + escapeHtml(p.type || 'update') + '</span><span class="post-time">' + escapeHtml(p.time || '') + '</span></p>'
         + '</div>' + optionsHtml + '</div>'
         + '<div class="post-content">'
-        + (p.title ? '<h2 class="post-title">' + p.title + '</h2>' : '')
-        + '<p class="post-text">' + p.body + '</p>'
+        + (p.title ? '<h2 class="post-title">' + escapeHtml(p.title) + '</h2>' : '')
+        + '<p class="post-text">' + escapeHtml(p.body || '') + '</p>'
         + mediaHtml
         + '</div>'
         + statsHtml
@@ -292,7 +298,7 @@ function buildPost(p) {
         + '<span id="comment-count-' + p.id + '">Comment (' + commentCount + ')</span></button>'
         + '</div>'
         + '<div class="comments-section" id="comments-' + p.id + '" style="display:none;">'
-        + '<div class="comments-list-scroll comments-list" id="comments-list-' + p.id + '">' + buildCommentsList(p) + '</div>'
+        + '<div class="comments-list" id="comments-list-' + p.id + '">' + buildCommentsList(p) + '</div>'
         + buildCommentInput(p)
         + '</div>';
 }
@@ -380,8 +386,6 @@ function addComment(id, input) {
                 if (section) {
                     section.style.display = 'block';
                     refreshCommentsSection(p);
-                    var list = section.querySelector('.comments-list-scroll');
-                    if (list) list.scrollTop = list.scrollHeight;
                 }
                 var countEl = document.getElementById('comment-count-' + id);
                 if (countEl) countEl.textContent = 'Comment (' + p.comments.length + ')';
@@ -466,8 +470,8 @@ function submitPost() {
     var titleVal = document.getElementById('compose-title') ? document.getElementById('compose-title').value.trim() : '';
     pendingLinkUrl = linkVal || null;
 
-    var payload = { type: type, body: content, link_url: pendingLinkUrl, title: titleVal || null };
-
+    var payload = { type: type, body: content, title: titleVal || null };
+    if (pendingLinkUrl) payload.link_url = pendingLinkUrl;
     if (pendingImageDataUrl) payload.image_url = pendingImageDataUrl;
     savePost(payload);
 }
@@ -485,23 +489,24 @@ function savePost(payload) {
     var method  = isEdit ? 'PUT' : 'POST';
 
     apiFetch(url, { method: method, body: JSON.stringify(payload) })
-        .then(function(r) { return r.json(); })
+        .then(function(r) {
+            return r.json().then(function(body) {
+                if (!r.ok) {
+                    var msg = body.message || (body.errors ? Object.values(body.errors).flat().join(' ') : 'Unable to save post.');
+                    throw new Error(msg);
+                }
+                return body;
+            });
+        })
         .then(function(saved) {
-            if (isEdit) {
-                var idx = posts.findIndex(function(x) { return x.id === saved.id; });
-                if (idx !== -1) posts[idx] = saved;
-                var el = document.querySelector('[data-post-id="' + saved.id + '"]');
-                if (el) el.innerHTML = buildPost(saved);
-            } else {
-                posts.unshift(saved);
-                var container = document.getElementById('feed-posts');
-                var el = document.createElement('div');
-                el.className = 'post-card';
-                el.dataset.postId = saved.id;
-                el.innerHTML = buildPost(saved);
-                container.insertBefore(el, container.firstChild);
+            if (!saved || !saved.id) {
+                throw new Error('Invalid response from server.');
             }
             closeComposeModal();
+            renderPosts(true);
+        })
+        .catch(function(err) {
+            alert(err.message || 'Unable to save post.');
         });
 }
 
@@ -606,31 +611,16 @@ function toggleLinkInput() {
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', function() {
     renderPosts(true);
-    // Search
-    var searchInput = document.getElementById('feed-search-input');
+    var searchInput = document.getElementById('feed-search-input') || document.getElementById('feedSearchInput');
     if (searchInput) {
+        var searchTimer = null;
         searchInput.addEventListener('input', function() {
-            var q = this.value.toLowerCase().trim();
-            var container = document.getElementById('feed-posts');
-            if (!q) { renderPosts(true); return; }
-            container.innerHTML = '';
-            var filtered = posts.filter(function(p) {
-                return (p.title && p.title.toLowerCase().includes(q))
-                    || (p.body && p.body.toLowerCase().includes(q))
-                    || (p.author_name && p.author_name.toLowerCase().includes(q))
-                    || p.type.toLowerCase().includes(q);
-            });
-            if (!filtered.length) {
-                container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">No posts found.</div>';
-                return;
-            }
-            filtered.forEach(function(p) {
-                var el = document.createElement('div');
-                el.className = 'post-card';
-                el.dataset.postId = p.id;
-                el.innerHTML = buildPost(p);
-                container.appendChild(el);
-            });
+            clearTimeout(searchTimer);
+            var input = this;
+            searchTimer = setTimeout(function() {
+                feedSearch = input.value.trim();
+                renderPosts(true);
+            }, 300);
         });
     }
 

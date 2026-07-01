@@ -490,37 +490,26 @@ function initProfileSupportingDocuments() {
     const submitBtn = document.getElementById('profileSupportingDocSubmitBtn');
     const errorEl = document.getElementById('profileSupportingDocUploadError');
     const schoolIdPanel = document.getElementById('profileSchoolIdUpload');
-    const clearancePanel = document.getElementById('profileBarangayClearanceUpload');
-    const schoolIdInput = document.getElementById('profileSchoolIdFile');
-    const clearanceInput = document.getElementById('profileBarangayClearanceFile');
+    const nationalIdPanel = document.getElementById('profileNationalIdUpload');
     const docTypeRadios = uploadModal.querySelectorAll('input[name="profile_document_type"]');
     const maxBytes = 10 * 1024 * 1024;
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
 
-    const previewConfig = {
+    const inputMap = {
         school_id: {
-            input: schoolIdInput,
-            preview: document.getElementById('profileSchoolIdPreview'),
-            previewImg: document.getElementById('profileSchoolIdPreviewImg'),
-            fileName: document.getElementById('profileSchoolIdFileName'),
-            dropzone: schoolIdPanel?.querySelector('.kkp-wizard-dropzone'),
+            front: document.getElementById('profileSchoolIdFront'),
+            back: document.getElementById('profileSchoolIdBack'),
         },
-        barangay_clearance: {
-            input: clearanceInput,
-            preview: document.getElementById('profileBarangayClearancePreview'),
-            previewImg: document.getElementById('profileBarangayClearancePreviewImg'),
-            fileName: document.getElementById('profileBarangayClearanceFileName'),
-            dropzone: clearancePanel?.querySelector('.kkp-wizard-dropzone'),
+        national_id: {
+            front: document.getElementById('profileNationalIdFront'),
+            back: document.getElementById('profileNationalIdBack'),
         },
     };
 
-    let selectedType = '';
-    let pendingFile = null;
+    const pendingFiles = { school_id: { front: null, back: null }, national_id: { front: null, back: null } };
 
     function showError(message) {
-        if (!errorEl) {
-            return;
-        }
+        if (!errorEl) return;
         if (!message) {
             errorEl.hidden = true;
             errorEl.textContent = '';
@@ -535,92 +524,94 @@ function initProfileSupportingDocuments() {
         return checked ? checked.value : '';
     }
 
+    function previewElements(inputId) {
+        return {
+            preview: document.getElementById(inputId + 'Preview'),
+            previewImg: document.getElementById(inputId + 'PreviewImg'),
+            fileName: document.getElementById(inputId + 'FileName'),
+            dropzone: document.querySelector('label[for="' + inputId + '"]'),
+        };
+    }
+
+    function clearSidePreview(type, side) {
+        const input = inputMap[type]?.[side];
+        const inputId = input?.id;
+        if (!inputId) return;
+        const els = previewElements(inputId);
+        input.value = '';
+        if (els.preview) els.preview.hidden = true;
+        if (els.dropzone) els.dropzone.hidden = false;
+        if (els.previewImg) els.previewImg.removeAttribute('src');
+        if (els.fileName) els.fileName.textContent = '';
+        pendingFiles[type][side] = null;
+    }
+
+    function clearAllPending() {
+        Object.keys(inputMap).forEach((type) => {
+            clearSidePreview(type, 'front');
+            clearSidePreview(type, 'back');
+        });
+        showError('');
+    }
+
     function updatePanels() {
         const type = selectedDocumentType();
-        selectedType = type;
         if (schoolIdPanel) schoolIdPanel.hidden = type !== 'school_id';
-        if (clearancePanel) clearancePanel.hidden = type !== 'barangay_clearance';
-        clearPendingFile();
+        if (nationalIdPanel) nationalIdPanel.hidden = type !== 'national_id';
+        if (type === 'school_id') {
+            clearSidePreview('national_id', 'front');
+            clearSidePreview('national_id', 'back');
+        } else if (type === 'national_id') {
+            clearSidePreview('school_id', 'front');
+            clearSidePreview('school_id', 'back');
+        }
         updateSubmitState();
-    }
-
-    function clearFilePreview(type) {
-        const config = previewConfig[type];
-        if (!config?.input) return;
-        config.input.value = '';
-        if (config.preview) config.preview.hidden = true;
-        if (config.dropzone) config.dropzone.hidden = false;
-        if (config.previewImg) config.previewImg.removeAttribute('src');
-        if (config.fileName) config.fileName.textContent = '';
-    }
-
-    function clearPendingFile() {
-        pendingFile = null;
-        clearFilePreview('school_id');
-        clearFilePreview('barangay_clearance');
-        showError('');
     }
 
     function updateSubmitState() {
         if (!submitBtn) return;
-        submitBtn.disabled = !(selectedDocumentType() && pendingFile);
+        const type = selectedDocumentType();
+        const files = type ? pendingFiles[type] : null;
+        submitBtn.disabled = !(type && files?.front && files?.back);
     }
 
     function validateFile(file) {
-        if (!file) {
-            return 'Please select an image file.';
-        }
-        if (!allowedTypes.includes(file.type)) {
-            return 'Only JPG and PNG images are allowed.';
-        }
-        if (file.size > maxBytes) {
-            return 'Supporting document must be 10MB or smaller.';
-        }
+        if (!file) return 'Please select an image file.';
+        if (!allowedTypes.includes(file.type)) return 'Only JPG and PNG images are allowed.';
+        if (file.size > maxBytes) return 'Supporting document must be 10MB or smaller.';
         return null;
     }
 
-    function setPendingFile(type, file) {
+    function setPendingFile(type, side, file) {
         const validationError = validateFile(file);
         if (validationError) {
             showError(validationError);
             return;
         }
 
-        const config = previewConfig[type];
-        if (!config) return;
+        const input = inputMap[type]?.[side];
+        if (!input?.id) return;
 
-        pendingFile = file;
+        pendingFiles[type][side] = file;
         showError('');
 
-        if (type === 'school_id') {
-            clearFilePreview('barangay_clearance');
-        } else {
-            clearFilePreview('school_id');
-        }
-
+        const els = previewElements(input.id);
         const reader = new FileReader();
         reader.onload = function (event) {
-            if (config.previewImg && event.target?.result) {
-                config.previewImg.src = event.target.result;
-            }
-            if (config.fileName) {
-                config.fileName.textContent = file.name;
-            }
-            if (config.preview) config.preview.hidden = false;
-            if (config.dropzone) config.dropzone.hidden = true;
+            if (els.previewImg && event.target?.result) els.previewImg.src = event.target.result;
+            if (els.fileName) els.fileName.textContent = file.name;
+            if (els.preview) els.preview.hidden = false;
+            if (els.dropzone) els.dropzone.hidden = true;
         };
         reader.readAsDataURL(file);
         updateSubmitState();
     }
 
     function resetUploadModal() {
-        docTypeRadios.forEach((radio) => {
-            radio.checked = false;
-        });
-        selectedType = '';
+        docTypeRadios.forEach((radio) => { radio.checked = false; });
         if (schoolIdPanel) schoolIdPanel.hidden = true;
-        if (clearancePanel) clearancePanel.hidden = true;
-        clearPendingFile();
+        if (nationalIdPanel) nationalIdPanel.hidden = true;
+        clearAllPending();
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.textContent = 'Upload Document';
@@ -629,26 +620,19 @@ function initProfileSupportingDocuments() {
 
     function uploadDocument() {
         const documentType = selectedDocumentType();
-        if (!documentType || !pendingFile || !uploadUrl) {
-            showError('Please select a document type and file.');
-            return;
-        }
-
-        const validationError = validateFile(pendingFile);
-        if (validationError) {
-            showError(validationError);
+        const files = documentType ? pendingFiles[documentType] : null;
+        if (!documentType || !files?.front || !files?.back || !uploadUrl) {
+            showError('Please select a document type and upload both front and back images.');
             return;
         }
 
         const formData = new FormData();
         formData.append('document_type', documentType);
         formData.append('_token', csrfToken);
-        formData.append(documentType, pendingFile);
+        formData.append(documentType + '_front', files.front);
+        formData.append(documentType + '_back', files.back);
 
-        if (typeof showLoading === 'function') {
-            showLoading('Uploading supporting document');
-        }
-
+        if (typeof showLoading === 'function') showLoading('Uploading supporting documents');
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.textContent = 'Uploading...';
@@ -656,79 +640,58 @@ function initProfileSupportingDocuments() {
 
         fetch(uploadUrl, {
             method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-            },
+            headers: { 'X-CSRF-TOKEN': csrfToken, Accept: 'application/json' },
             body: formData,
             credentials: 'same-origin',
         })
             .then(async (response) => {
                 let payload = {};
-                try {
-                    payload = await response.json();
-                } catch (error) {
+                try { payload = await response.json(); } catch (_) {
                     throw new Error('Unexpected server response. Please try again.');
                 }
-
                 if (response.ok && payload.success) {
                     if (typeof window.showProfileToast === 'function') {
-                        window.showProfileToast(payload.message || 'Supporting document uploaded successfully.', 'success');
+                        window.showProfileToast(payload.message || 'Supporting documents uploaded successfully.', 'success');
                     }
                     window.closeSupportingDocsModal?.();
                     window.location.reload();
                     return;
                 }
-
-                const message = payload.message
-                    || (payload.errors && Object.values(payload.errors).flat()[0])
-                    || 'Failed to upload supporting document.';
-                throw new Error(message);
+                throw new Error(payload.message || (payload.errors && Object.values(payload.errors).flat()[0]) || 'Failed to upload supporting documents.');
             })
             .catch((error) => {
                 showError(error.message || 'Network error while uploading. Please try again.');
                 if (typeof window.showProfileToast === 'function') {
-                    window.showProfileToast(error.message || 'Failed to upload supporting document.', 'error');
+                    window.showProfileToast(error.message || 'Failed to upload supporting documents.', 'error');
                 }
             })
             .finally(() => {
-                if (typeof hideLoading === 'function') {
-                    hideLoading();
-                }
-                if (submitBtn) {
-                    submitBtn.disabled = !(selectedDocumentType() && pendingFile);
-                    submitBtn.textContent = 'Upload Document';
-                }
+                if (typeof hideLoading === 'function') hideLoading();
+                updateSubmitState();
+                if (submitBtn) submitBtn.textContent = 'Upload Document';
             });
     }
 
     window.resetProfileSupportingDocUpload = resetUploadModal;
 
-    docTypeRadios.forEach((radio) => {
-        radio.addEventListener('change', updatePanels);
-    });
+    docTypeRadios.forEach((radio) => radio.addEventListener('change', updatePanels));
 
-    schoolIdInput?.addEventListener('change', function () {
-        if (this.files?.[0]) {
-            setPendingFile('school_id', this.files[0]);
-        }
-    });
-
-    clearanceInput?.addEventListener('change', function () {
-        if (this.files?.[0]) {
-            setPendingFile('barangay_clearance', this.files[0]);
-        }
+    Object.entries(inputMap).forEach(([type, sides]) => {
+        Object.entries(sides).forEach(([side, input]) => {
+            input?.addEventListener('change', function () {
+                if (this.files?.[0]) setPendingFile(type, side, this.files[0]);
+            });
+        });
     });
 
     uploadModal.querySelectorAll('[data-clear-profile-doc]').forEach((button) => {
         button.addEventListener('click', function () {
             const inputId = button.getAttribute('data-clear-profile-doc');
-            if (inputId === 'profileSchoolIdFile') {
-                clearFilePreview('school_id');
-            } else if (inputId === 'profileBarangayClearanceFile') {
-                clearFilePreview('barangay_clearance');
+            if (inputId?.includes('SchoolId')) {
+                clearSidePreview('school_id', inputId.includes('Front') ? 'front' : 'back');
+            } else if (inputId?.includes('NationalId')) {
+                clearSidePreview('national_id', inputId.includes('Front') ? 'front' : 'back');
             }
-            pendingFile = null;
             updateSubmitState();
         });
     });

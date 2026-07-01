@@ -927,16 +927,14 @@
             </button>
           </div>
           <div class="comments-section" id="feed-comments-${p.id}" style="display:none;">
-            <div class="comments-list-scroll" id="feed-comments-list-${p.id}">${comments}</div>
-            <div class="comment-compose-sticky">
-              <div class="comment-input-wrapper">
-                <img src="${commentAvatar}" alt="You">
-                <input type="text" class="comment-input" placeholder="Write a comment..." maxlength="500"
-                       onkeydown="if(event.key==='Enter')feedSubmitComment(${p.id},this)">
-                <button class="send-comment-btn" onclick="feedSubmitComment(${p.id},this.previousElementSibling)">
-                  <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
-                </button>
-              </div>
+            <div class="comments-list" id="feed-comments-list-${p.id}">${comments}</div>
+            <div class="comment-input-wrapper">
+              <img src="${commentAvatar}" alt="You">
+              <input type="text" class="comment-input" placeholder="Write a comment..." maxlength="500"
+                     onkeydown="if(event.key==='Enter')feedSubmitComment(${p.id},this)">
+              <button class="send-comment-btn" onclick="feedSubmitComment(${p.id},this.previousElementSibling)">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
+              </button>
             </div>
           </div>`;
     }

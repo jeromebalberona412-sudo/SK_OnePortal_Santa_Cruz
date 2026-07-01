@@ -45,6 +45,15 @@ class CommunityFeedPostController extends Controller
             $query->where('type', $request->filter);
         }
 
+        if ($search = trim((string) $request->get('search', ''))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', '%'.$search.'%')
+                    ->orWhere('body', 'like', '%'.$search.'%')
+                    ->orWhere('type', 'like', '%'.$search.'%')
+                    ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', '%'.$search.'%'));
+            });
+        }
+
         $posts = $query->paginate($perPage);
 
         return response()->json([
@@ -59,6 +68,12 @@ class CommunityFeedPostController extends Controller
     // POST /api/community-feed
     public function store(Request $request): JsonResponse
     {
+        $request->merge([
+            'link_url'  => filled($request->input('link_url')) ? $request->input('link_url') : null,
+            'image_url' => filled($request->input('image_url')) ? $request->input('image_url') : null,
+            'title'     => filled($request->input('title')) ? $request->input('title') : null,
+        ]);
+
         $validated = $request->validate([
             'type'      => 'required|in:announcement,event,activity,program,update',
             'title'     => 'nullable|string|max:255',
@@ -74,11 +89,16 @@ class CommunityFeedPostController extends Controller
             'is_federation_wide' => true,
         ]));
 
-        return response()->json($this->formatPost(
-            $post->load(['comments', 'user', 'reactions' => fn ($q) => $q->with('user')->latest()->limit(12)])
-                ->loadCount('reactions'),
-            $user->id
-        ), 201);
+        $fresh = Announcement::with([
+            'barangay',
+            'comments.user',
+            'user',
+            'reactions' => fn ($q) => $q->with('user')->latest()->limit(12),
+        ])
+            ->withCount('reactions')
+            ->findOrFail($post->id);
+
+        return response()->json($this->formatPost($fresh, $user->id), 201);
     }
 
     // PUT /api/community-feed/{id}
@@ -88,6 +108,12 @@ class CommunityFeedPostController extends Controller
             ->where('user_id', Auth::id())
             ->whereRaw('"is_federation_wide" = true')
             ->firstOrFail();
+
+        $request->merge([
+            'link_url'  => filled($request->input('link_url')) ? $request->input('link_url') : null,
+            'image_url' => filled($request->input('image_url')) ? $request->input('image_url') : null,
+            'title'     => filled($request->input('title')) ? $request->input('title') : null,
+        ]);
 
         $validated = $request->validate([
             'type'      => 'sometimes|in:announcement,event,activity,program,update',
@@ -268,7 +294,7 @@ class CommunityFeedPostController extends Controller
             'owned'              => $post->user_id === $userId && $post->is_federation_wide,
             'likes'              => $post->reactions_count ?? $post->reactions()->count(),
             'liked'              => $liked,
-            'time'               => $post->created_at->diffForHumans(),
+            'time'               => $post->created_at?->diffForHumans() ?? 'Just now',
             'reactions_summary'  => $this->formatReactionsSummary(
                 $post->relationLoaded('reactions') ? $post->reactions : collect(),
                 (int) ($post->reactions_count ?? 0),
@@ -286,7 +312,7 @@ class CommunityFeedPostController extends Controller
             'id'          => $comment->id,
             'author_name' => $comment->author_name,
             'body'        => $comment->body,
-            'time'        => $comment->created_at->diffForHumans(),
+            'time'        => $comment->created_at?->diffForHumans() ?? 'Just now',
             'user_type'   => $comment->user_type,
             'avatar_url'  => $this->avatarService->resolveForComment($comment),
         ];

@@ -18,6 +18,7 @@
         'app/Modules/Layout/assets/js/kabataan-logout.js',
         'app/Modules/Profile/assets/css/profile.css',
         'app/Modules/KKProfiling/assets/css/kkprofiling.css',
+        'app/Modules/KKProfiling/assets/css/kkprofiling-wizard.css',
         'app/Modules/KKProfiling/assets/css/kk-profiling-update.css',
         'app/Modules/Profile/assets/js/profile.js',
         'app/Modules/Profile/assets/js/profile-participation.js',
@@ -459,36 +460,18 @@
             </div>
             <div class="modal-body kabataan-modal-body kkp-docs-modal-body">
                 @if(!empty($supportingDocuments))
-                <div class="kkp-docs-modal-layout">
-                    <div class="kkp-docs-modal-sidebar" role="tablist" aria-label="Supporting documents">
-                        @foreach($supportingDocuments as $index => $document)
-                            <button
-                                type="button"
-                                class="kkp-docs-select-btn{{ $index === 0 ? ' is-active' : '' }}"
-                                data-doc-url="{{ $document['url'] }}"
-                                data-doc-label="{{ $document['label'] }}"
-                                data-doc-name="{{ $document['display_name'] }}"
-                                aria-selected="{{ $index === 0 ? 'true' : 'false' }}"
-                            >
-                                <span class="kkp-docs-select-label">{{ $document['label'] }}</span>
-                                <span class="kkp-docs-select-name">{{ $document['display_name'] }}</span>
-                            </button>
-                        @endforeach
-                    </div>
-                    <div class="kkp-docs-modal-preview">
-                        <div class="kkp-docs-preview-meta">
-                            <p class="kkp-docs-preview-label" id="supportingDocPreviewLabel">{{ $supportingDocuments[0]['label'] ?? '' }}</p>
-                            <p class="kkp-docs-preview-name" id="supportingDocPreviewName">{{ $supportingDocuments[0]['display_name'] ?? '' }}</p>
+                <div class="kkp-profile-docs-grid kkp-profile-docs-grid--preview">
+                    @foreach($supportingDocuments as $document)
+                        <div class="kkp-profile-doc-card">
+                            <a href="{{ $document['url'] }}" target="_blank" rel="noopener" class="kkp-profile-doc-thumb-link">
+                                <img src="{{ $document['url'] }}" alt="{{ $document['label'] }}" class="kkp-profile-doc-thumb" loading="lazy">
+                            </a>
+                            <div class="kkp-profile-doc-meta">
+                                <p class="kkp-profile-doc-label">{{ $document['label'] }}</p>
+                                <p class="kkp-profile-doc-name">{{ $document['display_name'] }}</p>
+                            </div>
                         </div>
-                        <div class="kkp-docs-preview-frame">
-                            <img
-                                id="supportingDocPreviewImage"
-                                src="{{ $supportingDocuments[0]['url'] ?? '' }}"
-                                alt="{{ $supportingDocuments[0]['label'] ?? 'Supporting document' }}"
-                                class="kkp-docs-preview-image"
-                            >
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
                 <div class="kkp-docs-modal-divider" role="separator" aria-hidden="true"></div>
                 @endif
@@ -496,7 +479,7 @@
                 <div class="kkp-docs-upload-section">
                     <h3 class="kkp-docs-upload-heading">{{ !empty($supportingDocuments) ? 'Replace document' : 'Upload document' }}</h3>
                     <p class="kkp-docs-upload-intro">
-                        Upload <strong>one</strong> optional supporting image — School ID or Barangay Clearance. JPG or PNG, max 10MB.
+                        Upload <strong>one</strong> optional supporting ID — School ID or PhilSys / National ID. Provide front and back images. JPG or PNG, max 10MB each.
                     </p>
 
                     <fieldset class="kkp-wizard-doc-type-fieldset" id="profileDocTypeFieldset">
@@ -506,89 +489,61 @@
                                 <input type="radio" name="profile_document_type" value="school_id" id="profileDocTypeSchoolId">
                                 <span class="kkp-wizard-doc-type-card">
                                     <span class="kkp-wizard-doc-type-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                                            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-                                            <circle cx="8" cy="12" r="2"></circle>
-                                            <path d="M14 10h5M14 14h5"></path>
-                                        </svg>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="2" y="5" width="20" height="14" rx="2"></rect><circle cx="8" cy="12" r="2"></circle><path d="M14 10h5M14 14h5"></path></svg>
                                     </span>
                                     <span class="kkp-wizard-doc-type-text">
                                         <span class="kkp-wizard-doc-type-name">School ID</span>
-                                        <span class="kkp-wizard-doc-type-desc">Valid school identification card</span>
+                                        <span class="kkp-wizard-doc-type-desc">Front and back · optional upload</span>
                                     </span>
                                 </span>
                             </label>
                             <label class="kkp-wizard-doc-type-option">
-                                <input type="radio" name="profile_document_type" value="barangay_clearance" id="profileDocTypeBarangayClearance">
+                                <input type="radio" name="profile_document_type" value="national_id" id="profileDocTypeNationalId">
                                 <span class="kkp-wizard-doc-type-card">
                                     <span class="kkp-wizard-doc-type-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                                            <polyline points="9 12 11 14 15 10"></polyline>
-                                        </svg>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="11" r="2"></circle><path d="M15 9h4M15 13h4"></path></svg>
                                     </span>
                                     <span class="kkp-wizard-doc-type-text">
-                                        <span class="kkp-wizard-doc-type-name">Barangay Clearance</span>
-                                        <span class="kkp-wizard-doc-type-desc">Barangay-issued clearance certificate</span>
+                                        <span class="kkp-wizard-doc-type-name">PhilSys / National ID</span>
+                                        <span class="kkp-wizard-doc-type-desc">Front and back · optional upload</span>
                                     </span>
                                 </span>
                             </label>
                         </div>
                     </fieldset>
 
-                    <div class="kkp-wizard-upload-panel" id="profileSchoolIdUpload" hidden>
-                        <div class="kkp-wizard-upload-shell">
-                            <label class="kkp-wizard-dropzone" for="profileSchoolIdFile">
-                                <input type="file" id="profileSchoolIdFile" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="kkp-wizard-file-input">
-                                <span class="kkp-wizard-dropzone-empty">
-                                    <span class="kkp-wizard-dropzone-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                            <polyline points="17 8 12 3 7 8"></polyline>
-                                            <line x1="12" y1="3" x2="12" y2="15"></line>
-                                        </svg>
+                    @foreach([
+                        ['type' => 'school_id', 'panelId' => 'profileSchoolIdUpload', 'label' => 'School ID', 'prefix' => 'profileSchoolId'],
+                        ['type' => 'national_id', 'panelId' => 'profileNationalIdUpload', 'label' => 'PhilSys / National ID', 'prefix' => 'profileNationalId'],
+                    ] as $doc)
+                    <div class="kkp-wizard-upload-panel" id="{{ $doc['panelId'] }}" hidden>
+                        <p class="kkp-wizard-upload-panel-title">{{ $doc['label'] }} — upload front and back</p>
+                        <div class="kkp-wizard-upload-grid">
+                            @foreach(['front' => 'Front', 'back' => 'Back'] as $side => $sideLabel)
+                            @php $inputId = $doc['prefix'].ucfirst($side); @endphp
+                            <div class="kkp-wizard-upload-shell">
+                                <p class="kkp-wizard-upload-side-label">{{ $sideLabel }}</p>
+                                <label class="kkp-wizard-dropzone" for="{{ $inputId }}">
+                                    <input type="file" id="{{ $inputId }}" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="kkp-wizard-file-input" data-doc-side="{{ $side }}">
+                                    <span class="kkp-wizard-dropzone-empty">
+                                        <span class="kkp-wizard-dropzone-icon" aria-hidden="true">📷</span>
+                                        <span class="kkp-wizard-dropzone-title">{{ $sideLabel }} image</span>
+                                        <span class="kkp-wizard-dropzone-sub">Drop or <span class="kkp-wizard-dropzone-link">browse</span></span>
+                                        <span class="kkp-wizard-dropzone-hint">JPG or PNG · max 10MB</span>
                                     </span>
-                                    <span class="kkp-wizard-dropzone-title">Drag &amp; drop your School ID here</span>
-                                    <span class="kkp-wizard-dropzone-sub">or <span class="kkp-wizard-dropzone-link">browse files</span></span>
-                                    <span class="kkp-wizard-dropzone-hint">JPG or PNG · max 10MB</span>
-                                </span>
-                            </label>
-                            <div class="kkp-wizard-dropzone-preview" id="profileSchoolIdPreview" hidden>
-                                <img id="profileSchoolIdPreviewImg" alt="School ID preview">
-                                <div class="kkp-wizard-dropzone-filemeta">
-                                    <span class="kkp-wizard-dropzone-filename" id="profileSchoolIdFileName"></span>
-                                    <button type="button" class="kkp-wizard-dropzone-remove" data-clear-profile-doc="profileSchoolIdFile" aria-label="Remove School ID file">Remove</button>
+                                </label>
+                                <div class="kkp-wizard-dropzone-preview" id="{{ $inputId }}Preview" hidden>
+                                    <img id="{{ $inputId }}PreviewImg" alt="{{ $doc['label'] }} {{ strtolower($sideLabel) }} preview">
+                                    <div class="kkp-wizard-dropzone-filemeta">
+                                        <span class="kkp-wizard-dropzone-filename" id="{{ $inputId }}FileName"></span>
+                                        <button type="button" class="kkp-wizard-dropzone-remove" data-clear-profile-doc="{{ $inputId }}" aria-label="Remove {{ $sideLabel }} image">Remove</button>
+                                    </div>
                                 </div>
                             </div>
+                            @endforeach
                         </div>
                     </div>
-
-                    <div class="kkp-wizard-upload-panel" id="profileBarangayClearanceUpload" hidden>
-                        <div class="kkp-wizard-upload-shell">
-                            <label class="kkp-wizard-dropzone" for="profileBarangayClearanceFile">
-                                <input type="file" id="profileBarangayClearanceFile" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="kkp-wizard-file-input">
-                                <span class="kkp-wizard-dropzone-empty">
-                                    <span class="kkp-wizard-dropzone-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                            <polyline points="17 8 12 3 7 8"></polyline>
-                                            <line x1="12" y1="3" x2="12" y2="15"></line>
-                                        </svg>
-                                    </span>
-                                    <span class="kkp-wizard-dropzone-title">Drag &amp; drop your Barangay Clearance here</span>
-                                    <span class="kkp-wizard-dropzone-sub">or <span class="kkp-wizard-dropzone-link">browse files</span></span>
-                                    <span class="kkp-wizard-dropzone-hint">JPG or PNG · max 10MB</span>
-                                </span>
-                            </label>
-                            <div class="kkp-wizard-dropzone-preview" id="profileBarangayClearancePreview" hidden>
-                                <img id="profileBarangayClearancePreviewImg" alt="Barangay Clearance preview">
-                                <div class="kkp-wizard-dropzone-filemeta">
-                                    <span class="kkp-wizard-dropzone-filename" id="profileBarangayClearanceFileName"></span>
-                                    <button type="button" class="kkp-wizard-dropzone-remove" data-clear-profile-doc="profileBarangayClearanceFile" aria-label="Remove Barangay Clearance file">Remove</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    @endforeach
 
                     <p class="kkp-docs-upload-error" id="profileSupportingDocUploadError" hidden></p>
 
@@ -613,14 +568,16 @@
             </div>
             <div class="modal-body kabataan-modal-body">
                 @if($kabataanRegistration)
-                    <div class="kabataan-form-scroll">
-                        @include('profile::partials.kk-profiling-preview', [
-                            'kabataanRegistration' => $kabataanRegistration,
-                            'user' => $user,
-                            'barangayName' => $barangayName,
-                            'barangayLogoUrl' => $barangayLogoUrl,
-                            'profile' => $profile ?? [],
-                        ])
+                    <div class="kkp-responsive-container">
+                        <div class="kkp-paper">
+                            @include('profile::partials.kk-profiling-preview', [
+                                'kabataanRegistration' => $kabataanRegistration,
+                                'user' => $user,
+                                'barangayName' => $barangayName,
+                                'barangayLogoUrl' => $barangayLogoUrl,
+                                'profile' => $profile ?? [],
+                            ])
+                        </div>
                     </div>
                 @endif
             </div>

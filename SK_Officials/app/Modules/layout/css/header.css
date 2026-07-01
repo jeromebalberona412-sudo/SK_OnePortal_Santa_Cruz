@@ -340,7 +340,7 @@
     align-items: center;
     gap: 12px;
     padding: 11px 16px;
-    color: #374151;
+    color: #1a56db;
     text-decoration: none;
     transition: background-color 0.2s ease;
     font-size: 14px;
@@ -348,8 +348,8 @@
 }
 
 .dropdown-item:hover {
-    background-color: #f5f7fa;
-    color: #111827;
+    background-color: #eff6ff;
+    color: #1e40af;
 }
 
 .dropdown-item--logout {

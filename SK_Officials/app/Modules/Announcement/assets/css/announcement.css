@@ -92,6 +92,28 @@ body {
 .compose-action-btn svg { width: 15px; height: 15px; }
 .compose-action-btn:hover { background: #f0f1f5; border-color: var(--sk-gold); color: var(--sk-dark); }
 
+.feed-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+.feed-header__intro { flex: 1; min-width: 200px; }
+.feed-header h1 { font-size: 22px; font-weight: 700; color: #1e293b; margin: 0 0 4px; }
+.feed-header p { color: #64748b; font-size: 14px; margin: 0; }
+.feed-header__search { position: relative; flex: 0 1 320px; min-width: 200px; width: 100%; max-width: 360px; }
+.feed-header__search-icon {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    width: 18px; height: 18px; color: #94a3b8; pointer-events: none;
+}
+.feed-header__search-input {
+    width: 100%; padding: 10px 12px 10px 38px; border: 2px solid #e2e8f0;
+    border-radius: 10px; font-size: 14px; font-family: inherit; background: #fff;
+}
+.feed-header__search-input:focus { outline: none; border-color: #1a56db; }
+
 /* Filter Tabs — sticky while scrolling feed */
 .feed-filter-bar {
     display: flex; gap: 10px; flex-wrap: wrap;
@@ -221,25 +243,8 @@ body {
     margin-top: 12px;
     padding-top: 12px;
     border-top: 1px solid #e8ecf0;
-    display: flex;
-    flex-direction: column;
-    max-height: 320px;
 }
-.comments-list-scroll {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    padding-right: 4px;
-    margin-bottom: 10px;
-    min-height: 0;
-}
-.comment-compose-sticky {
-    flex-shrink: 0;
-    position: sticky;
-    bottom: 0;
-    background: #fff;
-    padding-top: 8px;
-    border-top: 1px solid #e8ecf0;
-}
+.comments-list { margin-bottom: 10px; }
 .post-actions { align-items: center; }
 .action-btn { flex: 0 1 auto; }
 .comment-item { display: flex; gap: 10px; margin-bottom: 10px; }

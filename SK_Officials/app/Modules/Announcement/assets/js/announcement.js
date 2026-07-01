@@ -20,6 +20,7 @@ const LIGHTBOX_ZOOM_STEP = 0.25;
 let feedPollTimer = null;
 let knownPostIds = new Set();
 let feedLoading = false;
+let feedSearch = '';
 
 const SK_AVATAR = () => commentAvatarUrl({ author_name: 'You', barangay_logo_url: window.AnnConfig?.barangayLogo });
 const DEFAULT_LOGO = () => window.AnnConfig?.defaultLogo || '/images/logo.png';
@@ -81,6 +82,7 @@ async function loadFeed(reset = true) {
         }
 
         const params = new URLSearchParams({ page: currentPage, filter: currentFilter });
+        if (feedSearch) params.set('search', feedSearch);
         const data = await apiFetch(`/api/announcements?${params}`);
 
         currentUserId = data.user_id;
@@ -303,15 +305,13 @@ function buildPost(p) {
         </button>
       </div>
       <div class="comments-section" id="comments-${p.id}" style="display:none;">
-        <div class="comments-list-scroll" id="comments-list-${p.id}">${commentsHtml}</div>
-        <div class="comment-compose-sticky">
-          <div class="comment-input-wrapper">
-            <img src="${escapeHtml(SK_AVATAR())}" alt="You" class="comment-avatar">
-            <input type="text" class="comment-input" placeholder="Write a comment..." maxlength="500" onkeydown="if(event.key==='Enter')submitComment(${p.id},this)">
-            <button class="send-comment-btn" onclick="submitComment(${p.id},this.previousElementSibling)">
-              <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
-            </button>
-          </div>
+        <div class="comments-list" id="comments-list-${p.id}">${commentsHtml}</div>
+        <div class="comment-input-wrapper">
+          <img src="${escapeHtml(SK_AVATAR())}" alt="You" class="comment-avatar">
+          <input type="text" class="comment-input" placeholder="Write a comment..." maxlength="500" onkeydown="if(event.key==='Enter')submitComment(${p.id},this)">
+          <button class="send-comment-btn" onclick="submitComment(${p.id},this.previousElementSibling)">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
+          </button>
         </div>
       </div>`;
 }
@@ -710,6 +710,15 @@ function toggleSidebar() {
 document.addEventListener('DOMContentLoaded', () => {
     bindFeedFilterTabs();
     loadFeed(true).then(() => startFeedPolling());
+
+    let feedSearchTimer = null;
+    document.getElementById('feedSearchInput')?.addEventListener('input', function () {
+        clearTimeout(feedSearchTimer);
+        feedSearchTimer = setTimeout(() => {
+            feedSearch = this.value.trim();
+            loadFeed(true);
+        }, 300);
+    });
 
     document.getElementById('compose-content')?.addEventListener('input', updateCharCount);
     updateCharCount();
