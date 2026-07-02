@@ -1,15 +1,15 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Notifications — SK Officials Portal</title>
+    <title>Notifications � SK Officials Portal</title>
 
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Profile/assets/css/notification.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -112,8 +112,8 @@
 </main>
 
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Profile/assets/js/notification.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

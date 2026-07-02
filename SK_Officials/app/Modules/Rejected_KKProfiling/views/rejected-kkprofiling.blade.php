@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -10,8 +10,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
         'app/Modules/KKProfilingRequests/assets/css/kkprofiling-requests.css',
         'app/Modules/KKProfilingRequests/assets/css/kk-questionnaire-view.css',
         'app/Modules/Rejected_KKProfiling/assets/css/rejected-kkprofiling.css'
@@ -35,14 +35,14 @@
                 <p class="page-subtitle">KK Profiling requests that were rejected. You can restore records within 30 days. After 30 days, they will be automatically deleted.</p>
             </div>
             <div class="page-header-right">
-                <input type="text" id="rejectedKKSearch" class="filter-input" placeholder="Search by name or respondent #â€¦">
+                <input type="text" id="rejectedKKSearch" class="filter-input" placeholder="Search by name or respondent #…">
             </div>
         </section>
 
         <div class="module-stats-grid" id="rkkStatsRow"></div>
 
         <div class="restore-success-banner" id="rkkRestoreBanner" style="display:none;">
-            <span class="restore-banner-icon">âœ“</span>
+            <span class="restore-banner-icon">?</span>
             <span class="restore-banner-text" id="rkkRestoreBannerText"></span>
         </div>
 
@@ -120,22 +120,22 @@
                 <span class="dk-view-subtitle">Rejected KK Profiling Record</span>
             </div>
             <div class="view-modal-controls">
-                <button type="button" class="view-modal-toggle" id="rkkViewModalToggle" aria-label="Maximize">â–¡</button>
+                <button type="button" class="view-modal-toggle" id="rkkViewModalToggle" aria-label="Maximize">?</button>
                 <button type="button" class="view-modal-close" id="rkkViewModalClose">&times;</button>
             </div>
         </div>
         <div class="dk-deleted-meta rkk-rejected-meta" id="rkkRejectedMeta">
             <div class="dk-deleted-meta-item">
                 <span class="dk-deleted-meta-label">Rejection Reason</span>
-                <span class="dk-deleted-meta-value" id="rkkViewRejectionReason">â€”</span>
+                <span class="dk-deleted-meta-value" id="rkkViewRejectionReason">—</span>
             </div>
             <div class="dk-deleted-meta-item">
                 <span class="dk-deleted-meta-label">Rejected Date</span>
-                <span class="dk-deleted-meta-value" id="rkkViewRejectedDate">â€”</span>
+                <span class="dk-deleted-meta-value" id="rkkViewRejectedDate">—</span>
             </div>
             <div class="dk-deleted-meta-item">
                 <span class="dk-deleted-meta-label">Rejected Time</span>
-                <span class="dk-deleted-meta-value" id="rkkViewRejectedTime">â€”</span>
+                <span class="dk-deleted-meta-value" id="rkkViewRejectedTime">—</span>
             </div>
         </div>
         <div class="view-modal-body dk-view-modal-body kk-qs-body">
@@ -153,8 +153,8 @@
 
 <script src="{{ url('/shared/js/sk-archive-terms.js') }}"></script>
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Rejected_KKProfiling/assets/js/rejected-kkprofiling.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

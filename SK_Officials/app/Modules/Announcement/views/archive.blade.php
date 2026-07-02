@@ -8,9 +8,9 @@
     <title>Deleted Posts - SK Officials Portal</title>
 
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
-        'app/Modules/layout/css/table-row-actions-menu.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
+        'app/Modules/Layout/css/table-row-actions-menu.css',
         'app/Modules/Announcement/assets/css/announcement-archive.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -134,9 +134,9 @@
 </script>
 
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
-    'app/Modules/layout/js/table-row-actions-menu.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
+    'app/Modules/Layout/js/table-row-actions-menu.js',
     'app/Modules/Announcement/assets/js/announcement-archive.js',
 ])
 

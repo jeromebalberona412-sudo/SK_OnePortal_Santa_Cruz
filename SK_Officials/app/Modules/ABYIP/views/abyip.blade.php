@@ -1,11 +1,11 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Annual Barangay Youth Investment Program (ABYIP) CY {{ date('Y') }} â€” SK Officials Portal</title>
+    <title>Annual Barangay Youth Investment Program (ABYIP) CY {{ date('Y') }} — SK Officials Portal</title>
 
     <!-- PDF.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -14,8 +14,8 @@
     </script>
 
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
         'app/Modules/ABYIP/assets/css/abyip.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -115,11 +115,11 @@
     <div class="abyip-doc-budget">
         <p>
             <span class="abyip-doc-budget-label">Barangay Estimated Budget:</span> 
-            â‚±<input type="text" class="abyip-budget-input" placeholder="0.00" />
+            ?<input type="text" class="abyip-budget-input" placeholder="0.00" />
         </p>
         <p>
             <span class="abyip-doc-budget-label">Sangguniang Kabataan Fund (10%):</span> 
-            â‚±<input type="text" class="abyip-budget-input" placeholder="0.00" />
+            ?<input type="text" class="abyip-budget-input" placeholder="0.00" />
         </p>
     </div>
 
@@ -167,7 +167,7 @@
                 </tr>
                 
                 <tr class="subsection-header">
-                    <td colspan="10"><strong>GENERAL ADMINISTRATION PROGRAM â€” CURRENT OPERATING EXPENDITURES</strong></td>
+                    <td colspan="10"><strong>GENERAL ADMINISTRATION PROGRAM — CURRENT OPERATING EXPENDITURES</strong></td>
                 </tr>
                 <tr class="subsection-header">
                     <td colspan="10"><strong>Maintenance and Other Operating Expenses (MOOE)</strong></td>
@@ -450,7 +450,7 @@
         </div>
     </div>
 
-    <!-- Create ABYIP â€” PDF Upload / Immersive Preview -->
+    <!-- Create ABYIP — PDF Upload / Immersive Preview -->
     <div class="modal-backdrop abyip-upload-backdrop" id="createOptionsModal" aria-hidden="true">
         <div class="modal-box create-options-modal-box abyip-upload-modal-box" id="abyipUploadModalBox" role="dialog" aria-labelledby="createOptionsHeading">
             <div class="create-options-modal-header abyip-upload-modal-header" id="abyipUploadModalHeader">
@@ -469,7 +469,7 @@
                         </svg>
                     </div>
                     <p class="abyip-pdf-upload-title">Click to browse or drag and drop</p>
-                    <p class="abyip-pdf-upload-hint">PDF files only Â· Maximum 15MB</p>
+                    <p class="abyip-pdf-upload-hint">PDF files only · Maximum 15MB</p>
                 </div>
             </div>
             <div class="abyip-pdf-preview-stage" id="abyipPdfPreviewStage" hidden>
@@ -492,8 +492,8 @@
 </main>
 
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
     'app/Modules/ABYIP/assets/js/abyip.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

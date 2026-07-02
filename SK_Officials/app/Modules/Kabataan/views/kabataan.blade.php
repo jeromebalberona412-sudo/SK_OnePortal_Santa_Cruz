@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -8,9 +8,9 @@
     <title>Kabataan List - SK Officials Portal</title>
 
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
-        'app/Modules/layout/css/table-row-actions-menu.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
+        'app/Modules/Layout/css/table-row-actions-menu.css',
         'app/Modules/Kabataan/assets/css/kabataan.css',
         'app/Modules/KKProfilingRequests/assets/css/kk-questionnaire-view.css',
     ])
@@ -35,7 +35,7 @@
             </div>
         </section>
 
-        <!-- ── Kabataan Stat Cards ── -->
+        <!-- -- Kabataan Stat Cards -- -->
         <div class="module-stats-grid">
             <div class="stat-card stat-card-blue">
                 <div class="stat-card-top">
@@ -216,7 +216,7 @@
         <div class="modal-header">
             <h2 class="modal-title" id="kabataanModalTitle">Kabataan Details</h2>
             <div class="modal-window-controls">
-                <button type="button" class="modal-toggle-btn" id="kabataanModalToggle" aria-label="Maximize">□</button>
+                <button type="button" class="modal-toggle-btn" id="kabataanModalToggle" aria-label="Maximize">?</button>
                 <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
             </div>
         </div>
@@ -777,7 +777,7 @@
         <div class="modal-header">
             <h2 class="modal-title" id="kabataanViewModalTitle">Kabataan Details</h2>
             <div class="modal-window-controls">
-                <button type="button" class="modal-toggle-btn" id="kabataanViewModalToggle" aria-label="Maximize">□</button>
+                <button type="button" class="modal-toggle-btn" id="kabataanViewModalToggle" aria-label="Maximize">?</button>
                 <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
             </div>
         </div>
@@ -1082,8 +1082,8 @@
 <div class="signature-pad-overlay" id="signaturePadOverlay" style="display:none;">
     <div class="signature-pad-modal">
         <div class="signature-pad-header">
-            <h3 class="signature-pad-title">✍️ Please Sign Here</h3>
-            <button type="button" class="signature-pad-close" id="signaturePadClose" aria-label="Close">×</button>
+            <h3 class="signature-pad-title">?? Please Sign Here</h3>
+            <button type="button" class="signature-pad-close" id="signaturePadClose" aria-label="Close">�</button>
         </div>
         <div class="signature-pad-body">
             <div class="signature-canvas-container">
@@ -1111,9 +1111,9 @@
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
-    'app/Modules/layout/js/table-row-actions-menu.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
+    'app/Modules/Layout/js/table-row-actions-menu.js',
     'app/Modules/Kabataan/assets/js/kabataan.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

@@ -8,8 +8,8 @@
     <title>Reports Management - SK Officials Portal</title>
 
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Reports_Management/assets/css/reports-management.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -150,8 +150,8 @@
 </div>
 
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Reports_Management/assets/js/reports-management.js'
 ])
 <script>

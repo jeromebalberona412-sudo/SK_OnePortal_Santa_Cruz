@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scholar Application - SK Officials Portal</title>
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholarship_application_form.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -206,8 +206,8 @@
 </div>
 
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Program_Management/assets/js/scholarship/scholarship_requests.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

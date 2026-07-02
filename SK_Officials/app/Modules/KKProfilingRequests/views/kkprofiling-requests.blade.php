@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -8,9 +8,9 @@
     <title>KK Profiling Requests - SK Officials Portal</title>
 
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
-        'app/Modules/layout/css/table-row-actions-menu.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
+        'app/Modules/Layout/css/table-row-actions-menu.css',
         'app/Modules/Kabataan/assets/css/kabataan.css',
         'app/Modules/KKProfilingRequests/assets/css/kkprofiling-requests.css',
         'app/Modules/KKProfilingRequests/assets/css/kk-questionnaire-view.css',
@@ -36,7 +36,7 @@
             </div>
         </section>
 
-        <!-- ── KK Profiling Stat Cards ── -->
+        <!-- -- KK Profiling Stat Cards -- -->
         <div class="module-stats-grid">
             <div class="stat-card stat-card-blue">
                 <div class="stat-card-top">
@@ -77,7 +77,7 @@
         </div>
 
         <section class="page-filters-section">
-            <!-- ── Action Bar: Search + Compare ── -->
+            <!-- -- Action Bar: Search + Compare -- -->
             <div class="table-action-bar">
                 <div class="abyip-search-inline">
                     <label for="kkSearch" class="abyip-sr-only">Search KK profiling records</label>
@@ -182,7 +182,7 @@
         <div class="modal-header">
             <h2 class="modal-title">Kabataan Details</h2>
             <div class="modal-window-controls">
-                <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">□</button>
+                <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">?</button>
                 <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
             </div>
         </div>
@@ -261,9 +261,9 @@
 <!-- Success Modal - Removed and replaced with toast notification -->
 
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
-    'app/Modules/layout/js/table-row-actions-menu.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
+    'app/Modules/Layout/js/table-row-actions-menu.js',
     'app/Modules/KKProfilingRequests/assets/js/kkprofiling-requests.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

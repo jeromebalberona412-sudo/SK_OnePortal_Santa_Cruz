@@ -1,17 +1,17 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile — SK Officials Portal</title>
+    <title>Profile � SK Officials Portal</title>
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Profile/assets/css/profile.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -25,7 +25,7 @@
 <main class="main-content">
 <div class="profile-container">
 
-    <!-- ══ Page Header ══════════════════════════════════════ -->
+    <!-- -- Page Header -------------------------------------- -->
     <div class="profile-page-header">
         <div>
             <h1 class="profile-page-title">Profile</h1>
@@ -33,7 +33,7 @@
         </div>
     </div>
 
-    <!-- ══ Tab Bar ══════════════════════════════════════════ -->
+    <!-- -- Tab Bar ------------------------------------------ -->
     <div class="profile-tab-bar">
         <button type="button" class="profile-tab active" id="tabBtnInfo" aria-controls="tabInfo" aria-selected="true">
             <i class="fa-solid fa-user"></i> Profile Information
@@ -43,7 +43,7 @@
         </button>
     </div>
 
-    <!-- ══ Tab: Profile Information ══════════════════════════ -->
+    <!-- -- Tab: Profile Information -------------------------- -->
     <div class="profile-tab-content active" id="tabInfo">
 
         <!-- SK Chairman Card -->
@@ -51,7 +51,7 @@
             <div class="official-card">
                 <div class="official-details">
 
-                    <!-- ── Personal Information ───────────────────── -->
+                    <!-- -- Personal Information --------------------- -->
                     <div class="profile-field-group">
                         <div class="profile-field-group-label profile-field-group-label--bold">
                             <i class="fa-solid fa-user"></i> Personal Information
@@ -98,7 +98,7 @@
                         </div>
                     </div>
 
-                    <!-- ── Address ────────────────────────────────── -->
+                    <!-- -- Address ---------------------------------- -->
                     <div class="profile-field-group">
                         <div class="profile-field-group-label profile-field-group-label--bold">
                             <i class="fa-solid fa-location-dot"></i> Address
@@ -123,7 +123,7 @@
                         </div>
                     </div>
 
-                    <!-- ── Term & Committee Information ──────────── -->
+                    <!-- -- Term & Committee Information ------------ -->
                     <div class="profile-field-group">
                         <div class="profile-field-group-label profile-field-group-label--bold">
                             <i class="fa-solid fa-calendar-check"></i> Term &amp; Committee Information
@@ -144,7 +144,7 @@
                         </div>
                     </div>
 
-                    <!-- ── Account ────────────────────────────────── -->
+                    <!-- -- Account ---------------------------------- -->
                     <div class="profile-field-group">
                         <div class="profile-field-group-label profile-field-group-label--bold">
                             <i class="fa-solid fa-circle-user"></i> Account
@@ -163,7 +163,7 @@
 
     </div><!-- /tabInfo -->
 
-    <!-- ══ Tab: Account Settings ═════════════════════════════ -->
+    <!-- -- Tab: Account Settings ----------------------------- -->
     <div class="profile-tab-content" id="tabSettings">
 
         <section class="sk-account-settings-section">
@@ -219,8 +219,8 @@
 </main>
 
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Profile/assets/js/profile.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

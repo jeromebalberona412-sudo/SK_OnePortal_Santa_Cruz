@@ -7,6 +7,47 @@
     position: relative;
 }
 
+/* SKai header button — matches SK Officials style, blue theme for Kabataan */
+.kab-ai-assistant-btn {
+    position: relative;
+    border-radius: 6px !important;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.kab-ai-assistant-btn svg {
+    width: 22px !important;
+    height: 22px !important;
+}
+
+.kab-ai-assistant-btn:hover,
+.kab-ai-assistant-btn[aria-expanded="true"] {
+    background: rgba(96, 165, 250, 0.22) !important;
+    color: #93c5fd !important;
+}
+
+.kab-ai-glow-effect {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, transparent 70%);
+    opacity: 0;
+    animation: kabAiGlowPulse 2s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes kabAiGlowPulse {
+    0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+    50% { opacity: 0.65; transform: translate(-50%, -50%) scale(1.15); }
+}
+
+.chatbot-nav-btn {
+    position: relative;
+}
+
 /* Floating popover panel — drops down from icon */
 .chatbot-popover {
     position: absolute;
@@ -369,27 +410,6 @@
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;
-}
-
-/* Unread badge on nav chatbot button */
-.chatbot-nav-btn {
-    position: relative;
-}
-
-.chatbot-nav-btn .cp-unread-badge {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    width: 10px;
-    height: 10px;
-    background: #fdc020;
-    border-radius: 50%;
-    border: 2px solid transparent;
-    display: none;
-}
-
-.chatbot-nav-btn.has-unread .cp-unread-badge {
-    display: block;
 }
 
 /* Responsive — Tablet (481px–768px) */

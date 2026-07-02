@@ -7,9 +7,9 @@
     <title>Approved Participants - SK Officials Portal</title>
     @include('layout::favicon')
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
-        'app/Modules/layout/css/table-row-actions-menu.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
+        'app/Modules/Layout/css/table-row-actions-menu.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholarship_application_form.css',
         'app/Modules/Program_Management/assets/css/sports/sports_requests.css',
         'app/Modules/Program_Management/assets/css/sports/sports_list.css'
@@ -261,9 +261,9 @@
 </div>
 
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
-    'app/Modules/layout/js/table-row-actions-menu.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
+    'app/Modules/Layout/js/table-row-actions-menu.js',
     'app/Modules/Program_Management/assets/js/sports/sports_list.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

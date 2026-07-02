@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deleted ABYIP - SK Officials Portal</title>
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Deleted_Kabataan/assets/css/deleted-kabataan.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -26,7 +26,7 @@
                 <p class="page-subtitle">ABYIP records removed from the active list. Past terms are view-only.</p>
             </div>
             <div class="page-header-right">
-                <input type="text" id="daSearch" class="filter-input" placeholder="Search by title…">
+                <input type="text" id="daSearch" class="filter-input" placeholder="Search by title�">
             </div>
         </section>
 

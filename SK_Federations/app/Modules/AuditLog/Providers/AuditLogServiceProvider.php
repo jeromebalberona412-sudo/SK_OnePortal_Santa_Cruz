@@ -19,7 +19,7 @@ class AuditLogServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadViewsFrom(__DIR__.'/../views', 'auditlogs');
+        $this->loadViewsFrom(__DIR__.'/../Views', 'auditlogs');
 
         $this->publishes([
             __DIR__.'/../assets' => public_path('modules/audit-log'),

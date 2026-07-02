@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -8,8 +8,8 @@
     <title>Previous Kabataan Records - SK Officials Portal</title>
 
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
         'app/Modules/PreviousKabataan/assets/css/previous-kabataan.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
@@ -178,7 +178,7 @@
         <div class="modal-header">
             <h2 class="modal-title">Upload Previous Kabataan Records</h2>
             <div class="modal-window-controls">
-                <button type="button" class="modal-toggle-btn" id="prevKabUploadModalToggle" aria-label="Maximize">â–¡</button>
+                <button type="button" class="modal-toggle-btn" id="prevKabUploadModalToggle" aria-label="Maximize">?</button>
                 <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
             </div>
         </div>
@@ -194,14 +194,14 @@
                 <p><strong>Important:</strong> Uploading a new file will <strong>replace all existing Previous Kabataan records</strong> for your barangay. Old data will be removed and only the new upload will remain.</p>
             </div>
 
-            <!-- Drop zone â€” hidden once file is selected -->
+            <!-- Drop zone — hidden once file is selected -->
             <div class="upload-zone" id="prevKabUploadZone">
                 <div class="upload-zone-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 </div>
                 <div class="upload-zone-title">Click to upload or drag and drop</div>
                 <div class="upload-zone-hint">Excel files only (.xlsx, .xls)</div>
-                <div class="upload-zone-limit">Maximum file size: 10MB Â· Maximum 5,000 rows per upload</div>
+                <div class="upload-zone-limit">Maximum file size: 10MB · Maximum 5,000 rows per upload</div>
             </div>
 
             <input type="file" id="prevKabFileInput" class="upload-file-input" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
@@ -232,11 +232,11 @@
                 <div class="upload-progress-percentage" id="prevKabProgressPercentage">0%</div>
             </div>
 
-            <!-- Inline preview â€” shown after file selected -->
+            <!-- Inline preview — shown after file selected -->
             <div id="prevKabInlinePreview" style="display:none;">
                 <div class="preview-info-bar" style="margin-bottom:12px;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                    <span>Preview: <strong id="prevKabPreviewCount">0</strong> record(s) â€” review before saving.</span>
+                    <span>Preview: <strong id="prevKabPreviewCount">0</strong> record(s) — review before saving.</span>
                 </div>
                 <div class="preview-table-wrap">
                     <table class="preview-table preview-table--full">
@@ -283,8 +283,8 @@
 </div>
 
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
     'app/Modules/PreviousKabataan/assets/js/previous-kabataan.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

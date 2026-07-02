@@ -7,8 +7,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Archived Sports Programs - SK Officials Portal</title>
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholarship_application_form.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholarship-schedule.css',
         'app/Modules/Sports_Programs/assets/css/archived-sports-programs.css',
@@ -119,8 +119,8 @@
 <div class="sports-toast" id="aspToast" style="display:none;"></div>
 
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Sports_Programs/assets/js/archived-sports-programs.js',
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

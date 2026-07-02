@@ -1,4 +1,4 @@
-ï»¿
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,8 +9,8 @@
     <title>Community Feed - SK Officials</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Announcement/assets/css/announcement.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -34,8 +34,8 @@
                     <img src="{{ $barangayLogoUrl ?? asset('images/logo.png') }}" alt="SK Barangay {{ $name }} logo" class="sk-fed-card-logo">
                     <div class="sk-fed-card-info">
                         <h2 class="sk-fed-card-name">SK Barangay {{ $name }}</h2>
-                        <p class="sk-fed-card-sub">SK Officials Portal Â· Santa Cruz, Laguna</p>
-                        <a href="{{ route('sk-officials.barangay-profile', ['slug' => $slug]) }}" style="font-size:11px;color:rgba(255,255,255,0.85);font-weight:600;margin-top:4px;text-decoration:none;display:inline-block;">View Your Barangay Profile â†’</a>
+                        <p class="sk-fed-card-sub">SK Officials Portal · Santa Cruz, Laguna</p>
+                        <a href="{{ route('sk-officials.barangay-profile', ['slug' => $slug]) }}" style="font-size:11px;color:rgba(255,255,255,0.85);font-weight:600;margin-top:4px;text-decoration:none;display:inline-block;">View Your Barangay Profile ?</a>
                     </div>
                 </div>
                 {{-- Create Post button --}}
@@ -189,7 +189,7 @@
 <div id="imageLightbox" class="image-lightbox" aria-hidden="true">
     <button type="button" id="lightboxClose" class="lightbox-close" aria-label="Close">&times;</button>
     <div class="lightbox-toolbar">
-        <button type="button" id="lightboxZoomOut" class="lightbox-tool-btn" aria-label="Zoom out">âˆ’</button>
+        <button type="button" id="lightboxZoomOut" class="lightbox-tool-btn" aria-label="Zoom out">-</button>
         <span id="lightboxZoomLevel" class="lightbox-zoom-level">100%</span>
         <button type="button" id="lightboxZoomIn" class="lightbox-tool-btn" aria-label="Zoom in">+</button>
         <button type="button" id="lightboxZoomReset" class="lightbox-tool-btn lightbox-reset-btn" aria-label="Reset zoom">Reset</button>
@@ -228,8 +228,8 @@
 {{-- removed program modals --}}
 
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Announcement/assets/js/announcement.js',
 ])
 
@@ -257,12 +257,12 @@ window.showFeedToast = showFeedToast;
     <div class="restore-modal-box view-modal-box" id="profilePreviewModalBox">
         <div class="restore-modal-header view-modal-header">
             <div>
-                <p class="profile-preview-kicker">Preview â€” What Kabataan Sees</p>
+                <p class="profile-preview-kicker">Preview — What Kabataan Sees</p>
                 <h2 class="restore-modal-title" id="profilePreviewTitle">SK Barangay {{ $name }}</h2>
                 <span class="dk-view-subtitle" id="profilePreviewLocation">Barangay {{ $name }}, Santa Cruz, Laguna</span>
             </div>
             <div class="view-modal-controls">
-                <button type="button" class="view-modal-toggle" id="profilePreviewToggle" aria-label="Full screen">â–¡</button>
+                <button type="button" class="view-modal-toggle" id="profilePreviewToggle" aria-label="Full screen">?</button>
                 <button type="button" class="view-modal-close" id="profilePreviewClose" aria-label="Close">&times;</button>
             </div>
         </div>
@@ -271,9 +271,9 @@ window.showFeedToast = showFeedToast;
                 <div class="profile-field-group">
                     <div class="profile-field-group-label">Overview</div>
                     <div class="profile-field-row">
-                        <div class="profile-field"><label>Posts</label><p id="profilePreviewPostCount">â€”</p></div>
-                        <div class="profile-field"><label>SK Term</label><p id="profilePreviewTerm">â€”</p></div>
-                        <div class="profile-field"><label>Officials</label><p id="profilePreviewOfficialCount">â€”</p></div>
+                        <div class="profile-field"><label>Posts</label><p id="profilePreviewPostCount">—</p></div>
+                        <div class="profile-field"><label>SK Term</label><p id="profilePreviewTerm">—</p></div>
+                        <div class="profile-field"><label>Officials</label><p id="profilePreviewOfficialCount">—</p></div>
                     </div>
                 </div>
                 <div class="profile-field-group">

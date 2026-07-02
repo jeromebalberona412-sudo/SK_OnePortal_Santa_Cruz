@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -8,8 +8,8 @@
     <title>Committees - SK Officials Portal</title>
 
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Committees/assets/css/committees.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -111,7 +111,7 @@
         <div class="modal-header">
             <h2 class="modal-title">Assign Committee</h2>
             <div class="modal-window-controls">
-                <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">â–¡</button>
+                <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">?</button>
                 <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
             </div>
         </div>
@@ -164,7 +164,7 @@
         <div class="modal-header">
             <h2 class="modal-title">Committee Summary</h2>
             <div class="modal-window-controls">
-                <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">â–¡</button>
+                <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">?</button>
                 <button type="button" class="modal-close" data-view-close aria-label="Close">&times;</button>
             </div>
         </div>
@@ -176,7 +176,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 </div>
                 <div class="cv-banner-text">
-                    <div class="cv-committee-name" id="viewCommitteeName">â€”</div>
+                    <div class="cv-committee-name" id="viewCommitteeName">—</div>
                     <div class="cv-committee-status-row">
                         <span class="cv-status-badge" id="viewCommitteeStatus">Active</span>
                         <span class="cv-date-created" id="viewCommitteeDateCreated"></span>
@@ -188,11 +188,11 @@
             <div class="cv-info-grid">
                 <div class="cv-info-card cv-info-card-full">
                     <div class="cv-info-label">Committee Head</div>
-                    <div class="cv-info-value" id="viewCommitteeHead">â€”</div>
+                    <div class="cv-info-value" id="viewCommitteeHead">—</div>
                 </div>
                 <div class="cv-info-card cv-info-card-full">
                     <div class="cv-info-label">Committee</div>
-                    <div class="cv-info-value" id="viewCommitteeNameInfo">â€”</div>
+                    <div class="cv-info-value" id="viewCommitteeNameInfo">—</div>
                 </div>
                 <div class="cv-info-card cv-info-card-full">
                     <div class="cv-info-label">Role</div>
@@ -200,20 +200,20 @@
                 </div>
                 <div class="cv-info-card cv-info-card-full">
                     <div class="cv-info-label">Date Assigned</div>
-                    <div class="cv-info-value" id="viewCommitteeDateAssigned">â€”</div>
+                    <div class="cv-info-value" id="viewCommitteeDateAssigned">—</div>
                 </div>
             </div>
 
             {{-- Description --}}
             <div class="cv-section">
                 <div class="cv-section-title">Description</div>
-                <p class="cv-section-body" id="viewCommitteeDescription">â€”</p>
+                <p class="cv-section-body" id="viewCommitteeDescription">—</p>
             </div>
 
             {{-- Responsibilities --}}
             <div class="cv-section">
                 <div class="cv-section-title">Responsibilities</div>
-                <p class="cv-section-body" id="viewCommitteeResponsibilities">â€”</p>
+                <p class="cv-section-body" id="viewCommitteeResponsibilities">—</p>
             </div>
 
         </div>
@@ -221,8 +221,8 @@
 </div>
 
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Committees/assets/js/committees.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

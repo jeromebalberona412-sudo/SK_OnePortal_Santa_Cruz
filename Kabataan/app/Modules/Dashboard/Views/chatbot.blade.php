@@ -1,22 +1,41 @@
-{{-- Chatbot Popover — included in Dashboard and Profile navbars --}}
-<div class="chatbot-nav-wrapper">
-    <button class="nav-icon-btn chatbot-nav-btn" id="chatbotNavBtn" title="Chatbot" onclick="toggleChatbotPopover()">
-        <svg viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
+{{-- SKai Assistant — included in Kabataan header --}}
+@php
+    $chatUserId = auth()->id() ?? 'guest';
+@endphp
+<div class="chatbot-nav-wrapper" data-chat-user="{{ $chatUserId }}">
+    <button type="button"
+            class="kabataan-header__icon-btn kab-ai-assistant-btn chatbot-nav-btn"
+            id="chatbotNavBtn"
+            title="SKai"
+            aria-label="SKai"
+            aria-expanded="false"
+            onclick="toggleChatbotPopover()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 8V4H8"></path>
+            <rect width="16" height="12" x="4" y="8" rx="2"></rect>
+            <path d="M2 14h2"></path>
+            <path d="M20 14h2"></path>
+            <path d="M15 13v2"></path>
+            <path d="M9 13v2"></path>
         </svg>
-        <span class="cp-unread-badge"></span>
+        <span class="kab-ai-glow-effect" aria-hidden="true"></span>
     </button>
 
-    <div class="chatbot-popover" id="chatbotPopover" role="dialog" aria-label="SK Chatbot">
+    <div class="chatbot-popover" id="chatbotPopover" role="dialog" aria-label="SKai Assistant">
         <div class="cp-inner">
             <div class="cp-header">
                 <div class="cp-bot-icon">
-                    <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 8V4H8"></path>
+                        <rect width="16" height="12" x="4" y="8" rx="2"></rect>
+                        <path d="M2 14h2"></path>
+                        <path d="M20 14h2"></path>
+                        <path d="M15 13v2"></path>
+                        <path d="M9 13v2"></path>
                     </svg>
                 </div>
                 <div class="cp-header-info">
-                    <div class="cp-header-name">SK Assistant</div>
+                    <div class="cp-header-name">SKai</div>
                     <div class="cp-header-status">
                         <span class="cp-status-dot"></span>
                         Online
@@ -25,29 +44,39 @@
             </div>
 
             <div class="cp-topics">
-                <button class="cp-topic-btn" onclick="cpSendTopic('Programs')">📋 Programs</button>
-                <button class="cp-topic-btn" onclick="cpSendTopic('Events')">📅 Events</button>
-                <button class="cp-topic-btn" onclick="cpSendTopic('Scholarship')">🎓 Scholarship</button>
-                <button class="cp-topic-btn" onclick="cpSendTopic('How to apply')">📝 How to Apply</button>
-                <button class="cp-topic-btn" onclick="cpSendTopic('Contact SK')">📞 Contact SK</button>
+                <button type="button" class="cp-topic-btn" onclick="cpSendTopic('Programs')">📋 Programs</button>
+                <button type="button" class="cp-topic-btn" onclick="cpSendTopic('Events')">📅 Events</button>
+                <button type="button" class="cp-topic-btn" onclick="cpSendTopic('Scholarship')">🎓 Scholarship</button>
+                <button type="button" class="cp-topic-btn" onclick="cpSendTopic('How to apply')">📝 How to Apply</button>
+                <button type="button" class="cp-topic-btn" onclick="cpSendTopic('Contact SK')">📞 Contact SK</button>
             </div>
 
             <div class="cp-messages" id="cpMessages">
-                <div class="cp-msg bot">
+                <div class="cp-msg bot" id="cpWelcomeMsg">
                     <div class="cp-msg-avatar bot">
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 8V4H8"></path>
+                            <rect width="16" height="12" x="4" y="8" rx="2"></rect>
+                            <path d="M2 14h2"></path>
+                            <path d="M20 14h2"></path>
+                            <path d="M15 13v2"></path>
+                            <path d="M9 13v2"></path>
                         </svg>
                     </div>
                     <div class="cp-msg-body">
-                        <div class="cp-bubble">Kumusta! 👋 Ako si SK Assistant. Paano kita matutulungan ngayon?</div>
+                        <div class="cp-bubble">Kumusta! 👋 Ako si SKai. Paano kita matutulungan ngayon?</div>
                         <span class="cp-msg-time" id="cpWelcomeTime"></span>
                     </div>
                 </div>
                 <div class="cp-typing" id="cpTyping" style="display:none;">
                     <div class="cp-msg-avatar bot">
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 8V4H8"></path>
+                            <rect width="16" height="12" x="4" y="8" rx="2"></rect>
+                            <path d="M2 14h2"></path>
+                            <path d="M20 14h2"></path>
+                            <path d="M15 13v2"></path>
+                            <path d="M9 13v2"></path>
                         </svg>
                     </div>
                     <div class="cp-typing-dots">

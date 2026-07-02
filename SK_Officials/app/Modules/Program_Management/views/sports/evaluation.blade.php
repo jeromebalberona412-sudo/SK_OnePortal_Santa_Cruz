@@ -7,8 +7,8 @@
     <title>Sports Program Evaluation - SK Officials Portal</title>
     @include('layout::favicon')
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
         'app/Modules/GForm_Builder/assets/css/gform-builder.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholarship_application_form.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholar_list.css',
@@ -40,8 +40,8 @@
 </main>
 
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
     'app/Modules/GForm_Builder/assets/js/gform-builder.js',
     'app/Modules/Program_Management/assets/js/scholarship/scholar_evaluation.js'
 ])

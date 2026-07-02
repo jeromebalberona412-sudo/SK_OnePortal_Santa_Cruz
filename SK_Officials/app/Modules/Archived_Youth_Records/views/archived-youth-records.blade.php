@@ -8,8 +8,8 @@
     <title>Archived Youth Records - SK Officials Portal</title>
 
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Archived_Youth_Records/assets/css/archived-youth-records.css',
         'app/Modules/KKProfilingRequests/assets/css/kk-questionnaire-view.css',
     ])
@@ -130,8 +130,8 @@
 
 <script src="{{ url('/shared/js/sk-archive-terms.js') }}"></script>
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Archived_Youth_Records/assets/js/archived-youth-records.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

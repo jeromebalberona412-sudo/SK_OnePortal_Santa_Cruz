@@ -1,8 +1,18 @@
 /* =============================================
-   SK OnePortal — Dashboard Chatbot Popover JS
+   SK OnePortal — Kabataan SKai Assistant
    ============================================= */
 
-// ── Keyword-based reply engine ──────────────────────────────────────────────
+const CP_BOT_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>`;
+
+const CP_PROFANITY = [
+    'putang', 'puta', 'tangina', 'gago', 'gagu', 'bobo', 'tarantado', 'ulol', 'hayop',
+    'leche', 'punyeta', 'bwisit', 'tanga', 'salot', 'kantot', 'jakol', 'bayag', 'bilat',
+    'shit', 'fuck', 'fucking', 'bitch', 'asshole', 'bastard', 'damn', 'crap', 'dick',
+    'pussy', 'whore', 'slut', 'nigger', 'nigga', 'motherfucker', 'bullshit',
+];
+
+const CP_PROFANITY_REPLY = "Sorry, I don't understand. Please keep our conversation respectful. 😊";
+
 const CP_REPLIES = [
     {
         keys: ['program', 'programa', 'programs'],
@@ -38,7 +48,7 @@ const CP_REPLIES = [
     },
     {
         keys: ['hello', 'hi', 'kumusta', 'hey', 'uy', 'helo', 'magandang'],
-        reply: 'Kumusta! 😊 Ako si SK Assistant. Maaari akong tumulong sa impormasyon tungkol sa mga programa, events, at serbisyo ng SK Santa Cruz. Ano ang gusto mong malaman?'
+        reply: 'Kumusta! 😊 Ako si SKai. Maaari akong tumulong sa impormasyon tungkol sa mga programa, events, at serbisyo ng SK Santa Cruz. Ano ang gusto mong malaman?'
     },
     {
         keys: ['salamat', 'thank', 'thanks', 'maraming salamat'],
@@ -56,30 +66,118 @@ const CP_REPLIES = [
 
 const CP_DEFAULT = 'Pasensya na, hindi ko naintindihan ang iyong tanong. Subukan mong i-click ang isa sa mga quick topics sa itaas, o magtanong tungkol sa mga programa, events, o serbisyo ng SK. 😊';
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+let cpStoredMessages = [];
+
+function cpStorageKey() {
+    const wrapper = document.querySelector('.chatbot-nav-wrapper');
+    const userId = wrapper?.dataset?.chatUser || 'guest';
+    return `sk_kabataan_skai_chat_${userId}`;
+}
+
+function cpEscapeRegex(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function cpContainsProfanity(text) {
+    const lower = text.toLowerCase();
+    return CP_PROFANITY.some((word) => {
+        const regex = new RegExp(`\\b${cpEscapeRegex(word)}\\b`, 'i');
+        return regex.test(lower) || lower.includes(word);
+    });
+}
+
+function cpCensorText(text) {
+    let result = text;
+    CP_PROFANITY.forEach((word) => {
+        const regex = new RegExp(cpEscapeRegex(word), 'gi');
+        result = result.replace(regex, (match) => '*'.repeat(match.length));
+    });
+    return result;
+}
+
 function cpGetTime() {
     const now = new Date();
     return now.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
 }
 
 function cpGetReply(text) {
+    if (cpContainsProfanity(text)) {
+        return CP_PROFANITY_REPLY;
+    }
+
     const lower = text.toLowerCase();
     for (const item of CP_REPLIES) {
-        if (item.keys.some(k => lower.includes(k))) {
+        if (item.keys.some((key) => lower.includes(key))) {
             return item.reply;
         }
     }
+
     return CP_DEFAULT;
 }
 
 function cpScrollBottom() {
     const msgs = document.getElementById('cpMessages');
-    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+    if (msgs) {
+        msgs.scrollTop = msgs.scrollHeight;
+    }
 }
 
-function cpAppendMessage(text, sender) {
+function cpSaveMessages() {
+    try {
+        localStorage.setItem(cpStorageKey(), JSON.stringify(cpStoredMessages));
+    } catch (error) {
+        console.warn('SKai chat storage unavailable:', error);
+    }
+}
+
+function cpLoadMessages() {
+    try {
+        const raw = localStorage.getItem(cpStorageKey());
+        if (!raw) {
+            return [];
+        }
+
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+        console.warn('SKai chat storage read failed:', error);
+        return [];
+    }
+}
+
+function cpRenderStoredMessages() {
     const msgs = document.getElementById('cpMessages');
     const typing = document.getElementById('cpTyping');
+    const welcome = document.getElementById('cpWelcomeMsg');
+    if (!msgs || !typing) {
+        return;
+    }
+
+    cpStoredMessages = cpLoadMessages();
+    if (!cpStoredMessages.length) {
+        return;
+    }
+
+    if (welcome) {
+        welcome.remove();
+    }
+
+    msgs.querySelectorAll('.cp-msg').forEach((node) => node.remove());
+
+    cpStoredMessages.forEach((message) => {
+        cpAppendMessage(message.text, message.sender, message.time, false);
+    });
+}
+
+function cpAppendMessage(text, sender, timeValue = null, persist = true) {
+    const msgs = document.getElementById('cpMessages');
+    const typing = document.getElementById('cpTyping');
+    if (!msgs) {
+        return;
+    }
+
+    const displayText = sender === 'user' ? cpCensorText(text) : text;
+    const time = timeValue || cpGetTime();
 
     const row = document.createElement('div');
     row.className = `cp-msg ${sender}`;
@@ -88,10 +186,12 @@ function cpAppendMessage(text, sender) {
     avatarDiv.className = `cp-msg-avatar ${sender}`;
 
     if (sender === 'bot') {
-        avatarDiv.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>`;
+        avatarDiv.innerHTML = CP_BOT_ICON_SVG;
     } else {
         const img = document.createElement('img');
-        img.src = document.querySelector('.user-avatar-btn img')?.src || 'https://ui-avatars.com/api/?name=User&background=667eea&color=fff';
+        img.src = document.querySelector('.kabataan-header__avatar-btn img')?.src
+            || document.querySelector('.user-avatar-btn img')?.src
+            || 'https://ui-avatars.com/api/?name=User&background=667eea&color=fff';
         img.alt = 'You';
         avatarDiv.appendChild(img);
     }
@@ -102,109 +202,151 @@ function cpAppendMessage(text, sender) {
     const bubble = document.createElement('div');
     bubble.className = 'cp-bubble';
     bubble.style.whiteSpace = 'pre-line';
-    bubble.textContent = text;
+    bubble.textContent = displayText;
 
     const timeSpan = document.createElement('span');
     timeSpan.className = 'cp-msg-time';
-    timeSpan.textContent = cpGetTime();
+    timeSpan.textContent = time;
 
     bodyDiv.appendChild(bubble);
     bodyDiv.appendChild(timeSpan);
     row.appendChild(avatarDiv);
     row.appendChild(bodyDiv);
 
-    // Insert before typing indicator
     msgs.insertBefore(row, typing);
     cpScrollBottom();
+
+    if (persist) {
+        cpStoredMessages.push({ text: displayText, sender, time });
+        cpSaveMessages();
+    }
 }
 
-// ── Toggle / Close ────────────────────────────────────────────────────────────
-// ── Align arrow to button on mobile/tablet ────────────────────────────────────
 function cpAlignArrow() {
     const btn = document.getElementById('chatbotNavBtn');
     const popover = document.getElementById('chatbotPopover');
-    if (!btn || !popover) return;
+    if (!btn || !popover) {
+        return;
+    }
 
     const btnRect = btn.getBoundingClientRect();
     const btnCenter = btnRect.left + btnRect.width / 2;
 
-    // On mobile (fixed positioning): popover right edge = viewport width - 8px (right: 8px)
-    // On tablet (absolute, right: 0): popover right edge aligns with wrapper right edge
-    // On desktop (absolute positioning): use popover's actual rect
     let popRight;
     if (window.innerWidth <= 480) {
         popRight = window.innerWidth - 8;
     } else {
-        // For tablet and desktop, getBoundingClientRect is accurate since popover is visible
         popRight = popover.getBoundingClientRect().right;
     }
 
-    const arrowRight = Math.max(10, Math.round(popRight - btnCenter - 8)); // 8 = half arrow width
-    popover.style.setProperty('--cp-arrow-right', arrowRight + 'px');
+    const arrowRight = Math.max(10, Math.round(popRight - btnCenter - 8));
+    popover.style.setProperty('--cp-arrow-right', `${arrowRight}px`);
 }
 
 window.toggleChatbotPopover = function toggleChatbotPopover() {
     const popover = document.getElementById('chatbotPopover');
-    if (!popover) return;
+    const btn = document.getElementById('chatbotNavBtn');
+    if (!popover || !btn) {
+        return;
+    }
+
     const isOpen = popover.classList.contains('open');
     if (isOpen) {
         closeChatbotPopover();
-    } else {
-        popover.classList.add('open');
-        cpAlignArrow();
-        document.getElementById('cpInput')?.focus();
-        // Close notif popover if open
-        document.getElementById('notifPopover')?.classList.remove('open');
-        // Remove unread badge
-        document.getElementById('chatbotNavBtn')?.classList.remove('has-unread');
+        return;
     }
-}
+
+    popover.classList.add('open');
+    btn.setAttribute('aria-expanded', 'true');
+    cpAlignArrow();
+    document.getElementById('cpInput')?.focus();
+    document.getElementById('notifPopover')?.classList.remove('open');
+};
 
 window.closeChatbotPopover = function closeChatbotPopover() {
     document.getElementById('chatbotPopover')?.classList.remove('open');
-}
+    document.getElementById('chatbotNavBtn')?.setAttribute('aria-expanded', 'false');
+};
 
-// ── Send message ──────────────────────────────────────────────────────────────
-window.cpHandleSubmit = function cpHandleSubmit(e) {
-    e.preventDefault();
+window.cpHandleSubmit = function cpHandleSubmit(event) {
+    event.preventDefault();
+
     const input = document.getElementById('cpInput');
-    const text = input.value.trim();
-    if (!text) return;
+    if (!input) {
+        return;
+    }
 
-    cpAppendMessage(text, 'user');
+    const rawText = input.value.trim();
+    if (!rawText) {
+        return;
+    }
+
+    const censoredText = cpCensorText(rawText);
+    const hasProfanity = cpContainsProfanity(rawText);
+
+    cpAppendMessage(censoredText, 'user');
     input.value = '';
 
-    // Show typing indicator
     const typing = document.getElementById('cpTyping');
-    if (typing) typing.style.display = 'flex';
+    if (typing) {
+        typing.style.display = 'flex';
+    }
     cpScrollBottom();
 
-    // Simulate bot reply delay
     setTimeout(() => {
-        if (typing) typing.style.display = 'none';
-        cpAppendMessage(cpGetReply(text), 'bot');
-    }, 900 + Math.random() * 400);
-}
+        if (typing) {
+            typing.style.display = 'none';
+        }
 
-// ── Quick topic button ────────────────────────────────────────────────────────
+        const reply = hasProfanity ? CP_PROFANITY_REPLY : cpGetReply(rawText);
+        cpAppendMessage(reply, 'bot');
+    }, 900 + Math.random() * 400);
+};
+
 window.cpSendTopic = function cpSendTopic(topic) {
     const input = document.getElementById('cpInput');
-    if (input) input.value = topic;
-    cpHandleSubmit(new Event('submit'));
-}
+    if (!input) {
+        return;
+    }
 
-// ── Close on outside click ────────────────────────────────────────────────────
-document.addEventListener('click', function (e) {
+    input.value = topic;
+    cpHandleSubmit(new Event('submit'));
+};
+
+document.addEventListener('click', function (event) {
     const popover = document.getElementById('chatbotPopover');
     const btn = document.getElementById('chatbotNavBtn');
-    if (!popover || !btn) return;
-    if (popover.classList.contains('open') && !popover.contains(e.target) && !btn.contains(e.target)) {
+    if (!popover || !btn) {
+        return;
+    }
+
+    if (popover.classList.contains('open') && !popover.contains(event.target) && !btn.contains(event.target)) {
         closeChatbotPopover();
     }
 });
 
-// ── Init welcome time ─────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function () {
-    const el = document.getElementById('cpWelcomeTime');
-    if (el) el.textContent = cpGetTime();
+    const welcomeTime = document.getElementById('cpWelcomeTime');
+    if (welcomeTime) {
+        welcomeTime.textContent = cpGetTime();
+    }
+
+    cpRenderStoredMessages();
+
+    const input = document.getElementById('cpInput');
+    if (!input) {
+        return;
+    }
+
+    input.addEventListener('input', function () {
+        const censored = cpCensorText(this.value);
+        if (censored !== this.value) {
+            const cursor = this.selectionStart;
+            this.value = censored;
+            this.setSelectionRange(censored.length, censored.length);
+            if (typeof cursor === 'number') {
+                this.setSelectionRange(Math.min(cursor, censored.length), Math.min(cursor, censored.length));
+            }
+        }
+    });
 });

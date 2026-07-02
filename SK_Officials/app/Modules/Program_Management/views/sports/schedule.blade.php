@@ -6,9 +6,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Sports Program Schedule - SK Officials Portal</title>
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
-        'app/Modules/layout/css/table-row-actions-menu.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
+        'app/Modules/Layout/css/table-row-actions-menu.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholarship_application_form.css',
         'app/Modules/Program_Management/assets/css/sports/sports_requests.css',
         'app/Modules/GForm_Builder/assets/css/gform-builder.css',
@@ -190,9 +190,9 @@
     window.SPORTS_AGE_CLASSIFICATIONS = @json(require app_path('Modules/Program_Management/config/sports-age-classifications.php'));
 </script>
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
-    'app/Modules/layout/js/table-row-actions-menu.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
+    'app/Modules/Layout/js/table-row-actions-menu.js',
     'app/Modules/GForm_Builder/assets/js/gform-builder.js',
     'app/Modules/Program_Management/assets/js/sports/sports-age-classifications.js',
     'app/Modules/Program_Management/assets/js/sports/sports-schedule.js',

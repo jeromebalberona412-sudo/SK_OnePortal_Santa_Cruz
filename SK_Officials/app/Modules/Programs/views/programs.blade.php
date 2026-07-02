@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -8,8 +8,8 @@
     <title>Programs - SK Officials Portal</title>
 
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Programs/assets/css/programs.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -39,7 +39,7 @@
 
         @include('layout::partials.abyip-pending-notice', ['abyipGate' => $abyipGate ?? null])
 
-        <!-- ── Programs Stat Cards ── -->
+        <!-- -- Programs Stat Cards -- -->
         <div class="module-stats-grid">
             <div class="stat-card stat-card-blue">
                 <div class="stat-card-top">
@@ -154,7 +154,7 @@
         <div class="modal-header">
             <h2 class="modal-title">Program Summary</h2>
             <div class="modal-window-controls">
-                <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">□</button>
+                <button type="button" class="modal-toggle-btn" data-modal-toggle aria-label="Maximize">?</button>
                 <button type="button" class="modal-close" data-view-close aria-label="Close">&times;</button>
             </div>
         </div>
@@ -219,8 +219,8 @@
 </div>
 
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Programs/assets/js/programs.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

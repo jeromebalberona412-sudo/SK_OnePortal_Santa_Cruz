@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -8,8 +8,8 @@
     <title>Deleted Kabataan - SK Officials Portal</title>
 
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Deleted_Kabataan/assets/css/deleted-kabataan.css',
         'app/Modules/KKProfilingRequests/assets/css/kk-questionnaire-view.css',
     ])
@@ -32,7 +32,7 @@
                 <p class="page-subtitle">Records that have been removed from the Kabataan list. You can restore records within 30 days. After 30 days, they will be automatically deleted.</p>
             </div>
             <div class="page-header-right">
-                <input type="text" id="deletedKabataanSearch" class="filter-input" placeholder="Search by name or purok…">
+                <input type="text" id="deletedKabataanSearch" class="filter-input" placeholder="Search by name or purok�">
             </div>
         </section>
 
@@ -41,7 +41,7 @@
 
         <!-- Restore Success Banner -->
         <div class="restore-success-banner" id="dkRestoreBanner" style="display:none;">
-            <span class="restore-banner-icon">✓</span>
+            <span class="restore-banner-icon">?</span>
             <span class="restore-banner-text" id="dkRestoreBannerText"></span>
         </div>
 
@@ -119,18 +119,18 @@
                 <span class="dk-view-subtitle">Deleted Kabataan Record</span>
             </div>
             <div class="view-modal-controls">
-                <button type="button" class="view-modal-toggle" id="dkViewModalToggle" aria-label="Maximize">□</button>
+                <button type="button" class="view-modal-toggle" id="dkViewModalToggle" aria-label="Maximize">?</button>
                 <button type="button" class="view-modal-close" id="dkViewModalClose">&times;</button>
             </div>
         </div>
         <div class="dk-deleted-meta" id="dkDeletedMeta">
             <div class="dk-deleted-meta-item">
                 <span class="dk-deleted-meta-label">Deleted Date</span>
-                <span class="dk-deleted-meta-value" id="dkViewDeletedDate">—</span>
+                <span class="dk-deleted-meta-value" id="dkViewDeletedDate">�</span>
             </div>
             <div class="dk-deleted-meta-item">
                 <span class="dk-deleted-meta-label">Deleted Time</span>
-                <span class="dk-deleted-meta-value" id="dkViewDeletedTime">—</span>
+                <span class="dk-deleted-meta-value" id="dkViewDeletedTime">�</span>
             </div>
         </div>
         <div class="view-modal-body dk-view-modal-body kk-qs-body">
@@ -149,8 +149,8 @@
 
 <script src="{{ url('/shared/js/sk-archive-terms.js') }}"></script>
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Deleted_Kabataan/assets/js/deleted-kabataan.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

@@ -18,6 +18,6 @@ class ProfileServiceProvider extends ServiceProvider
     protected function loadRoutes(): void
     {
         Route::middleware('web')
-            ->group(__DIR__ . '/../Routes/profile.php');
+            ->group(__DIR__.'/../routes/profile.php');
     }
 }

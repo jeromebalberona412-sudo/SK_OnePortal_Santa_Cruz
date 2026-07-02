@@ -8,9 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
-        'app/Modules/layout/css/table-row-actions-menu.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
+        'app/Modules/Layout/css/table-row-actions-menu.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholarship_application_form.css',
         'app/Modules/Program_Management/assets/css/scholarship/approved-scholars.css',
         'app/Modules/Dashboard/assets/css/dashboard.css'
@@ -236,10 +236,10 @@
 </div>
 
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
-    'app/Modules/layout/js/table-row-actions-menu.js',
-    'app/Modules/layout/js/table-page-footer.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
+    'app/Modules/Layout/js/table-row-actions-menu.js',
+    'app/Modules/Layout/js/table-page-footer.js',
     'app/Modules/Program_Management/assets/css/scholarship/scholarship-toast.css',
     'app/Modules/Program_Management/assets/js/scholarship/scholarship-toast.js',
     'app/Modules/Program_Management/assets/js/scholarship/scholarship-system-fields.js',

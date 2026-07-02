@@ -111,6 +111,14 @@ class AppServiceProvider extends ServiceProvider
                 }
                 
                 $viewsPath = $modulesPath . '/' . $module . '/views';
+
+                if (! is_dir($viewsPath)) {
+                    $viewsPath = $modulesPath . '/' . $module . '/Views';
+                }
+
+                if ($module === 'Layout') {
+                    continue;
+                }
                 
                 if (is_dir($viewsPath)) {
                     $this->loadViewsFrom($viewsPath, $module);

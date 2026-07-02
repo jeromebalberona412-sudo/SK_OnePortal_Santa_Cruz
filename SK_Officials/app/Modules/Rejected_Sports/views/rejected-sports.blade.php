@@ -8,8 +8,8 @@
     <title>Rejected Sports Applications - SK Officials Portal</title>
 
     @vite([
-        'app/Modules/layout/css/header.css',
-        'app/Modules/layout/css/sidebar.css',
+        'app/Modules/Layout/css/header.css',
+        'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Program_Management/assets/css/sports/sports_requests.css',
         'app/Modules/KKProfilingRequests/assets/css/kkprofiling-requests.css',
         'app/Modules/Rejected_KKProfiling/assets/css/rejected-kkprofiling.css'
@@ -139,8 +139,8 @@
 
 <script src="{{ url('/shared/js/sk-archive-terms.js') }}"></script>
 @vite([
-    'app/Modules/layout/js/header.js',
-    'app/Modules/layout/js/sidebar.js',
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Rejected_Sports/assets/js/rejected-sports.js'
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>
