@@ -61,6 +61,7 @@ window.toggleNotifPopover = function () {
     }
 
     document.getElementById('chatbotPopover')?.classList.remove('open');
+    document.getElementById('chatbotNavBtn')?.setAttribute('aria-expanded', 'false');
     popover.classList.add('open');
     btn?.setAttribute('aria-expanded', 'true');
     npAlignArrow();
