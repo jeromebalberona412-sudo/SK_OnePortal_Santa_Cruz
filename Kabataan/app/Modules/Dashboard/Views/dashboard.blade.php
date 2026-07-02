@@ -322,6 +322,23 @@
         </div>
     </div>
 
+    <!-- Image Lightbox -->
+    <div id="imageLightbox" class="image-lightbox" aria-hidden="true">
+        <button type="button" id="lightboxClose" class="lightbox-close" aria-label="Close">&times;</button>
+        <div class="lightbox-toolbar">
+            <button type="button" id="lightboxZoomOut" class="lightbox-tool-btn" aria-label="Zoom out">-</button>
+            <span id="lightboxZoomLevel" class="lightbox-zoom-level">100%</span>
+            <button type="button" id="lightboxZoomIn" class="lightbox-tool-btn" aria-label="Zoom in">+</button>
+            <button type="button" id="lightboxZoomReset" class="lightbox-tool-btn lightbox-reset-btn" aria-label="Reset zoom">Reset</button>
+        </div>
+        <button type="button" id="lightboxPrev" class="lightbox-nav lightbox-prev" aria-label="Previous">&#10094;</button>
+        <div class="lightbox-viewport" id="lightboxViewport">
+            <img id="lightboxImage" src="" alt="Full size photo" draggable="false">
+        </div>
+        <button type="button" id="lightboxNext" class="lightbox-nav lightbox-next" aria-label="Next">&#10095;</button>
+        <div id="lightboxCounter" class="lightbox-counter"></div>
+    </div>
+
     <script>
     // ── Program Success Modal ─────────────────────────────────────────────────
     function showProgramSuccessModal() {
@@ -946,7 +963,46 @@
 
     function buildFeedPost(p) {
         const avatar = feedAvatarUrl(p.author_avatar_url, p.author_name);
-        const media  = p.image_url ? `<div class="post-image"><img src="${feedEscape(p.image_url)}" loading="lazy" alt="" onerror="this.parentElement.style.display='none'"></div>` : '';
+        
+        // Build image gallery HTML
+        let media = '';
+        if (p.images && p.images.length > 0) {
+            const imageCount = p.images.length;
+            if (imageCount === 1) {
+                // Single image - full width
+                media = `<div class="post-image"><img src="${feedEscape(p.images[0])}" loading="lazy" alt="" onerror="this.parentElement.style.display='none'" onclick="openImageModal('${feedEscape(p.images[0])}')"></div>`;
+            } else if (imageCount === 2) {
+                // Two images - side by side
+                media = `<div class="post-images-grid grid-2">
+                    ${p.images.map(img => `<img src="${feedEscape(img)}" loading="lazy" alt="" onerror="this.style.display='none'" onclick="openImageModal('${feedEscape(img)}')">`).join('')}
+                </div>`;
+            } else if (imageCount === 3) {
+                // Three images - one large, two small
+                media = `<div class="post-images-grid grid-3">
+                    ${p.images.map(img => `<img src="${feedEscape(img)}" loading="lazy" alt="" onerror="this.style.display='none'" onclick="openImageModal('${feedEscape(img)}')">`).join('')}
+                </div>`;
+            } else if (imageCount === 4) {
+                // Four images - 2x2 grid
+                media = `<div class="post-images-grid grid-4">
+                    ${p.images.map(img => `<img src="${feedEscape(img)}" loading="lazy" alt="" onerror="this.style.display='none'" onclick="openImageModal('${feedEscape(img)}')">`).join('')}
+                </div>`;
+            } else {
+                // 5+ images - show first 4 with "+N more" overlay
+                const firstFour = p.images.slice(0, 4);
+                const remaining = imageCount - 4;
+                media = `<div class="post-images-grid grid-4">
+                    ${firstFour.slice(0, 3).map(img => `<img src="${feedEscape(img)}" loading="lazy" alt="" onerror="this.style.display='none'" onclick="openImageModal('${feedEscape(img)}')">`).join('')}
+                    <div class="image-more-overlay" onclick="openImageGallery(${p.id}, ${JSON.stringify(p.images).replace(/"/g, '&quot;')})">
+                        <img src="${feedEscape(firstFour[3])}" loading="lazy" alt="">
+                        <div class="more-overlay-text">+${remaining} more</div>
+                    </div>
+                </div>`;
+            }
+        } else if (p.image_url) {
+            // Legacy single image_url field
+            media = `<div class="post-image"><img src="${feedEscape(p.image_url)}" loading="lazy" alt="" onerror="this.parentElement.style.display='none'" onclick="openImageModal('${feedEscape(p.image_url)}')"></div>`;
+        }
+        
         const link   = p.link_url  ? `<a href="${feedEscape(p.link_url)}" target="_blank" rel="noopener" class="post-link-preview">${feedEscape(p.link_url)}</a>` : '';
         const comments = (p.comments ?? []).map(function (c) { return renderCommentItem(c, p.id, 0); }).join('');
         const reactionsSummary = renderReactionsSummary(p);
@@ -1059,6 +1115,144 @@
             alert('Unable to post comment. Please try again.');
         }
     }
+
+    // ── Image Lightbox Functions ──────────────────────────────────────────────
+    let lightboxImages = [];
+    let lightboxIndex = 0;
+    let lightboxZoom = 1;
+    const LIGHTBOX_ZOOM_MIN = 1;
+    const LIGHTBOX_ZOOM_MAX = 3;
+    const LIGHTBOX_ZOOM_STEP = 0.25;
+
+    window.openImageModal = function(imageUrl) {
+        openLightbox([imageUrl], 0);
+    };
+
+    window.openImageGallery = function(postId, images) {
+        openLightbox(images, 0);
+    };
+
+    function openLightbox(images, startIndex = 0) {
+        lightboxImages = images;
+        lightboxIndex = startIndex;
+        lightboxZoom = 1;
+        const lb = document.getElementById('imageLightbox');
+        if (!lb) return;
+        lb.classList.add('active');
+        lb.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        renderLightboxImage();
+        applyLightboxZoom();
+    }
+
+    function closeLightbox() {
+        const lb = document.getElementById('imageLightbox');
+        if (lb) {
+            lb.classList.remove('active');
+            lb.setAttribute('aria-hidden', 'true');
+        }
+        document.body.style.overflow = '';
+        lightboxZoom = 1;
+        applyLightboxZoom();
+    }
+
+    function applyLightboxZoom() {
+        const img = document.getElementById('lightboxImage');
+        const label = document.getElementById('lightboxZoomLevel');
+        if (img) {
+            img.style.transform = `scale(${lightboxZoom})`;
+        }
+        if (label) {
+            label.textContent = `${Math.round(lightboxZoom * 100)}%`;
+        }
+    }
+
+    function lightboxZoomIn() {
+        lightboxZoom = Math.min(LIGHTBOX_ZOOM_MAX, +(lightboxZoom + LIGHTBOX_ZOOM_STEP).toFixed(2));
+        applyLightboxZoom();
+    }
+
+    function lightboxZoomOut() {
+        lightboxZoom = Math.max(LIGHTBOX_ZOOM_MIN, +(lightboxZoom - LIGHTBOX_ZOOM_STEP).toFixed(2));
+        applyLightboxZoom();
+    }
+
+    function lightboxZoomReset() {
+        lightboxZoom = 1;
+        applyLightboxZoom();
+        const viewport = document.getElementById('lightboxViewport');
+        if (viewport) {
+            viewport.scrollLeft = 0;
+            viewport.scrollTop = 0;
+        }
+    }
+
+    function renderLightboxImage() {
+        const img = document.getElementById('lightboxImage');
+        const counter = document.getElementById('lightboxCounter');
+        const prevBtn = document.getElementById('lightboxPrev');
+        const nextBtn = document.getElementById('lightboxNext');
+        
+        if (!img || !lightboxImages.length) return;
+        
+        img.src = lightboxImages[lightboxIndex];
+        lightboxZoom = 1;
+        applyLightboxZoom();
+        
+        if (counter) {
+            counter.textContent = lightboxImages.length > 1 ? `${lightboxIndex + 1} / ${lightboxImages.length}` : '';
+        }
+        
+        // Show/hide navigation buttons based on image count
+        if (prevBtn) prevBtn.style.display = lightboxImages.length > 1 ? 'flex' : 'none';
+        if (nextBtn) nextBtn.style.display = lightboxImages.length > 1 ? 'flex' : 'none';
+    }
+
+    function lightboxPrev() {
+        if (!lightboxImages.length) return;
+        lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length;
+        renderLightboxImage();
+    }
+
+    function lightboxNext() {
+        if (!lightboxImages.length) return;
+        lightboxIndex = (lightboxIndex + 1) % lightboxImages.length;
+        renderLightboxImage();
+    }
+
+    // Lightbox event listeners
+    document.getElementById('lightboxClose')?.addEventListener('click', closeLightbox);
+    document.getElementById('lightboxPrev')?.addEventListener('click', lightboxPrev);
+    document.getElementById('lightboxNext')?.addEventListener('click', lightboxNext);
+    document.getElementById('lightboxZoomIn')?.addEventListener('click', lightboxZoomIn);
+    document.getElementById('lightboxZoomOut')?.addEventListener('click', lightboxZoomOut);
+    document.getElementById('lightboxZoomReset')?.addEventListener('click', lightboxZoomReset);
+    
+    // Close on backdrop click
+    document.getElementById('imageLightbox')?.addEventListener('click', (e) => {
+        if (e.target?.id === 'imageLightbox') closeLightbox();
+    });
+    
+    // Zoom with mouse wheel
+    document.getElementById('lightboxViewport')?.addEventListener('wheel', (e) => {
+        const lb = document.getElementById('imageLightbox');
+        if (!lb?.classList.contains('active')) return;
+        e.preventDefault();
+        if (e.deltaY < 0) lightboxZoomIn();
+        else lightboxZoomOut();
+    }, { passive: false });
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        const lb = document.getElementById('imageLightbox');
+        if (!lb?.classList.contains('active')) return;
+        if (e.key === 'Escape') closeLightbox();
+        else if (e.key === 'ArrowLeft') lightboxPrev();
+        else if (e.key === 'ArrowRight') lightboxNext();
+        else if (e.key === '+' || e.key === '=') lightboxZoomIn();
+        else if (e.key === '-') lightboxZoomOut();
+        else if (e.key === '0') lightboxZoomReset();
+    });
 
     document.addEventListener('DOMContentLoaded', () => loadFeed(true));
     </script>

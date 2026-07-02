@@ -491,12 +491,12 @@ body {
     .feed-filter-bar { flex-wrap: nowrap; overflow-x: auto; padding: 12px 14px; gap: 8px; scrollbar-width: none; justify-content: center; }
     .feed-filter-bar::-webkit-scrollbar { display: none; }
     .feed-tab { white-space: nowrap; padding: 8px 16px; font-size: 13px; }
-    .post-media-grid.grid-2 { grid-template-rows: minmax(140px, 200px); }
-    .post-media-grid.grid-3 { grid-template-rows: repeat(2, minmax(70px, 110px)); }
+    .post-media-grid.grid-2 { grid-template-rows: 120px; }
+    .post-media-grid.grid-3 { grid-template-rows: repeat(2, 60px); }
     .post-media-grid.grid-4,
-    .post-media-grid.grid-4-plus { grid-template-rows: repeat(2, minmax(80px, 120px)); }
+    .post-media-grid.grid-4-plus { grid-template-rows: repeat(2, 80px); }
     .post-media-grid.grid-1 .post-media-tile,
-    .post-media-grid.grid-1 .post-media-tile img { max-height: none; }
+    .post-media-grid.grid-1 .post-media-tile img { max-height: 240px; }
     .post-title { font-size: 15px; }
     .post-text  { font-size: 13px; }
     .action-btn { font-size: 12px; padding: 7px 4px; gap: 5px; }
@@ -522,7 +522,7 @@ body {
     .programs-fab { bottom: 20px; right: 16px; width: 48px; height: 48px; font-size: 18px; }
 }
 
-/* Multi-image grid — responsive, max 4 visible */
+/* Multi-image grid — responsive, max 4 visible with MINIMIZED sizes */
 .post-media-grid {
     display: grid;
     gap: 3px;
@@ -538,7 +538,7 @@ body {
 }
 .post-media-grid.grid-1 .post-media-tile {
     min-height: 0;
-    max-height: none;
+    max-height: 320px; /* Limit single image height */
     background: #fff;
     display: block;
     height: auto;
@@ -546,18 +546,18 @@ body {
 .post-media-grid.grid-1 .post-media-tile img {
     width: 100%;
     height: auto;
-    max-height: none;
-    object-fit: unset;
+    max-height: 320px; /* Limit single image height */
+    object-fit: contain; /* Show full image without cropping */
     background: transparent;
     display: block;
 }
 .post-media-grid.grid-2 {
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: minmax(180px, 280px);
+    grid-template-rows: 150px; /* Reduced from 180-280px */
 }
 .post-media-grid.grid-3 {
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: repeat(2, minmax(90px, 140px));
+    grid-template-rows: repeat(2, 75px); /* Reduced from 90-140px */
 }
 .post-media-grid.grid-3 .post-media-tile:first-child {
     grid-row: 1 / 3;
@@ -566,7 +566,7 @@ body {
 .post-media-grid.grid-4,
 .post-media-grid.grid-4-plus {
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: repeat(2, minmax(100px, 160px));
+    grid-template-rows: repeat(2, 100px); /* Reduced from 100-160px */
 }
 .post-media-grid.fit-contain .post-media-tile img {
     object-fit: cover;
@@ -585,6 +585,10 @@ body {
     justify-content: center;
     width: 100%;
     height: 100%;
+    transition: opacity 0.2s;
+}
+.post-media-tile:hover {
+    opacity: 0.9;
 }
 .post-media-tile img {
     width: 100%;
