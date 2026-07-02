@@ -981,7 +981,12 @@
 .bm-show-page .bm-table-wrap {
     padding: 16px 20px 20px;
     background: #fff;
-    overflow: visible;
+}
+
+@media (min-width: 769px) {
+    .bm-show-page .bm-table-wrap {
+        overflow: visible;
+    }
 }
 
 .bm-show-page .bm-data-table--abyip {
@@ -991,6 +996,8 @@
     border: 1px solid #e2e8f0;
     border-radius: 12px;
     overflow: visible;
+    min-width: 0;
+    width: 100%;
 }
 
 .bm-show-page .bm-data-table--abyip tbody,
@@ -1929,45 +1936,6 @@
     }
 }
 
-@media (max-width: 640px) {
-    .bm-show-page .bm-data-table thead {
-        display: none;
-    }
-
-    .bm-show-page .bm-data-table tbody tr {
-        display: block;
-        padding: 12px 16px;
-        border-bottom: 1px solid #f1f5f9;
-    }
-
-    .bm-show-page .bm-data-table tbody tr:hover td {
-        background: transparent;
-    }
-
-    .bm-show-page .bm-data-table td {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 6px 0;
-        border: none;
-        text-align: right;
-    }
-
-    .bm-show-page .bm-data-table td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        color: #64748b;
-        font-size: 11px;
-        text-transform: uppercase;
-        text-align: left;
-        flex-shrink: 0;
-    }
-
-    .bm-show-page .bm-cell-strong {
-        max-width: none;
-    }
-}
-
 .bm-schedule-actions {
     display: flex;
     gap: 8px;
@@ -2317,4 +2285,237 @@
 .bm-btn-danger-solid:disabled {
     opacity: 0.7;
     cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Barangay Monitoring — mobile / show page overflow fixes
+   Prevents page zoom-out and keeps detail + view modal usable on phones
+   ========================================================================== */
+
+.bm-show-page,
+.bm-show-page .bm-container {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.bm-show-page .bm-table-card {
+    max-width: 100%;
+    min-width: 0;
+}
+
+@media (max-width: 1024px) {
+    .main-content.bm-main {
+        padding: 18px 14px 24px;
+        overflow-x: clip;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .bm-container {
+        min-width: 0;
+    }
+
+    .bm-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .bm-controls {
+        width: 100%;
+    }
+
+    .bm-search {
+        flex: 1 1 100%;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .bm-card-head {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .bm-card-head > div[style] {
+        width: 100% !important;
+    }
+
+    .bm-card-head select {
+        flex: 1 1 calc(50% - 4px);
+        min-width: 0 !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content.bm-main {
+        padding: 16px 12px 20px;
+    }
+
+    .bm-show-page {
+        gap: 14px;
+    }
+
+    .bm-show-page .bm-back-link {
+        max-width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .bm-show-hero {
+        padding: 16px;
+        gap: 14px;
+    }
+
+    .bm-show-hero-brand {
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .bm-show-hero-logo {
+        width: 56px;
+        height: 56px;
+    }
+
+    .bm-show-hero-logo-fallback {
+        font-size: 22px;
+    }
+
+    .bm-show-title {
+        font-size: 1.35rem;
+        word-break: break-word;
+    }
+
+    .bm-show-subtitle,
+    .bm-show-submitted-by {
+        flex-wrap: wrap;
+        font-size: 13px;
+    }
+
+    .bm-show-page .bm-table-header,
+    .bm-show-page .bm-table-filters {
+        padding: 12px 14px;
+    }
+
+    .bm-show-page .bm-table-header-title h3 {
+        font-size: 15px;
+        flex-wrap: wrap;
+    }
+
+    .bm-show-page .bm-table-wrap {
+        padding: 12px 14px 16px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .bm-show-page .bm-data-table--abyip,
+    .bm-show-page .bm-table.bm-data-table {
+        min-width: 920px;
+        width: max-content;
+    }
+
+    .bm-show-page .bm-data-table thead {
+        display: table-header-group;
+    }
+
+    .bm-show-page .bm-data-table tbody {
+        display: table-row-group;
+    }
+
+    .bm-show-page .bm-data-table tr {
+        display: table-row;
+    }
+
+    .bm-show-page .bm-data-table th,
+    .bm-show-page .bm-data-table td {
+        display: table-cell;
+    }
+
+    .bm-show-page .bm-data-table td::before {
+        content: none;
+        display: none;
+    }
+
+    .bm-show-page .bm-cell-strong {
+        min-width: 200px;
+        max-width: 280px;
+        white-space: normal;
+    }
+
+    .bm-show-page .bm-schedule-grid {
+        padding: 0 14px 14px;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 640px) {
+    .bm-list-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bm-show-page .bm-data-table--abyip {
+        min-width: 920px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+    }
+
+    .bm-show-page .bm-data-table td.bm-col-actions,
+    .bm-show-page .bm-data-table th:last-child,
+    .bm-show-page .bm-data-table td:last-child {
+        width: 72px;
+        min-width: 72px;
+        max-width: 72px;
+        padding-top: 14px !important;
+        margin-top: 0;
+        border-top: none;
+        text-align: center;
+    }
+
+    .bm-show-page .bm-row-actions {
+        justify-content: center;
+    }
+
+    .bm-show-page .bm-view-btn {
+        width: auto;
+        min-width: 88px;
+    }
+
+    .bm-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .bm-kpi-card {
+        padding: 10px;
+        min-height: 64px;
+    }
+
+    .bm-kpi-value {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content.bm-main {
+        padding: 14px 10px 18px;
+    }
+
+    .bm-show-page .bm-back-link span {
+        white-space: normal;
+        line-height: 1.35;
+    }
+
+    .bm-show-page .bm-table-filters select,
+    .bm-show-page .bm-search-wrap input {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .bm-show-page .bm-search-wrap {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .bm-card-head select {
+        flex: 1 1 100%;
+        width: 100%;
+    }
 }
