@@ -527,9 +527,14 @@ html, body {
     align-items: flex-start;
 }
 
-.dash-section-header--wrap > div:first-child {
+.dash-section-header--wrap > div:first-child,
+.dash-section-header-text {
     flex: 1;
     min-width: 0;
+}
+
+.dash-section-header--chart-filters {
+    gap: 10px;
 }
 
 .dash-chart-header-actions {
@@ -1347,6 +1352,17 @@ html, body {
 @media (max-width: 1100px) {
     .charts-grid-2 { grid-template-columns: 1fr; }
     .charts-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .dash-section-header--chart-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dash-section-header--chart-filters .dash-chart-header-actions {
+        width: 100%;
+        justify-content: flex-end;
+        margin-left: 0;
+    }
 }
 
 /* 1024px — sidebar margin, stat cards slightly smaller */
@@ -1468,6 +1484,58 @@ html, body {
     .charts-grid-2 { grid-template-columns: 1fr; gap: 12px; }
     .charts-grid-3 { grid-template-columns: 1fr; gap: 12px; }
 
+    .dash-section-header--chart-filters {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .dash-section-header--chart-filters .dash-section-header-text {
+        width: 100%;
+        flex: none;
+    }
+
+    .dash-section-header--chart-filters .dash-section-title {
+        font-size: 14px;
+        line-height: 1.25;
+        white-space: normal;
+    }
+
+    .dash-section-header--chart-filters .dash-section-sub {
+        font-size: 11px;
+        line-height: 1.35;
+        margin-top: 3px;
+        white-space: normal;
+    }
+
+    .dash-section-header--chart-filters .dash-chart-header-actions {
+        width: 100%;
+        justify-content: flex-end;
+        margin-left: 0;
+    }
+
+    .dash-section-header--chart-filters .dash-filter-select {
+        min-width: 0;
+        max-width: min(100%, 220px);
+        font-size: 11px;
+        padding: 5px 8px;
+    }
+
+    .charts-grid-2 .chart-canvas-wrap--pie {
+        height: 200px;
+    }
+
+    .charts-grid-2 .pie-legend-row,
+    .charts-grid-2 .donut-legend {
+        justify-content: flex-start;
+        gap: 8px 12px;
+    }
+
+    .charts-grid-2 .pie-legend-label,
+    .charts-grid-2 .donut-legend-label {
+        font-size: 11px;
+    }
+
     .quick-actions-scroll { gap: 8px; }
     .qa-btn { padding: 9px 14px; font-size: 12px; }
 
@@ -1539,12 +1607,13 @@ html, body {
 
     .dash-chart-header-actions {
         width: 100%;
-        justify-content: flex-start;
+        justify-content: flex-end;
         margin-left: 0;
     }
 
-    .dash-section-header--chart-filters {
-        flex-wrap: wrap;
+    .dash-section-header--chart-filters .dash-filter-select {
+        max-width: min(100%, 200px);
+        font-size: 10px;
     }
 
     .dash-brgy-link-list {

@@ -704,11 +704,14 @@ body.sidebar-collapsed .menu-item span {
 body.sidebar-collapsed .menu-item > i:not(:first-child) {
     display: none;
 }
-body.sidebar-collapsed .sidebar-submenu,
-body.sidebar-collapsed #archiveSubmenu,
-body.sidebar-collapsed #accountsSubmenu,
-body.sidebar-collapsed #archiveManagementSubmenu {
-    display: none !important;
+
+@media (min-width: 1025px) {
+    body.sidebar-collapsed .sidebar-submenu,
+    body.sidebar-collapsed #archiveSubmenu,
+    body.sidebar-collapsed #accountsSubmenu,
+    body.sidebar-collapsed #archiveManagementSubmenu {
+        display: none !important;
+    }
 }
 
 @media (min-width: 1025px) {
@@ -792,6 +795,33 @@ body.sidebar-collapsed #archiveManagementSubmenu {
     background: none;
     color: #94a3b8;
     border-left-color: transparent;
+}
+
+.sidebar-submenu {
+    max-height: 0;
+    overflow: hidden;
+    padding-left: 8px;
+    margin-left: 10px;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-submenu.is-open {
+    max-height: 640px;
+}
+
+body:not(.sidebar-collapsed) .sidebar-nav .sidebar-submenu.is-open {
+    display: block;
+}
+
+.menu-dropdown-chevron {
+    margin-left: auto;
+    font-size: 12px !important;
+    width: auto !important;
+    transition: transform 0.3s ease;
+}
+
+.menu-dropdown-chevron.is-open {
+    transform: rotate(180deg);
 }
 
 .sidebar-nav {

@@ -320,8 +320,8 @@
     <div class="charts-grid-2">
 
         <div class="dash-section-card">
-            <div class="dash-section-header dash-section-header--wrap">
-                <div>
+            <div class="dash-section-header dash-section-header--wrap dash-section-header--chart-filters">
+                <div class="dash-section-header-text">
                     <h2 class="dash-section-title">Kabataan Sex Distribution</h2>
                     <p class="dash-section-sub">Male vs Female registered youth</p>
                 </div>
@@ -340,8 +340,8 @@
         </div>
 
         <div class="dash-section-card" id="employmentStatusCard">
-            <div class="dash-section-header dash-section-header--wrap">
-                <div>
+            <div class="dash-section-header dash-section-header--wrap dash-section-header--chart-filters">
+                <div class="dash-section-header-text">
                     <h2 class="dash-section-title">Employment Status Distribution</h2>
                     <p class="dash-section-sub">Current employment profile of registered Kabataan</p>
                 </div>

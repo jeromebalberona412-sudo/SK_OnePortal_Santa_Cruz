@@ -62,6 +62,11 @@ function toggleSubmenu(submenuId) {
     });
 
     setSubmenuOpen(submenuId, willOpen);
+
+    if (willOpen && !isMobileSidebar()) {
+        document.body.classList.remove('sidebar-collapsed');
+        localStorage.setItem('sidebarCollapsed', 'false');
+    }
 }
 
 window.toggleSubmenuDropdown = function (btn, event) {
@@ -116,21 +121,23 @@ function syncSidebarForViewport() {
     if (mobile) {
         document.body.classList.remove('sidebar-collapsed');
         document.body.classList.remove('sidebar-open');
-        collapseSidebarExtras();
         return;
     }
 
     document.body.classList.remove('sidebar-open');
 
     if (narrowDesktop) {
-        document.body.classList.add('sidebar-collapsed');
-        collapseSidebarExtras();
+        if (localStorage.getItem('sidebarCollapsed') !== 'false') {
+            document.body.classList.add('sidebar-collapsed');
+        } else {
+            document.body.classList.remove('sidebar-collapsed');
+        }
+
         return;
     }
 
     if (localStorage.getItem('sidebarCollapsed') === 'true') {
         document.body.classList.add('sidebar-collapsed');
-        collapseSidebarExtras();
     } else {
         document.body.classList.remove('sidebar-collapsed');
     }

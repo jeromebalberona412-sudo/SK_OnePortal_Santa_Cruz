@@ -502,6 +502,11 @@ const SK_OFFICIAL_AGE_MIN = 18;
 const SK_OFFICIAL_AGE_MAX = 24;
 const SK_OFFICIAL_GMAIL_REGEX = /^[a-z0-9._%+-]{6,30}@gmail\.com$/i;
 const SK_OFFICIAL_MAX_MSG = 'Maximum of 50 characters reached';
+const BATCH_EMAIL_MAX = 254;
+const BATCH_SK_FED_NAME_MAX = 35;
+const BATCH_LOCATION_MAX = 100;
+const BATCH_POSITION_MAX = 100;
+const BATCH_CONTACT_NUMBER_LENGTH = 11;
 const MODAL_ICON_MAXIMIZE = '\u{1F5D6}';
 const MODAL_ICON_RESTORE = '\u{1F5D7}';
 
@@ -1788,7 +1793,7 @@ function normalizeBatchHeaderLabel(header) {
 
 function isOptionalBatchHeader(header) {
     const normalized = normalizeBatchHeaderLabel(header);
-    return normalized === 'middle name' || normalized === 'suffix';
+    return normalized === 'middle name';
 }
 
 const BATCH_OPTIONAL_HEADERS = new Set(['middle name', 'middle_name', 'middle name (optional)']);
@@ -1800,6 +1805,172 @@ const BATCH_REQUIRED_HEADERS = BATCH_TEMPLATE_HEADERS.filter(
 const BATCH_MAX_ACCOUNTS = 260;
 const BATCH_OFFICIAL_LAST_NAME_REGEX = /^[A-Z.\-']+$/;
 const BATCH_OFFICIAL_MIDDLE_NAME_REGEX = /^[A-Z.\-']*$/;
+const BATCH_SK_OFFICIAL_POSITIONS = ['Chairperson', 'Secretary', 'Treasurer', 'Kagawad', 'Councilor', 'Auditor', 'PIO'];
+const BATCH_SK_FED_POSITIONS = ['President', 'Vice President', 'Secretary', 'Treasurer', 'PIO', 'Sergeant at Arms'];
+
+function normalizeBatchLookupKey(value) {
+    return String(value || '').trim().toLowerCase();
+}
+
+function digitToRomanBatch(digit) {
+    return ({ 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V' })[digit] || null;
+}
+
+function romanToDigitBatch(roman) {
+    return ({ I: 1, II: 2, III: 3, IV: 4, V: 5 })[String(roman || '').toUpperCase()] || null;
+}
+
+function normalizeRomanOrDigitTokenBatch(token) {
+    const trimmed = String(token || '').trim();
+    if (/^\d+$/.test(trimmed)) {
+        return digitToRomanBatch(parseInt(trimmed, 10)) || trimmed;
+    }
+    return trimmed.toUpperCase();
+}
+
+function normalizeBatchBarangayName(name) {
+    const trimmed = String(name || '').trim();
+    let match;
+
+    if ((match = /^barangay\s+([0-9ivx]+)\s*\(poblacion\)$/i.exec(trimmed))) {
+        return 'Poblacion ' + normalizeRomanOrDigitTokenBatch(match[1]);
+    }
+    if ((match = /^poblacion\s+([0-9ivx]+)$/i.exec(trimmed))) {
+        return 'Poblacion ' + normalizeRomanOrDigitTokenBatch(match[1]);
+    }
+    if ((match = /^barangay\s+([0-9ivx]+)$/i.exec(trimmed))) {
+        return 'Poblacion ' + normalizeRomanOrDigitTokenBatch(match[1]);
+    }
+    if (trimmed.toLowerCase() === 'santa cruz') {
+        return trimmed;
+    }
+
+    return trimmed;
+}
+
+let batchBarangayLookupCache = null;
+
+function buildBatchBarangayLookup() {
+    if (batchBarangayLookupCache) {
+        return batchBarangayLookupCache;
+    }
+
+    const lookup = new Map();
+    const select = document.getElementById('barangayFilter');
+    if (!select) {
+        batchBarangayLookupCache = lookup;
+        return lookup;
+    }
+
+    [...select.options].forEach((opt) => {
+        if (!opt.value || !opt.text) {
+            return;
+        }
+
+        const name = opt.text.trim();
+        const register = (candidate) => {
+            lookup.set(normalizeBatchLookupKey(candidate), name);
+        };
+
+        register(name);
+        const canonical = normalizeBatchBarangayName(name);
+        if (canonical !== name) {
+            register(canonical);
+        }
+
+        const poblacionMatch = /^poblacion\s+([ivx]+)$/i.exec(canonical);
+        if (poblacionMatch) {
+            const roman = poblacionMatch[1].toUpperCase();
+            const digit = romanToDigitBatch(roman);
+            if (digit !== null) {
+                register('Poblacion ' + digit);
+                register('Poblacion ' + roman);
+                register('Barangay ' + digit);
+                register('Barangay ' + roman);
+                register('Barangay ' + roman + ' (Poblacion)');
+            }
+        }
+    });
+
+    batchBarangayLookupCache = lookup;
+    return lookup;
+}
+
+function resolveBatchBarangayName(rawBarangay) {
+    const barangayName = String(rawBarangay || '').trim();
+    if (!barangayName) {
+        return null;
+    }
+
+    const lookup = buildBatchBarangayLookup();
+    const canonical = normalizeBatchBarangayName(barangayName);
+
+    return lookup.get(normalizeBatchLookupKey(canonical))
+        || lookup.get(normalizeBatchLookupKey(barangayName))
+        || null;
+}
+
+function normalizeBatchPosition(value, role) {
+    const normalized = String(value || '').trim().toLowerCase().replace(/^(sk\s+|sangguniang kabataan\s+)/i, '');
+    const aliases = {
+        chairperson: 'Chairperson',
+        chairman: 'Chairperson',
+        secretary: 'Secretary',
+        treasurer: 'Treasurer',
+        kagawad: 'Kagawad',
+        councilor: 'Councilor',
+        auditor: 'Auditor',
+        pio: 'PIO',
+        president: 'President',
+        'vice president': 'Vice President',
+        'sergeant at arms': 'Sergeant at Arms',
+    };
+
+    let position = aliases[normalized] || null;
+    const allowed = role === 'sk_official' ? BATCH_SK_OFFICIAL_POSITIONS : BATCH_SK_FED_POSITIONS;
+
+    if (!position && normalized) {
+        position = allowed.find((candidate) => candidate.toLowerCase() === normalized) || null;
+    }
+
+    if (!position || !allowed.includes(position)) {
+        return null;
+    }
+
+    return position;
+}
+
+function normalizeBatchSuffix(rawSuffix) {
+    if (rawSuffix === null || rawSuffix === undefined || String(rawSuffix).trim() === '') {
+        return { suffix_input: '', suffix: null };
+    }
+
+    const suffixInput = String(rawSuffix).trim();
+    const lower = suffixInput.toLowerCase();
+    if (['none', 'n/a', 'na', '-'].includes(lower)) {
+        return { suffix_input: suffixInput, suffix: null };
+    }
+
+    const base = lower.replace(/\.$/, '');
+    const mapped = {
+        jr: 'Jr.',
+        sr: 'Sr.',
+        ii: 'II',
+        iii: 'III',
+        iv: 'IV',
+        v: 'V',
+    }[base];
+
+    if (mapped) {
+        return { suffix_input: suffixInput, suffix: mapped };
+    }
+
+    if (suffixInput.length <= 10) {
+        return { suffix_input: suffixInput, suffix: suffixInput };
+    }
+
+    return { suffix_input: suffixInput, suffix: null };
+}
 
 const BATCH_ALL_REQUIRED_FIELDS = [
     { key: 'first_name', label: 'First Name' },
@@ -1867,6 +2038,14 @@ function normalizeBatchAccountRow(row, role) {
         }
     });
 
+    const suffixResult = normalizeBatchSuffix(row.suffix ?? row.suffix_input ?? normalized.suffix ?? '');
+    normalized.suffix_input = suffixResult.suffix_input;
+    if (suffixResult.suffix) {
+        normalized.suffix = suffixResult.suffix.toUpperCase();
+    } else {
+        delete normalized.suffix;
+    }
+
     if (normalized.email) {
         normalized.email = String(normalized.email).trim().toLowerCase();
     }
@@ -1900,10 +2079,15 @@ function normalizeBatchAccountRow(row, role) {
         if (sex === 'f' || sex === 'female') normalized.sex = 'Female';
     }
 
-    if (normalized.suffix) {
-        const suffix = String(normalized.suffix).trim();
-        if (suffix === '' || suffix.toLowerCase() === 'none') {
-            delete normalized.suffix;
+    if (normalized.position) {
+        const resolvedPosition = normalizeBatchPosition(normalized.position, role);
+        normalized.position = resolvedPosition || normalized.position;
+    }
+
+    if (normalized.barangay) {
+        const resolvedBarangay = resolveBatchBarangayName(normalized.barangay);
+        if (resolvedBarangay) {
+            normalized.barangay = resolvedBarangay.toUpperCase();
         }
     }
 
@@ -1912,6 +2096,75 @@ function normalizeBatchAccountRow(row, role) {
     }
 
     return normalized;
+}
+
+function getBatchNameMax(role) {
+    return role === 'sk_official' ? SK_OFFICIAL_NAME_MAX : BATCH_SK_FED_NAME_MAX;
+}
+
+function pushBatchLengthError(errors, rowNumber, field, label, value, rules) {
+    const text = String(value ?? '').trim();
+    const length = text.length;
+
+    if (rules.optional && length === 0) {
+        return;
+    }
+
+    if (rules.min !== undefined && length > 0 && length < rules.min) {
+        errors.push({
+            row: rowNumber,
+            field,
+            error: `${label} must be at least ${rules.min} character${rules.min === 1 ? '' : 's'}.`,
+        });
+        return;
+    }
+
+    if (rules.max !== undefined && length > rules.max) {
+        errors.push({
+            row: rowNumber,
+            field,
+            error: `${label} must not exceed ${rules.max} characters.`,
+        });
+    }
+}
+
+function validateBatchFieldLengths(row, rowNumber, role, errors) {
+    const nameMax = getBatchNameMax(role);
+    const isOfficial = role === 'sk_official';
+    const rawSuffix = row.suffix ?? row.suffix_input ?? '';
+
+    pushBatchLengthError(errors, rowNumber, 'first_name', 'First name', row.first_name, { min: SK_OFFICIAL_NAME_MIN, max: nameMax });
+    pushBatchLengthError(errors, rowNumber, 'middle_name', 'Middle name', row.middle_name, { min: SK_OFFICIAL_NAME_MIN, max: nameMax, optional: true });
+    pushBatchLengthError(errors, rowNumber, 'last_name', 'Last name', row.last_name, { min: SK_OFFICIAL_NAME_MIN, max: nameMax });
+
+    if (isOfficial) {
+        pushBatchLengthError(errors, rowNumber, 'suffix', 'Suffix', rawSuffix, { min: 1, max: SK_OFFICIAL_SUFFIX_OTHER_MAX });
+    } else {
+        pushBatchLengthError(errors, rowNumber, 'suffix', 'Suffix', rawSuffix, { max: SK_OFFICIAL_SUFFIX_OTHER_MAX, optional: true });
+    }
+
+    pushBatchLengthError(errors, rowNumber, 'email', 'Email', row.email, { max: BATCH_EMAIL_MAX });
+    pushBatchLengthError(errors, rowNumber, 'position', 'Position', row.position, { min: 1, max: BATCH_POSITION_MAX });
+    pushBatchLengthError(errors, rowNumber, 'region', 'Region', row.region, { min: 1, max: BATCH_LOCATION_MAX });
+    pushBatchLengthError(errors, rowNumber, 'province', 'Province', row.province, { min: 1, max: BATCH_LOCATION_MAX });
+    pushBatchLengthError(errors, rowNumber, 'municipality', 'Municipality', row.municipality, { min: 1, max: BATCH_LOCATION_MAX });
+    pushBatchLengthError(errors, rowNumber, 'barangay', 'Barangay', row.barangay, { min: 1, max: BATCH_LOCATION_MAX });
+
+    const rawContact = String(row.contact_number ?? '').replace(/\D+/g, '');
+    if (rawContact.length > 0 && rawContact.length !== BATCH_CONTACT_NUMBER_LENGTH) {
+        errors.push({
+            row: rowNumber,
+            field: 'contact_number',
+            error: `Contact number must be exactly ${BATCH_CONTACT_NUMBER_LENGTH} digits.`,
+        });
+    }
+
+    if (row.age !== undefined && row.age !== '') {
+        const ageText = String(row.age).trim();
+        if (!/^\d{1,3}$/.test(ageText)) {
+            errors.push({ row: rowNumber, field: 'age', error: 'Age must be a valid number.' });
+        }
+    }
 }
 
 function batchRowFingerprint(row) {
@@ -1925,8 +2178,15 @@ function batchRowFingerprint(row) {
 
 function validateBatchAccountRow(row, rowNumber, role, seenEmails, seenFingerprints) {
     const errors = [];
-    const data = normalizeBatchAccountRow(row, role);
     const isOfficial = role === 'sk_official';
+    const rawSuffix = row.suffix ?? row.suffix_input ?? '';
+    const rawUploadedAge = row.age !== undefined && row.age !== '' ? parseInt(String(row.age).trim(), 10) : null;
+    const rawBarangay = row.barangay ?? '';
+    const rawPosition = row.position ?? '';
+    const nameMax = getBatchNameMax(role);
+
+    validateBatchFieldLengths(row, rowNumber, role, errors);
+    const data = normalizeBatchAccountRow(row, role);
 
     BATCH_ALL_REQUIRED_FIELDS.forEach(({ key, label }) => {
         const value = data[key];
@@ -1935,11 +2195,39 @@ function validateBatchAccountRow(row, rowNumber, role, seenEmails, seenFingerpri
         }
     });
 
+    if (isOfficial && String(rawSuffix).trim() === '') {
+        errors.push({ row: rowNumber, field: 'suffix', error: 'Suffix is required.' });
+    }
+
+    if (isOfficial && String(rawSuffix).trim() !== '') {
+        const suffixNorm = normalizeBatchSuffix(rawSuffix);
+        const suffixLower = String(rawSuffix).trim().toLowerCase();
+        if (
+            suffixNorm.suffix === null
+            && !['none', 'n/a', 'na', '-'].includes(suffixLower)
+            && String(rawSuffix).trim().length > 10
+        ) {
+            errors.push({ row: rowNumber, field: 'suffix', error: 'Suffix must not exceed 10 characters.' });
+        }
+    }
+
+    if (String(rawPosition).trim() !== '' && normalizeBatchPosition(rawPosition, role) === null) {
+        errors.push({ row: rowNumber, field: 'position', error: 'Position is required or not recognized for this account type.' });
+    }
+
+    if (String(rawBarangay).trim() !== '' && resolveBatchBarangayName(rawBarangay) === null) {
+        errors.push({
+            row: rowNumber,
+            field: 'barangay',
+            error: `Barangay "${String(rawBarangay).trim()}" was not found.`,
+        });
+    }
+
     if (data.first_name) {
         if (data.first_name.length < SK_OFFICIAL_NAME_MIN) {
             errors.push({ row: rowNumber, field: 'first_name', error: 'First name must be at least 3 characters.' });
-        } else if (data.first_name.length > SK_OFFICIAL_NAME_MAX) {
-            errors.push({ row: rowNumber, field: 'first_name', error: 'First name must not exceed 50 characters.' });
+        } else if (data.first_name.length > nameMax) {
+            errors.push({ row: rowNumber, field: 'first_name', error: `First name must not exceed ${nameMax} characters.` });
         } else if (isOfficial && !SK_OFFICIAL_FIRST_NAME_REGEX.test(data.first_name)) {
             errors.push({ row: rowNumber, field: 'first_name', error: 'First name must use uppercase letters only, with at most one space and no leading spaces.' });
         }
@@ -1948,8 +2236,8 @@ function validateBatchAccountRow(row, rowNumber, role, seenEmails, seenFingerpri
     if (data.middle_name) {
         if (data.middle_name.length < SK_OFFICIAL_NAME_MIN) {
             errors.push({ row: rowNumber, field: 'middle_name', error: 'Middle name must be at least 3 characters when provided.' });
-        } else if (data.middle_name.length > SK_OFFICIAL_NAME_MAX) {
-            errors.push({ row: rowNumber, field: 'middle_name', error: 'Middle name must not exceed 50 characters.' });
+        } else if (data.middle_name.length > nameMax) {
+            errors.push({ row: rowNumber, field: 'middle_name', error: `Middle name must not exceed ${nameMax} characters.` });
         } else if (isOfficial && !BATCH_OFFICIAL_MIDDLE_NAME_REGEX.test(data.middle_name)) {
             errors.push({ row: rowNumber, field: 'middle_name', error: 'Middle name must use uppercase letters only, with no spaces.' });
         }
@@ -1958,16 +2246,20 @@ function validateBatchAccountRow(row, rowNumber, role, seenEmails, seenFingerpri
     if (data.last_name) {
         if (data.last_name.length < SK_OFFICIAL_NAME_MIN) {
             errors.push({ row: rowNumber, field: 'last_name', error: 'Last name must be at least 3 characters.' });
-        } else if (data.last_name.length > SK_OFFICIAL_NAME_MAX) {
-            errors.push({ row: rowNumber, field: 'last_name', error: 'Last name must not exceed 50 characters.' });
+        } else if (data.last_name.length > nameMax) {
+            errors.push({ row: rowNumber, field: 'last_name', error: `Last name must not exceed ${nameMax} characters.` });
         } else if (isOfficial && !BATCH_OFFICIAL_LAST_NAME_REGEX.test(data.last_name)) {
             errors.push({ row: rowNumber, field: 'last_name', error: 'Last name must use uppercase letters only, with no spaces.' });
         }
     }
 
     if (data.email) {
-        if (!SK_OFFICIAL_GMAIL_REGEX.test(String(data.email).trim())) {
+        if (String(data.email).length > BATCH_EMAIL_MAX) {
+            errors.push({ row: rowNumber, field: 'email', error: `Email must not exceed ${BATCH_EMAIL_MAX} characters.` });
+        } else if (isOfficial && !SK_OFFICIAL_GMAIL_REGEX.test(String(data.email).trim())) {
             errors.push({ row: rowNumber, field: 'email', error: 'Email must be a @gmail.com address with 6–30 characters before @.' });
+        } else if (!isOfficial && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(data.email).trim())) {
+            errors.push({ row: rowNumber, field: 'email', error: 'Invalid email format.' });
         }
         if (seenEmails.has(data.email)) {
             errors.push({ row: rowNumber, field: 'email', error: 'Duplicate email in upload file.' });
@@ -1997,6 +2289,17 @@ function validateBatchAccountRow(row, rowNumber, role, seenEmails, seenFingerpri
         const bounds = getSkOfficialBirthdateBounds();
         if (data.date_of_birth < bounds.min || data.date_of_birth > bounds.max) {
             errors.push({ row: rowNumber, field: 'date_of_birth', error: `Birthdate must correspond to age ${SK_OFFICIAL_AGE_MIN}–${SK_OFFICIAL_AGE_MAX}.` });
+        }
+
+        if (isOfficial && rawUploadedAge !== null && !Number.isNaN(rawUploadedAge)) {
+            const calculatedAge = calculateAge(data.date_of_birth);
+            if (calculatedAge !== null && rawUploadedAge !== calculatedAge) {
+                errors.push({
+                    row: rowNumber,
+                    field: 'age',
+                    error: `Age (${rawUploadedAge}) does not match birthdate (expected ${calculatedAge}).`,
+                });
+            }
         }
     }
 
