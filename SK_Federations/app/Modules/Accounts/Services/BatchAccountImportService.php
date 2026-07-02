@@ -334,6 +334,13 @@ class BatchAccountImportService
                 if ($data['date_of_birth'] < $minBirth || $data['date_of_birth'] > $maxBirth) {
                     $errors[] = 'Birthdate must correspond to age 18–24.';
                 }
+
+                if ($data['age'] !== null) {
+                    $calculatedAge = Carbon::parse($data['date_of_birth'])->age;
+                    if ((int) $data['age'] !== $calculatedAge) {
+                        $errors[] = 'Age ('.$data['age'].') does not match birthdate (expected '.$calculatedAge.').';
+                    }
+                }
             }
 
             if ($data['age'] === null || (int) $data['age'] < 18 || (int) $data['age'] > 24) {

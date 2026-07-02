@@ -157,9 +157,20 @@ class AdminAccountController extends Controller
         $validationErrors = $importService->validateRows($validated['accounts'], $validated['role']);
 
         if ($validationErrors !== []) {
+            $previewErrors = collect($validationErrors)
+                ->take(3)
+                ->map(function (array $item): string {
+                    $row = (int) ($item['row'] ?? 0);
+                    $error = trim((string) ($item['error'] ?? 'Validation error.'));
+                    return $row > 0 ? "Row {$row}: {$error}" : $error;
+                })
+                ->implode(' | ');
+
             return response()->json([
                 'success' => false,
-                'message' => 'Please fix the validation errors in your Excel file before importing.',
+                'message' => $previewErrors !== ''
+                    ? 'Please fix the validation errors in your Excel file before importing. '.$previewErrors
+                    : 'Please fix the validation errors in your Excel file before importing.',
                 'created' => 0,
                 'failed' => [],
                 'validation_errors' => $validationErrors,

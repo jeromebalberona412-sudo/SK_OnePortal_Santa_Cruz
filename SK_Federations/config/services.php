@@ -55,7 +55,7 @@ return [
     | Portal URLs for account invitation emails (password setup links)
     |--------------------------------------------------------------------------
     */
-    'sk_officials_app_url' => env('SK_OFFICIALS_APP_URL'),
+    'sk_officials_app_url' => env('SK_OFFICIALS_APP_URL', env('APP_URL')),
     'sk_fed_app_url' => env('SK_FED_APP_URL', env('APP_URL')),
 
 ];

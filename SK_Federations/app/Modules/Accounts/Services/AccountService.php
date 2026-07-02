@@ -473,6 +473,18 @@ class AccountService
             $this->sendInitialResetLink($user, $role);
         } catch (ValidationException $exception) {
             throw $exception;
+        } catch (\RuntimeException $exception) {
+            if (str_contains($exception->getMessage(), 'target application URL is not configured')) {
+                throw ValidationException::withMessages([
+                    'email' => 'Password setup email could not be sent because the portal URL is not configured. Set SK_OFFICIALS_APP_URL (and SK_FED_APP_URL if needed) in .env, then run php artisan config:clear.',
+                ]);
+            }
+
+            report($exception);
+
+            throw ValidationException::withMessages([
+                'email' => 'Unable to send password setup email. Please check mail settings and try again.',
+            ]);
         } catch (\Throwable $exception) {
             report($exception);
 
@@ -551,11 +563,15 @@ class AccountService
         $role = $role ?? $user->role;
 
         if ($role === User::ROLE_SK_OFFICIAL) {
-            return ['SK Official', config('services.sk_officials_app_url')];
+            $baseUrl = trim((string) config('services.sk_officials_app_url'));
+
+            return ['SK Official', $baseUrl !== '' ? $baseUrl : null];
         }
 
         if ($role === User::ROLE_SK_FED) {
-            return ['SK Federation', config('services.sk_fed_app_url')];
+            $baseUrl = trim((string) config('services.sk_fed_app_url'));
+
+            return ['SK Federation', $baseUrl !== '' ? $baseUrl : null];
         }
 
         return [null, null];

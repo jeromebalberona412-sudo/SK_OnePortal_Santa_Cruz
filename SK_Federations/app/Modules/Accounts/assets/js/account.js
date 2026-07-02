@@ -1540,6 +1540,15 @@ let editOfficialsIsMaximized = false;
 
 window.openEditSkOfficialsModal = function () { toggleModal('editSkOfficialsModal', true); };
 
+function resetEditSkOfficialsFormState(form) {
+    if (!form) return;
+    form.reset();
+    form.dataset.accountId = '';
+    form.querySelectorAll('.is-invalid,.is-valid').forEach((field) => field.classList.remove('is-invalid', 'is-valid'));
+    form.querySelectorAll('.validation-error').forEach((error) => error.remove());
+    form.querySelectorAll('.form-error-light').forEach((error) => { error.textContent = ''; });
+}
+
 window.closeEditSkOfficialsModal = function () {
     editOfficialsIsMaximized = false;
     const overlay = document.getElementById('editSkOfficialsModal');
@@ -1548,11 +1557,7 @@ window.closeEditSkOfficialsModal = function () {
     const btn = document.getElementById('editOfficialsResizeBtn');
     resetModalResizeState({ overlay, content, iconEl: icon, btn });
     const form = document.getElementById('editSkOfficialsForm');
-    if (form) {
-        form.reset();
-        form.querySelectorAll('.is-invalid,.is-valid').forEach(f => f.classList.remove('is-invalid', 'is-valid'));
-        form.querySelectorAll('.validation-error').forEach(e => e.remove());
-    }
+    resetEditSkOfficialsFormState(form);
     toggleModal('editSkOfficialsModal', false);
 };
 
@@ -2292,8 +2297,8 @@ function validateBatchAccountRow(row, rowNumber, role, seenEmails, seenFingerpri
         }
 
         if (isOfficial && rawUploadedAge !== null && !Number.isNaN(rawUploadedAge)) {
-            const calculatedAge = calculateAge(data.date_of_birth);
-            if (calculatedAge !== null && rawUploadedAge !== calculatedAge) {
+            const calculatedAge = parseInt(calculateAge(data.date_of_birth), 10);
+            if (!Number.isNaN(calculatedAge) && rawUploadedAge !== calculatedAge) {
                 errors.push({
                     row: rowNumber,
                     field: 'age',
@@ -2756,7 +2761,11 @@ function initBatchUploadPanel(prefix, role) {
 
             const rowErrors = revalidateBatchState();
             if (rowErrors.length > 0) {
-                alert('Please fix the validation errors in the table before importing.');
+                const preview = rowErrors
+                    .slice(0, 3)
+                    .map((item) => `Row ${item.row || '?'}: ${item.error || 'Validation error.'}`)
+                    .join('\n');
+                alert(`Please fix the validation errors in the table before importing.\n\n${preview}`);
                 return;
             }
 
@@ -3384,11 +3393,19 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Edit button click → populate form ────────────────────
     function populateEditForm(form, data) {
         if (!form) return;
+        resetEditSkOfficialsFormState(form);
         form.dataset.accountId = data.accountId || '';
         ['first_name', 'last_name', 'middle_name', 'sex', 'date_of_birth', 'age', 'contact_number', 'email', 'position', 'barangay_id', 'term_start', 'term_end', 'term_status'].forEach(n => setFormFieldValue(form, n, data[_camel(n)] ?? data[n] ?? ''));
         setSuffixFieldValue(form, data[_camel('suffix')] ?? data.suffix ?? data.suffix ?? '');
+        const dob = form.querySelector('[name="date_of_birth"]');
+        const age = form.querySelector('[name="age"]');
+        if (dob && age) {
+            age.value = calculateAge(dob.value);
+        }
         const statusField = form.querySelector('[name="status"]');
         if (statusField) statusField.value = 'ACTIVE';
+        applySkOfficialDobConstraints(form);
+        applyTermDateConstraints(form);
         clearAllErrors(form);
     }
 
