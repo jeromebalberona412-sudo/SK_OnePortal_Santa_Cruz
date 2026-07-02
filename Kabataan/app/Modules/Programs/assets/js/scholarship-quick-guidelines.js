@@ -1,35 +1,12 @@
 /**
- * Scholarship Quick Guidelines — default bilingual steps (English + Tagalog), Laguna-style card layout.
+ * Scholarship Quick Guidelines — SK Officials configured steps only (no hardcoded defaults).
  */
 (function (global) {
     'use strict';
 
-    const STEPS = [
-        {
-            en: 'Open the scholarship program, click <strong>Apply Now</strong>, and complete all sections of the application form. Upload clear <strong>PDF copies</strong> of all required documents (maximum 5MB per file).',
-            tl: 'Buksan ang scholarship program, i-click ang <strong>Apply Now</strong>, at kumpletuhin ang lahat ng seksyon ng application form. I-upload ang malinaw na <strong>PDF copies</strong> ng lahat ng kinakailangang dokumento (maximum 5MB bawat file).',
-        },
-        {
-            en: 'Review your personal information, educational background, background information, and uploaded requirements. Make sure all entries match your KK Profiling record and supporting documents.',
-            tl: 'Suriin ang inyong personal na impormasyon, educational background, background information, at mga na-upload na requirements. Siguraduhing tumutugma ang lahat ng impormasyon sa inyong KK Profiling record at mga supporting documents.',
-        },
-        {
-            en: 'On the <strong>Review &amp; Confirm</strong> step, check all confirmation boxes and submit your application. Wait for SK Officials to verify your requirements and application details.',
-            tl: 'Sa <strong>Review &amp; Confirm</strong> step, lagyan ng check ang lahat ng confirmation boxes at isumite ang inyong aplikasyon. Maghintay habang bineberipika ng SK Officials ang inyong mga requirements at detalye ng aplikasyon.',
-        },
-        {
-            en: 'Once your application and requirements are verified, monitor your application status on the portal. You may view your submitted application from the Scholarship Application page.',
-            tl: 'Kapag na-verify na ang inyong aplikasyon at mga requirements, subaybayan ang status ng aplikasyon sa portal. Maaari ninyong tingnan ang inyong naisumiteng aplikasyon sa Scholarship Application page.',
-        },
-        {
-            en: 'Wait for announcements regarding scholarship evaluation results and release schedules. Stay updated by checking the <strong>SK Community Feed</strong> and announcements from your barangay SK.',
-            tl: 'Maghintay ng mga anunsyo ukol sa resulta ng scholarship evaluation at iskedyul ng pagkuha. Manatiling updated sa pamamagitan ng <strong>SK Community Feed</strong> at mga anunsyo mula sa inyong barangay SK.',
-        },
-    ];
-
     let modalEl = null;
     let isMaximized = false;
-    let activeSteps = STEPS;
+    let activeSteps = [];
 
     function escapeHtml(value) {
         return String(value ?? '')
@@ -171,7 +148,7 @@
         modalEl.hidden = true;
         modalEl.classList.remove('modal-maximized');
         isMaximized = false;
-        activeSteps = STEPS;
+        activeSteps = [];
         document.body.style.overflow = '';
         document.removeEventListener('keydown', onKeyDown);
     }
@@ -202,7 +179,6 @@
     }
 
     global.ScholarshipQuickGuidelines = {
-        STEPS,
         open,
         close,
         setSteps,

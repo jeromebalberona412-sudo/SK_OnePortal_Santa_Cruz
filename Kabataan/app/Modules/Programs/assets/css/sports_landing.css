@@ -89,12 +89,18 @@
     margin-bottom: 0;
 }
 
+.sports-program-card__body {
+    padding: 20px 24px 24px;
+}
+
 .sports-program-card__head {
     display: flex;
     justify-content: space-between;
     gap: 12px;
     align-items: flex-start;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e2e8f0;
 }
 
 .sports-program-sport-badge {
@@ -128,6 +134,14 @@
 .sports-program-questions h4 {
     margin: 0 0 8px;
     font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.sports-program-questions {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
 }
 
 .sports-question-preview {
@@ -144,6 +158,97 @@
 
 .sports-program-card__actions {
     margin-top: 16px;
+}
+
+.sports-program-card__title-wrap {
+    min-width: 0;
+}
+
+.sports-program-card__subtitle {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.sports-card-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin: 14px 0;
+}
+
+.sports-card-meta-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.sports-card-meta-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+    margin-bottom: 4px;
+}
+
+.sports-card-meta-value {
+    display: block;
+    font-size: 14px;
+    color: #0f172a;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.sports-card-announcement-box {
+    margin: 12px 0;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    color: #0f172a;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.sports-card-eligibility {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #fff7ed;
+    border: 1px solid #fdba74;
+    color: #9a3412;
+    font-size: 13px;
+}
+
+.sports-card-eligibility--ok {
+    background: #ecfdf5;
+    border-color: #86efac;
+    color: #166534;
+}
+
+.sports-card-eligibility--closed {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #475569;
+}
+
+.sports-question-preview li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: baseline;
+    margin-bottom: 8px;
+}
+
+.sports-question-type {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
 }
 
 .sports-apply-btn.is-disabled {

@@ -299,7 +299,7 @@ body.kabataan-has-view-only-banner {
     align-items: center;
     gap: 12px;
     padding: 16px;
-    background: linear-gradient(135deg, #2c2c3e 0%, #3a3a4a 100%);
+    background: linear-gradient(135deg, var(--kab-brand-dark) 0%, var(--kab-brand-mid) 60%, var(--kab-brand-light) 100%);
 }
 
 .kabataan-header__dropdown-avatar {

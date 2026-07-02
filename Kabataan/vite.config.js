@@ -65,6 +65,8 @@ export default defineConfig({
         'app/Modules/Programs/assets/js/kabataan-programs.js',
                 'app/Modules/Programs/assets/js/program_survey_landing.js',
                 'app/Modules/Programs/assets/js/program_survey_form.js',
+                'app/Modules/Programs/assets/js/program_evaluation_form.js',
+                'app/Modules/Programs/assets/js/program-evaluation-prompt.js',
 
                 // Profile
                 'app/Modules/Profile/assets/css/profile.css',

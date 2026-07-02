@@ -60,7 +60,7 @@
             </div>
         </div>
 
-        <div class="sl-card sl-card-history sports-applications-history-section">
+        <div class="sl-card sl-card-history sports-applications-history-section" hidden>
             <div class="sl-card-header">
                 <h2 class="sl-card-title">My Sports Applications</h2>
                 <p class="sl-card-subtitle">All sports you have previously applied for, grouped by year and sport type.</p>
@@ -82,6 +82,7 @@
     <script>
         window.__scheduleProgramId = @json($scheduleProgramId);
         window.__kkFieldLabels = @json($kkFieldLabels);
+        window.__kabataanPrograms = @json($programsPayload ?? ['abyip_programs' => [], 'schedule_programs' => [], 'pending_evaluations' => []]);
     </script>
     <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>

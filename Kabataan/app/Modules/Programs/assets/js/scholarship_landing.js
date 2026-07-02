@@ -190,13 +190,22 @@
         };
     }
 
+    function setApplicationsHistoryVisibility(hasApplications) {
+        const historyCard = document.getElementById('scholarshipApplicationsHistory')
+            || document.querySelector('.sl-card-history');
+        if (historyCard) {
+            historyCard.hidden = !hasApplications;
+        }
+    }
+
     function renderPreviousApplications(applications) {
         if (!previousApplicationsTable) return;
 
         currentApplications = applications;
+        setApplicationsHistoryVisibility(applications.length > 0);
 
         if (!applications.length) {
-            previousApplicationsTable.innerHTML = '<tr class="sl-empty-row"><td colspan="4">No previous applications found.</td></tr>';
+            previousApplicationsTable.innerHTML = '';
             updateStartButton(applications);
             return;
         }

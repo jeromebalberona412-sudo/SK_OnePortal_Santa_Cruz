@@ -189,6 +189,19 @@
         renderFilteredHistory();
     }
 
+    function updateHistorySectionVisibility(applications) {
+        const hasApplications = Array.isArray(applications) && applications.length > 0;
+        const historySection = document.querySelector('.sports-applications-history-section');
+        const toolbar = document.getElementById('sportsHistoryToolbar');
+
+        if (historySection) {
+            historySection.hidden = !hasApplications;
+        }
+        if (toolbar) {
+            toolbar.hidden = !hasApplications;
+        }
+    }
+
     function populateYearFilter(applications) {
         const select = document.getElementById('sportsHistoryYearFilter');
         const toolbar = document.getElementById('sportsHistoryToolbar');
@@ -209,6 +222,7 @@
         if (toolbar) {
             toolbar.hidden = applications.length === 0;
         }
+        updateHistorySectionVisibility(applications);
     }
 
     function renderFilteredHistory() {

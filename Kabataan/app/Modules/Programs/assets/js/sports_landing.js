@@ -118,34 +118,59 @@
             const sportLabel = resolveSportLabel(schedule);
             const questions = Array.isArray(schedule.custom_questions) ? schedule.custom_questions : [];
             const questionList = questions.length
-                ? `<ul class="sports-question-preview">${questions.map((q, i) => `<li>${i + 1}. ${escapeHtml(q.label || 'Question')}${q.required ? ' *' : ''}</li>`).join('')}</ul>`
+                ? `<ul class="sports-question-preview">${questions.map((q, i) => {
+                    const typeLabel = q.type === 'file' ? 'PDF upload' : 'Short answer';
+                    return `<li><span class="sports-question-index">${i + 1}.</span> <span class="sports-question-label">${escapeHtml(q.label || 'Question')}${q.required ? ' <span class="sch-program-required">*</span>' : ''}</span> <span class="sports-question-type">${typeLabel}</span></li>`;
+                }).join('')}</ul>`
                 : '<p class="sports-no-questions">No custom questions configured.</p>';
 
-            let actionHtml = '';
-            const canApply = schedule.can_apply !== false;
-            const openAndEligible = schedule.status === 'open' && canApply;
-            actionHtml = `<a href="/sports/apply/form?schedule=${encodeURIComponent(schedule.id)}" class="sl-btn sl-btn-primary sports-apply-btn ${openAndEligible ? '' : 'is-disabled'}" ${!openAndEligible ? 'aria-disabled="true" onclick="return false;"' : ''}>${!canApply ? 'Not Eligible' : (schedule.status !== 'open' ? 'Closed' : 'Apply Now')}</a>`;
+            const applyState = (function () {
+                if (schedule.has_applied) {
+                    return { label: 'View My Application', enabled: true, kind: 'view' };
+                }
+                if (schedule.status !== 'open') {
+                    return { label: 'Closed', enabled: false, kind: 'closed' };
+                }
+                if (schedule.can_apply === false) {
+                    return { label: 'Not Eligible', enabled: false, kind: 'ineligible' };
+                }
+                return { label: 'Apply Now', enabled: true, kind: 'apply' };
+            })();
+            const statusLabel = schedule.has_applied
+                ? `Applied — ${schedule.application_status || 'pending'}`
+                : (schedule.status === 'open' ? 'Open' : 'Closed');
+            const statusClass = schedule.status === 'open' && !schedule.has_applied ? 'sl-status-open' : 'sl-status-closed';
+            const periodStart = schedule.start_date_display || '—';
+            const periodEnd = schedule.end_date_display || '—';
+            const actionHtml = applyState.kind === 'view'
+                ? `<a href="/sports/apply/form?schedule=${encodeURIComponent(schedule.id)}" class="sl-btn sl-btn-primary sports-apply-btn">${applyState.label}</a>`
+                : `<a href="${applyState.enabled ? `/sports/apply/form?schedule=${encodeURIComponent(schedule.id)}` : '#'}" class="sl-btn sl-btn-primary sports-apply-btn ${applyState.enabled ? '' : 'is-disabled'}" ${!applyState.enabled ? 'aria-disabled="true" onclick="return false;"' : ''} title="${!applyState.enabled ? escapeHtml(schedule.eligibility_message || applyState.label) : ''}">${applyState.label}</a>`;
 
             return `
                 <div class="sl-card sports-program-card">
-                    <div class="sports-program-card__head">
-                        <div>
-                            <span class="sports-program-sport-badge">${escapeHtml(sportLabel)}</span>
-                            <h3 class="sports-program-card__title">${escapeHtml(schedule.program_name || 'Sports Program')}</h3>
+                    <div class="sports-program-card__body">
+                        <div class="sports-program-card__head">
+                            <div class="sports-program-card__title-wrap">
+                                <span class="sports-program-sport-badge">Sports Development</span>
+                                <h3 class="sports-program-card__title">${escapeHtml(sportLabel)}</h3>
+                            </div>
+                            <span class="sl-status-badge ${statusClass}">${escapeHtml(statusLabel)}</span>
                         </div>
-                        <span class="sl-status-badge ${schedule.status === 'open' ? 'sl-status-open' : 'sl-status-closed'}">${schedule.status === 'open' ? 'Open' : 'Closed'}</span>
+                        <div class="sports-card-meta-grid">
+                            <div class="sports-card-meta-item"><span class="sports-card-meta-label">Period</span><span class="sports-card-meta-value">${escapeHtml(periodStart)} – ${escapeHtml(periodEnd)}</span></div>
+                            <div class="sports-card-meta-item"><span class="sports-card-meta-label">Committee</span><span class="sports-card-meta-value">${escapeHtml(schedule.committee || '—')}</span></div>
+                            <div class="sports-card-meta-item"><span class="sports-card-meta-label">Slots</span><span class="sports-card-meta-value">${escapeHtml(String(schedule.available_slots ?? schedule.participation_quantity ?? '—'))}</span></div>
+                        </div>
+                        ${schedule.announcement ? `<div class="sports-card-announcement-box">${escapeHtml(schedule.announcement)}</div>` : ''}
+                        ${!applyState.enabled && schedule.eligibility_message ? `<p class="sports-card-eligibility ${applyState.kind === 'closed' ? 'sports-card-eligibility--closed' : ''}">${escapeHtml(schedule.eligibility_message)}</p>` : ''}
+                        <div class="sports-program-questions">
+                            <h4>Application Questions</h4>
+                            ${questionList}
+                        </div>
+                        <div class="sports-program-card__actions">
+                            ${actionHtml}
+                        </div>
                     </div>
-                    <div class="sports-program-card__meta">
-                        <p><strong>Period:</strong> ${escapeHtml(schedule.start_date_display || '—')} – ${escapeHtml(schedule.end_date_display || '—')}</p>
-                        <p><strong>Committee:</strong> ${escapeHtml(schedule.committee || '—')}</p>
-                        <p><strong>Slots:</strong> ${escapeHtml(String(schedule.available_slots ?? schedule.participation_quantity ?? '—'))}</p>
-                    </div>
-                    ${schedule.announcement ? `<p class="sports-program-announcement">${escapeHtml(schedule.announcement)}</p>` : ''}
-                    <div class="sports-program-questions">
-                        <h4>Application Questions</h4>
-                        ${questionList}
-                    </div>
-                    <div class="sports-program-card__actions">${actionHtml}</div>
                 </div>`;
         }).join('');
     }

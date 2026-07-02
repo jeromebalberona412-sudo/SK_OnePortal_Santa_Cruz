@@ -5,7 +5,9 @@
     const NAME_PATTERN = /^(?!\s)[A-Za-z.\-\s]+$/;
     const CONTACT_PATTERN = /^09\d{9}$/;
 
-    const YEAR_LEVEL_OPTIONS = ['Grade 11', 'Grade 12', '1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year', 'Other'];
+    const YEAR_LEVEL_HS = ['Grade 11', 'Grade 12', 'Other'];
+    const YEAR_LEVEL_COLLEGE = ['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year', 'Other'];
+    const YEAR_LEVEL_VOCATIONAL = ['1st Year', '2nd Year', 'Other'];
     const GRADUATING_OPTIONS = ['Yes', 'No'];
     const SEMESTER_OPTIONS = ['1st Semester', '2nd Semester', 'N/A'];
 
@@ -24,6 +26,17 @@
     const SCHOOL_TEXT_MAX = 100;
     const UNITS_ENROLLED_MAX = 100;
     const NAME_MAX_LENGTH = 50;
+    const STRAND_MAX_LENGTH = 100;
+    const STRAND_ABBREVIATION_MAX_LENGTH = 50;
+    const NAME_NO_SPACE_FIELD_IDS = new Set([
+        'mother_middle_name', 'father_middle_name', 'guardian_middle_name',
+        'mother_last_name', 'father_last_name', 'guardian_last_name',
+    ]);
+    const FIRST_NAME_FIELD_IDS = new Set([
+        'mother_first_name', 'father_first_name', 'guardian_first_name',
+    ]);
+    const NAME_NO_SPACE_PATTERN = /^[A-Za-z.\-]+$/;
+    const FIRST_NAME_PATTERN = /^(?!\s)[A-Za-z.\-]+(\s[A-Za-z.\-]+)*$/;
     const OCCUPATION_OTHER_VALUE = 'Other Occupation';
     const OCCUPATION_OTHER_MIN = 3;
     const OCCUPATION_OTHER_MAX = 100;
@@ -146,6 +159,25 @@
         currentYear: new Date().getFullYear(),
     };
 
+    let programContext = {
+        semester: '',
+    };
+
+    function setProgramContext(program = {}) {
+        const details = program?.scholarship_details || {};
+        programContext = {
+            semester: String(details.semester || '').trim(),
+        };
+    }
+
+    function getYearLevelOptions(education) {
+        const edu = normalizeEducation(education);
+        if (edu === 'High School Level') return YEAR_LEVEL_HS;
+        if (edu === 'College Level' || edu === 'College Grad') return YEAR_LEVEL_COLLEGE;
+        if (edu === 'Vocational Grad') return YEAR_LEVEL_VOCATIONAL;
+        return [];
+    }
+
     function setApplicantContext(profile = {}) {
         const currentYear = new Date().getFullYear();
         let birthYear = null;
@@ -248,6 +280,19 @@
             return;
         }
 
+        if (field.id === 'strand_abbreviation') {
+            el.value = String(el.value || '').replace(/\s/g, '').slice(0, STRAND_ABBREVIATION_MAX_LENGTH);
+            return;
+        }
+
+        if (field.type === 'name') {
+            if (NAME_NO_SPACE_FIELD_IDS.has(field.id)) {
+                el.value = String(el.value || '').replace(/\s/g, '');
+            } else if (FIRST_NAME_FIELD_IDS.has(field.id)) {
+                el.value = String(el.value || '').replace(/^\s+/, '');
+            }
+        }
+
         const maxLen = getFieldMaxLength(field);
         if (maxLen && el.value.length > maxLen) {
             el.value = el.value.slice(0, maxLen);
@@ -316,11 +361,11 @@
             title: 'Additional Information',
             locked: true,
             fields: [
-                { id: 'strand', label: 'Strand', type: 'text', required: true, showWhenEducation: ['High School Level', ...STRAND_COLLEGE_TRACK] },
-                { id: 'strand_abbreviation', label: 'Strand / Course Abbreviation', type: 'text', required: true, showWhenEducation: STRAND_COLLEGE_TRACK },
-                { id: 'year_level', label: 'Year Level (based on required/attached Registration Form)', type: 'select', required: true, options: YEAR_LEVEL_OPTIONS, showWhenEducation: ['High School Level', 'College Level', 'College Grad', 'Vocational Grad'] },
-                { id: 'units_enrolled', label: 'Units Enrolled (based on required/attached Registration Form)', type: 'number', required: true, showWhenEducation: ['High School Level', 'College Level', 'College Grad', 'Vocational Grad'] },
-                { id: 'expected_graduation_year', label: 'Expected Year of Graduation', type: 'year', required: true, showWhenEducation: ['High School Level', 'College Level', 'College Grad', 'Vocational Grad'] },
+                { id: 'strand', label: 'Strand', type: 'text', required: true, maxLength: STRAND_MAX_LENGTH, showWhenEducation: ['High School Level', ...STRAND_COLLEGE_TRACK] },
+                { id: 'strand_abbreviation', label: 'Strand / Course Abbreviation', type: 'text', required: true, maxLength: STRAND_ABBREVIATION_MAX_LENGTH, showWhenEducation: STRAND_COLLEGE_TRACK },
+                { id: 'year_level', label: 'Year Level', type: 'select', required: true, showWhenEducation: ['High School Level', 'College Level', 'College Grad', 'Vocational Grad'] },
+                { id: 'units_enrolled', label: 'Units Enrolled', type: 'number', required: true, showWhenEducation: ['High School Level', 'College Level', 'College Grad', 'Vocational Grad'] },
+                { id: 'expected_graduation_year', label: 'Expected Year of Graduation', type: 'year', required: true, showWhenField: 'graduating', showWhenValue: 'Yes', showWhenEducation: ['High School Level', 'College Level', 'College Grad', 'Vocational Grad'] },
                 { id: 'graduating', label: 'Graduating?', type: 'radio', required: true, options: GRADUATING_OPTIONS, showWhenEducation: ['High School Level', 'College Level', 'College Grad', 'Vocational Grad'] },
                 { id: 'semester_of_graduation', label: 'Semester of Graduation', type: 'select', required: true, options: SEMESTER_OPTIONS, showWhenField: 'graduating', showWhenValue: 'Yes', showWhenEducation: ['High School Level', 'College Level', 'College Grad', 'Vocational Grad'] },
                 { id: 'school_name', label: 'School Name', type: 'text', required: true, showWhenEducation: ['High School Level', 'College Level', 'College Grad', 'Vocational Grad'] },
@@ -399,6 +444,10 @@
         const education = normalizeEducation(kkEducation);
         if (field.id === 'strand' && STRAND_COLLEGE_TRACK.includes(education)) {
             return 'Strand / Course';
+        }
+        if (field.id === 'units_enrolled') {
+            const semester = programContext.semester;
+            return semester ? `Units Enrolled (${semester})` : 'Units Enrolled';
         }
         return field.label;
     }
@@ -485,9 +534,26 @@
     }
 
     function validateName(value, required) {
+        return validateNameField('', value, required);
+    }
+
+    function validateNameField(fieldId, value, required) {
         const trimmed = String(value || '').trim();
         if (!trimmed) return required ? 'This field is required.' : '';
-        if (trimmed.length < 3 || trimmed.length > 50) return 'Must be 3–50 characters.';
+        if (trimmed.length < 3) return 'Must be at least 3 characters.';
+        if (trimmed.length > NAME_MAX_LENGTH) return `Must not exceed ${NAME_MAX_LENGTH} characters.`;
+
+        if (fieldId && NAME_NO_SPACE_FIELD_IDS.has(fieldId)) {
+            if (/\s/.test(trimmed)) return 'Spaces are not allowed.';
+            if (!NAME_NO_SPACE_PATTERN.test(trimmed)) return 'Letters, periods, and hyphens only.';
+            return '';
+        }
+
+        if (fieldId && FIRST_NAME_FIELD_IDS.has(fieldId)) {
+            if (!FIRST_NAME_PATTERN.test(trimmed)) return 'Cannot start with a space. Use letters, periods, and hyphens only.';
+            return '';
+        }
+
         if (!NAME_PATTERN.test(trimmed)) return 'Letters, spaces, periods, and hyphens only.';
         return '';
     }
@@ -543,7 +609,7 @@
                 field.maxLength || SCHOOL_TEXT_MAX,
             );
         }
-        if (field.type === 'name') return validateName(value, field.required);
+        if (field.type === 'name') return validateNameField(field.id, value, field.required);
         if (field.type === 'suffix') return validateSuffix(value);
         if (field.type === 'suffix_select') {
             if (field.required && !String(value || '').trim()) return `${field.label} is required.`;
@@ -552,6 +618,37 @@
         if (field.type === 'suffix_other') return validateSuffixOther(value, field.required);
         if (field.type === 'contact') return validateContact(value, field.required);
         if (field.type === 'currency') return validateCurrency(value, field.required);
+        if (field.id === 'strand') {
+            const trimmed = String(value || '').trim();
+            if (!trimmed && field.required) return `${field.label} is required.`;
+            if (trimmed.length > STRAND_MAX_LENGTH) return `${field.label} must not exceed ${STRAND_MAX_LENGTH} characters.`;
+            return '';
+        }
+        if (field.id === 'strand_abbreviation') {
+            const trimmed = String(value || '').trim();
+            if (!trimmed && field.required) return `${field.label} is required.`;
+            if (/\s/.test(trimmed)) return 'Spaces are not allowed.';
+            if (trimmed.length > STRAND_ABBREVIATION_MAX_LENGTH) {
+                return `${field.label} must not exceed ${STRAND_ABBREVIATION_MAX_LENGTH} characters.`;
+            }
+            return '';
+        }
+        if (field.id === 'school_address') {
+            const raw = String(value || '');
+            const trimmed = raw.trim();
+            if (!trimmed && field.required) return `${field.label} is required.`;
+            if (raw && !trimmed) return `${field.label} cannot be spaces only.`;
+            return '';
+        }
+        if (field.id === 'year_level') {
+            const trimmed = String(value || '').trim();
+            if (!trimmed && field.required) return `${field.label} is required.`;
+            const options = getYearLevelOptions(values._kk_education || '');
+            if (trimmed && options.length && !options.includes(trimmed)) {
+                return `Please select a valid ${field.label}.`;
+            }
+            return '';
+        }
         if (field.maxLength && !field.minLength && field.type === 'text') {
             const trimmed = String(value || '').trim();
             if (!trimmed && field.required) {
@@ -657,13 +754,17 @@
         }
 
         if (field.type === 'select' || field.type === 'suffix_select') {
+            const selectOptions = field.id === 'year_level'
+                ? getYearLevelOptions(kkEducation)
+                : (field.options || []);
             return `
                 <div class="gf-form-group schol-system-field-wrap" data-field-wrap="${field.id}" ${hiddenAttr}>
                     <label for="sys_${field.id}">${escapeHtml(fieldLabel)}${reqMark}</label>
                     <select class="gf-input schol-system-input" name="${field.id}" id="sys_${field.id}" data-system-field="${field.id}" ${required ? 'required' : ''}>
                         <option value="">Select...</option>
-                        ${(field.options || []).map((opt) => `<option value="${escapeHtml(opt)}" ${value === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
+                        ${selectOptions.map((opt) => `<option value="${escapeHtml(opt)}" ${value === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
                     </select>
+                    <p class="sch-field-inline-error" hidden></p>
                 </div>`;
         }
 
@@ -714,7 +815,9 @@
             <div class="gf-form-group schol-system-field-wrap" data-field-wrap="${field.id}" ${hiddenAttr}>
                 <label for="sys_${field.id}">${escapeHtml(fieldLabel)}${reqMark}</label>
                 <input class="${inputClass}" type="${inputType}" name="${field.id}" id="sys_${field.id}" data-system-field="${field.id}" data-field-type="${field.type}" value="${displayValue}" ${required ? 'required' : ''} ${extraAttrs} ${lengthAttrs} autocomplete="off">
-                ${field.type === 'name' ? `<span class="sch-field-hint">3–${NAME_MAX_LENGTH} characters</span>` : ''}
+                ${field.type === 'name' ? `<span class="sch-field-hint">3–${NAME_MAX_LENGTH} characters, no leading spaces</span>` : ''}
+                ${field.id === 'strand' ? `<span class="sch-field-hint">Maximum ${STRAND_MAX_LENGTH} characters</span>` : ''}
+                ${field.id === 'strand_abbreviation' ? `<span class="sch-field-hint">Maximum ${STRAND_ABBREVIATION_MAX_LENGTH} characters, no spaces</span>` : ''}
                 ${field.minLength && field.maxLength ? `<span class="sch-field-hint">${field.minLength}–${field.maxLength} characters</span>` : (field.maxLength ? `<span class="sch-field-hint">Maximum ${field.maxLength} characters</span>` : '')}
                 ${yearHint}
                 <p class="sch-field-inline-error" hidden></p>
@@ -807,7 +910,21 @@
             return;
         }
 
-        showInlineFieldError(wrap, validateField(field, values[field.id], visible, values));
+        const message = validateField(field, values[field.id], visible, values);
+        if (message) {
+            showInlineFieldError(wrap, message);
+            return;
+        }
+
+        const maxLen = field.type === 'contact'
+            ? 11
+            : (field.type === 'year' ? 4 : getFieldMaxLength(field));
+        if (maxLen && String(el.value || '').length >= maxLen) {
+            showInlineFieldError(wrap, `Must not exceed ${maxLen} characters.`);
+            return;
+        }
+
+        showInlineFieldError(wrap, '');
     }
 
     function bindApplicantEvents(container, kkEducation) {
@@ -835,6 +952,18 @@
             el.addEventListener('keydown', (event) => {
                 const field = getAllFields().find((item) => item.id === el.name);
                 if (!field) return;
+
+                if (event.key === ' ') {
+                    if (field.id === 'strand_abbreviation' || NAME_NO_SPACE_FIELD_IDS.has(field.id)) {
+                        event.preventDefault();
+                        return;
+                    }
+                    if (FIRST_NAME_FIELD_IDS.has(field.id) && el.selectionStart === 0) {
+                        event.preventDefault();
+                        return;
+                    }
+                }
+
                 const maxLen = field.type === 'contact'
                     ? 11
                     : (field.type === 'year' ? 4 : getFieldMaxLength(field));
@@ -843,6 +972,7 @@
                 const selection = el.selectionEnd - el.selectionStart;
                 if (el.value.length - selection >= maxLen) {
                     event.preventDefault();
+                    showInlineFieldError(el.closest('[data-field-wrap]'), `Must not exceed ${maxLen} characters.`);
                 }
             });
             el.addEventListener('blur', runValidation);
@@ -864,8 +994,14 @@
             const visible = isFieldVisible(field, values, kkEducation);
             wrap.hidden = !visible;
             wrap.querySelectorAll('input, select, textarea').forEach((input) => {
-                if (!visible) input.removeAttribute('required');
-                else if (field.required) input.setAttribute('required', 'required');
+                if (!visible) {
+                    input.removeAttribute('required');
+                    if (field.id === 'expected_graduation_year' || field.id === 'semester_of_graduation') {
+                        input.value = '';
+                    }
+                } else if (field.required) {
+                    input.setAttribute('required', 'required');
+                }
             });
         });
 
@@ -874,7 +1010,36 @@
             blockEl.hidden = !isSchoolBlockVisible(blockId, kkEducation);
         });
 
+        refreshYearLevelSelect(container, kkEducation);
+        refreshDynamicFieldLabels(container, kkEducation);
         refreshYearFieldHints(container, kkEducation);
+    }
+
+    function refreshYearLevelSelect(container, kkEducation) {
+        const wrap = container.querySelector('[data-field-wrap="year_level"]');
+        const select = wrap?.querySelector('select[data-system-field="year_level"]');
+        if (!select) return;
+
+        const options = getYearLevelOptions(kkEducation);
+        const currentValue = select.value;
+        select.innerHTML = `<option value="">Select...</option>${options.map((opt) => `<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`).join('')}`;
+        if (currentValue && options.includes(currentValue)) {
+            select.value = currentValue;
+        } else {
+            select.value = '';
+        }
+    }
+
+    function refreshDynamicFieldLabels(container, kkEducation) {
+        const unitsWrap = container.querySelector('[data-field-wrap="units_enrolled"]');
+        const unitsLabel = unitsWrap?.querySelector('label');
+        if (unitsLabel) {
+            const field = getAllFields().find((item) => item.id === 'units_enrolled');
+            if (field) {
+                const required = field.required && isFieldVisible(field, collectAnswers(container, kkEducation), kkEducation);
+                unitsLabel.innerHTML = `${escapeHtml(getFieldDisplayLabel(field, kkEducation))}${required ? ' <span class="gf-req">*</span>' : ''}`;
+            }
+        }
     }
 
     function refreshYearFieldHints(container, kkEducation) {
@@ -921,6 +1086,7 @@
 
         if (values.graduating === 'No') {
             values.semester_of_graduation = 'N/A';
+            values.expected_graduation_year = '';
         }
 
         ['mother', 'father', 'guardian'].forEach((prefix) => {
@@ -1061,6 +1227,8 @@
         getFieldDisplayLabel,
         formatOccupationDisplay,
         resolveOccupationFromValues,
+        setProgramContext,
+        getYearLevelOptions,
         FAMILY_MONTHLY_INCOME_OPTIONS,
         OCCUPATION_OPTIONS,
         OCCUPATION_OTHER_VALUE,

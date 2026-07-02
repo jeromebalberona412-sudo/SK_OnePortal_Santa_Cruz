@@ -19,11 +19,16 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/api/kabataan/programs/survey-responses/{id}', [ProgramController::class, 'showSurveyResponse'])->name('kabataan.programs.survey-responses.show');
     Route::post('/api/kabataan/programs/survey-responses', [ProgramController::class, 'submitSurveyResponse'])->name('kabataan.programs.survey-responses.store');
 
+    Route::get('/api/kabataan/programs/evaluations/{id}', [ProgramController::class, 'showEvaluation'])->name('kabataan.programs.evaluations.show');
+    Route::get('/api/kabataan/programs/evaluations/by-program/{abyipProgramId}', [ProgramController::class, 'showEvaluationByProgram'])->name('kabataan.programs.evaluations.by-program');
+    Route::post('/api/kabataan/programs/evaluation-responses', [ProgramController::class, 'submitEvaluationResponse'])->name('kabataan.programs.evaluation-responses.store');
+
     Route::get('/scholarship/apply', [ProgramController::class, 'scholarshipLanding'])->name('scholarship.apply');
     Route::get('/scholarship/apply/form', [ProgramController::class, 'scholarshipForm'])->name('scholarship.apply.form');
 
     Route::get('/programs/survey', [ProgramController::class, 'surveyLanding'])->name('programs.survey.landing');
     Route::get('/programs/survey/form', [ProgramController::class, 'surveyForm'])->name('programs.survey.form');
+    Route::get('/programs/evaluation/form', [ProgramController::class, 'evaluationForm'])->name('programs.evaluation.form');
 
     Route::get('/sports/apply', [ProgramController::class, 'sportsLanding'])->name('sports.apply');
     Route::get('/sports/apply/form', [ProgramController::class, 'sportsForm'])->name('sports.apply.form');

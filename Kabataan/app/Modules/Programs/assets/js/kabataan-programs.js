@@ -73,6 +73,19 @@
         return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     }
 
+    function getScheduleApplyState(schedule) {
+        if (schedule?.has_applied) {
+            return { label: 'View My Application', enabled: true, kind: 'view' };
+        }
+        if (schedule?.status !== 'open') {
+            return { label: 'Closed', enabled: false, kind: 'closed' };
+        }
+        if (schedule?.can_apply === false) {
+            return { label: 'Not Eligible', enabled: false, kind: 'ineligible' };
+        }
+        return { label: 'Apply Now', enabled: true, kind: 'apply' };
+    }
+
     function formatPeriodRange(period, schedule) {
         if (!period) return '';
         const start = period.start_display || formatIsoDateDisplay(period.start || schedule?.start_date);
@@ -346,6 +359,9 @@
     }
 
     function programCountLabel(program) {
+        if (program.evaluation?.can_respond) return 'Evaluation open';
+        if (program.evaluation?.has_responded) return 'Evaluation submitted';
+
         if (program.type === 'education' || program.type === 'sports') {
             const n = Number(program.schedule_count) || 0;
             if (n === 0) return 'Barangay program';
@@ -362,6 +378,9 @@
     function renderSidebarItem(program) {
         const iconClass = ICON_CLASS[program.category_key] || 'others';
         const svgPath = CATEGORY_SVGS[program.category_key] || CATEGORY_SVGS.others;
+        const evalBtn = program.evaluation?.can_respond
+            ? `<button type="button" class="program-eval-cta" data-eval-program="${program.id}" data-eval-id="${program.evaluation.id}">Evaluate</button>`
+            : '';
         return `
             <div class="program-category" data-category="${escapeHtml(program.category_key)}" data-letter="${escapeHtml(program.letter)}" style="cursor:pointer;">
                 <div class="category-icon ${iconClass}">
@@ -371,6 +390,7 @@
                     <h3>${escapeHtml(program.title)}</h3>
                     <p>${programCountLabel(program)}</p>
                 </div>
+                ${evalBtn}
                 <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
                 </svg>
@@ -401,6 +421,12 @@
                     const letter = item.getAttribute('data-letter');
                     const program = programs.find((p) => p.letter === letter);
                     if (program) openProgramModal(program);
+                });
+            });
+            container.querySelectorAll('.program-eval-cta').forEach((button) => {
+                button.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    goToProgramEvaluation(button.getAttribute('data-eval-id'), button.getAttribute('data-eval-program'));
                 });
             });
         });
@@ -609,33 +635,32 @@
 
     function renderSportsScheduleCard(abyipProgram, schedule) {
         const sportLabel = resolveSportLabel(schedule);
+        const applyState = getScheduleApplyState(schedule);
         const statusLabel = schedule.status === 'open' ? 'Open' : 'Closed';
-        const applied = schedule.has_applied;
-        const canApply = schedule.can_apply !== false;
-        const openAndEligible = !applied && schedule.status === 'open' && canApply;
+        const statusClass = schedule.status === 'open' ? 'status-active' : 'status-closed';
         const periodStart = schedule.start_date_display || formatIsoDateDisplay(schedule.start_date) || '—';
         const periodEnd = schedule.end_date_display || formatIsoDateDisplay(schedule.end_date) || '—';
         const slots = schedule.available_slots ?? schedule.participation_quantity ?? '—';
         const matched = schedule.matched_classification;
 
         let actionButton = '';
-        if (applied) {
+        if (applyState.kind === 'view') {
             actionButton = `
-                <button type="button" class="apply-now-button enabled apply-view-btn" data-view-schedule-application="${schedule.id}" data-program-letter="${schedule.program_letter || ''}">
-                    View My Application
+                <button type="button" class="apply-now-button enabled apply-view-btn sports-card-btn" data-view-schedule-application="${schedule.id}" data-program-letter="${schedule.program_letter || ''}">
+                    ${applyState.label}
                 </button>`;
         } else {
             actionButton = `
-                <button type="button" class="apply-now-button ${openAndEligible ? 'enabled' : ''}" data-apply-schedule="${schedule.id}" data-program-letter="${schedule.program_letter || ''}" title="${!canApply ? escapeHtml(schedule.eligibility_message || 'Not eligible for this program') : ''}" ${schedule.status !== 'open' || !canApply ? 'disabled' : ''}>
-                    ${!canApply ? 'Not Eligible' : (schedule.status !== 'open' ? 'Closed' : 'Apply Now')}
+                <button type="button" class="apply-now-button sports-card-btn ${applyState.enabled ? 'enabled' : ''}" data-apply-schedule="${schedule.id}" data-program-letter="${schedule.program_letter || ''}" title="${!applyState.enabled ? escapeHtml(schedule.eligibility_message || applyState.label) : ''}" ${!applyState.enabled ? 'disabled' : ''}>
+                    ${applyState.label}
                 </button>`;
         }
 
         let eligibilityHtml = '';
         if (matched) {
-            eligibilityHtml = `<p class="sports-card-meta"><strong>Your Division:</strong> ${escapeHtml(matched.name)} (Ages ${escapeHtml(String(matched.min_age))}–${escapeHtml(String(matched.max_age))})</p>`;
-        } else if (schedule.eligibility_message) {
-            eligibilityHtml = `<p class="sports-card-eligibility">${escapeHtml(schedule.eligibility_message)}</p>`;
+            eligibilityHtml = `<p class="sports-card-eligibility sports-card-eligibility--ok"><strong>Your Division:</strong> ${escapeHtml(matched.name)} (Ages ${escapeHtml(String(matched.min_age))}–${escapeHtml(String(matched.max_age))})</p>`;
+        } else if (schedule.eligibility_message && applyState.kind !== 'apply' && applyState.kind !== 'view') {
+            eligibilityHtml = `<p class="sports-card-eligibility ${applyState.kind === 'closed' ? 'sports-card-eligibility--closed' : ''}">${escapeHtml(schedule.eligibility_message)}</p>`;
         }
 
         return `
@@ -646,15 +671,17 @@
                             <span class="program-category-tag">${escapeHtml(abyipProgram.short_label || 'Sports Development')}</span>
                             <h3 class="program-card-title">${escapeHtml(sportLabel)}</h3>
                         </div>
-                        <span class="program-status-badge status-active"><span class="status-dot"></span>${escapeHtml(applied ? `Applied — ${(schedule.application_status || 'pending')}` : statusLabel)}</span>
+                        <span class="program-status-badge ${statusClass}"><span class="status-dot"></span>${escapeHtml(schedule.has_applied ? `Applied — ${(schedule.application_status || 'pending')}` : statusLabel)}</span>
                     </div>
                 </div>
                 <div class="sports-program-card__body">
-                    <p class="sports-card-meta"><strong>Period:</strong> ${escapeHtml(periodStart)} – ${escapeHtml(periodEnd)}</p>
-                    <p class="sports-card-meta"><strong>Committee:</strong> ${escapeHtml(schedule.committee || '—')}</p>
-                    <p class="sports-card-meta"><strong>Slots:</strong> ${escapeHtml(String(slots))}</p>
+                    <div class="sports-card-meta-grid">
+                        <div class="sports-card-meta-item"><span class="sports-card-meta-label">Period</span><span class="sports-card-meta-value">${escapeHtml(periodStart)} – ${escapeHtml(periodEnd)}</span></div>
+                        <div class="sports-card-meta-item"><span class="sports-card-meta-label">Committee</span><span class="sports-card-meta-value">${escapeHtml(schedule.committee || '—')}</span></div>
+                        <div class="sports-card-meta-item"><span class="sports-card-meta-label">Slots</span><span class="sports-card-meta-value">${escapeHtml(String(slots))}</span></div>
+                    </div>
                     ${eligibilityHtml}
-                    ${schedule.announcement ? `<p class="sports-card-announcement">${escapeHtml(schedule.announcement)}</p>` : ''}
+                    ${schedule.announcement ? `<div class="sports-card-announcement-box">${escapeHtml(schedule.announcement)}</div>` : ''}
                     ${renderSportsAgeClassifications(schedule)}
                     <div class="sports-card-section">
                         <h4 class="sports-card-section-title">Application Questions</h4>
@@ -667,6 +694,41 @@
             </div>`;
     }
 
+    function renderEvaluationProgramCard(program, gradient) {
+        const evaluation = program.evaluation;
+        if (!evaluation) return '';
+
+        const headerGradient = gradient || EDUCATION_HEADER_GRADIENT;
+        const canRespond = Boolean(evaluation.can_respond);
+        const hasResponded = Boolean(evaluation.has_responded);
+        const actionLabel = hasResponded ? 'Evaluation Submitted' : (canRespond ? 'Start Evaluation' : 'Evaluation Closed');
+
+        return `
+            <div class="modern-program-card sports-evaluation-card" style="margin-top:16px;">
+                <div class="program-card-header" style="background:${headerGradient};">
+                    <div class="program-title-row">
+                        <div>
+                            <span class="program-category-tag">Program Evaluation</span>
+                            <h3 class="program-card-title">${escapeHtml(program.title)}</h3>
+                        </div>
+                        <span class="program-status-badge status-active"><span class="status-dot"></span>${escapeHtml(canRespond ? 'Open' : (hasResponded ? 'Submitted' : 'Closed'))}</span>
+                    </div>
+                </div>
+                <div class="program-description-section">
+                    <p class="description-text">Help your barangay SK improve youth programs and services. Completing this evaluation is highly recommended.</p>
+                    <div class="program-details-grid">
+                        <div class="detail-card"><div class="detail-content"><span class="detail-label">Evaluation Period</span><span class="detail-value">${escapeHtml(evaluation.start_date_display || '—')} – ${escapeHtml(evaluation.end_date_display || '—')}</span></div></div>
+                    </div>
+                    ${evaluation.instructions ? `<p class="description-text" style="margin-top:12px;">${escapeHtml(evaluation.instructions)}</p>` : ''}
+                </div>
+                <div class="program-action">
+                    <button type="button" class="apply-now-button ${canRespond ? 'enabled' : ''}" data-apply-evaluation="${evaluation.id}" ${!canRespond ? 'disabled' : ''}>
+                        ${actionLabel}
+                    </button>
+                </div>
+            </div>`;
+    }
+
     function renderSportsModalBody(program) {
         const modal = document.getElementById('sportsModal');
         const body = modal?.querySelector('.sports-modal-body') || modal?.querySelector('.modal-body');
@@ -674,6 +736,11 @@
 
         const schedules = schedulesForAbyipProgram(program);
         if (!schedules.length) {
+            if (program.evaluation) {
+                body.innerHTML = renderEvaluationProgramCard(program, SPORTS_HEADER_GRADIENT);
+                bindEvaluationCardActions(body);
+                return;
+            }
             body.innerHTML = renderProgramsEmptyState(EMPTY_SCHEDULE_MESSAGE);
             return;
         }
@@ -709,7 +776,11 @@
             container.innerHTML = filtered
                 .map((schedule) => renderSportsScheduleCard(program, schedule))
                 .join('');
+            if (program.evaluation) {
+                container.innerHTML += renderEvaluationProgramCard(program, SPORTS_HEADER_GRADIENT);
+            }
             bindScheduleCardActions(container);
+            bindEvaluationCardActions(container);
         }
 
         tabsEl?.querySelectorAll('[data-sport-tab]').forEach((button) => {
@@ -739,13 +810,21 @@
             body.innerHTML = schedules
                 .map((schedule) => renderScheduleCard(program, schedule, EDUCATION_HEADER_GRADIENT, true))
                 .join('');
+            if (program.evaluation) {
+                body.innerHTML += renderEvaluationProgramCard(program, EDUCATION_HEADER_GRADIENT);
+            }
             bindScheduleCardActions(body);
+            bindEvaluationCardActions(body);
             return;
         }
 
         if (hasSurveyAction) {
             body.innerHTML = renderSurveyProgramCard(program, null, EDUCATION_HEADER_GRADIENT, true);
+            if (program.evaluation) {
+                body.innerHTML += renderEvaluationProgramCard(program, EDUCATION_HEADER_GRADIENT);
+            }
             bindSurveyCardActions(body);
+            bindEvaluationCardActions(body);
             return;
         }
 
@@ -826,6 +905,15 @@
         });
     }
 
+    function bindEvaluationCardActions(container) {
+        container.querySelectorAll('[data-apply-evaluation]').forEach((button) => {
+            button.addEventListener('click', () => {
+                if (button.disabled) return;
+                goToProgramEvaluation(button.getAttribute('data-apply-evaluation'));
+            });
+        });
+    }
+
     function goToProgramSurvey(programId) {
         if (!programId) return;
 
@@ -837,6 +925,24 @@
 
         setTimeout(() => {
             window.location.href = `/programs/survey?program=${encodeURIComponent(programId)}`;
+        }, 650);
+    }
+
+    function goToProgramEvaluation(evaluationId, programId) {
+        if (!evaluationId && programId) {
+            const program = (programsData?.abyip_programs || []).find((item) => String(item.id) === String(programId));
+            evaluationId = program?.evaluation?.id;
+        }
+        if (!evaluationId) return;
+
+        Object.values(MODAL_IDS).forEach((modalId) => {
+            document.getElementById(modalId)?.classList.remove('active');
+        });
+
+        if (typeof showLoading === 'function') showLoading('Opening program evaluation…');
+
+        setTimeout(() => {
+            window.location.href = `/programs/evaluation/form?evaluation=${encodeURIComponent(evaluationId)}`;
         }, 650);
     }
 
@@ -986,21 +1092,19 @@
 
     function renderScheduleCard(abyipProgram, schedule, gradient, hideEmoji = false) {
         const headerGradient = gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        const applyState = getScheduleApplyState(schedule);
         const statusLabel = schedule.status === 'open' ? 'Open' : 'Closed';
-        const applied = schedule.has_applied;
-        const canApply = schedule.can_apply !== false;
-        const openAndEligible = !applied && schedule.status === 'open' && canApply;
+        const statusClass = schedule.status === 'open' ? 'status-active' : 'status-closed';
         const scholarship = isScholarshipSchedule(schedule);
-        const quickGuidelines = scholarship ? resolveScheduleQuickGuidelines(schedule) : [];
         const categoryTag = hideEmoji
             ? escapeHtml(abyipProgram.short_label)
             : `${escapeHtml(abyipProgram.emoji)} ${escapeHtml(abyipProgram.short_label)}`;
-        const statusBadge = applied
+        const statusBadge = schedule.has_applied
             ? `<span class="program-status-badge status-active">Applied — ${escapeHtml((schedule.application_status || 'pending').charAt(0).toUpperCase() + (schedule.application_status || 'pending').slice(1))}</span>`
-            : `<span class="program-status-badge status-active"><span class="status-dot"></span>${escapeHtml(statusLabel)}</span>`;
+            : `<span class="program-status-badge ${statusClass}"><span class="status-dot"></span>${escapeHtml(statusLabel)}</span>`;
 
         let actionButton = '';
-        if (applied) {
+        if (applyState.kind === 'view') {
             const viewLabel = scholarship ? 'View My Scholar Application Form' : 'View My Application';
             actionButton = `
                     <button type="button" class="apply-now-button enabled apply-view-btn" data-view-schedule-application="${schedule.id}" data-program-letter="${schedule.program_letter || ''}">
@@ -1008,8 +1112,8 @@
                     </button>`;
         } else {
             actionButton = `
-                    <button type="button" class="apply-now-button ${openAndEligible ? 'enabled' : ''}" data-apply-schedule="${schedule.id}" data-program-letter="${schedule.program_letter || ''}" title="${!canApply ? escapeHtml(schedule.eligibility_message || 'Not eligible for this program') : ''}" ${schedule.status !== 'open' || !canApply ? 'disabled' : ''}>
-                        ${!canApply ? 'Not Eligible' : 'Apply Now'}
+                    <button type="button" class="apply-now-button ${applyState.enabled ? 'enabled' : ''}" data-apply-schedule="${schedule.id}" data-program-letter="${schedule.program_letter || ''}" title="${!applyState.enabled ? escapeHtml(schedule.eligibility_message || applyState.label) : ''}" ${!applyState.enabled ? 'disabled' : ''}>
+                        ${applyState.label}
                     </button>`;
         }
 
@@ -1198,6 +1302,7 @@
     }
 
     window.goToProgramSurvey = goToProgramSurvey;
+    window.goToProgramEvaluation = goToProgramEvaluation;
 
     window.kabataanPrograms = {
         init,
@@ -1205,6 +1310,7 @@
         schedulesForAbyipProgram,
         goToScheduleApplication,
         goToProgramSurvey,
+        goToProgramEvaluation,
         renderSidebarItem,
         escapeHtml,
     };

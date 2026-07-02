@@ -129,11 +129,20 @@
         startBtn.querySelector('span').textContent = 'Start Survey';
     }
 
+    function setSurveyHistoryVisibility(hasHistory) {
+        const historyCard = document.querySelector('.sl-card-history');
+        if (historyCard) {
+            historyCard.hidden = !hasHistory;
+        }
+    }
+
     function renderHistory(responses) {
         if (!historyTable) return;
 
+        setSurveyHistoryVisibility(responses.length > 0);
+
         if (!responses.length) {
-            historyTable.innerHTML = '<tr class="sl-empty-row"><td colspan="4">No survey responses yet.</td></tr>';
+            historyTable.innerHTML = '';
             return;
         }
 

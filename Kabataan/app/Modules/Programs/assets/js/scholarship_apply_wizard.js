@@ -184,10 +184,6 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
                             <h1 id="schWizardProgramTitle">${escapeHtml(program.program_name || 'Scholarship Application')}</h1>
                             <p class="sch-preview-subtitle">Complete each section below before submitting your application.</p>
                         </div>
-                        <button type="button" class="sch-wizard-qg-link" data-open-sch-quick-guidelines>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                            Quick Guidelines
-                        </button>
                     </div>
                 </div>
                 <div class="sch-preview-layout sch-wizard-layout">
@@ -316,6 +312,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         const SF = global.ScholarshipSystemFields;
         if (!SF) return;
         SF.setApplicantContext?.(program.kk_profile || {});
+        SF.setProgramContext?.(program);
 
         const draft = loadDraft();
         const saved = { ...(draft?.system_field_answers || {}), ...(program.system_field_answers || {}) };
@@ -903,6 +900,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         kkFieldLabels = global.__kkFieldLabels || {};
         uploadedDocuments = { ...(program.uploaded_documents || {}) };
         global.ScholarshipSystemFields?.setApplicantContext?.(program.kk_profile || {});
+        global.ScholarshipSystemFields?.setProgramContext?.(program);
 
         const draft = loadDraft();
         if (draft?.savedAt) draftSavedAt = draft.savedAt;
@@ -927,16 +925,6 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
         renderCustomQuestions();
         bindEvents();
         updateStepUI();
-
-        if (global.ScholarshipQuickGuidelines) {
-            const customSteps = program?.quick_guidelines?.length
-                ? program.quick_guidelines
-                : (program?.scholarship_details?.quick_guidelines || []);
-            if (Array.isArray(customSteps) && customSteps.length) {
-                global.ScholarshipQuickGuidelines.setSteps(customSteps);
-            }
-            global.ScholarshipQuickGuidelines.bindTriggers(shell || document);
-        }
     }
 
     global.ScholarshipApplyWizard = { init };

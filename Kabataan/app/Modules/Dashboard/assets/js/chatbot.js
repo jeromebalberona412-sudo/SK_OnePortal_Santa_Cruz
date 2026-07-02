@@ -11,7 +11,7 @@ const CP_PROFANITY = [
     'pussy', 'whore', 'slut', 'nigger', 'nigga', 'motherfucker', 'bullshit',
 ];
 
-const CP_PROFANITY_REPLY = "Sorry, I don't understand. Please keep our conversation respectful. 😊";
+const CP_PROFANITY_REPLY = "Sorry, I don't understand. Please keep our conversation respectful.";
 
 const CP_REPLIES = [
     {
@@ -20,39 +20,39 @@ const CP_REPLIES = [
     },
     {
         keys: ['scholarship', 'iskolarship', 'scholar', 'tuition', 'education', 'edukasyon'],
-        reply: '🎓 Ang Scholarship Assistance Program ay bukas na! Deadline: March 31, 2026. Pumunta sa Programs sidebar at i-click ang Education para mag-apply.'
+        reply: 'Ang Scholarship Assistance Program ay bukas na! Deadline: March 31, 2026. Pumunta sa Programs sidebar at i-click ang Education para mag-apply.'
     },
     {
         keys: ['event', 'events', 'aktibidad', 'activity', 'activities'],
-        reply: '📅 Mga paparating na events:\n• Community Clean-Up Drive — March 15, 2026\n• Youth Leadership Summit — March 20, 2026\nAbangan ang mga announcements sa feed!'
+        reply: 'Mga paparating na events:\n• Community Clean-Up Drive — March 15, 2026\n• Youth Leadership Summit — March 20, 2026\nAbangan ang mga announcements sa feed!'
     },
     {
         keys: ['apply', 'mag-apply', 'application', 'pano', 'paano', 'how'],
-        reply: '📝 Para mag-apply sa isang programa:\n1. Pumunta sa Programs sidebar\n2. I-click ang kategorya\n3. Basahin ang detalye\n4. I-click ang "Apply Now"\n\nKailangan mo ng valid documents para sa application.'
+        reply: 'Para mag-apply sa isang programa:\n1. Pumunta sa Programs sidebar\n2. I-click ang kategorya\n3. Basahin ang detalye\n4. I-click ang "Apply Now"\n\nKailangan mo ng valid documents para sa application.'
     },
     {
         keys: ['contact', 'kontak', 'sk', 'tanggapan', 'office', 'numero', 'number'],
-        reply: '📞 SK Santa Cruz, Laguna\n📍 Municipal Hall, Santa Cruz, Laguna\n🕐 Lunes–Biyernes, 8AM–5PM\n\nMaaari ka ring mag-message sa aming official Facebook page.'
+        reply: 'SK Santa Cruz, Laguna\nMunicipal Hall, Santa Cruz, Laguna\nLunes–Biyernes, 8AM–5PM\n\nMaaari ka ring mag-message sa aming official Facebook page.'
     },
     {
         keys: ['sports', 'palakasan', 'basketball', 'volleyball', 'sports development'],
-        reply: '🏅 Ang Sports Development program ay naglalayong palakasin ang kabataan sa pamamagitan ng iba\'t ibang palakasan. Abangan ang mga susunod na aktibidad!'
+        reply: 'Ang Sports Development program ay naglalayong palakasin ang kabataan sa pamamagitan ng iba\'t ibang palakasan. Abangan ang mga susunod na aktibidad!'
     },
     {
         keys: ['health', 'kalusugan', 'medical', 'check-up', 'checkup'],
-        reply: '❤️ Ang Health program ay nagbibigay ng libreng medical check-up at health seminars para sa kabataan. Walang aktibong programa ngayon — abangan ang mga updates!'
+        reply: 'Ang Health program ay nagbibigay ng libreng medical check-up at health seminars para sa kabataan. Walang aktibong programa ngayon — abangan ang mga updates!'
     },
     {
         keys: ['anti-drug', 'anti drug', 'droga', 'drugs', 'drug'],
-        reply: '🚫 Ang Anti-Drugs program ay naglalayong turuan ang kabataan tungkol sa mga panganib ng droga. Walang aktibong programa ngayon — abangan ang mga updates!'
+        reply: 'Ang Anti-Drugs program ay naglalayong turuan ang kabataan tungkol sa mga panganib ng droga. Walang aktibong programa ngayon — abangan ang mga updates!'
     },
     {
         keys: ['hello', 'hi', 'kumusta', 'hey', 'uy', 'helo', 'magandang'],
-        reply: 'Kumusta! 😊 Ako si SKai. Maaari akong tumulong sa impormasyon tungkol sa mga programa, events, at serbisyo ng SK Santa Cruz. Ano ang gusto mong malaman?'
+        reply: 'Kumusta! Ako si SKai. Maaari akong tumulong sa impormasyon tungkol sa mga programa, events, at serbisyo ng SK Santa Cruz. Ano ang gusto mong malaman?'
     },
     {
         keys: ['salamat', 'thank', 'thanks', 'maraming salamat'],
-        reply: 'Walang anuman! 😊 Kung may iba ka pang katanungan, nandito lang ako. Mabuhay ang kabataan ng Santa Cruz!'
+        reply: 'Walang anuman! Kung may iba ka pang katanungan, nandito lang ako. Mabuhay ang kabataan ng Santa Cruz!'
     },
     {
         keys: ['register', 'rehistro', 'sign up', 'signup', 'account'],
@@ -64,7 +64,7 @@ const CP_REPLIES = [
     },
 ];
 
-const CP_DEFAULT = 'Pasensya na, hindi ko naintindihan ang iyong tanong. Subukan mong i-click ang isa sa mga quick topics sa itaas, o magtanong tungkol sa mga programa, events, o serbisyo ng SK. 😊';
+const CP_DEFAULT = 'Pasensya na, hindi ko naintindihan ang iyong tanong. Subukan mong i-click ang isa sa mga quick topics sa itaas, o magtanong tungkol sa mga programa, events, o serbisyo ng SK.';
 
 let cpStoredMessages = [];
 

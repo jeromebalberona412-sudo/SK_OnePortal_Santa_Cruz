@@ -329,7 +329,7 @@ class ProgramEvaluationService
         $end = Carbon::parse($endDate)->endOfDay();
 
         if ($now->gt($end)) {
-            return ProgramEvaluation::STATUS_OPEN;
+            return ProgramEvaluation::STATUS_CLOSED;
         }
 
         return ProgramEvaluation::STATUS_OPEN;

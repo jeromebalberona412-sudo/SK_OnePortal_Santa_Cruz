@@ -21,6 +21,7 @@ class KabataanProgramService
     public function __construct(
         private readonly ProgramDocumentService $documentService,
         private readonly KabataanProgramSurveyService $surveyService,
+        private readonly KabataanProgramEvaluationService $evaluationService,
         private readonly ScholarshipSystemFieldsService $scholarshipSystemFields,
         private readonly ProfileImageService $profileImageService,
     ) {}
@@ -134,9 +135,10 @@ class KabataanProgramService
 
             $openSurveyMap = $this->surveyService->summarizeOpenSurveysForPrograms($user, $programIds);
             $latestSurveyMap = $this->surveyService->summarizeLatestSurveysForPrograms($user, $programIds);
+            $openEvaluationMap = $this->evaluationService->summarizeOpenEvaluationsForPrograms($user, $programIds);
 
             $abyipPrograms = $programModels
-                ->map(function (Abyip $program) use ($user, $openSurveyMap, $latestSurveyMap) {
+                ->map(function (Abyip $program) use ($user, $openSurveyMap, $latestSurveyMap, $openEvaluationMap) {
                     $programId = (int) $program->id;
 
                     return $this->formatAbyipProgram(
@@ -144,6 +146,7 @@ class KabataanProgramService
                         $user,
                         $openSurveyMap[$programId] ?? null,
                         $latestSurveyMap[$programId] ?? null,
+                        $openEvaluationMap[$programId] ?? null,
                     );
                 })
                 ->values()
@@ -167,6 +170,7 @@ class KabataanProgramService
             'abyip_programs' => $abyipPrograms,
             'schedule_programs' => $schedulePrograms,
             'has_scholarship_application_history' => $hasScholarshipApplicationHistory,
+            'pending_evaluations' => $this->evaluationService->listPendingEvaluationsForUser($user),
         ];
     }
 
@@ -199,8 +203,12 @@ class KabataanProgramService
         );
 
         $eligibility = $this->evaluateEligibility($user, $program);
-        $formatted['can_apply'] = $eligibility['eligible'];
-        $formatted['eligibility_message'] = $eligibility['message'];
+        $periodOpen = $this->isSchedulePeriodOpen($program);
+        $effectiveOpen = $program->status === ScheduleProgram::STATUS_OPEN && $periodOpen;
+        $formatted['can_apply'] = $eligibility['eligible'] && $effectiveOpen;
+        $formatted['eligibility_message'] = ! $effectiveOpen
+            ? 'Application period has ended.'
+            : $eligibility['message'];
 
         return $formatted;
     }
@@ -309,7 +317,7 @@ class KabataanProgramService
             ]);
         }
 
-        if ($program->status !== ScheduleProgram::STATUS_OPEN) {
+        if ($program->status !== ScheduleProgram::STATUS_OPEN || ! $this->isSchedulePeriodOpen($program)) {
             throw ValidationException::withMessages([
                 'schedule_program_id' => ['This program is no longer accepting applications.'],
             ]);
@@ -454,6 +462,15 @@ class KabataanProgramService
             ->orderByDesc('id');
     }
 
+    private function isSchedulePeriodOpen(ScheduleProgram $program): bool
+    {
+        if ($program->end_date === null) {
+            return true;
+        }
+
+        return ! Carbon::today()->gt($program->end_date->copy()->startOfDay());
+    }
+
     private function findUserApplication(int $userId, int $scheduleProgramId): ?ProgramApplication
     {
         return ProgramApplication::query()
@@ -480,6 +497,7 @@ class KabataanProgramService
         User $user,
         ?array $openSurvey = null,
         ?array $latestSurvey = null,
+        ?array $openEvaluation = null,
     ): array {
         $letter = strtoupper(trim((string) ($program->program_letter ?? $program->code ?? '')));
         $meta = self::LETTER_META[$letter] ?? [
@@ -513,6 +531,10 @@ class KabataanProgramService
             ->when($barangayId !== null, fn ($q) => $q->where('barangay_id', $barangayId))
             ->where('status', ScheduleProgram::STATUS_OPEN)
             ->where('program_type', trim((string) $program->program_name))
+            ->where(function ($query) {
+                $query->whereNull('end_date')
+                    ->orWhereDate('end_date', '>=', Carbon::today());
+            })
             ->count();
 
         if ($openSurvey === null) {
@@ -529,7 +551,10 @@ class KabataanProgramService
         if ($meta['type'] === 'education' || $meta['type'] === 'sports') {
             $activeCount = $scheduleCount;
         } else {
-            $activeCount = $hasSurvey ? 1 : 0;
+            $activeCount = ($hasSurvey && ($openSurvey['can_respond'] ?? false)) ? 1 : 0;
+            if (($openEvaluation['can_respond'] ?? false)) {
+                $activeCount = 1;
+            }
         }
 
         return [
@@ -547,6 +572,8 @@ class KabataanProgramService
             'schedule_count' => $scheduleCount,
             'has_survey' => $hasSurvey,
             'survey' => $surveyForDisplay,
+            'has_evaluation' => $openEvaluation !== null,
+            'evaluation' => $openEvaluation,
         ];
     }
 
@@ -633,6 +660,11 @@ class KabataanProgramService
             }
         }
 
+        $periodOpen = $this->isSchedulePeriodOpen($program);
+        $effectiveStatus = ($program->status === ScheduleProgram::STATUS_OPEN && $periodOpen)
+            ? ScheduleProgram::STATUS_OPEN
+            : ScheduleProgram::STATUS_CLOSED;
+
         $payload = [
             'id' => $program->id,
             'program_type' => $program->program_type,
@@ -646,7 +678,8 @@ class KabataanProgramService
             'start_date_display' => $this->formatDate($program->start_date),
             'end_date' => $program->end_date?->format('Y-m-d'),
             'end_date_display' => $this->formatDate($program->end_date),
-            'status' => $program->status,
+            'status' => $effectiveStatus,
+            'is_period_open' => $periodOpen,
             'announcement' => $program->announcement,
             'scholarship_details' => $scholarshipDetails !== [] ? $scholarshipDetails : $program->scholarship_details,
             'sports_details' => $program->sports_details,
@@ -661,8 +694,10 @@ class KabataanProgramService
         ];
 
         $eligibility = $this->evaluateEligibility($user, $program);
-        $payload['can_apply'] = $eligibility['eligible'];
-        $payload['eligibility_message'] = $eligibility['message'];
+        $payload['can_apply'] = $eligibility['eligible'] && $effectiveStatus === ScheduleProgram::STATUS_OPEN;
+        $payload['eligibility_message'] = $effectiveStatus !== ScheduleProgram::STATUS_OPEN
+            ? 'Application period has ended.'
+            : $eligibility['message'];
 
         if (strtoupper((string) $program->program_letter) === 'I') {
             $payload['eligible_classifications'] = $eligibility['eligible_classifications'] ?? [];

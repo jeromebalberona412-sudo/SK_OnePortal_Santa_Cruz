@@ -9,6 +9,36 @@ class ScholarshipSystemFieldsService
 {
     private const NAME_REGEX = '/^(?!\s)[A-Za-z.\-\s]+$/';
 
+    private const NAME_NO_SPACE_REGEX = '/^[A-Za-z.\-]+$/';
+
+    private const FIRST_NAME_REGEX = '/^(?!\s)[A-Za-z.\-]+(\s[A-Za-z.\-]+)*$/';
+
+    /** @var list<string> */
+    private const NAME_NO_SPACE_FIELDS = [
+        'mother_middle_name', 'father_middle_name', 'guardian_middle_name',
+        'mother_last_name', 'father_last_name', 'guardian_last_name',
+    ];
+
+    /** @var list<string> */
+    private const FIRST_NAME_FIELDS = [
+        'mother_first_name', 'father_first_name', 'guardian_first_name',
+    ];
+
+    private const NAME_MAX_LENGTH = 50;
+
+    private const STRAND_MAX_LENGTH = 100;
+
+    private const STRAND_ABBREVIATION_MAX_LENGTH = 50;
+
+    /** @var list<string> */
+    private const YEAR_LEVEL_HS = ['Grade 11', 'Grade 12', 'Other'];
+
+    /** @var list<string> */
+    private const YEAR_LEVEL_COLLEGE = ['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year', 'Other'];
+
+    /** @var list<string> */
+    private const YEAR_LEVEL_VOCATIONAL = ['1st Year', '2nd Year', 'Other'];
+
     private const CONTACT_REGEX = '/^09\d{9}$/';
 
     private const SCHOOL_TEXT_MIN = 20;
@@ -70,16 +100,19 @@ class ScholarshipSystemFieldsService
             ['id' => 'senior_high_address', 'label' => 'School Address', 'type' => 'text', 'required' => true, 'section' => 'educational_background'],
             ['id' => 'senior_high_year_graduated', 'label' => 'Year Graduated', 'type' => 'year', 'required' => true, 'section' => 'educational_background'],
             ['id' => 'mother_first_name', 'label' => "Mother's First Name", 'type' => 'name', 'required' => true, 'section' => 'background_information'],
+            ['id' => 'mother_middle_name', 'label' => "Mother's Middle Name", 'type' => 'name', 'required' => false, 'section' => 'background_information'],
             ['id' => 'mother_last_name', 'label' => "Mother's Last Name", 'type' => 'name', 'required' => true, 'section' => 'background_information'],
             ['id' => 'mother_occupation', 'label' => "Mother's Occupation", 'type' => 'select', 'required' => true, 'section' => 'background_information'],
             ['id' => 'mother_occupation_other', 'label' => "Mother's Other Occupation", 'type' => 'text', 'required' => true, 'section' => 'background_information'],
             ['id' => 'mother_contact_number', 'label' => "Mother's Contact No.", 'type' => 'contact', 'required' => true, 'section' => 'background_information'],
             ['id' => 'father_first_name', 'label' => "Father's First Name", 'type' => 'name', 'required' => true, 'section' => 'background_information'],
+            ['id' => 'father_middle_name', 'label' => "Father's Middle Name", 'type' => 'name', 'required' => false, 'section' => 'background_information'],
             ['id' => 'father_last_name', 'label' => "Father's Last Name", 'type' => 'name', 'required' => true, 'section' => 'background_information'],
             ['id' => 'father_occupation', 'label' => "Father's Occupation", 'type' => 'select', 'required' => true, 'section' => 'background_information'],
             ['id' => 'father_occupation_other', 'label' => "Father's Other Occupation", 'type' => 'text', 'required' => true, 'section' => 'background_information'],
             ['id' => 'father_contact_number', 'label' => "Father's Contact No.", 'type' => 'contact', 'required' => true, 'section' => 'background_information'],
             ['id' => 'guardian_first_name', 'label' => "Guardian's First Name", 'type' => 'name', 'required' => false, 'section' => 'background_information'],
+            ['id' => 'guardian_middle_name', 'label' => "Guardian's Middle Name", 'type' => 'name', 'required' => false, 'section' => 'background_information'],
             ['id' => 'guardian_last_name', 'label' => "Guardian's Last Name", 'type' => 'name', 'required' => false, 'section' => 'background_information'],
             ['id' => 'guardian_occupation', 'label' => "Guardian's Occupation", 'type' => 'select', 'required' => false, 'section' => 'background_information'],
             ['id' => 'guardian_occupation_other', 'label' => "Guardian's Other Occupation", 'type' => 'text', 'required' => true, 'section' => 'background_information'],
@@ -139,6 +172,7 @@ class ScholarshipSystemFieldsService
 
         if (($normalized['graduating'] ?? '') !== 'Yes') {
             $normalized['semester_of_graduation'] = 'N/A';
+            $normalized['expected_graduation_year'] = '';
         }
 
         if (($normalized['receiving_gov_aid'] ?? '') !== 'Yes') {
@@ -209,11 +243,17 @@ class ScholarshipSystemFieldsService
         ];
 
         if (in_array($fieldId, $additionalIds, true)) {
-            return in_array($education, self::ADDITIONAL_EDUCATION, true);
+            if (! in_array($education, self::ADDITIONAL_EDUCATION, true)) {
+                return false;
+            }
         }
 
         if ($fieldId === 'strand_abbreviation') {
             return in_array($education, self::STRAND_COLLEGE_TRACK, true);
+        }
+
+        if ($fieldId === 'expected_graduation_year') {
+            return ($values['graduating'] ?? '') === 'Yes';
         }
 
         if ($fieldId === 'semester_of_graduation') {
@@ -276,8 +316,28 @@ class ScholarshipSystemFieldsService
             if ($stringValue === '' && $field['required']) {
                 return "{$field['label']} is required.";
             }
-            if ($stringValue !== '' && (strlen($stringValue) < 3 || strlen($stringValue) > 50)) {
-                return "{$field['label']} must be 3–50 characters.";
+            if ($stringValue !== '' && strlen($stringValue) < 3) {
+                return "{$field['label']} must be at least 3 characters.";
+            }
+            if ($stringValue !== '' && strlen($stringValue) > self::NAME_MAX_LENGTH) {
+                return "{$field['label']} must not exceed ".self::NAME_MAX_LENGTH.' characters.';
+            }
+            if ($stringValue !== '' && in_array($field['id'], self::NAME_NO_SPACE_FIELDS, true)) {
+                if (preg_match('/\s/', $stringValue)) {
+                    return "{$field['label']} cannot contain spaces.";
+                }
+                if (! preg_match(self::NAME_NO_SPACE_REGEX, $stringValue)) {
+                    return "{$field['label']} has an invalid format.";
+                }
+
+                return '';
+            }
+            if ($stringValue !== '' && in_array($field['id'], self::FIRST_NAME_FIELDS, true)) {
+                if (! preg_match(self::FIRST_NAME_REGEX, $stringValue)) {
+                    return "{$field['label']} cannot start with a space.";
+                }
+
+                return '';
             }
             if ($stringValue !== '' && ! preg_match(self::NAME_REGEX, $stringValue)) {
                 return "{$field['label']} has an invalid format.";
@@ -412,11 +472,84 @@ class ScholarshipSystemFieldsService
             return '';
         }
 
+        if ($field['id'] === 'strand') {
+            if ($stringValue === '' && $field['required']) {
+                return "{$field['label']} is required.";
+            }
+            if ($stringValue !== '' && strlen($stringValue) > self::STRAND_MAX_LENGTH) {
+                return "{$field['label']} must not exceed ".self::STRAND_MAX_LENGTH.' characters.';
+            }
+
+            return '';
+        }
+
+        if ($field['id'] === 'strand_abbreviation') {
+            if ($stringValue === '' && $field['required']) {
+                return "{$field['label']} is required.";
+            }
+            if ($stringValue !== '' && preg_match('/\s/', $stringValue)) {
+                return "{$field['label']} cannot contain spaces.";
+            }
+            if ($stringValue !== '' && strlen($stringValue) > self::STRAND_ABBREVIATION_MAX_LENGTH) {
+                return "{$field['label']} must not exceed ".self::STRAND_ABBREVIATION_MAX_LENGTH.' characters.';
+            }
+
+            return '';
+        }
+
+        if ($field['id'] === 'school_address') {
+            $raw = (string) ($value ?? '');
+            if ($stringValue === '' && $field['required']) {
+                return "{$field['label']} is required.";
+            }
+            if ($raw !== '' && $stringValue === '') {
+                return "{$field['label']} cannot be spaces only.";
+            }
+
+            return '';
+        }
+
+        if ($field['id'] === 'year_level') {
+            if ($stringValue === '' && $field['required']) {
+                return "{$field['label']} is required.";
+            }
+            if ($stringValue !== '') {
+                $options = $this->yearLevelOptions($kkEducation);
+                if ($options !== [] && ! in_array($stringValue, $options, true)) {
+                    return "{$field['label']} must be a valid selection.";
+                }
+            }
+
+            return '';
+        }
+
         if ($field['required'] && $stringValue === '') {
             return "{$field['label']} is required.";
         }
 
         return '';
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function yearLevelOptions(string $education): array
+    {
+        $education = trim($education);
+
+        if ($education === 'High School Level') {
+            return self::YEAR_LEVEL_HS;
+        }
+
+        if (in_array($education, ['College Level', 'College Grad'], true)) {
+            return self::YEAR_LEVEL_COLLEGE;
+        }
+
+        if ($education === 'Vocational Grad') {
+            return self::YEAR_LEVEL_VOCATIONAL;
+        }
+
+        return [];
     }
 
     /**

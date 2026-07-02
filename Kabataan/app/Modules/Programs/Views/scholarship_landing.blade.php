@@ -19,8 +19,6 @@
         'app/Modules/Programs/assets/css/scholarship_landing.css',
         'app/Modules/Programs/assets/css/scholarship_application_preview.css',
         'app/Modules/Programs/assets/css/scholarship_application.css',
-        'app/Modules/Programs/assets/css/scholarship-quick-guidelines.css',
-        'app/Modules/Programs/assets/js/scholarship-quick-guidelines.js',
         'app/Modules/Programs/assets/css/scholarship-data-privacy.css',
         'app/Modules/Programs/assets/js/scholarship-data-privacy.js',
         'app/Modules/Dashboard/assets/css/dashboard.css',
@@ -49,14 +47,10 @@
                 </a>
             </div>
             <h1 class="sl-title">Scholarship Application</h1>
-            <button type="button" class="sch-quick-guidelines-btn" data-open-sch-quick-guidelines style="margin-top:12px;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                Quick Guidelines
-            </button>
         </div>
 
         <!-- Previous Applications Card -->
-        <div class="sl-card sl-card-history">
+        <div class="sl-card sl-card-history" id="scholarshipApplicationsHistory" hidden>
             <div class="sl-card-header">
                 <h2 class="sl-card-title">Previous Applications</h2>
             </div>

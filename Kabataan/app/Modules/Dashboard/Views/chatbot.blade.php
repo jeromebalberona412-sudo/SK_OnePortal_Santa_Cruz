@@ -44,11 +44,11 @@
             </div>
 
             <div class="cp-topics">
-                <button type="button" class="cp-topic-btn" onclick="cpSendTopic('Programs')">📋 Programs</button>
-                <button type="button" class="cp-topic-btn" onclick="cpSendTopic('Events')">📅 Events</button>
-                <button type="button" class="cp-topic-btn" onclick="cpSendTopic('Scholarship')">🎓 Scholarship</button>
-                <button type="button" class="cp-topic-btn" onclick="cpSendTopic('How to apply')">📝 How to Apply</button>
-                <button type="button" class="cp-topic-btn" onclick="cpSendTopic('Contact SK')">📞 Contact SK</button>
+                <button type="button" class="cp-topic-btn" onclick="cpSendTopic('Programs')">Programs</button>
+                <button type="button" class="cp-topic-btn" onclick="cpSendTopic('Events')">Events</button>
+                <button type="button" class="cp-topic-btn" onclick="cpSendTopic('Scholarship')">Scholarship</button>
+                <button type="button" class="cp-topic-btn" onclick="cpSendTopic('How to apply')">How to Apply</button>
+                <button type="button" class="cp-topic-btn" onclick="cpSendTopic('Contact SK')">Contact SK</button>
             </div>
 
             <div class="cp-messages" id="cpMessages">
@@ -64,7 +64,7 @@
                         </svg>
                     </div>
                     <div class="cp-msg-body">
-                        <div class="cp-bubble">Kumusta! 👋 Ako si SKai. Paano kita matutulungan ngayon?</div>
+                        <div class="cp-bubble">Kumusta! Ako si SKai. Paano kita matutulungan ngayon?</div>
                         <span class="cp-msg-time" id="cpWelcomeTime"></span>
                     </div>
                 </div>

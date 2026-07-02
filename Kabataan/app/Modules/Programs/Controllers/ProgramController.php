@@ -4,6 +4,7 @@ namespace App\Modules\Programs\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
+use App\Modules\Programs\Services\KabataanProgramEvaluationService;
 use App\Modules\Programs\Services\KabataanProgramService;
 use App\Modules\Programs\Services\KabataanProgramSurveyService;
 use App\Modules\Programs\Services\ProgramDocumentService;
@@ -21,6 +22,7 @@ class ProgramController extends Controller
         private readonly KabataanProgramService $programService,
         private readonly ProgramDocumentService $documentService,
         private readonly KabataanProgramSurveyService $surveyService,
+        private readonly KabataanProgramEvaluationService $evaluationService,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -196,6 +198,7 @@ class ProgramController extends Controller
             'scheduleProgramId' => null,
             'barangayName' => $registration?->barangay?->name ?? 'Your Barangay',
             'kkFieldLabels' => $this->programService->kkFieldLabels(),
+            'programsPayload' => $this->programService->getDashboardPayload($user),
         ]);
     }
 
@@ -332,6 +335,80 @@ class ProgramController extends Controller
 
             return response()->json([
                 'message' => 'Survey submitted successfully.',
+                'response' => $response,
+            ], 201);
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'message' => collect($exception->errors())->flatten()->first(),
+                'errors' => $exception->errors(),
+            ], 422);
+        }
+    }
+
+    public function evaluationForm(Request $request): View
+    {
+        $user = Auth::user();
+        $evaluationId = (int) $request->query('evaluation', 0);
+
+        if ($evaluationId <= 0) {
+            abort(404);
+        }
+
+        $evaluation = $this->evaluationService->getEvaluationForUser($user, $evaluationId);
+        if ($evaluation === null || ! ($evaluation['can_respond'] ?? false)) {
+            abort(404);
+        }
+
+        return view('programs::program_evaluation_form', [
+            'evaluationId' => $evaluationId,
+            'evaluation' => $evaluation,
+        ]);
+    }
+
+    public function showEvaluation(Request $request, int $id): JsonResponse
+    {
+        $user = Auth::user();
+        $evaluation = $this->evaluationService->getEvaluationForUser($user, $id);
+
+        if ($evaluation === null) {
+            return response()->json(['message' => 'Evaluation not found.'], 404);
+        }
+
+        return response()->json(['evaluation' => $evaluation]);
+    }
+
+    public function showEvaluationByProgram(Request $request, int $abyipProgramId): JsonResponse
+    {
+        $user = Auth::user();
+        $evaluation = $this->evaluationService->getOpenEvaluationByProgram($user, $abyipProgramId);
+
+        if ($evaluation === null) {
+            return response()->json(['message' => 'No open evaluation found for this program.'], 404);
+        }
+
+        return response()->json(['evaluation' => $evaluation]);
+    }
+
+    public function submitEvaluationResponse(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'evaluation_id' => ['required', 'integer'],
+            'answers' => ['required', 'array'],
+            'answers.*.question_id' => ['required', 'string'],
+            'answers.*.answer' => ['nullable'],
+        ]);
+
+        $user = Auth::user();
+
+        try {
+            $response = $this->evaluationService->submitResponse(
+                $user,
+                (int) $validated['evaluation_id'],
+                $validated['answers'],
+            );
+
+            return response()->json([
+                'message' => 'Evaluation submitted successfully. Thank you for your feedback.',
                 'response' => $response,
             ], 201);
         } catch (ValidationException $exception) {

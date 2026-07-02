@@ -28,6 +28,7 @@
         'app/Modules/Programs/assets/css/scholarship-data-privacy.css',
         'app/Modules/Programs/assets/js/scholarship-data-privacy.js',
         'app/Modules/Programs/assets/js/kabataan-programs.js',
+        'app/Modules/Programs/assets/js/program-evaluation-prompt.js',
         'app/Modules/Dashboard/assets/css/chatbot.css',
         'app/Modules/Dashboard/assets/js/chatbot.js',
         'app/Modules/Dashboard/assets/css/notif.css',
@@ -279,6 +280,26 @@
     </div>
 
     <!-- Scholarship Application Form Modal (New PDF-style) -->
+    <div id="programEvaluationPromptModal" class="program-modal" hidden>
+        <div class="modal-overlay" data-eval-overlay></div>
+        <div class="modal-container" style="max-width:520px;">
+            <div class="modal-body" style="padding:28px;">
+                <h3 style="font-size:22px;font-weight:700;color:#0f172a;margin:0 0 8px;" data-eval-title>Program Evaluation Available</h3>
+                <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 16px;">
+                    A program evaluation form is ready for <strong data-eval-program>your barangay program</strong>.
+                    It is highly recommended that you complete this evaluation so your barangay SK can improve youth programs and services.
+                </p>
+                <p style="color:#64748b;font-size:13px;margin:0 0 20px;">
+                    Evaluation period: <span data-eval-period>—</span>
+                </p>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button type="button" class="apply-now-button enabled" data-eval-start style="flex:1;min-width:160px;">Start Evaluation</button>
+                    <button type="button" class="gf-btn gf-btn-cancel" data-eval-later style="flex:1;min-width:140px;">Maybe Later</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @include('dashboard::remaining_modals')
 
     <!-- Program Registration Success Modal -->

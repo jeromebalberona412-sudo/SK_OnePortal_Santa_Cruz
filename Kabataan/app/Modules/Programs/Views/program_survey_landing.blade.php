@@ -72,7 +72,7 @@
             </div>
         </div>
 
-        <div class="sl-card sl-card-history">
+        <div class="sl-card sl-card-history" hidden>
             <div class="sl-card-header">
                 <h2 class="sl-card-title">Your Survey History</h2>
             </div>
