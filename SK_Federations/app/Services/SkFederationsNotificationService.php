@@ -174,6 +174,16 @@ class SkFederationsNotificationService
         );
     }
 
+    public function postLabel(?string $title, ?string $body): string
+    {
+        $title = trim((string) $title);
+        if ($title !== '') {
+            return Str::limit($title, 80);
+        }
+
+        return Str::limit(trim(strip_tags((string) $body)), 80, '…') ?: 'your post';
+    }
+
     public function notifyAbyipSubmission(string $barangayName, int $fiscalYear, ?string $barangaySlug = null): void
     {
         $slug = $barangaySlug ?: $this->resolveBarangaySlug($barangayName);
