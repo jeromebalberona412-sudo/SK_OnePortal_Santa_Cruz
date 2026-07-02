@@ -29,6 +29,7 @@ class BatchStoreAccountsRequest extends FormRequest
             'accounts.*.middle_name' => ['nullable', 'string', 'max:100'],
             'accounts.*.last_name' => ['nullable', 'string', 'max:100'],
             'accounts.*.suffix' => ['nullable', 'string', 'max:10'],
+            'accounts.*.suffix_input' => ['nullable', 'string', 'max:20'],
             'accounts.*.sex' => ['nullable', 'string', 'max:20'],
             'accounts.*.date_of_birth' => ['nullable', 'string', 'max:50'],
             'accounts.*.birthdate' => ['nullable', 'string', 'max:50'],

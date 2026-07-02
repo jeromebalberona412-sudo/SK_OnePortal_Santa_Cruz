@@ -1767,7 +1767,7 @@ const BATCH_TEMPLATE_HEADERS = [
     'First Name',
     'Middle Name (optional)',
     'Last Name',
-    'Suffix (Type "None" if None)',
+    'Suffix (None)',
     'Sex',
     'Birthdate',
     'Age',
@@ -1793,7 +1793,12 @@ const BATCH_TEMPLATE_SAMPLE_ROW = [
 const BATCH_DATE_FIELD_KEYS = new Set(['date_of_birth', 'term_start', 'term_end']);
 
 function normalizeBatchHeaderLabel(header) {
-    return String(header || '').trim().replace(/\s*\([^)]*\)\s*$/i, '').trim().toLowerCase();
+    return String(header || '')
+        .trim()
+        .replace(/\s*\([^)]*\)\s*/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
 }
 
 function isOptionalBatchHeader(header) {
@@ -2497,7 +2502,7 @@ function initBatchUploadPanel(prefix, role) {
         });
 
         if (els.confirmBtn) {
-            els.confirmBtn.disabled = hasHeaderErrors || hasRowErrors || state.parsedRows.length === 0;
+            els.confirmBtn.disabled = hasHeaderErrors || state.parsedRows.length === 0;
         }
 
         return rowErrors;
@@ -2601,6 +2606,15 @@ function initBatchUploadPanel(prefix, role) {
 
         const hasErrors = Boolean(options.hasErrors);
         const errors = options.errors || [];
+        const activeInput = document.activeElement && document.activeElement.classList
+            && document.activeElement.classList.contains('batch-cell-input')
+            ? {
+                rowIndex: Number(document.activeElement.dataset.rowIndex),
+                colIndex: Number(document.activeElement.dataset.colIndex),
+                start: document.activeElement.selectionStart,
+                end: document.activeElement.selectionEnd,
+            }
+            : null;
 
         if (rows.length === 0) {
             els.preview.innerHTML = '<p class="batch-row-count" style="color:#94a3b8;">' + escapeHtml(message || 'Upload an Excel file to preview rows.') + '</p>';
@@ -2655,6 +2669,20 @@ function initBatchUploadPanel(prefix, role) {
                 handleBatchCellEdit(Number(input.dataset.rowIndex), Number(input.dataset.colIndex), input.value);
             });
         });
+
+        if (activeInput && Number.isFinite(activeInput.rowIndex) && Number.isFinite(activeInput.colIndex)) {
+            const selector = `.batch-cell-input[data-row-index="${activeInput.rowIndex}"][data-col-index="${activeInput.colIndex}"]`;
+            const replacementInput = els.preview.querySelector(selector);
+            if (replacementInput) {
+                replacementInput.focus();
+                const maxLength = replacementInput.value.length;
+                const start = Number.isFinite(activeInput.start) ? Math.min(activeInput.start, maxLength) : maxLength;
+                const end = Number.isFinite(activeInput.end) ? Math.min(activeInput.end, maxLength) : start;
+                if (typeof replacementInput.setSelectionRange === 'function') {
+                    replacementInput.setSelectionRange(start, end);
+                }
+            }
+        }
     }
 
     function renderBatchPreview(headers, rows, message, hasHeaderErrors = false) {

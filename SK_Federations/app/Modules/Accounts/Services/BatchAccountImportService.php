@@ -192,7 +192,7 @@ class BatchAccountImportService
             'date_of_birth', 'birthdate', 'date of birth', 'birth date', 'dob',
         ]));
 
-        $suffixRaw = $this->stringValue($row, ['suffix']);
+        $suffixRaw = $this->stringValue($row, ['suffix', 'suffix_input', 'suffix input']);
         $suffix = $this->normalizeSuffix($suffixRaw);
         $sex = $this->normalizeSex($this->stringValue($row, ['sex']));
         $contactNumber = $this->normalizeContactNumber($this->stringValue($row, ['contact_number', 'contact number']));
