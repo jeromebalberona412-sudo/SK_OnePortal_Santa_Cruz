@@ -24,7 +24,7 @@ let knownPostIds = new Set();
 let feedLoading = false;
 let feedSearch = '';
 
-const SK_AVATAR = () => commentAvatarUrl({ author_name: 'You', barangay_logo_url: window.AnnConfig?.barangayLogo });
+const SK_AVATAR = () => window.AnnConfig?.userAvatar || window.AnnConfig?.barangayLogo || DEFAULT_LOGO();
 const DEFAULT_LOGO = () => window.AnnConfig?.defaultLogo || '/images/logo.png';
 
 const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';

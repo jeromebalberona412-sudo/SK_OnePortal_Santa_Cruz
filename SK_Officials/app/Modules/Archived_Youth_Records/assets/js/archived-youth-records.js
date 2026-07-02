@@ -5,23 +5,28 @@ let ayrFiltered = [];
 let ayrCurrentPage = 1;
 const ayrPerPage = 10;
 let ayrActiveFilter = 'all';
-let ayrArchiveTerm = '2025-2027';
+let ayrArchiveTerm = '';
 let ayrSearchQuery = '';
 let ayrIsLoading = false;
 
 function initArchivedYouthRecords() {
+    bindSearch();
+    bindFilterTabs();
+    bindViewModal();
+
+    const boot = () => loadData();
+
     if (window.SkArchive) {
         SkArchive.mountShowArchiveFilter((termId) => {
             ayrArchiveTerm = termId;
             ayrApplyClientFilters();
             ayrCurrentPage = 1;
             renderTable();
-        });
+        }).then(boot);
+        return;
     }
-    bindSearch();
-    bindFilterTabs();
-    bindViewModal();
-    loadData();
+
+    boot();
 }
 
 function getCsrfToken() {
@@ -66,7 +71,7 @@ function normalizeRecord(r) {
         _archivedTs: r.archived_at ? new Date(r.archived_at) : null,
         skTerm: window.SkArchive && r.archived_at
             ? SkArchive.inferTermFromDate(r.archived_at)
-            : '2025-2027',
+            : (window.SkArchive?.getActiveTermId?.() || ''),
     };
 }
 

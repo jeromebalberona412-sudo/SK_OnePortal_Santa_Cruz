@@ -11,7 +11,7 @@ let rspCurrentPage = 1;
 const rspPerPage = 10;
 let rspPendingRestoreId = null;
 let rspActiveFilter = 'all';
-let rspArchiveTerm = '2025-2027';
+let rspArchiveTerm = '';
 let rspSearchQuery = '';
 let rspTeamQuery = '';
 let rspSportFilter = 'all';
@@ -76,7 +76,8 @@ function initRejectedSports() {
             applyClientFilters();
             rspCurrentPage = 1;
             renderTable();
-        });
+        }).then(() => loadData());
+        return;
     }
 
     loadData();
@@ -118,7 +119,7 @@ function normalizeRecord(r) {
         _rejectedTs: r.rejected_at ? new Date(r.rejected_at) : null,
         skTerm: window.SkArchive && r.rejected_at
             ? SkArchive.inferTermFromDate(r.rejected_at)
-            : '2025-2027',
+            : (window.SkArchive?.getActiveTermId?.() || ''),
     };
 }
 

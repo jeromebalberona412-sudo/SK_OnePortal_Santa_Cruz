@@ -10,24 +10,29 @@ let dkCurrentPage = 1;
 const dkPerPage = 10;
 let dkPendingRestoreId = null;
 let dkActiveFilter = 'all';
-let dkArchiveTerm = '2025-2027';
+let dkArchiveTerm = '';
 let dkSearchQuery = '';
 let dkIsLoading = false;
 
 function initDeletedKabataan() {
+    bindSearch();
+    bindFilterTabs();
+    bindRestoreModal();
+    bindViewModal();
+
+    const boot = () => loadData();
+
     if (window.SkArchive) {
         SkArchive.mountShowArchiveFilter((termId) => {
             dkArchiveTerm = termId;
             dkApplyClientFilters();
             dkCurrentPage = 1;
             renderTable();
-        });
+        }).then(boot);
+        return;
     }
-    bindSearch();
-    bindFilterTabs();
-    bindRestoreModal();
-    bindViewModal();
-    loadData();
+
+    boot();
 }
 
 function getCsrfToken() {
@@ -72,7 +77,7 @@ function normalizeRecord(r) {
         _deletedTs: r.deleted_at ? new Date(r.deleted_at) : null,
         skTerm: window.SkArchive && r.deleted_at
             ? SkArchive.inferTermFromDate(r.deleted_at)
-            : '2025-2027',
+            : (window.SkArchive?.getActiveTermId?.() || ''),
     };
 }
 

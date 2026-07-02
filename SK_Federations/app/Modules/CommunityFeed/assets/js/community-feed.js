@@ -856,7 +856,7 @@ document.addEventListener('DOMContentLoaded', function() {
     renderPosts(true);
     document.getElementById('compose-content')?.addEventListener('input', updateCharCount);
     updateCharCount();
-    var searchInput = document.getElementById('feed-search-input') || document.getElementById('feedSearchInput');
+    var searchInput = document.getElementById('feedSearchInput');
     if (searchInput) {
         var searchTimer = null;
         searchInput.addEventListener('input', function() {
@@ -866,6 +866,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 feedSearch = input.value.trim();
                 renderPosts(true);
             }, 300);
+        });
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(searchTimer);
+                feedSearch = searchInput.value.trim();
+                renderPosts(true);
+            }
         });
     }
 

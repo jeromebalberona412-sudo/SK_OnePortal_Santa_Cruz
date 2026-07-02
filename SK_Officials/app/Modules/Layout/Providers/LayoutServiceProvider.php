@@ -2,6 +2,9 @@
 
 namespace App\Modules\Layout\Providers;
 
+use App\Services\ArchiveTermService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class LayoutServiceProvider extends ServiceProvider
@@ -11,6 +14,16 @@ class LayoutServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadViewsFrom($this->resolveViewsPath(), 'layout');
+
+        View::composer('layout::partials.archive-show-filter', function ($view) {
+            $service = app(ArchiveTermService::class);
+            $terms = $service->termsForUser(Auth::user());
+
+            $view->with([
+                'archiveTerms' => $terms,
+                'activeArchiveTermId' => $service->activeTermId($terms),
+            ]);
+        });
     }
 
     private function resolveViewsPath(): string

@@ -13,7 +13,7 @@ let rsRecordsPerPage = 10;
 let rsTablePagination = null;
 let rsPendingRestoreId = null;
 let rsActiveFilter = 'all';
-let rsArchiveTerm = '2025-2027';
+let rsArchiveTerm = '';
 let rsSearchQuery = '';
 let rsIsLoading = false;
 
@@ -60,7 +60,8 @@ function initRejectedScholarship() {
             applyClientFilters();
             rsCurrentPage = 1;
             renderTable();
-        });
+        }).then(() => loadData());
+        return;
     }
 
     loadData();
@@ -102,7 +103,7 @@ function normalizeRecord(r) {
         _rejectedTs: r.rejected_at ? new Date(r.rejected_at) : null,
         skTerm: window.SkArchive && r.rejected_at
             ? SkArchive.inferTermFromDate(r.rejected_at)
-            : '2025-2027',
+            : (window.SkArchive?.getActiveTermId?.() || ''),
     };
 }
 

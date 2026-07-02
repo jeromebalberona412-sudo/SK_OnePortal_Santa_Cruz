@@ -10,24 +10,29 @@ let rkkCurrentPage = 1;
 const rkkPerPage = 10;
 let rkkPendingRestoreId = null;
 let rkkActiveFilter = 'all';
-let rkkArchiveTerm = '2025-2027';
+let rkkArchiveTerm = '';
 let rkkSearchQuery = '';
 let rkkIsLoading = false;
 
 function initRejectedKK() {
+    bindSearch();
+    bindFilterTabs();
+    bindRestoreModal();
+    bindViewModal();
+
+    const boot = () => loadData();
+
     if (window.SkArchive) {
         SkArchive.mountShowArchiveFilter((termId) => {
             rkkArchiveTerm = termId;
             rkkApplyClientFilters();
             rkkCurrentPage = 1;
             renderTable();
-        });
+        }).then(boot);
+        return;
     }
-    bindSearch();
-    bindFilterTabs();
-    bindRestoreModal();
-    bindViewModal();
-    loadData();
+
+    boot();
 }
 
 function getCsrfToken() {
@@ -72,7 +77,7 @@ function normalizeRecord(r) {
         _rejectedTs: r.rejected_at ? new Date(r.rejected_at) : null,
         skTerm: window.SkArchive && r.rejected_at
             ? SkArchive.inferTermFromDate(r.rejected_at)
-            : '2025-2027',
+            : (window.SkArchive?.getActiveTermId?.() || ''),
     };
 }
 

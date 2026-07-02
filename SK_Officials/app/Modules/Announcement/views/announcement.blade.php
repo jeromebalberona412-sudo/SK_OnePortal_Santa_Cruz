@@ -34,7 +34,7 @@
                     <img src="{{ $barangayLogoUrl ?? asset('images/logo.png') }}" alt="SK Barangay {{ $name }} logo" class="sk-fed-card-logo">
                     <div class="sk-fed-card-info">
                         <h2 class="sk-fed-card-name">SK Barangay {{ $name }}</h2>
-                        <p class="sk-fed-card-sub">SK Officials Portal ∑ Santa Cruz, Laguna</p>
+                        <p class="sk-fed-card-sub">SK Officials Portal ù Santa Cruz, Laguna</p>
                         <a href="{{ route('sk-officials.barangay-profile', ['slug' => $slug]) }}" style="font-size:11px;color:rgba(255,255,255,0.85);font-weight:600;margin-top:4px;text-decoration:none;display:inline-block;">View Your Barangay Profile ?</a>
                     </div>
                 </div>
@@ -46,11 +46,11 @@
                 </div>
             </div>
 
-            {{-- Filter Tabs --}}
+            {{-- Filter Tabs (sticky while scrolling) --}}
+            <div class="feed-sticky-toolbar">
             <div class="feed-header">
                 <div class="feed-header__intro">
                     <h1>SK Community Feed</h1>
-                    <p>Posts, events, and programs from your barangay SK.</p>
                 </div>
                 <div class="feed-header__search">
                     <svg class="feed-header__search-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -91,6 +91,7 @@
                     </span>
                     <span class="feed-tab-text">Programs</span>
                 </button>
+            </div>
             </div>
 
             <div id="feed-posts"></div>
@@ -237,6 +238,8 @@
 window.AnnConfig = {
     defaultLogo: @json(asset('images/logo.png')),
     barangayLogo: @json($barangayLogoUrl),
+    userAvatar: @json($barangayLogoUrl ?: asset('images/SK_OnePortal_logo.png')),
+    userDisplayName: @json($user->name ?? 'SK Official'),
     feedPollMs: 30000,
     profilePreview: @json($profilePreview ?? null),
 };
@@ -257,7 +260,7 @@ window.showFeedToast = showFeedToast;
     <div class="restore-modal-box view-modal-box" id="profilePreviewModalBox">
         <div class="restore-modal-header view-modal-header">
             <div>
-                <p class="profile-preview-kicker">Preview ó What Kabataan Sees</p>
+                <p class="profile-preview-kicker">Preview ù What Kabataan Sees</p>
                 <h2 class="restore-modal-title" id="profilePreviewTitle">SK Barangay {{ $name }}</h2>
                 <span class="dk-view-subtitle" id="profilePreviewLocation">Barangay {{ $name }}, Santa Cruz, Laguna</span>
             </div>
@@ -271,9 +274,9 @@ window.showFeedToast = showFeedToast;
                 <div class="profile-field-group">
                     <div class="profile-field-group-label">Overview</div>
                     <div class="profile-field-row">
-                        <div class="profile-field"><label>Posts</label><p id="profilePreviewPostCount">ó</p></div>
-                        <div class="profile-field"><label>SK Term</label><p id="profilePreviewTerm">ó</p></div>
-                        <div class="profile-field"><label>Officials</label><p id="profilePreviewOfficialCount">ó</p></div>
+                        <div class="profile-field"><label>Posts</label><p id="profilePreviewPostCount">ù</p></div>
+                        <div class="profile-field"><label>SK Term</label><p id="profilePreviewTerm">ù</p></div>
+                        <div class="profile-field"><label>Officials</label><p id="profilePreviewOfficialCount">ù</p></div>
                     </div>
                 </div>
                 <div class="profile-field-group">

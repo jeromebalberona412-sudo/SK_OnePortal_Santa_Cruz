@@ -57,6 +57,7 @@ Route::middleware([
 ])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/api/dashboard/stats', [DashboardController::class, 'stats'])->name('api.dashboard.stats');
+    Route::get('/api/archive/terms', [\App\Http\Controllers\ArchiveTermController::class, 'index'])->name('api.archive.terms');
 
     Route::get('/ai-assistant', function () {
         $user = auth()->user();

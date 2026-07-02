@@ -14,13 +14,6 @@
     <link rel="stylesheet" href="{{ url('/modules/community-feed/css/community-feed.css') }}?v={{ $communityFeedCssVersion }}">
 @endpush
 
-@push('navbar-center')
-    <div class="navbar-search">
-            <i class="fas fa-search search-icon"></i>
-            <input type="text" placeholder="Search posts..." aria-label="Search" id="feed-search-input">
-        </div>
-@endpush
-
 @section('content')
 <div class="cf-container">
 
@@ -51,11 +44,11 @@
                     </div>
                 </div>
 
-                {{-- Feed header + search --}}
+                {{-- Feed header + filter tabs (sticky while scrolling) --}}
+                <div class="feed-sticky-toolbar">
                 <div class="feed-header">
                     <div class="feed-header__intro">
                         <h1>SK Community Feed</h1>
-                        <p>Posts, events, and programs from SK Federation.</p>
                     </div>
                     <div class="feed-header__search">
                         <svg class="feed-header__search-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -97,6 +90,7 @@
                         </span>
                         <span class="feed-tab-text">Programs</span>
                     </button>
+                </div>
                 </div>
 
                 {{-- Feed Posts --}}
