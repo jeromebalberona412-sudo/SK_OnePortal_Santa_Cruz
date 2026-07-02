@@ -46,12 +46,13 @@ class AnnouncementFeedController extends Controller
         $query = Announcement::with([
             'barangay',
             'user',
+            'images',
             'comments' => fn ($q) => $q->with('user')->orderBy('created_at'),
             'reactions' => fn ($q) => $q->with('user')->latest()->limit(12),
         ])
             ->withCount('reactions')
             ->where(function ($q) {
-                $q->where('is_archived', false)->orWhereNull('is_archived');
+                $q->whereRaw('"is_archived" = false')->orWhereNull('is_archived');
             })
             ->where(function ($q) use ($barangayId) {
                 $q->where('barangay_id', $barangayId)
@@ -192,12 +193,29 @@ class AnnouncementFeedController extends Controller
 
         $registrations = $this->kabataanRegistrationsForPost($post);
 
+        // Handle multiple images from announcement_images table
+        $imageRecords = $post->relationLoaded('images') ? $post->images : collect();
+        $images = $imageRecords
+            ->map(fn ($img) => $this->cloudinary->normalizeUrl($img->image_url))
+            ->filter(fn ($url) => ! empty($url))
+            ->values()
+            ->all();
+        
+        // If no images in announcement_images, check legacy image_url field
+        if (empty($images) && $post->image_url) {
+            $normalized = $this->cloudinary->normalizeUrl($post->image_url);
+            if ($normalized) {
+                $images = [$normalized];
+            }
+        }
+
         return [
             'id' => $post->id,
             'type' => $post->type,
             'title' => $post->title,
             'body' => $post->body,
-            'image_url' => $this->cloudinary->normalizeUrl($post->image_url),
+            'image_url' => $images[0] ?? null,
+            'images' => $images,
             'link_url' => $post->link_url,
             'is_federation_wide' => (bool) $post->is_federation_wide,
             'barangay_name' => $post->barangay?->name,
