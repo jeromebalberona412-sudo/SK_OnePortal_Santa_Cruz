@@ -97,6 +97,12 @@ class CloudinaryService
             return $url;
         }
 
+        // If URL already has transformations (f_auto, q_auto), return as-is
+        // This prevents duplicate transformation parameters
+        if (str_contains($url, '/f_auto/') || str_contains($url, '/q_auto/')) {
+            return $url;
+        }
+
         $publicId = $this->extractPublicIdFromUrl($url);
 
         return $publicId

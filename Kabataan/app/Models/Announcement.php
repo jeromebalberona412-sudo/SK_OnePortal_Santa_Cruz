@@ -33,4 +33,9 @@ class Announcement extends Model
     {
         return $this->hasMany(AnnouncementComment::class)->orderBy('created_at');
     }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(AnnouncementImage::class)->orderBy('sort_order');
+    }
 }
