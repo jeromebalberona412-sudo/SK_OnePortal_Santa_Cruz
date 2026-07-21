@@ -6,6 +6,7 @@ use App\Services\BarangayLogoUrlService;
 use App\Services\SkOfficialsNotificationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,6 +16,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // 🔒 Force HTTPS for Railway/Production SSL & fix missing asset styles
+        if ($this->app->environment('production') || request()->server('HTTP_X_FORWARDED_PROTO') === 'https') {
+            URL::forceScheme('https');
+        }
+
         \Illuminate\Support\Facades\Mail::extend('brevo', function () {
             return new \Symfony\Component\Mailer\Bridge\Brevo\Transport\BrevoApiTransport(
                 (string) config('services.brevo.key', env('BREVO_KEY', ''))
