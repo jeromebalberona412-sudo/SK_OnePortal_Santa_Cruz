@@ -1,5 +1,5 @@
-/* KK Survey Questionnaire view — reuses Kabataan paper-form styles */
-@import '../../../../../../Kabataan/app/Modules/KKProfiling/assets/css/kkprofiling.css';
+/* KK Survey Questionnaire view — reuses KK Profiling paper-form styles */
+@import '../../KKProfiling/assets/css/kkprofiling.css';
 
 /* ── Modal container overrides ── */
 .kk-view-modal-wide.kk-modal-box {
