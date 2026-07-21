@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e5dfc227311a2cf5a2b4d197086259a1",
+    "content-hash": "20c13c23da81fa5f2a117f7cf877f4fe",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -4909,21 +4909,23 @@
         },
         {
             "name": "resend/resend-php",
-            "version": "v1.4.0",
+            "version": "v1.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/resend/resend-php.git",
-                "reference": "24e4f0507316776bc6a7c9136b2832ea2ecba6c3"
+                "reference": "9f80a745899cca15faf2b08e47f1b0e9b4a4c813"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/resend/resend-php/zipball/24e4f0507316776bc6a7c9136b2832ea2ecba6c3",
-                "reference": "24e4f0507316776bc6a7c9136b2832ea2ecba6c3",
+                "url": "https://api.github.com/repos/resend/resend-php/zipball/9f80a745899cca15faf2b08e47f1b0e9b4a4c813",
+                "reference": "9f80a745899cca15faf2b08e47f1b0e9b4a4c813",
                 "shasum": ""
             },
             "require": {
-                "guzzlehttp/guzzle": "^7.5",
-                "php": "^8.1.0"
+                "guzzlehttp/guzzle": "^7.8.2 || ^8.0",
+                "guzzlehttp/psr7": "^2.6.3 || ^3.0",
+                "php": "^8.1.0",
+                "psr/http-client": "^1.0"
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^3.13",
@@ -4960,9 +4962,9 @@
             ],
             "support": {
                 "issues": "https://github.com/resend/resend-php/issues",
-                "source": "https://github.com/resend/resend-php/tree/v1.4.0"
+                "source": "https://github.com/resend/resend-php/tree/v1.6.0"
             },
-            "time": "2026-06-26T21:11:51+00:00"
+            "time": "2026-07-21T04:41:42+00:00"
         },
         {
             "name": "sabberworm/php-css-parser",
