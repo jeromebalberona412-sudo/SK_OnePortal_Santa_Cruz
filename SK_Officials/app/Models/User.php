@@ -216,7 +216,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify(new \App\Modules\Authentication\Notifications\SkOfficialEmailVerificationNotification);
+       // $this->notify(new \App\Modules\Authentication\Notifications\SkOfficialEmailVerificationNotification);
     }
 
     public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
