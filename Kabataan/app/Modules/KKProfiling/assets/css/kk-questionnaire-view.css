@@ -1,5 +1,3 @@
-/* KK Survey Questionnaire view — reuses KK Profiling paper-form styles */
-@import '../../KKProfiling/assets/css/kkprofiling.css';
 
 /* ── Modal container overrides ── */
 .kk-view-modal-wide.kk-modal-box {
