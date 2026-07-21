@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-COPY SK_Officials/ .
+COPY . .
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
