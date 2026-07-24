@@ -73,7 +73,7 @@
                     </div>
                 </div>
                 <h1 class="sk-main-title">SK OnePortal</h1>
-                <p class="sk-tagline">SK Officials Portal – Santa Cruz, Laguna</p>
+                <p class="sk-tagline">SK Officials Portal - Santa Cruz, Laguna</p>
             </div>
         </div>
 
@@ -83,9 +83,9 @@
                 <div class="card-header">
                     <h2 class="card-title">
                         Welcome Back!
-                        <span class="wave-emoji">??</span>
+                        
                     </h2>
-                    <p class="card-subtitle">Sign in to your account</p>
+                    <p class="card-subtitle">Login to your account</p>
                 </div>
 
                 <!-- Login Form -->
@@ -180,7 +180,7 @@
 
                     <!-- Submit Button -->
                     <button type="submit" class="sk-submit-btn" id="loginBtn">
-                        <span>Sign In</span>
+                        <span>Login</span>
                     </button>
                 </form>
             </div>

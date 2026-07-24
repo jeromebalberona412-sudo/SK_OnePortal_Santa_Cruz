@@ -41,7 +41,7 @@
                          class="sk-logo">
                 </div>
                 <h1 class="sk-main-title">SK OnePortal</h1>
-                <p class="sk-tagline">SK Officials Portal – Santa Cruz, Laguna</p>
+                <p class="sk-tagline">SK Officials Portal - Santa Cruz, Laguna</p>
             </div>
         </div>
 
@@ -51,7 +51,7 @@
 
                 <div id="ceStep1">
                     <div class="card-header">
-                        <h2 class="card-title">Change Email ??</h2>
+                        <h2 class="card-title">Change Email</h2>
                         <p class="card-subtitle">Enter your current email, new email address, and current password to request a change.</p>
                     </div>
 
@@ -157,7 +157,7 @@
 
                     <div class="youth-register-section ce-back-section">
                         <p class="register-text">
-                            <a href="{{ route('profile') }}" class="register-link">? Back to Profile</a>
+                            <a href="{{ route('profile') }}" class="register-link">Back to Profile</a>
                         </p>
                     </div>
                 </div>

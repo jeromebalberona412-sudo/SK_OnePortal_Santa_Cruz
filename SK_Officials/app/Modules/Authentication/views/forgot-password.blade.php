@@ -45,7 +45,7 @@
                     </div>
                 </div>
                 <h1 class="sk-main-title">SK OnePortal</h1>
-                <p class="sk-tagline">SK Officials Portal – Santa Cruz, Laguna</p>
+                <p class="sk-tagline">SK Officials Portal - Santa Cruz, Laguna</p>
             </div>
         </div>
 
@@ -58,7 +58,7 @@
 
                 <div id="fpStep1" @if($linkSent) hidden @endif>
                     <div class="card-header">
-                        <h2 class="card-title">Forgot Password? ??</h2>
+                        <h2 class="card-title">Forgot Password?</h2>
                         <p class="card-subtitle">Enter the email address associated with your account and we'll send you a link to reset your password.</p>
                     </div>
 
@@ -75,24 +75,24 @@
                         @csrf
 
                         <div class="sk-form-group">
-                            <label for="email" class="sk-label">Email Address</label>
-                            <div class="input-wrapper">
-                                <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <label for="email" class="sk-label">
+                                <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
                                     <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
                                 </svg>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    name="email"
-                                    class="sk-input"
-                                    value="{{ old('email') }}"
-                                    autofocus
-                                    placeholder="Enter example@gmail.com"
-                                    maxlength="100"
-                                    autocomplete="email"
-                                >
-                            </div>
+                                Email Address
+                            </label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                class="sk-input"
+                                value="{{ old('email') }}"
+                                autofocus
+                                placeholder="Enter example@gmail.com"
+                                maxlength="100"
+                                autocomplete="email"
+                            >
                             <div class="sk-field-error" id="email-error" @if(! $errors->has('email')) hidden @endif>{{ $errors->first('email') }}</div>
                         </div>
 
@@ -104,7 +104,7 @@
 
                 <div id="fpStep2" @if(! $linkSent) hidden @endif>
                     <div class="card-header">
-                        <h2 class="card-title">Check Your Email ??</h2>
+                        <h2 class="card-title">Check Your Email</h2>
                         <p class="card-subtitle">
                             A password reset link was sent to
                             <strong id="fpSentEmail">{{ $sentEmail }}</strong>.

@@ -8,7 +8,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Change Password - SK Officials</title>
+    <title>Change Password- SK Officials</title>
     @vite([
         'app/Modules/Authentication/assets/css/forgot-password.css',
         'app/Modules/Profile/assets/css/change-email.css',
@@ -41,7 +41,7 @@
                          class="sk-logo">
                 </div>
                 <h1 class="sk-main-title">SK OnePortal</h1>
-                <p class="sk-tagline">SK Officials Portal – Santa Cruz, Laguna</p>
+                <p class="sk-tagline">SK Officials Portal - Santa Cruz, Laguna</p>
             </div>
         </div>
 
@@ -50,7 +50,7 @@
             <div class="sk-login-card ce-verify-card">
 
                 <div class="card-header">
-                    <h2 class="card-title">Change Password 🔐</h2>
+                    <h2 class="card-title">Change Password🔐</h2>
                     <p class="card-subtitle">Create a new password for your account. We will email you a confirmation link before the change takes effect.</p>
                 </div>
 
@@ -68,7 +68,7 @@
                     </div>
                 @endif
 
-                <!-- Change Password Form -->
+                <!-- Change PasswordForm -->
                 <form action="{{ route('password.change.update') }}" method="POST" class="sk-login-form" id="change-password-form" data-password-max-length="{{ (int) config('sk_official_auth.password_reset.password.max_length', 64) }}" novalidate>
                     @csrf
 
