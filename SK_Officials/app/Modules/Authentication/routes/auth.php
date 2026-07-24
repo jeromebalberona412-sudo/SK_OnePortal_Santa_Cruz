@@ -3,9 +3,15 @@
 use App\Modules\Authentication\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/email/verify/wait', [AuthController::class, 'showVerificationWait'])->name('sk_official.verification.wait');
-Route::get('/email/verify/wait-status', [AuthController::class, 'checkVerificationStatus'])->name('sk_official.verification.wait.status');
-Route::post('/email/verify/resend', [AuthController::class, 'resendVerification'])->name('sk_official.verification.resend');
+Route::get('/email/verify/wait', [AuthController::class, 'showVerificationWait'])
+    ->middleware('guest')
+    ->name('sk_official.verification.wait');
+Route::get('/email/verify/wait-status', [AuthController::class, 'checkVerificationStatus'])
+    ->middleware('guest')
+    ->name('sk_official.verification.wait.status');
+Route::post('/email/verify/resend', [AuthController::class, 'resendVerification'])
+    ->middleware('guest')
+    ->name('sk_official.verification.resend');
 Route::get('/email/verify-link/{id}/{hash}', [AuthController::class, 'verifyEmail'])
     ->middleware(['signed', 'throttle:6,1'])
     ->name('sk_official.verification.verify');

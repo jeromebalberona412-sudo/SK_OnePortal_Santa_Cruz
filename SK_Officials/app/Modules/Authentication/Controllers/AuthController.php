@@ -48,10 +48,13 @@ class AuthController extends Controller
 
     public function showVerificationWait(Request $request): View|RedirectResponse
     {
+        // If user is already authenticated and verified, redirect to dashboard
         if (Auth::check()) {
-            $this->clearVerificationSession($request);
-
-            return redirect()->intended(route('dashboard'));
+            $user = Auth::user();
+            if ($user->hasVerifiedEmail()) {
+                $this->clearVerificationSession($request);
+                return redirect()->intended(route('dashboard'));
+            }
         }
 
         $pending = $this->resolveVerificationPending($request);

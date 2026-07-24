@@ -15,7 +15,18 @@ class EnsureSkOfficialAccess
         /** @var User|null $user */
         $user = $request->user();
 
+        // If not authenticated, let auth middleware handle redirect
         if ($user === null) {
+            return redirect()->route('login');
+        }
+
+        // Refresh user to get latest data
+        $user = $user->fresh();
+
+        if ($user === null) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
             return redirect()->route('login');
         }
 
@@ -31,6 +42,7 @@ class EnsureSkOfficialAccess
             ]);
         }
 
+        // Check if user is active official (avoid logging out on first check)
         if ($user->hasRole($requiredRole) && ! $user->isActiveOfficial()) {
             Auth::logout();
             $request->session()->invalidate();

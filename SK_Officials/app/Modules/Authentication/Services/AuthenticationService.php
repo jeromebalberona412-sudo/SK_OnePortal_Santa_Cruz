@@ -117,6 +117,7 @@ class AuthenticationService
         $rememberDevice = $request->boolean('remember');
         $isTrustedDevice = $this->trustedDeviceService->isTrusted($user, $request);
 
+        // Only require email verification if email has NEVER been verified
         if (! $user->hasVerifiedEmail()) {
             $this->startEmailVerificationWait(
                 user: $user,
@@ -130,18 +131,9 @@ class AuthenticationService
             return null;
         }
 
-        if ($this->shouldRequireEmailVerification($user, $request, $isTrustedDevice)) {
-            $this->startEmailVerificationWait(
-                user: $user,
-                email: $email,
-                request: $request,
-                reason: 'email_device_changed',
-                message: 'New device detected. Email verification is required again for security.',
-                rememberDevice: $rememberDevice,
-            );
-
-            return null;
-        }
+        // Skip device verification for already-verified users
+        // The user has verified their email at least once, so trust them
+        // Device verification disabled to prevent verified users from being asked again
 
         $this->resolveActiveSessionConflict($user, $request);
 
@@ -164,6 +156,9 @@ class AuthenticationService
             resourceType: 'auth',
             resourceId: $user->getKey(),
         );
+
+        // Don't claim session here - let Fortify complete authentication first
+        // Session will be claimed by middleware after successful login
 
         return $user;
     }
@@ -413,17 +408,24 @@ class AuthenticationService
         }
 
         $activeSessionId = (string) ($user->active_session_id ?? '');
+        $currentSessionId = $request->session()->getId();
 
-        if ($activeSessionId === '' || $activeSessionId === $request->session()->getId()) {
+        if ($activeSessionId === '' || $activeSessionId === $currentSessionId) {
+            return;
+        }
+
+        // Check if user should reclaim session for same device
+        if ($this->trustedDeviceService->isTrusted($user, $request)) {
+            // Same device - allow reclaim without invalidating
             return;
         }
 
         if (! $this->isSessionActive($user)) {
             $this->clearStaleSessionOwnership($user);
-
             return;
         }
 
+        // Only invalidate previous session if it's truly active
         $this->invalidatePreviousSession($user);
         $this->clearStaleSessionOwnership($user);
 

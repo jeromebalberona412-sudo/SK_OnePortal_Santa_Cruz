@@ -10,11 +10,32 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\ValidationException;
+use Laravel\Fortify\Contracts\LoginResponse;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
+    public function register(): void
+    {
+        // Register custom login response handler
+        $this->app->singleton(LoginResponse::class, function () {
+            return new class implements LoginResponse {
+                public function toResponse($request)
+                {
+                    // For JSON requests (API)
+                    if ($request->expectsJson()) {
+                        return response()->json([
+                            'two_factor' => false,
+                            'redirect' => route('dashboard'),
+                        ], 200);
+                    }
+
+                    // For web requests - redirect to dashboard
+                    return redirect()->intended(route('dashboard'));
+                }
+            };
+        });
+    }
 
     public function boot(): void
     {
@@ -38,6 +59,13 @@ class FortifyServiceProvider extends ServiceProvider
             }
 
             return $user;
+        });
+
+        // After successful login, claim the session
+        Event::listen(\Illuminate\Auth\Events\Login::class, function (\Illuminate\Auth\Events\Login $event): void {
+            if ($event->user instanceof User && request()->hasSession()) {
+                app(AuthenticationService::class)->claimCurrentSession($event->user, request());
+            }
         });
 
         Event::listen(Logout::class, function (Logout $event): void {
