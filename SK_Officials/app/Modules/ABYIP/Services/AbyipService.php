@@ -481,8 +481,20 @@ class AbyipService
         array $defaults = []
     ): ?Abyip {
         $rowType = (string) ($defaults['row_type'] ?? Abyip::ROW_EXPENDITURE);
-        $programName = trim((string) ($item['ppa_name'] ?? $item['activity_name'] ?? ''));
-        if ($programName === '') {
+        
+        // For activities, use activity_name field; for programs, use ppa_name or program_name
+        $isActivity = $rowType === Abyip::ROW_ACTIVITY;
+        $programName = '';
+        $activityName = null;
+        
+        if ($isActivity) {
+            $activityName = trim((string) ($item['activity_name'] ?? $item['ppa_name'] ?? ''));
+            $programName = $activityName; // Fallback for program_name field
+        } else {
+            $programName = trim((string) ($item['ppa_name'] ?? $item['program_name'] ?? ''));
+        }
+        
+        if ($programName === '' && $activityName === null) {
             return null;
         }
 
@@ -495,7 +507,6 @@ class AbyipService
         $mooe = $budgets['budget_mooe'];
         $co = $budgets['budget_co'];
         $total = $budgets['budget_total'];
-        $budget = $total ?? $mooe ?? $co;
 
         return Abyip::create([
             'document_id' => $document->id,
@@ -506,16 +517,18 @@ class AbyipService
             'row_type' => $rowType,
             'parent_id' => $defaults['parent_id'] ?? null,
             'code' => $defaults['code'] ?? ($item['code'] ?? null),
+            'category' => $item['category'] ?? null,
             'program_name' => $programName,
+            'activity_name' => $activityName,
             'description' => $item['description'] ?? null,
             'expected_result' => $item['expected_result'] ?? null,
             'performance_indicator' => $item['performance_indicator'] ?? null,
-            'implementation_period' => $item['period_of_implementation'] ?? null,
+            'implementation_start' => $item['implementation_start'] ?? null,
+            'implementation_end' => $item['implementation_end'] ?? null,
             'person_responsible' => $this->extractPersonResponsibleFromValue($item['person_responsible'] ?? null),
             'mooe' => $mooe,
             'co' => $co,
             'total' => $total,
-            'budget' => $budget,
             'sort_order' => $sortOrder,
         ]);
     }
@@ -529,17 +542,18 @@ class AbyipService
             'id' => $line->id,
             'code' => $line->code,
             'program_letter' => $line->program_letter,
+            'category' => $line->category,
             'program_name' => $line->program_name,
             'description' => $line->description,
             'expected_result' => $line->expected_result,
             'performance_indicator' => $line->performance_indicator,
-            'implementation_period' => $line->implementation_period,
+            'implementation_start' => $line->implementation_start?->format('Y-m-d'),
+            'implementation_end' => $line->implementation_end?->format('Y-m-d'),
             'person_responsible' => $line->person_responsible,
             'row_type' => $line->row_type,
             'mooe' => $line->mooe,
             'co' => $line->co,
             'total' => $line->total,
-            'budget' => $line->budget,
             'activities' => $line->relationLoaded('children')
                 ? $line->children->map(fn (Abyip $activity) => $this->formatLineAsActivity($activity))->values()->all()
                 : [],
@@ -554,8 +568,13 @@ class AbyipService
         return [
             'id' => $activity->id,
             'program_id' => $activity->parent_id,
-            'activity_name' => $activity->program_name,
-            'budget' => $activity->budget,
+            'activity_name' => $activity->activity_name ?? $activity->program_name,
+            'description' => $activity->description,
+            'expected_result' => $activity->expected_result,
+            'performance_indicator' => $activity->performance_indicator,
+            'implementation_start' => $activity->implementation_start?->format('Y-m-d'),
+            'implementation_end' => $activity->implementation_end?->format('Y-m-d'),
+            'person_responsible' => $activity->person_responsible,
             'mooe' => $activity->mooe,
             'co' => $activity->co,
             'total' => $activity->total,

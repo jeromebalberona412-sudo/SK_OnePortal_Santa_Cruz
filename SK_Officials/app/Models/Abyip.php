@@ -66,16 +66,18 @@ class Abyip extends Model
         'row_type',
         'parent_id',
         'code',
+        'category',
         'program_name',
+        'activity_name',
         'description',
         'expected_result',
         'performance_indicator',
-        'implementation_period',
+        'implementation_start',
+        'implementation_end',
         'person_responsible',
         'mooe',
         'co',
         'total',
-        'budget',
         'sort_order',
     ];
 
@@ -90,8 +92,9 @@ class Abyip extends Model
             'mooe' => 'decimal:2',
             'co' => 'decimal:2',
             'total' => 'decimal:2',
-            'budget' => 'decimal:2',
             'reviewed_at' => 'datetime',
+            'implementation_start' => 'date',
+            'implementation_end' => 'date',
         ];
     }
 
@@ -160,7 +163,7 @@ class Abyip extends Model
     public function lines(): HasMany
     {
         return $this->hasMany(self::class, 'document_id')
-            ->lines()
+            ->whereIn('row_type', [self::ROW_EXPENDITURE, self::ROW_YOUTH_PROGRAM])
             ->orderBy('sort_order')
             ->orderBy('id');
     }
