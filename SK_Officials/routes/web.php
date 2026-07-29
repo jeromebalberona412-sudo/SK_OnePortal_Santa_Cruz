@@ -1,6 +1,6 @@
 <?php
 
-use App\Modules\ABYIP\Controllers\AbyipController;
+use App\Modules\Barangay_ABYIP\Controllers\AbyipController;
 use App\Modules\Announcement\Controllers\AnnouncementController;
 use App\Modules\Announcement\Controllers\AnnouncementPageController;
 use App\Modules\Announcement\Controllers\ArchiveAnnouncementController;
@@ -165,7 +165,7 @@ Route::middleware([
     Route::post('/kk-profiling-requests/{id}/reject', [KKProfilingRequestsController::class, 'reject'])->name('kk-profiling-requests.reject');
 
     Route::get('/abyip', function () {
-        return view('ABYIP::abyip');
+        return view('Barangay_ABYIP::abyip');
     })->name('abyip.index');
 
     Route::prefix('api/abyip')->group(function () {

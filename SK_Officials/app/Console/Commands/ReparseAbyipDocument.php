@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Abyip;
-use App\Modules\ABYIP\Services\AbyipService;
+use App\Modules\Barangay_ABYIP\Services\AbyipService;
 use Illuminate\Console\Command;
 
 class ReparseAbyipDocument extends Command
