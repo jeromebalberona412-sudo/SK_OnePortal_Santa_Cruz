@@ -210,7 +210,7 @@ class IdVerificationService
                 $sides = ['front' => $document];
             }
 
-            if (in_array($type, ['school_id', 'national_id'], true) && isset($sides['front'], $sides['back'])) {
+            if (in_array($type, ['school_id'], true) && isset($sides['front'], $sides['back'])) {
                 $frontPath = $this->resolveDocumentAbsolutePath(is_array($sides['front']) ? $sides['front'] : []);
                 $backPath = $this->resolveDocumentAbsolutePath(is_array($sides['back']) ? $sides['back'] : []);
 
@@ -318,7 +318,7 @@ class IdVerificationService
         foreach ($normalizedDocs as $document) {
             $type = (string) ($document['type'] ?? '');
 
-            if (in_array($type, ['school_id', 'national_id'], true)) {
+            if (in_array($type, ['school_id', 'national_id', 'philhealth_id', 'voters_id'], true)) {
                 $hasIdType = true;
                 break;
             }
@@ -473,7 +473,7 @@ class IdVerificationService
             $sides = ['front' => $document];
         }
 
-        if (in_array($documentType, ['school_id', 'national_id'], true) && isset($sides['front'], $sides['back'])) {
+        if (in_array($documentType, ['school_id'], true) && isset($sides['front'], $sides['back'])) {
             $frontPath = $this->resolveTempSidePath($sides['front']);
             $backPath = $this->resolveTempSidePath($sides['back']);
 
@@ -484,6 +484,26 @@ class IdVerificationService
                     $frontPath,
                     $backPath,
                     $documentType,
+                );
+            }
+        }
+
+        if (
+            in_array($documentType, ['national_id', 'philhealth_id', 'voters_id'], true)
+            && isset($sides['front'], $sides['back'])
+        ) {
+            $frontPath = $this->resolveTempSidePath($sides['front']);
+            $backPath = $this->resolveTempSidePath($sides['back']);
+
+            if ($frontPath !== null && $backPath !== null) {
+                /** @var PhilippineIdDetectionService $detector */
+                $detector = app(PhilippineIdDetectionService::class);
+                $payload = $detector->detectPair($frontPath, $backPath, $documentType);
+
+                return $detector->buildVerificationRecord(
+                    $payload,
+                    $documentType,
+                    $registrationFields,
                 );
             }
         }

@@ -337,16 +337,21 @@
 }
 
 .youth-login-page .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 70px;
     margin-bottom: 1.25rem;
-}
-
-.youth-login-page .card-title {
-    font-size: 1.75rem;
-    margin-bottom: 0.4rem;
+    text-align: center;
 }
 
 .youth-login-page .card-subtitle {
-    font-size: 0.9rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+    color: var(--youth-gray-700);
+    margin: 0;
+    line-height: 1.5;
 }
 
 .youth-login-page .youth-login-form {

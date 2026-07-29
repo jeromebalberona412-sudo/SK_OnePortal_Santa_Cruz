@@ -26,8 +26,9 @@ Route::post('/api/kkprofiling/wizard/set-password/{token}/finalize', [KKProfilin
 
 Route::prefix('/api/kkprofiling/{barangay}/wizard')->group(function () {
     Route::get('/status', [KKProfilingWizardController::class, 'status'])->name('kkprofiling.wizard.status');
+    Route::post('/detect-id', [KKProfilingWizardController::class, 'detectId'])->name('kkprofiling.wizard.detect-id');
     Route::get('/document/{type}/{side?}', [KKProfilingWizardController::class, 'documentPreview'])
-        ->where('type', 'school_id|national_id')
+        ->where('type', 'school_id|national_id|voters_id|philhealth_id|other_id')
         ->where('side', 'front|back')
         ->name('kkprofiling.wizard.document-preview');
     Route::get('/registration-complete', [KKProfilingWizardController::class, 'checkRegistrationComplete'])->name('kkprofiling.wizard.registration-complete');

@@ -6,8 +6,7 @@ use App\Models\Barangay;
 use App\Models\KabataanRegistration;
 use App\Models\User;
 use App\Support\SupportingDocumentTypes;
-use App\Services\DuplicateKabataanRegistrationService;
-use App\Services\KkProfilingValidationMessages;
+use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -515,6 +514,9 @@ class KkRegistrationDraftService
         return [
             'document_type' => $documentType,
             'sides' => $sidePayload,
+            'id_verification' => is_array($wizard['step2_data']['id_verification'] ?? null)
+                ? $wizard['step2_data']['id_verification']
+                : null,
         ];
     }
 
@@ -604,7 +606,7 @@ class KkRegistrationDraftService
         }
 
         try {
-            return now()->greaterThan(\Carbon\Carbon::parse($wizard['expires_at']));
+            return now()->greaterThan(Carbon::parse($wizard['expires_at']));
         } catch (\Throwable $e) {
             return false;
         }

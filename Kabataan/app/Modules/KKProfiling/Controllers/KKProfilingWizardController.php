@@ -11,15 +11,19 @@ use App\Rules\FacebookProfileUrl;
 use App\Services\BarangayZoneService;
 use App\Services\DuplicateKabataanRegistrationService;
 use App\Services\KkRegistrationDraftService;
+use App\Services\PhilippineIdDetectionService;
 use App\Services\RegistrationEvaluationService;
 use App\Support\SupportingDocumentTypes;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 
 class KKProfilingWizardController extends Controller
 {
@@ -27,6 +31,7 @@ class KKProfilingWizardController extends Controller
         protected KkRegistrationDraftService $draftService,
         protected BarangayZoneService $barangayZoneService,
         protected DuplicateKabataanRegistrationService $duplicateChecker,
+        protected PhilippineIdDetectionService $philippineIdDetection,
     ) {}
 
     public function saveStep1(Request $request, string $barangay)
@@ -51,6 +56,8 @@ class KKProfilingWizardController extends Controller
 
     public function saveStep2(Request $request, string $barangay)
     {
+        set_time_limit((int) config('ocr.timeout', 120) + 60);
+
         $barangayRecord = $this->resolveBarangay($barangay);
         $wizard = $this->requireWizard();
 
@@ -62,6 +69,8 @@ class KKProfilingWizardController extends Controller
 
         $skipDocuments = $request->boolean('skip_documents');
         $fileRule = ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'];
+        $ocrPayload = null;
+        $formSuggestions = null;
 
         $validationRules = [
             'skip_documents' => ['sometimes', 'boolean'],
@@ -131,7 +140,7 @@ class KKProfilingWizardController extends Controller
                 'back' => null,
             ];
 
-            $uploadedSides = collect($sides)->filter(fn ($file) => $file instanceof \Illuminate\Http\UploadedFile);
+            $uploadedSides = collect($sides)->filter(fn ($file) => $file instanceof UploadedFile);
 
             if ($uploadedSides->count() > 0 && $uploadedSides->count() < 2) {
                 throw ValidationException::withMessages([
@@ -141,6 +150,38 @@ class KKProfilingWizardController extends Controller
 
             if ($uploadedSides->count() === 2) {
                 $wizard = $this->draftService->saveStep2($wizard, (string) $documentType, $sides);
+
+                if ($this->philippineIdDetection->isSupportedDocumentType((string) $documentType)) {
+                    try {
+                        $ocrPayload = $this->philippineIdDetection->detectUploadedPair(
+                            $sides['front'],
+                            $sides['back'],
+                            (string) $documentType,
+                        );
+
+                        $verification = $this->philippineIdDetection->buildVerificationRecord(
+                            $ocrPayload,
+                            (string) $documentType,
+                            is_array($wizard['step1_data'] ?? null) ? $wizard['step1_data'] : [],
+                        );
+                        $wizard = $this->draftService->storeIdVerification($wizard, $verification);
+                        $formSuggestions = $verification['form_suggestions'] ?? null;
+
+                        if (($ocrPayload['validation_error'] ?? false) === true) {
+                            Log::info('KK wizard Step 2 OCR validation warning', [
+                                'document_type' => $documentType,
+                                'detected_id_type' => $ocrPayload['id_type'] ?? null,
+                                'message' => $ocrPayload['message'] ?? null,
+                            ]);
+                        }
+                    } catch (\Throwable $exception) {
+                        report($exception);
+                        Log::warning('KK wizard Step 2 OCR failed', [
+                            'document_type' => $documentType,
+                            'error' => $exception->getMessage(),
+                        ]);
+                    }
+                }
             }
         }
 
@@ -176,6 +217,8 @@ class KKProfilingWizardController extends Controller
             'documents_uploaded' => $hasAnyUpload,
             'verification_sent' => $verificationSent,
             'email_error' => $emailError,
+            'ocr' => isset($ocrPayload) && is_array($ocrPayload) ? $ocrPayload : null,
+            'form_suggestions' => isset($formSuggestions) && is_array($formSuggestions) ? $formSuggestions : null,
         ]);
     }
 
@@ -570,6 +613,58 @@ class KKProfilingWizardController extends Controller
         ]);
     }
 
+    public function detectId(Request $request, string $barangay)
+    {
+        $barangayRecord = $this->resolveBarangay($barangay);
+        $wizard = $this->requireWizard();
+
+        if ((int) ($wizard['barangay_id'] ?? 0) !== (int) $barangayRecord->id) {
+            throw ValidationException::withMessages([
+                'draft' => ['Your registration session does not match this barangay.'],
+            ]);
+        }
+
+        $request->validate([
+            'document_type' => ['required', Rule::in(['national_id', 'philhealth_id', 'voters_id'])],
+            'front' => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
+            'back' => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
+        ]);
+
+        $documentType = (string) $request->input('document_type');
+
+        try {
+            $payload = $this->philippineIdDetection->detectUploadedPair(
+                $request->file('front'),
+                $request->file('back'),
+                $documentType,
+            );
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return response()->json([
+                'success' => false,
+                'validation_error' => true,
+                'message' => 'Unable to scan your ID right now. Please try again with clearer front and back photos.',
+                'ocr' => [
+                    'success' => false,
+                    'validation_error' => true,
+                    'message' => 'Unable to scan your ID right now. Please try again with clearer front and back photos.',
+                ],
+                'form_suggestions' => [],
+            ], 422);
+        }
+
+        $formSuggestions = $this->philippineIdDetection->mapToFormFields($payload);
+
+        return response()->json([
+            'success' => (bool) ($payload['success'] ?? false),
+            'ocr' => $payload,
+            'form_suggestions' => $formSuggestions,
+            'message' => $payload['message'] ?? null,
+            'validation_error' => (bool) ($payload['validation_error'] ?? false),
+        ], ($payload['validation_error'] ?? false) ? 422 : 200);
+    }
+
     public function documentPreview(string $barangay, string $type, ?string $side = 'front')
     {
         $barangayRecord = $this->resolveBarangay($barangay);
@@ -609,7 +704,7 @@ class KKProfilingWizardController extends Controller
         ]);
     }
 
-    private function completedRegistrationResponse(Barangay $barangayRecord): ?\Illuminate\Http\JsonResponse
+    private function completedRegistrationResponse(Barangay $barangayRecord): ?JsonResponse
     {
         $completed = $this->draftService->resolveCompletedRegistration((int) $barangayRecord->id);
 
@@ -654,7 +749,7 @@ class KKProfilingWizardController extends Controller
         return $wizard;
     }
 
-    private function finalizeRegistrationResponse(KabataanRegistration $registration): \Illuminate\Http\JsonResponse
+    private function finalizeRegistrationResponse(KabataanRegistration $registration): JsonResponse
     {
         $registration = $registration->fresh();
         $autoApproved = RegistrationEvaluationService::isAutoApprovedStatus($registration->evaluation_status);
@@ -776,7 +871,7 @@ class KKProfilingWizardController extends Controller
         }
 
         try {
-            $derivedAge = \Carbon\Carbon::parse($validated['birthday'])->age;
+            $derivedAge = Carbon::parse($validated['birthday'])->age;
             if ($derivedAge < 15 || $derivedAge > 30 || (int) $validated['age'] !== (int) $derivedAge) {
                 throw ValidationException::withMessages([
                     'birthday' => ['Birthday and age must match and be within 15 to 30 years old.'],
@@ -918,7 +1013,7 @@ class KKProfilingWizardController extends Controller
         Barangay $barangayRecord,
         string $email,
         ?KabataanRegistration $registration = null,
-    ): \Illuminate\View\View {
+    ): View {
         $this->draftService->markRegistrationComplete($email, (int) $barangayRecord->id, $registration);
 
         $autoApproved = $registration

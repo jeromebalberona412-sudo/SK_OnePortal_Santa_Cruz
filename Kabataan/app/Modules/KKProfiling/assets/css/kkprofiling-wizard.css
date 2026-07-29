@@ -651,6 +651,84 @@
     display: none !important;
 }
 
+.kkp-wizard-doc-error-panel {
+    margin-top: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #991b1b;
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.kkp-wizard-doc-error-panel[hidden] {
+    display: none !important;
+}
+
+.kkp-wizard-ocr-panel {
+    margin-top: 1.25rem;
+    padding: 1rem 1.1rem;
+    border-radius: 12px;
+    border: 1px solid #dbeafe;
+    background: #f8fbff;
+}
+
+.kkp-wizard-ocr-title {
+    margin: 0 0 0.35rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.kkp-wizard-ocr-status {
+    margin: 0;
+    color: #334155;
+    font-size: 0.92rem;
+}
+
+.kkp-wizard-ocr-fields {
+    margin: 0.75rem 0 0;
+    display: grid;
+    gap: 0.35rem 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.kkp-wizard-ocr-fields div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.kkp-wizard-ocr-fields dt {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+}
+
+.kkp-wizard-ocr-fields dd {
+    margin: 0;
+    font-weight: 600;
+    color: #0f172a;
+    word-break: break-word;
+}
+
+.kkp-wizard-ocr-note {
+    margin: 0.75rem 0 0;
+    font-size: 0.85rem;
+    color: #1d4ed8;
+}
+
+.kkp-wizard-ocr-panel.is-error {
+    border-color: #fecaca;
+    background: #fff7f7;
+}
+
+.kkp-wizard-ocr-panel.is-loading {
+    opacity: 0.85;
+}
+
 /* Set-password-only view (from email link) — hide wizard chrome */
 .kkp-wizard-set-password-only #kkpWizardProgressHeader,
 .kkp-wizard-set-password-only #kkpTopBackLink,

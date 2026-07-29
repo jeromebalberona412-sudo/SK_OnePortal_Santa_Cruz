@@ -21,8 +21,10 @@
         'app/Modules/Homepage/assets/css/kabataan-footer.css',
         'app/Modules/Homepage/assets/css/homepage-interactions.css',
         'app/Modules/Homepage/assets/css/homepage-responsive.css',
+        'app/Modules/Homepage/assets/css/barangay-abyip.css',
         'app/Modules/Homepage/assets/js/homepage.js',
         'app/Modules/Homepage/assets/js/faqs.js',
+        'app/Modules/Homepage/assets/js/barangay-abyip.js',
     ])
 
     @stack('styles')
@@ -41,6 +43,7 @@
             <div class="kabataan-nav-links" id="kabataanNavLinks">
                 <a href="{{ route('homepage') }}" class="kabataan-nav-link" data-section="hero">Home</a>
                 <a href="{{ route('homepage.section', ['section' => 'about']) }}" class="kabataan-nav-link" data-section="about">About</a>
+                <a href="{{ route('homepage.barangays') }}" class="kabataan-nav-link" data-section="barangays">Barangay ABYIP</a>
                 <a href="{{ route('homepage.section', ['section' => 'faqs']) }}" class="kabataan-nav-link" data-section="faq">FAQs</a>
                 <a href="{{ route('homepage.section', ['section' => 'contact']) }}" class="kabataan-nav-link" data-section="kabataanFooter">Contact</a>
             </div>
@@ -58,6 +61,7 @@
     <div class="kabataan-drawer" id="kabataanDrawer" aria-hidden="true">
         <a href="{{ route('homepage') }}" class="kabataan-drawer-link" data-section="hero">Home</a>
         <a href="{{ route('homepage.section', ['section' => 'about']) }}" class="kabataan-drawer-link" data-section="about">About</a>
+        <a href="{{ route('homepage.barangays') }}" class="kabataan-drawer-link" data-section="barangays">Barangay ABYIP</a>
         <a href="{{ route('homepage.section', ['section' => 'faqs']) }}" class="kabataan-drawer-link" data-section="faq">FAQs</a>
         <a href="{{ route('homepage.section', ['section' => 'contact']) }}" class="kabataan-drawer-link" data-section="kabataanFooter">Contact</a>
         <div class="kabataan-drawer-actions">

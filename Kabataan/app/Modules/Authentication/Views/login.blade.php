@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -73,10 +73,6 @@
         <div class="youth-login-section">
             <div class="youth-login-card">
                 <div class="card-header">
-                    <h2 class="card-title">
-                        Welcome, Kabataan! 
-                        <span class="wave-emoji">👋</span>
-                    </h2>
                     <p class="card-subtitle">Sign in to your account</p>
                 </div>
 

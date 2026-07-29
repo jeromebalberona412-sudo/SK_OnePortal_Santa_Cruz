@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
 use RuntimeException;
@@ -171,6 +173,181 @@ class OCRService
         $resolved = realpath($imagePath);
 
         return $resolved !== false ? $resolved : $imagePath;
+    }
+
+    /**
+     * Detect Philippine ID (PhilSys, PhilHealth, Voter's) via FastAPI PaddleOCR service.
+     *
+     * @return array<string, mixed>
+     */
+    public function detectId(string $imagePath, ?string $documentType = null): array
+    {
+        $imagePath = $this->normalizeImagePath($imagePath);
+
+        if (! is_file($imagePath)) {
+            return [
+                'success' => false,
+                'message' => 'Image file not found.',
+            ];
+        }
+
+        if (! config('ocr.api_enabled', true)) {
+            return [
+                'success' => false,
+                'message' => 'OCR API is disabled.',
+            ];
+        }
+
+        $apiUrl = (string) config('ocr.api_url', '');
+
+        if ($apiUrl === '') {
+            return [
+                'success' => false,
+                'message' => 'OCR API URL is not configured.',
+            ];
+        }
+
+        try {
+            $request = Http::timeout((int) config('ocr.timeout', 120))
+                ->attach('image', file_get_contents($imagePath), basename($imagePath));
+
+            $apiKey = config('ocr.api_key');
+
+            if (is_string($apiKey) && $apiKey !== '') {
+                $request = $request->withHeaders(['X-Api-Key' => $apiKey]);
+            }
+
+            $form = ($documentType !== null && $documentType !== '')
+                ? ['document_type' => $documentType]
+                : [];
+
+            $response = $request->post($apiUrl.'/detect-id', $form);
+        } catch (\Throwable $exception) {
+            Log::warning('Philippine ID OCR API request failed', [
+                'error' => $exception->getMessage(),
+                'path' => $imagePath,
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'OCR service is unavailable.',
+            ];
+        }
+
+        return $this->decodeApiResponse($response->status(), $response->json());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function detectIdPair(
+        string $frontPath,
+        string $backPath,
+        ?string $documentType = null,
+    ): array {
+        $frontPath = $this->normalizeImagePath($frontPath);
+        $backPath = $this->normalizeImagePath($backPath);
+
+        if (! is_file($frontPath) || ! is_file($backPath)) {
+            return [
+                'success' => false,
+                'message' => 'Front or back image file not found.',
+            ];
+        }
+
+        if (! config('ocr.api_enabled', true)) {
+            return [
+                'success' => false,
+                'message' => 'OCR API is disabled.',
+            ];
+        }
+
+        $apiUrl = (string) config('ocr.api_url', '');
+
+        if ($apiUrl === '') {
+            return [
+                'success' => false,
+                'message' => 'OCR API URL is not configured.',
+            ];
+        }
+
+        try {
+            $request = Http::timeout((int) config('ocr.timeout', 120))
+                ->attach('front', file_get_contents($frontPath), basename($frontPath))
+                ->attach('back', file_get_contents($backPath), basename($backPath));
+
+            $apiKey = config('ocr.api_key');
+
+            if (is_string($apiKey) && $apiKey !== '') {
+                $request = $request->withHeaders(['X-Api-Key' => $apiKey]);
+            }
+
+            $form = ($documentType !== null && $documentType !== '')
+                ? ['document_type' => $documentType]
+                : [];
+
+            $response = $request->post($apiUrl.'/detect-id-pair', $form);
+        } catch (\Throwable $exception) {
+            Log::warning('Philippine ID OCR pair API request failed', [
+                'error' => $exception->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'OCR service is unavailable.',
+            ];
+        }
+
+        return $this->decodeApiResponse($response->status(), $response->json());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function detectIdPairFromUploads(
+        UploadedFile $front,
+        UploadedFile $back,
+        ?string $documentType = null,
+    ): array {
+        $frontPath = $front->getRealPath();
+        $backPath = $back->getRealPath();
+
+        if (! is_string($frontPath) || ! is_string($backPath)) {
+            return [
+                'success' => false,
+                'message' => 'Unable to read uploaded images.',
+            ];
+        }
+
+        return $this->detectIdPair($frontPath, $backPath, $documentType);
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $payload
+     * @return array<string, mixed>
+     */
+    private function decodeApiResponse(int $status, ?array $payload): array
+    {
+        if (! is_array($payload)) {
+            return [
+                'success' => false,
+                'message' => 'Invalid OCR API response.',
+            ];
+        }
+
+        if ($status >= 500) {
+            return [
+                'success' => false,
+                'message' => (string) ($payload['detail'] ?? $payload['message'] ?? 'OCR service error.'),
+            ];
+        }
+
+        if (! array_key_exists('success', $payload)) {
+            $payload['success'] = ! ($payload['validation_error'] ?? false)
+                && (($payload['id_type'] ?? 'Unknown') !== 'Unknown');
+        }
+
+        return $payload;
     }
 
     /**

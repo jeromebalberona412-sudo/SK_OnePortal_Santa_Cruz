@@ -51,6 +51,25 @@
     const DOC_MAX_BYTES = 10 * 1024 * 1024;
     const DOC_ALLOWED_TYPES = ['image/jpeg', 'image/png'];
     const DOC_ALLOWED_EXT = ['.jpg', '.jpeg', '.png'];
+    const PHILIPPINE_OCR_DOC_TYPES = ['national_id', 'philhealth_id', 'voters_id'];
+
+    const DOC_TYPE_LABELS = {
+        national_id: 'PhilSys / National ID',
+        philhealth_id: 'PhilHealth ID',
+        voters_id: "Voter's ID",
+        school_id: 'School ID',
+        other_id: 'Other valid proof of identity',
+    };
+
+    const ocrPanel = document.getElementById('kkpWizardOcrPanel');
+    const ocrStatusEl = document.getElementById('kkpWizardOcrStatus');
+    const ocrFieldsEl = document.getElementById('kkpWizardOcrFields');
+    const ocrNoteEl = document.getElementById('kkpWizardOcrNote');
+    const docErrorEl = document.getElementById('kkpWizardDocError');
+
+    let ocrScanToken = 0;
+    let lastOcrPayload = null;
+    let lastOcrBlockingError = null;
 
     const docTypeRadios = document.querySelectorAll('input[name="document_type"]');
     const schoolIdUploadPanel = document.getElementById('kkpSchoolIdUpload');
@@ -106,7 +125,38 @@
     }
 
     function hideDocUploadError() {
-        // No inline error panel on step 2
+        lastOcrBlockingError = null;
+
+        if (docErrorEl) {
+            docErrorEl.hidden = true;
+            docErrorEl.textContent = '';
+        }
+    }
+
+    function formatOcrMismatchMessage(payload, selectedDocumentType) {
+        const selectedLabel = DOC_TYPE_LABELS[selectedDocumentType] || selectedDocumentType;
+        const detectedType = payload?.detected_id_type || payload?.id_type;
+        const detectedLabel = detectedType && detectedType !== 'Unknown'
+            ? detectedType
+            : 'a different ID type';
+
+        if (payload?.message) {
+            return payload.message;
+        }
+
+        if (payload?.expected_id_type && detectedType && detectedType !== 'Unknown') {
+            return `You selected ${selectedLabel}, but the uploaded images appear to be ${detectedLabel}. Please upload the correct ID or change the document type.`;
+        }
+
+        if (detectedType && detectedType !== 'Unknown' && payload?.validation_error) {
+            return `The uploaded images do not match ${selectedLabel}. Detected: ${detectedLabel}. Please upload the correct front and back photos.`;
+        }
+
+        if (payload?.id_type === 'Unknown' || !payload?.success) {
+            return `Unable to verify ${selectedLabel} from the uploaded images. Please upload a clearer front and back photo of your selected ID.`;
+        }
+
+        return `The uploaded ID could not be verified as ${selectedLabel}. Please check your files and try again.`;
     }
 
     function showDocUploadError(message) {
@@ -115,7 +165,236 @@
             return;
         }
 
+        lastOcrBlockingError = message;
+
+        if (docErrorEl) {
+            docErrorEl.hidden = false;
+            docErrorEl.textContent = message;
+            docErrorEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            return;
+        }
+
         alert(message);
+    }
+
+    function setOcrPanelState(state) {
+        if (!ocrPanel) {
+            return;
+        }
+
+        ocrPanel.classList.remove('is-error', 'is-loading');
+
+        if (state === 'loading') {
+            ocrPanel.classList.add('is-loading');
+        } else if (state === 'error') {
+            ocrPanel.classList.add('is-error');
+        }
+    }
+
+    function renderOcrFields(payload) {
+        if (!ocrFieldsEl || !ocrStatusEl || !ocrPanel) {
+            return;
+        }
+
+        const entries = [
+            ['ID type', payload?.id_type],
+            ['Confidence', payload?.confidence != null ? `${Math.round(Number(payload.confidence) * 100)}%` : null],
+            ['Full name', payload?.full_name],
+            ['Birthdate', payload?.birthdate],
+            ['Sex', payload?.sex],
+            ['Address', payload?.address],
+            ['ID number', payload?.id_number],
+        ].filter(([, value]) => value);
+
+        ocrFieldsEl.innerHTML = '';
+
+        entries.forEach(([label, value]) => {
+            const wrap = document.createElement('div');
+            const dt = document.createElement('dt');
+            const dd = document.createElement('dd');
+            dt.textContent = label;
+            dd.textContent = String(value);
+            wrap.appendChild(dt);
+            wrap.appendChild(dd);
+            ocrFieldsEl.appendChild(wrap);
+        });
+
+        ocrFieldsEl.hidden = entries.length === 0;
+        ocrPanel.hidden = false;
+
+        if (payload?.validation_error) {
+            const mismatchMessage = formatOcrMismatchMessage(payload, getSelectedDocumentType());
+            ocrStatusEl.textContent = mismatchMessage;
+            setOcrPanelState('error');
+            showDocUploadError(mismatchMessage);
+        } else if (payload?.success) {
+            hideDocUploadError();
+            ocrStatusEl.textContent = 'ID scanned successfully. Review detected details below.';
+            setOcrPanelState('ok');
+        } else {
+            const fallbackMessage = payload?.message || 'OCR could not identify this ID.';
+            ocrStatusEl.textContent = fallbackMessage;
+            setOcrPanelState('error');
+            showDocUploadError(fallbackMessage);
+        }
+    }
+
+    function setFieldValue(fieldName, value, { onlyEmpty = true } = {}) {
+        if (!value) {
+            return false;
+        }
+
+        const input = form?.querySelector(`[name="${fieldName}"]`);
+
+        if (!input) {
+            return false;
+        }
+
+        if (onlyEmpty && String(input.value || '').trim() !== '') {
+            return false;
+        }
+
+        input.value = value;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+
+        return true;
+    }
+
+    function applySexValue(sex, { onlyEmpty = true } = {}) {
+        if (!sex) {
+            return false;
+        }
+
+        const hidden = document.getElementById('kkpSex');
+
+        if (hidden && (!onlyEmpty || !hidden.value)) {
+            hidden.value = sex;
+        }
+
+        document.querySelectorAll('input[name="sexChk"]').forEach((checkbox) => {
+            checkbox.checked = checkbox.value === sex;
+        });
+
+        return true;
+    }
+
+    function applyFormSuggestions(suggestions, options = {}) {
+        if (!suggestions || typeof suggestions !== 'object') {
+            return false;
+        }
+
+        const onlyEmpty = options.onlyEmpty !== false;
+        let applied = false;
+
+        applied = setFieldValue('first_name', suggestions.first_name, { onlyEmpty }) || applied;
+        applied = setFieldValue('middle_name', suggestions.middle_name, { onlyEmpty }) || applied;
+        applied = setFieldValue('last_name', suggestions.last_name, { onlyEmpty }) || applied;
+        applied = setFieldValue('birthday', suggestions.birthday, { onlyEmpty }) || applied;
+        applied = setFieldValue('age', suggestions.age != null ? String(suggestions.age) : '', { onlyEmpty }) || applied;
+        applied = setFieldValue('purok_zone', suggestions.purok_zone, { onlyEmpty }) || applied;
+        applied = applySexValue(suggestions.sex, { onlyEmpty }) || applied;
+
+        if (ocrNoteEl) {
+            ocrNoteEl.hidden = !applied;
+        }
+
+        return applied;
+    }
+
+    async function scanPhilippineIdIfReady() {
+        const documentType = getSelectedDocumentType();
+
+        if (!PHILIPPINE_OCR_DOC_TYPES.includes(documentType) || !hasCompleteDocumentUpload()) {
+            hideDocUploadError();
+
+            if (ocrPanel) {
+                ocrPanel.hidden = true;
+            }
+
+            return;
+        }
+
+        const files = getActiveDocumentFiles();
+        const token = ++ocrScanToken;
+
+        if (ocrPanel) {
+            ocrPanel.hidden = false;
+        }
+
+        if (ocrStatusEl) {
+            ocrStatusEl.textContent = 'Scanning ID with OCR...';
+        }
+
+        setOcrPanelState('loading');
+
+        try {
+            const formData = new FormData();
+            formData.append('document_type', documentType);
+            formData.append('front', files.front);
+            formData.append('back', files.back);
+
+            const response = await fetch(`${apiBase}/detect-id`, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: formData,
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (token !== ocrScanToken) {
+                return;
+            }
+
+            lastOcrPayload = data.ocr || data;
+
+            if (!response.ok || lastOcrPayload?.validation_error) {
+                if (!lastOcrPayload?.validation_error) {
+                    lastOcrPayload = {
+                        success: false,
+                        validation_error: true,
+                        message: data.message || formatOcrMismatchMessage({}, documentType),
+                    };
+                }
+            }
+
+            renderOcrFields(lastOcrPayload);
+
+            if (lastOcrPayload?.success && data.form_suggestions) {
+                applyFormSuggestions(data.form_suggestions, { onlyEmpty: true });
+            }
+
+            updateNavButtons(currentStep);
+        } catch (error) {
+            if (token !== ocrScanToken) {
+                return;
+            }
+
+            const offlineMessage = 'OCR service is unavailable right now. Please try again later or upload a clearer ID photo.';
+            renderOcrFields({
+                success: false,
+                validation_error: true,
+                message: offlineMessage,
+            });
+            showDocUploadError(offlineMessage);
+            updateNavButtons(currentStep);
+        }
+    }
+
+    function hasBlockingOcrError() {
+        if (!PHILIPPINE_OCR_DOC_TYPES.includes(getSelectedDocumentType())) {
+            return false;
+        }
+
+        if (!hasCompleteDocumentUpload()) {
+            return false;
+        }
+
+        return Boolean(lastOcrBlockingError);
     }
 
     function isAllowedDocumentFile(file) {
@@ -191,6 +470,7 @@
 
         resetFilePreview(input.id);
         input.value = '';
+        scanPhilippineIdIfReady();
     }
 
     function resetFilePreview(inputId) {
@@ -273,6 +553,7 @@
         }
 
         updateNavButtons(currentStep);
+        scanPhilippineIdIfReady();
     }
 
     function resetAllDocumentPreviews() {
@@ -313,6 +594,9 @@
 
         if (!selectedType) {
             clearAllDocumentInputs();
+            if (ocrPanel) {
+                ocrPanel.hidden = true;
+            }
         } else {
             // Clear all other document types
             const allTypes = ['school_id', 'national_id', 'voters_id', 'philhealth_id', 'other_id'];
@@ -324,6 +608,7 @@
         }
 
         updateNavButtons(currentStep);
+        scanPhilippineIdIfReady();
     }
     syncDocumentUploadPanels.lastType = '';
 
@@ -724,6 +1009,24 @@
             }
         });
 
+        if (PHILIPPINE_OCR_DOC_TYPES.includes(documentType) && step2.id_verification) {
+            renderOcrFields({
+                id_type: step2.id_verification.id_type,
+                confidence: step2.id_verification.confidence,
+                full_name: step2.id_verification.detected_name,
+                birthdate: step2.id_verification.detected_birthdate,
+                sex: step2.id_verification.detected_sex,
+                address: step2.id_verification.detected_address,
+                id_number: step2.id_verification.id_number,
+                success: step2.id_verification.success,
+                validation_error: !step2.id_verification.success,
+            });
+
+            if (step2.id_verification.form_suggestions) {
+                applyFormSuggestions(step2.id_verification.form_suggestions, { onlyEmpty: true });
+            }
+        }
+
         updateNavButtons(currentStep);
     }
 
@@ -845,6 +1148,7 @@
 
         if (nextBtn) {
             nextBtn.hidden = step === 3;
+            nextBtn.disabled = step === 2 && hasBlockingOcrError();
         }
 
         if (nextLabelEl) {
@@ -1079,6 +1383,23 @@
             return false;
         }
 
+        if (PHILIPPINE_OCR_DOC_TYPES.includes(documentType)) {
+            if (hasBlockingOcrError()) {
+                showDocUploadError(lastOcrBlockingError);
+                return false;
+            }
+
+            if (!lastOcrPayload || lastOcrPayload.validation_error || !lastOcrPayload.success) {
+                showDocUploadError('Please wait for ID scanning to finish, or upload a clearer front and back photo of your selected ID.');
+                await scanPhilippineIdIfReady();
+
+                if (hasBlockingOcrError()) {
+                    showDocUploadError(lastOcrBlockingError);
+                    return false;
+                }
+            }
+        }
+
         showLoading('Saving your documents...');
 
         let saved = false;
@@ -1090,6 +1411,15 @@
             formData.append(`${documentType}_back`, files.back);
 
             const response = await postFormData(`${apiBase}/step-2`, formData);
+
+            if (response?.ocr) {
+                lastOcrPayload = response.ocr;
+                renderOcrFields(response.ocr);
+            }
+
+            if (response?.form_suggestions) {
+                applyFormSuggestions(response.form_suggestions, { onlyEmpty: true });
+            }
 
             if (response?.verification_sent) {
                 verificationSent = true;

@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Middleware\EnsureKabataanUser;
+use App\Http\Middleware\EnsureKkProfilingUpdated;
+use App\Http\Middleware\EnsureStaffUser;
+use App\Http\Middleware\PreventArchivedKabataanMutations;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,9 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'kabataan' => \App\Http\Middleware\EnsureKabataanUser::class,
-            'kabataan.view_only_guard' => \App\Http\Middleware\PreventArchivedKabataanMutations::class,
-            'kk_profiling.update_required' => \App\Http\Middleware\EnsureKkProfilingUpdated::class,
+            'kabataan' => EnsureKabataanUser::class,
+            'kabataan.view_only_guard' => PreventArchivedKabataanMutations::class,
+            'kk_profiling.update_required' => EnsureKkProfilingUpdated::class,
+            'staff' => EnsureStaffUser::class,
         ]);
 
         $middleware->appendToGroup('auth', [

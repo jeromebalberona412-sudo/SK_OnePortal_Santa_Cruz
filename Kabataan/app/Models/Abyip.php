@@ -17,6 +17,12 @@ class Abyip extends Model
 
     public const ROW_ACTIVITY = 'activity';
 
+    public const STATUS_PENDING = 'pending';
+
+    public const STATUS_APPROVED = 'approved';
+
+    public const STATUS_REJECTED = 'rejected';
+
     protected $table = 'abyip';
 
     protected $fillable = [
@@ -29,16 +35,31 @@ class Abyip extends Model
         'parent_id',
         'code',
         'program_name',
+        'activity_name',
         'description',
         'expected_result',
         'performance_indicator',
         'implementation_period',
+        'implementation_start',
+        'implementation_end',
         'person_responsible',
         'mooe',
         'co',
         'total',
         'budget',
         'sort_order',
+        'barangay_estimated_budget',
+        'sk_fund_amount',
+        'total_budget',
+        'prepared_by',
+        'prepared_by_name',
+        'prepared_position',
+        'prepared_by_position',
+        'approved_by',
+        'approved_by_name',
+        'approved_position',
+        'approved_by_position',
+        'status',
     ];
 
     protected function casts(): array
@@ -49,6 +70,9 @@ class Abyip extends Model
             'co' => 'decimal:2',
             'total' => 'decimal:2',
             'budget' => 'decimal:2',
+            'barangay_estimated_budget' => 'decimal:2',
+            'sk_fund_amount' => 'decimal:2',
+            'total_budget' => 'decimal:2',
         ];
     }
 
@@ -67,6 +91,14 @@ class Abyip extends Model
     public function barangay(): BelongsTo
     {
         return $this->belongsTo(Barangay::class);
+    }
+
+    public function lines(): HasMany
+    {
+        return $this->hasMany(self::class, 'document_id')
+            ->where('row_type', '!=', self::ROW_DOCUMENT)
+            ->orderBy('sort_order')
+            ->orderBy('id');
     }
 
     public function children(): HasMany

@@ -1,17 +1,27 @@
 <?php
 
+$ocrRoot = env('OCR_ROOT');
+
+if (! is_string($ocrRoot) || $ocrRoot === '' || ! is_dir($ocrRoot)) {
+    $ocrRoot = dirname(base_path()).DIRECTORY_SEPARATOR.'python';
+}
+
+$defaultPython = PHP_OS_FAMILY === 'Windows'
+    ? (is_file($ocrRoot.'/.venv312/Scripts/python.exe')
+        ? $ocrRoot.'/.venv312/Scripts/python.exe'
+        : $ocrRoot.'/.venv/Scripts/python.exe')
+    : (is_file($ocrRoot.'/.venv312/bin/python')
+        ? $ocrRoot.'/.venv312/bin/python'
+        : $ocrRoot.'/.venv/bin/python');
+
 return [
-    'python' => env('OCR_PYTHON_PATH', PHP_OS_FAMILY === 'Windows'
-        ? (is_file(base_path('python/.venv312/Scripts/python.exe'))
-            ? base_path('python/.venv312/Scripts/python.exe')
-            : base_path('python/.venv/Scripts/python.exe'))
-        : (is_file(base_path('python/.venv312/bin/python'))
-            ? base_path('python/.venv312/bin/python')
-            : base_path('python/.venv/bin/python'))),
+    'root' => $ocrRoot,
 
-    'script' => base_path('python/ocr.py'),
+    'python' => env('OCR_PYTHON_PATH', $defaultPython),
 
-    'pipeline_script' => base_path('python/validate_school_id.py'),
+    'script' => $ocrRoot.DIRECTORY_SEPARATOR.'ocr.py',
+
+    'pipeline_script' => $ocrRoot.DIRECTORY_SEPARATOR.'validate_school_id.py',
 
     'pipeline_enabled' => (bool) env('OCR_PIPELINE_ENABLED', true),
 
@@ -23,9 +33,23 @@ return [
 
     'min_lines' => (int) env('OCR_MIN_LINES', 2),
 
-    'windows_script' => base_path('python/ocr_windows.ps1'),
+    'windows_script' => $ocrRoot.DIRECTORY_SEPARATOR.'ocr_windows.ps1',
 
     'trust_school_id_municipal_match' => (bool) env('OCR_TRUST_SCHOOL_ID_MUNICIPAL', false),
 
     'trust_complete_upload_match' => (bool) env('OCR_TRUST_COMPLETE_UPLOAD', false),
+
+    'api_url' => rtrim((string) env('OCR_API_URL', 'http://127.0.0.1:8001'), '/'),
+
+    'api_enabled' => (bool) env('OCR_API_ENABLED', true),
+
+    'api_key' => env('OCR_API_KEY'),
+
+    'min_detect_confidence' => (float) env('OCR_MIN_DETECT_CONFIDENCE', 0.35),
+
+    'supported_philippine_ids' => [
+        'national_id',
+        'philhealth_id',
+        'voters_id',
+    ],
 ];

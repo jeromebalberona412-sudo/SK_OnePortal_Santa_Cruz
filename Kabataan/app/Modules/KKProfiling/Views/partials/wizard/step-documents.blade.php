@@ -160,5 +160,16 @@
         </div>
         @endforeach
 
+        <div class="kkp-wizard-doc-error-panel" id="kkpWizardDocError" role="alert" hidden></div>
+
+        <div class="kkp-wizard-ocr-panel" id="kkpWizardOcrPanel" hidden aria-live="polite">
+            <p class="kkp-wizard-ocr-title">ID scan results</p>
+            <p class="kkp-wizard-ocr-status" id="kkpWizardOcrStatus">Upload front and back to scan your ID.</p>
+            <dl class="kkp-wizard-ocr-fields" id="kkpWizardOcrFields" hidden></dl>
+            <p class="kkp-wizard-ocr-note" id="kkpWizardOcrNote" hidden>
+                Detected values were applied to your profiling form where fields were empty. Review Step 1 and edit before you finish registration.
+            </p>
+        </div>
+
     </div>
 </section>

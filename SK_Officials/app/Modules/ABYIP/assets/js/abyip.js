@@ -1591,16 +1591,122 @@ function collectColumnText(parts, width, startRatio, endRatio) {
         .trim();
 }
 
+function mergeNumericParts(parts) {
+    const sorted = parts.slice().sort(function (a, b) { return a.x - b.x; });
+    const merged = [];
+    let buffer = '';
+    let bufferX = 0;
+
+    sorted.forEach(function (part) {
+        const text = String(part.text || '').replace(/\s/g, '');
+        if (!text) {
+            return;
+        }
+
+        const isNumericFragment = /^[\d,.\-]+$/.test(text) || (buffer && /^[\d,.\-]+$/.test(text));
+        if (isNumericFragment) {
+            if (!buffer) {
+                bufferX = part.x;
+            }
+            buffer += text;
+            return;
+        }
+
+        if (buffer) {
+            merged.push({ x: bufferX, text: buffer });
+            buffer = '';
+        }
+
+        merged.push({ x: part.x, text: text });
+    });
+
+    if (buffer) {
+        merged.push({ x: bufferX, text: buffer });
+    }
+
+    return merged;
+}
+
+function normalizeAmountToken(text) {
+    let value = String(text || '').replace(/\s/g, '').replace(/,/g, '');
+    if (/^[\d]+\.\d{2}$/.test(value)) {
+        return value;
+    }
+
+    if (/^[\d]+$/.test(value) && value.length >= 3) {
+        return value.slice(0, -2) + '.' + value.slice(-2);
+    }
+
+    return '';
+}
+
 function extractColumnAmounts(parts, width, startRatio, endRatio) {
     const start = width * startRatio;
     const end = width * endRatio;
-    const amountPattern = /^[\d,]+(?:\.\d{2})?$/;
 
-    return parts
+    return mergeNumericParts(parts)
         .filter(function (part) { return part.x >= start && part.x < end; })
-        .map(function (part) { return part.text.replace(/\s/g, ''); })
-        .filter(function (text) { return amountPattern.test(text); })
-        .map(function (text) { return text.replace(/,/g, ''); });
+        .map(function (part) { return normalizeAmountToken(part.text); })
+        .filter(Boolean);
+}
+
+function extractBudgetAmountsFromParts(parts, width) {
+    const budgetStart = width * 0.55;
+
+    return mergeNumericParts(parts)
+        .filter(function (part) { return part.x >= budgetStart; })
+        .map(function (part) { return normalizeAmountToken(part.text); })
+        .filter(Boolean);
+}
+
+function assignBudgetColumns(amounts) {
+    if (!amounts || !amounts.length) {
+        return {
+            mooe: '',
+            co: '',
+            total: '',
+            mooeAmounts: [],
+            coAmounts: [],
+            totalAmounts: [],
+        };
+    }
+
+    if (amounts.length >= 3) {
+        const mooe = amounts[amounts.length - 3];
+        const co = amounts[amounts.length - 2];
+        const total = amounts[amounts.length - 1];
+
+        return {
+            mooe: mooe,
+            co: co,
+            total: total,
+            mooeAmounts: [mooe],
+            coAmounts: co ? [co] : [],
+            totalAmounts: [total],
+        };
+    }
+
+    if (amounts.length === 2) {
+        return {
+            mooe: amounts[0],
+            co: '',
+            total: amounts[1],
+            mooeAmounts: [amounts[0]],
+            coAmounts: [],
+            totalAmounts: [amounts[1]],
+        };
+    }
+
+    const only = amounts[amounts.length - 1];
+
+    return {
+        mooe: only,
+        co: '',
+        total: only,
+        mooeAmounts: [only],
+        coAmounts: [],
+        totalAmounts: [only],
+    };
 }
 
 function appendBlockField(block, key, value) {
@@ -1635,12 +1741,36 @@ function appendBlockAmounts(block, key, amounts) {
 
 function parseRowColumns(row, width, bounds) {
     const columns = bounds || abyipColumnBounds || ABYIP_COLUMN_DEFAULTS;
-    const mooeAmounts = extractColumnAmounts(row.parts, width, columns.mooe[0], columns.mooe[1]);
-    const coAmounts = extractColumnAmounts(row.parts, width, columns.co[0], columns.co[1]);
+    let mooeAmounts = extractColumnAmounts(row.parts, width, columns.mooe[0], columns.mooe[1]);
+    let coAmounts = extractColumnAmounts(row.parts, width, columns.co[0], columns.co[1]);
     let totalAmounts = extractColumnAmounts(row.parts, width, columns.total[0], columns.total[1]);
 
-    if (totalAmounts.length === 0 && mooeAmounts.length > 0) {
-        totalAmounts = mooeAmounts.slice();
+    let mooe = mooeAmounts[0] || '';
+    let co = coAmounts[0] || '';
+    let total = totalAmounts[0] || '';
+
+    if (!mooe && !co && !total) {
+        const fallback = assignBudgetColumns(extractBudgetAmountsFromParts(row.parts, width));
+        mooe = fallback.mooe;
+        co = fallback.co;
+        total = fallback.total;
+        mooeAmounts = fallback.mooeAmounts;
+        coAmounts = fallback.coAmounts;
+        totalAmounts = fallback.totalAmounts;
+    }
+
+    if (!total && mooe && co) {
+        total = String((parseFloat(mooe) || 0) + (parseFloat(co) || 0));
+        totalAmounts = [total];
+    } else if (!total && mooe && !co) {
+        total = mooe;
+        totalAmounts = [total];
+    }
+
+    const fullLine = row.parts.map(function (part) { return part.text; }).join(' ').replace(/\s+/g, ' ').trim();
+    let person = extractPersonResponsibleValue(row.parts, width, columns.person[0]);
+    if (!person) {
+        person = extractPersonFromFullLine(fullLine);
     }
 
     return {
@@ -1651,12 +1781,12 @@ function parseRowColumns(row, width, bounds) {
         period: collectColumnText(row.parts, width, columns.period[0], columns.period[1]),
         mooeAmounts: mooeAmounts,
         coAmounts: coAmounts,
-        totalAmounts: totalAmounts,
-        mooe: mooeAmounts[0] || '',
-        co: coAmounts[0] || '',
-        total: totalAmounts[0] || '',
-        person: extractPersonResponsibleValue(row.parts, width, columns.person[0]),
-        fullLine: row.parts.map(function (part) { return part.text; }).join(' ').replace(/\s+/g, ' ').trim(),
+        totalAmounts: total ? [total] : totalAmounts,
+        mooe: mooe,
+        co: co,
+        total: total,
+        person: person,
+        fullLine: fullLine,
     };
 }
 
@@ -1769,12 +1899,19 @@ function createEmptyBlock(letter) {
 }
 
 function extractAmountFromText(text) {
-    const matches = String(text || '').match(/([\d,]+(?:\.\d{2})?)/g);
-    if (!matches || !matches.length) {
-        return '';
+    const source = String(text || '');
+
+    const decimalMatches = source.match(/[\d,]+\.\d{2}/g);
+    if (decimalMatches && decimalMatches.length) {
+        return decimalMatches[decimalMatches.length - 1].replace(/,/g, '');
     }
 
-    return matches[matches.length - 1].replace(/,/g, '');
+    const groupedMatches = source.match(/\d{1,3}(?:,\d{3})+/g);
+    if (groupedMatches && groupedMatches.length) {
+        return groupedMatches[groupedMatches.length - 1].replace(/,/g, '');
+    }
+
+    return '';
 }
 
 function extractPersonColumn(parts, width, startRatio) {
@@ -1792,6 +1929,33 @@ function extractPersonColumn(parts, width, startRatio) {
     return collectColumnText(parts, width, startRatio !== undefined ? startRatio : 0.82, 1.05);
 }
 
+function extractPersonFromFullLine(fullLine) {
+    const source = String(fullLine || '').replace(/\s+/g, ' ').trim();
+    if (!source) {
+        return '';
+    }
+
+    const patterns = [
+        /Sangguniang\s*Kabataan\s*Council\s*\/\s*BADAC/i,
+        /Sangguniang\s*Kabataan\s*Council\s*\/\s*ALS/i,
+        /SK\s*Chairman\s*\/\s*SK\s*Treasurer/i,
+        /Sangguniang\s*Kabataan\s*Council/i,
+        /Sangguniang\s*Kabataan\s*Counci[l]?/i,
+        /SK\s*Treasurer/i,
+        /SK\s*Chairman/i,
+        /SK\s*Chairperson/i,
+    ];
+
+    for (let i = 0; i < patterns.length; i++) {
+        const match = source.match(patterns[i]);
+        if (match) {
+            return normalizePersonColumnText(match[0]);
+        }
+    }
+
+    return '';
+}
+
 function extractPersonResponsibleValue(parts, width, startRatio) {
     const threshold = width * (startRatio !== undefined ? startRatio : 0.82);
     const raw = parts
@@ -1801,22 +1965,9 @@ function extractPersonResponsibleValue(parts, width, startRatio) {
         .replace(/\s+/g, ' ')
         .trim();
 
-    const patterns = [
-        /Sangguniang\s*Kabataan\s*Council\s*\/\s*BADAC/i,
-        /Sangguniang\s*Kabataan\s*Council\s*\/\s*ALS/i,
-        /SK\s*Chairman\s*\/\s*SK\s*Treasurer/i,
-        /Sangguniang\s*Kabataan\s*Counci[l]?/i,
-        /Sangguniang\s*Kabataan\s*Council/i,
-        /SK\s*Treasurer/i,
-        /SK\s*Chairman/i,
-        /SK\s*Chairperson/i,
-    ];
-
-    for (let i = 0; i < patterns.length; i++) {
-        const match = raw.match(patterns[i]);
-        if (match) {
-            return normalizePersonColumnText(match[0]);
-        }
+    const fromColumn = extractPersonFromFullLine(raw);
+    if (fromColumn) {
+        return fromColumn;
     }
 
     const fallback = normalizePersonColumnText(extractPersonColumn(parts, width, startRatio));
@@ -1824,7 +1975,9 @@ function extractPersonResponsibleValue(parts, width, startRatio) {
         return fallback;
     }
 
-    return '';
+    const fullLine = parts.map(function (part) { return part.text; }).join(' ').replace(/\s+/g, ' ').trim();
+
+    return extractPersonFromFullLine(fullLine);
 }
 
 function normalizePersonColumnText(value) {

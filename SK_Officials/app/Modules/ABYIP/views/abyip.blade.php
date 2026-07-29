@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Annual Barangay Youth Investment Program (ABYIP) CY {{ date('Y') }} — SK Officials Portal</title>
+    <title>Annual Barangay Youth Investment Program (ABYIP) CY {{ date('Y') }} ï¿½ SK Officials Portal</title>
 
     <!-- PDF.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -167,7 +167,7 @@
                 </tr>
                 
                 <tr class="subsection-header">
-                    <td colspan="10"><strong>GENERAL ADMINISTRATION PROGRAM — CURRENT OPERATING EXPENDITURES</strong></td>
+                    <td colspan="10"><strong>GENERAL ADMINISTRATION PROGRAM ï¿½ CURRENT OPERATING EXPENDITURES</strong></td>
                 </tr>
                 <tr class="subsection-header">
                     <td colspan="10"><strong>Maintenance and Other Operating Expenses (MOOE)</strong></td>
@@ -450,7 +450,7 @@
         </div>
     </div>
 
-    <!-- Create ABYIP — PDF Upload / Immersive Preview -->
+    <!-- Create ABYIP ï¿½ PDF Upload / Immersive Preview -->
     <div class="modal-backdrop abyip-upload-backdrop" id="createOptionsModal" aria-hidden="true">
         <div class="modal-box create-options-modal-box abyip-upload-modal-box" id="abyipUploadModalBox" role="dialog" aria-labelledby="createOptionsHeading">
             <div class="create-options-modal-header abyip-upload-modal-header" id="abyipUploadModalHeader">
@@ -469,7 +469,7 @@
                         </svg>
                     </div>
                     <p class="abyip-pdf-upload-title">Click to browse or drag and drop</p>
-                    <p class="abyip-pdf-upload-hint">PDF files only · Maximum 15MB</p>
+                    <p class="abyip-pdf-upload-hint">PDF files only ï¿½ Maximum 15MB</p>
                 </div>
             </div>
             <div class="abyip-pdf-preview-stage" id="abyipPdfPreviewStage" hidden>

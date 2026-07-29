@@ -1,0 +1,861 @@
+.barangay-abyip-page {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background:
+        radial-gradient(circle at top left, rgba(4, 80, 168, 0.10), transparent 32%),
+        radial-gradient(circle at top right, rgba(32, 180, 134, 0.08), transparent 28%),
+        #f8fafc;
+    color: #0f172a;
+}
+
+.barangay-abyip-page.kabataan-page-section {
+    scroll-margin-top: 88px;
+}
+
+.barangay-abyip-page .abyip-shell {
+    width: min(1200px, calc(100% - 48px));
+    margin: 0 auto;
+}
+
+/* ============================================
+   Hero / Page Header
+   ============================================ */
+
+.barangay-abyip-page .abyip-hero,
+.barangay-abyip-page .abyip-detail-hero {
+    padding: 96px 0 48px;
+    background: linear-gradient(135deg, #022a54 0%, #0450a8 52%, #1a6fd4 100%);
+    color: #fff;
+}
+
+.barangay-abyip-page .abyip-back-link {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 20px;
+    color: rgba(255, 255, 255, 0.94);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.92rem;
+    padding: 6px 0;
+    transition: color 0.18s ease, transform 0.18s ease;
+}
+
+.barangay-abyip-page .abyip-back-link:hover {
+    color: #ffffff;
+    transform: translateX(-2px);
+}
+
+.barangay-abyip-page .abyip-detail-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 16px;
+}
+
+.barangay-abyip-page .abyip-header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
+}
+
+.barangay-abyip-page .abyip-eyebrow {
+    display: inline-block;
+    align-self: flex-start;
+    margin-bottom: 12px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.barangay-abyip-page h1 {
+    margin: 0 0 10px;
+    font-family: 'Poppins', sans-serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 1.12;
+    color: #ffffff;
+    word-break: break-word;
+}
+
+.barangay-abyip-page .abyip-detail-subtitle {
+    max-width: 720px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.90);
+    line-height: 1.6;
+    font-size: 1.05rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+}
+
+.barangay-abyip-page .abyip-print-btn {
+    border: 0;
+    border-radius: 12px;
+    padding: 12px 20px;
+    background: #20b486;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.92rem;
+    flex-shrink: 0;
+    transition: background 0.18s ease, transform 0.18s ease;
+    box-shadow: 0 6px 16px rgba(32, 180, 134, 0.28);
+}
+
+.barangay-abyip-page .abyip-print-btn:hover {
+    background: #1aa176;
+    transform: translateY(-1px);
+}
+
+/* ============================================
+   Pending Review Status Banner
+   Unobtrusive, clearly visible, non-obstructing
+   ============================================ */
+
+.barangay-abyip-page .abyip-pending-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 18px 0 0;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: rgba(253, 192, 32, 0.14);
+    border: 1px solid rgba(253, 192, 32, 0.35);
+    color: #fde68a;
+    backdrop-filter: blur(6px);
+}
+
+.barangay-abyip-page .abyip-pending-icon {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: #fdc020;
+}
+
+.barangay-abyip-page .abyip-pending-text {
+    font-size: 0.94rem;
+    font-weight: 500;
+    line-height: 1.55;
+    color: #fff8e1;
+    letter-spacing: 0.01em;
+}
+
+/* Old legacy note class (kept for safety) */
+.barangay-abyip-page .abyip-detail-note {
+    margin-top: 8px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.92rem;
+}
+
+/* ============================================
+   Budget Cards
+   ============================================ */
+
+.barangay-abyip-page .abyip-budget-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin: 32px 0 24px;
+}
+
+.barangay-abyip-page .abyip-budget-pill {
+    padding: 20px 22px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(8px);
+}
+
+.barangay-abyip-page .abyip-budget-pill span {
+    display: block;
+    margin-bottom: 10px;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.88rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.barangay-abyip-page .abyip-budget-pill strong {
+    font-size: 1.4rem;
+    font-family: 'Poppins', sans-serif;
+    color: #ffffff;
+    word-break: break-word;
+    line-height: 1.2;
+}
+
+/* ============================================
+   PPA Table — Wrapper & Scroll UX
+   ============================================ */
+
+.barangay-abyip-page .abyip-table-wrap {
+    position: relative;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+    margin-bottom: 28px;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.barangay-abyip-page .abyip-table-wrap:focus-visible {
+    outline: 3px solid #0450a8;
+    outline-offset: 2px;
+}
+
+.barangay-abyip-page .abyip-table-wrap::-webkit-scrollbar {
+    height: 10px;
+}
+
+.barangay-abyip-page .abyip-table-wrap::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 0 0 18px 18px;
+}
+
+.barangay-abyip-page .abyip-table-wrap::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 5px;
+    border: 2px solid #f1f5f9;
+}
+
+.barangay-abyip-page .abyip-table-wrap::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Scroll hint — shows on small screens only */
+.barangay-abyip-page .abyip-scroll-hint {
+    display: none;
+    padding: 10px 16px 12px;
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-align: center;
+    border-top: 1px dashed #e2e8f0;
+    background: #f8fafc;
+    border-radius: 0 0 18px 18px;
+    animation: scrollHintPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes scrollHintPulse {
+    0%, 100% { opacity: 0.75; }
+    50% { opacity: 1; }
+}
+
+/* ============================================
+   PPA Table — Core Layout, Sizing & Typography
+   ============================================ */
+
+.barangay-abyip-page .abyip-table {
+    width: 100%;
+    min-width: 1100px;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+}
+
+/* Fixed column widths for predictable, non-collapsing layout */
+.barangay-abyip-page .abyip-table .abyip-col-ppa            { width: 11%; min-width: 120px; }
+.barangay-abyip-page .abyip-table .abyip-col-description    { width: 21%; min-width: 230px; }
+.barangay-abyip-page .abyip-table .abyip-col-expected       { width: 18%; min-width: 200px; }
+.barangay-abyip-page .abyip-table .abyip-col-indicator      { width: 14%; min-width: 160px; }
+.barangay-abyip-page .abyip-table .abyip-col-period         { width: 9%;  min-width: 100px; }
+.barangay-abyip-page .abyip-table .abyip-col-mooe           { width: 8%;  min-width: 100px; }
+.barangay-abyip-page .abyip-table .abyip-col-co             { width: 7%;  min-width: 90px; }
+.barangay-abyip-page .abyip-table .abyip-col-total          { width: 7%;  min-width: 100px; }
+.barangay-abyip-page .abyip-table .abyip-col-person         { width: 10%; min-width: 130px; }
+
+/* Column headers — min 14px effective font, strong contrast */
+.barangay-abyip-page .abyip-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 16px 14px;
+    background: #022a54;
+    color: #ffffff;
+    text-align: left;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.35;
+    vertical-align: middle;
+    white-space: nowrap;
+    border-bottom: 2px solid #0450a8;
+}
+
+.barangay-abyip-page .abyip-table thead th:first-child {
+    border-top-left-radius: 18px;
+}
+
+.barangay-abyip-page .abyip-table thead th:last-child {
+    border-top-right-radius: 18px;
+}
+
+/* Table cells — MIN 14px body text font (0.9rem = 14.4px) */
+.barangay-abyip-page .abyip-table td {
+    padding: 14px 14px;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: top;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: #0f172a;
+    font-weight: 400;
+    letter-spacing: 0.005em;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+.barangay-abyip-page .abyip-table td.abyip-cell {
+    min-height: 44px;
+}
+
+/* Long-text cells: Description, Expected Result, Performance Indicator
+   Force wrap, prevent truncation/clipping, generous line height */
+.barangay-abyip-page .abyip-table td.abyip-longtext {
+    white-space: normal;
+    line-height: 1.65;
+    color: #1e293b;
+}
+
+/* Numeric columns: right-align for easy comparison, keep on one line per value */
+.barangay-abyip-page .abyip-table td.abyip-num,
+.barangay-abyip-page .abyip-table th.abyip-col-mooe,
+.barangay-abyip-page .abyip-table th.abyip-col-co,
+.barangay-abyip-page .abyip-table th.abyip-col-total {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* Person / Period: wrap names, prevent break mid-word on tiny screens */
+.barangay-abyip-page .abyip-table .abyip-col-person,
+.barangay-abyip-page .abyip-table .abyip-col-period {
+    white-space: normal;
+}
+
+/* Last row removes bottom border so card border is clean */
+.barangay-abyip-page .abyip-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ============================================
+   Table Row Types — Section / Subsection / Item
+   ============================================ */
+
+.barangay-abyip-page .abyip-row-section td {
+    background: linear-gradient(90deg, #0450a8 0%, #0d5fc4 100%);
+    color: #ffffff;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.88rem;
+    padding: 16px 20px;
+    border-bottom: none;
+    line-height: 1.4;
+}
+
+.barangay-abyip-page .abyip-row-section + .abyip-row-subsection td,
+.barangay-abyip-page .abyip-row-section + .abyip-row-item td {
+    border-top: 1px solid #e2e8f0;
+}
+
+.barangay-abyip-page .abyip-row-subsection td {
+    background: rgba(4, 80, 168, 0.10);
+    color: #022a54;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 14px 20px;
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid rgba(4, 80, 168, 0.14);
+}
+
+/* Zebra striping on item rows for scanability */
+.barangay-abyip-page .abyip-row-item:nth-child(even) td {
+    background: #f8fafc;
+}
+
+.barangay-abyip-page .abyip-row-item:hover td {
+    background: rgba(68, 165, 62, 0.05);
+}
+
+/* Section corners fix when section is first row */
+.barangay-abyip-page .abyip-table tbody tr:first-child.abyip-row-section td:first-child {
+    border-top-left-radius: 18px;
+}
+.barangay-abyip-page .abyip-table tbody tr:first-child.abyip-row-section td:last-child {
+    border-top-right-radius: 18px;
+}
+
+/* Last item row bottom-radius (only when no signatories / etc. inside) */
+.barangay-abyip-page .abyip-table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 18px;
+}
+.barangay-abyip-page .abyip-table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 18px;
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+
+.barangay-abyip-page .abyip-empty-state,
+.barangay-abyip-page .no-doc {
+    padding: 40px 32px;
+    border-radius: 18px;
+    background: #fff;
+    border: 1px dashed rgba(148, 163, 184, 0.35);
+    text-align: center;
+    margin-top: 24px;
+}
+
+.barangay-abyip-page .abyip-empty-state h2,
+.barangay-abyip-page .no-doc h2 {
+    margin-top: 0;
+    font-family: 'Poppins', sans-serif;
+    color: #0f172a;
+    font-size: 1.4rem;
+}
+
+.barangay-abyip-page .abyip-empty-state p,
+.barangay-abyip-page .no-doc p {
+    color: #475569;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 8px auto 0;
+    max-width: 560px;
+}
+
+/* ============================================
+   Signatories
+   ============================================ */
+
+.barangay-abyip-page .abyip-signatories {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 48px;
+}
+
+.barangay-abyip-page .abyip-signatories article {
+    padding: 22px 24px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(8px);
+}
+
+.barangay-abyip-page .abyip-signatories span {
+    display: block;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.barangay-abyip-page .abyip-signatories strong {
+    display: block;
+    margin: 10px 0;
+    font-size: 1.12rem;
+    font-family: 'Poppins', sans-serif;
+    color: #ffffff;
+    word-break: break-word;
+    line-height: 1.3;
+}
+
+.barangay-abyip-page .abyip-signatories small {
+    color: rgba(255, 255, 255, 0.74);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* ============================================
+   Listing Page — Grid & Search (index.blade.php)
+   ============================================ */
+
+.barangay-abyip-page .abyip-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 420px;
+    margin-top: 24px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.barangay-abyip-page .abyip-search input {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    outline: none;
+    font-size: 0.98rem;
+    min-height: 24px;
+}
+
+.barangay-abyip-page .abyip-search input::placeholder {
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.barangay-abyip-page .abyip-list-section {
+    padding: 36px 0 72px;
+}
+
+.barangay-abyip-page .abyip-summary {
+    margin-bottom: 18px;
+    color: #475569;
+    font-size: 0.95rem;
+}
+
+.barangay-abyip-page .abyip-barangay-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
+}
+
+.barangay-abyip-page .abyip-barangay-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px;
+    border-radius: 18px;
+    background: #fff;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.barangay-abyip-page .abyip-barangay-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.10);
+}
+
+.barangay-abyip-page .abyip-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.barangay-abyip-page .abyip-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.barangay-abyip-page .abyip-status-badge.is-available {
+    background: rgba(32, 180, 134, 0.14);
+    color: #047857;
+}
+
+.barangay-abyip-page .abyip-status-badge.is-missing {
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+}
+
+.barangay-abyip-page .abyip-card-copy {
+    margin: 0;
+    color: #64748b;
+    line-height: 1.55;
+    font-size: 0.94rem;
+}
+
+.barangay-abyip-page .abyip-card-link {
+    margin-top: auto;
+    color: #0450a8;
+    font-weight: 700;
+    font-size: 0.92rem;
+}
+
+/* ============================================
+   Responsive — Tablet (≤ 900px)
+   ============================================ */
+
+@media (max-width: 900px) {
+    .barangay-abyip-page .abyip-shell {
+        width: min(100%, calc(100% - 32px));
+    }
+
+    .barangay-abyip-page .abyip-detail-hero {
+        padding: 88px 0 40px;
+    }
+
+    .barangay-abyip-page .abyip-detail-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        margin-bottom: 12px;
+    }
+
+    .barangay-abyip-page .abyip-print-btn {
+        align-self: flex-start;
+    }
+
+    .barangay-abyip-page .abyip-budget-cards,
+    .barangay-abyip-page .abyip-signatories {
+        grid-template-columns: 1fr;
+    }
+
+    .barangay-abyip-page .abyip-budget-cards {
+        margin: 28px 0 22px;
+    }
+}
+
+/* ============================================
+   Responsive — Mobile (≤ 640px)
+   ============================================ */
+
+@media (max-width: 640px) {
+    .barangay-abyip-page .abyip-shell {
+        width: min(100%, calc(100% - 24px));
+    }
+
+    .barangay-abyip-page .abyip-detail-hero {
+        padding: 80px 0 32px;
+    }
+
+    .barangay-abyip-page .abyip-back-link {
+        margin-bottom: 16px;
+        font-size: 0.88rem;
+    }
+
+    .barangay-abyip-page .abyip-eyebrow {
+        font-size: 0.75rem;
+        padding: 5px 12px;
+        margin-bottom: 10px;
+    }
+
+    .barangay-abyip-page .abyip-detail-subtitle {
+        font-size: 1rem;
+    }
+
+    .barangay-abyip-page .abyip-pending-banner {
+        margin: 14px 0 0;
+        padding: 12px 14px;
+        border-radius: 12px;
+    }
+
+    .barangay-abyip-page .abyip-pending-icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    .barangay-abyip-page .abyip-pending-text {
+        font-size: 0.9rem;
+    }
+
+    .barangay-abyip-page .abyip-budget-cards {
+        gap: 12px;
+        margin: 24px 0 18px;
+    }
+
+    .barangay-abyip-page .abyip-budget-pill {
+        padding: 16px 18px;
+        border-radius: 14px;
+    }
+
+    .barangay-abyip-page .abyip-budget-pill strong {
+        font-size: 1.25rem;
+    }
+
+    .barangay-abyip-page .abyip-table-wrap {
+        border-radius: 14px;
+        margin-bottom: 24px;
+    }
+
+    .barangay-abyip-page .abyip-table {
+        min-width: 980px;
+    }
+
+    .barangay-abyip-page .abyip-table thead th {
+        padding: 14px 12px;
+        font-size: 0.82rem;
+        letter-spacing: 0.03em;
+    }
+
+    .barangay-abyip-page .abyip-table td {
+        padding: 12px 12px;
+        font-size: 0.88rem; /* 14.08px — still above 14px min */
+        line-height: 1.5;
+    }
+
+    .barangay-abyip-page .abyip-table td.abyip-longtext {
+        line-height: 1.6;
+    }
+
+    .barangay-abyip-page .abyip-row-section td {
+        padding: 14px 16px;
+        font-size: 0.82rem;
+    }
+
+    .barangay-abyip-page .abyip-row-subsection td {
+        padding: 12px 16px;
+        font-size: 0.88rem;
+    }
+
+    .barangay-abyip-page .abyip-scroll-hint {
+        display: block;
+    }
+
+    .barangay-abyip-page .abyip-signatories {
+        gap: 12px;
+        margin-bottom: 32px;
+    }
+
+    .barangay-abyip-page .abyip-signatories article {
+        padding: 18px 20px;
+        border-radius: 14px;
+    }
+
+    .barangay-abyip-page .abyip-signatories strong {
+        font-size: 1.05rem;
+    }
+}
+
+/* ============================================
+   Responsive — Small Mobile (≤ 420px)
+   ============================================ */
+
+@media (max-width: 420px) {
+    .barangay-abyip-page .abyip-table {
+        min-width: 900px;
+    }
+
+    .barangay-abyip-page .abyip-table thead th {
+        padding: 12px 10px;
+        font-size: 0.78rem;
+    }
+
+    .barangay-abyip-page .abyip-table td {
+        padding: 11px 10px;
+        font-size: 0.88rem; /* keep ≥ 14px */
+    }
+}
+
+/* ============================================
+   Print Styles
+   ============================================ */
+
+@media print {
+    .kabataan-nav,
+    .kabataan-drawer,
+    .kabataan-footer,
+    .abyip-back-link,
+    .abyip-print-btn,
+    .abyip-scroll-hint {
+        display: none !important;
+    }
+
+    .barangay-abyip-page .abyip-detail-hero {
+        padding: 24px 0;
+        background: #fff;
+        color: #0f172a;
+    }
+
+    .barangay-abyip-page .abyip-eyebrow {
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        color: #022a54;
+    }
+
+    .barangay-abyip-page h1,
+    .barangay-abyip-page .abyip-detail-subtitle {
+        color: #0f172a;
+    }
+
+    .barangay-abyip-page .abyip-pending-banner {
+        background: #fff7ed;
+        border: 1px solid #fdba74;
+        color: #9a3412;
+    }
+    .barangay-abyip-page .abyip-pending-icon { color: #c2410c; }
+    .barangay-abyip-page .abyip-pending-text { color: #9a3412; }
+
+    .barangay-abyip-page .abyip-budget-pill,
+    .barangay-abyip-page .abyip-signatories article {
+        background: #f8fafc;
+        color: #0f172a;
+        border-color: #cbd5e1;
+    }
+
+    .barangay-abyip-page .abyip-budget-pill span,
+    .barangay-abyip-page .abyip-signatories span,
+    .barangay-abyip-page .abyip-signatories small {
+        color: #475569;
+    }
+
+    .barangay-abyip-page .abyip-budget-pill strong,
+    .barangay-abyip-page .abyip-signatories strong {
+        color: #0f172a;
+    }
+
+    .barangay-abyip-page .abyip-table-wrap {
+        box-shadow: none;
+        border: 1px solid #cbd5e1;
+        overflow: visible;
+    }
+
+    .barangay-abyip-page .abyip-table {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .barangay-abyip-page .abyip-table thead th {
+        background: #022a54 !important;
+        color: #fff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .barangay-abyip-page .abyip-row-section td {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+/* ============================================
+   Accessibility
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .barangay-abyip-page *,
+    .barangay-abyip-page *::before,
+    .barangay-abyip-page *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+.barangay-abyip-page *:focus-visible {
+    outline: 3px solid #fdc020;
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
+::selection {
+    background: #fdc020;
+    color: #022a54;
+}
+::-moz-selection {
+    background: #fdc020;
+    color: #022a54;
+}

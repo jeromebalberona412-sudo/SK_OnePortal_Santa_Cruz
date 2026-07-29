@@ -5,6 +5,7 @@ namespace App\Modules\ABYIP\Services;
 use App\Models\Abyip;
 use App\Models\OfficialProfile;
 use App\Models\User;
+use App\Services\AbyipPdfExtractionService;
 use App\Services\SkFederationsNotificationDispatcher;
 use Carbon\Carbon;
 use DOMDocument;
@@ -13,10 +14,13 @@ use DOMNodeList;
 use DOMXPath;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class AbyipService
 {
+    public function __construct(private readonly AbyipPdfExtractionService $pdfExtractionService) {}
+
     /** @var list<string> */
     private const YOUTH_PROGRAM_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 
@@ -120,10 +124,11 @@ class AbyipService
     public function store(User $user, array $data): array
     {
         $sourceType = (string) ($data['source_type'] ?? Abyip::SOURCE_WORD);
+        $extractedText = $this->resolveExtractedText($data);
         $parsed = $sourceType === Abyip::SOURCE_PDF
             ? $this->parseUploadedDocument(
                 documentHtml: '',
-                extractedText: (string) ($data['extracted_text'] ?? '')
+                extractedText: $extractedText
             )
             : $this->parseUploadedDocument(
                 documentHtml: (string) ($data['document_html'] ?? ''),
@@ -134,9 +139,10 @@ class AbyipService
         $this->assertUniqueYear($user, $fiscalYear);
 
         $signatureUserIds = $this->resolveSignatureUserIds($user->barangay_id, $parsed);
+        $parsed = $this->normalizeDocumentForInsert($parsed);
 
         $document = DB::transaction(function () use ($user, $data, $fiscalYear, $sourceType, $parsed, $signatureUserIds) {
-            $document = Abyip::create([
+            $documentPayload = [
                 'row_type' => Abyip::ROW_DOCUMENT,
                 'tenant_id' => $user->tenant_id,
                 'barangay_id' => $user->barangay_id,
@@ -150,7 +156,7 @@ class AbyipService
                 'document_title' => trim((string) ($parsed['document_title'] ?? $data['title'] ?? 'ABYIP CY '.$fiscalYear)),
                 'sk_council_name' => $parsed['sk_council_name'],
                 'barangay_estimated_budget' => $parsed['barangay_estimated_budget'],
-                'sk_fund_percentage' => $this->resolveSkFundPercentage($parsed),
+                'sk_fund_percentage' => $parsed['sk_fund_percentage'],
                 'sk_fund_amount' => $parsed['sk_fund_amount'],
                 'total_budget' => $parsed['total_budget'],
                 'prepared_by' => $parsed['prepared_by'],
@@ -167,7 +173,11 @@ class AbyipService
                 'source_type' => $sourceType,
                 'document_html' => $data['document_html'] ?? null,
                 'pdf_data' => $data['pdf_data'] ?? null,
-            ]);
+            ];
+
+            Log::info('ABYIP document insert payload', $documentPayload);
+
+            $document = Abyip::create($documentPayload);
 
             $document->update(['document_id' => $document->id]);
 
@@ -249,10 +259,11 @@ class AbyipService
             ]);
         }
 
+        $extractedText = $this->resolveExtractedText($data);
         $parsed = $sourceType === Abyip::SOURCE_PDF
             ? $this->parseUploadedDocument(
                 documentHtml: '',
-                extractedText: (string) ($data['extracted_text'] ?? '')
+                extractedText: $extractedText
             )
             : $this->parseUploadedDocument(
                 documentHtml: (string) ($data['document_html'] ?? ''),
@@ -260,6 +271,7 @@ class AbyipService
             );
 
         $signatureUserIds = $this->resolveSignatureUserIds($user->barangay_id, $parsed);
+        $parsed = $this->normalizeDocumentForInsert($parsed);
 
         $document = DB::transaction(function () use ($document, $data, $sourceType, $parsed, $signatureUserIds) {
             Abyip::query()
@@ -267,7 +279,7 @@ class AbyipService
                 ->where('id', '!=', $document->id)
                 ->delete();
 
-            $document->forceFill([
+            $documentPayload = [
                 'country' => $parsed['country'] ?? 'Republic of the Philippines',
                 'region' => $parsed['region'],
                 'province' => $parsed['province'],
@@ -276,7 +288,7 @@ class AbyipService
                 'document_title' => trim((string) ($parsed['document_title'] ?? $data['title'] ?? $document->document_title)),
                 'sk_council_name' => $parsed['sk_council_name'],
                 'barangay_estimated_budget' => $parsed['barangay_estimated_budget'],
-                'sk_fund_percentage' => $this->resolveSkFundPercentage($parsed),
+                'sk_fund_percentage' => $parsed['sk_fund_percentage'],
                 'sk_fund_amount' => $parsed['sk_fund_amount'],
                 'total_budget' => $parsed['total_budget'],
                 'prepared_by' => $parsed['prepared_by'],
@@ -296,7 +308,11 @@ class AbyipService
                 'reviewed_at' => null,
                 'reviewed_by_user_id' => null,
                 'rejection_reason' => null,
-            ])->save();
+            ];
+
+            Log::info('ABYIP document resubmit payload', $documentPayload);
+
+            $document->forceFill($documentPayload)->save();
 
             $this->syncAbyipLines(
                 $document,
@@ -504,11 +520,11 @@ class AbyipService
             'budget_total' => $item['budget_total'] ?? $item['budget'] ?? null,
         ]);
 
-        $mooe = $budgets['budget_mooe'];
-        $co = $budgets['budget_co'];
-        $total = $budgets['budget_total'];
+        $mooe = $this->numericAmount($budgets['budget_mooe']);
+        $co = $this->numericAmount($budgets['budget_co']);
+        $total = $this->numericAmount($budgets['budget_total']);
 
-        return Abyip::create([
+        $linePayload = [
             'document_id' => $document->id,
             'tenant_id' => $document->tenant_id,
             'barangay_id' => $document->barangay_id,
@@ -530,7 +546,12 @@ class AbyipService
             'co' => $co,
             'total' => $total,
             'sort_order' => $sortOrder,
-        ]);
+            'progress_percent' => $this->numericAmount($item['progress_percent'] ?? 0),
+        ];
+
+        Log::info('ABYIP program insert payload', $linePayload);
+
+        return Abyip::create($linePayload);
     }
 
     /**
@@ -583,7 +604,7 @@ class AbyipService
 
     /**
      * @param  array<string, mixed>  $row
-     * @return array{budget_mooe: ?string, budget_co: ?string, budget_total: ?string}
+     * @return array{budget_mooe: string, budget_co: string, budget_total: string}
      */
     protected function normalizeBudgetFields(array $row): array
     {
@@ -591,14 +612,16 @@ class AbyipService
         $co = $this->parseAmount($row['budget_co'] ?? null);
         $total = $this->parseAmount($row['budget_total'] ?? null);
 
-        if ($total === null && $mooe !== null) {
+        if ($total === null && $mooe !== null && $co !== null) {
+            $total = (string) round((float) $mooe + (float) $co, 2);
+        } elseif ($total === null && $mooe !== null) {
             $total = $mooe;
         }
 
         return [
-            'budget_mooe' => $mooe,
-            'budget_co' => $co,
-            'budget_total' => $total,
+            'budget_mooe' => $this->numericAmount($mooe),
+            'budget_co' => $this->numericAmount($co),
+            'budget_total' => $this->numericAmount($total),
         ];
     }
 
@@ -630,13 +653,13 @@ class AbyipService
         if (trim($extractedText) !== '') {
             foreach ($this->parseHeaderMetadataFromText($extractedText) as $key => $value) {
                 if ($value !== null && $value !== '') {
-                    $parsed[$key] = $value;
+                    $parsed[$key] = $this->preferBudgetAmount($parsed[$key] ?? null, $value, $key);
                 }
             }
 
             foreach ($this->parseAbyipHeaderTagsFromText($extractedText) as $key => $value) {
                 if ($value !== null && $value !== '') {
-                    $parsed[$key] = $value;
+                    $parsed[$key] = $this->preferBudgetAmount($parsed[$key] ?? null, $value, $key);
                 }
             }
 
@@ -648,11 +671,12 @@ class AbyipService
 
             $grandTotal = $this->parseAbyipGrandTotalFromText($extractedText);
             if ($grandTotal !== null) {
-                $parsed['total_budget'] = $grandTotal;
+                $parsed['total_budget'] = $this->preferBudgetAmount($parsed['total_budget'] ?? null, $grandTotal, 'total_budget');
             }
         }
 
         $parsed = $this->normalizeSignatureFields($parsed);
+        $parsed = $this->normalizeDocumentBudgets($parsed);
 
         $parsed['line_items'] = array_values(array_filter(
             $parsed['line_items'] ?? [],
@@ -696,6 +720,10 @@ class AbyipService
             $generalStructured !== [] ? $generalStructured : $generalFromLines,
             fn (array $item) => ! $this->isNonProgramLineItem($item)
         ));
+
+        if ($generalStructured !== []) {
+            $parsed['line_items'] = $this->supplementStructuredRowsFromRawText($parsed['line_items'], $extractedText);
+        }
 
         $youthFromLines = $this->buildYouthProgramsFromLineItems($lineItems);
         if ($youthFromLines === []) {
@@ -935,15 +963,17 @@ class AbyipService
      */
     protected function resolveSkFundPercentage(array $parsed): string
     {
-        if (! empty($parsed['sk_fund_percentage'])) {
-            return (string) $parsed['sk_fund_percentage'];
+        $percentage = $this->parseAmount($parsed['sk_fund_percentage'] ?? null);
+
+        if ($percentage !== null && (float) $percentage > 0) {
+            return $this->numericAmount($percentage);
         }
 
-        $barangay = (float) ($parsed['barangay_estimated_budget'] ?? 0);
-        $skFund = (float) ($parsed['sk_fund_amount'] ?? 0);
+        $barangay = (float) $this->numericAmount($parsed['barangay_estimated_budget'] ?? 0);
+        $skFund = (float) $this->numericAmount($parsed['sk_fund_amount'] ?? 0);
 
         if ($barangay > 0 && $skFund > 0) {
-            return (string) round($skFund / $barangay * 100, 2);
+            return $this->numericAmount(round($skFund / $barangay * 100, 2));
         }
 
         return '10.00';
@@ -1018,9 +1048,9 @@ class AbyipService
             $metadata['fiscal_year'] = (int) $match[1];
         }
 
-        if (preg_match('/Barangay\s+Estimated\s+Budget\s*:?\s*₱?\s*([\d,]+(?:\.\d{2})?)/i', $normalized, $match)) {
+        if (preg_match('/Barangay\s+Estimated\s+Budget\s*:?\s*₱?\s*([\d,]+\.\d{2})/i', $normalized, $match)) {
             $metadata['barangay_estimated_budget'] = $this->parseAmount($match[1]);
-        } elseif (preg_match('/BarangayEstimatedBudget:?\s*₱?\s*([\d,]+(?:\.\d{2})?)/i', $compact, $match)) {
+        } elseif (preg_match('/BarangayEstimatedBudget:?\s*₱?\s*([\d,]+\.\d{2})/i', $compact, $match)) {
             $metadata['barangay_estimated_budget'] = $this->parseAmount($match[1]);
         }
 
@@ -1030,9 +1060,9 @@ class AbyipService
             $metadata['sk_fund_percentage'] = $this->parseAmount($match[1]);
         }
 
-        if (preg_match('/Sangguniang\s+Kabataan\s+Fund\s*(?:\d+(?:\.\d+)?\s*%)?\s*:?\s*₱?\s*([\d,]+(?:\.\d{2})?)/i', $normalized, $match)) {
+        if (preg_match('/Sangguniang\s+Kabataan\s+Fund\s*(?:\d+(?:\.\d+)?\s*%)?\s*:?\s*₱?\s*([\d,]+\.\d{2})/i', $normalized, $match)) {
             $metadata['sk_fund_amount'] = $this->parseAmount($match[1]);
-        } elseif (preg_match('/SangguniangKabataanFund(?:\d+(?:\.\d+)?%)?\s*:?\s*₱?\s*([\d,]+(?:\.\d{2})?)/i', $compact, $match)) {
+        } elseif (preg_match('/SangguniangKabataanFund(?:\d+(?:\.\d+)?%)?\s*:?\s*₱?\s*([\d,]+\.\d{2})/i', $compact, $match)) {
             $metadata['sk_fund_amount'] = $this->parseAmount($match[1]);
         }
 
@@ -1401,7 +1431,7 @@ class AbyipService
 
         ksort($programs);
 
-        return array_values($programs);
+        return $this->supplementYouthProgramsFromRawText(array_values($programs), $text);
     }
 
     /**
@@ -1456,6 +1486,8 @@ class AbyipService
         if ($current !== null) {
             $items[] = $this->finalizeStructuredAbyipRow($current);
         }
+
+        $items = $this->supplementStructuredRowsFromRawText($items, $text);
 
         return array_values(array_filter(
             $items,
@@ -1513,9 +1545,16 @@ class AbyipService
         }
 
         foreach (['MOOE' => 'budget_mooe', 'CO' => 'budget_co', 'TOTAL' => 'budget_total'] as $source => $target) {
-            $parsed = $this->parseAmount($fields[$source] ?? null);
-            if ($parsed !== null && empty($row[$target])) {
-                $row[$target] = $parsed;
+            $amounts = $this->parseAmountsFromCell($fields[$source] ?? null);
+            if ($amounts === []) {
+                $parsed = $this->parseAmount($fields[$source] ?? null);
+                if ($parsed !== null) {
+                    $amounts = [$parsed];
+                }
+            }
+
+            if ($amounts !== []) {
+                $row[$target] = $this->preferBudgetAmount($row[$target] ?? null, $amounts[0], $target);
             }
         }
 
@@ -1535,6 +1574,279 @@ class AbyipService
         $row['person_responsible'] = $this->extractPersonResponsibleFromValue($row['person_responsible'] ?? null);
 
         return $row;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $items
+     * @return list<array<string, mixed>>
+     */
+    protected function supplementStructuredRowsFromRawText(array $items, string $text): array
+    {
+        $rawLines = $this->extractRawTextLines($text);
+
+        foreach ($items as &$item) {
+            $needsBudget = (float) $this->numericAmount($item['budget_mooe'] ?? 0) <= 0
+                && (float) $this->numericAmount($item['budget_co'] ?? 0) <= 0
+                && (float) $this->numericAmount($item['budget_total'] ?? 0) <= 0;
+            $needsPerson = empty($item['person_responsible']);
+
+            if (! $needsBudget && ! $needsPerson) {
+                continue;
+            }
+
+            $ppaName = trim((string) ($item['ppa_name'] ?? ''));
+            if ($ppaName === '') {
+                continue;
+            }
+
+            foreach ($rawLines as $line) {
+                if (! $this->rawLineMatchesPpa($line, $ppaName)) {
+                    continue;
+                }
+
+                $extracted = $this->extractBudgetAndPersonFromLine($line);
+                if ($needsBudget) {
+                    foreach (['budget_mooe', 'budget_co', 'budget_total'] as $field) {
+                        if (! empty($extracted[$field])) {
+                            $item[$field] = $this->preferBudgetAmount(
+                                $item[$field] ?? null,
+                                $extracted[$field],
+                                $field
+                            );
+                        }
+                    }
+                }
+
+                if ($needsPerson && ! empty($extracted['person_responsible'])) {
+                    $item['person_responsible'] = $extracted['person_responsible'];
+                }
+
+                $needsBudget = (float) $this->numericAmount($item['budget_mooe'] ?? 0) <= 0
+                    && (float) $this->numericAmount($item['budget_co'] ?? 0) <= 0
+                    && (float) $this->numericAmount($item['budget_total'] ?? 0) <= 0;
+                $needsPerson = empty($item['person_responsible']);
+
+                if (! $needsBudget && ! $needsPerson) {
+                    break;
+                }
+            }
+
+            if ($needsBudget || $needsPerson) {
+                $item = $this->finalizeStructuredAbyipRow($item);
+            }
+        }
+        unset($item);
+
+        return $items;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $programs
+     * @return list<array<string, mixed>>
+     */
+    protected function supplementYouthProgramsFromRawText(array $programs, string $text): array
+    {
+        $rawLines = $this->extractRawTextLines($text);
+
+        foreach ($programs as &$program) {
+            $letter = strtoupper((string) ($program['letter'] ?? ''));
+            $activities = $program['activities'] ?? [];
+
+            if ($activities === []) {
+                continue;
+            }
+
+            $amountLines = [];
+            $sharedPerson = $program['_meta']['person_responsible'] ?? null;
+
+            foreach ($rawLines as $line) {
+                if ($letter !== '' && preg_match('/^'.$letter.'\.\s/i', $line)) {
+                    continue;
+                }
+
+                if ($letter !== '' && preg_match('/^[A-J]\.\s/i', $line) && ! preg_match('/^'.$letter.'\.\s/i', $line)) {
+                    if ($amountLines !== []) {
+                        break;
+                    }
+
+                    continue;
+                }
+
+                if ($letter !== '' && ! preg_match('/^[A-J]\.\s/i', $line) && $amountLines === [] && ! $this->lineContainsBudgetAmounts($line)) {
+                    continue;
+                }
+
+                if ($this->lineContainsBudgetAmounts($line)) {
+                    $amountLines[] = $line;
+                    $extracted = $this->extractBudgetAndPersonFromLine($line);
+                    if ($sharedPerson === null && ! empty($extracted['person_responsible'])) {
+                        $sharedPerson = $extracted['person_responsible'];
+                    }
+                }
+            }
+
+            if ($amountLines === []) {
+                continue;
+            }
+
+            $allMooe = [];
+            $allCo = [];
+            $allTotal = [];
+
+            foreach ($amountLines as $amountLine) {
+                $extracted = $this->extractBudgetAndPersonFromLine($amountLine);
+                if (! empty($extracted['budget_mooe'])) {
+                    $allMooe[] = $extracted['budget_mooe'];
+                }
+                if (! empty($extracted['budget_co'])) {
+                    $allCo[] = $extracted['budget_co'];
+                }
+                if (! empty($extracted['budget_total'])) {
+                    $allTotal[] = $extracted['budget_total'];
+                }
+            }
+
+            $activityCount = max(1, count($activities));
+            $mooeList = $this->normalizeBudgetAmountList($allMooe, $activityCount);
+            $coList = $this->normalizeBudgetAmountList($allCo, $activityCount);
+            $totalList = $this->normalizeBudgetAmountList($allTotal, $activityCount);
+
+            $program['budget_mooe'] = 0;
+            $program['budget_co'] = 0;
+            $program['budget_total'] = 0;
+
+            foreach ($activities as $index => &$activity) {
+                $hasBudget = (float) $this->numericAmount($activity['budget_mooe'] ?? 0) > 0
+                    || (float) $this->numericAmount($activity['budget_co'] ?? 0) > 0
+                    || (float) $this->numericAmount($activity['budget_total'] ?? 0) > 0;
+
+                if (! $hasBudget) {
+                    $activity = $this->buildYouthActivityRecord(
+                        $activity['ppa_name'] ?? null,
+                        array_merge($program['_meta'] ?? [], ['person_responsible' => $sharedPerson]),
+                        $mooeList[$index] ?? ($mooeList[0] ?? null),
+                        $coList[$index] ?? ($coList[0] ?? null),
+                        $totalList[$index] ?? ($totalList[0] ?? null),
+                    );
+                } elseif (empty($activity['person_responsible']) && $sharedPerson !== null) {
+                    $activity['person_responsible'] = $sharedPerson;
+                }
+
+                $program['budget_mooe'] += (float) $this->numericAmount($activity['budget_mooe'] ?? 0);
+                $program['budget_co'] += (float) $this->numericAmount($activity['budget_co'] ?? 0);
+                $program['budget_total'] += (float) $this->numericAmount($activity['budget_total'] ?? 0);
+            }
+            unset($activity);
+        }
+        unset($program);
+
+        return $programs;
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function extractRawTextLines(string $text): array
+    {
+        $lines = [];
+
+        foreach (preg_split('/\R/u', $text) ?: [] as $line) {
+            $line = trim(preg_replace('/\s+/u', ' ', $line) ?? $line);
+            if ($line === '' || str_starts_with($line, '@')) {
+                continue;
+            }
+
+            $lines[] = $line;
+        }
+
+        return $lines;
+    }
+
+    protected function rawLineMatchesPpa(string $line, string $ppaName): bool
+    {
+        $lineNorm = mb_strtolower(trim(preg_replace('/\s+/u', ' ', $line) ?? $line));
+        $ppaNorm = mb_strtolower(trim(preg_replace('/\s+/u', ' ', $ppaName) ?? $ppaName));
+
+        if ($lineNorm === '' || $ppaNorm === '') {
+            return false;
+        }
+
+        if (str_contains($lineNorm, $ppaNorm)) {
+            return true;
+        }
+
+        $ppaWords = preg_split('/\s+/u', $ppaNorm) ?: [];
+        $firstWord = $ppaWords[0] ?? '';
+
+        if (mb_strlen($firstWord) >= 4 && str_contains($lineNorm, $firstWord)) {
+            return true;
+        }
+
+        $prefix = mb_substr($ppaNorm, 0, min(24, mb_strlen($ppaNorm)));
+
+        return $prefix !== '' && str_contains($lineNorm, $prefix);
+    }
+
+    protected function lineContainsBudgetAmounts(string $line): bool
+    {
+        return preg_match('/[\d,]+\.\d{2}/', $line) === 1;
+    }
+
+    /**
+     * @return array{
+     *     budget_mooe: ?string,
+     *     budget_co: ?string,
+     *     budget_total: ?string,
+     *     person_responsible: ?string
+     * }
+     */
+    protected function extractBudgetAndPersonFromLine(string $line): array
+    {
+        $line = trim(preg_replace('/\s+/u', ' ', $line) ?? $line);
+        $person = null;
+
+        $personPatterns = [
+            '/Sangguniang\s+Kabataan\s+Council\s*\/\s*BADAC/i',
+            '/Sangguniang\s+Kabataan\s+Council\s*\/\s*ALS/i',
+            '/SK\s+Chairman\s*\/\s*SK\s+Treasurer/i',
+            '/Sangguniang\s+Kabataan\s+Council/i',
+            '/Sangguniang\s+Kabataan\s+Counci[l]?/i',
+            '/SK\s+Treasurer/i',
+            '/SK\s+Chairman/i',
+            '/SK\s+Chairperson/i',
+        ];
+
+        foreach ($personPatterns as $pattern) {
+            if (preg_match($pattern, $line, $match)) {
+                $person = $this->extractPersonResponsibleFromValue($match[0]);
+                $line = trim(str_replace($match[0], '', $line));
+                break;
+            }
+        }
+
+        $amounts = $this->parseInlineAmounts($line);
+        $mooe = null;
+        $co = null;
+        $total = null;
+
+        if (count($amounts) >= 3) {
+            $mooe = $amounts[count($amounts) - 3];
+            $co = $amounts[count($amounts) - 2];
+            $total = $amounts[count($amounts) - 1];
+        } elseif (count($amounts) === 2) {
+            $mooe = $amounts[0];
+            $total = $amounts[1];
+        } elseif (count($amounts) === 1) {
+            $mooe = $amounts[0];
+            $total = $amounts[0];
+        }
+
+        return [
+            'budget_mooe' => $mooe,
+            'budget_co' => $co,
+            'budget_total' => $total,
+            'person_responsible' => $person,
+        ];
     }
 
     /**
@@ -2927,8 +3239,46 @@ class AbyipService
                 'budget_mooe' => $this->parseAmount($matches[2]),
                 'budget_co' => $this->parseAmount($matches[3]),
                 'budget_total' => $this->parseAmount($matches[4]),
-                'person_responsible' => isset($matches[5]) ? trim($matches[5]) : null,
+                'person_responsible' => isset($matches[5]) ? $this->extractPersonResponsibleFromValue(trim($matches[5])) : null,
             ];
+        }
+
+        if (preg_match(
+            '/^(.+?)\s+([\d,]+\.\d{2})\s+([\d,]+\.\d{2})(?:\s+(.+))?$/u',
+            $line,
+            $matches
+        )) {
+            $ppaName = trim($matches[1]);
+
+            return [
+                'row_type' => 'data',
+                'ppa_name' => $ppaName !== '' ? $ppaName : null,
+                'budget_mooe' => $this->parseAmount($matches[2]),
+                'budget_co' => '0.00',
+                'budget_total' => $this->parseAmount($matches[3]),
+                'person_responsible' => isset($matches[4]) ? $this->extractPersonResponsibleFromValue(trim($matches[4])) : null,
+            ];
+        }
+
+        if (preg_match(
+            '/^(.+?)\s+([\d,]+\.\d{2})(?:\s+(.+))?$/u',
+            $line,
+            $matches
+        )) {
+            $ppaName = trim($matches[1]);
+            $person = isset($matches[3]) ? $this->extractPersonResponsibleFromValue(trim($matches[3])) : null;
+            $amount = $this->parseAmount($matches[2]);
+
+            if ($amount !== null && ($person !== null || ! preg_match('/^(January|February|March|April|May|June|July|August|September|October|November|December)\b/i', $ppaName))) {
+                return [
+                    'row_type' => 'data',
+                    'ppa_name' => $ppaName !== '' ? $ppaName : null,
+                    'budget_mooe' => $amount,
+                    'budget_co' => '0.00',
+                    'budget_total' => $amount,
+                    'person_responsible' => $person,
+                ];
+            }
         }
 
         if (preg_match('/^(Honoraria|MOOE|Capital Outlay|Receipts)\b/i', $line)) {
@@ -3183,6 +3533,12 @@ class AbyipService
             return null;
         }
 
+        if (preg_match('/([\d,]+\.\d{2})/', $raw, $match)) {
+            $normalized = str_replace(',', '', $match[1]);
+
+            return $this->isValidNumericAmount($normalized) ? $normalized : null;
+        }
+
         if (preg_match('/^([\d,]+),(\d{2})$/', $raw, $matches)) {
             $normalized = str_replace(',', '', $matches[1]).'.'.$matches[2];
 
@@ -3192,6 +3548,198 @@ class AbyipService
         $cleaned = preg_replace('/[^0-9.\-]/', '', $raw) ?? '';
 
         return $this->isValidNumericAmount($cleaned) ? $cleaned : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    protected function resolveExtractedText(array $data): string
+    {
+        $clientText = (string) ($data['extracted_text'] ?? '');
+        $pdfData = (string) ($data['pdf_data'] ?? '');
+
+        if ($pdfData === '') {
+            return $clientText;
+        }
+
+        $serverText = $this->pdfExtractionService->extractTextFromBase64($pdfData);
+
+        return $this->pdfExtractionService->mergeExtractedTexts($clientText, $serverText);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function reparseDocument(Abyip $document): array
+    {
+        if ($document->row_type !== Abyip::ROW_DOCUMENT) {
+            throw ValidationException::withMessages([
+                'document' => ['Only ABYIP document rows can be reparsed.'],
+            ]);
+        }
+
+        if (empty($document->pdf_data)) {
+            throw ValidationException::withMessages([
+                'document' => ['This ABYIP record has no stored PDF to reparse.'],
+            ]);
+        }
+
+        $extractedText = $this->resolveExtractedText([
+            'extracted_text' => '',
+            'pdf_data' => $document->pdf_data,
+        ]);
+
+        $parsed = $this->parseUploadedDocument('', $extractedText);
+        $parsed = $this->normalizeDocumentForInsert($parsed);
+
+        DB::transaction(function () use ($document, $parsed) {
+            $documentPayload = [
+                'country' => $parsed['country'] ?? $document->country,
+                'region' => $parsed['region'] ?? $document->region,
+                'province' => $parsed['province'] ?? $document->province,
+                'municipality' => $parsed['municipality'] ?? $document->municipality,
+                'barangay_name' => $parsed['barangay_name'] ?? $document->barangay_name,
+                'document_title' => $parsed['document_title'] ?? $document->document_title,
+                'sk_council_name' => $parsed['sk_council_name'] ?? $document->sk_council_name,
+                'barangay_estimated_budget' => $parsed['barangay_estimated_budget'],
+                'sk_fund_percentage' => $parsed['sk_fund_percentage'],
+                'sk_fund_amount' => $parsed['sk_fund_amount'],
+                'total_budget' => $parsed['total_budget'],
+                'prepared_by' => $parsed['prepared_by'] ?? $document->prepared_by,
+                'prepared_position' => $parsed['prepared_position'] ?? $document->prepared_position,
+                'prepared_by_name' => $parsed['prepared_by_name'] ?? $document->prepared_by_name,
+                'prepared_by_position' => $parsed['prepared_by_position'] ?? $document->prepared_by_position,
+                'approved_by' => $parsed['approved_by'] ?? $document->approved_by,
+                'approved_position' => $parsed['approved_position'] ?? $document->approved_position,
+                'approved_by_name' => $parsed['approved_by_name'] ?? $document->approved_by_name,
+                'approved_by_position' => $parsed['approved_by_position'] ?? $document->approved_by_position,
+            ];
+
+            Log::info('ABYIP document reparse payload', $documentPayload);
+
+            $document->update($documentPayload);
+
+            Abyip::query()
+                ->where('document_id', $document->id)
+                ->where('id', '!=', $document->id)
+                ->delete();
+
+            $this->syncAbyipLines(
+                $document->fresh(),
+                $parsed['line_items'] ?? [],
+                $parsed['sk_youth_development_and_empowerment_programs'] ?? []
+            );
+        });
+
+        return $this->formatDocument($document->fresh(['lines.children']));
+    }
+
+    protected function preferBudgetAmount(mixed $existing, mixed $incoming, string $field): mixed
+    {
+        if (! in_array($field, ['barangay_estimated_budget', 'sk_fund_amount', 'total_budget', 'budget_mooe', 'budget_co', 'budget_total'], true)) {
+            return $incoming ?? $existing;
+        }
+
+        $existingAmount = (float) $this->numericAmount($existing);
+        $incomingAmount = (float) $this->numericAmount($incoming);
+
+        if ($incomingAmount <= 0 && $existingAmount <= 0) {
+            return '0.00';
+        }
+
+        if ($incomingAmount <= 0) {
+            return $this->numericAmount($existing);
+        }
+
+        if ($existingAmount <= 0) {
+            return $this->numericAmount($incoming);
+        }
+
+        return $incomingAmount >= $existingAmount
+            ? $this->numericAmount($incoming)
+            : $this->numericAmount($existing);
+    }
+
+    /**
+     * @param  array<string, mixed>  $parsed
+     * @return array<string, mixed>
+     */
+    protected function normalizeDocumentForInsert(array $parsed): array
+    {
+        $parsed = $this->normalizeDocumentBudgets($parsed);
+
+        $barangay = (float) $this->numericAmount($parsed['barangay_estimated_budget'] ?? 0);
+        $skFund = (float) $this->numericAmount($parsed['sk_fund_amount'] ?? 0);
+        $total = (float) $this->numericAmount($parsed['total_budget'] ?? 0);
+        $percentage = (float) $this->numericAmount($parsed['sk_fund_percentage'] ?? 10);
+
+        if ($percentage <= 0) {
+            $percentage = 10.0;
+        }
+
+        if ($skFund > 0 && $barangay <= 0) {
+            $barangay = round($skFund / ($percentage / 100), 2);
+        }
+
+        if ($barangay > 0 && $skFund <= 0) {
+            $skFund = round($barangay * ($percentage / 100), 2);
+        }
+
+        if ($total <= 0 && $skFund > 0) {
+            $total = $skFund;
+        }
+
+        $parsed['barangay_estimated_budget'] = $this->numericAmount($barangay);
+        $parsed['sk_fund_percentage'] = $this->numericAmount($percentage);
+        $parsed['sk_fund_amount'] = $this->numericAmount($skFund);
+        $parsed['total_budget'] = $this->numericAmount($total);
+
+        return $parsed;
+    }
+
+    protected function numericAmount(mixed $value): string
+    {
+        $parsed = $this->parseAmount($value);
+
+        if ($parsed !== null && is_numeric($parsed)) {
+            return number_format((float) $parsed, 2, '.', '');
+        }
+
+        if (is_numeric($value)) {
+            return number_format((float) $value, 2, '.', '');
+        }
+
+        return '0.00';
+    }
+
+    /**
+     * @param  array<string, mixed>  $parsed
+     * @return array<string, mixed>
+     */
+    protected function normalizeDocumentBudgets(array $parsed): array
+    {
+        $barangay = (float) $this->numericAmount($parsed['barangay_estimated_budget'] ?? 0);
+        $skFund = (float) $this->numericAmount($parsed['sk_fund_amount'] ?? 0);
+        $total = (float) $this->numericAmount($parsed['total_budget'] ?? 0);
+        $percentage = (float) $this->numericAmount($parsed['sk_fund_percentage'] ?? 10);
+
+        if ($percentage <= 0) {
+            $percentage = 10.0;
+        }
+
+        if ($skFund > 1000 && ($barangay <= 0 || $barangay < ($skFund / 2))) {
+            $parsed['barangay_estimated_budget'] = number_format($skFund / ($percentage / 100), 2, '.', '');
+        }
+
+        if ($total <= 0 && $skFund > 0) {
+            $parsed['total_budget'] = number_format($skFund, 2, '.', '');
+        }
+
+        if ($skFund <= 0 && $barangay > 0) {
+            $parsed['sk_fund_amount'] = number_format($barangay * ($percentage / 100), 2, '.', '');
+        }
+
+        return $parsed;
     }
 
     /**
