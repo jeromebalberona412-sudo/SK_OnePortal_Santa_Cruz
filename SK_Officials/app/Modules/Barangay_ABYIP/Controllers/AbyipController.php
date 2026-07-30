@@ -67,7 +67,6 @@ class AbyipController extends Controller
 
         try {
             $this->scheduleGate->assertCanSubmit($request->user());
-            $validated['calendar_year'] = (int) date('Y');
             $document = $this->abyipService->store($request->user(), $validated);
         } catch (ValidationException $exception) {
             return response()->json([

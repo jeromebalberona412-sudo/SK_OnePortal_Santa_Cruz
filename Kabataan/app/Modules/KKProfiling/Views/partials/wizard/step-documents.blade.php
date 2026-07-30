@@ -171,5 +171,31 @@
             </p>
         </div>
 
+        <div class="kkp-wizard-upload-panel" id="kkpSelfieUploadPanel" hidden>
+            <p class="kkp-wizard-upload-panel-title">Selfie verification</p>
+            <p class="kkp-wizard-panel-desc">After your ID is scanned, upload a clear selfie so we can match your face with your ID photo.</p>
+            <div class="kkp-wizard-upload-grid">
+                <div class="kkp-wizard-upload-shell" data-upload-shell="kkpSelfie">
+                    <p class="kkp-wizard-upload-side-label">Selfie</p>
+                    <label class="kkp-wizard-dropzone" id="kkpSelfieDropzone" for="kkpSelfie">
+                        <input type="file" id="kkpSelfie" name="selfie" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="kkp-wizard-file-input">
+                        <span class="kkp-wizard-dropzone-empty" id="kkpSelfieEmpty">
+                            <span class="kkp-wizard-dropzone-icon" aria-hidden="true">🤳</span>
+                            <span class="kkp-wizard-dropzone-title">Selfie image</span>
+                            <span class="kkp-wizard-dropzone-sub">Drop or <span class="kkp-wizard-dropzone-link">browse</span></span>
+                            <span class="kkp-wizard-dropzone-hint">JPG or PNG · max 10MB</span>
+                        </span>
+                    </label>
+                    <div class="kkp-wizard-dropzone-preview" id="kkpSelfiePreview" hidden>
+                        <img id="kkpSelfiePreviewImg" alt="Selfie preview">
+                        <div class="kkp-wizard-dropzone-filemeta">
+                            <span class="kkp-wizard-dropzone-filename" id="kkpSelfieFileName"></span>
+                            <button type="button" class="kkp-wizard-dropzone-remove" data-clear-input="kkpSelfie" aria-label="Remove selfie image">Remove</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </section>

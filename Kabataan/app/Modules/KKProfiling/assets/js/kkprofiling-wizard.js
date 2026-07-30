@@ -66,6 +66,8 @@
     const ocrFieldsEl = document.getElementById('kkpWizardOcrFields');
     const ocrNoteEl = document.getElementById('kkpWizardOcrNote');
     const docErrorEl = document.getElementById('kkpWizardDocError');
+    const selfieUploadPanel = document.getElementById('kkpSelfieUploadPanel');
+    const selfieInput = document.getElementById('kkpSelfie');
 
     let ocrScanToken = 0;
     let lastOcrPayload = null;
@@ -101,6 +103,7 @@
     Object.values(DOCUMENT_INPUT_IDS).flat().forEach((inputId) => {
         previewConfig[inputId] = buildPreviewConfig(inputId);
     });
+    previewConfig.kkpSelfie = buildPreviewConfig('kkpSelfie');
 
     function getDocumentInput(inputId) {
         return document.getElementById(inputId);
@@ -204,6 +207,7 @@
             ['Sex', payload?.sex],
             ['Address', payload?.address],
             ['ID number', payload?.id_number],
+            ['Face match', payload?.face_match === true ? 'Matched' : (payload?.face_verification?.decision || null)],
         ].filter(([, value]) => value);
 
         ocrFieldsEl.innerHTML = '';
@@ -229,7 +233,19 @@
             showDocUploadError(mismatchMessage);
         } else if (payload?.success) {
             hideDocUploadError();
-            ocrStatusEl.textContent = 'ID scanned successfully. Review detected details below.';
+            if (payload?.face_match) {
+                ocrStatusEl.textContent = 'ID and selfie verified successfully.';
+            } else if (payload?.face_verification?.decision === 'FAIL') {
+                ocrStatusEl.textContent = 'Your selfie does not match your ID photo. Please upload a clearer selfie.';
+                setOcrPanelState('error');
+                showDocUploadError('Your selfie does not match your ID photo. Please upload a clearer selfie.');
+                return;
+            } else if (PHILIPPINE_OCR_DOC_TYPES.includes(getSelectedDocumentType()) && selfieUploadPanel) {
+                ocrStatusEl.textContent = 'ID scanned. Upload a selfie to verify your face matches your ID.';
+                selfieUploadPanel.hidden = false;
+            } else {
+                ocrStatusEl.textContent = 'ID scanned successfully. Review detected details below.';
+            }
             setOcrPanelState('ok');
         } else {
             const fallbackMessage = payload?.message || 'OCR could not identify this ID.';
@@ -302,6 +318,10 @@
         return applied;
     }
 
+    function getSelfieFile() {
+        return selfieInput?.files?.[0] || null;
+    }
+
     async function scanPhilippineIdIfReady() {
         const documentType = getSelectedDocumentType();
 
@@ -333,6 +353,11 @@
             formData.append('document_type', documentType);
             formData.append('front', files.front);
             formData.append('back', files.back);
+
+            const selfie = getSelfieFile();
+            if (selfie) {
+                formData.append('selfie', selfie);
+            }
 
             const response = await fetch(`${apiBase}/detect-id`, {
                 method: 'POST',
@@ -597,6 +622,9 @@
             if (ocrPanel) {
                 ocrPanel.hidden = true;
             }
+            if (selfieUploadPanel) {
+                selfieUploadPanel.hidden = true;
+            }
         } else {
             // Clear all other document types
             const allTypes = ['school_id', 'national_id', 'voters_id', 'philhealth_id', 'other_id'];
@@ -655,6 +683,14 @@
             input?.addEventListener('change', () => updateFilePreview(input));
             bindDropzone(previewConfig[inputId]?.dropzone, input);
         });
+
+        selfieInput?.addEventListener('change', () => {
+            updateFilePreview(selfieInput);
+            if (hasCompleteDocumentUpload() && PHILIPPINE_OCR_DOC_TYPES.includes(getSelectedDocumentType())) {
+                scanPhilippineIdIfReady();
+            }
+        });
+        bindDropzone(previewConfig.kkpSelfie?.dropzone, selfieInput);
 
         document.querySelectorAll('.kkp-wizard-dropzone-remove').forEach((button) => {
             button.addEventListener('click', (event) => {
@@ -1409,6 +1445,11 @@
             formData.append('document_type', documentType);
             formData.append(`${documentType}_front`, files.front);
             formData.append(`${documentType}_back`, files.back);
+
+            const selfie = getSelfieFile();
+            if (selfie) {
+                formData.append('selfie', selfie);
+            }
 
             const response = await postFormData(`${apiBase}/step-2`, formData);
 

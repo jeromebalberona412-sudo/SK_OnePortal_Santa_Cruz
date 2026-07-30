@@ -15,6 +15,15 @@ class AbyipNumericNormalizer
             return null;
         }
 
+        // A bare 4-digit value such as "2025" or "2026" is virtually always a
+        // fiscal/calendar year, page number, or document revision year picked
+        // up from surrounding text/OCR noise - never a peso amount. Reject it
+        // outright here so it can never be reinterpreted as a decimal further
+        // down (e.g. mistaken for "20.25").
+        if ($this->looksLikeBareYear($raw)) {
+            return null;
+        }
+
         if (preg_match('/([\d,]+\.\d{2})/', $raw, $match)) {
             $normalized = str_replace(',', '', $match[1]);
 
@@ -22,14 +31,52 @@ class AbyipNumericNormalizer
         }
 
         if (preg_match('/^([\d,]+),(\d{2})$/', $raw, $matches)) {
-            $normalized = str_replace(',', '', $matches[1]).'.'.$matches[2];
+            $wholePart = str_replace(',', '', $matches[1]);
+
+            // Guard against OCR/spacing artifacts where a 4-digit year like
+            // "2025" picks up a stray comma (e.g. "20,25") and would
+            // otherwise be misread as the decimal amount "20.25".
+            if ($this->looksLikeBareYear($wholePart)) {
+                return null;
+            }
+
+            $normalized = $wholePart.'.'.$matches[2];
 
             return $this->isValidNumericAmount($normalized) ? $normalized : null;
         }
 
         $cleaned = preg_replace('/[^0-9.\-]/', '', $raw) ?? '';
 
+        if ($this->looksLikeBareYear($cleaned)) {
+            return null;
+        }
+
         return $this->isValidNumericAmount($cleaned) ? $cleaned : null;
+    }
+
+    /**
+     * Detects a bare 4-digit token that looks like a calendar year
+     * (1900-2099) with no thousands separator and no decimal component.
+     * These show up throughout ABYIP PDFs as fiscal years, revision years,
+     * or page headers and must never be treated as budget amounts.
+     */
+    public function looksLikeBareYear(string $digitsOnly): bool
+    {
+        return preg_match('/^(19|20)\d{2}$/', $digitsOnly) === 1;
+    }
+
+    /**
+     * Like numericAmount(), but preserves null instead of coercing a
+     * genuinely missing value to '0.00'. Use this for fields (like CO)
+     * where "no value was present in the source" is a real, distinct
+     * state from "the value is zero" and the database column should
+     * store NULL rather than a fake 0.00.
+     */
+    public function numericAmountOrNull(mixed $value): ?string
+    {
+        $parsed = $this->parseAmount($value);
+
+        return $parsed !== null ? $this->numericAmount($parsed) : null;
     }
 
     public function numericAmount(mixed $value): string
@@ -38,6 +85,18 @@ class AbyipNumericNormalizer
 
         if ($parsed !== null && is_numeric($parsed)) {
             return number_format((float) $parsed, 2, '.', '');
+        }
+
+        if (is_scalar($value)) {
+            $digitsOnly = preg_replace('/[^0-9]/', '', (string) $value) ?? '';
+
+            // parseAmount() already rejected this value (returned null). If
+            // that rejection was because it looks like a bare calendar year,
+            // do not let the raw is_numeric() fallback below undo that
+            // protection and format it as a peso amount anyway.
+            if ($digitsOnly !== '' && $this->looksLikeBareYear($digitsOnly)) {
+                return '0.00';
+            }
         }
 
         if (is_numeric($value)) {
@@ -49,7 +108,7 @@ class AbyipNumericNormalizer
 
     /**
      * @param  array<string, mixed>  $row
-     * @return array{budget_mooe: string, budget_co: string, budget_total: string}
+     * @return array{budget_mooe: ?string, budget_co: ?string, budget_total: ?string}
      */
     public function normalizeBudgetFields(array $row): array
     {
@@ -61,12 +120,33 @@ class AbyipNumericNormalizer
             $total = (string) round((float) $mooe + (float) $co, 2);
         } elseif ($total === null && $mooe !== null) {
             $total = $mooe;
+        } elseif ($total === null && $co !== null) {
+            // Mirrors the MOOE-only fallback above. Rows under the "Capital
+            // Outlay" sub-heading (see AbyipService::parseLineItemsFromText())
+            // are parsed with ONLY budget_co populated - MOOE is genuinely
+            // absent there, not zero. Without this branch, TOTAL was left
+            // NULL for every CO-only row even though TOTAL is effectively
+            // always present/derivable in the source table.
+            $total = $co;
         }
 
+        // Deliberately NOT deriving a missing MOOE or CO from "total minus
+        // the other one": in the ABYIP table, CO is blank for almost every
+        // line item, and blank means "not applicable here", not "solve for
+        // it". Backfilling it with total-mooe (usually 0.00) would make a
+        // genuinely empty cell indistinguishable from an explicit zero, and
+        // store a fabricated value instead of the NULL the source actually
+        // has. TOTAL is the one exception above, since it is effectively
+        // always present in the source and computing it from the other two
+        // is a safe fallback rather than a guess.
+
+        // Use the null-preserving formatter here: if a field genuinely has
+        // no value in the source (e.g. CO left blank in the ABYIP table),
+        // that should be stored as NULL, not a fabricated '0.00'.
         return [
-            'budget_mooe' => $this->numericAmount($mooe),
-            'budget_co' => $this->numericAmount($co),
-            'budget_total' => $this->numericAmount($total),
+            'budget_mooe' => $this->numericAmountOrNull($mooe),
+            'budget_co' => $this->numericAmountOrNull($co),
+            'budget_total' => $this->numericAmountOrNull($total),
         ];
     }
 
@@ -91,7 +171,7 @@ class AbyipNumericNormalizer
             return $this->numericAmount($incoming);
         }
 
-        return $incomingAmount >= $existingAmount
+        return $incomingAmount <= $existingAmount
             ? $this->numericAmount($incoming)
             : $this->numericAmount($existing);
     }

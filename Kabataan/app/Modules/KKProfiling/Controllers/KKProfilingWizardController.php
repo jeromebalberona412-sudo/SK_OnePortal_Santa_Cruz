@@ -12,6 +12,7 @@ use App\Services\BarangayZoneService;
 use App\Services\DuplicateKabataanRegistrationService;
 use App\Services\KkRegistrationDraftService;
 use App\Services\PhilippineIdDetectionService;
+use App\Services\PhilippineIdPipelineService;
 use App\Services\RegistrationEvaluationService;
 use App\Support\SupportingDocumentTypes;
 use Carbon\Carbon;
@@ -32,6 +33,7 @@ class KKProfilingWizardController extends Controller
         protected BarangayZoneService $barangayZoneService,
         protected DuplicateKabataanRegistrationService $duplicateChecker,
         protected PhilippineIdDetectionService $philippineIdDetection,
+        protected PhilippineIdPipelineService $philippineIdPipeline,
     ) {}
 
     public function saveStep1(Request $request, string $barangay)
@@ -85,6 +87,8 @@ class KKProfilingWizardController extends Controller
             $validationRules[$type.'_front'] = $fileRule;
             $validationRules[$type.'_back'] = $fileRule;
         }
+
+        $validationRules['selfie'] = $fileRule;
 
         $request->validate($validationRules);
 
@@ -153,21 +157,60 @@ class KKProfilingWizardController extends Controller
 
                 if ($this->philippineIdDetection->isSupportedDocumentType((string) $documentType)) {
                     try {
-                        $ocrPayload = $this->philippineIdDetection->detectUploadedPair(
-                            $sides['front'],
-                            $sides['back'],
-                            (string) $documentType,
-                        );
+                        $frontRealPath = $sides['front']?->getRealPath();
+                        $backRealPath = $sides['back']?->getRealPath();
+                        $selfieRealPath = $request->file('selfie')?->getRealPath();
 
-                        $verification = $this->philippineIdDetection->buildVerificationRecord(
-                            $ocrPayload,
-                            (string) $documentType,
-                            is_array($wizard['step1_data'] ?? null) ? $wizard['step1_data'] : [],
-                        );
-                        $wizard = $this->draftService->storeIdVerification($wizard, $verification);
-                        $formSuggestions = $verification['form_suggestions'] ?? null;
+                        if (
+                            config('ocr.philippine_pipeline_enabled', true)
+                            && $this->philippineIdPipeline->isConfigured()
+                            && is_string($frontRealPath)
+                            && is_string($backRealPath)
+                        ) {
+                            $pipelineResult = $this->philippineIdPipeline->validate(
+                                (int) $barangayRecord->id,
+                                is_array($wizard['step1_data'] ?? null) ? $wizard['step1_data'] : [],
+                                $frontRealPath,
+                                $backRealPath,
+                                (string) $documentType,
+                                is_string($selfieRealPath) ? $selfieRealPath : null,
+                            );
 
-                        if (($ocrPayload['validation_error'] ?? false) === true) {
+                            if (is_array($pipelineResult)) {
+                                $ocrPayload = array_merge($pipelineResult, [
+                                    'form_suggestions' => $this->philippineIdDetection->mapToFormFields([
+                                        'success' => $pipelineResult['success'] ?? false,
+                                        'id_type' => $pipelineResult['id_type'] ?? 'Unknown',
+                                        'full_name' => $pipelineResult['detected_name'] ?? null,
+                                        'birthdate' => $pipelineResult['detected_birthdate'] ?? null,
+                                        'sex' => $pipelineResult['detected_sex'] ?? null,
+                                        'address' => $pipelineResult['detected_address'] ?? null,
+                                        'id_number' => $pipelineResult['id_number'] ?? null,
+                                        'confidence' => $pipelineResult['confidence'] ?? 0,
+                                    ]),
+                                ]);
+                                $wizard = $this->draftService->storeIdVerification($wizard, $ocrPayload);
+                                $formSuggestions = $ocrPayload['form_suggestions'] ?? null;
+                            }
+                        }
+
+                        if (! is_array($ocrPayload)) {
+                            $ocrPayload = $this->philippineIdDetection->detectUploadedPair(
+                                $sides['front'],
+                                $sides['back'],
+                                (string) $documentType,
+                            );
+
+                            $verification = $this->philippineIdDetection->buildVerificationRecord(
+                                $ocrPayload,
+                                (string) $documentType,
+                                is_array($wizard['step1_data'] ?? null) ? $wizard['step1_data'] : [],
+                            );
+                            $wizard = $this->draftService->storeIdVerification($wizard, $verification);
+                            $formSuggestions = $verification['form_suggestions'] ?? null;
+                        }
+
+                        if (is_array($ocrPayload) && ($ocrPayload['validation_error'] ?? false) === true) {
                             Log::info('KK wizard Step 2 OCR validation warning', [
                                 'document_type' => $documentType,
                                 'detected_id_type' => $ocrPayload['id_type'] ?? null,
@@ -628,9 +671,74 @@ class KKProfilingWizardController extends Controller
             'document_type' => ['required', Rule::in(['national_id', 'philhealth_id', 'voters_id'])],
             'front' => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
             'back' => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
+            'selfie' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
         ]);
 
         $documentType = (string) $request->input('document_type');
+        $registrationFields = is_array($wizard['step1_data'] ?? null) ? $wizard['step1_data'] : [];
+        $frontPath = $request->file('front')?->getRealPath();
+        $backPath = $request->file('back')?->getRealPath();
+        $selfiePath = $request->file('selfie')?->getRealPath();
+
+        if (
+            config('ocr.philippine_pipeline_enabled', true)
+            && $this->philippineIdPipeline->isConfigured()
+            && is_string($frontPath)
+            && is_string($backPath)
+        ) {
+            try {
+                $pipelineResult = $this->philippineIdPipeline->validate(
+                    (int) $barangayRecord->id,
+                    $registrationFields,
+                    $frontPath,
+                    $backPath,
+                    $documentType,
+                    is_string($selfiePath) ? $selfiePath : null,
+                );
+
+                if (is_array($pipelineResult)) {
+                    $payload = [
+                        'success' => (bool) ($pipelineResult['success'] ?? false),
+                        'id_type' => $pipelineResult['id_type'] ?? 'Unknown',
+                        'detected_id_type' => $pipelineResult['detected_id_type'] ?? null,
+                        'expected_id_type' => $pipelineResult['expected_id_type'] ?? null,
+                        'confidence' => $pipelineResult['confidence'] ?? 0,
+                        'full_name' => $pipelineResult['detected_name'] ?? null,
+                        'birthdate' => $pipelineResult['detected_birthdate'] ?? null,
+                        'sex' => $pipelineResult['detected_sex'] ?? null,
+                        'address' => $pipelineResult['detected_address'] ?? null,
+                        'id_number' => $pipelineResult['id_number'] ?? null,
+                        'face_match' => $pipelineResult['face_match'] ?? false,
+                        'face_verification' => $pipelineResult['face_verification'] ?? null,
+                        'validation_error' => (bool) ($pipelineResult['validation_error'] ?? false),
+                        'message' => $pipelineResult['message'] ?? null,
+                        'ocr' => $pipelineResult['ocr'] ?? [],
+                    ];
+
+                    $formSuggestions = $this->philippineIdDetection->mapToFormFields($payload);
+                    $verification = array_merge($pipelineResult, [
+                        'form_suggestions' => $formSuggestions,
+                    ]);
+                    $this->draftService->storeIdVerification($wizard, $verification);
+
+                    return response()->json([
+                        'success' => (bool) ($pipelineResult['success'] ?? false),
+                        'ocr' => $payload,
+                        'form_suggestions' => $formSuggestions,
+                        'message' => $pipelineResult['message'] ?? null,
+                        'validation_error' => (bool) ($pipelineResult['validation_error'] ?? false),
+                        'face_match' => (bool) ($pipelineResult['face_match'] ?? false),
+                        'requires_selfie' => ! ($pipelineResult['face_match'] ?? false)
+                            && empty($pipelineResult['face_verification']['available']),
+                    ], ($pipelineResult['validation_error'] ?? false) ? 422 : 200);
+                }
+            } catch (\Throwable $exception) {
+                report($exception);
+                Log::warning('Philippine ID pipeline failed in detect-id', [
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
 
         try {
             $payload = $this->philippineIdDetection->detectUploadedPair(
@@ -655,6 +763,12 @@ class KKProfilingWizardController extends Controller
         }
 
         $formSuggestions = $this->philippineIdDetection->mapToFormFields($payload);
+        $verification = $this->philippineIdDetection->buildVerificationRecord(
+            $payload,
+            $documentType,
+            $registrationFields,
+        );
+        $this->draftService->storeIdVerification($wizard, $verification);
 
         return response()->json([
             'success' => (bool) ($payload['success'] ?? false),
@@ -662,6 +776,7 @@ class KKProfilingWizardController extends Controller
             'form_suggestions' => $formSuggestions,
             'message' => $payload['message'] ?? null,
             'validation_error' => (bool) ($payload['validation_error'] ?? false),
+            'face_match' => (bool) ($payload['face_match'] ?? false),
         ], ($payload['validation_error'] ?? false) ? 422 : 200);
     }
 

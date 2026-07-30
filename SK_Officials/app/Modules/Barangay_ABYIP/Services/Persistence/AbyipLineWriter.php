@@ -29,6 +29,37 @@ class AbyipLineWriter
     ): void {
         $sortOrder = 0;
 
+        $sortOrder = $this->syncExpenditureLines(
+            $document,
+            $lineItems,
+            $sortOrder,
+            $isNonProgramLineItem,
+            $rowHasContent,
+        );
+
+        $this->syncYouthPrograms(
+            $document,
+            $youthPrograms,
+            $sortOrder,
+            $isValidYouthProgramLetter,
+            $isValidYouthActivityRecord,
+        );
+    }
+
+    /**
+     * Writes the plain expenditure line items (everything outside the SK Youth
+     * Development section). Returns the next available sort order so the
+     * youth-program rows that follow continue the same sequence.
+     *
+     * @param  list<array<string, mixed>>  $lineItems
+     */
+    private function syncExpenditureLines(
+        Abyip $document,
+        array $lineItems,
+        int $sortOrder,
+        callable $isNonProgramLineItem,
+        callable $rowHasContent,
+    ): int {
         foreach ($lineItems as $item) {
             if (($item['row_type'] ?? '') !== 'data' || ! $rowHasContent($item)) {
                 continue;
@@ -49,6 +80,22 @@ class AbyipLineWriter
             ]);
         }
 
+        return $sortOrder;
+    }
+
+    /**
+     * Writes the SK Youth Development program rows and their nested activity
+     * rows, continuing the sort order handed in from the expenditure lines.
+     *
+     * @param  list<array<string, mixed>>  $youthPrograms
+     */
+    private function syncYouthPrograms(
+        Abyip $document,
+        array $youthPrograms,
+        int $sortOrder,
+        callable $isValidYouthProgramLetter,
+        callable $isValidYouthActivityRecord,
+    ): void {
         foreach ($youthPrograms as $program) {
             $letter = strtoupper((string) ($program['letter'] ?? ''));
             $name = trim((string) ($program['name'] ?? ''));
@@ -70,22 +117,45 @@ class AbyipLineWriter
                 continue;
             }
 
-            foreach ($program['activities'] ?? [] as $activity) {
-                if (! $isValidYouthActivityRecord($activity)) {
-                    continue;
-                }
-
-                $this->createLineRow(
-                    $document,
-                    $activity,
-                    $sortOrder++,
-                    [
-                        'row_type' => Abyip::ROW_ACTIVITY,
-                        'parent_id' => $programRow->id,
-                    ]
-                );
-            }
+            $sortOrder = $this->syncYouthActivities(
+                $document,
+                $program['activities'] ?? [],
+                $programRow,
+                $sortOrder,
+                $isValidYouthActivityRecord,
+            );
         }
+    }
+
+    /**
+     * Writes the activity rows nested under a single youth program row.
+     *
+     * @param  list<array<string, mixed>>  $activities
+     */
+    private function syncYouthActivities(
+        Abyip $document,
+        array $activities,
+        Abyip $programRow,
+        int $sortOrder,
+        callable $isValidYouthActivityRecord,
+    ): int {
+        foreach ($activities as $activity) {
+            if (! $isValidYouthActivityRecord($activity)) {
+                continue;
+            }
+
+            $this->createLineRow(
+                $document,
+                $activity,
+                $sortOrder++,
+                [
+                    'row_type' => Abyip::ROW_ACTIVITY,
+                    'parent_id' => $programRow->id,
+                ]
+            );
+        }
+
+        return $sortOrder;
     }
 
     /**
@@ -100,54 +170,110 @@ class AbyipLineWriter
     ): ?Abyip {
         $rowType = (string) ($defaults['row_type'] ?? Abyip::ROW_EXPENDITURE);
         $isActivity = $rowType === Abyip::ROW_ACTIVITY;
-        $programName = '';
-        $activityName = null;
 
-        if ($isActivity) {
-            $activityName = trim((string) ($item['activity_name'] ?? $item['ppa_name'] ?? ''));
-            $programName = $activityName;
-        } else {
-            $programName = trim((string) ($item['ppa_name'] ?? $item['program_name'] ?? ''));
-        }
+        [$programName, $activityName] = $this->resolveProgramName($item, $isActivity);
 
-        if ($programName === '' && $activityName === null) {
+        if ($programName === '') {
             return null;
         }
 
-        $budgets = $this->normalizer->normalizeBudgetFields([
-            'budget_mooe' => $item['budget_mooe'] ?? null,
-            'budget_co' => $item['budget_co'] ?? null,
-            'budget_total' => $item['budget_total'] ?? $item['budget'] ?? null,
+        $linePayload = $this->buildPayload($document, $item, $defaults, [
+            'row_type' => $rowType,
+            'program_name' => $programName,
+            'activity_name' => $activityName,
+            'sort_order' => $sortOrder,
         ]);
 
-        $linePayload = [
+        Log::info('ABYIP program insert payload', $linePayload);
+
+        return Abyip::create($linePayload);
+    }
+
+    /**
+     * Determines the program/activity name for a row. Activity rows use the
+     * activity name as both fields; program/expenditure rows only populate
+     * program_name and leave activity_name null.
+     *
+     * @param  array<string, mixed>  $item
+     * @return array{0: string, 1: ?string} [$programName, $activityName]
+     */
+    private function resolveProgramName(array $item, bool $isActivity): array
+    {
+        if ($isActivity) {
+            $activityName = trim((string) ($item['activity_name'] ?? $item['ppa_name'] ?? ''));
+
+            return [$activityName, $activityName];
+        }
+
+        $programName = trim((string) ($item['ppa_name'] ?? $item['program_name'] ?? ''));
+
+        return [$programName, null];
+    }
+
+    /**
+     * Assembles the full Abyip::create() payload for a single line row.
+     *
+     * @param  array<string, mixed>  $item
+     * @param  array<string, mixed>  $defaults
+     * @param  array{row_type: string, program_name: string, activity_name: ?string, sort_order: int}  $resolved
+     * @return array<string, mixed>
+     */
+    private function buildPayload(Abyip $document, array $item, array $defaults, array $resolved): array
+    {
+        $budgets = $this->normalizeBudget($item);
+
+        return [
             'document_id' => $document->id,
             'tenant_id' => $document->tenant_id,
             'barangay_id' => $document->barangay_id,
             'created_by' => $document->created_by,
             'fiscal_year' => $document->fiscal_year,
-            'row_type' => $rowType,
+            'row_type' => $resolved['row_type'],
             'parent_id' => $defaults['parent_id'] ?? null,
             'code' => $defaults['code'] ?? ($item['code'] ?? null),
             'category' => $item['category'] ?? null,
-            'program_name' => $programName,
-            'activity_name' => $activityName,
+            'program_name' => $resolved['program_name'],
+            'activity_name' => $resolved['activity_name'],
             'description' => $item['description'] ?? null,
             'expected_result' => $item['expected_result'] ?? null,
             'performance_indicator' => $item['performance_indicator'] ?? null,
             'implementation_start' => $item['implementation_start'] ?? null,
             'implementation_end' => $item['implementation_end'] ?? null,
-            'person_responsible' => $this->budgetExtractor->extractPersonResponsibleFromValue($item['person_responsible'] ?? null),
-            'mooe' => $this->normalizer->numericAmount($budgets['budget_mooe']),
-            'co' => $this->normalizer->numericAmount($budgets['budget_co']),
-            'total' => $this->normalizer->numericAmount($budgets['budget_total']),
-            'sort_order' => $sortOrder,
+            'person_responsible' => $this->normalizePersonResponsible($item['person_responsible'] ?? null),
+            // numericAmountOrNull() keeps a genuinely blank cell (most often
+            // CO, which is empty for almost every ABYIP line item) as NULL
+            // instead of writing a fabricated '0.00' to the database.
+            'mooe' => $this->normalizer->numericAmountOrNull($budgets['budget_mooe']),
+            'co' => $this->normalizer->numericAmountOrNull($budgets['budget_co']),
+            'total' => $this->normalizer->numericAmountOrNull($budgets['budget_total']),
+            'sort_order' => $resolved['sort_order'],
             'progress_percent' => $this->normalizer->numericAmount($item['progress_percent'] ?? 0),
             'accomplishment_status' => $item['accomplishment_status'] ?? 'Not Started',
         ];
+    }
 
-        Log::info('ABYIP program insert payload', $linePayload);
+    /**
+     * Normalizes the mooe/co/total budget fields for a row via the shared
+     * numeric normalizer, honoring the legacy 'budget' fallback key.
+     *
+     * @param  array<string, mixed>  $item
+     * @return array{budget_mooe: string, budget_co: string, budget_total: string}
+     */
+    private function normalizeBudget(array $item): array
+    {
+        return $this->normalizer->normalizeBudgetFields([
+            'budget_mooe' => $item['budget_mooe'] ?? null,
+            'budget_co' => $item['budget_co'] ?? null,
+            'budget_total' => $item['budget_total'] ?? $item['budget'] ?? null,
+        ]);
+    }
 
-        return Abyip::create($linePayload);
+    /**
+     * Normalizes the free-text "person responsible" value via the shared
+     * budget extractor (strips labels/noise picked up during PDF parsing).
+     */
+    private function normalizePersonResponsible(mixed $value): ?string
+    {
+        return $this->budgetExtractor->extractPersonResponsibleFromValue($value);
     }
 }

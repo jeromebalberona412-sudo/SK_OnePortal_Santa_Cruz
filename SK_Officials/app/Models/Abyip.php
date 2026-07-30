@@ -78,6 +78,7 @@ class Abyip extends Model
         'mooe',
         'co',
         'total',
+        'sort_order',
         'progress_percent',
         'accomplishment_status',
         'target_date',
@@ -100,6 +101,7 @@ class Abyip extends Model
             'mooe' => 'decimal:2',
             'co' => 'decimal:2',
             'total' => 'decimal:2',
+            'sort_order' => 'integer',
             'progress_percent' => 'decimal:2',
             'target_date' => 'date',
             'completed_at' => 'datetime',
@@ -109,6 +111,7 @@ class Abyip extends Model
             'reviewed_at' => 'datetime',
             'implementation_start' => 'date',
             'implementation_end' => 'date',
+            'page_number' => 'integer',
         ];
     }
 

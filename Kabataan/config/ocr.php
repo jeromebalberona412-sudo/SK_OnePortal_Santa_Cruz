@@ -23,6 +23,10 @@ return [
 
     'pipeline_script' => $ocrRoot.DIRECTORY_SEPARATOR.'validate_school_id.py',
 
+    'philippine_pipeline_script' => $ocrRoot.DIRECTORY_SEPARATOR.'validate_philippine_id.py',
+
+    'philippine_pipeline_enabled' => (bool) env('OCR_PHILIPPINE_PIPELINE_ENABLED', true),
+
     'pipeline_enabled' => (bool) env('OCR_PIPELINE_ENABLED', true),
 
     'pipeline_timeout' => (int) env('OCR_PIPELINE_TIMEOUT', 600),

@@ -134,9 +134,46 @@ class AbyipPdfExtractionService
     protected function normalizeWhitespace(string $text): string
     {
         $text = str_replace(["\r\n", "\r"], "\n", $text);
-        $text = preg_replace('/[ \t]+/u', ' ', $text) ?? $text;
+        $text = str_replace("\t", ' ', $text);
+
+        $lines = [];
+        foreach (preg_split('/\R/u', $text) ?: [] as $line) {
+            $lines[] = $this->normalizeAbyipPdfLine($line);
+        }
+
+        $text = implode("\n", $lines);
         $text = preg_replace('/\n{3,}/u', "\n\n", $text) ?? $text;
 
         return trim($text);
+    }
+
+    protected function normalizeAbyipPdfLine(string $line): string
+    {
+        $line = preg_replace('/[ \t]+/u', ' ', trim($line)) ?? trim($line);
+
+        if ($line === '') {
+            return '';
+        }
+
+        $replacements = [
+            '/SKTreasurer/i' => 'SK Treasurer',
+            '/SKChairman\/SKTreasurer/i' => 'SK Chairman/SK Treasurer',
+            '/SKChairman/i' => 'SK Chairman',
+            '/SKChairperson/i' => 'SK Chairperson',
+            '/SangguniangKabataanCouncil\/BADAC/i' => 'Sangguniang Kabataan Council/BADAC',
+            '/SangguniangKabataanCouncil\/ALS/i' => 'Sangguniang Kabataan Council/ALS',
+            '/SangguniangKabataanCouncil/i' => 'Sangguniang Kabataan Council',
+            '/SangguniangKabataan/i' => 'Sangguniang Kabataan',
+            '/KabataanCouncil/i' => 'Kabataan Council',
+            '/MaintenanceandOtherOperatingExpenses\(MOOE\)/i' => 'Maintenance and Other Operating Expenses (MOOE)',
+            '/GENERALADMINISTRATIONPROGRAM/i' => 'GENERAL ADMINISTRATION PROGRAM',
+            '/(\d{1,3}(?:,\d{3})*\.\d{2})\s+(\d{1,3}(?:,\d{3})*\.\d{2})\s*(SK\s)/i' => '$1 $2 $3',
+        ];
+
+        foreach ($replacements as $pattern => $replacement) {
+            $line = preg_replace($pattern, $replacement, $line) ?? $line;
+        }
+
+        return trim($line);
     }
 }

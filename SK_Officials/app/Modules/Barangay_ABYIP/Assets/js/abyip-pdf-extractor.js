@@ -1603,7 +1603,7 @@ function mergeNumericParts(parts) {
             return;
         }
 
-        const isNumericFragment = /^[\d,.\-]+$/.test(text) || (buffer && /^[\d,.\-]+$/.test(text));
+        const isNumericFragment = /^[\d,.]+$/.test(text);
         if (isNumericFragment) {
             if (!buffer) {
                 bufferX = part.x;
@@ -1633,8 +1633,11 @@ function normalizeAmountToken(text) {
         return value;
     }
 
-    if (/^[\d]+$/.test(value) && value.length >= 3) {
-        return value.slice(0, -2) + '.' + value.slice(-2);
+    // Pure-digit values represent whole pesos (e.g. "50000" = 50,000.00).
+    // Do NOT insert a decimal before the last 2 digits — that would divide
+    // the amount by 100 and corrupt every non-formatted number in the PDF.
+    if (/^[\d]+$/.test(value)) {
+        return value + '.00';
     }
 
     return '';
@@ -1650,8 +1653,8 @@ function extractColumnAmounts(parts, width, startRatio, endRatio) {
         .filter(Boolean);
 }
 
-function extractBudgetAmountsFromParts(parts, width) {
-    const budgetStart = width * 0.55;
+function extractBudgetAmountsFromParts(parts, width, columns) {
+    const budgetStart = width * ((columns && columns.mooe) ? columns.mooe[0] : 0.55);
 
     return mergeNumericParts(parts)
         .filter(function (part) { return part.x >= budgetStart; })
@@ -1672,17 +1675,29 @@ function assignBudgetColumns(amounts) {
     }
 
     if (amounts.length >= 3) {
-        const mooe = amounts[amounts.length - 3];
-        const co = amounts[amounts.length - 2];
-        const total = amounts[amounts.length - 1];
-
+        for (var i = amounts.length - 3; i >= 0; i--) {
+            var m = parseFloat(amounts[i]) || 0;
+            var c = parseFloat(amounts[i + 1]) || 0;
+            var t = parseFloat(amounts[i + 2]) || 0;
+            if (Math.abs(m + c - t) < 1.01) {
+                return {
+                    mooe: amounts[i],
+                    co: amounts[i + 1],
+                    total: amounts[i + 2],
+                    mooeAmounts: [amounts[i]],
+                    coAmounts: c ? [amounts[i + 1]] : [],
+                    totalAmounts: [amounts[i + 2]],
+                };
+            }
+        }
+        var last = amounts.length - 1;
         return {
-            mooe: mooe,
-            co: co,
-            total: total,
-            mooeAmounts: [mooe],
-            coAmounts: co ? [co] : [],
-            totalAmounts: [total],
+            mooe: amounts[last - 2] || '',
+            co: amounts[last - 1] || '',
+            total: amounts[last],
+            mooeAmounts: amounts[last - 2] ? [amounts[last - 2]] : [],
+            coAmounts: amounts[last - 1] ? [amounts[last - 1]] : [],
+            totalAmounts: [amounts[last]],
         };
     }
 
@@ -1697,15 +1712,13 @@ function assignBudgetColumns(amounts) {
         };
     }
 
-    const only = amounts[amounts.length - 1];
-
     return {
-        mooe: only,
+        mooe: '',
         co: '',
-        total: only,
-        mooeAmounts: [only],
+        total: amounts[0],
+        mooeAmounts: [],
         coAmounts: [],
-        totalAmounts: [only],
+        totalAmounts: [amounts[0]],
     };
 }
 
@@ -1750,7 +1763,7 @@ function parseRowColumns(row, width, bounds) {
     let total = totalAmounts[0] || '';
 
     if (!mooe && !co && !total) {
-        const fallback = assignBudgetColumns(extractBudgetAmountsFromParts(row.parts, width));
+        const fallback = assignBudgetColumns(extractBudgetAmountsFromParts(row.parts, width, columns));
         mooe = fallback.mooe;
         co = fallback.co;
         total = fallback.total;
@@ -1971,8 +1984,13 @@ function extractPersonResponsibleValue(parts, width, startRatio) {
     }
 
     const fallback = normalizePersonColumnText(extractPersonColumn(parts, width, startRatio));
-    if (fallback && /^(SK|Sangguniang)/i.test(fallback)) {
-        return fallback;
+    if (fallback) {
+        if (/^(SK|Sangguniang)/i.test(fallback)) {
+            return fallback;
+        }
+        if (fallback.length >= 3 && !/^[\d\s]+$/.test(fallback)) {
+            return fallback;
+        }
     }
 
     const fullLine = parts.map(function (part) { return part.text; }).join(' ').replace(/\s+/g, ' ').trim();

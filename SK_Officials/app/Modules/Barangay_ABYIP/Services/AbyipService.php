@@ -88,6 +88,13 @@ class AbyipService
         ],
     ];
 
+    // =====================================================================
+    // PUBLIC API — CRUD orchestration for ABYIP documents.
+    // These methods are the entry points controllers call. Each one wires
+    // together parsing, validation, normalization, and persistence but
+    // keeps no business logic of its own beyond sequencing those steps.
+    // =====================================================================
+
     /**
      * @return Collection<int, array<string, mixed>>
      */
@@ -143,7 +150,7 @@ class AbyipService
                 extractedText: ''
             );
 
-        $fiscalYear = (int) ($data['calendar_year'] ?? now()->year);
+        $fiscalYear = (int) ($parsed['fiscal_year'] ?? $data['calendar_year'] ?? now()->year);
         $this->assertUniqueYear($user, $fiscalYear);
 
         $signatureUserIds = $this->resolveSignatureUserIds($user->barangay_id, $parsed);
@@ -347,6 +354,12 @@ class AbyipService
         return $this->formatDocument($document->fresh(['lines.children']));
     }
 
+    // =====================================================================
+    // DOCUMENT LOOKUP & GUARDS
+    // Shared tenant-scoped lookups and precondition checks used by the
+    // public API methods above.
+    // =====================================================================
+
     protected function findDocumentModel(User $user, int $documentId): Abyip
     {
         $document = Abyip::query()
@@ -378,6 +391,12 @@ class AbyipService
             ]);
         }
     }
+
+    // =====================================================================
+    // RESPONSE FORMATTING
+    // Converts Abyip models (documents, program lines, activity lines) into
+    // the plain arrays returned to controllers/API consumers.
+    // =====================================================================
 
     /**
      * @return array<string, mixed>
@@ -512,6 +531,14 @@ class AbyipService
             'total' => $activity->total,
         ];
     }
+
+    // =====================================================================
+    // DOCUMENT PARSING ORCHESTRATION
+    // Top-level entry points that turn a raw HTML doc or extracted PDF text
+    // into the normalized "$parsed" array consumed by store()/resubmit()/
+    // reparseDocument(). Delegates to the header/signature/youth-program
+    // parsing sections below.
+    // =====================================================================
 
     /**
      * @return array{
@@ -711,6 +738,14 @@ class AbyipService
             'sk_youth_development_and_empowerment_programs' => [],
         ];
     }
+
+    // =====================================================================
+    // HEADER, SIGNATURE & TAG TEXT PARSING
+    // Extracts document metadata (region/province/barangay, budgets,
+    // prepared/approved-by names) from raw PDF text — both the structured
+    // "@ABYIP_..." tags emitted by the extraction pipeline and free-text
+    // fallback patterns for documents without those tags.
+    // =====================================================================
 
     /**
      * @return array<string, mixed>
@@ -1078,6 +1113,13 @@ class AbyipService
         return 'HON. '.trim($cleaned);
     }
 
+    // =====================================================================
+    // OFFICIAL / SIGNATORY USER RESOLUTION
+    // Matches the prepared-by / approved-by names extracted from the PDF
+    // against actual barangay User accounts (by name similarity or by
+    // official position), so signed documents can be linked to real users.
+    // =====================================================================
+
     /**
      * @param  array<string, mixed>  $parsed
      * @return array{prepared_by_user_id: ?int, approved_by_user_id: ?int}
@@ -1208,6 +1250,14 @@ class AbyipService
 
         return '';
     }
+
+    // =====================================================================
+    // YOUTH PROGRAM PARSING & VALIDATION
+    // Everything specific to the "SK Youth Development and Empowerment
+    // Programs" section: structured-tag parsing, free-text block parsing,
+    // activity matching/normalization, and the canonical A–J letter/name
+    // catalog defined at the top of this class.
+    // =====================================================================
 
     /**
      * @return list<array<string, mixed>>
@@ -2310,6 +2360,15 @@ class AbyipService
         return trim(preg_replace('/\s+/u', ' ', $cleaned) ?? $cleaned);
     }
 
+    // =====================================================================
+    // TABLE PARSING — HTML (Word) & PLAIN-TEXT (PDF) SOURCES
+    // Two parallel extraction paths that both produce the same shape of
+    // line-item/youth-program arrays: parseDocumentHtml() walks the DOM for
+    // Word-sourced documents, parseLineItemsFromText() walks raw extracted
+    // PDF text. Shared row-classification and cell-cleanup helpers live at
+    // the end of this section.
+    // =====================================================================
+
     /**
      * @return array{
      *     region: ?string,
@@ -2648,23 +2707,39 @@ class AbyipService
             return [];
         }
 
-        $lineItems = [];
         $lines = preg_split('/\R/u', $text) ?: [];
+        $multilineExpenditure = $this->budgetExtractor->parseMultilineExpenditureRows($lines);
+
+        $lineItems = [];
         $inYouthSection = false;
         $currentSection = null;
         $currentYouthLetter = null;
         $currentYouthName = null;
         $nextYouthLetterIndex = 0;
+        $currentBudgetColumn = 'mooe';
 
         foreach ($lines as $line) {
             $line = trim(preg_replace('/\s+/u', ' ', $line) ?? $line);
-            if ($line === '') {
+            if ($line === '' || str_starts_with($line, '@')) {
+                continue;
+            }
+
+            if (preg_match('/Maintenance and Other Operating Expenses/i', $line)) {
+                $currentBudgetColumn = 'mooe';
+
+                continue;
+            }
+
+            if (preg_match('/^Capital Outlay\b/i', $line) && ! preg_match('/\d/', $line)) {
+                $currentBudgetColumn = 'co';
+
                 continue;
             }
 
             if (stripos($line, 'SK YOUTH DEVELOPMENT') !== false) {
                 $inYouthSection = true;
                 $currentSection = 'SK Youth Development and Empowerment Programs';
+                $currentBudgetColumn = 'mooe';
                 $lineItems[] = [
                     'row_type' => 'subsection',
                     'ppa_name' => $line,
@@ -2711,23 +2786,99 @@ class AbyipService
                 continue;
             }
 
-            $parsedRow = $this->parseTextTableRow($line);
-            if ($parsedRow === null) {
+            if ($inYouthSection) {
+                $parsedRow = $this->parseTextTableRow($line, $currentBudgetColumn);
+                if ($parsedRow !== null) {
+                    $parsedRow['program_section'] = $currentSection;
+                    $parsedRow['youth_program_letter'] = $currentYouthLetter;
+                    $parsedRow['youth_program_name'] = $currentYouthName;
+                    $lineItems[] = $parsedRow;
+                }
+
                 continue;
             }
 
-            if ($inYouthSection) {
-                $parsedRow['program_section'] = $currentSection;
-                $parsedRow['youth_program_letter'] = $currentYouthLetter;
-                $parsedRow['youth_program_name'] = $currentYouthName;
-            } elseif ($currentSection !== null) {
-                $parsedRow['program_section'] = $currentSection;
+            if ($this->budgetExtractor->isAbyipTableNoiseLine($line)) {
+                continue;
             }
 
-            $lineItems[] = $parsedRow;
+            $parsedRow = $this->parseTextTableRow($line, $currentBudgetColumn);
+            if ($parsedRow !== null && ($parsedRow['row_type'] ?? '') === 'data') {
+                if ($this->lineLooksLikeAmountOnlyRow($line)) {
+                    continue;
+                }
+
+                if ($currentSection !== null) {
+                    $parsedRow['program_section'] = $currentSection;
+                }
+
+                $lineItems[] = $parsedRow;
+            }
         }
 
-        return $lineItems;
+        if ($multilineExpenditure !== []) {
+            $lineItems = array_merge($multilineExpenditure, $lineItems);
+        }
+
+        return $this->dedupeExpenditureLineItems($lineItems);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $items
+     * @return list<array<string, mixed>>
+     */
+    protected function dedupeExpenditureLineItems(array $items): array
+    {
+        $deduped = [];
+        $seen = [];
+
+        foreach ($items as $item) {
+            if (($item['row_type'] ?? '') !== 'data') {
+                $deduped[] = $item;
+
+                continue;
+            }
+
+            $ppa = mb_strtolower(trim((string) ($item['ppa_name'] ?? '')));
+            $mooe = $this->parseAmount($item['budget_mooe'] ?? null) ?? '0';
+            $total = $this->parseAmount($item['budget_total'] ?? null) ?? '0';
+            $key = $ppa.'|'.$mooe.'|'.$total;
+
+            if ($ppa === '' && (float) $mooe <= 0 && (float) $total <= 0) {
+                continue;
+            }
+
+            if ($ppa !== '' && preg_match('/^(charge|SK|Sangguniang|Kabataan|Council|n)$/i', $ppa)) {
+                continue;
+            }
+
+            if (isset($seen[$key])) {
+                $index = $seen[$key];
+                $existing = $deduped[$index];
+
+                foreach (['budget_mooe', 'budget_co', 'budget_total', 'person_responsible', 'description'] as $field) {
+                    if (empty($existing[$field]) && ! empty($item[$field])) {
+                        $existing[$field] = $item[$field];
+                    }
+                }
+
+                $deduped[$index] = $existing;
+
+                continue;
+            }
+
+            $seen[$key] = count($deduped);
+            $deduped[] = $item;
+        }
+
+        return $deduped;
+    }
+
+    protected function lineLooksLikeAmountOnlyRow(string $line): bool
+    {
+        $trimmed = trim($line);
+
+        return preg_match('/^[\d,]+\.\d{2}(?:\s+[\d,]+\.\d{2})*(?:\s+(?:SK|Sangguniang).*)?$/iu', $trimmed) === 1;
     }
 
     protected function looksLikeYouthCategoryLine(string $line): bool
@@ -2762,7 +2913,7 @@ class AbyipService
     /**
      * @return array<string, mixed>|null
      */
-    protected function parseTextTableRow(string $line): ?array
+    protected function parseTextTableRow(string $line, string $budgetColumn = 'mooe'): ?array
     {
         if (preg_match('/^TOTAL\b/i', $line)) {
             $amount = null;
@@ -2779,11 +2930,14 @@ class AbyipService
         }
 
         if (preg_match(
-            '/^(.+?)\s+([\d,]+(?:\.\d{2})?)\s+([\d,]+(?:\.\d{2})?)\s+([\d,]+(?:\.\d{2})?)(?:\s+(.+))?$/u',
+            '/^(.+?)\s+([\d,]+\.\d{2})\s+([\d,]+\.\d{2})\s+([\d,]+\.\d{2})(?:\s+(.+))?$/u',
             $line,
             $matches
         )) {
             $ppaName = trim($matches[1]);
+            if ($this->lineLooksLikeAmountOnlyRow($ppaName.' '.$matches[2].' '.$matches[3].' '.$matches[4])) {
+                return null;
+            }
 
             return [
                 'row_type' => 'data',
@@ -2801,12 +2955,22 @@ class AbyipService
             $matches
         )) {
             $ppaName = trim($matches[1]);
+            if ($this->lineLooksLikeAmountOnlyRow($line) || preg_match('/^[\d,]+\.\d{2}$/', $ppaName)) {
+                return null;
+            }
+
+            $amount = $this->parseAmount($matches[2]);
+            $primaryField = $budgetColumn === 'co' ? 'budget_co' : 'budget_mooe';
+            $otherField = $budgetColumn === 'co' ? 'budget_mooe' : 'budget_co';
 
             return [
                 'row_type' => 'data',
                 'ppa_name' => $ppaName !== '' ? $ppaName : null,
-                'budget_mooe' => $this->parseAmount($matches[2]),
-                'budget_co' => '0.00',
+                $primaryField => $amount,
+                // Nothing was found for the other column on this line - it's
+                // genuinely blank in the source table, not zero, so leave it
+                // null rather than writing a fabricated '0.00'.
+                $otherField => null,
                 'budget_total' => $this->parseAmount($matches[3]),
                 'person_responsible' => isset($matches[4]) ? $this->extractPersonResponsibleFromValue(trim($matches[4])) : null,
             ];
@@ -2822,11 +2986,14 @@ class AbyipService
             $amount = $this->parseAmount($matches[2]);
 
             if ($amount !== null && ($person !== null || ! preg_match('/^(January|February|March|April|May|June|July|August|September|October|November|December)\b/i', $ppaName))) {
+                $primaryField = $budgetColumn === 'co' ? 'budget_co' : 'budget_mooe';
+                $otherField = $budgetColumn === 'co' ? 'budget_mooe' : 'budget_co';
+
                 return [
                     'row_type' => 'data',
                     'ppa_name' => $ppaName !== '' ? $ppaName : null,
-                    'budget_mooe' => $amount,
-                    'budget_co' => '0.00',
+                    $primaryField => $amount,
+                    $otherField => null,
                     'budget_total' => $amount,
                     'person_responsible' => $person,
                 ];
@@ -3074,6 +3241,12 @@ class AbyipService
         return 'data';
     }
 
+    // =====================================================================
+    // PDF TEXT RESOLUTION & REPARSE ORCHESTRATION
+    // Merges client-side and server-side extracted PDF text, and drives the
+    // "reparse an existing document from its stored PDF" flow.
+    // =====================================================================
+
     /**
      * @param  array<string, mixed>  $data
      */
@@ -3157,6 +3330,15 @@ class AbyipService
 
         return $this->formatDocument($document->fresh(['lines.children']));
     }
+
+    // =====================================================================
+    // NORMALIZATION DELEGATES
+    // Thin protected wrappers around AbyipNumericNormalizer / AbyipBudget
+    // Extractor, kept here (rather than removed) for backward compatibility
+    // since they are called from within this class's own parsing methods
+    // and may also be relied on by subclasses/tests. All real normalization
+    // logic lives in those injected services, not in this class.
+    // =====================================================================
 
     protected function preferBudgetAmount(mixed $existing, mixed $incoming, string $field): mixed
     {
