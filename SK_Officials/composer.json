@@ -10,7 +10,7 @@
     "require": {
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "*",
-        "cloudinary/cloudinary_php": "^2.0",
+        "cloudinary/cloudinary_php": "*",
         "laravel/fortify": "^1.36",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",

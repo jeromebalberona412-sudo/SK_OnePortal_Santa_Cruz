@@ -258,7 +258,7 @@ class AbyipBudgetExtractor
 
         $requiredMatches = (int) ceil(count($ppaWords) * 0.8);
 
-        return $matchedWords >= max(2, $requiredMatches);
+        return $matchedWords >= max(min(count($ppaWords), 2), $requiredMatches);
     }
 
     public function lineContainsBudgetAmounts(string $line): bool

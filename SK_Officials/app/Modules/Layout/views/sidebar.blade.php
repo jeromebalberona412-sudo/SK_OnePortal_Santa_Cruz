@@ -115,7 +115,7 @@
                 </li>
 
                 <!-- ── Planning & Development (Dropdown) ── -->
-                <li class="nav-item nav-item-dropdown {{ request()->routeIs('abyip.*', 'committees', 'programs', 'schedule-programs', 'schedule-programs.sports-application-form', 'sports-application-form', 'sports-programs.archived', '*.survey.*') ? 'open' : '' }}" id="planningDevDropdown">
+                <li class="nav-item nav-item-dropdown {{ request()->routeIs('abyip.*', 'program-accomplishment.*', 'committees', 'programs', 'schedule-programs', 'schedule-programs.sports-application-form', 'sports-application-form', 'sports-programs.archived', '*.survey.*') ? 'open' : '' }}" id="planningDevDropdown">
                     <a href="#" class="nav-link nav-link-dropdown" id="planningDevToggleLink">
                         <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
@@ -134,6 +134,13 @@
                         <li class="nav-subitem">
                             <a href="{{ route('abyip.index') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('abyip.*') ? 'active' : '' }}">
                                 <span>ABYIP</span>
+                            </a>
+                        </li>
+
+                        <!-- Program Accomplishment Reports -->
+                        <li class="nav-subitem">
+                            <a href="{{ route('program-accomplishment.index') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('program-accomplishment.*') ? 'active' : '' }}">
+                                <span>Accomplishment Reports</span>
                             </a>
                         </li>
 

@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Barangay_ABYIP\Controllers\AbyipController;
+use App\Modules\Program_Accomplishment\Controllers\ProgramAccomplishmentController;
 use App\Modules\Announcement\Controllers\AnnouncementController;
 use App\Modules\Announcement\Controllers\AnnouncementPageController;
 use App\Modules\Announcement\Controllers\ArchiveAnnouncementController;
@@ -48,6 +49,15 @@ Route::post('/change-email/set-password/{id}/{token}', [ProfileController::class
 Route::get('/change-password/confirm/{id}/{token}', [ProfileController::class, 'confirmChangePassword'])
     ->middleware('throttle:6,1')
     ->name('change-password.confirm');
+
+Route::get('/accomplishment/{id}', function ($id) {
+    try {
+        $report = app(\App\Modules\Program_Accomplishment\Services\ProgramAccomplishmentService::class)->getPublishedById($id);
+        return view('Program_Accomplishment::public.show', compact('report'));
+    } catch (\Exception $e) {
+        abort(404, 'Accomplishment report not found.');
+    }
+})->name('public.accomplishment.show');
 
 Route::middleware([
     'auth',
@@ -175,6 +185,45 @@ Route::middleware([
         Route::post('/{id}/resubmit', [AbyipController::class, 'resubmit'])->name('api.abyip.resubmit');
         Route::put('/{id}', [AbyipController::class, 'update'])->name('api.abyip.update');
         Route::delete('/{id}', [AbyipController::class, 'destroy'])->name('api.abyip.destroy');
+    });
+
+    // ── Program Accomplishment Reports ──
+    Route::get('/program-accomplishment', [ProgramAccomplishmentController::class, 'index'])
+        ->name('program-accomplishment.index');
+
+    Route::get('/program-accomplishment/{id}/edit', [ProgramAccomplishmentController::class, 'edit'])
+        ->name('program-accomplishment.edit');
+
+    Route::get('/program-accomplishment/{id}', [ProgramAccomplishmentController::class, 'show'])
+        ->name('program-accomplishment.show');
+
+    Route::prefix('api/program-accomplishment')->group(function () {
+        Route::get('/pending-programs', [ProgramAccomplishmentController::class, 'pendingPrograms'])
+            ->name('api.program-accomplishment.pending-programs');
+        Route::get('/search-programs', [ProgramAccomplishmentController::class, 'searchPrograms'])
+            ->name('api.program-accomplishment.search-programs');
+        Route::get('/', [ProgramAccomplishmentController::class, 'list'])
+            ->name('api.program-accomplishment.list');
+        Route::get('/{id}', [ProgramAccomplishmentController::class, 'showApi'])
+            ->name('api.program-accomplishment.show');
+        Route::post('/', [ProgramAccomplishmentController::class, 'store'])
+            ->name('api.program-accomplishment.store');
+        Route::put('/{id}', [ProgramAccomplishmentController::class, 'update'])
+            ->name('api.program-accomplishment.update');
+        Route::delete('/{id}', [ProgramAccomplishmentController::class, 'destroy'])
+            ->name('api.program-accomplishment.destroy');
+        Route::post('/{id}/submit', [ProgramAccomplishmentController::class, 'submit'])
+            ->name('api.program-accomplishment.submit');
+        Route::post('/{id}/approve', [ProgramAccomplishmentController::class, 'approve'])
+            ->name('api.program-accomplishment.approve');
+        Route::post('/{id}/reject', [ProgramAccomplishmentController::class, 'reject'])
+            ->name('api.program-accomplishment.reject');
+        Route::post('/{id}/publish', [ProgramAccomplishmentController::class, 'publish'])
+            ->name('api.program-accomplishment.publish');
+        Route::post('/{id}/unpublish', [ProgramAccomplishmentController::class, 'unpublish'])
+            ->name('api.program-accomplishment.unpublish');
+        Route::get('/stats/transparency', [ProgramAccomplishmentController::class, 'transparencyData'])
+            ->name('api.program-accomplishment.transparency');
     });
 
     Route::get('/kabataan', [KabataanController::class, 'index'])->name('kabataan');

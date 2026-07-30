@@ -1985,11 +1985,19 @@ function extractPersonResponsibleValue(parts, width, startRatio) {
 
     const fallback = normalizePersonColumnText(extractPersonColumn(parts, width, startRatio));
     if (fallback) {
-        if (/^(SK|Sangguniang)/i.test(fallback)) {
-            return fallback;
-        }
-        if (fallback.length >= 3 && !/^[\d\s]+$/.test(fallback)) {
-            return fallback;
+        // Strip any amount noise that leaked into the person column region
+        const cleaned = fallback.replace(/[\d,]+\.\d{2}\s*/g, '').trim();
+        if (cleaned.length >= 3) {
+            // Starts with a known prefix — complete entry.
+            if (/^(SK|Sangguniang)/i.test(cleaned)) {
+                return cleaned;
+            }
+            // Multi-word value containing a known keyword — likely complete.
+            if (cleaned.split(/\s+/).length >= 2) {
+                if (/\b(Kabataan|Council|Chairman|Chairperson|Treasurer|BADAC|ALS)\b/i.test(cleaned)) {
+                    return cleaned;
+                }
+            }
         }
     }
 
@@ -2147,6 +2155,8 @@ async function extractPdfTextForPrograms(pdfDoc) {
     let inReceiptsSection = true;
     let generalBlock = null;
     let youthBlock = null;
+    let pendingData = [];
+    let pendingYouthData = [];
     const pageRows = [];
 
     for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
@@ -2235,6 +2245,8 @@ async function extractPdfTextForPrograms(pdfDoc) {
         if (/SK\s+YOUTH\s+DEVELOPMENT/i.test(fullLine)) {
             flushGeneralBlock(generalBlock, lines);
             generalBlock = null;
+            pendingData = [];
+            pendingYouthData = [];
             inYouthSection = true;
             inExpenditureSection = true;
             lines.push(fullLine);
@@ -2244,6 +2256,8 @@ async function extractPdfTextForPrograms(pdfDoc) {
         if (/Prepared\s+by/i.test(fullLine) || /Approved\s+by/i.test(fullLine)) {
             flushGeneralBlock(generalBlock, lines);
             generalBlock = null;
+            pendingData = [];
+            pendingYouthData = [];
             flushYouthBlock(youthBlock, lines);
             youthBlock = null;
             lines.push(fullLine);
@@ -2253,6 +2267,7 @@ async function extractPdfTextForPrograms(pdfDoc) {
         if (inYouthSection && /^(TOTAL|Prepared\s+by|Approved\s+by)\b/i.test(fullLine)) {
             flushYouthBlock(youthBlock, lines);
             youthBlock = null;
+            pendingYouthData = [];
             inYouthSection = false;
             if (/^TOTAL\b/i.test(fullLine)) {
                 const totalAmounts = fullLine.match(/[\d,]+\.\d{2}/g);
@@ -2273,13 +2288,32 @@ async function extractPdfTextForPrograms(pdfDoc) {
 
         if (inYouthSection) {
             const letter = extractYouthLetter(cols.ppas, fullLine);
+            const hasData = hasStructuredTableData(
+                cols.ppas,
+                cols.description,
+                cols.expected,
+                cols.performance,
+                cols.period,
+                cols.mooe,
+                cols.co,
+                cols.total,
+                cols.person
+            );
+
             if (letter) {
                 flushYouthBlock(youthBlock, lines);
                 youthBlock = createEmptyBlock(letter);
-            }
-
-            if (youthBlock) {
+                pendingYouthData.forEach(function (pd) {
+                    mergeRowIntoBlock(youthBlock, pd);
+                });
+                pendingYouthData = [];
                 mergeRowIntoBlock(youthBlock, cols);
+            } else if (hasData) {
+                if (youthBlock) {
+                    mergeRowIntoBlock(youthBlock, cols);
+                } else {
+                    pendingYouthData.push(cols);
+                }
             }
 
             lines.push(fullLine);
@@ -2303,9 +2337,17 @@ async function extractPdfTextForPrograms(pdfDoc) {
             if (isPrimary) {
                 flushGeneralBlock(generalBlock, lines);
                 generalBlock = createEmptyBlock('');
+                pendingData.forEach(function (pd) {
+                    mergeRowIntoBlock(generalBlock, pd);
+                });
+                pendingData = [];
                 mergeRowIntoBlock(generalBlock, cols);
-            } else if (generalBlock && hasData) {
-                mergeRowIntoBlock(generalBlock, cols);
+            } else if (hasData) {
+                if (generalBlock) {
+                    mergeRowIntoBlock(generalBlock, cols);
+                } else {
+                    pendingData.push(cols);
+                }
             }
         }
 

@@ -143,6 +143,9 @@ export default defineConfig({
                 'app/Modules/AI_Assistant/assets/js/ai-recent-menu.js',
                 'app/Modules/AI_Assistant/assets/js/ai-modal.js',
                 'app/Modules/AI_Assistant/assets/js/ai-page.js',
+                // Program Accomplishment module assets
+                'app/Modules/Program_Accomplishment/Assets/css/program-accomplishment.css',
+                'app/Modules/Program_Accomplishment/Assets/js/program-accomplishment.js',
                 // Layout module assets
         'app/Modules/Layout/css/header.css',
         'app/Modules/Layout/css/sidebar.css',
