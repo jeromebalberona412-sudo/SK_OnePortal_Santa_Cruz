@@ -137,10 +137,10 @@
                             </a>
                         </li>
 
-                        <!-- Program Accomplishment Reports -->
+                        <!-- Program Accomplishments -->
                         <li class="nav-subitem">
                             <a href="{{ route('program-accomplishment.index') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('program-accomplishment.*') ? 'active' : '' }}">
-                                <span>Accomplishment Reports</span>
+                                <span>Program Accomplishments</span>
                             </a>
                         </li>
 

@@ -120,6 +120,9 @@ export default defineConfig({
                 'app/Modules/Sports_Programs/assets/js/archived-sports-programs.js',
                 'app/Modules/Program_Management/assets/js/sports/sports-tabs.js',
                 'app/Modules/Program_Management/assets/js/sports/sports_report.js',
+                // Program Accomplishment module assets
+                'app/Modules/Program_Accomplishment/Assets/css/program-accomplishment.css',
+                'app/Modules/Program_Accomplishment/Assets/js/program-accomplishment.js',
                 // Shared Schedule Programs Assets
                 'app/Modules/Program_Management/assets/css/shared/sk-report-editor.css',
                 'app/Modules/Program_Management/assets/js/shared/sk-report-editor.js',

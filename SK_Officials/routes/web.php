@@ -155,6 +155,8 @@ Route::middleware([
         Route::put('/{id}', [CommitteeController::class, 'update'])->name('api.committees.update');
     });
 
+    Route::get('/program-accomplishment', [ProgramAccomplishmentController::class, 'index'])->name('program-accomplishment.index');
+
     Route::get('/programs', function () {
         $catalog = app(AbyipProgramCatalogService::class);
 
@@ -198,13 +200,9 @@ Route::middleware([
         ->name('program-accomplishment.show');
 
     Route::prefix('api/program-accomplishment')->group(function () {
-        Route::get('/pending-programs', [ProgramAccomplishmentController::class, 'pendingPrograms'])
-            ->name('api.program-accomplishment.pending-programs');
-        Route::get('/search-programs', [ProgramAccomplishmentController::class, 'searchPrograms'])
-            ->name('api.program-accomplishment.search-programs');
-        Route::get('/', [ProgramAccomplishmentController::class, 'list'])
-            ->name('api.program-accomplishment.list');
-        Route::get('/{id}', [ProgramAccomplishmentController::class, 'showApi'])
+        Route::get('/data', [ProgramAccomplishmentController::class, 'data'])
+            ->name('api.program-accomplishment.data');
+        Route::get('/{id}', [ProgramAccomplishmentController::class, 'show'])
             ->name('api.program-accomplishment.show');
         Route::post('/', [ProgramAccomplishmentController::class, 'store'])
             ->name('api.program-accomplishment.store');
@@ -212,18 +210,6 @@ Route::middleware([
             ->name('api.program-accomplishment.update');
         Route::delete('/{id}', [ProgramAccomplishmentController::class, 'destroy'])
             ->name('api.program-accomplishment.destroy');
-        Route::post('/{id}/submit', [ProgramAccomplishmentController::class, 'submit'])
-            ->name('api.program-accomplishment.submit');
-        Route::post('/{id}/approve', [ProgramAccomplishmentController::class, 'approve'])
-            ->name('api.program-accomplishment.approve');
-        Route::post('/{id}/reject', [ProgramAccomplishmentController::class, 'reject'])
-            ->name('api.program-accomplishment.reject');
-        Route::post('/{id}/publish', [ProgramAccomplishmentController::class, 'publish'])
-            ->name('api.program-accomplishment.publish');
-        Route::post('/{id}/unpublish', [ProgramAccomplishmentController::class, 'unpublish'])
-            ->name('api.program-accomplishment.unpublish');
-        Route::get('/stats/transparency', [ProgramAccomplishmentController::class, 'transparencyData'])
-            ->name('api.program-accomplishment.transparency');
     });
 
     Route::get('/kabataan', [KabataanController::class, 'index'])->name('kabataan');
