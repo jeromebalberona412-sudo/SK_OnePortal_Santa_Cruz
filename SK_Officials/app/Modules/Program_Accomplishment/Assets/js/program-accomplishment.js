@@ -17,7 +17,6 @@ const PAState = {
     currentLightboxIndex: 0,
     filters: {
         search: '',
-        barangay: '',
         category: '',
         dateFrom: '',
         dateTo: '',
@@ -93,12 +92,9 @@ function renderTable() {
         // Search filter
         if (PAState.filters.search) {
             const searchLower = PAState.filters.search.toLowerCase();
-            const searchableText = `${program.program_name} ${program.program_type} ${program.barangay} ${program.committee} ${program.creator}`.toLowerCase();
+            const searchableText = `${program.program_name} ${program.program_type} ${program.committee} ${program.creator}`.toLowerCase();
             if (!searchableText.includes(searchLower)) return false;
         }
-
-        // Barangay filter
-        if (PAState.filters.barangay && program.barangay !== PAState.filters.barangay) return false;
 
         // Category filter (using program_type)
         if (PAState.filters.category && program.program_type !== PAState.filters.category) return false;
@@ -137,7 +133,7 @@ function renderTable() {
     if (pageData.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="12" class="pa-empty-state">
+                <td colspan="11" class="pa-empty-state">
                     <div class="pa-empty-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -159,7 +155,6 @@ function renderTable() {
             row.innerHTML = `
                 <td><strong>${program.program_name}</strong></td>
                 <td>${program.program_type || 'N/A'}</td>
-                <td>${program.barangay || 'N/A'}</td>
                 <td>${program.committee || 'N/A'}</td>
                 <td>${formatDate(program.start_date)}</td>
                 <td>${formatDate(program.end_date)}</td>
@@ -274,7 +269,6 @@ function resetForm() {
 
 function loadProgramIntoForm(program) {
     document.getElementById('paProgram').value = program.program_name || '';
-    document.getElementById('paBarangay').value = program.barangay || '';
     document.getElementById('paVenue').value = program.program_type || '';
     document.getElementById('paPersonResponsible').value = program.creator || '';
     document.getElementById('paBudgetAllocated').value = formatCurrency(program.participation_quantity || 0);
@@ -816,12 +810,6 @@ function initializeEventListeners() {
         renderTable();
     });
     
-    document.getElementById('paBarangayFilter').addEventListener('change', (e) => {
-        PAState.filters.barangay = e.target.value;
-        PAState.currentPage = 1;
-        renderTable();
-    });
-    
     document.getElementById('paCategoryFilter').addEventListener('change', (e) => {
         PAState.filters.category = e.target.value;
         PAState.currentPage = 1;
@@ -865,20 +853,75 @@ function initializeEventListeners() {
 
 // API Functions
 async function fetchInitialData() {
+    // Show loading state
+    const loadingElement = document.getElementById('loading');
+    if (loadingElement) {
+        loadingElement.style.display = 'flex';
+    }
+
     try {
-        const response = await fetch('/api/program-accomplishment/data');
-        if (!response.ok) throw new Error('Failed to fetch data');
-        
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        if (!csrfToken) {
+            console.error('CSRF token not found');
+            showToast('Security token missing. Please refresh the page.', 'error');
+            return;
+        }
+
+        console.log('Fetching data from /api/program-accomplishment/data...');
+
+        const response = await fetch('/api/program-accomplishment/data', {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+        });
+
+        console.log('Response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('API Error Response:', errorText);
+            
+            // Handle specific error cases
+            if (response.status === 401) {
+                showToast('Session expired. Please login again.', 'error');
+                setTimeout(() => window.location.href = '/login', 2000);
+                return;
+            }
+            if (response.status === 403) {
+                showToast('Access denied. Please check your permissions.', 'error');
+                return;
+            }
+            
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
         const data = await response.json();
+        console.log('Data received:', data);
+
         PAState.programs = data.programs || [];
         PAState.accomplishmentReports = data.accomplishmentReports || [];
         PAState.images = data.images || [];
-        
+
         updateStatistics();
         renderTable();
+
+        if (data.error) {
+            console.warn('API returned data with error:', data.error);
+            showToast(data.error, 'warning');
+        }
     } catch (error) {
         console.error('Error fetching initial data:', error);
         showToast('Failed to load data. Please refresh the page.', 'error');
+    } finally {
+        // Hide loading state
+        const loadingElement = document.getElementById('loading');
+        if (loadingElement) {
+            loadingElement.style.display = 'none';
+        }
     }
 }
 

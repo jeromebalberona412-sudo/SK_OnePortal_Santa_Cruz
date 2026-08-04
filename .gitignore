@@ -1,3 +1,4 @@
 package-lock.json
 # Ignore entire Python OCR project
 /python/
+Admin/

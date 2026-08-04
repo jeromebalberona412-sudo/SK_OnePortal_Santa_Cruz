@@ -16,12 +16,25 @@ body {
     margin-left: 280px;
     margin-top: 70px;
     min-height: calc(100vh - 70px);
-    transition: margin-left 0.28s ease;
+    transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+                width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 20px;
+    display: flex;
+    justify-content: center;
+    width: calc(100% - 280px);
+    box-sizing: border-box;
+}
+
+/* header.js toggles this class directly on .main-content when the
+   sidebar collapses to its 80px icon rail — match that exactly so the
+   page stretches, same as every other module. */
+.main-content.sidebar-collapsed {
+    margin-left: 80px;
+    width: calc(100% - 80px);
 }
 
 .page-container {
-    max-width: 100%;
+    max-width: 1400px;
     width: 100%;
     margin: 0 auto;
 }
@@ -261,14 +274,56 @@ body {
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
+    border-radius: 16px;
+    /* Visible, on-brand scrollbar so it's obvious there are more columns
+       to the right instead of the table looking cut off/broken. */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(244, 194, 13, 0.65) #e5e7eb;
+}
+
+.table-wrapper::-webkit-scrollbar {
+    height: 9px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+    background: #e5e7eb;
+    border-radius: 10px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(244, 194, 13, 0.65);
+    border-radius: 10px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #f4c20d;
 }
 
 .pa-table {
     width: 100%;
-    min-width: 1400px;
+    min-width: 1240px;
     border-collapse: separate;
     border-spacing: 0;
     font-size: 13px;
+    table-layout: fixed;
+}
+
+/* Column widths — sized to their content so headers never wrap oddly
+   and the Actions column stays reachable via the sticky rule below. */
+.pa-table th:nth-child(1),  .pa-table td:nth-child(1)  { width: 220px; } /* Program Name */
+.pa-table th:nth-child(2),  .pa-table td:nth-child(2)  { width: 130px; } /* Program Type */
+.pa-table th:nth-child(3),  .pa-table td:nth-child(3)  { width: 140px; } /* Committee */
+.pa-table th:nth-child(4),  .pa-table td:nth-child(4)  { width: 115px; } /* Date Started */
+.pa-table th:nth-child(5),  .pa-table td:nth-child(5)  { width: 125px; } /* Date Completed */
+.pa-table th:nth-child(6),  .pa-table td:nth-child(6)  { width: 130px; } /* Budget Allocated */
+.pa-table th:nth-child(7),  .pa-table td:nth-child(7)  { width: 120px; } /* Created By */
+.pa-table th:nth-child(8),  .pa-table td:nth-child(8)  { width: 105px; } /* Status */
+.pa-table th:nth-child(9),  .pa-table td:nth-child(9)  { width: 130px; } /* Report Status */
+
+.pa-table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .pa-table thead {
@@ -320,15 +375,22 @@ body {
 .pa-table td.col-actions {
     border-right: none;
     text-align: center;
-    min-width: 80px;
-    width: 80px;
+    min-width: 110px;
+    width: 110px;
     background: #fff;
     overflow: visible;
     white-space: nowrap;
+    /* Pin Actions to the right edge of the scroll area so it's never
+       hidden off-screen — this is what was making the table look broken. */
+    position: sticky;
+    right: 0;
+    z-index: 2;
+    box-shadow: -6px 0 8px -6px rgba(15, 23, 42, 0.18);
 }
 
 .pa-table thead th.col-actions {
     background: #2c2c3e;
+    z-index: 3;
 }
 
 .pa-table tbody tr:nth-child(even) td.col-actions {
@@ -1269,24 +1331,53 @@ body {
 }
 
 /* Responsive */
-@media (max-width: 1024px) {
+
+/* Tablet / small desktop - sidebar is usually collapsed to icon rail here */
+@media (max-width: 1200px) {
+    .main-content {
+        padding: 18px;
+    }
+
     .pa-table {
-        min-width: 1200px;
+        min-width: 1150px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .module-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .pa-view-info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Below this point the shared sidebar goes off-canvas (overlay), so the
+   main content should always take the full viewport width and center
+   its own contents rather than reserving space for the sidebar. */
+@media (max-width: 900px) {
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 16px;
+    }
+
+    .page-header-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
     }
 }
 
 @media (max-width: 768px) {
-    .main-content {
-        margin-left: 0;
-        padding: 16px;
-    }
-
     .page-title {
         font-size: 24px;
     }
 
     .module-stats-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
     }
 
     .pa-form-grid {
@@ -1296,6 +1387,15 @@ body {
     .pa-modal-container {
         width: 95%;
         max-height: 95vh;
+    }
+
+    .table-action-bar {
+        justify-content: stretch;
+    }
+
+    .pa-search-inline {
+        max-width: 100%;
+        width: 100%;
     }
 
     .filters-row {
@@ -1310,6 +1410,11 @@ body {
     .table-page-footer {
         flex-direction: column;
         gap: 12px;
+        text-align: center;
+    }
+
+    .page-content-section {
+        padding: 16px;
     }
 }
 
@@ -1330,5 +1435,11 @@ body {
 
     .pa-modal-title {
         font-size: 18px;
+    }
+
+    .pa-gallery,
+    .pa-image-preview,
+    .pa-existing-images {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     }
 }

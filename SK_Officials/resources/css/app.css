@@ -1,3 +1,7 @@
+/* Tailwind CSS v4 Configuration */
+/* Note: @source and @theme are Tailwind CSS v4 directives */
+/* CSS linter warnings for these can be safely ignored */
+/* eslint-disable-next-line tailwindcss/classnames-order */
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -8,4 +12,22 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* Main content margin adjustment for sidebar */
+@media (min-width: 769px) {
+    .main-content {
+        margin-left: 80px;
+        transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .main-content:not(.sidebar-collapsed) {
+        margin-left: 260px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0 !important;
+    }
 }

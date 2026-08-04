@@ -478,20 +478,25 @@ window.HeaderFunctions = {
 };
 
 function closeAIAssistant() {
-    if (typeof window.closeAIAssistant === 'function') {
-        window.closeAIAssistant();
-        return;
+    // AI Assistant is currently disabled - safe no-op
+    try {
+        if (typeof window.closeAIAssistantInternal === 'function') {
+            window.closeAIAssistantInternal();
+            return;
+        }
+        if (window.SkAiClose?.forceCloseAiModal) {
+            window.SkAiClose.forceCloseAiModal();
+            return;
+        }
+        const aiModal = document.getElementById('aiAssistantModal');
+        const aiBtn = document.getElementById('aiAssistantBtn');
+        if (aiModal) {
+            aiModal.classList.remove('open');
+            aiModal.setAttribute('hidden', '');
+            aiModal.setAttribute('aria-hidden', 'true');
+        }
+        if (aiBtn) aiBtn.setAttribute('aria-expanded', 'false');
+    } catch (e) {
+        // Ignore errors when closing disabled AI Assistant
     }
-    if (window.SkAiClose?.forceCloseAiModal) {
-        window.SkAiClose.forceCloseAiModal();
-        return;
-    }
-    const aiModal = document.getElementById('aiAssistantModal');
-    const aiBtn = document.getElementById('aiAssistantBtn');
-    if (aiModal) {
-        aiModal.classList.remove('open');
-        aiModal.setAttribute('hidden', '');
-        aiModal.setAttribute('aria-hidden', 'true');
-    }
-    if (aiBtn) aiBtn.setAttribute('aria-expanded', 'false');
 }

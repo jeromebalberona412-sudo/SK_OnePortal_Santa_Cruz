@@ -385,11 +385,11 @@ class ProgramAccomplishmentService
             'end_date' => $program->end_date?->format('Y-m-d'),
             'status' => $program->status,
             'barangay_id' => $program->barangay_id,
-            'barangay' => $program->barangay?->name,
             'participation_quantity' => $program->participation_quantity, // Using as budget
             'created_by' => $program->created_by,
             'creator' => $program->creator?->name,
             'created_at' => $program->created_at?->format('Y-m-d H:i:s'),
+            'updated_at' => $program->updated_at?->format('Y-m-d H:i:s'),
         ];
     }
 
@@ -416,7 +416,6 @@ class ProgramAccomplishmentService
             'remaining_budget' => $report->remaining_budget,
             'budget_utilization_percent' => $report->budget_utilization_percent,
             'program' => $report->program ? $this->formatProgram($report->program) : null,
-            'barangay' => $report->barangay?->name,
             'creator' => $report->creator?->name,
             'images' => $report->images->map(fn ($image) => $this->formatImage($image))->values(),
             'created_at' => $report->created_at?->format('Y-m-d H:i:s'),

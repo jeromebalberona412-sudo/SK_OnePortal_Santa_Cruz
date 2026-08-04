@@ -105,13 +105,6 @@
             </div>
             <div class="filters-row">
                 <div class="filter-item">
-                    <label for="paBarangayFilter" class="filter-label">Barangay</label>
-                    <select id="paBarangayFilter" class="filter-select">
-                        <option value="">All</option>
-                        @include('layout::partials.barangay-zone-options')
-                    </select>
-                </div>
-                <div class="filter-item">
                     <label for="paCategoryFilter" class="filter-label">Category</label>
                     <select id="paCategoryFilter" class="filter-select">
                         <option value="">All</option>
@@ -153,7 +146,6 @@
                             <tr>
                                 <th>Program Name</th>
                                 <th>Program Type</th>
-                                <th>Barangay</th>
                                 <th>Committee</th>
                                 <th>Date Started</th>
                                 <th>Date Completed</th>
@@ -220,10 +212,6 @@
                         <div class="pa-form-group">
                             <label class="pa-form-label">Program</label>
                             <input type="text" id="paProgram" class="pa-form-input" readonly>
-                        </div>
-                        <div class="pa-form-group">
-                            <label class="pa-form-label">Barangay</label>
-                            <input type="text" id="paBarangay" class="pa-form-input" readonly>
                         </div>
                         <div class="pa-form-group">
                             <label class="pa-form-label">Venue</label>

@@ -26,25 +26,53 @@ class ProgramAccomplishmentController extends Controller
 
     public function data(Request $request)
     {
-        $user = Auth::user();
+        try {
+            $user = Auth::user();
 
-        if (!$user || !$user->barangay_id) {
+            if (!$user) {
+                \Log::warning('Program Accomplishment data fetch: No authenticated user');
+                return response()->json([
+                    'programs' => [],
+                    'accomplishmentReports' => [],
+                    'images' => [],
+                    'error' => 'No authenticated user'
+                ], 401);
+            }
+
+            if (!$user->barangay_id) {
+                \Log::warning('Program Accomplishment data fetch: User has no barangay_id', [
+                    'user_id' => $user->id
+                ]);
+                return response()->json([
+                    'programs' => [],
+                    'accomplishmentReports' => [],
+                    'images' => [],
+                    'error' => 'User has no barangay assigned'
+                ], 403);
+            }
+
+            $programs = $this->accomplishmentService->getCompletedPrograms($user->barangay_id);
+            $accomplishmentReports = $this->accomplishmentService->getAccomplishmentReports($user->barangay_id);
+            $images = $this->accomplishmentService->getAllImages($user->barangay_id);
+
+            return response()->json([
+                'programs' => $programs,
+                'accomplishmentReports' => $accomplishmentReports,
+                'images' => $images,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Program Accomplishment data fetch error: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'programs' => [],
                 'accomplishmentReports' => [],
                 'images' => [],
-            ]);
+                'error' => 'Failed to fetch data: ' . $e->getMessage()
+            ], 500);
         }
-
-        $programs = $this->accomplishmentService->getCompletedPrograms($user->barangay_id);
-        $accomplishmentReports = $this->accomplishmentService->getAccomplishmentReports($user->barangay_id);
-        $images = $this->accomplishmentService->getAllImages($user->barangay_id);
-
-        return response()->json([
-            'programs' => $programs,
-            'accomplishmentReports' => $accomplishmentReports,
-            'images' => $images,
-        ]);
     }
 
     public function store(Request $request)
