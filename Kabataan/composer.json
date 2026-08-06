@@ -10,6 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "altcha-org/altcha": "*",
         "cloudinary/cloudinary_php": "*",
         "google/cloud-vision": "*",
         "laravel/framework": "^12.0",

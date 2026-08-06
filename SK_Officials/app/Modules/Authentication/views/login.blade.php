@@ -44,7 +44,7 @@
 </head>
 <body class="sk-login-page">
     @include('loading')
-    
+
     <!-- Animated Background -->
     <div class="sk-bg-wrapper">
         <div class="sk-bg-image"></div>
@@ -80,11 +80,7 @@
         <!-- Right Side - Login Card -->
         <div class="sk-login-section">
             <div class="sk-login-card">
-                <div class="card-header">
-                    <h2 class="card-title">
-                        Welcome Back!
-                        
-                    </h2>
+                <div class="card-header card-header-centered">
                     <p class="card-subtitle">Login to your account</p>
                 </div>
 

@@ -97,12 +97,46 @@ document.addEventListener('DOMContentLoaded', function () {
         if (sentEmailEl && email) sentEmailEl.textContent = email;
     }
 
-    const isSentStep = step2 && !step2.hidden;
+    function navigationType() {
+        const entries = performance.getEntriesByType('navigation');
+        if (entries.length > 0) {
+            return entries[0].type;
+        }
 
-    if (isSentStep) {
+        if (performance.navigation && performance.navigation.type === 1) {
+            return 'reload';
+        }
+
+        return 'navigate';
+    }
+
+    function disableResendAfterRefresh() {
+        const navType = navigationType();
+        if (navType === 'reload' || navType === 'back_forward') {
+            if (resendBtn) {
+                resendBtn.disabled = true;
+            }
+            if (fpResendBtnText) {
+                fpResendBtnText.textContent = 'Resend Disabled After Refresh';
+            }
+            if (cooldownNotice) {
+                cooldownNotice.hidden = false;
+                cooldownNotice.textContent = 'Reset link resend is disabled after refreshing the page.';
+            }
+        }
+    }
+
+    const isSentStep = step2 && !step2.hidden;
+    const isReloadNavigation = navigationType() === 'reload' || navigationType() === 'back_forward';
+
+    if (isSentStep && !isReloadNavigation) {
         startCooldown();
     } else {
         resumeCooldownIfActive();
+    }
+
+    if (isReloadNavigation) {
+        disableResendAfterRefresh();
     }
 
     document.querySelectorAll('.sk-field-error').forEach(function (el) {

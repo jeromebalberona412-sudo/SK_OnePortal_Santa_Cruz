@@ -44,8 +44,7 @@
                              class="collab-logo">
                     </div>
                 </div>
-                <h1 class="sk-main-title">SK OnePortal</h1>
-                <p class="sk-tagline">SK Officials Portal - Santa Cruz, Laguna</p>
+                <h1 class="sk-main-title">SK OnePortal and SK Officials Portal - Santa Cruz, Laguna</h1>
             </div>
         </div>
 
@@ -58,7 +57,7 @@
 
                 <div id="fpStep1" @if($linkSent) hidden @endif>
                     <div class="card-header">
-                        <h2 class="card-title">Forgot Password?</h2>
+                        <h2 class="card-title">Forgot Password</h2>
                         <p class="card-subtitle">Enter the email address associated with your account and we'll send you a link to reset your password.</p>
                     </div>
 
