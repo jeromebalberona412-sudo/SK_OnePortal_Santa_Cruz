@@ -3,11 +3,10 @@
     "private": true,
     "type": "module",
     "scripts": {
-    "build": "node scripts/copy-mediapipe-wasm.cjs && node scripts/copy-face-api-models.cjs && node scripts/copy-face-landmarker-model.cjs && vite build",
+    "build": "vite build",
     "dev": "vite",
     "dev:https": "node scripts/dev-https-proxy.cjs",
-    "serve:lan": "concurrently -n laravel,https -c blue,green \"php artisan serve --host=0.0.0.0 --port=8002\" \"node scripts/dev-https-proxy.cjs\"",
-    "postinstall": "node scripts/copy-mediapipe-wasm.cjs && node scripts/copy-face-api-models.cjs && node scripts/copy-face-landmarker-model.cjs"
+    "serve:lan": "concurrently -n laravel,https -c blue,green \"php artisan serve --host=0.0.0.0 --port=8002\" \"node scripts/dev-https-proxy.cjs\""
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
@@ -20,8 +19,6 @@
         "vite": "^7.0.7"
     },
     "dependencies": {
-        "@mediapipe/tasks-vision": "^0.10.35",
-        "@vladmandic/face-api": "^1.7.15",
         "bootstrap": "^5.3.8",
         "pdfjs-dist": "^6.0.227",
         "signature_pad": "^5.1.3"

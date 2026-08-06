@@ -123,9 +123,6 @@ export default defineConfig({
                     if (id.includes('node_modules/@vladmandic/face-api') || id.includes('node_modules/@tensorflow')) {
                         return 'vendor-face-api';
                     }
-                    if (id.includes('node_modules/@mediapipe')) {
-                        return 'vendor-mediapipe';
-                    }
                 },
             },
         },

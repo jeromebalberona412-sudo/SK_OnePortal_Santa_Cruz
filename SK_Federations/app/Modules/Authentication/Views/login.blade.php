@@ -68,7 +68,6 @@
             <div class="login-form-container">
                 <div class="login-card-inner">
                     <div class="form-header">
-                        <h2 class="nowrap">Welcome Back! <span class="wave-emoji">👋</span></h2>
                         <p>Sign in to your account</p>
                     </div>
 
