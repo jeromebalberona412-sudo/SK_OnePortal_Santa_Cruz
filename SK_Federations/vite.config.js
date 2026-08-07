@@ -22,6 +22,7 @@ export default defineConfig({
                 'app/Modules/Authentication/assets/css/style.css',
                 'app/Modules/Authentication/assets/css/auth-legal.css',
                 'app/Modules/Authentication/assets/js/auth-legal.js',
+                'app/Modules/Authentication/assets/js/login.js',
             ],
             refresh: true,
         }),

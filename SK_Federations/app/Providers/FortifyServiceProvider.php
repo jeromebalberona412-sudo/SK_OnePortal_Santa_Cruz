@@ -46,6 +46,30 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         Fortify::authenticateUsing(function (Request $request) {
+            // ── Turnstile verification ─────────────────────────────────────────
+            // Must happen before credential checking so an invalid/missing token
+            // never reaches the authentication layer.
+            $turnstileService = app(\App\Modules\Authentication\Services\TurnstileService::class);
+
+            if ($turnstileService->isConfigured()) {
+                $turnstileToken = (string) $request->input('cf-turnstile-response', '');
+
+                if ($turnstileToken === '') {
+                    throw ValidationException::withMessages([
+                        'email'    => ['Human verification is required. Please complete the challenge.'],
+                        'password' => ['Human verification is required. Please complete the challenge.'],
+                    ])->redirectTo(route('login'));
+                }
+
+                if (! $turnstileService->verify($turnstileToken, $request->ip())) {
+                    throw ValidationException::withMessages([
+                        'email'    => ['Human verification failed. Please try again.'],
+                        'password' => ['Human verification failed. Please try again.'],
+                    ])->redirectTo(route('login'));
+                }
+            }
+
+            // ── Credential check ──────────────────────────────────────────────
             $user = app(AuthenticationService::class)->authenticate($request);
 
             if ($user === null) {

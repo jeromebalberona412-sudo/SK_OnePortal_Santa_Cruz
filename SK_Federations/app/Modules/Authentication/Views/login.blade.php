@@ -7,17 +7,25 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>OnePortal SK Federation</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     @vite([
         'app/Modules/Authentication/assets/css/style.css',
         'app/Modules/Authentication/assets/css/auth-legal.css',
         'app/Modules/Authentication/assets/js/auth-legal.js',
+        'app/Modules/Authentication/assets/js/login.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+
+    {{--
+        render=explicit: prevents Cloudflare from auto-scanning the DOM.
+        login.js calls turnstile.render() manually after the API is ready.
+    --}}
+    @if(config('services.turnstile.enabled') && config('services.turnstile.site_key'))
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+    @endif
 </head>
 <body>
-    @include('partials.loading')
 
     <script>
         (function() {
@@ -30,6 +38,55 @@
             };
         })();
     </script>
+
+    {{-- ─── Turnstile Modal ─────────────────────────────────────────────────────
+         Always rendered when Turnstile is enabled. Visibility controlled by
+         .turnstile-modal-visible class added/removed by login.js.
+    ──────────────────────────────────────────────────────────────────────────── --}}
+    @if(config('services.turnstile.enabled') && config('services.turnstile.site_key'))
+        <div id="turnstile-modal" class="turnstile-modal" role="dialog" aria-modal="true" aria-label="Human verification">
+
+            <div id="turnstile-modal-backdrop" class="turnstile-modal-backdrop"></div>
+
+            <div class="turnstile-modal-card">
+
+                <div class="turnstile-modal-header">
+                    <div class="turnstile-modal-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0
+                                     01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332
+                                     9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="turnstile-modal-title">Verify you're human</h2>
+                        <p class="turnstile-modal-subtitle">Complete the security check to continue signing in.</p>
+                    </div>
+                    <button id="turnstile-close-btn" class="turnstile-close-btn" type="button" aria-label="Cancel verification">
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414
+                                     1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293
+                                     4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                  clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="turnstile-modal-body">
+                    <div id="turnstile-container"></div>
+                </div>
+
+                <div class="turnstile-modal-footer">
+                    <button id="turnstile-cancel-btn" type="button" class="turnstile-cancel-link">
+                        Cancel and go back
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    @endif
 
     <div class="login-page">
         {{-- Background --}}
@@ -60,18 +117,28 @@
                              class="collab-logo">
                     </div>
                 </div>
-                <h1 class="brand-title">SK OnePortal</h1>
-                <p class="brand-subtitle">SK Federation Portal – Santa Cruz, Laguna</p>
+                <h1 class="brand-title" style="white-space:nowrap;">SK OnePortal</h1>
+                <p class="brand-subtitle" style="white-space:nowrap;">SK Federation Portal &ndash; Santa Cruz, Laguna</p>
             </div>
 
             {{-- RIGHT: Login Card --}}
             <div class="login-form-container">
                 <div class="login-card-inner">
                     <div class="form-header">
-                        <p>Sign in to your account</p>
+                        <p style="font-size:1.35rem;font-weight:800;color:#0f172a;letter-spacing:-0.01em;margin:0;">
+                            Login to your account
+                        </p>
                     </div>
 
-                    <form method="POST" action="{{ route('login', [], false) }}" class="login-form" id="loginForm" novalidate>
+                    <form method="POST"
+                          action="{{ route('login', [], false) }}"
+                          class="login-form"
+                          id="loginForm"
+                          novalidate
+                          @if(config('services.turnstile.enabled') && config('services.turnstile.site_key'))
+                              data-turnstile-enabled="true"
+                              data-turnstile-sitekey="{{ config('services.turnstile.site_key') }}"
+                          @endif>
                         @csrf
 
                         @if (session('access_denied'))
@@ -88,6 +155,15 @@
                             </div>
                         @enderror
 
+                        @if ($errors->has('email') || $errors->has('password'))
+                            <div class="alert alert-danger" role="alert">
+                                <svg style="width:18px;height:18px;flex-shrink:0;vertical-align:middle;margin-right:6px;" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                </svg>
+                                {{ $errors->first('email') ?: $errors->first('password') }}
+                            </div>
+                        @endif
+
                         <div class="form-group">
                             <label for="email">
                                 <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">
@@ -100,17 +176,14 @@
                                 type="email"
                                 id="email"
                                 name="email"
-                                class="form-control @error('email') is-invalid @enderror"
+                                class="form-control"
                                 value="{{ old('email') }}"
-                                required
-                                autocomplete="off"
                                 autofocus
+                                autocomplete="email"
                                 placeholder="Enter your email"
                                 maxlength="150"
                             >
-                            @error('email')
-                                <div class="invalid-feedback" data-server-error="true">{{ $message }}</div>
-                            @enderror
+                            <div class="invalid-feedback fed-field-error" id="email-error" style="display:none;"></div>
                         </div>
 
                         <div class="form-group">
@@ -125,11 +198,9 @@
                                     type="password"
                                     id="password"
                                     name="password"
-                                    class="form-control @error('password') is-invalid @enderror"
-                                    required
+                                    class="form-control"
                                     autocomplete="current-password"
                                     placeholder="Enter your password"
-                                    minlength="8"
                                     maxlength="64"
                                 >
                                 <button type="button" class="pw-toggle-btn" id="pwToggleBtn" aria-label="Show password" tabindex="-1">
@@ -144,9 +215,7 @@
                                     </svg>
                                 </button>
                             </div>
-                            @error('password')
-                                <div class="invalid-feedback d-block" data-server-error="true">{{ $message }}</div>
-                            @enderror
+                            <div class="invalid-feedback fed-field-error" id="password-error" style="display:none;"></div>
                         </div>
 
                         <div class="form-options">
@@ -154,16 +223,34 @@
                                 <input class="form-check-input" type="checkbox" id="remember" name="remember" value="1">
                                 <label class="form-check-label" for="remember">Remember me</label>
                             </div>
-                            <a href="{{ url('/forgot-password') }}" class="forgot-password">Forgot Password?</a>
+                            <a href="{{ url('/forgot-password') }}" class="forgot-password" id="forgotBtn">Forgot Password?</a>
                         </div>
 
                         @include('authentication::partials.login-legal-consent')
 
+                        {{--
+                            Hidden anchor for Turnstile server-side errors.
+                            Only rendered when the backend specifically rejected the Turnstile token
+                            (messages contain "pagpapatunay" / "verification" / "turnstile").
+                            login.js detects this and auto-opens the modal so the user can re-verify.
+                        --}}
+                        @php
+                            $fedLoginErr = session('login_error', '');
+                            $isFedTurnstileErr = $fedLoginErr && (
+                                str_contains(strtolower($fedLoginErr), 'pagpapatunay') ||
+                                str_contains(strtolower($fedLoginErr), 'verification') ||
+                                str_contains(strtolower($fedLoginErr), 'turnstile') ||
+                                str_contains(strtolower($fedLoginErr), 'security check')
+                            );
+                        @endphp
+                        @if($isFedTurnstileErr && config('services.turnstile.enabled') && config('services.turnstile.site_key'))
+                            <div id="turnstile-server-error" style="display:none;" aria-hidden="true">{{ $fedLoginErr }}</div>
+                        @endif
+
                         <button type="submit" class="login-btn btn btn-primary w-100" id="loginBtn">
-                            <span id="loginBtnText">Sign In</span>
+                            <span id="loginBtnText">Login</span>
                         </button>
                     </form>
-
 
                 </div>
             </div>
@@ -175,112 +262,7 @@
     @include('authentication::partials.login-legal-prompt')
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
-    <script>
-        (function () {
-        const loginForm = document.getElementById('loginForm');
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const loginBtn = document.getElementById('loginBtn');
-        const loginBtnText = document.getElementById('loginBtnText');
-        const pwToggleBtn = document.getElementById('pwToggleBtn');
 
-        if (!loginForm || !emailInput || !passwordInput) {
-            return;
-        }
-
-        if (pwToggleBtn) {
-            pwToggleBtn.addEventListener('click', function () {
-                const show = passwordInput.type === 'password';
-                passwordInput.type = show ? 'text' : 'password';
-                pwToggleBtn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
-                pwToggleBtn.classList.toggle('pw-visible', show);
-            });
-        }
-
-        function validateEmail(email) {
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-        }
-
-        function showError(input, message) {
-            input.classList.add('is-invalid');
-            let insertTarget = input.id === 'password'
-                ? input.closest('.password-input-container').parentElement
-                : input.parentElement;
-            const existing = insertTarget.querySelector('.invalid-feedback:not([data-server-error])');
-            if (existing) existing.remove();
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'invalid-feedback d-block';
-            errorDiv.textContent = message;
-            insertTarget.appendChild(errorDiv);
-        }
-
-        function clearError(input) {
-            input.classList.remove('is-invalid');
-            let searchTarget = input.id === 'password'
-                ? input.closest('.password-input-container').parentElement
-                : input.parentElement;
-            const errorDiv = searchTarget.querySelector('.invalid-feedback:not([data-server-error])');
-            if (errorDiv) errorDiv.remove();
-        }
-
-        emailInput.addEventListener('input', function() { clearError(this); });
-        passwordInput.addEventListener('input', function() { clearError(this); });
-
-        loginForm.addEventListener('submit', function(e) {
-            let isValid = true;
-            clearError(emailInput);
-            clearError(passwordInput);
-
-            if (!emailInput.value.trim()) {
-                showError(emailInput, 'Email address is required.');
-                isValid = false;
-            } else if (!validateEmail(emailInput.value.trim())) {
-                showError(emailInput, 'Please enter a valid email address.');
-                isValid = false;
-            }
-
-            if (!passwordInput.value) {
-                showError(passwordInput, 'Password is required.');
-                isValid = false;
-            } else if (passwordInput.value.length < 8) {
-                showError(passwordInput, 'Password must be at least 8 characters long.');
-                isValid = false;
-            } else if (passwordInput.value.length > 64) {
-                showError(passwordInput, 'Password must not exceed 64 characters.');
-                isValid = false;
-            }
-
-            if (!isValid) { e.preventDefault(); return false; }
-
-            if (loginBtn) {
-                loginBtn.disabled = true;
-            }
-            if (loginBtnText) {
-                loginBtnText.textContent = 'Signing In...';
-            }
-
-            if (typeof LoadingScreen !== 'undefined') {
-                LoadingScreen.show('Signing In', 'Verifying your credentials...');
-            }
-        });
-
-        document.querySelector('.forgot-password').addEventListener('click', function(e) {
-            e.preventDefault();
-            LoadingScreen.show('Loading', 'Redirecting to password reset...');
-            setTimeout(() => { window.location.href = this.href; }, 300);
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            localStorage.removeItem('sk_fed_remember_email');
-            localStorage.removeItem('sk_fed_remember_enabled');
-
-            document.querySelectorAll('.invalid-feedback').forEach(function(el) {
-                el.setAttribute('data-server-error', 'true');
-            });
-        });
-        })();
-    </script>
 </body>
 @if (session('verification_wait') && session()->has('sk_fed_email_verification_pending'))
     <script>window.location.replace("{{ route('skfed.verification.wait', [], false) }}");</script>
