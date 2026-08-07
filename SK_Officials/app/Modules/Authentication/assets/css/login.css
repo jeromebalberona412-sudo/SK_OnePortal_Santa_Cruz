@@ -1187,7 +1187,13 @@ html {
 .sk-field-error {
     font-size: 0.8rem;
     color: #dc3545;
-    font-weight: 500;
-    margin-top: 0.25rem;
-    animation: alertSlideIn 0.3s ease;
+}
+
+/* Turnstile Widget */
+#turnstile-container {
+    margin-bottom: 1.5rem;
+}
+
+#turnstile-widget iframe {
+    border-radius: 8px;
 }

@@ -804,6 +804,15 @@ html {
     }
 }
 
+/* Turnstile Widget */
+#turnstile-container {
+    margin-bottom: 1.5rem;
+}
+
+#turnstile-widget iframe {
+    border-radius: 8px;
+}
+
 /* ============================================
    Selection
    ============================================ */

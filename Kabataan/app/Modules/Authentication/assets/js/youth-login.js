@@ -4,13 +4,13 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    
+
     // ============================================
     // Password Toggle Functionality (Disabled - handled in individual pages)
     // ============================================
     // Note: Password toggle is now handled directly in each blade file
     // to avoid conflicts between login, register, and reset-password pages
-    
+
     // ============================================
     // Form Validation Enhancement (Only for login page)
     // ============================================
@@ -18,32 +18,183 @@ document.addEventListener('DOMContentLoaded', function() {
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     const isResetPasswordPage = document.getElementById('resetPasswordForm');
-    
+    const turnstileContainer = document.getElementById('turnstile-container');
+    const turnstileWidget = document.getElementById('turnstile-widget');
+    const turnstileError = document.getElementById('turnstile-error');
+    const submitBtn = document.getElementById('loginBtn');
+
+    // Turnstile state
+    let turnstileLoaded = false;
+    let turnstileWidgetId = null;
+
+    // Load Turnstile widget dynamically
+    function loadTurnstileWidget() {
+        if (turnstileLoaded || typeof turnstile === 'undefined') return;
+
+        turnstileLoaded = true;
+        turnstileContainer.style.display = 'block';
+
+        turnstileWidgetId = turnstile.render('#turnstile-widget', {
+            sitekey: window.turnstileSiteKey,
+            callback: function(token) {
+                // Turnstile completed successfully
+                clearTurnstileError();
+                submitLoginForm();
+            },
+            'error-callback': function() {
+                // Turnstile failed
+                showTurnstileError('Security verification failed. Please try again.');
+                resetFormState();
+            },
+            'expired-callback': function() {
+                // Turnstile expired
+                showTurnstileError('Security verification expired. Please try again.');
+                resetFormState();
+            }
+        });
+    }
+
+    function resetFormState() {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span>Login</span>';
+        }
+        if (emailInput) emailInput.disabled = false;
+        if (passwordInput) passwordInput.disabled = false;
+    }
+
+    function submitLoginForm() {
+        // Create hidden input for Turnstile token
+        let tokenInput = document.querySelector('input[name="cf-turnstile-response"]');
+        if (!tokenInput) {
+            tokenInput = document.createElement('input');
+            tokenInput.type = 'hidden';
+            tokenInput.name = 'cf-turnstile-response';
+            loginForm.appendChild(tokenInput);
+        }
+
+        // Get the token from Turnstile
+        const response = turnstile.getResponse(turnstileWidgetId);
+        tokenInput.value = response;
+
+        // Disable form elements and show loading state
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <svg class="spinner" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <circle class="spinner-circle" cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span>Authenticating...</span>
+            `;
+        }
+
+        if (emailInput) emailInput.disabled = true;
+        if (passwordInput) passwordInput.disabled = true;
+        if (turnstileContainer) {
+            turnstileContainer.style.pointerEvents = 'none';
+            turnstileContainer.style.opacity = '0.5';
+        }
+
+        // Submit the form
+        loginForm.submit();
+    }
+
+    function showTurnstileError(message) {
+        if (turnstileError) {
+            turnstileError.textContent = message;
+            turnstileError.hidden = false;
+            turnstileError.style.display = 'block';
+        }
+    }
+
+    function clearTurnstileError() {
+        if (turnstileError) {
+            turnstileError.hidden = true;
+            turnstileError.style.display = 'none';
+        }
+    }
+
     // Only apply validation if NOT on reset password page
     if (loginForm && !isResetPasswordPage) {
         loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
             let isValid = true;
-            
+
             // Clear all previous errors
             clearAllErrors();
-            
+            clearTurnstileError();
+
             // Email validation
             if (emailInput && !isValidEmail(emailInput.value.trim())) {
                 isValid = false;
                 showInputError(emailInput, 'Invalid Email or Password');
             }
-            
+
             // Password validation for prototype login
             if (passwordInput && passwordInput.value.trim().length === 0) {
                 isValid = false;
                 showInputError(passwordInput, 'Invalid Email or Password');
             }
 
-            if (!isValid) {
-                e.preventDefault();
+            if (!isValid) return false;
+
+            // If Turnstile is enabled and not yet loaded, load it now
+            if (turnstileContainer && window.turnstileSiteKey && !turnstileLoaded) {
+                // Show loading state while preparing Turnstile
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span>Loading Security Check...</span>';
+                }
+                if (emailInput) emailInput.disabled = true;
+                if (passwordInput) passwordInput.disabled = true;
+
+                loadTurnstileWidget();
+
+                // Reset button state after widget loads
+                setTimeout(() => {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<span>Login</span>';
+                    }
+                    if (emailInput) emailInput.disabled = false;
+                    if (passwordInput) passwordInput.disabled = false;
+                }, 500);
+
+                return false;
+            }
+
+            // If Turnstile is already loaded but not completed, show error
+            if (turnstileContainer && turnstileLoaded) {
+                const response = turnstile.getResponse(turnstileWidgetId);
+                if (!response) {
+                    showTurnstileError('Please complete the security verification.');
+                    return false;
+                }
+            }
+
+            // If Turnstile is not enabled, submit directly
+            if (!turnstileContainer) {
+                // Original loading state logic
+                const emailVal = emailInput ? emailInput.value.trim() : '';
+                const passwordVal = passwordInput ? passwordInput.value.trim() : '';
+                if (!emailVal || !isValidEmail(emailVal) || !passwordVal) {
+                    return;
+                }
+
+                if (submitBtn && !submitBtn.disabled) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = `
+                        <svg class="spinner" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle class="spinner-circle" cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <span>Authenticating...</span>
+                    `;
+                }
+                loginForm.submit();
             }
         });
-        
+
         // Real-time validation on blur
         if (emailInput) {
             emailInput.addEventListener('blur', function() {
@@ -51,19 +202,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     showInputError(this, 'Invalid Email or Password');
                 }
             });
-            
+
             emailInput.addEventListener('input', function() {
                 clearInputError(this);
             });
         }
-        
+
         if (passwordInput) {
             passwordInput.addEventListener('blur', function() {
                 if (this.value.trim().length === 0) {
                     showInputError(this, 'Invalid Email or Password');
                 }
             });
-            
+
             passwordInput.addEventListener('input', function() {
                 clearInputError(this);
             });
@@ -197,48 +348,35 @@ document.addEventListener('DOMContentLoaded', function() {
             if (emailInput) emailInput.focus();
         }
     });
-    
-    // ============================================
-    // Loading State on Submit (Only for login page)
-    // Only animate if inputs are valid (non-empty)
-    // ============================================
-    if (loginForm && !document.getElementById('resetPasswordForm')) {
-        loginForm.addEventListener('submit', function(e) {
-            // Do not show loading if validation will block the submit
-            const emailVal    = emailInput    ? emailInput.value.trim()    : '';
-            const passwordVal = passwordInput ? passwordInput.value.trim() : '';
-            if (!emailVal || !isValidEmail(emailVal) || !passwordVal) {
-                return; // validation listener already called e.preventDefault()
-            }
 
-            const submitBtn = this.querySelector('.youth-submit-btn');
-            if (submitBtn && !submitBtn.disabled) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = `
-                    <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                        <circle cx="12" cy="12" r="10" stroke-width="4" stroke-opacity="0.25"/>
-                        <path d="M12 2a10 10 0 0 1 10 10" stroke-width="4" stroke-linecap="round"/>
-                    </svg>
-                    <span>Logging in...</span>
-                `;
-
-                if (!document.getElementById('youth-login-spinner-style')) {
-                    const style = document.createElement('style');
-                    style.id = 'youth-login-spinner-style';
-                    style.textContent = `
-                        @keyframes youthLoginSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-                        .youth-submit-btn .spinner {
-                            display: inline-block;
-                            vertical-align: middle;
-                            transform-origin: center center;
-                            animation: youthLoginSpin 0.9s linear infinite;
-                        }
-                    `;
-                    document.head.appendChild(style);
-                }
+    // Add spinner CSS
+    if (!document.getElementById('youth-login-spinner-style')) {
+        const style = document.createElement('style');
+        style.id = 'youth-login-spinner-style';
+        style.textContent = `
+            @keyframes youthLoginSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+            .youth-submit-btn .spinner {
+                display: inline-block;
+                vertical-align: middle;
+                transform-origin: center center;
+                animation: youthLoginSpin 0.9s linear infinite;
             }
-        });
+        `;
+        document.head.appendChild(style);
     }
+
+    // Expose reset function for error handling
+    window.resetTurnstileState = function() {
+        if (turnstileLoaded && turnstileWidgetId && typeof turnstile !== 'undefined') {
+            turnstile.reset(turnstileWidgetId);
+        }
+        if (turnstileContainer) {
+            turnstileContainer.style.display = 'none';
+        }
+        turnstileLoaded = false;
+        turnstileWidgetId = null;
+        resetFormState();
+    };
 });
 
 // ============================================

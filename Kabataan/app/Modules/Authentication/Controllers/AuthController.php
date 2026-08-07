@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
 use App\Models\User;
 use App\Services\KabataanAuthService;
+use App\Services\KkProfilingScheduleService;
 use App\Services\RegistrationEvaluationService;
+use App\Services\TurnstileService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -17,6 +19,7 @@ class AuthController extends Controller
 {
     public function __construct(
         private readonly KabataanAuthService $kabataanAuthService,
+        private readonly TurnstileService $turnstileService,
     ) {}
 
     public function showLogin()
@@ -36,6 +39,23 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        // Verify Turnstile token if enabled
+        if (config('services.turnstile.enabled')) {
+            $token = (string) $request->input('cf-turnstile-response', '');
+
+            if ($token === '') {
+                return back()
+                    ->withInput($request->only('email'))
+                    ->with('login_error', 'Please complete the security verification.');
+            }
+
+            if (! $this->turnstileService->verify($token, $request->ip())) {
+                return back()
+                    ->withInput($request->only('email'))
+                    ->with('login_error', 'Security verification failed. Please try again.');
+            }
+        }
+
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
@@ -67,7 +87,7 @@ class AuthController extends Controller
 
         if ($user->status === 'REJECTED') {
             // Fetch rejection reason from registration
-            $registration = \App\Models\KabataanRegistration::where('user_id', $user->id)->latest()->first();
+            $registration = KabataanRegistration::where('user_id', $user->id)->latest()->first();
             $reason = $registration?->review_notes
                 ? 'Reason: '.$registration->review_notes
                 : 'Please contact your SK officials for more information.';
@@ -91,7 +111,7 @@ class AuthController extends Controller
             ->latest('id')
             ->first();
 
-        if ($registration && app(\App\Services\KkProfilingScheduleService::class)->requiresProfilingUpdate($registration)) {
+        if ($registration && app(KkProfilingScheduleService::class)->requiresProfilingUpdate($registration)) {
             $request->session()->flash('show_kk_profiling_update', true);
             $request->session()->flash('kk_profiling_update_required', true);
         }

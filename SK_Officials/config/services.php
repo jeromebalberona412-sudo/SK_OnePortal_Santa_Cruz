@@ -40,7 +40,7 @@ return [
     ],
 
     'turnstile' => [
-        'enabled' => (bool) env('TURNSTILE_ENABLED', false),
+        'enabled' => (bool) env('TURNSTILE_ENABLED', true),
         'site_key' => env('TURNSTILE_SITE_KEY'),
         'secret_key' => env('TURNSTILE_SECRET_KEY'),
         'verify_url' => env('TURNSTILE_VERIFY_URL', 'https://challenges.cloudflare.com/turnstile/v0/siteverify'),
@@ -48,9 +48,9 @@ return [
 
     'cloudinary' => [
         'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
-        'api_key'    => env('CLOUDINARY_API_KEY'),
+        'api_key' => env('CLOUDINARY_API_KEY'),
         'api_secret' => env('CLOUDINARY_API_SECRET'),
-        'folder'     => env('CLOUDINARY_FOLDER', 'sk_oneportal/sk_officials_posts'),
+        'folder' => env('CLOUDINARY_FOLDER', 'sk_oneportal/sk_officials_posts'),
     ],
 
     'kabataan_app_url' => env('KABATAAN_APP_URL', 'http://localhost:8002'),

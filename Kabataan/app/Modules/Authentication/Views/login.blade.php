@@ -13,6 +13,12 @@
         'app/Modules/Authentication/assets/js/auth-legal.js',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    @if(config('services.turnstile.enabled'))
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+        <script>
+            window.turnstileSiteKey = {{ json_encode(config('services.turnstile.site_key')) }};
+        </script>
+    @endif
     <style>
         .youth-main-title {
             white-space: nowrap;
@@ -83,6 +89,12 @@
                         </svg>
                         <span>{{ session('login_error') }}</span>
                     </div>
+                    <script>
+                        // Reset Turnstile state on error
+                        if (typeof window.resetTurnstileState === 'function') {
+                            window.resetTurnstileState();
+                        }
+                    </script>
                 @endif
 
                 @if (session('success'))
@@ -171,6 +183,14 @@
                     </div>
 
                     @include('authentication::partials.login-legal-consent')
+
+                    <!-- Cloudflare Turnstile (Hidden initially) -->
+                    @if(config('services.turnstile.enabled'))
+                        <div class="youth-form-group" id="turnstile-container" style="display: none;">
+                            <div id="turnstile-widget"></div>
+                            <div class="youth-field-error" id="turnstile-error" hidden style="display: none !important;"></div>
+                        </div>
+                    @endif
 
                     <!-- Submit Button -->
                     <button type="submit" class="youth-submit-btn" id="loginBtn">

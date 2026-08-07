@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Models\User;
 use App\Modules\Authentication\Services\AuthenticationService;
+use App\Modules\Authentication\Services\TurnstileService;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
@@ -19,7 +21,8 @@ class FortifyServiceProvider extends ServiceProvider
     {
         // Register custom login response handler
         $this->app->singleton(LoginResponse::class, function () {
-            return new class implements LoginResponse {
+            return new class implements LoginResponse
+            {
                 public function toResponse($request)
                 {
                     // For JSON requests (API)
@@ -43,6 +46,24 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::verifyEmailView(fn () => view('authentication::verify-notice'));
 
         Fortify::authenticateUsing(function (Request $request) {
+            // Verify Turnstile token if enabled
+            if (config('services.turnstile.enabled')) {
+                $token = (string) $request->input('cf-turnstile-response', '');
+                $turnstileService = app(TurnstileService::class);
+
+                if ($token === '') {
+                    throw ValidationException::withMessages([
+                        'captcha' => ['Please complete the security verification.'],
+                    ]);
+                }
+
+                if (! $turnstileService->verify($token, $request->ip())) {
+                    throw ValidationException::withMessages([
+                        'captcha' => ['Security verification failed. Please try again.'],
+                    ]);
+                }
+            }
+
             $user = app(AuthenticationService::class)->authenticate($request);
 
             if ($user === null) {
@@ -62,7 +83,7 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         // After successful login, claim the session
-        Event::listen(\Illuminate\Auth\Events\Login::class, function (\Illuminate\Auth\Events\Login $event): void {
+        Event::listen(Login::class, function (Login $event): void {
             if ($event->user instanceof User && request()->hasSession()) {
                 app(AuthenticationService::class)->claimCurrentSession($event->user, request());
             }
