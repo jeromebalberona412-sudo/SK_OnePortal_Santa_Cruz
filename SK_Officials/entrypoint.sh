@@ -4,9 +4,28 @@ set -e
 echo "Starting Laravel application entrypoint..."
 
 # ============================================
-# Set proper permissions
+# Create required system directories
 # ============================================
-echo "Setting permissions..."
+echo "Creating system directories..."
+mkdir -p /var/log/nginx
+mkdir -p /var/lib/nginx
+mkdir -p /var/cache/nginx
+mkdir -p /run/nginx
+mkdir -p /var/log/supervisor
+mkdir -p /var/run/supervisor
+
+# ============================================
+# Set proper permissions for system directories
+# ============================================
+echo "Setting system directory permissions..."
+chown -R www-data:www-data /var/lib/nginx /var/cache/nginx /run/nginx
+chown -R root:root /var/log/nginx /var/log/supervisor /var/run/supervisor
+chmod -R 755 /var/log/nginx /var/log/supervisor /var/run/supervisor
+
+# ============================================
+# Set proper permissions for Laravel
+# ============================================
+echo "Setting Laravel permissions..."
 chown -R www-data:www-data /var/www/html/storage
 chown -R www-data:www-data /var/www/html/bootstrap/cache
 chown -R www-data:www-data /var/www/html/public/storage

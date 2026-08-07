@@ -95,13 +95,25 @@ RUN composer install \
 # Copy built frontend assets from frontend stage
 COPY --from=frontend-builder /app/public/build ./public/build
 
-# Create necessary directories
+# Create necessary directories for Laravel
 RUN mkdir -p \
     storage/framework/{views,cache,sessions} \
     storage/logs \
     storage/app/public \
     bootstrap/cache \
     public/storage
+
+# Create necessary directories for Nginx
+RUN mkdir -p \
+    /var/log/nginx \
+    /var/lib/nginx \
+    /var/cache/nginx \
+    /run/nginx
+
+# Create necessary directories for Supervisor
+RUN mkdir -p \
+    /var/log/supervisor \
+    /var/run/supervisor
 
 # Set permissions for Laravel
 RUN chown -R www-data:www-data \
@@ -112,6 +124,11 @@ RUN chown -R www-data:www-data \
     /var/www/html/storage \
     /var/www/html/bootstrap/cache \
     /var/www/html/public/storage
+
+# Set permissions for Nginx and Supervisor
+RUN chown -R www-data:www-data /var/lib/nginx /var/cache/nginx /run/nginx \
+    && chown -R root:root /var/log/nginx /var/log/supervisor /var/run/supervisor \
+    && chmod -R 755 /var/log/nginx /var/log/supervisor /var/run/supervisor
 
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
