@@ -25,12 +25,16 @@ RUN apk add --no-cache \
     zip \
     unzip \
     libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
     libzip-dev \
     oniguruma-dev \
-    freetype-dev \
-    libjpeg-turbo-dev \
+    libpq-dev \
     nginx \
-    supervisor
+    supervisor \
+    autoconf \
+    g++ \
+    make
 
 # Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
