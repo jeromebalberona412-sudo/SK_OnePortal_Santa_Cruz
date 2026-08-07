@@ -123,7 +123,7 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Expose port (Render uses dynamic port via environment variable)
+# Expose port (Render uses dynamic PORT environment variable)
 EXPOSE 8080
 
 # Set entrypoint

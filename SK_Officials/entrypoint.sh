@@ -24,18 +24,25 @@ mkdir -p /var/www/html/storage/app/public
 mkdir -p /var/www/html/bootstrap/cache
 
 # ============================================
+# Handle storage link (idempotent)
+# ============================================
+echo "Setting up storage link..."
+if [ -L "/var/www/html/public/storage" ]; then
+    echo "Storage symlink already exists, skipping creation"
+elif [ -d "/var/www/html/public/storage" ]; then
+    echo "Storage exists as a directory, removing and recreating as symlink"
+    rm -rf /var/www/html/public/storage
+    php artisan storage:link || echo "Storage link creation failed"
+else
+    echo "Creating storage symlink"
+    php artisan storage:link || echo "Storage link creation failed"
+fi
+
+# ============================================
 # Run package:discover (skipped during composer install)
 # ============================================
 echo "Running package:discover..."
 php artisan package:discover --ansi || echo "Package discovery failed or already run"
-
-# ============================================
-# Link storage if not already linked
-# ============================================
-if [ ! -L "/var/www/html/public/storage" ]; then
-    echo "Creating storage link..."
-    php artisan storage:link || echo "Storage link already exists or failed"
-fi
 
 # ============================================
 # Wait for database if DB_HOST is set
@@ -94,11 +101,13 @@ echo "Optimizing Composer autoloader..."
 composer dump-autoload --optimize || echo "Composer optimization failed"
 
 # ============================================
-# Update Nginx port if RENDER_PORT is set
+# Configure Nginx to use Render PORT
 # ============================================
-if [ -n "$RENDER_PORT" ]; then
-    echo "Configuring Nginx to use port $RENDER_PORT..."
-    sed -i "s/listen 8080;/listen $RENDER_PORT;/g" /etc/nginx/nginx.conf
+if [ -n "$PORT" ]; then
+    echo "Configuring Nginx to use port $PORT..."
+    sed -i "s/listen 8080;/listen $PORT;/g" /etc/nginx/nginx.conf
+else
+    echo "PORT not set, using default 8080"
 fi
 
 echo "Starting services..."
