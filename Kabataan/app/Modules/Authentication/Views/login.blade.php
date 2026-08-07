@@ -243,15 +243,25 @@
 
                     {{--
                         Hidden Turnstile server-error anchor.
-                        When the backend rejects the Turnstile token it redirects back
-                        with 'login_error' in session. We detect this via a data
-                        attribute on the error alert so JS can auto-open the modal.
-                        The actual error message is already shown in the alert above.
+                        Only rendered when the backend explicitly rejected the Turnstile
+                        token — NOT for wrong email/password errors. The JS checks for
+                        this element on page load and auto-opens the verification modal
+                        so the user can re-verify without clicking Login again.
+                        Turnstile errors contain "pagpapatunay" (Filipino for verification).
                     --}}
-                    @if(session('login_error') && config('services.turnstile.enabled') && config('services.turnstile.site_key'))
+                    @php
+                        $loginErr = session('login_error', '');
+                        $isTurnstileErr = $loginErr && (
+                            str_contains(strtolower($loginErr), 'pagpapatunay') ||
+                            str_contains(strtolower($loginErr), 'verification') ||
+                            str_contains(strtolower($loginErr), 'turnstile') ||
+                            str_contains(strtolower($loginErr), 'security check')
+                        );
+                    @endphp
+                    @if($isTurnstileErr && config('services.turnstile.enabled') && config('services.turnstile.site_key'))
                         <div id="turnstile-server-error"
                              style="display:none;"
-                             aria-hidden="true">{{ session('login_error') }}</div>
+                             aria-hidden="true">{{ $loginErr }}</div>
                     @endif
 
                     <!-- Submit Button -->
@@ -276,6 +286,7 @@
     </main>
 
     @include('authentication::partials.legal-modals')
+    @include('authentication::partials.login-legal-prompt')
 
     <script>
         // Password toggle — self-contained, no conflict with form submit handlers

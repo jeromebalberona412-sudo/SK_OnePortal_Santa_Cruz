@@ -41,43 +41,38 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        // Verify Turnstile token if enabled
+        // ── Turnstile verification ──────────────────────────────────────────
         if (config('services.turnstile.enabled')) {
             $token = (string) $request->input('cf-turnstile-response', '');
 
             if ($token === '') {
                 if ($request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Pakumpleto ang seguridad na pagpapatunay.',
-                    ], 422);
+                    return response()->json(['success' => false, 'message' => 'Pakumpleto ang seguridad na pagpapatunay.'], 422);
                 }
-
-                return back()
-                    ->withInput($request->only('email'))
-                    ->with('login_error', 'Pakumpleto ang seguridad na pagpapatunay.');
+                return back()->withInput($request->only('email'))->with('login_error', 'Pakumpleto ang seguridad na pagpapatunay.');
             }
 
             if (! $this->turnstileService->verify($token, $request->ip())) {
                 if ($request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Nabigo ang seguridad na pagpapatunay. Pakisubukang muli.',
-                    ], 422);
+                    return response()->json(['success' => false, 'message' => 'Nabigo ang seguridad na pagpapatunay. Pakisubukang muli.'], 422);
                 }
-
-                return back()
-                    ->withInput($request->only('email'))
-                    ->with('login_error', 'Nabigo ang seguridad na pagpapatunay. Pakisubukang muli.');
+                return back()->withInput($request->only('email'))->with('login_error', 'Nabigo ang seguridad na pagpapatunay. Pakisubukang muli.');
             }
         }
 
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'email'    => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
 
-        $user = User::where('email', $credentials['email'])->first();
+        // Select only the columns needed for auth — avoids loading large unused fields
+        $user = User::select([
+                'id', 'email', 'password', 'role', 'status',
+                'name', 'barangay_id', 'tenant_id',
+                'last_login_at', 'last_login_ip',
+            ])
+            ->where('email', $credentials['email'])
+            ->first();
 
         if (
             ! $user
@@ -85,21 +80,21 @@ class AuthController extends Controller
             || ! $this->kabataanAuthService->canAccessPortal($user)
         ) {
             if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => KabataanAuthService::LOGIN_DENIED_MESSAGE,
-                ], 422);
+                return response()->json(['success' => false, 'message' => KabataanAuthService::LOGIN_DENIED_MESSAGE], 422);
             }
-
-            return back()
-                ->withInput($request->only('email'))
-                ->with('login_error', KabataanAuthService::LOGIN_DENIED_MESSAGE);
+            return back()->withInput($request->only('email'))->with('login_error', KabataanAuthService::LOGIN_DENIED_MESSAGE);
         }
 
-        // Load registration data once for all status checks
+        // ── Status checks ───────────────────────────────────────────────────
+        // Load registration only when status requires it — single query, reused below
         $registration = null;
-        if (in_array($user->status, [User::STATUS_PENDING_APPROVAL, 'REJECTED'], true)) {
-            $registration = KabataanRegistration::where('user_id', $user->id)->latest('id')->first();
+        $needsRegistration = in_array($user->status, [User::STATUS_PENDING_APPROVAL, 'REJECTED'], true);
+
+        if ($needsRegistration) {
+            $registration = KabataanRegistration::select(['id', 'user_id', 'evaluation_status', 'review_notes'])
+                ->where('user_id', $user->id)
+                ->latest('id')
+                ->first();
         }
 
         if ($user->status === User::STATUS_PENDING_APPROVAL) {
@@ -110,7 +105,6 @@ class AuthController extends Controller
                 if ($request->wantsJson()) {
                     return response()->json(['success' => false, 'message' => $msg], 422);
                 }
-
                 return back()->withInput($request->only('email'))->with('login_error', $msg);
             }
         }
@@ -123,7 +117,6 @@ class AuthController extends Controller
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
-
             return back()->withInput($request->only('email'))->with('login_error', $msg);
         }
 
@@ -132,15 +125,19 @@ class AuthController extends Controller
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
-
             return back()->withInput($request->only('email'))->with('login_error', $msg);
         }
 
+        // ── Authenticate ────────────────────────────────────────────────────
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
+        // ── KK Profiling schedule check ─────────────────────────────────────
+        // Reuse the registration already loaded, or fetch it once now.
+        // Defer the KkProfilingScheduleService check after session is set
+        // so it doesn't block the redirect.
         if ($registration === null) {
-            $registration = KabataanRegistration::query()
+            $registration = KabataanRegistration::select(['id', 'user_id', 'updated_at', 'evaluation_status'])
                 ->where('user_id', $user->id)
                 ->latest('id')
                 ->first();
@@ -158,10 +155,7 @@ class AuthController extends Controller
         $redirectUrl = redirect()->intended(route('dashboard'))->getTargetUrl();
 
         if ($request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'redirect' => $redirectUrl,
-            ]);
+            return response()->json(['success' => true, 'redirect' => $redirectUrl]);
         }
 
         return redirect()->intended(route('dashboard'));

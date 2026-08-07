@@ -1,27 +1,27 @@
 /**
  * SK OnePortal — Kabataan Login
  *
- * Execution order of submit listeners on #loginForm:
+ * Submit listener execution order on #loginForm:
  *   1. auth-legal.js  — capturing phase (useCapture=true)
- *      Intercepts if consent checkbox is unchecked.
- *      If consent IS checked, or pendingSubmit flag is set, it returns immediately.
- *   2. youth-login.js — bubbling phase (useCapture=false, default)
- *      Handles field validation, Turnstile modal, and final form dispatch.
+ *      Blocks if consent radio unchecked; otherwise passes through.
+ *   2. youth-login.js — bubbling phase (useCapture=false)
+ *      Validates fields, shows Turnstile modal, then calls loginForm.submit().
  *
- * The only path that sends the POST is loginForm.submit() inside
- * onTurnstileSuccess(). Every other submit-event invocation calls
- * e.preventDefault() so the native browser submit never races with the
- * controlled submission.
+ * loginForm.submit() is a native call — it does NOT fire the submit event,
+ * so no listener can intercept it. It is the only path that sends the POST.
+ *
+ * Performance: Turnstile widget is pre-rendered on page load so the checkbox
+ * is already initialized when the modal opens — no initialization delay.
  */
 
 (function () {
     'use strict';
 
     // ─── Module-level state ───────────────────────────────────────────────────
-    var turnstileWidgetId   = null;   // widget handle from turnstile.render()
-    var turnstileToken      = null;   // verified token from the success callback
-    var turnstileRendered   = false;  // render() called at least once
-    var isSubmitting        = false;  // true the moment loginForm.submit() is called
+    var turnstileWidgetId = null;
+    var turnstileToken    = null;
+    var turnstileRendered = false;
+    var isSubmitting      = false;
 
     // ─── DOM refs ─────────────────────────────────────────────────────────────
     var loginForm, emailInput, passwordInput,
@@ -37,19 +37,12 @@
 
     function showErr(input, el, msg) {
         if (input) input.classList.add('error');
-        if (el) {
-            el.textContent = msg;
-            el.hidden = false;
-            el.style.display = 'block';
-        }
+        if (el) { el.textContent = msg; el.hidden = false; el.style.display = 'block'; }
     }
 
     function clearErr(input, el) {
         if (input) input.classList.remove('error');
-        if (el) {
-            el.hidden = true;
-            el.style.display = 'none';
-        }
+        if (el) { el.hidden = true; el.style.display = 'none'; }
     }
 
     function validateFields() {
@@ -81,20 +74,50 @@
     function waitForTurnstileAPI(maxWaitMs) {
         maxWaitMs = maxWaitMs || 10000;
         return new Promise(function (resolve, reject) {
-            if (typeof window.turnstile !== 'undefined') {
-                resolve();
-                return;
-            }
+            if (typeof window.turnstile !== 'undefined') { resolve(); return; }
             var start = Date.now();
             var iv = setInterval(function () {
                 if (typeof window.turnstile !== 'undefined') {
-                    clearInterval(iv);
-                    resolve();
+                    clearInterval(iv); resolve();
                 } else if (Date.now() - start > maxWaitMs) {
                     clearInterval(iv);
-                    reject(new Error('Turnstile API did not load within ' + maxWaitMs + ' ms'));
+                    reject(new Error('Turnstile API timed out'));
                 }
             }, 100);
+        });
+    }
+
+    // ─── Pre-render widget on page load ──────────────────────────────────────
+    //
+    // Renders the Turnstile widget as soon as the API script loads — before
+    // the user clicks Login. When the modal opens, the widget is already
+    // initialized so there is no initialization delay before the checkbox
+    // appears.
+
+    function preRenderTurnstile() {
+        if (!loginForm || !turnstileContainer) return;
+        if (!loginForm.dataset.turnstileEnabled) return;
+
+        var siteKey = loginForm.dataset.turnstileSitekey;
+        if (!siteKey) return;
+
+        waitForTurnstileAPI(15000).then(function () {
+            if (turnstileRendered) return;
+            try {
+                turnstileWidgetId = window.turnstile.render(turnstileContainer, {
+                    sitekey:            siteKey,
+                    theme:              'light',
+                    size:               'normal',
+                    callback:           onTurnstileSuccess,
+                    'error-callback':   onTurnstileError,
+                    'expired-callback': onTurnstileExpired,
+                });
+                turnstileRendered = true;
+            } catch (err) {
+                console.warn('[Turnstile] pre-render failed:', err);
+            }
+        }).catch(function () {
+            // API didn't load in 15s — modal will attempt render on open
         });
     }
 
@@ -105,57 +128,45 @@
         turnstileModal.classList.add('turnstile-modal-visible');
         document.body.style.overflow = 'hidden';
 
-        waitForTurnstileAPI().then(function () {
-            if (isSubmitting) return;
+        // Widget already pre-rendered — just reset so checkbox appears fresh
+        if (turnstileRendered && turnstileWidgetId !== null &&
+            typeof window.turnstile !== 'undefined') {
+            window.turnstile.reset(turnstileWidgetId);
+            return;
+        }
 
-            if (!turnstileRendered) {
-                var siteKey = loginForm.dataset.turnstileSitekey;
-                if (!siteKey) {
-                    console.error('[Turnstile] site key missing');
-                    return;
-                }
-                try {
-                    turnstileWidgetId = window.turnstile.render(turnstileContainer, {
-                        sitekey:            siteKey,
-                        theme:              'light',
-                        size:               'normal',
-                        callback:           onTurnstileSuccess,
-                        'error-callback':   onTurnstileError,
-                        'expired-callback': onTurnstileExpired,
-                    });
-                    turnstileRendered = true;
-                } catch (err) {
-                    console.error('[Turnstile] render() failed:', err);
-                    setModalError('Failed to initialize verification. Please refresh the page.');
-                }
-            } else if (!isSubmitting && turnstileWidgetId !== null) {
-                // Already rendered — reset so the widget appears fresh
-                window.turnstile.reset(turnstileWidgetId);
+        // Fallback: pre-render hasn't completed yet — render now
+        waitForTurnstileAPI(10000).then(function () {
+            if (isSubmitting || turnstileRendered) return;
+            var siteKey = loginForm.dataset.turnstileSitekey;
+            if (!siteKey) { setModalError('Verification config missing. Please refresh.'); return; }
+            try {
+                turnstileWidgetId = window.turnstile.render(turnstileContainer, {
+                    sitekey:            siteKey,
+                    theme:              'light',
+                    size:               'normal',
+                    callback:           onTurnstileSuccess,
+                    'error-callback':   onTurnstileError,
+                    'expired-callback': onTurnstileExpired,
+                });
+                turnstileRendered = true;
+            } catch (err) {
+                setModalError('Failed to initialize verification. Please refresh the page.');
             }
-        }).catch(function (err) {
-            console.error('[Turnstile] API load timeout:', err);
+        }).catch(function () {
             setModalError('Verification system failed to load. Please refresh the page.');
         });
     }
 
-    /**
-     * Hide the Turnstile modal.
-     *
-     * @param {boolean} beforeSubmit
-     *   Pass true when about to call loginForm.submit(). Skips turnstile.reset()
-     *   to avoid triggering the expired-callback mid-submission on some SDK versions.
-     */
     function hideTurnstileModal(beforeSubmit) {
         if (!turnstileModal) return;
         turnstileModal.classList.remove('turnstile-modal-visible');
         document.body.style.overflow = '';
 
-        // Clear any inline error
         var errEl = turnstileModal.querySelector('.turnstile-modal-error');
         if (errEl) errEl.remove();
 
         if (!beforeSubmit) {
-            // User cancelled — reset the widget and discard the token
             if (turnstileRendered && turnstileWidgetId !== null &&
                 typeof window.turnstile !== 'undefined') {
                 window.turnstile.reset(turnstileWidgetId);
@@ -163,8 +174,6 @@
             turnstileToken = null;
             removeTokenInput();
         }
-        // When beforeSubmit=true: leave widget state intact so the form
-        // submission carries the token.
     }
 
     function setModalError(message) {
@@ -184,7 +193,6 @@
     // ─── Token input helpers ──────────────────────────────────────────────────
 
     function injectTokenInput(token) {
-        // Remove any existing fields first (prevents duplicates from previous attempts)
         removeTokenInput();
         var hidden = document.createElement('input');
         hidden.type  = 'hidden';
@@ -201,31 +209,16 @@
     // ─── Turnstile callbacks ──────────────────────────────────────────────────
 
     function onTurnstileSuccess(token) {
-        if (isSubmitting) return; // late callback — already submitted
+        if (isSubmitting) return;
 
         turnstileToken = token;
         injectTokenInput(token);
-
-        // Close the modal without resetting the widget (beforeSubmit = true)
         hideTurnstileModal(true);
 
-        // Update button UI
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.classList.remove('waiting-for-turnstile');
-            var span = submitBtn.querySelector('span');
-            if (span) span.textContent = 'Signing In...';
-        }
-
-        // Show the loading overlay immediately
-        showLoadingOverlay();
-
-        // Set the guard BEFORE calling submit so any re-entrant event is blocked
+        // Set lock BEFORE submit — prevents any re-entrant handler from firing
         isSubmitting = true;
 
-        // Native submit — bypasses all JS listeners, sends the POST exactly once.
-        // email, password, _token, remember, and cf-turnstile-response are all
-        // included in the POST body.
+        // Native submit — does NOT dispatch a submit event, sends POST exactly once
         loginForm.submit();
     }
 
@@ -242,27 +235,7 @@
         setModalError('Verification expired. Please complete the challenge again.');
     }
 
-    // ─── Loading overlay ──────────────────────────────────────────────────────
-
-    function showLoadingOverlay() {
-        var overlay = document.querySelector('.loading-overlay');
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.className = 'loading-overlay';
-            overlay.innerHTML =
-                '<div class="overlay-backdrop"></div>' +
-                '<div class="loading-content">' +
-                '<div class="main-spinner"></div>' +
-                '<p class="loading-text">Signing In...</p>' +
-                '</div>';
-            document.body.appendChild(overlay);
-        }
-        overlay.classList.add('active');
-        var container = document.querySelector('.youth-login-container');
-        if (container) container.classList.add('blurred');
-    }
-
-    // ─── Submit button state helpers ──────────────────────────────────────────
+    // ─── Submit button helpers ────────────────────────────────────────────────
 
     function resetSubmitBtn() {
         if (!submitBtn) return;
@@ -272,79 +245,56 @@
         if (span) span.textContent = 'Login';
     }
 
-    // ─── Field edit: reset Turnstile if the modal is open ────────────────────
+    // ─── Field edit ───────────────────────────────────────────────────────────
 
     function onFieldEdit() {
         if (isSubmitting) return;
-
         if (turnstileModal && turnstileModal.classList.contains('turnstile-modal-visible')) {
-            hideTurnstileModal(false); // cancel — full reset
+            hideTurnstileModal(false);
         }
-
         if (turnstileToken) {
             turnstileToken = null;
             removeTokenInput();
         }
-
         resetSubmitBtn();
     }
 
     // ─── Form submit handler ──────────────────────────────────────────────────
-    //
-    // Runs in the BUBBLING phase — after auth-legal.js capturing listener.
-    // We ALWAYS call e.preventDefault() unless isSubmitting is already true.
-    // The only path that sends the POST is loginForm.submit() inside
-    // onTurnstileSuccess(). This eliminates the race where the browser would
-    // natively submit the form at the same time as our programmatic submit.
 
     function onFormSubmit(e) {
-        // Guard: never re-enter during an active submission
         if (isSubmitting) {
             e.preventDefault();
+            e.stopPropagation();
             return;
         }
 
-        // If the token is already present (e.g. re-submit after auth-legal gate),
-        // skip the modal and go straight to native submit.
+        // Token already verified this session — submit immediately
         if (turnstileToken) {
             e.preventDefault();
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                var span = submitBtn.querySelector('span');
-                if (span) span.textContent = 'Signing In...';
-            }
-            showLoadingOverlay();
+            e.stopPropagation();
             isSubmitting = true;
             loginForm.submit();
             return;
         }
 
-        // Always preventDefault from here — Turnstile / direct submit will drive it
         e.preventDefault();
 
-        // Validate fields first
         if (!validateFields()) return;
 
-        // Turnstile disabled → submit directly via native form submit
+        // Turnstile disabled — submit directly
         if (!loginForm.dataset.turnstileEnabled) {
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                var span = submitBtn.querySelector('span');
-                if (span) span.textContent = 'Signing In...';
-            }
-            showLoadingOverlay();
             isSubmitting = true;
             loginForm.submit();
             return;
         }
 
-        // Show Turnstile modal and wait for the challenge to complete
+        // Show Turnstile modal — submission happens in onTurnstileSuccess
         showTurnstileModal();
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.classList.add('waiting-for-turnstile');
             var span = submitBtn.querySelector('span');
-            if (span) span.textContent = 'Complete verification';
+            if (span) span.textContent = 'Signing in...';
         }
     }
 
@@ -352,7 +302,7 @@
 
     function onModalClose() {
         if (isSubmitting) return;
-        hideTurnstileModal(false); // full cancel reset
+        hideTurnstileModal(false);
         resetSubmitBtn();
     }
 
@@ -375,7 +325,9 @@
         document.querySelectorAll('.youth-alert').forEach(function (alert) {
             setTimeout(function () {
                 alert.style.animation = 'alertSlideOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards';
-                setTimeout(function () { if (alert.parentNode) alert.parentNode.removeChild(alert); }, 400);
+                setTimeout(function () {
+                    if (alert.parentNode) alert.parentNode.removeChild(alert);
+                }, 400);
             }, 5000);
         });
     }
@@ -396,7 +348,6 @@
 
         if (!loginForm || !emailInput || !passwordInput) return;
 
-        // Field input: clear inline errors; reset Turnstile if modal was open
         emailInput.addEventListener('input', function () {
             clearErr(emailInput, emailError);
             onFieldEdit();
@@ -406,7 +357,7 @@
             onFieldEdit();
         });
 
-        // Bubbling-phase submit listener (fires after auth-legal.js capturing listener)
+        // Single submit listener — bubbling phase, after auth-legal capturing
         loginForm.addEventListener('submit', onFormSubmit, false);
 
         // Forgot password link
@@ -419,19 +370,12 @@
         }
 
         // Turnstile modal close / cancel
-        if (turnstileCloseBtn) {
-            turnstileCloseBtn.addEventListener('click', onModalClose);
-        }
-        if (turnstileModalBackdrop) {
-            turnstileModalBackdrop.addEventListener('click', onModalClose);
-        }
+        if (turnstileCloseBtn) turnstileCloseBtn.addEventListener('click', onModalClose);
+        if (turnstileModalBackdrop) turnstileModalBackdrop.addEventListener('click', onModalClose);
         var cancelBtn = document.getElementById('turnstile-cancel-btn');
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', onModalClose);
-        }
+        if (cancelBtn) cancelBtn.addEventListener('click', onModalClose);
 
-        // If the server returned a Turnstile error, auto-open the modal so the
-        // user can re-verify without having to click Login again.
+        // Auto-open modal only when server returned a Turnstile-specific error
         var serverErrEl = document.getElementById('turnstile-server-error');
         if (serverErrEl && loginForm.dataset.turnstileEnabled) {
             showTurnstileModal();
@@ -439,6 +383,9 @@
 
         bindInputAnimations();
         bindAlertDismiss();
+
+        // Pre-render Turnstile widget now so it's ready before user clicks Login
+        preRenderTurnstile();
     }
 
     if (document.readyState === 'loading') {
@@ -447,7 +394,7 @@
         init();
     }
 
-    // ─── Shared animation styles ──────────────────────────────────────────────
+    // ─── Inject animation keyframes ───────────────────────────────────────────
     (function injectStyles() {
         if (document.getElementById('youth-login-styles')) return;
         var style = document.createElement('style');
