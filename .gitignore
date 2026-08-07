@@ -2,3 +2,7 @@ package-lock.json
 # Ignore entire Python OCR project
 /python/
 Admin/
+# Ignore embedded git repositories that shouldn't be submodules
+philippine-id-validator/
+extractor/
+insightface/
