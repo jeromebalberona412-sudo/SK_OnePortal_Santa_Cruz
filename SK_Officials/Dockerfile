@@ -153,6 +153,7 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Copy PHP-FPM configuration
+COPY php-fpm-global.conf /usr/local/etc/php-fpm.conf
 COPY php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
 
 # Copy entrypoint script
