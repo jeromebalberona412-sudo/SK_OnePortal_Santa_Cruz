@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Response;
 
 // Health check endpoint for Render
 Route::get('/health', function () {
@@ -15,17 +14,17 @@ Route::get('/health', function () {
     ];
 
     try {
-        \Illuminate\Support\Facades\DB::connection()->getPdo();
+        DB::connection()->getPdo();
         $health['services']['database'] = 'connected';
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         $health['services']['database'] = 'disconnected';
         $health['status'] = 'degraded';
     }
 
     try {
-        \Illuminate\Support\Facades\Cache::store()->get('health_check', 'ok');
+        Cache::store()->get('health_check', 'ok');
         $health['services']['cache'] = 'connected';
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         $health['services']['cache'] = 'disconnected';
         $health['status'] = 'degraded';
     }
@@ -35,22 +34,24 @@ Route::get('/health', function () {
     return response()->json($health, $statusCode);
 })->name('health');
 
-use App\Modules\Barangay_ABYIP\Controllers\AbyipController;
-use App\Modules\Program_Accomplishment\Controllers\ProgramAccomplishmentController;
+use App\Http\Controllers\ArchiveTermController;
 use App\Modules\Announcement\Controllers\AnnouncementController;
 use App\Modules\Announcement\Controllers\AnnouncementPageController;
 use App\Modules\Announcement\Controllers\ArchiveAnnouncementController;
 use App\Modules\Announcement\Controllers\BarangayProfileController;
+use App\Modules\Archived_Youth_Records\Controllers\ArchivedYouthRecordsController;
+use App\Modules\Barangay_ABYIP\Controllers\AbyipController;
 use App\Modules\Calendar\Controllers\CalendarController;
 use App\Modules\Committees\Controllers\CommitteeController;
 use App\Modules\Dashboard\Controllers\DashboardController;
-use App\Modules\Archived_Youth_Records\Controllers\ArchivedYouthRecordsController;
 use App\Modules\Deleted_Kabataan\Controllers\DeletedKabataanController;
 use App\Modules\Kabataan\Controllers\KabataanController;
 use App\Modules\KKProfilingRequests\Controllers\KKProfilingRequestsController;
 use App\Modules\PreviousKabataan\Controllers\PreviousKabataanController;
 use App\Modules\Profile\Controllers\NotificationController;
 use App\Modules\Profile\Controllers\ProfileController;
+use App\Modules\Program_Accomplishment\Controllers\ProgramAccomplishmentController;
+use App\Modules\Program_Accomplishment\Services\ProgramAccomplishmentService;
 use App\Modules\Program_Management\Controllers\ProgramApplicationController;
 use App\Modules\Program_Management\Controllers\ProgramEvaluationController;
 use App\Modules\Program_Management\Controllers\ProgramSurveyController;
@@ -63,7 +64,8 @@ use App\Modules\Rejected_Scholarship\Controllers\RejectedScholarshipController;
 use App\Modules\Rejected_Sports\Controllers\RejectedSportsController;
 use App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController;
 use App\Modules\Sports_Programs\Controllers\ArchivedSportsProgramController;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -87,9 +89,10 @@ Route::get('/change-password/confirm/{id}/{token}', [ProfileController::class, '
 
 Route::get('/accomplishment/{id}', function ($id) {
     try {
-        $report = app(\App\Modules\Program_Accomplishment\Services\ProgramAccomplishmentService::class)->getPublishedById($id);
+        $report = app(ProgramAccomplishmentService::class)->getPublishedById($id);
+
         return view('Program_Accomplishment::public.show', compact('report'));
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         abort(404, 'Accomplishment report not found.');
     }
 })->name('public.accomplishment.show');
@@ -102,7 +105,7 @@ Route::middleware([
 ])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/api/dashboard/stats', [DashboardController::class, 'stats'])->name('api.dashboard.stats');
-    Route::get('/api/archive/terms', [\App\Http\Controllers\ArchiveTermController::class, 'index'])->name('api.archive.terms');
+    Route::get('/api/archive/terms', [ArchiveTermController::class, 'index'])->name('api.archive.terms');
 
     Route::get('/ai-assistant', function () {
         $user = auth()->user();
