@@ -46,13 +46,13 @@ class AuthController extends Controller
             if ($token === '') {
                 return back()
                     ->withInput($request->only('email'))
-                    ->with('login_error', 'Please complete the security verification.');
+                    ->with('login_error', 'Pakumpleto ang seguridad na pagpapatunay.');
             }
 
             if (! $this->turnstileService->verify($token, $request->ip())) {
                 return back()
                     ->withInput($request->only('email'))
-                    ->with('login_error', 'Security verification failed. Please try again.');
+                    ->with('login_error', 'Nabigo ang seguridad na pagpapatunay. Pakisubukang muli.');
             }
         }
 

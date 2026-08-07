@@ -179,7 +179,7 @@ export function initLoginForm(options = {}) {
         if (turnstileContainer && turnstileLoaded) {
             const response = turnstile.getResponse(turnstileWidgetId);
             if (!response) {
-                showFieldError(null, turnstileError, 'Please complete the security verification.');
+                showFieldError(null, turnstileError, 'Pakumpleto ang seguridad na pagpapatunay.');
                 return false;
             }
         }

@@ -25,24 +25,24 @@ class VerifyTurnstile
         if ($token === '') {
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => 'Please complete the security verification.',
+                    'message' => 'Pakumpleto ang seguridad na pagpapatunay.',
                 ], 422);
             }
 
             return back()->withErrors([
-                'captcha' => 'Please complete the security verification.',
+                'captcha' => 'Pakumpleto ang seguridad na pagpapatunay.',
             ]);
         }
 
         if (! $this->turnstileService->verify($token, $request->ip())) {
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => 'Security verification failed. Please try again.',
+                    'message' => 'Nabigo ang seguridad na pagpapatunay. Pakisubukang muli.',
                 ], 422);
             }
 
             return back()->withErrors([
-                'captcha' => 'Security verification failed. Please try again.',
+                'captcha' => 'Nabigo ang seguridad na pagpapatunay. Pakisubukang muli.',
             ]);
         }
 

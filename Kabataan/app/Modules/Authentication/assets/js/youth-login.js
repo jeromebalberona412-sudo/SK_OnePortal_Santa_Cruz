@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (turnstileContainer && turnstileLoaded) {
                 const response = turnstile.getResponse(turnstileWidgetId);
                 if (!response) {
-                    showTurnstileError('Please complete the security verification.');
+                    showTurnstileError('Pakumpleto ang seguridad na pagpapatunay.');
                     return false;
                 }
             }
