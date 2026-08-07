@@ -6,8 +6,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install frontend dependencies
-RUN npm ci --only=production
+# Install all dependencies (Vite and build tools are in devDependencies)
+RUN npm ci
 
 # Copy frontend source
 COPY . .
