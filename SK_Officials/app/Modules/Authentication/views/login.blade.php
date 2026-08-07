@@ -15,7 +15,7 @@
         'app/Modules/Authentication/assets/js/login.js',
         'app/Modules/Authentication/assets/js/auth-legal.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+
     <style>
         .sk-main-title {
             white-space: nowrap;
@@ -43,8 +43,7 @@
     </style>
 </head>
 <body class="sk-login-page">
-    @include('loading')
-    
+
     <!-- Animated Background -->
     <div class="sk-bg-wrapper">
         <div class="sk-bg-image"></div>
@@ -205,92 +204,7 @@
                 eyeClosed.style.display = 'none';
             }
         }
-
-        // Inline Validation
-        (() => {
-            const form = document.getElementById('loginForm');
-            const emailInput = document.getElementById('email');
-            const passwordInput = document.getElementById('password');
-            const emailError = document.getElementById('email-error');
-            const passwordError = document.getElementById('password-error');
-
-            function validateEmail(email) {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                return emailRegex.test(email);
-            }
-
-            function showError(input, errorElement, message) {
-                input.classList.add('error');
-                errorElement.textContent = message;
-                errorElement.hidden = false;
-            }
-
-            function clearError(input, errorElement) {
-                input.classList.remove('error');
-                errorElement.hidden = true;
-            }
-
-            // Email validation on input
-            emailInput.addEventListener('input', () => {
-                if (!emailInput.value.trim()) {
-                    showError(emailInput, emailError, 'Email is required');
-                } else if (!validateEmail(emailInput.value)) {
-                    showError(emailInput, emailError, 'Please enter a valid email address');
-                } else {
-                    clearError(emailInput, emailError);
-                }
-            });
-
-            // Password validation on input
-            passwordInput.addEventListener('input', () => {
-                if (!passwordInput.value.trim()) {
-                    showError(passwordInput, passwordError, 'Password is required');
-                } else if (passwordInput.value.length < 8) {
-                    showError(passwordInput, passwordError, 'Password must be at least 8 characters');
-                } else {
-                    clearError(passwordInput, passwordError);
-                }
-            });
-
-            form.addEventListener('submit', (e) => {
-                let isValid = true;
-
-                if (!emailInput.value.trim()) {
-                    showError(emailInput, emailError, 'Email is required');
-                    isValid = false;
-                } else if (!validateEmail(emailInput.value)) {
-                    showError(emailInput, emailError, 'Please enter a valid email address');
-                    isValid = false;
-                }
-
-                if (!passwordInput.value.trim()) {
-                    showError(passwordInput, passwordError, 'Password is required');
-                    isValid = false;
-                } else if (passwordInput.value.length < 8) {
-                    showError(passwordInput, passwordError, 'Password must be at least 8 characters');
-                    isValid = false;
-                }
-
-                if (!isValid) {
-                    e.preventDefault();
-                    return false;
-                }
-
-                const submitBtn = document.getElementById('loginBtn');
-                if (submitBtn) {
-                    submitBtn.disabled = true;
-                    const label = submitBtn.querySelector('span');
-                    if (label) label.textContent = 'Signing In...';
-                }
-
-                if (typeof showLoading === 'function') {
-                    showLoading('Signing In');
-                }
-            });
-        })();
     </script>
-
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 @if (session('verification_wait') && session()->has('sk_official_email_verification_pending'))
     <script>

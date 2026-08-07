@@ -64,13 +64,10 @@ function initLoginForm() {
         // Lock form and submit
         if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.querySelector('span').textContent = 'Authenticating...';
+            submitBtn.querySelector('span').textContent = 'Signing In...';
         }
-        // readOnly keeps values in POST body (disabled would strip them)
         emailInput.readOnly    = true;
         passwordInput.readOnly = true;
-
-        if (typeof showLoading === 'function') showLoading('Authenticating...');
 
         loginForm.submit();
     });
