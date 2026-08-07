@@ -15,6 +15,12 @@
         'app/Modules/Authentication/assets/js/forgot-password.js',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    @if(config('services.turnstile.enabled'))
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+        <script>
+            window.turnstileSiteKey = {{ json_encode(config('services.turnstile.site_key')) }};
+        </script>
+    @endif
 </head>
 <body class="sk-login-page">
     @include('loading')
@@ -94,6 +100,14 @@
                             >
                             <div class="sk-field-error" id="email-error" @if(! $errors->has('email')) hidden @endif>{{ $errors->first('email') }}</div>
                         </div>
+
+                        <!-- Cloudflare Turnstile -->
+                        @if(config('services.turnstile.enabled'))
+                            <div class="sk-form-group" id="fp-turnstile-container" style="display: none;">
+                                <div id="fp-turnstile-widget"></div>
+                                <div class="sk-field-error" id="fp-turnstile-error" hidden></div>
+                            </div>
+                        @endif
 
                         <button type="submit" class="sk-submit-btn" id="submitBtn">
                             <span id="fpBtnText">Send Reset Link</span>
