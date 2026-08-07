@@ -1,0 +1,58 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+
+# Tests
+tests/
+phpunit.xml
+.phpunit.result.cache
+Pest.php
+
+# Development
+.env.example
+.env.backup
+composer.lock
+package-lock.json
+
+# Node modules (we install fresh in Docker)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build output (we build fresh in Docker)
+public/build/
+public/hot/
+
+# Storage (don't include local storage files)
+storage/*.key
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/app/public/*
+
+# Cache
+bootstrap/cache/*
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log
+*.bak
+*.swp
+*~

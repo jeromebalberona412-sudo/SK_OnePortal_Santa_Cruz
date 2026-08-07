@@ -1,5 +1,40 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Response;
+
+// Health check endpoint for Render
+Route::get('/health', function () {
+    $health = [
+        'status' => 'ok',
+        'timestamp' => now()->toIso8601String(),
+        'services' => [
+            'database' => 'connected',
+            'cache' => 'connected',
+        ],
+    ];
+
+    try {
+        \Illuminate\Support\Facades\DB::connection()->getPdo();
+        $health['services']['database'] = 'connected';
+    } catch (\Exception $e) {
+        $health['services']['database'] = 'disconnected';
+        $health['status'] = 'degraded';
+    }
+
+    try {
+        \Illuminate\Support\Facades\Cache::store()->get('health_check', 'ok');
+        $health['services']['cache'] = 'connected';
+    } catch (\Exception $e) {
+        $health['services']['cache'] = 'disconnected';
+        $health['status'] = 'degraded';
+    }
+
+    $statusCode = $health['status'] === 'ok' ? 200 : 503;
+
+    return response()->json($health, $statusCode);
+})->name('health');
+
 use App\Modules\Barangay_ABYIP\Controllers\AbyipController;
 use App\Modules\Program_Accomplishment\Controllers\ProgramAccomplishmentController;
 use App\Modules\Announcement\Controllers\AnnouncementController;
