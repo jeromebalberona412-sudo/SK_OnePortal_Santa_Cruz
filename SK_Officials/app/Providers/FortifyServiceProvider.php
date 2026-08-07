@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Modules\Authentication\Actions\VerifyAltchaChallenge;
 use App\Modules\Authentication\Services\AuthenticationService;
 use App\Modules\Authentication\Services\TurnstileService;
 use Illuminate\Auth\Events\Login;
@@ -12,7 +13,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\ValidationException;
+use Laravel\Fortify\Actions\AttemptToAuthenticate;
+use Laravel\Fortify\Actions\CanonicalizeUsername;
+use Laravel\Fortify\Actions\EnsureLoginIsNotThrottled;
+use Laravel\Fortify\Actions\PrepareAuthenticatedSession;
 use Laravel\Fortify\Contracts\LoginResponse;
+use Laravel\Fortify\Contracts\RedirectsIfTwoFactorAuthenticatable;
+use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -44,6 +51,17 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::loginView(fn () => view('authentication::login'));
         Fortify::verifyEmailView(fn () => view('authentication::verify-notice'));
+
+        Fortify::authenticateThrough(function (Request $request) {
+            return array_filter([
+                config('fortify.limiters.login') ? null : EnsureLoginIsNotThrottled::class,
+                config('fortify.lowercase_usernames') ? CanonicalizeUsername::class : null,
+                VerifyAltchaChallenge::class,
+                Features::enabled(Features::twoFactorAuthentication()) ? RedirectsIfTwoFactorAuthenticatable::class : null,
+                AttemptToAuthenticate::class,
+                PrepareAuthenticatedSession::class,
+            ]);
+        });
 
         Fortify::authenticateUsing(function (Request $request) {
             // Verify Turnstile token if enabled

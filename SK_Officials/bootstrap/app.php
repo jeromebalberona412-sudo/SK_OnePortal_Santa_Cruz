@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'trusted.device' => \App\Modules\Authentication\Middleware\EnsureTrustedDevice::class,
             'single.session' => \App\Modules\Authentication\Middleware\EnsureSingleSession::class,
             'turnstile' => \App\Modules\Authentication\Middleware\VerifyTurnstile::class,
+            'altcha' => \App\Modules\Authentication\Middleware\VerifyAltcha::class,
             'must.change.password' => \App\Modules\Authentication\Middleware\EnsurePasswordChanged::class,
         ]);
 

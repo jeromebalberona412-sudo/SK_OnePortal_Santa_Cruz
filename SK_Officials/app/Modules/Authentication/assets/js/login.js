@@ -1,19 +1,29 @@
-document.addEventListener('DOMContentLoaded', function () {
+/**
+ * SK Officials login form validation and shared UI helpers.
+ */
+export function initLoginForm(options = {}) {
     const loginForm = document.getElementById('loginForm');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     const emailError = document.getElementById('email-error');
     const passwordError = document.getElementById('password-error');
+<<<<<<< Updated upstream
     const turnstileContainer = document.getElementById('turnstile-container');
     const turnstileWidget = document.getElementById('turnstile-widget');
     const turnstileError = document.getElementById('turnstile-error');
     const submitBtn = document.getElementById('loginBtn');
+=======
+    const togglePasswordBtn = document.querySelector('.toggle-password');
+>>>>>>> Stashed changes
 
-    if (!loginForm) return;
+    if (!loginForm || !emailInput || !passwordInput) {
+        return null;
+    }
 
-    // Mark server-side errors so they survive the first input clear
     document.querySelectorAll('.sk-field-error').forEach(function (el) {
-        if (!el.hidden) el.setAttribute('data-server-error', 'true');
+        if (!el.hidden) {
+            el.setAttribute('data-server-error', 'true');
+        }
     });
 
     function validateEmail(email) {
@@ -21,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function showFieldError(input, errorEl, message) {
+<<<<<<< Updated upstream
         if (input) input.classList.add('is-invalid');
         errorEl.textContent = message;
         errorEl.hidden = false;
@@ -115,7 +126,25 @@ document.addEventListener('DOMContentLoaded', function () {
     loginForm.addEventListener('submit', function (e) {
         e.preventDefault();
 
+=======
+        input.classList.add('is-invalid');
+        if (errorEl) {
+            errorEl.textContent = message;
+            errorEl.hidden = false;
+        }
+    }
+
+    function clearFieldError(input, errorEl) {
+        input.classList.remove('is-invalid');
+        if (errorEl) {
+            errorEl.hidden = true;
+        }
+    }
+
+    function validateForm() {
+>>>>>>> Stashed changes
         let isValid = true;
+
         clearFieldError(emailInput, emailError);
         clearFieldError(passwordInput, passwordError);
         if (turnstileError) clearFieldError(null, turnstileError);
@@ -141,6 +170,7 @@ document.addEventListener('DOMContentLoaded', function () {
             isValid = false;
         }
 
+<<<<<<< Updated upstream
         if (!isValid) return false;
 
         // If Turnstile is enabled and not yet loaded, load it now
@@ -180,13 +210,57 @@ document.addEventListener('DOMContentLoaded', function () {
         // If Turnstile is not enabled, submit directly
         if (!turnstileContainer) {
             submitLoginForm();
+=======
+        return isValid;
+    }
+
+    emailInput.addEventListener('input', () => clearFieldError(emailInput, emailError));
+    passwordInput.addEventListener('input', () => clearFieldError(passwordInput, passwordError));
+
+    togglePasswordBtn?.addEventListener('click', () => {
+        const eyeOpen = document.getElementById('eyeOpen');
+        const eyeClosed = document.getElementById('eyeClosed');
+
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            if (eyeOpen) eyeOpen.style.display = 'none';
+            if (eyeClosed) eyeClosed.style.display = 'block';
+        } else {
+            passwordInput.type = 'password';
+            if (eyeOpen) eyeOpen.style.display = 'block';
+            if (eyeClosed) eyeClosed.style.display = 'none';
+        }
+    });
+
+    loginForm.addEventListener('submit', function (event) {
+        if (event.skSkipClientValidation) {
+            return;
+        }
+
+        if (!validateForm()) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            return false;
+        }
+
+        if (typeof options.onValidatedSubmit === 'function') {
+            const shouldContinue = options.onValidatedSubmit(event);
+            if (shouldContinue === false) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                return false;
+            }
+>>>>>>> Stashed changes
         }
     });
 
     document.getElementById('forgotBtn')?.addEventListener('click', function () {
-        setTimeout(() => { window.location.href = '/forgot-password'; }, 300);
+        setTimeout(() => {
+            window.location.href = '/forgot-password';
+        }, 300);
     });
 
+<<<<<<< Updated upstream
     // Expose reset function for error handling
     window.resetTurnstileState = function() {
         if (turnstileLoaded && turnstileWidgetId && typeof turnstile !== 'undefined') {
@@ -200,3 +274,71 @@ document.addEventListener('DOMContentLoaded', function () {
         resetFormState();
     };
 });
+=======
+    return {
+        form: loginForm,
+        validateForm,
+        emailInput,
+        passwordInput,
+    };
+}
+
+export function setLoginAuthenticating(isAuthenticating) {
+    const loginForm = document.getElementById('loginForm');
+    const submitBtn = document.getElementById('loginBtn');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const rememberInput = document.getElementById('remember');
+    const legalConsent = document.getElementById('loginLegalConsent');
+    const altchaWidget = document.getElementById('altchaWidget');
+    const togglePasswordBtn = loginForm?.querySelector('.toggle-password');
+    const spinner = submitBtn?.querySelector('.sk-btn-spinner');
+    const label = submitBtn?.querySelector('.login-btn-text');
+
+    const controls = [
+        emailInput,
+        passwordInput,
+        rememberInput,
+        legalConsent,
+        altchaWidget,
+        togglePasswordBtn,
+        submitBtn,
+    ];
+
+    controls.forEach((control) => {
+        if (control) {
+            control.disabled = isAuthenticating;
+        }
+    });
+
+    if (submitBtn) {
+        submitBtn.setAttribute('aria-busy', isAuthenticating ? 'true' : 'false');
+    }
+
+    if (spinner) {
+        spinner.hidden = !isAuthenticating;
+    }
+
+    if (label) {
+        label.textContent = isAuthenticating ? 'Authenticating...' : 'Login';
+    }
+
+    if (isAuthenticating && typeof window.showLoading === 'function') {
+        window.showLoading('Authenticating...', 'Please wait...');
+    }
+}
+
+export function resetLoginAuthenticating() {
+    setLoginAuthenticating(false);
+}
+
+if (!window.skLoginAltcha?.enabled) {
+    document.addEventListener('DOMContentLoaded', () => {
+        initLoginForm({
+            onValidatedSubmit: () => {
+                setLoginAuthenticating(true);
+            },
+        });
+    });
+}
+>>>>>>> Stashed changes

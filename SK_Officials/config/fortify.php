@@ -13,7 +13,7 @@ return [
     'domain' => null,
     'middleware' => ['web'],
     'limiters' => [
-        'login' => null,
+        'login' => 'sk-official-login',
         'two-factor' => null,
     ],
     'views' => true,
