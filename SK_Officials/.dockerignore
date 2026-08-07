@@ -18,7 +18,6 @@ Pest.php
 # Development
 .env.example
 .env.backup
-composer.lock
 package-lock.json
 
 # Node modules (we install fresh in Docker)
