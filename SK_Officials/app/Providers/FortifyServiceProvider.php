@@ -64,13 +64,19 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         Fortify::authenticateUsing(function (Request $request) {
-            // Verify Turnstile token before attempting authentication
+            // ── Turnstile verification ─────────────────────────────────────────
+            // Must happen before credential checking so a missing/invalid token
+            // never reaches the authentication layer.
             $turnstileService = app(TurnstileService::class);
 
             if ($turnstileService->isEnabled()) {
                 $turnstileToken = (string) $request->input('cf-turnstile-response', '');
 
                 if ($turnstileToken === '') {
+                    // Token absent — the modal was never completed.
+                    // Key the error to 'cf-turnstile-response' so the blade can
+                    // detect it via @error('cf-turnstile-response') and auto-open
+                    // the modal, while keeping email in old() for the form.
                     throw ValidationException::withMessages([
                         'cf-turnstile-response' => ['Human verification is required. Please complete the challenge.'],
                     ])->redirectTo(route('login'));
@@ -79,12 +85,15 @@ class FortifyServiceProvider extends ServiceProvider
                 $verified = $turnstileService->verify($turnstileToken, $request->ip());
 
                 if (!$verified) {
+                    // Cloudflare explicitly rejected the token.
+                    // Same key — blade will auto-open the modal on the returned page.
                     throw ValidationException::withMessages([
                         'cf-turnstile-response' => ['Human verification failed. Please try again.'],
                     ])->redirectTo(route('login'));
                 }
             }
 
+            // ── Credential check ──────────────────────────────────────────────
             $user = app(AuthenticationService::class)->authenticate($request);
 
             if ($user === null) {
@@ -94,10 +103,12 @@ class FortifyServiceProvider extends ServiceProvider
                     );
                 }
 
+                // Bad credentials — key errors to email/password (not Turnstile)
+                // so the blade shows the credential error in the form, not the modal.
                 throw ValidationException::withMessages([
-                    'email' => ['Invalid Email or Password'],
+                    'email'    => ['Invalid Email or Password'],
                     'password' => ['Invalid Email or Password'],
-                ]);
+                ])->redirectTo(route('login'));
             }
 
             return $user;
