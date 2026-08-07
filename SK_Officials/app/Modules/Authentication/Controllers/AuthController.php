@@ -368,6 +368,19 @@ class AuthController extends Controller
         return view('authentication::forgot-password');
     }
 
+    public function showForgotPasswordCheckEmail(Request $request): View|RedirectResponse
+    {
+        $email = session('forgot_password_email');
+
+        if (!$email) {
+            return redirect()->route('password.request');
+        }
+
+        return view('authentication::forgot-password-check-email', [
+            'email' => $email,
+        ]);
+    }
+
     public function sendPasswordResetLink(Request $request): RedirectResponse
     {
         if (config('fortify.lowercase_usernames') && $request->has('email')) {
@@ -390,8 +403,7 @@ class AuthController extends Controller
 
         $request->session()->put('forgot_password_email', $email);
 
-        return back()
-            ->withInput(['email' => $email])
+        return redirect()->route('password.check-email')
             ->with('status', 'A password reset link has been sent to your email address.');
     }
 
@@ -406,8 +418,7 @@ class AuthController extends Controller
         }
 
         return view('authentication::reset-password', [
-            'token' => $token,
-            'email' => $email,
+            'request' => $request,
         ]);
     }
 

@@ -1,11 +1,11 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const resetPasswordForm = document.getElementById('reset-password-form');
-    const newPasswordInput = document.getElementById('new-password');
-    const confirmPasswordInput = document.getElementById('confirm-password');
-    const newPasswordError = document.getElementById('new-password-error');
-    const confirmPasswordError = document.getElementById('confirm-password-error');
+    const resetPasswordForm = document.getElementById('resetPasswordForm');
+    const newPasswordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('password_confirmation');
+    const newPasswordError = document.getElementById('password-error');
+    const confirmPasswordError = document.getElementById('password-confirmation-error');
     const resetBtn = document.getElementById('resetBtn');
-    const resetBtnLabel = resetBtn?.querySelector('span');
+    const resetBtnText = document.getElementById('resetBtnText');
     const passwordRules = document.getElementById('passwordRules');
 
     if (!resetPasswordForm) {
@@ -71,26 +71,6 @@ document.addEventListener('DOMContentLoaded', function () {
         passwordRules.hidden = !showRules;
     }
 
-    document.querySelectorAll('.toggle-password').forEach((button) => {
-        button.addEventListener('click', function (event) {
-            event.preventDefault();
-
-            const wrapper = this.closest('.password-wrapper');
-            const input = wrapper?.querySelector('.password-input');
-            const eyeOpen = this.querySelector('.eye-open');
-            const eyeClosed = this.querySelector('.eye-closed');
-
-            if (!input || !eyeOpen || !eyeClosed) {
-                return;
-            }
-
-            const showPlain = input.type === 'password';
-            input.type = showPlain ? 'text' : 'password';
-            eyeOpen.style.display = showPlain ? 'none' : 'flex';
-            eyeClosed.style.display = showPlain ? 'flex' : 'none';
-        });
-    });
-
     newPasswordInput.addEventListener('input', function () {
         clearError(this, newPasswordError);
         updatePasswordRules(this.value);
@@ -125,9 +105,30 @@ document.addEventListener('DOMContentLoaded', function () {
             isValid = false;
         }
 
-        if (isValid && resetBtn && resetBtnLabel) {
+        if (isValid && resetBtn && resetBtnText) {
             resetBtn.disabled = true;
-            resetBtnLabel.textContent = 'Resetting...';
+            resetBtnText.textContent = 'Resetting...';
         }
+    });
+
+    // Toggle password visibility
+    document.querySelectorAll('.toggle-password').forEach((button) => {
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+            
+            const targetId = this.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            const eyeOpen = this.querySelector('.eye-open');
+            const eyeClosed = this.querySelector('.eye-closed');
+
+            if (!input || !eyeOpen || !eyeClosed) {
+                return;
+            }
+
+            const showPlain = input.type === 'password';
+            input.type = showPlain ? 'text' : 'password';
+            eyeOpen.style.display = showPlain ? 'none' : 'block';
+            eyeClosed.style.display = showPlain ? 'block' : 'none';
+        });
     });
 });

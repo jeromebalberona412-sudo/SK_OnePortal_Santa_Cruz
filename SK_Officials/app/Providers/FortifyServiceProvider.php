@@ -49,6 +49,8 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::loginView(fn () => view('authentication::login'));
         Fortify::verifyEmailView(fn () => view('authentication::verify-notice'));
+        Fortify::requestPasswordResetLinkView(fn () => view('authentication::forgot-password'));
+        Fortify::resetPasswordView(fn ($request) => view('authentication::reset-password', ['request' => $request]));
 
         Fortify::authenticateThrough(function (Request $request) {
             return array_filter([

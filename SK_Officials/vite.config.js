@@ -14,6 +14,7 @@ export default defineConfig({
                 'app/Modules/Authentication/assets/js/auth-legal.js',
                 'app/Modules/Authentication/assets/css/forgot-password.css',
                 'app/Modules/Authentication/assets/js/forgot-password.js',
+                'app/Modules/Authentication/assets/js/forgot-password-check-email.js',
                 'app/Modules/Authentication/assets/css/password-reset-success.css',
                 'app/Modules/Authentication/assets/js/password-reset-success.js',
                 'app/Modules/Authentication/assets/css/reset-password.css',

@@ -44,17 +44,6 @@
 </head>
 <body class="sk-login-page">
 
-    <!-- Animated Background -->
-    <div class="sk-bg-wrapper">
-        <div class="sk-bg-image"></div>
-        <div class="sk-gradient-overlay"></div>
-        <div class="floating-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
-        </div>
-    </div>
-
     <main class="sk-login-container">
         <!-- Left Side - Logo & Branding -->
         <div class="sk-branding-section">
@@ -79,12 +68,8 @@
         <!-- Right Side - Login Card -->
         <div class="sk-login-section">
             <div class="sk-login-card">
-                <div class="card-header">
-                    <h2 class="card-title">
-                        Welcome Back!
-                        
-                    </h2>
-                    <p class="card-subtitle">Login to your account</p>
+                <div class="card-header" style="text-align:center;">
+                    <p class="card-subtitle" style="font-size:1.4rem;font-weight:800;color:#0f172a;letter-spacing:-0.02em;">Login to your account</p>
                 </div>
 
                 <!-- Login Form -->

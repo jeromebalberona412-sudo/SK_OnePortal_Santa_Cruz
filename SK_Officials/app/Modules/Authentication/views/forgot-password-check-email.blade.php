@@ -8,11 +8,11 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Forgot Password - SK Officials</title>
+    <title>Check Your Email - SK Officials</title>
     @vite([
         'app/Modules/Authentication/assets/css/login.css',
         'app/Modules/Authentication/assets/css/forgot-password.css',
-        'app/Modules/Authentication/assets/js/forgot-password.js',
+        'app/Modules/Authentication/assets/js/forgot-password-check-email.js',
     ])
 </head>
 <body class="sk-login-page">
@@ -40,9 +40,22 @@
         <div class="sk-login-section">
             <div class="sk-login-card">
                 <div class="card-header">
-                    <h2 class="card-title">Forgot Password?</h2>
-                    <p class="card-subtitle">Enter the email address associated with your account and we'll send you a link to reset your password.</p>
+                    <h2 class="card-title">Check Your Email</h2>
+                    <p class="card-subtitle">
+                        A password reset link was sent to
+                        <strong id="fpSentEmail">{{ $email }}</strong>.
+                        Open your inbox and follow the link to set a new password.
+                    </p>
                 </div>
+
+                @if (session('status'))
+                    <div class="sk-alert sk-alert-success">
+                        <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        {{ session('status') }}
+                    </div>
+                @endif
 
                 @if ($errors->any())
                     <div class="sk-alert sk-alert-error">
@@ -53,34 +66,17 @@
                     </div>
                 @endif
 
-                <form class="sk-login-form" id="forgotPasswordForm" method="POST" action="{{ route('password.email') }}" novalidate>
+                <form class="sk-login-form" id="fpResendForm" method="POST" action="{{ route('password.email') }}" novalidate>
                     @csrf
+                    <input type="hidden" name="email" id="fpHiddenEmail" value="{{ $email }}">
 
-                    <div class="sk-form-group">
-                        <label for="email" class="sk-label">
-                            <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
-                            </svg>
-                            Email Address
-                        </label>
-                        <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            class="sk-input"
-                            value="{{ old('email') }}"
-                            autofocus
-                            placeholder="Enter example@gmail.com"
-                            maxlength="100"
-                            autocomplete="email"
-                        >
-                        <div class="sk-field-error" id="email-error" @if(! $errors->has('email')) hidden @endif>{{ $errors->first('email') }}</div>
-                    </div>
-
-                    <button type="submit" class="sk-submit-btn" id="submitBtn">
-                        <span id="fpBtnText">Send Reset Link</span>
+                    <button type="submit" class="sk-submit-btn" id="fpResendBtn">
+                        <span id="fpResendBtnText">Resend Reset Link</span>
                     </button>
+
+                    <p class="fp-cooldown-notice" id="fpCooldownNotice" hidden>
+                        You can resend the link in <strong id="fpCooldownCount">60</strong>s.
+                    </p>
                 </form>
 
                 <div class="youth-register-section">

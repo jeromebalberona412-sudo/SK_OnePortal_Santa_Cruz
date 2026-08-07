@@ -71,6 +71,10 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+Route::get('/forgot-password/check-email', [App\Modules\Authentication\Controllers\AuthController::class, 'showForgotPasswordCheckEmail'])
+    ->middleware('guest')
+    ->name('password.check-email');
+
 Route::get('/change-email/confirm/{id}/{token}', [ProfileController::class, 'confirmChangeEmail'])
     ->middleware('throttle:6,1')
     ->name('change-email.confirm');
