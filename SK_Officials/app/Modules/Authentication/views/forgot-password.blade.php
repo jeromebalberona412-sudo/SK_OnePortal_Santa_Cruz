@@ -16,10 +16,18 @@
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     @if(config('services.turnstile.enabled'))
-        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
         <script>
             window.turnstileSiteKey = {{ json_encode(config('services.turnstile.site_key')) }};
+            // Called by Cloudflare as soon as the Turnstile script finishes loading.
+            function onTurnstileLoad() {
+                if (typeof window.__turnstileReadyCallbacks !== 'undefined') {
+                    window.__turnstileReadyCallbacks.forEach(function(cb) { cb(); });
+                    window.__turnstileReadyCallbacks = [];
+                }
+                window.__turnstileReady = true;
+            }
         </script>
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async defer></script>
     @endif
 </head>
 <body class="sk-login-page">

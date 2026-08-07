@@ -30,50 +30,55 @@ document.addEventListener('DOMContentLoaded', function () {
     let turnstileLoaded = false;
     let turnstileWidgetId = null;
 
+    /**
+     * Run `fn` as soon as the Turnstile script is ready.
+     * If already loaded (window.__turnstileReady), runs immediately.
+     * Otherwise queues it for onTurnstileLoad() to flush.
+     */
+    function whenTurnstileReady(fn) {
+        if (window.__turnstileReady) {
+            fn();
+        } else {
+            window.__turnstileReadyCallbacks = window.__turnstileReadyCallbacks || [];
+            window.__turnstileReadyCallbacks.push(fn);
+        }
+    }
+
     function loadTurnstileWidget() {
         if (turnstileLoaded) return;
 
-        if (typeof turnstile === 'undefined') {
-            // Script hasn't loaded yet
+        whenTurnstileReady(function () {
+            if (turnstileLoaded) return; // guard against double-fire
+            turnstileLoaded = true;
+
+            if (turnstileContainer) turnstileContainer.style.display = 'block';
+
+            // Restore form so user can interact while solving the challenge
             if (submitBtn) submitBtn.disabled = false;
             if (fpBtnText) fpBtnText.textContent = 'Send Reset Link';
             if (emailInput) emailInput.disabled = false;
-            if (turnstileError) {
-                turnstileError.textContent = 'Security check failed to load. Please refresh the page and try again.';
-                turnstileError.hidden = false;
-            }
-            return;
-        }
 
-        turnstileLoaded = true;
-
-        if (turnstileContainer) turnstileContainer.style.display = 'block';
-
-        // Restore form state so the user can see/interact with the widget
-        if (submitBtn) submitBtn.disabled = false;
-        if (fpBtnText) fpBtnText.textContent = 'Send Reset Link';
-        if (emailInput) emailInput.disabled = false;
-
-        turnstileWidgetId = turnstile.render('#fp-turnstile-widget', {
-            sitekey: window.turnstileSiteKey,
-            callback: function (token) {
-                if (turnstileError) turnstileError.hidden = true;
-                submitForgotPasswordForm();
-            },
-            'error-callback': function () {
-                if (turnstileError) {
-                    turnstileError.textContent = 'Security verification failed. Please try again.';
-                    turnstileError.hidden = false;
-                }
-                resetSubmitBtn();
-            },
-            'expired-callback': function () {
-                if (turnstileError) {
-                    turnstileError.textContent = 'Security verification expired. Please try again.';
-                    turnstileError.hidden = false;
-                }
-                resetSubmitBtn();
-            },
+            turnstileWidgetId = turnstile.render('#fp-turnstile-widget', {
+                sitekey: window.turnstileSiteKey,
+                callback: function (token) {
+                    if (turnstileError) turnstileError.hidden = true;
+                    submitForgotPasswordForm();
+                },
+                'error-callback': function () {
+                    if (turnstileError) {
+                        turnstileError.textContent = 'Security verification failed. Please try again.';
+                        turnstileError.hidden = false;
+                    }
+                    resetSubmitBtn();
+                },
+                'expired-callback': function () {
+                    if (turnstileError) {
+                        turnstileError.textContent = 'Security verification expired. Please try again.';
+                        turnstileError.hidden = false;
+                    }
+                    resetSubmitBtn();
+                },
+            });
         });
     }
 
@@ -251,6 +256,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (fpBtnText) fpBtnText.textContent = 'Loading Security Check...';
                     if (emailInput) emailInput.disabled = true;
                     loadTurnstileWidget();
+                    // whenTurnstileReady() inside loadTurnstileWidget will re-enable
+                    // inputs and show the widget once the script is ready.
                     return;
                 }
 

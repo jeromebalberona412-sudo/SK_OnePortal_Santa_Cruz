@@ -43,53 +43,56 @@ function initLoginForm(options = {}) {
     let turnstileLoaded = false;
     let turnstileWidgetId = null;
 
+    /**
+     * Run `fn` as soon as the Turnstile script is ready.
+     * If it's already loaded (window.__turnstileReady), run immediately.
+     * Otherwise push onto the queue that onTurnstileLoad() will flush.
+     */
+    function whenTurnstileReady(fn) {
+        if (window.__turnstileReady) {
+            fn();
+        } else {
+            window.__turnstileReadyCallbacks = window.__turnstileReadyCallbacks || [];
+            window.__turnstileReadyCallbacks.push(fn);
+        }
+    }
+
     // Load Turnstile widget dynamically — called once after form validation passes
     function loadTurnstileWidget() {
         if (turnstileLoaded) return;
-        if (typeof turnstile === 'undefined') {
-            // Turnstile script not loaded yet, show error
+
+        whenTurnstileReady(function () {
+            if (turnstileLoaded) return; // guard against double-fire
+            turnstileLoaded = true;
+
+            // Show the widget container
+            if (turnstileContainer) {
+                turnstileContainer.style.display = 'block';
+            }
+
+            // Restore inputs so the user can see/interact while solving the challenge
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.querySelector('span').textContent = 'Login';
             }
             emailInput.disabled = false;
             passwordInput.disabled = false;
-            if (turnstileError) {
-                showFieldError(null, turnstileError, 'Security check failed to load. Please refresh the page and try again.');
-            }
-            return;
-        }
 
-        turnstileLoaded = true;
-
-        // Show the Turnstile container so the checkbox appears
-        if (turnstileContainer) {
-            turnstileContainer.style.display = 'block';
-        }
-
-        // Restore inputs so user can interact while completing the challenge
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.querySelector('span').textContent = 'Login';
-        }
-        emailInput.disabled = false;
-        passwordInput.disabled = false;
-
-        turnstileWidgetId = turnstile.render('#turnstile-widget', {
-            sitekey: window.turnstileSiteKey,
-            callback: function(token) {
-                // Turnstile completed — auto-submit the form
-                clearFieldError(null, turnstileError);
-                submitLoginForm();
-            },
-            'error-callback': function() {
-                showFieldError(null, turnstileError, 'Security verification failed. Please try again.');
-                resetFormState();
-            },
-            'expired-callback': function() {
-                showFieldError(null, turnstileError, 'Security verification expired. Please try again.');
-                resetFormState();
-            }
+            turnstileWidgetId = turnstile.render('#turnstile-widget', {
+                sitekey: window.turnstileSiteKey,
+                callback: function (token) {
+                    clearFieldError(null, turnstileError);
+                    submitLoginForm();
+                },
+                'error-callback': function () {
+                    showFieldError(null, turnstileError, 'Security verification failed. Please try again.');
+                    resetFormState();
+                },
+                'expired-callback': function () {
+                    showFieldError(null, turnstileError, 'Security verification expired. Please try again.');
+                    resetFormState();
+                },
+            });
         });
     }
 
@@ -172,7 +175,7 @@ function initLoginForm(options = {}) {
         // Turnstile enabled — show the widget first (if not yet loaded)
         if (turnstileContainer && window.turnstileSiteKey) {
             if (!turnstileLoaded) {
-                // Lock the button briefly while rendering the widget
+                // Lock the button and wait for the script + render
                 if (submitBtn) {
                     submitBtn.disabled = true;
                     submitBtn.querySelector('span').textContent = 'Loading Security Check...';
@@ -181,7 +184,8 @@ function initLoginForm(options = {}) {
                 passwordInput.disabled = true;
 
                 loadTurnstileWidget();
-                // Button and inputs are re-enabled inside loadTurnstileWidget() after render
+                // whenTurnstileReady() inside loadTurnstileWidget will re-enable
+                // inputs and show the widget once the script is ready.
                 return false;
             }
 
