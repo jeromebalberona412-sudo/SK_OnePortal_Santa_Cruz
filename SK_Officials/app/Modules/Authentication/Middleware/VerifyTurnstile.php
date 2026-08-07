@@ -22,27 +22,15 @@ class VerifyTurnstile
 
         $token = (string) $request->input('cf-turnstile-response', '');
 
-        if ($token === '') {
+        if ($token === '' || ! $this->turnstileService->verify($token, $request->ip())) {
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => 'Pakumpleto ang seguridad na pagpapatunay.',
+                    'message' => 'Human verification failed. Please try again.',
                 ], 422);
             }
 
             return back()->withErrors([
-                'captcha' => 'Pakumpleto ang seguridad na pagpapatunay.',
-            ]);
-        }
-
-        if (! $this->turnstileService->verify($token, $request->ip())) {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'message' => 'Nabigo ang seguridad na pagpapatunay. Pakisubukang muli.',
-                ], 422);
-            }
-
-            return back()->withErrors([
-                'captcha' => 'Nabigo ang seguridad na pagpapatunay. Pakisubukang muli.',
+                'captcha' => 'Human verification failed. Please try again.',
             ]);
         }
 

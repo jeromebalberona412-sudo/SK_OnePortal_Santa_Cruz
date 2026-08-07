@@ -4,7 +4,6 @@ namespace App\Modules\Authentication\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Modules\Authentication\Services\AltchaService;
 use App\Modules\Authentication\Services\AuthenticationService;
 use App\Modules\Authentication\Services\EmailVerificationDeviceService;
 use App\Modules\Authentication\Services\PasswordResetService;
@@ -28,7 +27,6 @@ use Illuminate\View\View;
 class AuthController extends Controller
 {
     public function __construct(
-        protected AltchaService $altchaService,
         protected AuthenticationService $authenticationService,
         protected TenantContextService $tenantContextService,
         protected PasswordResetService $passwordResetService,
@@ -38,19 +36,7 @@ class AuthController extends Controller
 
     public function showLogin(): View
     {
-        return view('authentication::login', $this->loginViewData());
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    protected function loginViewData(): array
-    {
-        return [
-            'altchaEnabled' => $this->altchaService->enabled(),
-            'altchaChallengeUrl' => $this->altchaService->challengeUrl(),
-            'altchaReset' => session('altcha_reset', false),
-        ];
+        return view('authentication::login');
     }
 
     public function showVerifyNotice(Request $request): View

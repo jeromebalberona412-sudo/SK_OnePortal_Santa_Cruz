@@ -34,8 +34,23 @@ class TurnstileService
 
             $response = Http::asForm()->post($this->verifyUrl, $payload);
 
-            return (bool) ($response->json('success', false));
-        } catch (\Throwable) {
+            $success = (bool) ($response->json('success', false));
+
+            // Log the full response when verification fails (for debugging)
+            if (!$success) {
+                \Log::warning('Turnstile verification failed', [
+                    'response' => $response->json(),
+                    'remote_ip' => $remoteIp,
+                    'token_length' => strlen($token),
+                ]);
+            }
+
+            return $success;
+        } catch (\Throwable $e) {
+            \Log::error('Turnstile verification exception', [
+                'message' => $e->getMessage(),
+                'remote_ip' => $remoteIp,
+            ]);
             return false;
         }
     }

@@ -3,127 +3,44 @@
  */
 
 document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('forgotPasswordForm');
-    const resendForm = document.getElementById('fpResendForm');
-    const emailInput = document.getElementById('email');
-    const emailError = document.getElementById('email-error');
-    const submitBtn = document.getElementById('submitBtn');
-    const fpBtnText = document.getElementById('fpBtnText');
-    const resendBtn = document.getElementById('fpResendBtn');
+    const form          = document.getElementById('forgotPasswordForm');
+    const resendForm    = document.getElementById('fpResendForm');
+    const emailInput    = document.getElementById('email');
+    const emailError    = document.getElementById('email-error');
+    const submitBtn     = document.getElementById('submitBtn');
+    const fpBtnText     = document.getElementById('fpBtnText');
+    const resendBtn     = document.getElementById('fpResendBtn');
     const fpResendBtnText = document.getElementById('fpResendBtnText');
-    const cooldownNotice = document.getElementById('fpCooldownNotice');
-    const cooldownCount = document.getElementById('fpCooldownCount');
-    const step1 = document.getElementById('fpStep1');
-    const step2 = document.getElementById('fpStep2');
-    const hiddenEmail = document.getElementById('fpHiddenEmail');
-    const sentEmailEl = document.getElementById('fpSentEmail');
-
-    // Turnstile elements (may be absent if Turnstile is disabled)
-    const turnstileContainer = document.getElementById('fp-turnstile-container');
-    const turnstileError = document.getElementById('fp-turnstile-error');
+    const cooldownNotice  = document.getElementById('fpCooldownNotice');
+    const cooldownCount   = document.getElementById('fpCooldownCount');
+    const step1         = document.getElementById('fpStep1');
+    const step2         = document.getElementById('fpStep2');
+    const hiddenEmail   = document.getElementById('fpHiddenEmail');
 
     const COOLDOWN_DURATION = 60;
-    const COOLDOWN_KEY = 'fp_cooldown_until';
-    let cooldownInterval = null;
+    const COOLDOWN_KEY      = 'fp_cooldown_until';
+    let cooldownInterval    = null;
 
-    // ── Turnstile state ──────────────────────────────────────────────────────
-    let turnstileLoaded = false;
-    let turnstileWidgetId = null;
-
-    /**
-     * Run `fn` as soon as the Turnstile script is ready.
-     * If already loaded (window.__turnstileReady), runs immediately.
-     * Otherwise queues it for onTurnstileLoad() to flush.
-     */
-    function whenTurnstileReady(fn) {
-        if (window.__turnstileReady) {
-            fn();
-        } else {
-            window.__turnstileReadyCallbacks = window.__turnstileReadyCallbacks || [];
-            window.__turnstileReadyCallbacks.push(fn);
-        }
-    }
-
-    function loadTurnstileWidget() {
-        if (turnstileLoaded) return;
-
-        whenTurnstileReady(function () {
-            if (turnstileLoaded) return; // guard against double-fire
-            turnstileLoaded = true;
-
-            if (turnstileContainer) turnstileContainer.style.display = 'block';
-
-            // Restore form so user can interact while solving the challenge
-            if (submitBtn) submitBtn.disabled = false;
-            if (fpBtnText) fpBtnText.textContent = 'Send Reset Link';
-            if (emailInput) emailInput.disabled = false;
-
-            turnstileWidgetId = turnstile.render('#fp-turnstile-widget', {
-                sitekey: window.turnstileSiteKey,
-                callback: function (token) {
-                    if (turnstileError) turnstileError.hidden = true;
-                    submitForgotPasswordForm();
-                },
-                'error-callback': function () {
-                    if (turnstileError) {
-                        turnstileError.textContent = 'Security verification failed. Please try again.';
-                        turnstileError.hidden = false;
-                    }
-                    resetSubmitBtn();
-                },
-                'expired-callback': function () {
-                    if (turnstileError) {
-                        turnstileError.textContent = 'Security verification expired. Please try again.';
-                        turnstileError.hidden = false;
-                    }
-                    resetSubmitBtn();
-                },
-            });
-        });
-    }
-
-    function resetSubmitBtn() {
-        if (submitBtn) submitBtn.disabled = false;
-        if (fpBtnText) fpBtnText.textContent = 'Send Reset Link';
-        if (emailInput) emailInput.disabled = false;
-    }
-
-    function submitForgotPasswordForm() {
-        // Attach the token as a hidden input
-        let tokenInput = form.querySelector('input[name="cf-turnstile-response"]');
-        if (!tokenInput) {
-            tokenInput = document.createElement('input');
-            tokenInput.type = 'hidden';
-            tokenInput.name = 'cf-turnstile-response';
-            form.appendChild(tokenInput);
-        }
-        tokenInput.value = turnstile.getResponse(turnstileWidgetId);
-
-        // Lock the form while submitting
-        if (submitBtn) submitBtn.disabled = true;
-        if (fpBtnText) fpBtnText.textContent = 'Sending...';
-        if (emailInput) emailInput.disabled = true;
-        if (turnstileContainer) {
-            turnstileContainer.style.pointerEvents = 'none';
-            turnstileContainer.style.opacity = '0.5';
-        }
-
-        form.submit();
-    }
-
-    // ── Cooldown helpers ─────────────────────────────────────────────────────
+    // ── Field helpers ────────────────────────────────────────────────────────
     function setInputError(input, errorEl, msg) {
         input.classList.add('is-invalid');
         errorEl.textContent = msg;
         errorEl.hidden = false;
     }
 
-    function clearInputError(input, errorEl) {
-        input.classList.remove('is-invalid');
-        errorEl.textContent = '';
-        errorEl.hidden = true;
+    document.querySelectorAll('.sk-field-error').forEach(function (el) {
+        if (!el.hidden) el.setAttribute('data-server-error', 'true');
+    });
+
+    if (emailInput && emailError) {
+        emailInput.addEventListener('input', function () {
+            if (emailError.getAttribute('data-server-error') === 'true') return;
+            this.classList.remove('is-invalid');
+            emailError.hidden = true;
+        });
     }
 
+    // ── Cooldown helpers ─────────────────────────────────────────────────────
     function getCooldownKey() {
         const email = hiddenEmail?.value || emailInput?.value || '';
         return `${COOLDOWN_KEY}_${email.trim().toLowerCase()}`;
@@ -154,8 +71,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (submitBtn) submitBtn.disabled = true;
             if (resendBtn) resendBtn.disabled = true;
-            if (fpBtnText) fpBtnText.textContent = 'Send Reset Link';
-            if (fpResendBtnText) fpResendBtnText.textContent = 'Resend Reset Link';
             if (cooldownNotice) {
                 cooldownNotice.hidden = false;
                 if (cooldownCount) cooldownCount.textContent = remaining;
@@ -169,13 +84,11 @@ document.addEventListener('DOMContentLoaded', function () {
     function resumeCooldownIfActive() {
         const stored = localStorage.getItem(getCooldownKey());
         if (!stored) return false;
-
         const until = parseInt(stored, 10);
         if (Number.isNaN(until) || Date.now() >= until) {
             localStorage.removeItem(getCooldownKey());
             return false;
         }
-
         runCooldownTick(until);
         return true;
     }
@@ -187,20 +100,8 @@ document.addEventListener('DOMContentLoaded', function () {
         return 'navigate';
     }
 
-    function disableResendAfterRefresh() {
-        const navType = navigationType();
-        if (navType === 'reload' || navType === 'back_forward') {
-            if (resendBtn) resendBtn.disabled = true;
-            if (fpResendBtnText) fpResendBtnText.textContent = 'Resend Disabled After Refresh';
-            if (cooldownNotice) {
-                cooldownNotice.hidden = false;
-                cooldownNotice.textContent = 'Reset link resend is disabled after refreshing the page.';
-            }
-        }
-    }
-
-    // ── Init cooldown state ──────────────────────────────────────────────────
-    const isSentStep = step2 && !step2.hidden;
+    // ── Init cooldown state ───────────────────────────────────────────────────
+    const isSentStep        = step2 && !step2.hidden;
     const isReloadNavigation = navigationType() === 'reload' || navigationType() === 'back_forward';
 
     if (isSentStep && !isReloadNavigation) {
@@ -209,29 +110,21 @@ document.addEventListener('DOMContentLoaded', function () {
         resumeCooldownIfActive();
     }
 
-    if (isReloadNavigation) {
-        disableResendAfterRefresh();
+    if (isReloadNavigation && step2 && !step2.hidden) {
+        if (resendBtn) resendBtn.disabled = true;
+        if (fpResendBtnText) fpResendBtnText.textContent = 'Resend Disabled After Refresh';
+        if (cooldownNotice) {
+            cooldownNotice.hidden = false;
+            cooldownNotice.textContent = 'Reset link resend is disabled after refreshing the page.';
+        }
     }
 
-    // ── Field error helpers ──────────────────────────────────────────────────
-    document.querySelectorAll('.sk-field-error').forEach(function (el) {
-        if (!el.hidden) el.setAttribute('data-server-error', 'true');
-    });
-
-    if (emailInput && emailError) {
-        emailInput.addEventListener('input', function () {
-            if (emailError.getAttribute('data-server-error') === 'true') return;
-            this.classList.remove('is-invalid');
-            emailError.hidden = true;
-        });
-    }
-
-    // ── Form submit ──────────────────────────────────────────────────────────
+    // ── Main form submit ──────────────────────────────────────────────────────
     if (form && emailInput && emailError && submitBtn) {
         form.addEventListener('submit', function (e) {
             e.preventDefault();
 
-            const email = emailInput.value.trim();
+            const email      = emailInput.value.trim();
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
             emailInput.classList.remove('is-invalid');
@@ -249,41 +142,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (submitBtn.disabled) return;
 
-            // If Turnstile is enabled, show widget first (if not yet loaded)
-            if (turnstileContainer && window.turnstileSiteKey) {
-                if (!turnstileLoaded) {
-                    if (submitBtn) submitBtn.disabled = true;
-                    if (fpBtnText) fpBtnText.textContent = 'Loading Security Check...';
-                    if (emailInput) emailInput.disabled = true;
-                    loadTurnstileWidget();
-                    // whenTurnstileReady() inside loadTurnstileWidget will re-enable
-                    // inputs and show the widget once the script is ready.
-                    return;
-                }
-
-                // Widget already visible — check if completed
-                const response = turnstile.getResponse(turnstileWidgetId);
-                if (!response) {
-                    if (turnstileError) {
-                        turnstileError.textContent = 'Please complete the security verification.';
-                        turnstileError.hidden = false;
-                    }
-                    return;
-                }
-
-                // Already completed — submit immediately
-                submitForgotPasswordForm();
-                return;
-            }
-
-            // Turnstile disabled — submit normally
             submitBtn.disabled = true;
             if (fpBtnText) fpBtnText.textContent = 'Sending...';
             form.submit();
         });
     }
 
-    // ── Resend form ──────────────────────────────────────────────────────────
+    // ── Resend form ───────────────────────────────────────────────────────────
     if (resendForm && resendBtn) {
         resendForm.addEventListener('submit', function (e) {
             if (resendBtn.disabled) {

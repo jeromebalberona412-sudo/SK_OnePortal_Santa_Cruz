@@ -3,9 +3,7 @@
 namespace App\Providers;
 
 use App\Models\User;
-use App\Modules\Authentication\Actions\VerifyAltchaChallenge;
 use App\Modules\Authentication\Services\AuthenticationService;
-use App\Modules\Authentication\Services\TurnstileService;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -56,7 +54,6 @@ class FortifyServiceProvider extends ServiceProvider
             return array_filter([
                 config('fortify.limiters.login') ? null : EnsureLoginIsNotThrottled::class,
                 config('fortify.lowercase_usernames') ? CanonicalizeUsername::class : null,
-                VerifyAltchaChallenge::class,
                 Features::enabled(Features::twoFactorAuthentication()) ? RedirectsIfTwoFactorAuthenticatable::class : null,
                 AttemptToAuthenticate::class,
                 PrepareAuthenticatedSession::class,
@@ -64,24 +61,6 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         Fortify::authenticateUsing(function (Request $request) {
-            // Verify Turnstile token if enabled
-            if (config('services.turnstile.enabled')) {
-                $token = (string) $request->input('cf-turnstile-response', '');
-                $turnstileService = app(TurnstileService::class);
-
-                if ($token === '') {
-                    throw ValidationException::withMessages([
-                        'captcha' => ['Please complete the security verification.'],
-                    ]);
-                }
-
-                if (! $turnstileService->verify($token, $request->ip())) {
-                    throw ValidationException::withMessages([
-                        'captcha' => ['Security verification failed. Please try again.'],
-                    ]);
-                }
-            }
-
             $user = app(AuthenticationService::class)->authenticate($request);
 
             if ($user === null) {

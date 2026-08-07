@@ -12,7 +12,6 @@ use App\Modules\Authentication\Services\PasswordResetService;
 use App\Modules\Authentication\Services\SuspiciousLoginService;
 use App\Modules\Authentication\Services\TenantContextService;
 use App\Modules\Authentication\Services\TrustedDeviceService;
-use App\Modules\Authentication\Services\AltchaService;
 use App\Modules\Authentication\Services\TurnstileService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -36,13 +35,12 @@ class AuthenticationServiceProvider extends ServiceProvider
         $this->app->singleton(AuthenticationService::class);
         $this->app->singleton(PasswordResetService::class);
         $this->app->singleton(TurnstileService::class);
-        $this->app->singleton(AltchaService::class);
     }
 
     public function boot(): void
     {
-        $this->configurePasswordResetRateLimiters();
         $this->configureLoginRateLimiter();
+        $this->configurePasswordResetRateLimiters();
         $this->loadRoutes();
         $this->loadViewsFrom(__DIR__.'/../views', 'authentication');
         $this->loadMigrationsFrom(__DIR__.'/../Database/Migrations');
@@ -56,19 +54,24 @@ class AuthenticationServiceProvider extends ServiceProvider
 
     protected function configureLoginRateLimiter(): void
     {
-        $ipLimitPerMinute = max(1, (int) config('sk_official_auth.rate_limit.max_failures_per_window', 5));
-        $emailLimitPerMinute = max(1, (int) config('sk_official_auth.rate_limit.max_failures_per_window', 5));
+        $maxAttempts = max(1, (int) config('sk_official_auth.rate_limit.max_failures_per_window', 5));
+        $windowMinutes = max(1, (int) config('sk_official_auth.rate_limit.window_minutes', 15));
 
-        RateLimiter::for('sk-official-login', function (Request $request) use ($ipLimitPerMinute, $emailLimitPerMinute) {
-            $normalizedEmail = Str::lower(trim((string) $request->input('email', '')));
-            $emailHash = $normalizedEmail === '' ? 'missing' : hash('sha256', $normalizedEmail);
+        RateLimiter::for('sk-official-login', function (Request $request) use ($maxAttempts, $windowMinutes) {
+            return Limit::perMinutes($windowMinutes, $maxAttempts)
+                ->by('sk-official-login:'.$request->ip())
+                ->response(function (Request $request, array $headers) {
+                    if ($request->expectsJson()) {
+                        return response()->json([
+                            'message' => 'Too many login attempts. Please try again later.',
+                        ], 429, $headers);
+                    }
 
-            return [
-                Limit::perMinute($ipLimitPerMinute)
-                    ->by('sk-official-login-ip:'.$request->ip()),
-                Limit::perMinute($emailLimitPerMinute)
-                    ->by('sk-official-login-email:'.$emailHash),
-            ];
+                    return redirect()->back()
+                        ->withErrors(['email' => 'Too many login attempts. Please try again later.'])
+                        ->setStatusCode(429)
+                        ->withHeaders($headers);
+                });
         });
     }
 
@@ -77,13 +80,6 @@ class AuthenticationServiceProvider extends ServiceProvider
         $ipLimitPerMinute = max(1, (int) config('sk_official_auth.password_reset.rate_limit.ip_per_minute', 5));
         $emailLimitPerHour = max(1, (int) config('sk_official_auth.password_reset.rate_limit.email_per_hour', 10));
         $resetFormLimitPerMinute = max(1, (int) config('sk_official_auth.password_reset.rate_limit.reset_form_per_minute', 20));
-
-        $altchaChallengeLimitPerMinute = max(1, (int) config('altcha.challenge_rate_limit', 60));
-
-        RateLimiter::for('sk-official-altcha-challenge', function (Request $request) use ($altchaChallengeLimitPerMinute) {
-            return Limit::perMinute($altchaChallengeLimitPerMinute)
-                ->by('sk-official-altcha-challenge:'.$request->ip());
-        });
 
         RateLimiter::for('sk-official-password-reset-ip', function (Request $request) use ($ipLimitPerMinute) {
             return Limit::perMinute($ipLimitPerMinute)

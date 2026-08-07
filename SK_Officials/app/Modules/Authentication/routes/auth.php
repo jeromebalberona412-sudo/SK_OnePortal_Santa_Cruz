@@ -1,6 +1,5 @@
 <?php
 
-use App\Modules\Authentication\Controllers\AltchaChallengeController;
 use App\Modules\Authentication\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,16 +18,12 @@ Route::get('/email/verify-link/{id}/{hash}', [AuthController::class, 'verifyEmai
 Route::get('/email/verified-success', [AuthController::class, 'showVerificationSuccess'])->name('sk_official.verification.success');
 
 Route::middleware('guest')->group(function () {
-    Route::get('/altcha/challenge', AltchaChallengeController::class)
-        ->middleware('throttle:sk-official-altcha-challenge')
-        ->name('sk_official.altcha.challenge');
-
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::get('/email/verify/notice', [AuthController::class, 'showVerifyNotice'])->name('sk_official.verification.notice');
 
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'sendPasswordResetLink'])
-        ->middleware(['turnstile', 'throttle:sk-official-password-reset-ip', 'throttle:sk-official-password-reset-email'])
+        ->middleware(['throttle:sk-official-password-reset-ip', 'throttle:sk-official-password-reset-email'])
         ->name('password.email');
     Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])
         ->middleware(['throttle:sk-official-password-reset-form'])

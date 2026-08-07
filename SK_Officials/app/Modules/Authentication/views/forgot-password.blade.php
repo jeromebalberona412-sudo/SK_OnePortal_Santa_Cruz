@@ -15,20 +15,6 @@
         'app/Modules/Authentication/assets/js/forgot-password.js',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
-    @if(config('services.turnstile.enabled'))
-        <script>
-            window.turnstileSiteKey = {{ json_encode(config('services.turnstile.site_key')) }};
-            // Called by Cloudflare as soon as the Turnstile script finishes loading.
-            function onTurnstileLoad() {
-                if (typeof window.__turnstileReadyCallbacks !== 'undefined') {
-                    window.__turnstileReadyCallbacks.forEach(function(cb) { cb(); });
-                    window.__turnstileReadyCallbacks = [];
-                }
-                window.__turnstileReady = true;
-            }
-        </script>
-        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async defer></script>
-    @endif
 </head>
 <body class="sk-login-page">
     @include('loading')
@@ -58,7 +44,8 @@
                              class="collab-logo">
                     </div>
                 </div>
-                <h1 class="sk-main-title">SK OnePortal and SK Officials Portal - Santa Cruz, Laguna</h1>
+                <h1 class="sk-main-title">SK OnePortal</h1>
+                <p class="sk-tagline">SK Officials Portal - Santa Cruz, Laguna</p>
             </div>
         </div>
 
@@ -71,7 +58,7 @@
 
                 <div id="fpStep1" @if($linkSent) hidden @endif>
                     <div class="card-header">
-                        <h2 class="card-title">Forgot Password</h2>
+                        <h2 class="card-title">Forgot Password?</h2>
                         <p class="card-subtitle">Enter the email address associated with your account and we'll send you a link to reset your password.</p>
                     </div>
 
@@ -108,14 +95,6 @@
                             >
                             <div class="sk-field-error" id="email-error" @if(! $errors->has('email')) hidden @endif>{{ $errors->first('email') }}</div>
                         </div>
-
-                        <!-- Cloudflare Turnstile -->
-                        @if(config('services.turnstile.enabled'))
-                            <div class="sk-form-group" id="fp-turnstile-container" style="display: none;">
-                                <div id="fp-turnstile-widget"></div>
-                                <div class="sk-field-error" id="fp-turnstile-error" hidden></div>
-                            </div>
-                        @endif
 
                         <button type="submit" class="sk-submit-btn" id="submitBtn">
                             <span id="fpBtnText">Send Reset Link</span>
