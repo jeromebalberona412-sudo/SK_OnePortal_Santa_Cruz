@@ -16,7 +16,6 @@ mkdir -p /run/nginx || echo "Failed to create /run/nginx"
 mkdir -p /var/log/supervisor || echo "Failed to create /var/log/supervisor"
 mkdir -p /var/run/supervisor || echo "Failed to create /var/run/supervisor"
 mkdir -p /var/lib/php/sessions || echo "Failed to create /var/lib/php/sessions"
-mkdir -p /var/lib/php/wsdlcache || echo "Failed to create /var/lib/php/wsdlcache"
 
 # ============================================
 # Set proper permissions for system directories

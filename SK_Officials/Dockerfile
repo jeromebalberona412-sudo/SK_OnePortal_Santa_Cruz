@@ -119,8 +119,7 @@ RUN mkdir -p \
 
 # Create necessary directories for PHP sessions
 RUN mkdir -p \
-    /var/lib/php/sessions \
-    /var/lib/php/wsdlcache
+    /var/lib/php/sessions
 
 # Set permissions for Laravel
 RUN chown -R www-data:www-data \
