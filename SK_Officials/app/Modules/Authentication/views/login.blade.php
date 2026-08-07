@@ -16,6 +16,10 @@
         'app/Modules/Authentication/assets/js/auth-legal.js',
     ])
 
+    @if (config('turnstile.enabled') && config('turnstile.site_key'))
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    @endif
+
     <style>
         .sk-main-title {
             white-space: nowrap;
@@ -161,6 +165,22 @@
                     </div>
 
                     @include('authentication::partials.login-legal-consent')
+
+                    <!-- Cloudflare Turnstile Widget -->
+                    @if (config('turnstile.enabled') && config('turnstile.site_key'))
+                        <div class="sk-form-group">
+                            <div class="cf-turnstile" 
+                                 data-sitekey="{{ config('turnstile.site_key') }}" 
+                                 data-theme="light"
+                                 data-size="normal">
+                            </div>
+                            @error('cf-turnstile-response')
+                                <div class="sk-field-error" style="display: block; margin-top: 0.5rem;">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+                        </div>
+                    @endif
 
                     <!-- Submit Button -->
                     <button type="submit" class="sk-submit-btn" id="loginBtn">

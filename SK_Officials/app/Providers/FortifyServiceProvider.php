@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\User;
 use App\Modules\Authentication\Services\AuthenticationService;
+use App\Modules\Authentication\Services\TurnstileService;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -63,6 +64,27 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         Fortify::authenticateUsing(function (Request $request) {
+            // Verify Turnstile token before attempting authentication
+            $turnstileService = app(TurnstileService::class);
+
+            if ($turnstileService->isEnabled()) {
+                $turnstileToken = (string) $request->input('cf-turnstile-response', '');
+
+                if ($turnstileToken === '') {
+                    throw ValidationException::withMessages([
+                        'cf-turnstile-response' => ['Human verification is required. Please complete the challenge.'],
+                    ])->redirectTo(route('login'));
+                }
+
+                $verified = $turnstileService->verify($turnstileToken, $request->ip());
+
+                if (!$verified) {
+                    throw ValidationException::withMessages([
+                        'cf-turnstile-response' => ['Human verification failed. Please try again.'],
+                    ])->redirectTo(route('login'));
+                }
+            }
+
             $user = app(AuthenticationService::class)->authenticate($request);
 
             if ($user === null) {
