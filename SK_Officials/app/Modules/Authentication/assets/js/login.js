@@ -7,14 +7,10 @@ export function initLoginForm(options = {}) {
     const passwordInput = document.getElementById('password');
     const emailError = document.getElementById('email-error');
     const passwordError = document.getElementById('password-error');
-<<<<<<< Updated upstream
     const turnstileContainer = document.getElementById('turnstile-container');
     const turnstileWidget = document.getElementById('turnstile-widget');
     const turnstileError = document.getElementById('turnstile-error');
     const submitBtn = document.getElementById('loginBtn');
-=======
-    const togglePasswordBtn = document.querySelector('.toggle-password');
->>>>>>> Stashed changes
 
     if (!loginForm || !emailInput || !passwordInput) {
         return null;
@@ -31,7 +27,6 @@ export function initLoginForm(options = {}) {
     }
 
     function showFieldError(input, errorEl, message) {
-<<<<<<< Updated upstream
         if (input) input.classList.add('is-invalid');
         errorEl.textContent = message;
         errorEl.hidden = false;
@@ -126,23 +121,6 @@ export function initLoginForm(options = {}) {
     loginForm.addEventListener('submit', function (e) {
         e.preventDefault();
 
-=======
-        input.classList.add('is-invalid');
-        if (errorEl) {
-            errorEl.textContent = message;
-            errorEl.hidden = false;
-        }
-    }
-
-    function clearFieldError(input, errorEl) {
-        input.classList.remove('is-invalid');
-        if (errorEl) {
-            errorEl.hidden = true;
-        }
-    }
-
-    function validateForm() {
->>>>>>> Stashed changes
         let isValid = true;
 
         clearFieldError(emailInput, emailError);
@@ -170,7 +148,6 @@ export function initLoginForm(options = {}) {
             isValid = false;
         }
 
-<<<<<<< Updated upstream
         if (!isValid) return false;
 
         // If Turnstile is enabled and not yet loaded, load it now
@@ -210,57 +187,13 @@ export function initLoginForm(options = {}) {
         // If Turnstile is not enabled, submit directly
         if (!turnstileContainer) {
             submitLoginForm();
-=======
-        return isValid;
-    }
-
-    emailInput.addEventListener('input', () => clearFieldError(emailInput, emailError));
-    passwordInput.addEventListener('input', () => clearFieldError(passwordInput, passwordError));
-
-    togglePasswordBtn?.addEventListener('click', () => {
-        const eyeOpen = document.getElementById('eyeOpen');
-        const eyeClosed = document.getElementById('eyeClosed');
-
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            if (eyeOpen) eyeOpen.style.display = 'none';
-            if (eyeClosed) eyeClosed.style.display = 'block';
-        } else {
-            passwordInput.type = 'password';
-            if (eyeOpen) eyeOpen.style.display = 'block';
-            if (eyeClosed) eyeClosed.style.display = 'none';
-        }
-    });
-
-    loginForm.addEventListener('submit', function (event) {
-        if (event.skSkipClientValidation) {
-            return;
-        }
-
-        if (!validateForm()) {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-            return false;
-        }
-
-        if (typeof options.onValidatedSubmit === 'function') {
-            const shouldContinue = options.onValidatedSubmit(event);
-            if (shouldContinue === false) {
-                event.preventDefault();
-                event.stopImmediatePropagation();
-                return false;
-            }
->>>>>>> Stashed changes
         }
     });
 
     document.getElementById('forgotBtn')?.addEventListener('click', function () {
-        setTimeout(() => {
-            window.location.href = '/forgot-password';
-        }, 300);
+        setTimeout(() => { window.location.href = '/forgot-password'; }, 300);
     });
 
-<<<<<<< Updated upstream
     // Expose reset function for error handling
     window.resetTurnstileState = function() {
         if (turnstileLoaded && turnstileWidgetId && typeof turnstile !== 'undefined') {
@@ -273,72 +206,4 @@ export function initLoginForm(options = {}) {
         turnstileWidgetId = null;
         resetFormState();
     };
-});
-=======
-    return {
-        form: loginForm,
-        validateForm,
-        emailInput,
-        passwordInput,
-    };
 }
-
-export function setLoginAuthenticating(isAuthenticating) {
-    const loginForm = document.getElementById('loginForm');
-    const submitBtn = document.getElementById('loginBtn');
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const rememberInput = document.getElementById('remember');
-    const legalConsent = document.getElementById('loginLegalConsent');
-    const altchaWidget = document.getElementById('altchaWidget');
-    const togglePasswordBtn = loginForm?.querySelector('.toggle-password');
-    const spinner = submitBtn?.querySelector('.sk-btn-spinner');
-    const label = submitBtn?.querySelector('.login-btn-text');
-
-    const controls = [
-        emailInput,
-        passwordInput,
-        rememberInput,
-        legalConsent,
-        altchaWidget,
-        togglePasswordBtn,
-        submitBtn,
-    ];
-
-    controls.forEach((control) => {
-        if (control) {
-            control.disabled = isAuthenticating;
-        }
-    });
-
-    if (submitBtn) {
-        submitBtn.setAttribute('aria-busy', isAuthenticating ? 'true' : 'false');
-    }
-
-    if (spinner) {
-        spinner.hidden = !isAuthenticating;
-    }
-
-    if (label) {
-        label.textContent = isAuthenticating ? 'Authenticating...' : 'Login';
-    }
-
-    if (isAuthenticating && typeof window.showLoading === 'function') {
-        window.showLoading('Authenticating...', 'Please wait...');
-    }
-}
-
-export function resetLoginAuthenticating() {
-    setLoginAuthenticating(false);
-}
-
-if (!window.skLoginAltcha?.enabled) {
-    document.addEventListener('DOMContentLoaded', () => {
-        initLoginForm({
-            onValidatedSubmit: () => {
-                setLoginAuthenticating(true);
-            },
-        });
-    });
-}
->>>>>>> Stashed changes
