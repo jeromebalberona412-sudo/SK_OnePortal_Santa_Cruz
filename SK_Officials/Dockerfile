@@ -117,6 +117,12 @@ RUN mkdir -p \
     /var/log/supervisor \
     /var/run/supervisor
 
+# Create necessary directories for PHP-FPM
+RUN mkdir -p \
+    /var/log/php-fpm \
+    /var/lib/php/sessions \
+    /var/lib/php/wsdlcache
+
 # Set permissions for Laravel
 RUN chown -R www-data:www-data \
     /var/www/html/storage \
@@ -132,11 +138,18 @@ RUN chown -R www-data:www-data /var/lib/nginx /var/cache/nginx /run/nginx \
     && chown -R root:root /var/log/nginx /var/log/supervisor /var/run/supervisor \
     && chmod -R 755 /var/log/nginx /var/log/supervisor /var/run/supervisor
 
+# Set permissions for PHP-FPM
+RUN chown -R www-data:www-data /var/lib/php /var/log/php-fpm \
+    && chmod -R 755 /var/lib/php /var/log/php-fpm
+
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copy Supervisor configuration
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Copy PHP-FPM configuration
+COPY php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
 
 # Copy entrypoint script
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
