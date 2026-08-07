@@ -2,31 +2,33 @@
 .git
 .gitignore
 .gitattributes
+.github
 
 # Documentation
 README.md
 CHANGELOG.md
 LICENSE
 docs/
+*.md
 
 # Tests
 tests/
 phpunit.xml
 .phpunit.result.cache
 Pest.php
+phpunit.xml.backup
 
-# Development
+# Development files
 .env.example
 .env.backup
-
-# Node modules (we install fresh in Docker)
-node_modules/
-npm-debug.log
-yarn-error.log
+.env.local
+.env.production
+.env.testing
 
 # Build output (we build fresh in Docker)
 public/build/
 public/hot/
+public/storage
 
 # Storage (don't include local storage files)
 storage/*.key
@@ -35,22 +37,42 @@ storage/framework/cache/*
 storage/framework/sessions/*
 storage/framework/views/*
 storage/app/public/*
+storage/*.sqlite
 
 # Cache
 bootstrap/cache/*
+
+# Node modules (we install fresh in Docker)
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
 # IDE
 .vscode/
 .idea/
 *.sublime-project
 *.sublime-workspace
+.cursor/
+*.swp
+*.swo
+*~
 
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
 # Misc
 *.log
 *.bak
-*.swp
-*~
+*.tmp
+*.temp
+composer.phar
+package-lock.json.backup

@@ -1,43 +1,62 @@
-# Multi-stage build for Laravel 12 on Render
-FROM node:20-alpine AS frontend
+# ============================================
+# Stage 1: Frontend Build (Node.js + Vite)
+# ============================================
+FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install all dependencies (Vite and build tools are in devDependencies)
+# Install all dependencies (including devDependencies for Vite)
 RUN npm ci
 
-# Copy frontend source
+# Copy application files for Vite build
 COPY . .
 
 # Build frontend assets
 RUN npm run build
 
-# Production stage
+# Clean up node_modules to reduce layer size
+RUN npm cache clean --force && rm -rf /root/.npm /root/.cache
+
+# ============================================
+# Stage 2: Production (PHP 8.3-FPM + Nginx)
+# ============================================
 FROM php:8.3-fpm-alpine AS production
 
-# Install system dependencies
+# Install Alpine system dependencies
 RUN apk add --no-cache \
-    git \
-    curl \
-    zip \
-    unzip \
+    # Build tools for PHP extensions
+    autoconf \
+    g++ \
+    make \
+    # Image processing libraries
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \
-    libzip-dev \
-    oniguruma-dev \
+    libwebp-dev \
+    # Database libraries
     libpq-dev \
+    # Compression
+    libzip-dev \
+    # Unicode/multibyte
+    oniguruma-dev \
+    # Web server and process manager
     nginx \
     supervisor \
-    autoconf \
-    g++ \
-    make
+    # Misc
+    curl \
+    zip \
+    unzip \
+    git \
+    bash
 
-# Install PHP extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+# Configure and install PHP extensions
+RUN docker-php-ext-configure gd \
+    --with-freetype \
+    --with-jpeg \
+    --with-webp \
     && docker-php-ext-install -j$(nproc) \
     gd \
     pdo \
@@ -47,62 +66,65 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     pcntl \
     bcmath \
     zip \
-    opcache
+    opcache \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Composer
+# Install Composer globally
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# Set working directory
 WORKDIR /var/www/html
 
-# Copy PHP dependencies
+# Copy composer files first (better layer caching)
 COPY composer.json composer.lock ./
 
 # Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction \
+    --prefer-dist \
+    && rm -rf /root/.composer
 
 # Copy application files
 COPY . .
 
 # Copy built frontend assets from frontend stage
-COPY --from=frontend /app/public/build ./public/build
+COPY --from=frontend-builder /app/public/build ./public/build
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache
-
-# Create storage directories
-RUN mkdir -p storage/framework/{views,cache,sessions} \
+# Create necessary directories
+RUN mkdir -p \
+    storage/framework/{views,cache,sessions} \
     storage/logs \
+    storage/app/public \
     bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache
+    public/storage
 
-# Generate application key if not set
-RUN if [ -z "$APP_KEY" ]; then \
-    php artisan key:generate --ansi; \
-    fi
-
-# Clear and cache configs
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache \
-    && php artisan event:cache
+# Set permissions for Laravel
+RUN chown -R www-data:www-data \
+    /var/www/html/storage \
+    /var/www/html/bootstrap/cache \
+    /var/www/html/public/storage \
+    && chmod -R 775 \
+    /var/www/html/storage \
+    /var/www/html/bootstrap/cache \
+    /var/www/html/public/storage
 
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Copy supervisor configuration
+# Copy Supervisor configuration
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Copy entrypoint script
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Expose port 8080 (Render uses port 8080)
+# Expose port (Render uses dynamic port via environment variable)
 EXPOSE 8080
 
 # Set entrypoint
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
-# Start supervisor to run both PHP-FPM and Nginx
+# Start Supervisor
 CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
