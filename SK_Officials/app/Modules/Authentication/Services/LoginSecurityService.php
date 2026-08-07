@@ -18,15 +18,27 @@ class LoginSecurityService
             $successfulValue = DB::raw($successful ? 'true' : 'false');
         }
 
-        LoginAttempt::query()->create([
-            'user_id' => $user?->getKey(),
-            'email' => $email,
-            'ip_address' => $request->ip(),
-            'successful' => $successfulValue,
-            'user_agent' => $request->userAgent(),
+        $payload = [
+            'user_id'      => $user?->getKey(),
+            'email'        => $email,
+            'ip_address'   => $request->ip(),
+            'successful'   => $successfulValue,
+            'user_agent'   => $request->userAgent(),
             'attempted_at' => now(),
-            'metadata' => $metadata,
-        ]);
+            'metadata'     => $metadata,
+        ];
+
+        if ($successful) {
+            // Defer successful login inserts until after the response is sent so
+            // the audit INSERT does not block the redirect to the dashboard.
+            app()->terminating(function () use ($payload) {
+                LoginAttempt::query()->create($payload);
+            });
+        } else {
+            // Failed attempts must be written immediately so the lockout counter
+            // is accurate for the current request's applyFailureLockout() call.
+            LoginAttempt::query()->create($payload);
+        }
     }
 
     public function isLocked(User $user): bool

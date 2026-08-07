@@ -4,28 +4,21 @@
     @include('layout::favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Forgot Password - SK OnePortal</title>
     @vite([
         'app/Modules/Authentication/assets/css/youth-login.css',
+        'app/Modules/Authentication/assets/css/auth-legal.css',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="youth-login-page">
-    @include('dashboard::loading')
-    <!-- Animated Background -->
-    <div class="youth-bg-wrapper">
-        <div class="youth-bg-image"></div>
-        <div class="youth-gradient-overlay"></div>
-        <div class="floating-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
-        </div>
-    </div>
 
     <main class="youth-login-container">
-        <!-- Left Side - Logo & Branding -->
+
+        {{-- ─── Left Side — Logo & Branding ─────────────────────────────────────── --}}
         <div class="youth-branding-section">
             <div class="branding-content">
                 <div class="logo-wrapper">
@@ -36,20 +29,21 @@
                     >
                 </div>
                 <h1 class="youth-main-title">SK OnePortal</h1>
-                <p class="youth-tagline">Official Youth Portal � Santa Cruz, Laguna</p>
+                <p class="youth-tagline">Official Youth Portal &ndash; Santa Cruz, Laguna</p>
             </div>
         </div>
 
-        <!-- Right Side - Forgot Password Card -->
-        <div class="youth-login-section">
+        {{-- ─── Right Side — Forgot Password Card ───────────────────────────────── --}}
+        <div class="youth-login-section youth-login-section--fp">
             <div class="youth-login-card">
-                <div class="card-header">
-                    <h2 class="card-title">
-                        Forgot Your Password? ??
-                    </h2>
-                    <p class="card-subtitle">Enter the email address associated with your account and we will send you a link to reset your password.</p>
+
+                {{-- Card Header: centered bold title + small helper text --}}
+                <div class="card-header fp-card-header">
+                    <p class="card-subtitle">Forgot Your Password</p>
+                    <p class="card-helper-text">Enter the email address associated with your account and we will send you a link to reset your password.</p>
                 </div>
 
+                {{-- Alerts --}}
                 @if (session('forgot_password_error'))
                     <div class="youth-alert youth-alert-error" role="alert">
                         <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -60,7 +54,7 @@
                 @endif
 
                 @if (session('status'))
-                    <div class="youth-alert youth-alert-success" id="resetStatusAlert">
+                    <div class="youth-alert youth-alert-success" id="resetStatusAlert" role="alert">
                         <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
@@ -68,12 +62,11 @@
                     </div>
                 @endif
 
-
-                <!-- Forgot Password Form -->
-                <form class="youth-login-form" method="POST" action="{{ route('password.email') }}" id="forgotPasswordForm">
+                {{-- Forgot Password Form --}}
+                <form class="youth-login-form" method="POST" action="{{ route('password.email') }}" id="forgotPasswordForm" novalidate>
                     @csrf
 
-                    <!-- Email Field -->
+                    {{-- Email Field --}}
                     <div class="youth-form-group">
                         <label for="email" class="youth-label">
                             <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">
@@ -88,41 +81,62 @@
                             name="email"
                             class="youth-input"
                             value="{{ old('email') }}"
-                            required
                             autofocus
+                            autocomplete="email"
                             placeholder="Enter example@gmail.com"
+                            maxlength="150"
                         >
-                        <span class="inline-error" id="emailError" style="display: none; color: #ef4444; font-size: 0.875rem; margin-top: 0.5rem; display: block;"></span>
+                        <div class="youth-field-error" id="email-error" hidden></div>
                     </div>
 
-                    <!-- Submit Button -->
+                    {{-- Submit Button --}}
                     <button type="submit" class="youth-submit-btn" id="sendResetLinkBtn">
-                        <span>Send Reset Link</span>
+                        <span id="fpBtnText">Send Reset Link</span>
                     </button>
                 </form>
 
-                <!-- Back to Login Link -->
+                {{-- Back to Login --}}
                 <div class="youth-register-section">
                     <p class="register-text">
-                        Remember your password? 
+                        Remember your password?
                         <a href="{{ route('login') }}" class="register-link">Back to Login</a>
                     </p>
                 </div>
-            </div>
-        </div>
+
+            </div>{{-- /.youth-login-card --}}
+        </div>{{-- /.youth-login-section --}}
+
     </main>
 
     <script>
         (function () {
-            var form = document.getElementById('forgotPasswordForm');
-            var btn = document.getElementById('sendResetLinkBtn');
-            var btnText = btn ? btn.querySelector('span') : null;
-            var emailInput = document.getElementById('email');
+            var form        = document.getElementById('forgotPasswordForm');
+            var btn         = document.getElementById('sendResetLinkBtn');
+            var btnText     = document.getElementById('fpBtnText');
+            var emailInput  = document.getElementById('email');
+            var emailError  = document.getElementById('email-error');
             var cooldownKey = 'kabataan_forgot_password_cooldown_until';
-            var cooldownSeconds = 60;
-            var timerInterval = null;
+            var cooldownSec = 60;
+            var timerIv     = null;
 
-            function setButtonState(disabled, text) {
+            function validEmail(v) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+            }
+
+            function showErr(msg) {
+                emailInput.classList.add('error');
+                emailError.textContent = msg;
+                emailError.hidden = false;
+                emailError.style.display = 'block';
+            }
+
+            function clearErr() {
+                emailInput.classList.remove('error');
+                emailError.hidden = true;
+                emailError.style.display = 'none';
+            }
+
+            function setBtn(disabled, text) {
                 if (!btn || !btnText) return;
                 btn.disabled = disabled;
                 btnText.textContent = text;
@@ -130,33 +144,21 @@
 
             function clearCooldown() {
                 localStorage.removeItem(cooldownKey);
-                if (timerInterval) {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                }
-                setButtonState(false, 'Send Reset Link');
+                if (timerIv) { clearInterval(timerIv); timerIv = null; }
+                setBtn(false, 'Send Reset Link');
             }
 
-            function applyCooldown(untilTimestamp) {
-                if (!untilTimestamp) return;
-
-                if (timerInterval) {
-                    clearInterval(timerInterval);
-                }
-
-                timerInterval = setInterval(function () {
-                    var remainingMs = untilTimestamp - Date.now();
-                    var remainingSeconds = Math.ceil(remainingMs / 1000);
-
-                    if (remainingSeconds <= 0) {
-                        clearCooldown();
-                        return;
-                    }
-
-                    setButtonState(true, 'Send Reset Link (' + remainingSeconds + 's)');
+            function applyCooldown(until) {
+                if (!until) return;
+                if (timerIv) clearInterval(timerIv);
+                timerIv = setInterval(function () {
+                    var remaining = Math.ceil((until - Date.now()) / 1000);
+                    if (remaining <= 0) { clearCooldown(); return; }
+                    setBtn(true, 'Send Reset Link (' + remaining + 's)');
                 }, 250);
             }
 
+            // Restore any active cooldown on page load
             var storedUntil = Number(localStorage.getItem(cooldownKey) || 0);
             if (storedUntil > Date.now()) {
                 applyCooldown(storedUntil);
@@ -164,34 +166,47 @@
                 clearCooldown();
             }
 
-            if (form && btn) {
-                form.addEventListener('submit', function (event) {
+            // If the success alert is visible, start the cooldown timer
+            var successAlert = document.getElementById('resetStatusAlert');
+            if (successAlert) {
+                var nextUntil = Date.now() + cooldownSec * 1000;
+                localStorage.setItem(cooldownKey, String(nextUntil));
+                applyCooldown(nextUntil);
+            }
+
+            // Clear inline error while typing
+            if (emailInput) {
+                emailInput.addEventListener('input', clearErr);
+            }
+
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+
                     var currentUntil = Number(localStorage.getItem(cooldownKey) || 0);
                     if (currentUntil > Date.now()) {
-                        event.preventDefault();
                         applyCooldown(currentUntil);
                         return;
                     }
 
-                    if (!emailInput || !emailInput.value.trim()) {
+                    clearErr();
+                    var email = emailInput ? emailInput.value.trim() : '';
+
+                    if (!email) {
+                        showErr('Please enter your email address.');
+                        return;
+                    }
+                    if (!validEmail(email)) {
+                        showErr('Please enter a valid email address.');
                         return;
                     }
 
-                    if (window.showLoading) {
-                        window.showLoading('Sending reset link...');
-                    }
+                    setBtn(true, 'Sending...');
+                    form.submit();
                 });
             }
-
-            // Check for success alert and start timer only after successful submission
-            var successAlert = document.getElementById('resetStatusAlert');
-            if (successAlert && successAlert.style.display !== 'none') {
-                var nextUntil = Date.now() + (cooldownSeconds * 1000);
-                localStorage.setItem(cooldownKey, String(nextUntil));
-                applyCooldown(nextUntil);
-            }
-        })();
+        }());
     </script>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
+
 </body>
 </html>

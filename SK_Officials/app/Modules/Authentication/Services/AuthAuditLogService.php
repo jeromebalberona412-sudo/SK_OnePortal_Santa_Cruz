@@ -4,6 +4,7 @@ namespace App\Modules\Authentication\Services;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
@@ -40,8 +41,21 @@ class AuthAuditLogService
             'occurred_at'   => now()->toIso8601String(),
         ];
 
+        // Defer the DB write until after the response has been sent to the browser.
+        // This removes 1-2 synchronous DB INSERTs from the critical login path
+        // without losing any audit data.
+        app()->terminating(function () use ($entry, $user) {
+            $this->writeAuditEntry($entry, $user);
+        });
+    }
+
+    /**
+     * @param  array<string, mixed>  $entry
+     */
+    protected function writeAuditEntry(array $entry, ?User $user): void
+    {
         try {
-            if (Schema::hasTable('auth_audit_logs')) {
+            if ($this->hasTable('auth_audit_logs')) {
                 DB::table('auth_audit_logs')->insert([
                     'event'         => $entry['event'],
                     'outcome'       => $entry['outcome'],
@@ -55,13 +69,12 @@ class AuthAuditLogService
                 ]);
             }
 
-            if (Schema::hasTable('admin_activity_logs')) {
+            if ($this->hasTable('admin_activity_logs')) {
                 $this->writeCentralAuditLog($entry, $user);
-
                 return;
             }
 
-            if (Schema::hasTable('auth_audit_logs')) {
+            if ($this->hasTable('auth_audit_logs')) {
                 return;
             }
         } catch (\Throwable) {
@@ -97,5 +110,20 @@ class AuthAuditLogService
             'metadata' => json_encode($metadata),
             'created_at' => now(),
         ]);
+    }
+
+    /**
+     * Cache Schema::hasTable checks — these are called on every login and add
+     * unnecessary DB round-trips for the information_schema.
+     */
+    protected function hasTable(string $table): bool
+    {
+        return (bool) Cache::rememberForever("schema_tbl:{$table}", function () use ($table) {
+            try {
+                return Schema::hasTable($table);
+            } catch (\Throwable) {
+                return false;
+            }
+        });
     }
 }

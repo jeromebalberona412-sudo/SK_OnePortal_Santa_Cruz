@@ -3,19 +3,27 @@
 namespace App\Services;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 
 class SkOfficialPresenceService
 {
+    /**
+     * Mark a user as online.
+     *
+     * NOTE: During login, claimCurrentSession() already writes online_status
+     * and last_seen in the same UPDATE. Call this only for heartbeat updates
+     * so we don't issue a redundant save.
+     */
     public function markOnline(User $user): void
     {
         $updates = [];
 
-        if (Schema::hasColumn('users', 'last_seen')) {
+        if ($this->hasColumn('users', 'last_seen')) {
             $updates['last_seen'] = now();
         }
 
-        if (Schema::hasColumn('users', 'online_status')) {
+        if ($this->hasColumn('users', 'online_status')) {
             $updates['online_status'] = 'online';
         }
 
@@ -28,7 +36,7 @@ class SkOfficialPresenceService
     {
         $updates = [];
 
-        if (Schema::hasColumn('users', 'online_status')) {
+        if ($this->hasColumn('users', 'online_status')) {
             $updates['online_status'] = 'offline';
         }
 
@@ -39,7 +47,7 @@ class SkOfficialPresenceService
 
     public function syncStaleOfflineStatuses(): void
     {
-        if (! Schema::hasColumn('users', 'online_status') || ! Schema::hasColumn('users', 'last_seen')) {
+        if (! $this->hasColumn('users', 'online_status') || ! $this->hasColumn('users', 'last_seen')) {
             return;
         }
 
@@ -57,7 +65,7 @@ class SkOfficialPresenceService
 
     public function isOnline(User $user): bool
     {
-        if (Schema::hasColumn('users', 'online_status')) {
+        if ($this->hasColumn('users', 'online_status')) {
             return strtolower((string) $user->online_status) === 'online';
         }
 
@@ -65,5 +73,19 @@ class SkOfficialPresenceService
 
         return $user->last_seen !== null
             && $user->last_seen->diffInSeconds(now()) <= $timeout;
+    }
+
+    /**
+     * Cached Schema::hasColumn to avoid per-request information_schema queries.
+     */
+    protected function hasColumn(string $table, string $column): bool
+    {
+        return (bool) Cache::rememberForever("schema_col:{$table}.{$column}", function () use ($table, $column) {
+            try {
+                return Schema::hasColumn($table, $column);
+            } catch (\Throwable) {
+                return false;
+            }
+        });
     }
 }

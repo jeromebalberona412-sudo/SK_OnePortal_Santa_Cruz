@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -24,14 +25,21 @@ class EnsureSingleSession
             return $next($request);
         }
 
-        // Refresh user to get latest session data
-        $user = $user->fresh();
+        // Use the already-loaded user rather than issuing an extra SELECT.
+        // fresh() is only needed when another process may have changed the
+        // session — we rely on the Login event handler to keep active_session_id
+        // up-to-date, so a fresh() on every request is unnecessary.
 
-        if ($user === null) {
-            return $next($request);
-        }
+        // Cache the schema check so it doesn't hit the DB on every request
+        $hasColumn = (bool) Cache::rememberForever('schema_col:users.active_session_id', function () {
+            try {
+                return Schema::hasColumn('users', 'active_session_id');
+            } catch (\Throwable) {
+                return false;
+            }
+        });
 
-        if (! Schema::hasColumn('users', 'active_session_id')) {
+        if (! $hasColumn) {
             return $next($request);
         }
 
@@ -59,7 +67,7 @@ class EnsureSingleSession
             return $next($request);
         }
 
-        // Another active session exists - logout this one
+        // Another active session exists — logout this one
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

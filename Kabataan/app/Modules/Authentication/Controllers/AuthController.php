@@ -41,137 +41,131 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $startTime = microtime(true);
-        $logData = [];
-
-        // Enable query logging for this request
-        \DB::enableQueryLog();
-
         // Verify Turnstile token if enabled
-        $turnstileStart = microtime(true);
         if (config('services.turnstile.enabled')) {
             $token = (string) $request->input('cf-turnstile-response', '');
 
+            if ($token === '') {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Pakumpleto ang seguridad na pagpapatunay.',
+                    ], 422);
+                }
+
+                return back()
+                    ->withInput($request->only('email'))
+                    ->with('login_error', 'Pakumpleto ang seguridad na pagpapatunay.');
+            }
+
+            if (! $this->turnstileService->verify($token, $request->ip())) {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Nabigo ang seguridad na pagpapatunay. Pakisubukang muli.',
+                    ], 422);
+                }
+
+                return back()
+                    ->withInput($request->only('email'))
+                    ->with('login_error', 'Nabigo ang seguridad na pagpapatunay. Pakisubukang muli.');
+            }
+        }
+
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
+        ]);
+
+        $user = User::where('email', $credentials['email'])->first();
+
+        if (
+            ! $user
+            || ! Hash::check($credentials['password'], $user->password)
+            || ! $this->kabataanAuthService->canAccessPortal($user)
+        ) {
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Pakumpleto ang seguridad na pagpapatunay.',
+                    'message' => KabataanAuthService::LOGIN_DENIED_MESSAGE,
                 ], 422);
             }
 
             return back()
                 ->withInput($request->only('email'))
-                ->with('login_error', 'Pakumpleto ang seguridad na pagpapatunay.');
+                ->with('login_error', KabataanAuthService::LOGIN_DENIED_MESSAGE);
         }
 
-        if (! $this->turnstileService->verify($token, $request->ip())) {
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Nabigo ang seguridad na pagpapatunay. Pakisubukang muli.',
-                ], 422);
+        // Load registration data once for all status checks
+        $registration = null;
+        if (in_array($user->status, [User::STATUS_PENDING_APPROVAL, 'REJECTED'], true)) {
+            $registration = KabataanRegistration::where('user_id', $user->id)->latest('id')->first();
+        }
+
+        if ($user->status === User::STATUS_PENDING_APPROVAL) {
+            if ($registration && RegistrationEvaluationService::isAutoApprovedStatus($registration->evaluation_status)) {
+                $user->update(['status' => User::STATUS_ACTIVE]);
+            } else {
+                $msg = 'Please wait for SK officials to verify your account. You will receive an email once your registration has been approved.';
+                if ($request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => $msg], 422);
+                }
+
+                return back()->withInput($request->only('email'))->with('login_error', $msg);
             }
-
-            return back()
-                ->withInput($request->only('email'))
-                ->with('login_error', 'Nabigo ang seguridad na pagpapatunay. Pakisubukang muli.');
-        }
-    }
-
-    $credentials = $request->validate([
-        'email' => ['required', 'email'],
-        'password' => ['required', 'string'],
-    ]);
-
-    $user = User::where('email', $credentials['email'])->first();
-
-    if (
-        ! $user
-        || ! Hash::check($credentials['password'], $user->password)
-        || ! $this->kabataanAuthService->canAccessPortal($user)
-    ) {
-        if ($request->wantsJson()) {
-            return response()->json([
-                'success' => false,
-                'message' => KabataanAuthService::LOGIN_DENIED_MESSAGE,
-            ], 422);
         }
 
-        return back()
-            ->withInput($request->only('email'))
-            ->with('login_error', KabataanAuthService::LOGIN_DENIED_MESSAGE);
-    }
-
-    // Load registration data once for all status checks
-    $registration = null;
-    if (in_array($user->status, [User::STATUS_PENDING_APPROVAL, 'REJECTED'], true)) {
-        $registration = KabataanRegistration::where('user_id', $user->id)->latest('id')->first();
-    }
-
-    if ($user->status === User::STATUS_PENDING_APPROVAL) {
-        if ($registration && RegistrationEvaluationService::isAutoApprovedStatus($registration->evaluation_status)) {
-            $user->update(['status' => User::STATUS_ACTIVE]);
-        } else {
-            $msg = 'Please wait for SK officials to verify your account. You will receive an email once your registration has been approved.';
+        if ($user->status === 'REJECTED') {
+            $reason = $registration?->review_notes
+                ? 'Reason: '.$registration->review_notes
+                : 'Please contact your SK officials for more information.';
+            $msg = 'Your KK Profiling registration has been rejected. '.$reason;
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
 
             return back()->withInput($request->only('email'))->with('login_error', $msg);
         }
-    }
 
-    if ($user->status === 'REJECTED') {
-        $reason = $registration?->review_notes
-            ? 'Reason: '.$registration->review_notes
-            : 'Please contact your SK officials for more information.';
-        $msg = 'Your KK Profiling registration has been rejected. '.$reason;
-        if ($request->wantsJson()) {
-            return response()->json(['success' => false, 'message' => $msg], 422);
+        if ($user->status === 'INACTIVE') {
+            $msg = 'Your account has been deactivated. Please contact your SK officials.';
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+
+            return back()->withInput($request->only('email'))->with('login_error', $msg);
         }
 
-        return back()->withInput($request->only('email'))->with('login_error', $msg);
-    }
+        Auth::login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
 
-    if ($user->status === 'INACTIVE') {
-        $msg = 'Your account has been deactivated. Please contact your SK officials.';
-        if ($request->wantsJson()) {
-            return response()->json(['success' => false, 'message' => $msg], 422);
+        if ($registration === null) {
+            $registration = KabataanRegistration::query()
+                ->where('user_id', $user->id)
+                ->latest('id')
+                ->first();
         }
 
-        return back()->withInput($request->only('email'))->with('login_error', $msg);
+        if ($registration && app(KkProfilingScheduleService::class)->requiresProfilingUpdate($registration)) {
+            $request->session()->flash('show_kk_profiling_update', true);
+            $request->session()->flash('kk_profiling_update_required', true);
+            $request->session()->put('kk_profiling_update_required', true);
+            $request->session()->put('kabataan_registration_id', $registration->id);
+        } else {
+            $request->session()->put('kk_profiling_update_required', false);
+        }
+
+        $redirectUrl = redirect()->intended(route('dashboard'))->getTargetUrl();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'redirect' => $redirectUrl,
+            ]);
+        }
+
+        return redirect()->intended(route('dashboard'));
     }
-
-    Auth::login($user, $request->boolean('remember'));
-    $request->session()->regenerate();
-
-    if ($registration === null) {
-        $registration = KabataanRegistration::query()
-            ->where('user_id', $user->id)
-            ->latest('id')
-            ->first();
-    }
-
-    if ($registration && app(KkProfilingScheduleService::class)->requiresProfilingUpdate($registration)) {
-        $request->session()->flash('show_kk_profiling_update', true);
-        $request->session()->flash('kk_profiling_update_required', true);
-        $request->session()->put('kk_profiling_update_required', true);
-        $request->session()->put('kabataan_registration_id', $registration->id);
-    } else {
-        $request->session()->put('kk_profiling_update_required', false);
-    }
-
-    $redirectUrl = redirect()->intended(route('dashboard'))->getTargetUrl();
-
-    if ($request->wantsJson()) {
-        return response()->json([
-            'success' => true,
-            'redirect' => $redirectUrl,
-        ]);
-    }
-
-    return redirect()->intended(route('dashboard'));
-}
 
     public function logout(Request $request)
     {

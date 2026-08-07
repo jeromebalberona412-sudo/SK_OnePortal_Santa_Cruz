@@ -4,6 +4,7 @@ namespace App\Modules\Authentication\Services;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -20,7 +21,7 @@ class TrustedDeviceService
 
     public function isTrusted(User $user, Request $request): bool
     {
-        if (! Schema::hasTable($this->tableName())) {
+        if (! $this->hasTable()) {
             return false;
         }
 
@@ -45,7 +46,7 @@ class TrustedDeviceService
 
     public function rememberDevice(User $user, Request $request, ?string $loginFingerprint = null): void
     {
-        if (! Schema::hasTable($this->tableName())) {
+        if (! $this->hasTable()) {
             return;
         }
 
@@ -69,7 +70,7 @@ class TrustedDeviceService
 
     public function refreshRememberCookieIfPresent(User $user, Request $request): void
     {
-        if (! Schema::hasTable($this->tableName()) || ! $this->hasColumn('device_token_hash')) {
+        if (! $this->hasTable() || ! $this->hasColumn('device_token_hash')) {
             return;
         }
 
@@ -108,7 +109,7 @@ class TrustedDeviceService
 
     public function trust(User $user, Request $request): void
     {
-        if (! Schema::hasTable($this->tableName())) {
+        if (! $this->hasTable()) {
             return;
         }
 
@@ -133,7 +134,7 @@ class TrustedDeviceService
 
     public function revoke(User $user, Request $request): void
     {
-        if (! Schema::hasTable($this->tableName())) {
+        if (! $this->hasTable()) {
             return;
         }
 
@@ -325,11 +326,28 @@ class TrustedDeviceService
 
     protected function hasColumn(string $column): bool
     {
-        try {
-            return Schema::hasColumn($this->tableName(), $column);
-        } catch (\Throwable) {
-            return false;
-        }
+        // Cache per-column schema checks to avoid information_schema round-trips
+        // on every request that touches trusted device logic.
+        $table = $this->tableName();
+        return (bool) Cache::rememberForever("schema_col:{$table}.{$column}", function () use ($table, $column) {
+            try {
+                return Schema::hasColumn($table, $column);
+            } catch (\Throwable) {
+                return false;
+            }
+        });
+    }
+
+    protected function hasTable(): bool
+    {
+        $table = $this->tableName();
+        return (bool) Cache::rememberForever("schema_tbl:{$table}", function () use ($table) {
+            try {
+                return Schema::hasTable($table);
+            } catch (\Throwable) {
+                return false;
+            }
+        });
     }
 }
 

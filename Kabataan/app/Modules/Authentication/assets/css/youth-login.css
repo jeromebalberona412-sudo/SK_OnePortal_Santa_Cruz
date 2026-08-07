@@ -83,52 +83,11 @@ html {
     }
 }
 
-/* Mobile: solid brand color instead of heavy image */
-@media (max-width: 640px) {
-    .youth-bg-image {
-        display: none;
-    }
-    .youth-gradient-overlay {
-        background: linear-gradient(135deg, #022a54, #0450a8 55%, #1a6fd4);
-    }
-}
-
-.youth-bg-wrapper {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    overflow: hidden;
-}
-
-.youth-bg-image {
-    position: absolute;
-    top: 0; 
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url('/images/Background.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: 0.25;
-    animation: subtleZoom 30s ease-in-out infinite alternate;
-}
-
-@keyframes subtleZoom {
-    0%   { transform: scale(1); }
-    100% { transform: scale(1.03); }
-}
-
+/* Background wrapper — kept for HTML compatibility but hidden */
+.youth-bg-wrapper,
+.youth-bg-image,
 .youth-gradient-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(2,42,84,0.55), rgba(4,80,168,0.45) 55%, rgba(26,111,212,0.50));
+    display: none;
 }
 
 /* Floating shapes — hidden, kept for HTML compatibility */
@@ -275,17 +234,38 @@ html {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 80px;
-    margin-bottom: 2rem;
+    min-height: 40px;
+    margin-bottom: 1.5rem;
     text-align: center;
 }
 
+/* "Sign in to your account" — bold, dark, prominent */
 .card-subtitle {
-    font-size: 1.25rem;
-    color: var(--youth-gray-700);
-    font-weight: 600;
-    letter-spacing: 0.01em;
+    font-size: 1.35rem;
+    color: var(--youth-gray-900);
+    font-weight: 800;
+    letter-spacing: -0.01em;
     text-align: center;
+    margin: 0;
+    line-height: 1.3;
+}
+
+/* Forgot-password card: single-line bold title */
+.card-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--youth-gray-900);
+    letter-spacing: -0.01em;
+    margin: 0 0 0.5rem;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+/* Small muted helper text below the title */
+.card-helper-text {
+    font-size: 0.85rem;
+    color: var(--youth-gray-500);
+    font-weight: 400;
     margin: 0;
     line-height: 1.5;
 }
@@ -702,8 +682,8 @@ html {
     .youth-logo { width: 180px; height: 180px; }
     .youth-login-section { padding: 0 2rem 3rem; }
     .youth-login-card { padding: 3rem 2.5rem; border-radius: 28px; }
-    .card-header { min-height: 70px; margin-bottom: 1.75rem; }
-    .card-subtitle { font-size: 1.15rem; }
+    .card-header { min-height: 36px; margin-bottom: 1.5rem; }
+    .card-subtitle { font-size: 1.25rem; }
 }
 
 @media (max-width: 640px) {
@@ -715,8 +695,8 @@ html {
     .youth-logo { width: 150px; height: 150px; }
     .youth-login-section { padding: 0 1.5rem 2.5rem; }
     .youth-login-card { padding: 2.5rem 2rem; border-radius: 24px; }
-    .card-header { min-height: 60px; margin-bottom: 1.75rem; }
-    .card-subtitle { font-size: 1.05rem; }
+    .card-header { min-height: 32px; margin-bottom: 1.5rem; }
+    .card-subtitle { font-size: 1.15rem; }
     .youth-form-options { flex-direction: row; align-items: center; gap: 0.5rem; }
 }
 
@@ -729,8 +709,8 @@ html {
     .youth-logo { width: 120px; height: 120px; }
     .youth-login-section { padding: 0 1.25rem 2rem; }
     .youth-login-card { padding: 2rem 1.75rem; border-radius: 20px; }
-    .card-header { min-height: 50px; margin-bottom: 1.5rem; }
-    .card-subtitle { font-size: 1rem; }
+    .card-header { min-height: 28px; margin-bottom: 1.25rem; }
+    .card-subtitle { font-size: 1.1rem; }
     .youth-input { padding: 0.875rem 1rem; font-size: 0.95rem; }
     .youth-submit-btn { padding: 1rem 1.5rem; font-size: 1rem; }
 }
@@ -1119,6 +1099,54 @@ html {
 
 #turnstile-widget iframe {
     border-radius: 8px;
+}
+
+/* ============================================
+   Forgot Password — card header override
+   ============================================ */
+
+/* Slightly narrower card (~half inch less than the 580px login card) */
+.youth-login-section--fp {
+    width: 484px;
+}
+
+@media (max-width: 1200px) {
+    .youth-login-section--fp { width: 452px; }
+}
+
+@media (max-width: 1024px) {
+    .youth-login-section--fp {
+        width: 100%;
+        max-width: 484px;
+    }
+}
+
+/* Centers title + helper text, stacks them vertically */
+.fp-card-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+    min-height: auto;
+    margin-bottom: 1.75rem;
+}
+
+.fp-card-header .card-subtitle {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--youth-gray-900);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    margin: 0;
+}
+
+.fp-card-header .card-helper-text {
+    font-size: 0.875rem;
+    color: var(--youth-gray-500);
+    font-weight: 400;
+    line-height: 1.55;
+    margin: 0;
+    max-width: 360px;
 }
 
 /* ============================================

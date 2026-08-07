@@ -120,63 +120,70 @@ class KabataanProgramService
      */
     public function getDashboardPayload(User $user): array
     {
-        $barangayId = $this->resolveUserBarangayId($user);
-        $document = $this->getLatestAbyipDocument($barangayId);
+        return Cache::remember("kabataan_dashboard_payload_u{$user->id}", self::CACHE_TTL, function () use ($user) {
+            $barangayId = $this->resolveUserBarangayId($user);
+            $document = $this->getLatestAbyipDocument($barangayId);
 
-        $abyipPrograms = [];
-        if ($document !== null) {
-            $programModels = Abyip::query()
-                ->where('document_id', $document->id)
-                ->where(function ($query) {
-                    $query->where('row_type', Abyip::ROW_YOUTH_PROGRAM)
-                        ->orWhereIn('code', self::YOUTH_PROGRAM_LETTERS);
-                })
-                ->with(['children' => fn ($q) => $q->orderBy('sort_order')->orderBy('id')])
-                ->orderBy('sort_order')
-                ->orderBy('id')
-                ->get();
+            $abyipPrograms = [];
+            if ($document !== null) {
+                $programModels = Abyip::query()
+                    ->where('document_id', $document->id)
+                    ->where(function ($query) {
+                        $query->where('row_type', Abyip::ROW_YOUTH_PROGRAM)
+                            ->orWhereIn('code', self::YOUTH_PROGRAM_LETTERS);
+                    })
+                    ->with(['children' => fn ($q) => $q->orderBy('sort_order')->orderBy('id')])
+                    ->orderBy('sort_order')
+                    ->orderBy('id')
+                    ->get();
 
-            $programIds = $programModels->pluck('id')->map(fn ($id) => (int) $id)->all();
+                $programIds = $programModels->pluck('id')->map(fn ($id) => (int) $id)->all();
 
-            $openSurveyMap = $this->surveyService->summarizeOpenSurveysForPrograms($user, $programIds);
-            $latestSurveyMap = $this->surveyService->summarizeLatestSurveysForPrograms($user, $programIds);
-            $openEvaluationMap = $this->evaluationService->summarizeOpenEvaluationsForPrograms($user, $programIds);
+                $openSurveyMap = $this->surveyService->summarizeOpenSurveysForPrograms($user, $programIds);
+                $latestSurveyMap = $this->surveyService->summarizeLatestSurveysForPrograms($user, $programIds);
+                $openEvaluationMap = $this->evaluationService->summarizeOpenEvaluationsForPrograms($user, $programIds);
 
-            $abyipPrograms = $programModels
-                ->map(function (Abyip $program) use ($user, $openSurveyMap, $latestSurveyMap, $openEvaluationMap) {
-                    $programId = (int) $program->id;
+                $abyipPrograms = $programModels
+                    ->map(function (Abyip $program) use ($user, $openSurveyMap, $latestSurveyMap, $openEvaluationMap) {
+                        $programId = (int) $program->id;
 
-                    return $this->formatAbyipProgram(
-                        $program,
-                        $user,
-                        $openSurveyMap[$programId] ?? null,
-                        $latestSurveyMap[$programId] ?? null,
-                        $openEvaluationMap[$programId] ?? null,
-                    );
-                })
+                        return $this->formatAbyipProgram(
+                            $program,
+                            $user,
+                            $openSurveyMap[$programId] ?? null,
+                            $latestSurveyMap[$programId] ?? null,
+                            $openEvaluationMap[$programId] ?? null,
+                        );
+                    })
+                    ->values()
+                    ->all();
+            }
+
+            $schedulePrograms = $this->scheduleProgramsQuery($user)
+                ->get()
+                ->map(fn (ScheduleProgram $program) => $this->formatScheduleProgram($program, $user))
                 ->values()
                 ->all();
-        }
 
-        $schedulePrograms = $this->scheduleProgramsQuery($user)
-            ->get()
-            ->map(fn (ScheduleProgram $program) => $this->formatScheduleProgram($program, $user))
-            ->values()
-            ->all();
+            $hasScholarshipApplicationHistory = ProgramApplication::query()
+                ->where('kabataan_id', $user->id)
+                ->whereNot('status', ProgramApplication::STATUS_CANCELLED)
+                ->whereHas('scheduleProgram', fn ($query) => $query->where('program_letter', 'A'))
+                ->exists();
 
-        $hasScholarshipApplicationHistory = ProgramApplication::query()
-            ->where('kabataan_id', $user->id)
-            ->whereNot('status', ProgramApplication::STATUS_CANCELLED)
-            ->whereHas('scheduleProgram', fn ($query) => $query->where('program_letter', 'A'))
-            ->exists();
+            return [
+                'calendar_year' => $document?->fiscal_year,
+                'abyip_programs' => $abyipPrograms,
+                'schedule_programs' => $schedulePrograms,
+                'has_scholarship_application_history' => $hasScholarshipApplicationHistory,
+                'pending_evaluations' => $this->evaluationService->listPendingEvaluationsForUser($user),
+            ];
+        });
+    }
 
-        return [
-            'calendar_year' => $document?->fiscal_year,
-            'abyip_programs' => $abyipPrograms,
-            'schedule_programs' => $schedulePrograms,
-            'has_scholarship_application_history' => $hasScholarshipApplicationHistory,
-            'pending_evaluations' => $this->evaluationService->listPendingEvaluationsForUser($user),
-        ];
+    public function clearUserDashboardCache(User $user): void
+    {
+        Cache::forget("kabataan_dashboard_payload_u{$user->id}");
     }
 
     /**

@@ -128,7 +128,7 @@
                     >
                 </div>
                 <h1 class="youth-main-title">SK OnePortal</h1>
-                <p class="youth-tagline">Official Youth Portal – Santa Cruz, Laguna</p>
+                <p class="youth-tagline">Official Youth Portal &ndash; Santa Cruz, Laguna</p>
             </div>
         </div>
 
@@ -243,17 +243,15 @@
 
                     {{--
                         Hidden Turnstile server-error anchor.
-                        When the backend rejects the token it redirects back with the
-                        'cf-turnstile-response' error key in session. JS detects
-                        #turnstile-server-error on page load and auto-opens the modal
-                        so the user can re-verify without clicking Login again.
+                        When the backend rejects the Turnstile token it redirects back
+                        with 'login_error' in session. We detect this via a data
+                        attribute on the error alert so JS can auto-open the modal.
+                        The actual error message is already shown in the alert above.
                     --}}
-                    @if(session('turnstile_error'))
+                    @if(session('login_error') && config('services.turnstile.enabled') && config('services.turnstile.site_key'))
                         <div id="turnstile-server-error"
                              style="display:none;"
-                             aria-hidden="true">
-                            {{ session('turnstile_error') }}
-                        </div>
+                             aria-hidden="true">{{ session('login_error') }}</div>
                     @endif
 
                     <!-- Submit Button -->
@@ -278,10 +276,6 @@
     </main>
 
     @include('authentication::partials.legal-modals')
-    @include('authentication::partials.login-legal-prompt')
-
-    <!-- Shared loading overlay script (must load after the overlay HTML) -->
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 
     <script>
         // Password toggle — self-contained, no conflict with form submit handlers

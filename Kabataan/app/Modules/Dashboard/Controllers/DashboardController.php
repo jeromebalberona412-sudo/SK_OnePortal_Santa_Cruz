@@ -39,12 +39,11 @@ class DashboardController extends Controller
 
         $user = Auth::user();
 
-        $regQueryStart = microtime(true);
-        $registration = KabataanRegistration::with('barangay')
-            ->where('user_id', $user->id)
-            ->latest()
-            ->first();
-        $logData['registration_query_ms'] = round((microtime(true) - $regQueryStart) * 1000, 2);
+        $registration = \Illuminate\Support\Facades\Cache::remember(
+            "kabataan_reg_user_{$user->id}",
+            60,
+            fn () => KabataanRegistration::with('barangay')->where('user_id', $user->id)->latest()->first()
+        );
 
         $formData = $registration?->form_data ?? [];
         $respondentNumber = $formData['respondent_number'] ?? null;

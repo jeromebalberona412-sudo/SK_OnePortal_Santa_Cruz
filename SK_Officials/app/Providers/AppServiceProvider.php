@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Services\BarangayLogoUrlService;
 use App\Services\SkOfficialsNotificationService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -37,7 +38,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer(['layout::sidebar', 'layout::header'], function ($view) {
             $user = Auth::user();
 
-            $barangayName = null;
+            $barangayName    = null;
             $barangayLogoUrl = null;
             $userDisplayName = 'SK Officials User';
 
@@ -45,11 +46,24 @@ class AppServiceProvider extends ServiceProvider
                 $userDisplayName = $user->name ?: 'SK Officials User';
 
                 if ($user->barangay_id) {
-                    $barangayName = DB::table('barangays')
-                        ->where('id', $user->barangay_id)
-                        ->value('name');
+                    // Cache barangay name + logo per barangay for 30 minutes.
+                    // These values are static for the lifetime of a session and
+                    // querying them on every sidebar/header render adds 2 DB
+                    // round-trips per page load.
+                    $cacheKey = "sk_official_barangay_ctx:{$user->barangay_id}";
 
-                    $barangayLogoUrl = app(BarangayLogoUrlService::class)->resolve($user->barangay_id);
+                    $barangayCtx = Cache::remember($cacheKey, 1800, function () use ($user) {
+                        $name = DB::table('barangays')
+                            ->where('id', $user->barangay_id)
+                            ->value('name');
+
+                        $logoUrl = app(BarangayLogoUrlService::class)->resolve($user->barangay_id);
+
+                        return ['name' => $name, 'logo' => $logoUrl];
+                    });
+
+                    $barangayName    = $barangayCtx['name'];
+                    $barangayLogoUrl = $barangayCtx['logo'];
                 }
             }
 
@@ -66,9 +80,17 @@ class AppServiceProvider extends ServiceProvider
             $user = Auth::user();
             $notificationService = app(SkOfficialsNotificationService::class);
 
+            // Cache unread count per user for 60 seconds — avoids a COUNT query
+            // on every page load while still reflecting new notifications quickly.
+            $unreadCount = Cache::remember(
+                "sk_official_notif_unread:{$user?->id}",
+                60,
+                fn () => $notificationService->unreadCountForUser($user),
+            );
+
             $view->with([
-                'headerNotifications' => $notificationService->allForUser($user),
-                'unreadNotificationCount' => $notificationService->unreadCountForUser($user),
+                'headerNotifications'    => $notificationService->allForUser($user),
+                'unreadNotificationCount' => $unreadCount,
             ]);
         });
     }

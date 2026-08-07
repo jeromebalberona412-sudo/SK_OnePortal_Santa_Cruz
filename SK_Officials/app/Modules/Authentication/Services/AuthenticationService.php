@@ -41,7 +41,18 @@ class AuthenticationService
 
         $tenantId = $this->tenantContextService->tenantId();
 
+        // Select only the columns needed for authentication — avoids loading
+        // large text columns or unused profile data on the critical login path.
         $user = User::query()
+            ->select([
+                'id', 'email', 'password', 'role', 'status', 'tenant_id',
+                'barangay_id', 'name', 'must_change_password',
+                'lockout_count', 'lockout_until',
+                'last_login_at', 'last_login_ip',
+                'active_session_id', 'last_seen', 'online_status',
+                'active_device', 'last_ip',
+                'email_verified_at', 'remember_token',
+            ])
             ->where('email', $email)
             ->when($tenantId !== null, fn ($q) => $q->where('tenant_id', $tenantId))
             ->first();
@@ -319,12 +330,19 @@ class AuthenticationService
             return;
         }
 
+        // Merge session claim + presence + login fields into ONE save.
+        // Previously this was split across claimCurrentSession() and
+        // presenceService.markOnline() — two separate UPDATE queries.
         $updates = [
             'active_session_id' => $request->session()->getId(),
         ];
 
         if ($this->hasColumn('users', 'last_seen')) {
             $updates['last_seen'] = now();
+        }
+
+        if ($this->hasColumn('users', 'online_status')) {
+            $updates['online_status'] = 'online';
         }
 
         if ($this->hasColumn('users', 'active_device')) {
@@ -335,8 +353,20 @@ class AuthenticationService
             $updates['last_ip'] = (string) $request->ip();
         }
 
+        // Merge last_login_at / last_login_ip if the columns exist so
+        // recordLogin() doesn't need a separate UPDATE query during login.
+        if ($this->hasColumn('users', 'last_login_at')) {
+            $updates['last_login_at'] = now();
+        }
+
+        if ($this->hasColumn('users', 'last_login_ip')) {
+            $updates['last_login_ip'] = (string) $request->ip();
+        }
+
         $user->forceFill($updates)->save();
-        $this->presenceService->markOnline($user);
+
+        // Sync the in-memory model so callers see the new values without re-fetching
+        $user->syncOriginal();
     }
 
     public function isSessionActive(User $user): bool
@@ -368,7 +398,20 @@ class AuthenticationService
 
     public function activeSessionExists(string $sessionId): bool
     {
-        if ($sessionId === '' || ! Schema::hasTable('sessions')) {
+        if ($sessionId === '') {
+            return false;
+        }
+
+        // Cache the schema check; the sessions table never disappears at runtime
+        $tableExists = (bool) Cache::rememberForever('schema_tbl:sessions', function () {
+            try {
+                return Schema::hasTable('sessions');
+            } catch (\Throwable) {
+                return false;
+            }
+        });
+
+        if (! $tableExists) {
             return false;
         }
 
@@ -532,31 +575,45 @@ class AuthenticationService
 
     protected function hasColumn(string $table, string $column): bool
     {
-        try {
-            return Schema::hasColumn($table, $column);
-        } catch (\Throwable) {
-            return false;
-        }
+        // Cache schema introspection results permanently (cleared on php artisan optimize:clear).
+        // Schema::hasColumn() issues a SHOW COLUMNS / information_schema query on every call;
+        // calling it 6-8 times per login adds measurable latency.
+        $cacheKey = "schema_col:{$table}.{$column}";
+
+        return (bool) Cache::rememberForever($cacheKey, function () use ($table, $column) {
+            try {
+                return Schema::hasColumn($table, $column);
+            } catch (\Throwable) {
+                return false;
+            }
+        });
     }
 
     protected function hasEndedTerm(User $user): bool
     {
-        $user->loadMissing('officialProfile.terms');
+        // Cache the term-ended result per user for 5 minutes.
+        // Terms change infrequently; this eliminates the officialProfile + terms
+        // eager-load on every login attempt.
+        $cacheKey = 'sk_official_term_ended:'.(int) $user->getKey();
 
-        $activeTerm = $user->officialProfile?->terms()
-            ->where('status', OfficialTerm::STATUS_ACTIVE)
-            ->orderByDesc('term_end')
-            ->first();
+        return (bool) Cache::remember($cacheKey, 300, function () use ($user) {
+            $user->loadMissing('officialProfile.terms');
 
-        if ($activeTerm !== null) {
-            return $activeTerm->term_end->lte(now()->startOfDay());
-        }
+            $activeTerm = $user->officialProfile?->terms()
+                ->where('status', OfficialTerm::STATUS_ACTIVE)
+                ->orderByDesc('term_end')
+                ->first();
 
-        $latestTerm = $user->officialProfile?->terms()
-            ->orderByDesc('term_end')
-            ->first();
+            if ($activeTerm !== null) {
+                return $activeTerm->term_end->lte(now()->startOfDay());
+            }
 
-        return $latestTerm !== null
-            && $latestTerm->term_end->lte(now()->startOfDay());
+            $latestTerm = $user->officialProfile?->terms()
+                ->orderByDesc('term_end')
+                ->first();
+
+            return $latestTerm !== null
+                && $latestTerm->term_end->lte(now()->startOfDay());
+        });
     }
 }

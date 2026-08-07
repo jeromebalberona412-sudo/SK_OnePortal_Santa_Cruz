@@ -9,6 +9,7 @@ use App\Modules\Authentication\Services\TrustedDeviceService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -60,7 +61,15 @@ class EnsureTrustedDevice
 
     protected function deviceVerificationEnabled(): bool
     {
-        return $this->featureFlagService->deviceVerificationEnabled()
-            || Schema::hasTable('sk_official_trusted_devices');
+        // Cache the hasTable check — called on every authenticated request
+        $tableExists = (bool) Cache::rememberForever('schema_tbl:sk_official_trusted_devices', function () {
+            try {
+                return Schema::hasTable('sk_official_trusted_devices');
+            } catch (\Throwable) {
+                return false;
+            }
+        });
+
+        return $this->featureFlagService->deviceVerificationEnabled() || $tableExists;
     }
 }

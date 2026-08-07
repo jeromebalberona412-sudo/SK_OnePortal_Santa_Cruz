@@ -201,14 +201,16 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $attributes = [];
 
-        if ($this->hasTableColumn('last_login_at')) {
+        if ($this->hasTableColumn('last_login_at') && $this->last_login_at === null) {
             $attributes['last_login_at'] = now();
         }
 
-        if ($this->hasTableColumn('last_login_ip')) {
+        if ($this->hasTableColumn('last_login_ip') && $this->last_login_ip === null) {
             $attributes['last_login_ip'] = $ipAddress;
         }
 
+        // claimCurrentSession() already writes these fields in the same UPDATE.
+        // Only save here if they haven't been set yet (e.g. email-verification login path).
         if ($attributes !== []) {
             $this->forceFill($attributes)->save();
         }

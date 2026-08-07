@@ -8,7 +8,7 @@
  *   2. youth-login.js — bubbling phase (useCapture=false, default)
  *      Handles field validation, Turnstile modal, and final form dispatch.
  *
- * The only path that actually sends the POST is loginForm.submit() inside
+ * The only path that sends the POST is loginForm.submit() inside
  * onTurnstileSuccess(). Every other submit-event invocation calls
  * e.preventDefault() so the native browser submit never races with the
  * controlled submission.
@@ -150,10 +150,12 @@
         turnstileModal.classList.remove('turnstile-modal-visible');
         document.body.style.overflow = '';
 
+        // Clear any inline error
         var errEl = turnstileModal.querySelector('.turnstile-modal-error');
         if (errEl) errEl.remove();
 
         if (!beforeSubmit) {
+            // User cancelled — reset the widget and discard the token
             if (turnstileRendered && turnstileWidgetId !== null &&
                 typeof window.turnstile !== 'undefined') {
                 window.turnstile.reset(turnstileWidgetId);
@@ -161,6 +163,8 @@
             turnstileToken = null;
             removeTokenInput();
         }
+        // When beforeSubmit=true: leave widget state intact so the form
+        // submission carries the token.
     }
 
     function setModalError(message) {
@@ -180,7 +184,7 @@
     // ─── Token input helpers ──────────────────────────────────────────────────
 
     function injectTokenInput(token) {
-        // Remove duplicates before injecting (prevents double-submit token issues)
+        // Remove any existing fields first (prevents duplicates from previous attempts)
         removeTokenInput();
         var hidden = document.createElement('input');
         hidden.type  = 'hidden';
@@ -197,27 +201,31 @@
     // ─── Turnstile callbacks ──────────────────────────────────────────────────
 
     function onTurnstileSuccess(token) {
-        if (isSubmitting) return;
+        if (isSubmitting) return; // late callback — already submitted
 
         turnstileToken = token;
         injectTokenInput(token);
 
-        // Close modal WITHOUT resetting the widget
+        // Close the modal without resetting the widget (beforeSubmit = true)
         hideTurnstileModal(true);
 
+        // Update button UI
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.classList.remove('waiting-for-turnstile');
-            submitBtn.querySelector('span').textContent = 'Signing In...';
+            var span = submitBtn.querySelector('span');
+            if (span) span.textContent = 'Signing In...';
         }
 
+        // Show the loading overlay immediately
         showLoadingOverlay();
 
-        // Guard before submit to block any re-entrant events
+        // Set the guard BEFORE calling submit so any re-entrant event is blocked
         isSubmitting = true;
 
-        // Native submit — bypasses all JS submit listeners so the POST fires
-        // exactly once with email, password, _token, remember, cf-turnstile-response.
+        // Native submit — bypasses all JS listeners, sends the POST exactly once.
+        // email, password, _token, remember, and cf-turnstile-response are all
+        // included in the POST body.
         loginForm.submit();
     }
 
@@ -270,7 +278,7 @@
         if (isSubmitting) return;
 
         if (turnstileModal && turnstileModal.classList.contains('turnstile-modal-visible')) {
-            hideTurnstileModal(false);
+            hideTurnstileModal(false); // cancel — full reset
         }
 
         if (turnstileToken) {
@@ -283,20 +291,21 @@
 
     // ─── Form submit handler ──────────────────────────────────────────────────
     //
-    // Runs in the bubbling phase — AFTER auth-legal.js's capturing listener.
-    // auth-legal.js has already passed the legal-consent gate before we get here.
-    //
-    // Invariant: always call e.preventDefault() unless isSubmitting is true.
-    // The only path that actually POSTs is loginForm.submit() in onTurnstileSuccess().
+    // Runs in the BUBBLING phase — after auth-legal.js capturing listener.
+    // We ALWAYS call e.preventDefault() unless isSubmitting is already true.
+    // The only path that sends the POST is loginForm.submit() inside
+    // onTurnstileSuccess(). This eliminates the race where the browser would
+    // natively submit the form at the same time as our programmatic submit.
 
     function onFormSubmit(e) {
-        // Guard: block re-entrance during an active submission
+        // Guard: never re-enter during an active submission
         if (isSubmitting) {
             e.preventDefault();
             return;
         }
 
-        // Token already present (e.g. auth-legal.js re-triggered via requestSubmit)
+        // If the token is already present (e.g. re-submit after auth-legal gate),
+        // skip the modal and go straight to native submit.
         if (turnstileToken) {
             e.preventDefault();
             if (submitBtn) {
@@ -310,11 +319,13 @@
             return;
         }
 
+        // Always preventDefault from here — Turnstile / direct submit will drive it
         e.preventDefault();
 
+        // Validate fields first
         if (!validateFields()) return;
 
-        // Turnstile disabled — submit directly
+        // Turnstile disabled → submit directly via native form submit
         if (!loginForm.dataset.turnstileEnabled) {
             if (submitBtn) {
                 submitBtn.disabled = true;
@@ -327,7 +338,7 @@
             return;
         }
 
-        // Show the Turnstile modal and wait for the user to complete the challenge
+        // Show Turnstile modal and wait for the challenge to complete
         showTurnstileModal();
         if (submitBtn) {
             submitBtn.disabled = true;
@@ -341,19 +352,19 @@
 
     function onModalClose() {
         if (isSubmitting) return;
-        hideTurnstileModal(false);
+        hideTurnstileModal(false); // full cancel reset
         resetSubmitBtn();
     }
 
-    // ─── Input animation on focus ─────────────────────────────────────────────
+    // ─── Input animations ─────────────────────────────────────────────────────
 
     function bindInputAnimations() {
         document.querySelectorAll('.youth-input').forEach(function (input) {
             input.addEventListener('focus', function () {
-                this.parentElement.classList.add('input-focused');
+                if (this.parentElement) this.parentElement.classList.add('input-focused');
             });
             input.addEventListener('blur', function () {
-                this.parentElement.classList.remove('input-focused');
+                if (this.parentElement) this.parentElement.classList.remove('input-focused');
             });
         });
     }
@@ -364,7 +375,7 @@
         document.querySelectorAll('.youth-alert').forEach(function (alert) {
             setTimeout(function () {
                 alert.style.animation = 'alertSlideOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards';
-                setTimeout(function () { alert.remove(); }, 400);
+                setTimeout(function () { if (alert.parentNode) alert.parentNode.removeChild(alert); }, 400);
             }, 5000);
         });
     }
@@ -383,49 +394,27 @@
         turnstileContainer     = document.getElementById('turnstile-container');
         turnstileCloseBtn      = document.getElementById('turnstile-close-btn');
 
-        // Only wire up login logic on pages that have the login form
         if (!loginForm || !emailInput || !passwordInput) return;
 
-        // Clear inline errors on input
-        if (emailInput) {
-            emailInput.addEventListener('input', function () {
-                clearErr(emailInput, emailError);
-                onFieldEdit();
-            });
-        }
-        if (passwordInput) {
-            passwordInput.addEventListener('input', function () {
-                clearErr(passwordInput, passwordError);
-                onFieldEdit();
-            });
-        }
+        // Field input: clear inline errors; reset Turnstile if modal was open
+        emailInput.addEventListener('input', function () {
+            clearErr(emailInput, emailError);
+            onFieldEdit();
+        });
+        passwordInput.addEventListener('input', function () {
+            clearErr(passwordInput, passwordError);
+            onFieldEdit();
+        });
 
-        // Single bubbling-phase submit listener
+        // Bubbling-phase submit listener (fires after auth-legal.js capturing listener)
         loginForm.addEventListener('submit', onFormSubmit, false);
 
-        // Forgot password
+        // Forgot password link
         var forgotBtn = document.getElementById('forgotBtn');
         if (forgotBtn) {
             forgotBtn.addEventListener('click', function (e) {
                 e.preventDefault();
-                if (typeof showLoading === 'function') {
-                    showLoading('Redirecting to password recovery');
-                    setTimeout(function () {
-                        window.location.href = forgotBtn.href;
-                    }, 300);
-                } else {
-                    window.location.href = forgotBtn.href;
-                }
-            });
-        }
-
-        // Homepage button
-        var homepageBtn = document.getElementById('homepageBtn');
-        if (homepageBtn) {
-            homepageBtn.addEventListener('click', function () {
-                if (typeof showLoading === 'function') {
-                    showLoading('Redirecting to Homepage');
-                }
+                window.location.href = forgotBtn.href || '/password/reset';
             });
         }
 
@@ -467,8 +456,6 @@
             '@keyframes alertSlideOut{to{opacity:0;transform:translateY(-10px)}}',
             '@keyframes errorSlideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}',
             '@keyframes errorSlideOut{to{opacity:0;transform:translateY(-8px)}}',
-            '@keyframes youthLoginSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}',
-            '.youth-submit-btn .spinner{display:inline-block;vertical-align:middle;transform-origin:center center;animation:youthLoginSpin 0.9s linear infinite}',
         ].join('');
         document.head.appendChild(style);
     }());

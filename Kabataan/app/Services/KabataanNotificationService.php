@@ -194,8 +194,14 @@ class KabataanNotificationService
         return trim(preg_replace('/\s+/u', ' ', $cleaned) ?? $cleaned);
     }
 
+    private static ?bool $tableExistsCache = null;
+
     private function tableExists(): bool
     {
-        return Schema::hasTable('kabataan_notifications');
+        if (self::$tableExistsCache === null) {
+            self::$tableExistsCache = Schema::hasTable('kabataan_notifications');
+        }
+
+        return self::$tableExistsCache;
     }
 }
