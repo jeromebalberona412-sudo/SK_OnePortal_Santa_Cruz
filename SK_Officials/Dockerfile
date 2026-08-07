@@ -50,7 +50,9 @@ RUN apk add --no-cache \
     zip \
     unzip \
     git \
-    bash
+    bash \
+    # Network tools for database connection check
+    netcat-openbsd
 
 # Configure and install PHP extensions
 RUN docker-php-ext-configure gd \

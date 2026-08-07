@@ -1,46 +1,65 @@
 #!/bin/sh
 set -e
 
+echo "=========================================="
 echo "Starting Laravel application entrypoint..."
+echo "=========================================="
 
 # ============================================
 # Create required system directories
 # ============================================
 echo "Creating system directories..."
-mkdir -p /var/log/nginx
-mkdir -p /var/lib/nginx
-mkdir -p /var/cache/nginx
-mkdir -p /run/nginx
-mkdir -p /var/log/supervisor
-mkdir -p /var/run/supervisor
+mkdir -p /var/log/nginx || echo "Failed to create /var/log/nginx"
+mkdir -p /var/lib/nginx || echo "Failed to create /var/lib/nginx"
+mkdir -p /var/cache/nginx || echo "Failed to create /var/cache/nginx"
+mkdir -p /run/nginx || echo "Failed to create /run/nginx"
+mkdir -p /var/log/supervisor || echo "Failed to create /var/log/supervisor"
+mkdir -p /var/run/supervisor || echo "Failed to create /var/run/supervisor"
 
 # ============================================
 # Set proper permissions for system directories
 # ============================================
 echo "Setting system directory permissions..."
-chown -R www-data:www-data /var/lib/nginx /var/cache/nginx /run/nginx
-chown -R root:root /var/log/nginx /var/log/supervisor /var/run/supervisor
-chmod -R 755 /var/log/nginx /var/log/supervisor /var/run/supervisor
+chown -R www-data:www-data /var/lib/nginx /var/cache/nginx /run/nginx || echo "Failed to chown nginx directories"
+chown -R root:root /var/log/nginx /var/log/supervisor /var/run/supervisor || echo "Failed to chown log directories"
+chmod -R 755 /var/log/nginx /var/log/supervisor /var/run/supervisor || echo "Failed to chmod log directories"
 
 # ============================================
 # Set proper permissions for Laravel
 # ============================================
 echo "Setting Laravel permissions..."
-chown -R www-data:www-data /var/www/html/storage
-chown -R www-data:www-data /var/www/html/bootstrap/cache
-chown -R www-data:www-data /var/www/html/public/storage
-chmod -R 775 /var/www/html/storage
-chmod -R 775 /var/www/html/bootstrap/cache
-chmod -R 775 /var/www/html/public/storage
+chown -R www-data:www-data /var/www/html/storage || echo "Failed to chown storage"
+chown -R www-data:www-data /var/www/html/bootstrap/cache || echo "Failed to chown bootstrap/cache"
+chown -R www-data:www-data /var/www/html/public/storage || echo "Failed to chown public/storage"
+chmod -R 775 /var/www/html/storage || echo "Failed to chmod storage"
+chmod -R 775 /var/www/html/bootstrap/cache || echo "Failed to chmod bootstrap/cache"
+chmod -R 775 /var/www/html/public/storage || echo "Failed to chmod public/storage"
 
 # ============================================
 # Create storage directories if missing
 # ============================================
 echo "Ensuring storage directories exist..."
-mkdir -p /var/www/html/storage/framework/{views,cache,sessions}
-mkdir -p /var/www/html/storage/logs
-mkdir -p /var/www/html/storage/app/public
-mkdir -p /var/www/html/bootstrap/cache
+mkdir -p /var/www/html/storage/framework/{views,cache,sessions} || echo "Failed to create framework directories"
+mkdir -p /var/www/html/storage/logs || echo "Failed to create logs directory"
+mkdir -p /var/www/html/storage/app/public || echo "Failed to create app/public directory"
+mkdir -p /var/www/html/bootstrap/cache || echo "Failed to create bootstrap/cache directory"
+
+# ============================================
+# Verify Laravel files exist
+# ============================================
+echo "Verifying Laravel installation..."
+if [ ! -f "/var/www/html/artisan" ]; then
+    echo "ERROR: artisan file not found!"
+    ls -la /var/www/html/
+    exit 1
+fi
+echo "artisan file found"
+
+if [ ! -f "/var/www/html/composer.json" ]; then
+    echo "ERROR: composer.json not found!"
+    exit 1
+fi
+echo "composer.json found"
 
 # ============================================
 # Handle storage link (idempotent)
@@ -50,7 +69,7 @@ if [ -L "/var/www/html/public/storage" ]; then
     echo "Storage symlink already exists, skipping creation"
 elif [ -d "/var/www/html/public/storage" ]; then
     echo "Storage exists as a directory, removing and recreating as symlink"
-    rm -rf /var/www/html/public/storage
+    rm -rf /var/www/html/public/storage || echo "Failed to remove existing storage directory"
     php artisan storage:link || echo "Storage link creation failed"
 else
     echo "Creating storage symlink"
@@ -82,6 +101,8 @@ if [ -n "$DB_HOST" ]; then
     if [ $attempt -eq $max_attempts ]; then
         echo "Warning: Database connection not established after $max_attempts attempts"
     fi
+else
+    echo "DB_HOST not set, skipping database wait"
 fi
 
 # ============================================
@@ -90,25 +111,27 @@ fi
 if [ "$RUN_MIGRATIONS" = "true" ]; then
     echo "Running database migrations..."
     php artisan migrate --force || echo "Migrations failed or already run"
+else
+    echo "RUN_MIGRATIONS not set to true, skipping migrations"
 fi
 
 # ============================================
 # Clear and cache configurations
 # ============================================
 echo "Optimizing application..."
-php artisan config:clear
-php artisan cache:clear
-php artisan route:clear
-php artisan view:clear
-php artisan event:clear
+php artisan config:clear || echo "Config clear failed"
+php artisan cache:clear || echo "Cache clear failed"
+php artisan route:clear || echo "Route clear failed"
+php artisan view:clear || echo "View clear failed"
+php artisan event:clear || echo "Event clear failed"
 
 # Only cache if APP_KEY is set (not during image build)
 if [ -n "$APP_KEY" ]; then
     echo "Caching configurations..."
-    php artisan config:cache
-    php artisan route:cache
-    php artisan view:cache
-    php artisan event:cache
+    php artisan config:cache || echo "Config cache failed"
+    php artisan route:cache || echo "Route cache failed"
+    php artisan view:cache || echo "View cache failed"
+    php artisan event:cache || echo "Event cache failed"
 else
     echo "APP_KEY not set, skipping config caching"
 fi
@@ -124,10 +147,25 @@ composer dump-autoload --optimize || echo "Composer optimization failed"
 # ============================================
 if [ -n "$PORT" ]; then
     echo "Configuring Nginx to use port $PORT..."
-    sed -i "s/listen 8080;/listen $PORT;/g" /etc/nginx/nginx.conf
+    sed -i "s/listen 8080;/listen $PORT;/g" /etc/nginx/nginx.conf || echo "Failed to configure Nginx port"
 else
     echo "PORT not set, using default 8080"
 fi
 
-echo "Starting services..."
+# ============================================
+# Verify Supervisor configuration
+# ============================================
+echo "Verifying Supervisor configuration..."
+if [ ! -f "/etc/supervisor/conf.d/supervisord.conf" ]; then
+    echo "ERROR: Supervisor configuration file not found!"
+    exit 1
+fi
+echo "Supervisor configuration found"
+
+# ============================================
+# Start services
+# ============================================
+echo "=========================================="
+echo "Starting Supervisor..."
+echo "=========================================="
 exec "$@"
