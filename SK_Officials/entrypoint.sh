@@ -24,6 +24,12 @@ mkdir -p /var/www/html/storage/app/public
 mkdir -p /var/www/html/bootstrap/cache
 
 # ============================================
+# Run package:discover (skipped during composer install)
+# ============================================
+echo "Running package:discover..."
+php artisan package:discover --ansi || echo "Package discovery failed or already run"
+
+# ============================================
 # Link storage if not already linked
 # ============================================
 if [ ! -L "/var/www/html/public/storage" ]; then

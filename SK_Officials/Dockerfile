@@ -78,16 +78,19 @@ WORKDIR /var/www/html
 # Copy composer files first (better layer caching)
 COPY composer.json composer.lock ./
 
-# Install PHP dependencies
+# Copy application files BEFORE composer install
+# This ensures artisan exists when composer runs post-autoload-dump
+COPY . .
+
+# Install PHP dependencies with --no-scripts to prevent artisan commands during build
+# package:discover will run in entrypoint when environment is ready
 RUN composer install \
     --no-dev \
+    --no-scripts \
     --optimize-autoloader \
     --no-interaction \
     --prefer-dist \
     && rm -rf /root/.composer
-
-# Copy application files
-COPY . .
 
 # Copy built frontend assets from frontend stage
 COPY --from=frontend-builder /app/public/build ./public/build

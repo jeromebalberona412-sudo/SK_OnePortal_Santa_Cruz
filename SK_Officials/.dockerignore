@@ -9,7 +9,7 @@ README.md
 CHANGELOG.md
 LICENSE
 docs/
-*.md
+RENDER_DEPLOYMENT_GUIDE.md
 
 # Tests
 tests/
@@ -30,7 +30,7 @@ public/build/
 public/hot/
 public/storage
 
-# Storage (don't include local storage files)
+# Storage (don't include local storage files, but keep the directory structure)
 storage/*.key
 storage/logs/*
 storage/framework/cache/*
@@ -39,7 +39,7 @@ storage/framework/views/*
 storage/app/public/*
 storage/*.sqlite
 
-# Cache
+# Cache (keep directory structure)
 bootstrap/cache/*
 
 # Node modules (we install fresh in Docker)
@@ -76,3 +76,4 @@ Thumbs.db
 *.temp
 composer.phar
 package-lock.json.backup
+old-context.json
