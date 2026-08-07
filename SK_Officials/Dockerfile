@@ -141,6 +141,11 @@ RUN chown -R www-data:www-data /var/lib/nginx /var/cache/nginx /run/nginx \
 RUN chown -R www-data:www-data /var/lib/php \
     && chmod -R 755 /var/lib/php
 
+# Fix PHP-FPM default error_log configuration in Alpine image
+RUN sed -i 's|error_log = /proc/self/fd/2|error_log = /tmp/php-fpm.log|g' /usr/local/etc/php-fpm.conf 2>/dev/null || true \
+    && sed -i 's|error_log = /proc/self/fd/2|error_log = /tmp/php-fpm.log|g' /etc/php/*/fpm/php-fpm.conf 2>/dev/null || true \
+    && sed -i 's|error_log = /proc/self/fd/2|error_log = /tmp/php-fpm.log|g' /etc/php/*/fpm/pool.d/www.conf 2>/dev/null || true
+
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
