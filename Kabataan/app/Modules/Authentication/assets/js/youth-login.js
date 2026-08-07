@@ -1,423 +1,476 @@
 /**
- * SK OnePortal - Youth Login JavaScript
- * Modern interactive features for 2026
+ * SK OnePortal — Kabataan Login
+ *
+ * Execution order of submit listeners on #loginForm:
+ *   1. auth-legal.js  — capturing phase (useCapture=true)
+ *      Intercepts if consent checkbox is unchecked.
+ *      If consent IS checked, or pendingSubmit flag is set, it returns immediately.
+ *   2. youth-login.js — bubbling phase (useCapture=false, default)
+ *      Handles field validation, Turnstile modal, and final form dispatch.
+ *
+ * The only path that actually sends the POST is loginForm.submit() inside
+ * onTurnstileSuccess(). Every other submit-event invocation calls
+ * e.preventDefault() so the native browser submit never races with the
+ * controlled submission.
  */
 
-document.addEventListener('DOMContentLoaded', function() {
+(function () {
+    'use strict';
 
-    // ============================================
-    // Password Toggle Functionality (Disabled - handled in individual pages)
-    // ============================================
-    // Note: Password toggle is now handled directly in each blade file
-    // to avoid conflicts between login, register, and reset-password pages
+    // ─── Module-level state ───────────────────────────────────────────────────
+    var turnstileWidgetId   = null;   // widget handle from turnstile.render()
+    var turnstileToken      = null;   // verified token from the success callback
+    var turnstileRendered   = false;  // render() called at least once
+    var isSubmitting        = false;  // true the moment loginForm.submit() is called
 
-    // ============================================
-    // Form Validation Enhancement (Only for login page)
-    // ============================================
-    const loginForm = document.querySelector('.youth-login-form');
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const isResetPasswordPage = document.getElementById('resetPasswordForm');
-    const turnstileContainer = document.getElementById('turnstile-container');
-    const turnstileWidget = document.getElementById('turnstile-widget');
-    const turnstileError = document.getElementById('turnstile-error');
-    const submitBtn = document.getElementById('loginBtn');
+    // ─── DOM refs ─────────────────────────────────────────────────────────────
+    var loginForm, emailInput, passwordInput,
+        emailError, passwordError, submitBtn,
+        turnstileModal, turnstileModalBackdrop,
+        turnstileContainer, turnstileCloseBtn;
 
-    // Turnstile state
-    let turnstileLoaded = false;
-    let turnstileWidgetId = null;
+    // ─── Validation helpers ───────────────────────────────────────────────────
 
-    // Load Turnstile widget dynamically
-    function loadTurnstileWidget() {
-        if (turnstileLoaded || typeof turnstile === 'undefined') return;
+    function validEmail(v) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+    }
 
-        turnstileLoaded = true;
-        turnstileContainer.style.display = 'block';
+    function showErr(input, el, msg) {
+        if (input) input.classList.add('error');
+        if (el) {
+            el.textContent = msg;
+            el.hidden = false;
+            el.style.display = 'block';
+        }
+    }
 
-        turnstileWidgetId = turnstile.render('#turnstile-widget', {
-            sitekey: window.turnstileSiteKey,
-            callback: function(token) {
-                // Turnstile completed successfully
-                clearTurnstileError();
-                submitLoginForm();
-            },
-            'error-callback': function() {
-                // Turnstile failed
-                showTurnstileError('Security verification failed. Please try again.');
-                resetFormState();
-            },
-            'expired-callback': function() {
-                // Turnstile expired
-                showTurnstileError('Security verification expired. Please try again.');
-                resetFormState();
+    function clearErr(input, el) {
+        if (input) input.classList.remove('error');
+        if (el) {
+            el.hidden = true;
+            el.style.display = 'none';
+        }
+    }
+
+    function validateFields() {
+        clearErr(emailInput, emailError);
+        clearErr(passwordInput, passwordError);
+
+        var ok    = true;
+        var email = emailInput ? emailInput.value.trim() : '';
+        var pass  = passwordInput ? passwordInput.value : '';
+
+        if (!email) {
+            showErr(emailInput, emailError, 'Email is required.');
+            ok = false;
+        } else if (!validEmail(email)) {
+            showErr(emailInput, emailError, 'Please enter a valid email address.');
+            ok = false;
+        }
+
+        if (!pass) {
+            showErr(passwordInput, passwordError, 'Password is required.');
+            ok = false;
+        }
+
+        return ok;
+    }
+
+    // ─── Turnstile API readiness ──────────────────────────────────────────────
+
+    function waitForTurnstileAPI(maxWaitMs) {
+        maxWaitMs = maxWaitMs || 10000;
+        return new Promise(function (resolve, reject) {
+            if (typeof window.turnstile !== 'undefined') {
+                resolve();
+                return;
             }
+            var start = Date.now();
+            var iv = setInterval(function () {
+                if (typeof window.turnstile !== 'undefined') {
+                    clearInterval(iv);
+                    resolve();
+                } else if (Date.now() - start > maxWaitMs) {
+                    clearInterval(iv);
+                    reject(new Error('Turnstile API did not load within ' + maxWaitMs + ' ms'));
+                }
+            }, 100);
         });
     }
 
-    function resetFormState() {
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<span>Login</span>';
-        }
-        if (emailInput) emailInput.disabled = false;
-        if (passwordInput) passwordInput.disabled = false;
+    // ─── Turnstile modal ──────────────────────────────────────────────────────
+
+    function showTurnstileModal() {
+        if (!turnstileModal) return;
+        turnstileModal.classList.add('turnstile-modal-visible');
+        document.body.style.overflow = 'hidden';
+
+        waitForTurnstileAPI().then(function () {
+            if (isSubmitting) return;
+
+            if (!turnstileRendered) {
+                var siteKey = loginForm.dataset.turnstileSitekey;
+                if (!siteKey) {
+                    console.error('[Turnstile] site key missing');
+                    return;
+                }
+                try {
+                    turnstileWidgetId = window.turnstile.render(turnstileContainer, {
+                        sitekey:            siteKey,
+                        theme:              'light',
+                        size:               'normal',
+                        callback:           onTurnstileSuccess,
+                        'error-callback':   onTurnstileError,
+                        'expired-callback': onTurnstileExpired,
+                    });
+                    turnstileRendered = true;
+                } catch (err) {
+                    console.error('[Turnstile] render() failed:', err);
+                    setModalError('Failed to initialize verification. Please refresh the page.');
+                }
+            } else if (!isSubmitting && turnstileWidgetId !== null) {
+                // Already rendered — reset so the widget appears fresh
+                window.turnstile.reset(turnstileWidgetId);
+            }
+        }).catch(function (err) {
+            console.error('[Turnstile] API load timeout:', err);
+            setModalError('Verification system failed to load. Please refresh the page.');
+        });
     }
 
-    function submitLoginForm() {
-        // Create hidden input for Turnstile token
-        let tokenInput = document.querySelector('input[name="cf-turnstile-response"]');
-        if (!tokenInput) {
-            tokenInput = document.createElement('input');
-            tokenInput.type = 'hidden';
-            tokenInput.name = 'cf-turnstile-response';
-            loginForm.appendChild(tokenInput);
+    /**
+     * Hide the Turnstile modal.
+     *
+     * @param {boolean} beforeSubmit
+     *   Pass true when about to call loginForm.submit(). Skips turnstile.reset()
+     *   to avoid triggering the expired-callback mid-submission on some SDK versions.
+     */
+    function hideTurnstileModal(beforeSubmit) {
+        if (!turnstileModal) return;
+        turnstileModal.classList.remove('turnstile-modal-visible');
+        document.body.style.overflow = '';
+
+        var errEl = turnstileModal.querySelector('.turnstile-modal-error');
+        if (errEl) errEl.remove();
+
+        if (!beforeSubmit) {
+            if (turnstileRendered && turnstileWidgetId !== null &&
+                typeof window.turnstile !== 'undefined') {
+                window.turnstile.reset(turnstileWidgetId);
+            }
+            turnstileToken = null;
+            removeTokenInput();
         }
+    }
 
-        // Get the token from Turnstile
-        const response = turnstile.getResponse(turnstileWidgetId);
-        tokenInput.value = response;
+    function setModalError(message) {
+        if (!turnstileModal) return;
+        var errEl = turnstileModal.querySelector('.turnstile-modal-error');
+        if (!errEl) {
+            errEl = document.createElement('div');
+            errEl.className = 'turnstile-modal-error';
+            var body = turnstileModal.querySelector('.turnstile-modal-body');
+            if (body) body.appendChild(errEl);
+        }
+        errEl.textContent = message;
+        errEl.style.display = 'block';
+        resetSubmitBtn();
+    }
 
-        // Disable form elements and show loading state
+    // ─── Token input helpers ──────────────────────────────────────────────────
+
+    function injectTokenInput(token) {
+        // Remove duplicates before injecting (prevents double-submit token issues)
+        removeTokenInput();
+        var hidden = document.createElement('input');
+        hidden.type  = 'hidden';
+        hidden.name  = 'cf-turnstile-response';
+        hidden.value = token;
+        loginForm.appendChild(hidden);
+    }
+
+    function removeTokenInput() {
+        loginForm.querySelectorAll('input[name="cf-turnstile-response"]')
+            .forEach(function (f) { f.remove(); });
+    }
+
+    // ─── Turnstile callbacks ──────────────────────────────────────────────────
+
+    function onTurnstileSuccess(token) {
+        if (isSubmitting) return;
+
+        turnstileToken = token;
+        injectTokenInput(token);
+
+        // Close modal WITHOUT resetting the widget
+        hideTurnstileModal(true);
+
         if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.innerHTML = `
-                <svg class="spinner" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <circle class="spinner-circle" cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-                <span>Authenticating...</span>
-            `;
+            submitBtn.classList.remove('waiting-for-turnstile');
+            submitBtn.querySelector('span').textContent = 'Signing In...';
         }
 
-        if (emailInput) emailInput.disabled = true;
-        if (passwordInput) passwordInput.disabled = true;
-        if (turnstileContainer) {
-            turnstileContainer.style.pointerEvents = 'none';
-            turnstileContainer.style.opacity = '0.5';
-        }
+        showLoadingOverlay();
 
-        // Submit the form
+        // Guard before submit to block any re-entrant events
+        isSubmitting = true;
+
+        // Native submit — bypasses all JS submit listeners so the POST fires
+        // exactly once with email, password, _token, remember, cf-turnstile-response.
         loginForm.submit();
     }
 
-    function showTurnstileError(message) {
-        if (turnstileError) {
-            turnstileError.textContent = message;
-            turnstileError.hidden = false;
-            turnstileError.style.display = 'block';
-        }
+    function onTurnstileError() {
+        if (isSubmitting) return;
+        turnstileToken = null;
+        setModalError('Verification failed. Please try again or refresh the page.');
     }
 
-    function clearTurnstileError() {
-        if (turnstileError) {
-            turnstileError.hidden = true;
-            turnstileError.style.display = 'none';
-        }
+    function onTurnstileExpired() {
+        if (isSubmitting) return;
+        turnstileToken = null;
+        removeTokenInput();
+        setModalError('Verification expired. Please complete the challenge again.');
     }
 
-    // Only apply validation if NOT on reset password page
-    if (loginForm && !isResetPasswordPage) {
-        loginForm.addEventListener('submit', function(e) {
+    // ─── Loading overlay ──────────────────────────────────────────────────────
+
+    function showLoadingOverlay() {
+        var overlay = document.querySelector('.loading-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'loading-overlay';
+            overlay.innerHTML =
+                '<div class="overlay-backdrop"></div>' +
+                '<div class="loading-content">' +
+                '<div class="main-spinner"></div>' +
+                '<p class="loading-text">Signing In...</p>' +
+                '</div>';
+            document.body.appendChild(overlay);
+        }
+        overlay.classList.add('active');
+        var container = document.querySelector('.youth-login-container');
+        if (container) container.classList.add('blurred');
+    }
+
+    // ─── Submit button state helpers ──────────────────────────────────────────
+
+    function resetSubmitBtn() {
+        if (!submitBtn) return;
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('waiting-for-turnstile');
+        var span = submitBtn.querySelector('span');
+        if (span) span.textContent = 'Login';
+    }
+
+    // ─── Field edit: reset Turnstile if the modal is open ────────────────────
+
+    function onFieldEdit() {
+        if (isSubmitting) return;
+
+        if (turnstileModal && turnstileModal.classList.contains('turnstile-modal-visible')) {
+            hideTurnstileModal(false);
+        }
+
+        if (turnstileToken) {
+            turnstileToken = null;
+            removeTokenInput();
+        }
+
+        resetSubmitBtn();
+    }
+
+    // ─── Form submit handler ──────────────────────────────────────────────────
+    //
+    // Runs in the bubbling phase — AFTER auth-legal.js's capturing listener.
+    // auth-legal.js has already passed the legal-consent gate before we get here.
+    //
+    // Invariant: always call e.preventDefault() unless isSubmitting is true.
+    // The only path that actually POSTs is loginForm.submit() in onTurnstileSuccess().
+
+    function onFormSubmit(e) {
+        // Guard: block re-entrance during an active submission
+        if (isSubmitting) {
             e.preventDefault();
+            return;
+        }
 
-            let isValid = true;
-
-            // Clear all previous errors
-            clearAllErrors();
-            clearTurnstileError();
-
-            // Email validation
-            if (emailInput && !isValidEmail(emailInput.value.trim())) {
-                isValid = false;
-                showInputError(emailInput, 'Invalid Email or Password');
+        // Token already present (e.g. auth-legal.js re-triggered via requestSubmit)
+        if (turnstileToken) {
+            e.preventDefault();
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                var span = submitBtn.querySelector('span');
+                if (span) span.textContent = 'Signing In...';
             }
+            showLoadingOverlay();
+            isSubmitting = true;
+            loginForm.submit();
+            return;
+        }
 
-            // Password validation for prototype login
-            if (passwordInput && passwordInput.value.trim().length === 0) {
-                isValid = false;
-                showInputError(passwordInput, 'Invalid Email or Password');
+        e.preventDefault();
+
+        if (!validateFields()) return;
+
+        // Turnstile disabled — submit directly
+        if (!loginForm.dataset.turnstileEnabled) {
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                var span = submitBtn.querySelector('span');
+                if (span) span.textContent = 'Signing In...';
             }
+            showLoadingOverlay();
+            isSubmitting = true;
+            loginForm.submit();
+            return;
+        }
 
-            if (!isValid) return false;
+        // Show the Turnstile modal and wait for the user to complete the challenge
+        showTurnstileModal();
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('waiting-for-turnstile');
+            var span = submitBtn.querySelector('span');
+            if (span) span.textContent = 'Complete verification';
+        }
+    }
 
-            // If Turnstile is enabled and not yet loaded, load it now
-            if (turnstileContainer && window.turnstileSiteKey && !turnstileLoaded) {
-                // Show loading state while preparing Turnstile
-                if (submitBtn) {
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<span>Loading Security Check...</span>';
-                }
-                if (emailInput) emailInput.disabled = true;
-                if (passwordInput) passwordInput.disabled = true;
+    // ─── Modal close ─────────────────────────────────────────────────────────
 
-                loadTurnstileWidget();
+    function onModalClose() {
+        if (isSubmitting) return;
+        hideTurnstileModal(false);
+        resetSubmitBtn();
+    }
 
-                // Reset button state after widget loads
-                setTimeout(() => {
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<span>Login</span>';
-                    }
-                    if (emailInput) emailInput.disabled = false;
-                    if (passwordInput) passwordInput.disabled = false;
-                }, 500);
+    // ─── Input animation on focus ─────────────────────────────────────────────
 
-                return false;
-            }
-
-            // If Turnstile is already loaded but not completed, show error
-            if (turnstileContainer && turnstileLoaded) {
-                const response = turnstile.getResponse(turnstileWidgetId);
-                if (!response) {
-                    showTurnstileError('Pakumpleto ang seguridad na pagpapatunay.');
-                    return false;
-                }
-            }
-
-            // If Turnstile is not enabled, submit directly
-            if (!turnstileContainer) {
-                // Original loading state logic
-                const emailVal = emailInput ? emailInput.value.trim() : '';
-                const passwordVal = passwordInput ? passwordInput.value.trim() : '';
-                if (!emailVal || !isValidEmail(emailVal) || !passwordVal) {
-                    return;
-                }
-
-                if (submitBtn && !submitBtn.disabled) {
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = `
-                        <svg class="spinner" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                            <circle class="spinner-circle" cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
-                        <span>Authenticating...</span>
-                    `;
-                }
-                loginForm.submit();
-            }
+    function bindInputAnimations() {
+        document.querySelectorAll('.youth-input').forEach(function (input) {
+            input.addEventListener('focus', function () {
+                this.parentElement.classList.add('input-focused');
+            });
+            input.addEventListener('blur', function () {
+                this.parentElement.classList.remove('input-focused');
+            });
         });
+    }
 
-        // Real-time validation on blur
+    // ─── Alert auto-dismiss ───────────────────────────────────────────────────
+
+    function bindAlertDismiss() {
+        document.querySelectorAll('.youth-alert').forEach(function (alert) {
+            setTimeout(function () {
+                alert.style.animation = 'alertSlideOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+                setTimeout(function () { alert.remove(); }, 400);
+            }, 5000);
+        });
+    }
+
+    // ─── Initialise ──────────────────────────────────────────────────────────
+
+    function init() {
+        loginForm              = document.getElementById('loginForm');
+        emailInput             = document.getElementById('email');
+        passwordInput          = document.getElementById('password');
+        emailError             = document.getElementById('email-error');
+        passwordError          = document.getElementById('password-error');
+        submitBtn              = document.getElementById('loginBtn');
+        turnstileModal         = document.getElementById('turnstile-modal');
+        turnstileModalBackdrop = document.getElementById('turnstile-modal-backdrop');
+        turnstileContainer     = document.getElementById('turnstile-container');
+        turnstileCloseBtn      = document.getElementById('turnstile-close-btn');
+
+        // Only wire up login logic on pages that have the login form
+        if (!loginForm || !emailInput || !passwordInput) return;
+
+        // Clear inline errors on input
         if (emailInput) {
-            emailInput.addEventListener('blur', function() {
-                if (this.value.trim() && !isValidEmail(this.value.trim())) {
-                    showInputError(this, 'Invalid Email or Password');
-                }
-            });
-
-            emailInput.addEventListener('input', function() {
-                clearInputError(this);
+            emailInput.addEventListener('input', function () {
+                clearErr(emailInput, emailError);
+                onFieldEdit();
             });
         }
-
         if (passwordInput) {
-            passwordInput.addEventListener('blur', function() {
-                if (this.value.trim().length === 0) {
-                    showInputError(this, 'Invalid Email or Password');
-                }
-            });
-
-            passwordInput.addEventListener('input', function() {
-                clearInputError(this);
+            passwordInput.addEventListener('input', function () {
+                clearErr(passwordInput, passwordError);
+                onFieldEdit();
             });
         }
-    }
-    
-    // ============================================
-    // Input Animation on Focus
-    // ============================================
-    const allInputs = document.querySelectorAll('.youth-input');
-    
-    allInputs.forEach(input => {
-        input.addEventListener('focus', function() {
-            this.parentElement.classList.add('input-focused');
-        });
-        
-        input.addEventListener('blur', function() {
-            this.parentElement.classList.remove('input-focused');
-        });
-    });
-    
-    // ============================================
-    // Alert Auto-dismiss
-    // ============================================
-    const alerts = document.querySelectorAll('.youth-alert');
-    
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            alert.style.animation = 'alertSlideOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards';
-            setTimeout(() => {
-                alert.remove();
-            }, 400);
-        }, 5000);
-    });
-    
-    // ============================================
-    // Helper Functions
-    // ============================================
-    
-    function isValidEmail(email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    }
-    
-    function showInputError(input, message) {
-        // Add error class to input
-        input.classList.add('input-error');
-        input.style.borderColor = '#ef4444';
-        
-        // Remove existing error message
-        const existingError = input.closest('.youth-form-group').querySelector('.input-error-message');
-        if (existingError) {
-            existingError.remove();
-        }
-        
-        // Add error message
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'input-error-message';
-        errorDiv.textContent = message;
-        errorDiv.style.cssText = `
-            color: #ef4444;
-            font-size: 0.875rem;
-            margin-top: 0.5rem;
-            font-weight: 500;
-            animation: errorSlideIn 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.375rem;
-        `;
-        
-        // Add error icon
-        const errorIcon = document.createElement('svg');
-        errorIcon.innerHTML = `
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style="flex-shrink: 0;">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-            </svg>
-        `;
-        errorDiv.insertBefore(errorIcon.firstElementChild, errorDiv.firstChild);
-        
-        // Insert error message after the input or password wrapper
-        const wrapper = input.closest('.password-wrapper') || input;
-        wrapper.parentElement.appendChild(errorDiv);
-        
-        // Auto-dismiss after 5 seconds
-        setTimeout(() => {
-            if (errorDiv && errorDiv.parentElement) {
-                errorDiv.style.animation = 'errorSlideOut 0.3s ease forwards';
-                setTimeout(() => {
-                    if (errorDiv && errorDiv.parentElement) {
-                        errorDiv.remove();
-                    }
-                }, 300);
-            }
-        }, 5000);
-    }
-    
-    function clearInputError(input) {
-        input.classList.remove('input-error');
-        input.style.borderColor = '';
-        const errorMessage = input.closest('.youth-form-group').querySelector('.input-error-message');
-        if (errorMessage) {
-            errorMessage.style.animation = 'errorSlideOut 0.3s ease forwards';
-            setTimeout(() => {
-                if (errorMessage && errorMessage.parentElement) {
-                    errorMessage.remove();
-                }
-            }, 300);
-        }
-    }
-    
-    function clearAllErrors() {
-        const allInputs = document.querySelectorAll('.youth-input');
-        allInputs.forEach(input => {
-            input.classList.remove('input-error');
-            input.style.borderColor = '';
-        });
-        
-        const allErrors = document.querySelectorAll('.input-error-message');
-        allErrors.forEach(error => {
-            error.remove();
-        });
-    }
-    
-    // ============================================
-    // Keyboard Shortcuts
-    // ============================================
-    document.addEventListener('keydown', function(e) {
-        // Alt + L to focus email input
-        if (e.altKey && e.key === 'l') {
-            e.preventDefault();
-            if (emailInput) emailInput.focus();
-        }
-    });
 
-    // Add spinner CSS
-    if (!document.getElementById('youth-login-spinner-style')) {
-        const style = document.createElement('style');
-        style.id = 'youth-login-spinner-style';
-        style.textContent = `
-            @keyframes youthLoginSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-            .youth-submit-btn .spinner {
-                display: inline-block;
-                vertical-align: middle;
-                transform-origin: center center;
-                animation: youthLoginSpin 0.9s linear infinite;
-            }
-        `;
+        // Single bubbling-phase submit listener
+        loginForm.addEventListener('submit', onFormSubmit, false);
+
+        // Forgot password
+        var forgotBtn = document.getElementById('forgotBtn');
+        if (forgotBtn) {
+            forgotBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (typeof showLoading === 'function') {
+                    showLoading('Redirecting to password recovery');
+                    setTimeout(function () {
+                        window.location.href = forgotBtn.href;
+                    }, 300);
+                } else {
+                    window.location.href = forgotBtn.href;
+                }
+            });
+        }
+
+        // Homepage button
+        var homepageBtn = document.getElementById('homepageBtn');
+        if (homepageBtn) {
+            homepageBtn.addEventListener('click', function () {
+                if (typeof showLoading === 'function') {
+                    showLoading('Redirecting to Homepage');
+                }
+            });
+        }
+
+        // Turnstile modal close / cancel
+        if (turnstileCloseBtn) {
+            turnstileCloseBtn.addEventListener('click', onModalClose);
+        }
+        if (turnstileModalBackdrop) {
+            turnstileModalBackdrop.addEventListener('click', onModalClose);
+        }
+        var cancelBtn = document.getElementById('turnstile-cancel-btn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', onModalClose);
+        }
+
+        // If the server returned a Turnstile error, auto-open the modal so the
+        // user can re-verify without having to click Login again.
+        var serverErrEl = document.getElementById('turnstile-server-error');
+        if (serverErrEl && loginForm.dataset.turnstileEnabled) {
+            showTurnstileModal();
+        }
+
+        bindInputAnimations();
+        bindAlertDismiss();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+    // ─── Shared animation styles ──────────────────────────────────────────────
+    (function injectStyles() {
+        if (document.getElementById('youth-login-styles')) return;
+        var style = document.createElement('style');
+        style.id  = 'youth-login-styles';
+        style.textContent = [
+            '@keyframes alertSlideOut{to{opacity:0;transform:translateY(-10px)}}',
+            '@keyframes errorSlideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}',
+            '@keyframes errorSlideOut{to{opacity:0;transform:translateY(-8px)}}',
+            '@keyframes youthLoginSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}',
+            '.youth-submit-btn .spinner{display:inline-block;vertical-align:middle;transform-origin:center center;animation:youthLoginSpin 0.9s linear infinite}',
+        ].join('');
         document.head.appendChild(style);
-    }
+    }());
 
-    // Expose reset function for error handling
-    window.resetTurnstileState = function() {
-        if (turnstileLoaded && turnstileWidgetId && typeof turnstile !== 'undefined') {
-            turnstile.reset(turnstileWidgetId);
-        }
-        if (turnstileContainer) {
-            turnstileContainer.style.display = 'none';
-        }
-        turnstileLoaded = false;
-        turnstileWidgetId = null;
-        resetFormState();
-    };
-});
-
-// ============================================
-// Alert Slide Out Animation
-// ============================================
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes alertSlideOut {
-        to {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-    }
-    
-    @keyframes errorSlideIn {
-        from {
-            opacity: 0;
-            transform: translateY(-8px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    @keyframes errorSlideOut {
-        to {
-            opacity: 0;
-            transform: translateY(-8px);
-        }
-    }
-    
-    .input-error {
-        border-color: #ef4444 !important;
-        animation: shake 0.4s ease;
-    }
-    
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-        20%, 40%, 60%, 80% { transform: translateX(4px); }
-    }
-`;
-document.head.appendChild(style);
+}());

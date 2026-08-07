@@ -4,11 +4,14 @@ namespace App\Services;
 
 use App\Models\KabataanProfilingHistory;
 use App\Models\KabataanRegistration;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class KkProfilingScheduleService
 {
+    private const CACHE_TTL = 300; // 5 minutes
+
     public function timezone(): string
     {
         return (string) config('app.timezone', 'Asia/Manila');
@@ -34,13 +37,15 @@ class KkProfilingScheduleService
 
         $today = now($this->timezone())->toDateString();
 
-        return DB::table('kk_profiling_schedules')
-            ->where('barangay_id', $barangayId)
-            ->where('status', 'Ongoing')
-            ->where('date_expiry', '>=', $today)
-            ->orderByDesc('profiling_year')
-            ->orderByDesc('date_start')
-            ->first();
+        return Cache::remember("kk_profiling_schedule.{$barangayId}.{$today}", self::CACHE_TTL, function () use ($barangayId, $today) {
+            return DB::table('kk_profiling_schedules')
+                ->where('barangay_id', $barangayId)
+                ->where('status', 'Ongoing')
+                ->where('date_expiry', '>=', $today)
+                ->orderByDesc('profiling_year')
+                ->orderByDesc('date_start')
+                ->first();
+        });
     }
 
     public function hasActiveProfilingSchedule(int $barangayId): bool
@@ -58,9 +63,11 @@ class KkProfilingScheduleService
         }
 
         if (Schema::hasTable('kabataan_profiling_history')) {
-            $historyYear = KabataanProfilingHistory::query()
-                ->where('kabataan_registration_id', $registration->id)
-                ->max('profiling_year');
+            $historyYear = Cache::remember("kk_profiling_history.max_year.{$registration->id}", self::CACHE_TTL, function () use ($registration) {
+                return KabataanProfilingHistory::query()
+                    ->where('kabataan_registration_id', $registration->id)
+                    ->max('profiling_year');
+            });
 
             if ($historyYear) {
                 $years[] = (int) $historyYear;
@@ -81,10 +88,12 @@ class KkProfilingScheduleService
             return false;
         }
 
-        return KabataanProfilingHistory::query()
-            ->where('kabataan_registration_id', $registration->id)
-            ->where('profiling_year', '>=', $year)
-            ->exists();
+        return Cache::remember("kk_profiling_history.completed.{$registration->id}.{$year}", self::CACHE_TTL, function () use ($registration, $year) {
+            return KabataanProfilingHistory::query()
+                ->where('kabataan_registration_id', $registration->id)
+                ->where('profiling_year', '>=', $year)
+                ->exists();
+        });
     }
 
     public function scheduleProfilingYear(?object $schedule): int

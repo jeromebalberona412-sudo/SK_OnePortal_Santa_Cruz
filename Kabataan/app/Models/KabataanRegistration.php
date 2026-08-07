@@ -5,10 +5,43 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 
 class KabataanRegistration extends Model
 {
     use SoftDeletes;
+    
+    protected static function booted()
+    {
+        static::updated(function ($registration) {
+            // Clear user-specific cache when registration is updated
+            if ($registration->user_id) {
+                Cache::forget("kabataan_registration.latest.{$registration->user_id}");
+                Cache::forget("kk_profiling_history.max_year.{$registration->id}");
+                Cache::forget("kk_profiling_history.completed.{$registration->id}.*");
+            }
+            
+            // Clear barangay-specific cache
+            if ($registration->barangay_id) {
+                Cache::forget("kk_profiling_schedule.{$registration->barangay_id}.*");
+            }
+        });
+        
+        static::deleted(function ($registration) {
+            // Clear user-specific cache when registration is deleted
+            if ($registration->user_id) {
+                Cache::forget("kabataan_registration.latest.{$registration->user_id}");
+                Cache::forget("kk_profiling_history.max_year.{$registration->id}");
+                Cache::forget("kk_profiling_history.completed.{$registration->id}.*");
+            }
+            
+            // Clear barangay-specific cache
+            if ($registration->barangay_id) {
+                Cache::forget("kk_profiling_schedule.{$registration->barangay_id}.*");
+            }
+        });
+    }
+    
     protected $fillable = [
         'tenant_id',
         'barangay_id',

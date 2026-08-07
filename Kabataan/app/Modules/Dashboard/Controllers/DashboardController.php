@@ -13,6 +13,7 @@ use App\Services\KabataanProfilingHistoryService;
 use App\Services\KkProfilingScheduleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -26,37 +27,54 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
+        $startTime = microtime(true);
+        $logData = [];
+
+        // Enable query logging for this request
+        \DB::enableQueryLog();
+
         if (! Auth::check()) {
             return redirect()->route('login');
         }
 
         $user = Auth::user();
 
+        $regQueryStart = microtime(true);
         $registration = KabataanRegistration::with('barangay')
             ->where('user_id', $user->id)
             ->latest()
             ->first();
+        $logData['registration_query_ms'] = round((microtime(true) - $regQueryStart) * 1000, 2);
 
         $formData = $registration?->form_data ?? [];
         $respondentNumber = $formData['respondent_number'] ?? null;
 
         $barangayName = $registration?->barangay?->name ?? 'Santa Cruz';
 
+        $profilingCheckStart = microtime(true);
         $requiresKkUpdate = $registration
             && $this->kkProfilingScheduleService->hasActiveProfilingSchedule((int) $registration->barangay_id)
             && $this->kkProfilingScheduleService->requiresProfilingUpdate($registration);
+        $logData['profiling_check_ms'] = round((microtime(true) - $profilingCheckStart) * 1000, 2);
 
+        $barangayProfileStart = microtime(true);
         $tenantId = (int) ($user->tenant_id ?? $registration?->barangay?->tenant_id ?? 0);
         $barangayProfiles = $tenantId > 0
             ? $this->barangaySkProfileService->listForTenant($tenantId)
             : [];
+        $logData['barangay_profiles_ms'] = round((microtime(true) - $barangayProfileStart) * 1000, 2);
 
-        return view('dashboard::dashboard', [
+        $programsStart = microtime(true);
+        $programsPayload = $this->programService->getDashboardPayload($user);
+        $logData['programs_payload_ms'] = round((microtime(true) - $programsStart) * 1000, 2);
+
+        $viewDataStart = microtime(true);
+        $viewData = [
             'user' => $user,
             'userAvatarUrl' => app(ProfileImageService::class)->resolveDisplayUrl($user),
             'barangayName' => $barangayName,
             'barangayProfiles' => $barangayProfiles,
-            'programsPayload' => $this->programService->getDashboardPayload($user),
+            'programsPayload' => $programsPayload,
             'showKkUpdateModal' => $requiresKkUpdate,
             'kkProfilingUpdateRequired' => $requiresKkUpdate,
             'kkProfilingFormData' => $requiresKkUpdate && $registration
@@ -83,7 +101,24 @@ class DashboardController extends Controller
                 ? ($formData['purok_zone'][0] ?? '')
                 : ($requiresKkUpdate ? ($formData['purok_zone'] ?? '') : ''),
             'kkSelectedFacebookProfileUrl' => '',
-        ])->withHeaders([
+        ];
+        $logData['view_data_prep_ms'] = round((microtime(true) - $viewDataStart) * 1000, 2);
+
+        $logData['total_dashboard_ms'] = round((microtime(true) - $startTime) * 1000, 2);
+
+        // Log query information
+        $queries = \DB::getQueryLog();
+        $logData['query_count'] = count($queries);
+        $logData['queries'] = array_map(function($query) {
+            return [
+                'sql' => $query['query'],
+                'time_ms' => round($query['time'] * 1000, 2),
+            ];
+        }, $queries);
+
+        \Log::info('Dashboard controller profile', $logData);
+
+        return view('dashboard::dashboard', $viewData)->withHeaders([
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma' => 'no-cache',
             'Expires' => 'Sat, 01 Jan 2000 00:00:00 GMT',

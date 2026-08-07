@@ -8,6 +8,7 @@ use App\Models\Barangay;
 use App\Services\BarangayLogoUrlService;
 use App\Services\CloudinaryService;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -28,6 +29,7 @@ class BarangaySkProfileService
         'councilor',
         'kagawad',
     ];
+    private const CACHE_TTL = 600; // 10 minutes
 
     public function __construct(private readonly BarangayLogoUrlService $logoUrlService)
     {
@@ -51,24 +53,26 @@ class BarangaySkProfileService
      */
     public function listForTenant(int $tenantId): array
     {
-        return Barangay::query()
-            ->where('tenant_id', $tenantId)
-            ->orderBy('name')
-            ->get()
-            ->map(function (Barangay $barangay) {
-                $officials = $this->listOfficials($barangay->id);
+        return Cache::remember("barangay_sk_profiles.list.{$tenantId}", self::CACHE_TTL, function () use ($tenantId) {
+            return Barangay::query()
+                ->where('tenant_id', $tenantId)
+                ->orderBy('name')
+                ->get()
+                ->map(function (Barangay $barangay) {
+                    $officials = $this->listOfficials($barangay->id);
 
-                return [
-                    'id' => $barangay->id,
-                    'name' => $barangay->name,
-                    'slug' => Str::slug($barangay->name),
-                    'logo_url' => $this->logoUrlService->resolve($barangay->id),
-                    'initials' => $this->buildInitials($barangay->name),
-                    'chairman' => $this->resolveChairmanLabel($officials),
-                ];
-            })
-            ->values()
-            ->all();
+                    return [
+                        'id' => $barangay->id,
+                        'name' => $barangay->name,
+                        'slug' => Str::slug($barangay->name),
+                        'logo_url' => $this->logoUrlService->resolve($barangay->id),
+                        'initials' => $this->buildInitials($barangay->name),
+                        'chairman' => $this->resolveChairmanLabel($officials),
+                    ];
+                })
+                ->values()
+                ->all();
+        });
     }
 
     /**
@@ -105,37 +109,39 @@ class BarangaySkProfileService
      */
     private function listOfficials(int $barangayId, ?string $logoUrl = null): Collection
     {
-        $rows = DB::table('users')
-            ->join('official_profiles', 'users.id', '=', 'official_profiles.user_id')
-            ->where('users.barangay_id', $barangayId)
-            ->where('users.role', 'sk_official')
-            ->where('users.status', 'ACTIVE')
-            ->orderBy('official_profiles.position')
-            ->orderBy('official_profiles.last_name')
-            ->get([
-                'users.name',
-                'official_profiles.first_name',
-                'official_profiles.last_name',
-                'official_profiles.middle_name',
-                'official_profiles.suffix',
-                'official_profiles.position',
-            ]);
+        return Cache::remember("barangay_sk_profiles.officials.{$barangayId}", self::CACHE_TTL, function () use ($barangayId, $logoUrl) {
+            $rows = DB::table('users')
+                ->join('official_profiles', 'users.id', '=', 'official_profiles.user_id')
+                ->where('users.barangay_id', $barangayId)
+                ->where('users.role', 'sk_official')
+                ->where('users.status', 'ACTIVE')
+                ->orderBy('official_profiles.position')
+                ->orderBy('official_profiles.last_name')
+                ->get([
+                    'users.name',
+                    'official_profiles.first_name',
+                    'official_profiles.last_name',
+                    'official_profiles.middle_name',
+                    'official_profiles.suffix',
+                    'official_profiles.position',
+                ]);
 
-        return $rows->map(function ($row) use ($logoUrl) {
-            $fullName = $this->buildOfficialFullName($row);
-            $role = trim((string) ($row->position ?? 'SK Official'));
+            return $rows->map(function ($row) use ($logoUrl) {
+                $fullName = $this->buildOfficialFullName($row);
+                $role = trim((string) ($row->position ?? 'SK Official'));
 
-            return [
-                'name' => $fullName,
-                'role' => $role !== '' ? $role : 'SK Official',
-                'initials' => $this->buildInitials($fullName),
-                'logo_url' => $logoUrl,
-                'sort_key' => $this->positionSortKey($role),
-            ];
-        })->sortBy([
-            ['sort_key', 'asc'],
-            ['name', 'asc'],
-        ])->values();
+                return [
+                    'name' => $fullName,
+                    'role' => $role !== '' ? $role : 'SK Official',
+                    'initials' => $this->buildInitials($fullName),
+                    'logo_url' => $logoUrl,
+                    'sort_key' => $this->positionSortKey($role),
+                ];
+            })->sortBy([
+                ['sort_key', 'asc'],
+                ['name', 'asc'],
+            ])->values();
+        });
     }
 
     /**

@@ -4,6 +4,9 @@
     @include('layout::favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>OnePortal Youth Officials</title>
     @vite([
@@ -12,13 +15,16 @@
         'app/Modules/Authentication/assets/js/youth-login.js',
         'app/Modules/Authentication/assets/js/auth-legal.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
-    @if(config('services.turnstile.enabled'))
-        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-        <script>
-            window.turnstileSiteKey = {{ json_encode(config('services.turnstile.site_key')) }};
-        </script>
+
+    @if(config('services.turnstile.enabled') && config('services.turnstile.site_key'))
+        {{--
+            render=explicit: prevents Cloudflare from auto-scanning the DOM and
+            rendering any widget it finds. Our JS calls turnstile.render() manually
+            after waiting for the API to be ready, eliminating the load-race bug.
+        --}}
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
     @endif
+
     <style>
         .youth-main-title {
             white-space: nowrap;
@@ -27,27 +33,78 @@
         }
 
         @media (max-width: 1024px) {
-            .youth-main-title {
-                font-size: 32px;
-            }
+            .youth-main-title { font-size: 32px; }
         }
-
         @media (max-width: 768px) {
-            .youth-main-title {
-                font-size: 28px;
-            }
+            .youth-main-title { font-size: 28px; }
         }
-
         @media (max-width: 480px) {
-            .youth-main-title {
-                font-size: 24px;
-            }
+            .youth-main-title { font-size: 24px; }
         }
     </style>
 </head>
 <body class="youth-login-page">
-    @include('dashboard::loading')
-    
+
+    {{-- ─── Turnstile Modal Overlay ─────────────────────────────────────────────
+         Rendered in the DOM at all times when Turnstile is enabled.
+         Visibility is controlled purely by the .turnstile-modal-visible class
+         that youth-login.js adds/removes. The widget itself (#turnstile-container)
+         is empty until JS calls turnstile.render() on the first reveal.
+    ──────────────────────────────────────────────────────────────────────────── --}}
+    @if(config('services.turnstile.enabled') && config('services.turnstile.site_key'))
+        <div id="turnstile-modal" class="turnstile-modal" role="dialog" aria-modal="true" aria-label="Human verification">
+
+            {{-- Semi-transparent backdrop — click closes the modal --}}
+            <div id="turnstile-modal-backdrop" class="turnstile-modal-backdrop"></div>
+
+            {{-- Centered verification card --}}
+            <div class="turnstile-modal-card">
+
+                {{-- Card header --}}
+                <div class="turnstile-modal-header">
+                    <div class="turnstile-modal-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0
+                                     01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332
+                                     9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="turnstile-modal-title">Verify you're human</h2>
+                        <p class="turnstile-modal-subtitle">Complete the security check to continue signing in.</p>
+                    </div>
+                    {{-- Close button --}}
+                    <button id="turnstile-close-btn"
+                            class="turnstile-close-btn"
+                            type="button"
+                            aria-label="Cancel verification">
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414
+                                     1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293
+                                     4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                  clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Widget mount point --}}
+                <div class="turnstile-modal-body">
+                    <div id="turnstile-container"></div>
+                </div>
+
+                {{-- Cancel link --}}
+                <div class="turnstile-modal-footer">
+                    <button id="turnstile-cancel-btn" type="button" class="turnstile-cancel-link">
+                        Cancel and go back
+                    </button>
+                </div>
+
+            </div>{{-- /.turnstile-modal-card --}}
+        </div>{{-- /#turnstile-modal --}}
+    @endif
+
     <!-- Animated Background -->
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
@@ -89,12 +146,6 @@
                         </svg>
                         <span>{{ session('login_error') }}</span>
                     </div>
-                    <script>
-                        // Reset Turnstile state on error
-                        if (typeof window.resetTurnstileState === 'function') {
-                            window.resetTurnstileState();
-                        }
-                    </script>
                 @endif
 
                 @if (session('success'))
@@ -107,7 +158,14 @@
                 @endif
 
                 <!-- Login Form -->
-                <form class="youth-login-form" id="loginForm" method="POST" action="{{ route('login') }}">
+                <form class="youth-login-form" id="loginForm"
+                      method="POST"
+                      action="{{ route('login') }}"
+                      novalidate
+                      @if(config('services.turnstile.enabled') && config('services.turnstile.site_key'))
+                          data-turnstile-enabled="true"
+                          data-turnstile-sitekey="{{ config('services.turnstile.site_key') }}"
+                      @endif>
                     @csrf
 
                     <!-- Email Field -->
@@ -125,10 +183,10 @@
                             name="email"
                             class="youth-input"
                             value="{{ old('email') }}"
-                            required
                             autofocus
                             autocomplete="email"
                             placeholder="Enter example@gmail.com"
+                            maxlength="150"
                         >
                         <div class="youth-field-error" id="email-error" hidden style="display: none !important;"></div>
                     </div>
@@ -147,7 +205,6 @@
                                 id="password"
                                 name="password"
                                 class="youth-input password-input"
-                                required
                                 autocomplete="current-password"
                                 placeholder="Enter your password"
                             >
@@ -184,11 +241,18 @@
 
                     @include('authentication::partials.login-legal-consent')
 
-                    <!-- Cloudflare Turnstile (Hidden initially) -->
-                    @if(config('services.turnstile.enabled'))
-                        <div class="youth-form-group" id="turnstile-container" style="display: none;">
-                            <div id="turnstile-widget"></div>
-                            <div class="youth-field-error" id="turnstile-error" hidden style="display: none !important;"></div>
+                    {{--
+                        Hidden Turnstile server-error anchor.
+                        When the backend rejects the token it redirects back with the
+                        'cf-turnstile-response' error key in session. JS detects
+                        #turnstile-server-error on page load and auto-opens the modal
+                        so the user can re-verify without clicking Login again.
+                    --}}
+                    @if(session('turnstile_error'))
+                        <div id="turnstile-server-error"
+                             style="display:none;"
+                             aria-hidden="true">
+                            {{ session('turnstile_error') }}
                         </div>
                     @endif
 
@@ -216,10 +280,11 @@
     @include('authentication::partials.legal-modals')
     @include('authentication::partials.login-legal-prompt')
 
-    <!-- Load loading script AFTER the overlay HTML is rendered -->
+    <!-- Shared loading overlay script (must load after the overlay HTML) -->
     <script src="{{ url('/shared/js/loading.js') }}"></script>
 
     <script>
+        // Password toggle — self-contained, no conflict with form submit handlers
         (function () {
             var btn   = document.getElementById('pwToggleBtn');
             var input = document.getElementById('password');
@@ -230,91 +295,7 @@
                 btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
                 btn.classList.toggle('pw-visible', show);
             });
-        })();
-
-        // Form Validation
-        (() => {
-            const form = document.getElementById('loginForm');
-            const emailInput = document.getElementById('email');
-            const passwordInput = document.getElementById('password');
-            const emailError = document.getElementById('email-error');
-            const passwordError = document.getElementById('password-error');
-
-            function validateEmail(email) {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                return emailRegex.test(email);
-            }
-
-            function showError(input, errorElement, message) {
-                input.classList.add('error');
-                errorElement.textContent = message;
-                errorElement.hidden = false;
-                errorElement.style.display = 'block';
-            }
-
-            function clearError(input, errorElement) {
-                input.classList.remove('error');
-                errorElement.hidden = true;
-                errorElement.style.display = 'none';
-            }
-
-
-
-            // Validate on submit — only show loading when form will actually submit
-            form.addEventListener('submit', (e) => {
-                let isValid = true;
-
-                clearError(emailInput, emailError);
-                clearError(passwordInput, passwordError);
-
-                if (!emailInput.value.trim()) {
-                    showError(emailInput, emailError, 'Email is required');
-                    isValid = false;
-                } else if (!validateEmail(emailInput.value.trim())) {
-                    showError(emailInput, emailError, 'Please enter a valid email address');
-                    isValid = false;
-                }
-
-                if (!passwordInput.value) {
-                    showError(passwordInput, passwordError, 'Password is required');
-                    isValid = false;
-                }
-
-                if (!isValid) {
-                    e.preventDefault();
-                    return false;
-                }
-
-                const submitBtn = form.querySelector('button[type="submit"]');
-                if (submitBtn) {
-                    submitBtn.disabled = true;
-                    const label = submitBtn.querySelector('span');
-                    if (label) label.textContent = 'Signing In...';
-                }
-
-                if (typeof showLoading === 'function') {
-                    showLoading('Signing In');
-                }
-            });
-
-            document.getElementById('forgotBtn').addEventListener('click', (e) => {
-                e.preventDefault();
-                if (typeof showLoading !== 'undefined') {
-                    showLoading('Redirecting to password recovery');
-                    setTimeout(() => {
-                        window.location.href = e.target.href;
-                    }, 300);
-                } else {
-                    window.location.href = e.target.href;
-                }
-            });
-
-            document.getElementById('homepageBtn')?.addEventListener('click', (e) => {
-                if (typeof showLoading !== 'undefined') {
-                    showLoading('Redirecting to Homepage');
-                }
-            });
-        })();
+        }());
     </script>
 </body>
 </html>

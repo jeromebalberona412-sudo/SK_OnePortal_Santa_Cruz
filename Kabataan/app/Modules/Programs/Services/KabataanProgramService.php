@@ -14,10 +14,13 @@ use App\Modules\Profile\Services\ProfileImageService;
 use App\Services\ScholarshipSystemFieldsService;
 use App\Services\SkOfficialsNotificationDispatcher;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
 
 class KabataanProgramService
 {
+    private const CACHE_TTL = 300; // 5 minutes
+
     public function __construct(
         private readonly ProgramDocumentService $documentService,
         private readonly KabataanProgramSurveyService $surveyService,
@@ -102,12 +105,14 @@ class KabataanProgramService
             return null;
         }
 
-        return Abyip::query()
-            ->documents()
-            ->where('barangay_id', $barangayId)
-            ->orderByDesc('fiscal_year')
-            ->orderByDesc('id')
-            ->first();
+        return Cache::remember("abyip.latest_document.{$barangayId}", self::CACHE_TTL, function () use ($barangayId) {
+            return Abyip::query()
+                ->documents()
+                ->where('barangay_id', $barangayId)
+                ->orderByDesc('fiscal_year')
+                ->orderByDesc('id')
+                ->first();
+        });
     }
 
     /**

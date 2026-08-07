@@ -121,6 +121,11 @@ document.addEventListener('DOMContentLoaded', () => {
         loginForm.addEventListener('submit', (e) => {
             if (e.defaultPrevented) return;
 
+            // Skip if Turnstile is enabled - the login JS handles loading
+            if (loginForm.dataset.turnstileEnabled === 'true') {
+                return;
+            }
+
             const emailInput = loginForm.querySelector('input[type="email"], input[name="email"]');
             const passwordInput = loginForm.querySelector('input[type="password"], input[name="password"]');
             const emailFilled = emailInput && emailInput.value.trim() !== '';
