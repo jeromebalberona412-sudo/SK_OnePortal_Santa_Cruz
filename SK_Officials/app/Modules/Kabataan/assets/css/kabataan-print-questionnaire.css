@@ -42,6 +42,62 @@ body.kk-print-body {
     color: #111;
 }
 
+/* ── Print header layout: everything stacked on the right ── */
+.kk-print-questionnaire .kkp-form-header {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+/* title + respondent + date block */
+.kk-print-questionnaire .kkp-form-title-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 2px;
+    text-align: right;
+}
+
+.kk-print-questionnaire .kkp-form-main-title {
+    font-size: 13px;
+    font-weight: 900;
+    text-align: right;
+    margin: 0;
+}
+
+.kk-print-questionnaire .kkp-form-header-fields {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    margin: 0;
+}
+
+.kk-print-questionnaire .kkp-hdr-field {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+/* logo beside the text block */
+.kk-print-questionnaire .kkp-form-logo {
+    display: flex;
+    align-items: flex-start;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.kk-print-questionnaire .kkp-form-logo img {
+    width: 50px;
+    height: 50px;
+}
+
 @media print {
     body.kk-print-body {
         background: #fff;
@@ -54,5 +110,31 @@ body.kk-print-body {
 
     .kk-print-questionnaire.kk-view-paper {
         font-size: 11px;
+    }
+
+    /* Header: everything right-aligned */
+    .kk-print-questionnaire .kkp-form-header {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: flex-start !important;
+        justify-content: flex-end !important;
+    }
+
+    .kk-print-questionnaire .kkp-form-title-col {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-end !important;
+        text-align: right !important;
+    }
+
+    .kk-print-questionnaire .kkp-form-header-fields {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-end !important;
+        justify-content: flex-start !important;
+    }
+
+    .kk-print-questionnaire .kkp-form-logo {
+        align-items: flex-start !important;
     }
 }

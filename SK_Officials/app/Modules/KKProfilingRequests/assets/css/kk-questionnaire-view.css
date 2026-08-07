@@ -348,3 +348,185 @@
 .kk-view-document-link:hover {
     text-decoration: underline;
 }
+
+/* ── KK PROFILING FORM HEADER (matches Kabataan reference) ── */
+.kkp-form-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: none;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+}
+
+.kkp-form-title-col {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.kkp-form-main-title {
+    font-size: 13px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #111;
+    line-height: 1.2;
+    align-self: flex-end;
+    padding-bottom: 2px;
+}
+
+.kkp-form-header-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+    margin-left: auto;
+    margin-right: 10px;
+}
+
+.kkp-hdr-field {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.kkp-hdr-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #111;
+    white-space: nowrap;
+}
+
+.kkp-hdr-input {
+    border: none;
+    border-bottom: 1px solid #555;
+    background: transparent;
+    font-size: 11px;
+    color: #111;
+    padding: 1px 4px;
+    width: 120px;
+    outline: none;
+    text-align: center;
+}
+
+.kkp-hdr-input.kkp-hdr-input-readonly {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #555;
+    text-align: center;
+}
+
+.kkp-hdr-input-auto {
+    width: 92px;
+    font-size: 10px;
+    color: #64748b;
+    font-style: italic;
+}
+
+.kkp-hdr-input-auto::placeholder {
+    color: #64748b;
+    opacity: 1;
+}
+
+.kkp-form-logo {
+    flex-shrink: 0;
+}
+
+.kkp-form-logo img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .kkp-form-header {
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .kkp-form-title-col {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .kkp-form-main-title {
+        font-size: 12px;
+        align-self: center;
+    }
+
+    .kkp-form-header-fields {
+        align-items: center;
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .kkp-form-logo img {
+        width: 45px;
+        height: 45px;
+    }
+}
+
+@media (max-width: 480px) {
+    .kkp-form-main-title {
+        font-size: 11px;
+    }
+
+    .kkp-hdr-label,
+    .kkp-hdr-input {
+        font-size: 10px;
+    }
+
+    .kkp-form-logo img {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+
+/* ── NOTICE BOX (matches Kabataan reference) ── */
+.kkf-notice-box,
+.kkp-notice-box {
+    border: 2px solid #111;
+    background: #e8e8e8;
+    padding: 8px 14px;
+    margin: 8px 0;
+}
+
+.kkf-notice-title,
+.kkp-notice-title {
+    font-size: 11px;
+    font-weight: 900;
+    color: #111;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    text-decoration: underline;
+    font-family: 'Times New Roman', Times, serif;
+}
+
+.kkf-notice-body,
+.kkp-notice-body {
+    font-size: 10.5px;
+    color: #111;
+    line-height: 1.55;
+    margin-bottom: 6px;
+    text-align: justify;
+}
+
+.kkf-notice-confidential,
+.kkp-notice-confidential {
+    font-size: 10.5px;
+    font-weight: 900;
+    color: #111;
+    line-height: 1.55;
+    margin: 0;
+    text-align: center;
+    text-transform: uppercase;
+}
