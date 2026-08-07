@@ -1,7 +1,7 @@
 /**
  * SK Officials login form validation and shared UI helpers.
  */
-export function initLoginForm(options = {}) {
+function initLoginForm(options = {}) {
     const loginForm = document.getElementById('loginForm');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
@@ -43,27 +43,50 @@ export function initLoginForm(options = {}) {
     let turnstileLoaded = false;
     let turnstileWidgetId = null;
 
-    // Load Turnstile widget dynamically
+    // Load Turnstile widget dynamically — called once after form validation passes
     function loadTurnstileWidget() {
-        if (turnstileLoaded || typeof turnstile === 'undefined') return;
+        if (turnstileLoaded) return;
+        if (typeof turnstile === 'undefined') {
+            // Turnstile script not loaded yet, show error
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.querySelector('span').textContent = 'Login';
+            }
+            emailInput.disabled = false;
+            passwordInput.disabled = false;
+            if (turnstileError) {
+                showFieldError(null, turnstileError, 'Security check failed to load. Please refresh the page and try again.');
+            }
+            return;
+        }
 
         turnstileLoaded = true;
-        turnstileContainer.style.display = 'block';
+
+        // Show the Turnstile container so the checkbox appears
+        if (turnstileContainer) {
+            turnstileContainer.style.display = 'block';
+        }
+
+        // Restore inputs so user can interact while completing the challenge
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.querySelector('span').textContent = 'Login';
+        }
+        emailInput.disabled = false;
+        passwordInput.disabled = false;
 
         turnstileWidgetId = turnstile.render('#turnstile-widget', {
             sitekey: window.turnstileSiteKey,
             callback: function(token) {
-                // Turnstile completed successfully
+                // Turnstile completed — auto-submit the form
                 clearFieldError(null, turnstileError);
                 submitLoginForm();
             },
             'error-callback': function() {
-                // Turnstile failed
                 showFieldError(null, turnstileError, 'Security verification failed. Please try again.');
                 resetFormState();
             },
             'expired-callback': function() {
-                // Turnstile expired
                 showFieldError(null, turnstileError, 'Security verification expired. Please try again.');
                 resetFormState();
             }
@@ -83,7 +106,7 @@ export function initLoginForm(options = {}) {
     }
 
     function submitLoginForm() {
-        // Create hidden input for Turnstile token
+        // Attach the Turnstile token as a hidden input
         let tokenInput = document.querySelector('input[name="cf-turnstile-response"]');
         if (!tokenInput) {
             tokenInput = document.createElement('input');
@@ -92,16 +115,14 @@ export function initLoginForm(options = {}) {
             loginForm.appendChild(tokenInput);
         }
 
-        // Get the token from Turnstile
         const response = turnstile.getResponse(turnstileWidgetId);
         tokenInput.value = response;
 
-        // Disable form elements and show loading state
+        // Lock the form while submitting
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.querySelector('span').textContent = 'Authenticating...';
         }
-
         emailInput.disabled = true;
         passwordInput.disabled = true;
         if (turnstileContainer) {
@@ -109,12 +130,10 @@ export function initLoginForm(options = {}) {
             turnstileContainer.style.opacity = '0.5';
         }
 
-        // Show loading spinner
         if (typeof showLoading === 'function') {
             showLoading('Authenticating...');
         }
 
-        // Submit the form
         loginForm.submit();
     }
 
@@ -150,60 +169,70 @@ export function initLoginForm(options = {}) {
 
         if (!isValid) return false;
 
-        // If Turnstile is enabled and not yet loaded, load it now
-        if (turnstileContainer && window.turnstileSiteKey && !turnstileLoaded) {
-            // Show loading state while preparing Turnstile
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.querySelector('span').textContent = 'Loading Security Check...';
-            }
-            emailInput.disabled = true;
-            passwordInput.disabled = true;
-
-            loadTurnstileWidget();
-
-            // Reset button state after widget loads
-            setTimeout(() => {
+        // Turnstile enabled — show the widget first (if not yet loaded)
+        if (turnstileContainer && window.turnstileSiteKey) {
+            if (!turnstileLoaded) {
+                // Lock the button briefly while rendering the widget
                 if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.querySelector('span').textContent = 'Login';
+                    submitBtn.disabled = true;
+                    submitBtn.querySelector('span').textContent = 'Loading Security Check...';
                 }
-                emailInput.disabled = false;
-                passwordInput.disabled = false;
-            }, 500);
+                emailInput.disabled = true;
+                passwordInput.disabled = true;
 
+                loadTurnstileWidget();
+                // Button and inputs are re-enabled inside loadTurnstileWidget() after render
+                return false;
+            }
+
+            // Widget already visible — check if user completed the challenge
+            const response = turnstile.getResponse(turnstileWidgetId);
+            if (!response) {
+                showFieldError(null, turnstileError, 'Please complete the security verification.');
+                return false;
+            }
+
+            // Challenge already passed — submit immediately
+            submitLoginForm();
             return false;
         }
 
-        // If Turnstile is already loaded but not completed, show error
-        if (turnstileContainer && turnstileLoaded) {
-            const response = turnstile.getResponse(turnstileWidgetId);
-            if (!response) {
-                showFieldError(null, turnstileError, 'Pakumpleto ang seguridad na pagpapatunay.');
-                return false;
-            }
+        // Turnstile not enabled — submit directly with a loading spinner
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.querySelector('span').textContent = 'Authenticating...';
         }
-
-        // If Turnstile is not enabled, submit directly
-        if (!turnstileContainer) {
-            submitLoginForm();
+        if (typeof showLoading === 'function') {
+            showLoading('Authenticating...');
         }
+        loginForm.submit();
     });
 
     document.getElementById('forgotBtn')?.addEventListener('click', function () {
         setTimeout(() => { window.location.href = '/forgot-password'; }, 300);
     });
 
-    // Expose reset function for error handling
+    // Expose reset function for server-side error handling
     window.resetTurnstileState = function() {
         if (turnstileLoaded && turnstileWidgetId && typeof turnstile !== 'undefined') {
             turnstile.reset(turnstileWidgetId);
         }
         if (turnstileContainer) {
             turnstileContainer.style.display = 'none';
+            turnstileContainer.style.pointerEvents = '';
+            turnstileContainer.style.opacity = '';
         }
         turnstileLoaded = false;
         turnstileWidgetId = null;
         resetFormState();
     };
+}
+
+// Auto-initialize when the DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+        initLoginForm();
+    });
+} else {
+    initLoginForm();
 }
