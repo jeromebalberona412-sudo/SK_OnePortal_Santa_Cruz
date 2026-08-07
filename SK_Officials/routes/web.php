@@ -66,8 +66,6 @@ use App\Modules\Rejected_Scholarship\Controllers\RejectedScholarshipController;
 use App\Modules\Rejected_Sports\Controllers\RejectedSportsController;
 use App\Modules\ScheduleKKProfiling\Controllers\ScheduleKKProfilingController;
 use App\Modules\Sports_Programs\Controllers\ArchivedSportsProgramController;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
 Route::get('/', function () {
     return redirect()->route('login');
