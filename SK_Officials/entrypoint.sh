@@ -15,7 +15,6 @@ mkdir -p /var/cache/nginx || echo "Failed to create /var/cache/nginx"
 mkdir -p /run/nginx || echo "Failed to create /run/nginx"
 mkdir -p /var/log/supervisor || echo "Failed to create /var/log/supervisor"
 mkdir -p /var/run/supervisor || echo "Failed to create /var/run/supervisor"
-mkdir -p /var/log/php-fpm || echo "Failed to create /var/log/php-fpm"
 mkdir -p /var/lib/php/sessions || echo "Failed to create /var/lib/php/sessions"
 mkdir -p /var/lib/php/wsdlcache || echo "Failed to create /var/lib/php/wsdlcache"
 
@@ -25,9 +24,9 @@ mkdir -p /var/lib/php/wsdlcache || echo "Failed to create /var/lib/php/wsdlcache
 echo "Setting system directory permissions..."
 chown -R www-data:www-data /var/lib/nginx /var/cache/nginx /run/nginx || echo "Failed to chown nginx directories"
 chown -R root:root /var/log/nginx /var/log/supervisor /var/run/supervisor || echo "Failed to chown log directories"
-chown -R www-data:www-data /var/lib/php /var/log/php-fpm || echo "Failed to chown php directories"
+chown -R www-data:www-data /var/lib/php || echo "Failed to chown php directories"
 chmod -R 755 /var/log/nginx /var/log/supervisor /var/run/supervisor || echo "Failed to chmod log directories"
-chmod -R 755 /var/lib/php /var/log/php-fpm || echo "Failed to chmod php directories"
+chmod -R 755 /var/lib/php || echo "Failed to chmod php directories"
 
 # ============================================
 # Set proper permissions for Laravel

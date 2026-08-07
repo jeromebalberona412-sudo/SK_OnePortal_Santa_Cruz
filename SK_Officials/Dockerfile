@@ -117,9 +117,8 @@ RUN mkdir -p \
     /var/log/supervisor \
     /var/run/supervisor
 
-# Create necessary directories for PHP-FPM
+# Create necessary directories for PHP sessions
 RUN mkdir -p \
-    /var/log/php-fpm \
     /var/lib/php/sessions \
     /var/lib/php/wsdlcache
 
@@ -138,9 +137,9 @@ RUN chown -R www-data:www-data /var/lib/nginx /var/cache/nginx /run/nginx \
     && chown -R root:root /var/log/nginx /var/log/supervisor /var/run/supervisor \
     && chmod -R 755 /var/log/nginx /var/log/supervisor /var/run/supervisor
 
-# Set permissions for PHP-FPM
-RUN chown -R www-data:www-data /var/lib/php /var/log/php-fpm \
-    && chmod -R 755 /var/lib/php /var/log/php-fpm
+# Set permissions for PHP sessions
+RUN chown -R www-data:www-data /var/lib/php \
+    && chmod -R 755 /var/lib/php
 
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
