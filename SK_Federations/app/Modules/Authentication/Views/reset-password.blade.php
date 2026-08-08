@@ -61,9 +61,13 @@
             {{-- RIGHT: Reset Password Card --}}
             <div class="login-form-container">
                 <div class="login-card-inner">
-                    <div class="form-header">
-                        <h2 class="nowrap">Set New Password 🔐</h2>
-                        <p>Create a new secure password for your account</p>
+                    <div class="form-header" style="text-align:center;margin-bottom:1.75rem;">
+                        <p style="font-size:1.35rem;font-weight:800;color:#0f172a;letter-spacing:-0.01em;margin:0 0 0.5rem;">
+                            Set New Password
+                        </p>
+                        <p style="font-size:0.875rem;color:#64748b;font-weight:400;margin:0;line-height:1.55;">
+                            Create a new secure password for your account.
+                        </p>
                     </div>
 
                     @if ($errors->has('email') || $errors->has('reset'))

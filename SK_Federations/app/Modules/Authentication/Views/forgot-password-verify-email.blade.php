@@ -10,7 +10,7 @@
     <title>Check Your Email - SK OnePortal</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     @vite([
-        'app/Modules/Authentication/assets/css/style.css',
+        'app/Modules/Authentication/assets/css/auth-base.css',
         'app/Modules/Authentication/assets/css/forgot-password.css',
         'app/Modules/Authentication/assets/js/forgot-password.js',
     ])
@@ -21,6 +21,7 @@
     @endauth
     <script>
         (function() {
+            {{-- Prevent browser back button from going back to /forgot-password --}}
             window.history.pushState(null, "", window.location.href);
             window.onpopstate = function() {
                 window.history.pushState(null, "", window.location.href);
@@ -29,12 +30,13 @@
     </script>
 
     @php
-        $resetEmail = session('password_reset_email', '');
-        $statusMsg  = session('status', 'A password reset link has been sent to your email address.');
+        $resetEmail   = session('password_reset_email', '');
+        $statusMsg    = session('status', 'A password reset link has been sent to your email address.');
+        // Scoped key: each email address gets its own independent cooldown timer
+        $cooldownKey  = 'sk_fed_fp_cooldown_' . md5($resetEmail);
     @endphp
 
     <div class="login-page">
-
         <div class="bg-wrapper">
             <div class="bg-image"></div>
             <div class="gradient-overlay"></div>
@@ -56,7 +58,7 @@
                 <p class="brand-subtitle" style="white-space:nowrap;">SK Federation Portal &ndash; Santa Cruz, Laguna</p>
             </div>
 
-            {{-- RIGHT: Verify Email Card --}}
+            {{-- RIGHT: Check Email Card --}}
             <div class="login-form-container">
                 <div class="login-card-inner">
 
@@ -79,12 +81,12 @@
                         {{ $statusMsg }}
                     </div>
 
-                    {{-- Resend form --}}
                     <form id="forgotPasswordForm"
                           class="login-form"
                           method="POST"
                           action="{{ route('password.email', [], false) }}"
                           data-email-sent="1"
+                          data-cooldown-key="{{ $cooldownKey }}"
                           novalidate>
                         @csrf
                         <input type="hidden" name="email" id="email" value="{{ $resetEmail }}">

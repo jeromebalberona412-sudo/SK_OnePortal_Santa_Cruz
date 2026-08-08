@@ -1,323 +1,258 @@
+/**
+ * SK Federations — Email Verify Wait
+ *
+ * Countdown rules:
+ *  - First arrival (no cooldown stored yet): start fresh 60s immediately
+ *    because the server already sent the verification email.
+ *  - Page refresh while cooldown is running: resume from where it left off.
+ *  - Clicking Resend: starts a new 60s from that moment.
+ *  - After successful verification: clears cooldown and redirects instantly.
+ */
 document.addEventListener('DOMContentLoaded', () => {
+    const POLL_INTERVAL_MS = 2000;
     const COOLDOWN_SECONDS = 60;
-    const POLL_INTERVAL_MS = 500;
-    const BTN_LABEL = 'Resend Verification Email';
+    const BTN_LABEL        = 'Resend Verification Email';
 
-    if (typeof window.hideLoading === 'function') {
-        window.hideLoading();
-    }
+    if (typeof window.hideLoading === 'function') window.hideLoading();
 
     const verifyContent = document.querySelector('.verify-content');
-    if (!verifyContent) {
-        return;
-    }
+    if (!verifyContent) return;
 
-    const resendUrl = verifyContent.dataset.resendUrl || '';
+    const resendUrl    = verifyContent.dataset.resendUrl    || '';
     const dashboardUrl = verifyContent.dataset.dashboardUrl || '/dashboard';
-    const email = verifyContent.dataset.email || '';
-    const userId = verifyContent.dataset.userId || '';
-    const sessionKey = verifyContent.dataset.sessionKey || email;
+    const email        = verifyContent.dataset.email        || '';
+    const userId       = verifyContent.dataset.userId       || '';
+    const sessionKey   = verifyContent.dataset.sessionKey   || email;
+
+    // Status-poll URL — includes session context so the server can resolve it
     const statusUrl = (() => {
         const base = verifyContent.dataset.statusUrl || '';
-        if (!base) {
-            return base;
-        }
-
-        const params = new URLSearchParams();
-        if (sessionKey) {
-            params.set('session_key', sessionKey);
-        }
-        if (userId) {
-            params.set('user_id', userId);
-        }
-
-        const query = params.toString();
-        if (!query) {
-            return base;
-        }
-
-        return `${base}${base.includes('?') ? '&' : '?'}${query}`;
+        if (!base) return base;
+        const p = new URLSearchParams();
+        if (sessionKey) p.set('session_key', sessionKey);
+        if (userId)     p.set('user_id', userId);
+        const q = p.toString();
+        return q ? `${base}${base.includes('?') ? '&' : '?'}${q}` : base;
     })();
 
-    const freshSession = verifyContent.dataset.freshSession === '1';
-    const resendJustSent = verifyContent.dataset.resendJustSent === '1';
-    const serverCooldown = resendJustSent
-        ? Number.parseInt(verifyContent.dataset.resendCooldown || '0', 10)
-        : 0;
-
-    const stateElement = document.getElementById('verification-state');
-    const resendBtn = document.getElementById('resend-btn');
-    const resendBtnLabel = document.getElementById('resend-btn-label');
+    const stateEl         = document.getElementById('verification-state');
+    const resendBtn       = document.getElementById('resend-btn');
+    const resendBtnLabel  = document.getElementById('resend-btn-label');
     const resendBtnSpinner = document.getElementById('resend-btn-spinner');
-    const resendCooldownElement = document.getElementById('resend-cooldown');
-    const resendCooldownCount = document.getElementById('resend-cooldown-count');
-    const resendStatusElement = document.getElementById('resend-status');
+    const cooldownEl      = document.getElementById('resend-cooldown');
+    const cooldownCount   = document.getElementById('resend-cooldown-count');
+    const statusEl        = document.getElementById('resend-status');
 
-    const COOLDOWN_KEY = `sk_fed_resend_cooldown_${sessionKey}`;
-    let resendTimerInterval = null;
-    let resendInFlight = false;
-    let verificationComplete = false;
-    let redirectStarted = false;
+    // Per-session key — unique per login attempt so it auto-expires with the session
+    const COOLDOWN_KEY = `sk_fed_resend_until_${sessionKey}`;
 
-    function clearResendCooldown() {
+    let timerInterval       = null;
+    let pollTimeout         = null;
+    let resendInFlight      = false;
+    let verificationDone    = false;
+    let redirectStarted     = false;
+
+    // ── Cooldown storage helpers ──────────────────────────────────────────────
+
+    function cooldownExpiry() {
+        return Number.parseInt(localStorage.getItem(COOLDOWN_KEY) || '0', 10);
+    }
+
+    function remaining() {
+        const expiry = cooldownExpiry();
+        return expiry > Date.now() ? Math.max(0, Math.ceil((expiry - Date.now()) / 1000)) : 0;
+    }
+
+    function startCooldown(seconds) {
+        localStorage.setItem(COOLDOWN_KEY, String(Date.now() + (seconds || COOLDOWN_SECONDS) * 1000));
+    }
+
+    function clearCooldown() {
         localStorage.removeItem(COOLDOWN_KEY);
     }
 
-    function setResendCooldownExpiry(seconds) {
-        const duration = Math.max(1, seconds || COOLDOWN_SECONDS);
-        localStorage.setItem(COOLDOWN_KEY, String(Date.now() + duration * 1000));
+    function fmt(s) {
+        return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
     }
 
-    function getRemainingCooldown() {
-        const expiry = Number.parseInt(localStorage.getItem(COOLDOWN_KEY) || '0', 10);
-        if (expiry > Date.now()) {
-            return Math.max(0, Math.ceil((expiry - Date.now()) / 1000));
-        }
+    // ── UI helpers ────────────────────────────────────────────────────────────
 
-        return 0;
+    function setLabel(text) {
+        if (resendBtnLabel) resendBtnLabel.textContent = text;
+        else if (resendBtn) resendBtn.textContent = text;
     }
 
-    function formatCountdown(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${String(secs).padStart(2, '0')}`;
+    function setLoading(loading) {
+        if (resendBtn) { resendBtn.classList.toggle('is-loading', loading); resendBtn.disabled = loading; }
+        if (resendBtnSpinner) resendBtnSpinner.hidden = !loading;
+        setLabel(loading ? 'Sending…' : BTN_LABEL);
     }
 
-    function setButtonLabel(text) {
-        if (resendBtnLabel) {
-            resendBtnLabel.textContent = text;
-        } else if (resendBtn) {
-            resendBtn.textContent = text;
-        }
+    function setStatus(msg, type = 'success') {
+        if (!statusEl) return;
+        if (!msg) { statusEl.hidden = true; statusEl.textContent = ''; statusEl.className = 'resend-status'; return; }
+        statusEl.hidden = false;
+        statusEl.textContent = msg;
+        statusEl.className = `resend-status resend-status-${type}`;
     }
 
-    function setButtonLoading(isLoading) {
-        if (resendBtn) {
-            resendBtn.classList.toggle('is-loading', isLoading);
-            resendBtn.disabled = isLoading;
-        }
-        if (resendBtnSpinner) {
-            resendBtnSpinner.hidden = !isLoading;
-        }
-        setButtonLabel(isLoading ? 'Sending…' : BTN_LABEL);
-    }
-
-    function setResendStatus(message, type = 'success') {
-        if (!resendStatusElement) {
+    function refreshButton() {
+        const rem = remaining();
+        if (rem > 0) {
+            if (resendBtn)        { resendBtn.disabled = true; resendBtn.classList.remove('is-loading'); }
+            if (resendBtnSpinner) resendBtnSpinner.hidden = true;
+            setLabel(BTN_LABEL);
+            if (cooldownEl)    cooldownEl.style.display = 'block';
+            if (cooldownCount) cooldownCount.textContent = fmt(rem);
             return;
         }
-        if (!message) {
-            resendStatusElement.hidden = true;
-            resendStatusElement.textContent = '';
-            resendStatusElement.className = 'resend-status';
-            return;
-        }
-        resendStatusElement.hidden = false;
-        resendStatusElement.textContent = message;
-        resendStatusElement.className = `resend-status resend-status-${type}`;
+        if (cooldownEl) cooldownEl.style.display = 'none';
+        if (!resendInFlight && resendBtn) resendBtn.disabled = false;
+        if (!resendInFlight) setLabel(BTN_LABEL);
     }
 
-    function updateResendButton() {
-        const remaining = getRemainingCooldown();
+    // ── Bootstrap on page load ────────────────────────────────────────────────
+    // If no cooldown exists in localStorage yet, this is the first visit for this
+    // session — start the 60s countdown immediately (the server already sent the email).
+    // If a cooldown already exists, the user refreshed — resume it as-is.
 
-        if (remaining > 0) {
-            if (resendBtn) {
-                resendBtn.disabled = true;
-                resendBtn.classList.remove('is-loading');
-            }
-            if (resendBtnSpinner) {
-                resendBtnSpinner.hidden = true;
-            }
-            setButtonLabel(BTN_LABEL);
-            if (resendCooldownElement) {
-                resendCooldownElement.style.display = 'block';
-            }
-            if (resendCooldownCount) {
-                resendCooldownCount.textContent = formatCountdown(remaining);
-            }
-            return;
+    function bootstrap() {
+        if (remaining() <= 0) {
+            // No existing entry → first arrival → seed the cooldown now
+            startCooldown(COOLDOWN_SECONDS);
         }
-
-        if (resendCooldownElement) {
-            resendCooldownElement.style.display = 'none';
-        }
-        if (!resendInFlight && resendBtn) {
-            resendBtn.disabled = false;
-        }
-        if (!resendInFlight) {
-            setButtonLabel(BTN_LABEL);
-        }
+        // Always run the tick loop (either fresh or resumed)
+        refreshButton();
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(refreshButton, 1000);
     }
 
-    function bootstrapResendCooldown() {
-        let storedRemaining = getRemainingCooldown();
+    // ── Redirect to dashboard ─────────────────────────────────────────────────
 
-        if (freshSession && storedRemaining <= 0) {
-            setResendCooldownExpiry(COOLDOWN_SECONDS);
-            storedRemaining = COOLDOWN_SECONDS;
-        } else if (resendJustSent && storedRemaining <= 0 && serverCooldown > 0) {
-            setResendCooldownExpiry(serverCooldown);
-        }
-
-        updateResendButton();
-        if (resendTimerInterval) {
-            clearInterval(resendTimerInterval);
-        }
-        resendTimerInterval = setInterval(updateResendButton, 1000);
-    }
-
-    function redirectToDashboard(targetUrl) {
-        const destination = targetUrl || dashboardUrl;
-        if (!destination || redirectStarted) {
-            return;
-        }
-
+    function goToDashboard(url) {
+        if (redirectStarted) return;
         redirectStarted = true;
-        verificationComplete = true;
+        verificationDone = true;
 
-        if (stateElement) {
-            stateElement.className = 'alert alert-success';
-            stateElement.textContent = 'Email verified successfully! Redirecting...';
+        if (stateEl) {
+            stateEl.className = 'alert alert-success';
+            stateEl.textContent = 'Email verified! Redirecting to dashboard...';
         }
 
-        const successModal = document.getElementById('success-modal');
-        if (successModal) {
-            successModal.classList.add('show');
-        }
+        const modal = document.getElementById('success-modal');
+        if (modal) modal.classList.add('show');
 
         if (typeof LoadingScreen !== 'undefined') {
             LoadingScreen.show('Redirecting', 'Taking you to dashboard...');
         }
 
-        clearResendCooldown();
-
-        setTimeout(() => {
-            window.location.replace(destination);
-        }, 350);
+        clearCooldown();
+        window.location.replace(url || dashboardUrl);
     }
 
-    async function resendVerificationEmail() {
-        if (verificationComplete || resendInFlight) {
+    // ── Resend (button click only) ────────────────────────────────────────────
+
+    async function resend() {
+        if (verificationDone || resendInFlight) return;
+
+        const rem = remaining();
+        if (rem > 0) {
+            setStatus(`Please wait ${fmt(rem)} before resending.`, 'error');
             return;
         }
 
-        const remaining = getRemainingCooldown();
-        if (remaining > 0) {
-            setResendStatus(`Please wait ${formatCountdown(remaining)} before resending.`, 'error');
-            return;
-        }
-
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
         resendInFlight = true;
-        setResendStatus('');
-        setButtonLoading(true);
+        setStatus('');
+        setLoading(true);
 
         try {
-            const response = await fetch(resendUrl, {
+            const res = await fetch(resendUrl, {
                 method: 'POST',
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
+                    'X-CSRF-TOKEN': csrf,
                     'X-Requested-With': 'XMLHttpRequest',
                 },
                 credentials: 'same-origin',
                 body: JSON.stringify({ email, session_key: sessionKey, user_id: userId }),
             });
 
-            const payload = await response.json().catch(() => ({}));
+            const data = await res.json().catch(() => ({}));
 
-            if (payload.state === 'verified' && payload.redirect) {
-                redirectToDashboard(payload.redirect);
+            if (data.state === 'verified' && data.redirect) {
+                goToDashboard(data.redirect);
                 return;
             }
 
-            if (!response.ok || !payload.ok) {
-                const message = payload.message || 'Unable to resend verification email. Please try again.';
-                setResendStatus(message, 'error');
-                setButtonLoading(false);
-                if (Number(payload.resend_cooldown) > 0) {
-                    setResendCooldownExpiry(Number(payload.resend_cooldown));
-                }
-                updateResendButton();
+            if (!res.ok || !data.ok) {
+                setStatus(data.message || 'Unable to resend. Please try again.', 'error');
+                setLoading(false);
+                if (Number(data.resend_cooldown) > 0) startCooldown(Number(data.resend_cooldown));
+                refreshButton();
                 return;
             }
 
-            setResendStatus(payload.message || 'Verification email resent.', 'success');
-            setResendCooldownExpiry(Number(payload.resend_cooldown) || COOLDOWN_SECONDS);
-            setButtonLoading(false);
-            updateResendButton();
-        } catch (error) {
-            setResendStatus('Unable to resend verification email. Please try again.', 'error');
-            setButtonLoading(false);
-            updateResendButton();
+            setStatus(data.message || 'Verification email resent. Check your inbox.', 'success');
+            // Start a fresh 60s from right now
+            startCooldown(Number(data.resend_cooldown) || COOLDOWN_SECONDS);
+            setLoading(false);
+            refreshButton();
+        } catch {
+            setStatus('Unable to resend. Please try again.', 'error');
+            setLoading(false);
+            refreshButton();
         } finally {
             resendInFlight = false;
         }
     }
 
-    if (resendBtn) {
-        resendBtn.addEventListener('click', (event) => {
-            event.preventDefault();
-            resendVerificationEmail();
-        });
-    }
+    if (resendBtn) resendBtn.addEventListener('click', e => { e.preventDefault(); resend(); });
 
-    async function checkStatus() {
-        if (verificationComplete) {
-            return;
-        }
+    // ── Status polling ────────────────────────────────────────────────────────
+
+    async function poll() {
+        if (verificationDone) return;
 
         try {
-            const response = await fetch(statusUrl, {
-                method: 'GET',
-                headers: { Accept: 'application/json' },
-                credentials: 'same-origin',
-                cache: 'no-store',
-            });
+            const res  = await fetch(statusUrl, { method: 'GET', headers: { Accept: 'application/json' }, credentials: 'same-origin', cache: 'no-store' });
+            const data = await res.json().catch(() => ({}));
 
-            const payload = await response.json().catch(() => ({}));
-
-            if (payload.state === 'verified' && payload.redirect) {
-                redirectToDashboard(payload.redirect);
+            if (data.state === 'verified' && data.redirect) {
+                goToDashboard(data.redirect);
                 return;
             }
 
-            if (payload.state === 'expired') {
-                if (stateElement) {
-                    stateElement.className = 'alert alert-warning';
-                    stateElement.textContent = 'Verification window expired. Please sign in again.';
-                }
-                clearResendCooldown();
-                return;
+            if (data.state === 'expired') {
+                if (stateEl) { stateEl.className = 'alert alert-warning'; stateEl.textContent = 'Verification window expired. Please sign in again.'; }
+                clearCooldown();
+                return; // stop polling
             }
-        } catch (error) {
-            if (stateElement) {
-                stateElement.className = 'alert alert-danger';
-                stateElement.textContent = 'Unable to check verification status. Retrying...';
-            }
-        }
+        } catch { /* network hiccup — retry */ }
 
-        setTimeout(checkStatus, POLL_INTERVAL_MS);
+        pollTimeout = setTimeout(poll, POLL_INTERVAL_MS);
     }
 
-    bootstrapResendCooldown();
-    checkStatus();
+    // ── Init ─────────────────────────────────────────────────────────────────
+
+    bootstrap();
+    poll();
 
     document.addEventListener('visibilitychange', () => {
-        if (!document.hidden && !verificationComplete) {
-            checkStatus();
+        if (!document.hidden && !verificationDone) {
+            if (pollTimeout) clearTimeout(pollTimeout);
+            poll();
         }
     });
 
     window.addEventListener('pageshow', () => {
-        if (typeof window.hideLoading === 'function') {
-            window.hideLoading();
-        }
-        updateResendButton();
-        if (!verificationComplete) {
-            checkStatus();
+        if (typeof window.hideLoading === 'function') window.hideLoading();
+        refreshButton();
+        if (!verificationDone) {
+            if (pollTimeout) clearTimeout(pollTimeout);
+            poll();
         }
     });
 });

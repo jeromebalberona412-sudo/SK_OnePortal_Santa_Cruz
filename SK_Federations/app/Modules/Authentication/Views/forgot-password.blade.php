@@ -10,7 +10,8 @@
     <title>Reset Your Password - SK OnePortal</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     @vite([
-        'app/Modules/Authentication/assets/css/style.css',
+        'app/Modules/Authentication/assets/css/auth-base.css',
+        'app/Modules/Authentication/assets/css/forgot-password.css',
     ])
 </head>
 <body>
@@ -79,6 +80,7 @@
                           method="POST"
                           action="{{ route('password.email', [], false) }}"
                           data-email-sent="0"
+                          data-cooldown-key=""
                           novalidate>
                         @csrf
 

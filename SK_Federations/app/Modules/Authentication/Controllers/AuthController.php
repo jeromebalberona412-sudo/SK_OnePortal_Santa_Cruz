@@ -428,13 +428,129 @@ class AuthController extends Controller
         return view('authentication::forgot-password');
     }
 
-    public function showForgotPasswordVerifyEmail(): View|RedirectResponse
+    /**
+     * Show the /forgot-password/verify-email page.
+     *
+     * State is persisted in the session as 'sk_fed_fp_verify' so that
+     * refreshing the page stays on this view instead of bouncing back
+     * to /forgot-password.
+     *
+     * Session key 'sk_fed_fp_verify' shape:
+     *   email            string  — address the link was sent to
+     *   sent_at          string  — ISO-8601 of when the link was last sent
+     *   resend_available_at string — ISO-8601 of when resend is allowed again
+     *   expires_at       string  — ISO-8601 after which the whole session is stale
+     */
+    public function showForgotPasswordVerifyEmail(Request $request): View|RedirectResponse
     {
-        if (! session('password_reset_sent')) {
+        // Accept state from either the session flash (first arrival) or the
+        // persistent session key (subsequent refreshes).
+        if (session('password_reset_sent')) {
+            $email  = (string) session('password_reset_email', '');
+            $sentAt = now();
+
+            $state = [
+                'email'               => $email,
+                'sent_at'             => $sentAt->toIso8601String(),
+                'resend_available_at' => $sentAt->copy()->addSeconds(60)->toIso8601String(),
+                'expires_at'          => $sentAt->copy()->addHours(2)->toIso8601String(),
+            ];
+
+            $request->session()->put('sk_fed_fp_verify', $state);
+        }
+
+        $state = $request->session()->get('sk_fed_fp_verify');
+
+        if (! is_array($state) || empty($state['email'])) {
             return redirect()->route('password.request');
         }
 
-        return view('authentication::forgot-password-verify-email');
+        // If the overall session has expired redirect back to start
+        $expiresAt = Carbon::parse((string) ($state['expires_at'] ?? now()->toIso8601String()));
+        if ($expiresAt->isPast()) {
+            $request->session()->forget('sk_fed_fp_verify');
+            return redirect()->route('password.request')
+                ->withErrors(['email' => 'Your password reset session has expired. Please start again.']);
+        }
+
+        $resendAvailableAt = Carbon::parse((string) ($state['resend_available_at'] ?? now()->toIso8601String()));
+
+        return view('authentication::fp-verify-email', [
+            'email'              => (string) $state['email'],
+            'resendAvailableAt'  => $resendAvailableAt->toIso8601String(),
+            'resendCooldownSecs' => max(0, (int) now()->diffInSeconds($resendAvailableAt, false)),
+        ]);
+    }
+
+    /**
+     * POST /forgot-password/resend
+     *
+     * Re-sends the password reset link and enforces the backend cooldown.
+     * Returns JSON so the dedicated JS can handle the response without a
+     * full page reload.
+     */
+    public function resendForgotPasswordEmail(Request $request): JsonResponse
+    {
+        $state = $request->session()->get('sk_fed_fp_verify');
+
+        if (! is_array($state) || empty($state['email'])) {
+            return response()->json([
+                'ok'      => false,
+                'message' => 'No active password reset session. Please start again.',
+            ], 404);
+        }
+
+        $expiresAt = Carbon::parse((string) ($state['expires_at'] ?? now()->toIso8601String()));
+        if ($expiresAt->isPast()) {
+            $request->session()->forget('sk_fed_fp_verify');
+            return response()->json([
+                'ok'      => false,
+                'message' => 'Your password reset session has expired. Please start again.',
+                'expired' => true,
+            ], 410);
+        }
+
+        $resendAvailableAt = Carbon::parse((string) ($state['resend_available_at'] ?? now()->toIso8601String()));
+        $remainingSecs     = (int) now()->diffInSeconds($resendAvailableAt, false);
+
+        if ($remainingSecs > 0) {
+            return response()->json([
+                'ok'                 => false,
+                'message'            => "Please wait {$remainingSecs} seconds before resending.",
+                'resend_available_at' => $resendAvailableAt->toIso8601String(),
+                'cooldown_remaining' => $remainingSecs,
+            ], 429);
+        }
+
+        // Send the link
+        try {
+            $this->passwordResetService->sendResetLink($request, (string) $state['email']);
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'ok'      => false,
+                'message' => $exception->errors()['email'][0] ?? 'Unable to send reset link.',
+            ], 422);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'ok'      => false,
+                'message' => 'Unable to send the reset link right now. Please try again.',
+            ], 500);
+        }
+
+        $newResendAvailableAt = now()->addSeconds(60);
+
+        // Persist updated cooldown
+        $state['resend_available_at'] = $newResendAvailableAt->toIso8601String();
+        $state['sent_at']             = now()->toIso8601String();
+        $request->session()->put('sk_fed_fp_verify', $state);
+
+        return response()->json([
+            'ok'                 => true,
+            'message'            => 'A new password reset link has been sent to your email.',
+            'resend_available_at' => $newResendAvailableAt->toIso8601String(),
+            'cooldown_remaining' => 60,
+        ]);
     }
 
     public function sendPasswordResetLink(Request $request): RedirectResponse

@@ -7,6 +7,8 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/app.js',
+
+                // ── Other modules ──────────────────────────────────────────
                 'app/Modules/Barangay_ABYIP/Assets/js/barangay_abyip.js',
                 'app/Modules/Barangay_ABYIP/Assets/css/barangay_abyip.css',
                 'app/Modules/Accounts/assets/css/account.css',
@@ -19,10 +21,27 @@ export default defineConfig({
                 'app/Modules/Archive_Management/assets/js/SK_federation.js',
                 'app/Modules/Archive_Management/assets/css/SK_officials.css',
                 'app/Modules/Archive_Management/assets/js/SK_officials.js',
-                'app/Modules/Authentication/assets/css/style.css',
+
+                // ── Authentication — shared ────────────────────────────────
+                'app/Modules/Authentication/assets/css/auth-base.css',
                 'app/Modules/Authentication/assets/css/auth-legal.css',
                 'app/Modules/Authentication/assets/js/auth-legal.js',
+
+                // ── Authentication — Login ─────────────────────────────────
+                'app/Modules/Authentication/assets/css/login.css',
                 'app/Modules/Authentication/assets/js/login.js',
+
+                // ── Authentication — Forgot Password ──────────────────────
+                'app/Modules/Authentication/assets/css/forgot-password.css',
+                'app/Modules/Authentication/assets/js/forgot-password.js',
+
+                // ── Authentication — Forgot Password / Verify Email ────────
+                'app/Modules/Authentication/assets/css/fp-verify-email.css',
+                'app/Modules/Authentication/assets/js/fp-verify-email.js',
+
+                // ── Authentication — Email Verify Wait ────────────────────
+                'app/Modules/Authentication/assets/css/verify-wait.css',
+                'app/Modules/Authentication/assets/js/verify-wait.js',
             ],
             refresh: true,
         }),

@@ -11,16 +11,12 @@
     <title>OnePortal SK Federation</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     @vite([
-        'app/Modules/Authentication/assets/css/style.css',
+        'app/Modules/Authentication/assets/css/auth-base.css',
+        'app/Modules/Authentication/assets/css/login.css',
         'app/Modules/Authentication/assets/css/auth-legal.css',
         'app/Modules/Authentication/assets/js/auth-legal.js',
         'app/Modules/Authentication/assets/js/login.js',
     ])
-
-    {{--
-        render=explicit: prevents Cloudflare from auto-scanning the DOM.
-        login.js calls turnstile.render() manually after the API is ready.
-    --}}
     @if(config('services.turnstile.enabled') && config('services.turnstile.site_key'))
         <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
     @endif
@@ -39,19 +35,12 @@
         })();
     </script>
 
-    {{-- ─── Turnstile Modal ─────────────────────────────────────────────────────
-         Always rendered when Turnstile is enabled. Visibility controlled by
-         .turnstile-modal-visible class added/removed by login.js.
-    ──────────────────────────────────────────────────────────────────────────── --}}
     @if(config('services.turnstile.enabled') && config('services.turnstile.site_key'))
         <div id="turnstile-modal" class="turnstile-modal" role="dialog" aria-modal="true" aria-label="Human verification">
-
             <div id="turnstile-modal-backdrop" class="turnstile-modal-backdrop"></div>
-
             <div class="turnstile-modal-card">
-
                 <div class="turnstile-modal-header">
-                    <button id="turnstile-close-btn" class="turnstile-close-btn" type="button" aria-label="Cancel verification" style="margin-left:auto;">
+                    <button id="turnstile-close-btn" class="turnstile-close-btn" type="button" aria-label="Cancel verification">
                         <svg viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                   d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414
@@ -61,23 +50,19 @@
                         </svg>
                     </button>
                 </div>
-
                 <div class="turnstile-modal-body">
                     <div id="turnstile-container"></div>
                 </div>
-
                 <div class="turnstile-modal-footer">
                     <button id="turnstile-cancel-btn" type="button" class="turnstile-cancel-link">
                         Cancel and go back
                     </button>
                 </div>
-
             </div>
         </div>
     @endif
 
     <div class="login-page">
-        {{-- Background --}}
         <div class="bg-wrapper">
             <div class="bg-image"></div>
             <div class="gradient-overlay"></div>
@@ -88,21 +73,16 @@
             </div>
         </div>
 
-        {{-- Main Split Layout --}}
         <div class="login-container">
 
             {{-- LEFT: Logo & Branding --}}
             <div class="logo-container">
                 <div class="collab-logo-wrapper">
                     <div class="logo-glow-wrapper logo-left">
-                        <img src="{{ asset('images/SK_OnePortal_logo.png') }}"
-                             alt="SK OnePortal Logo"
-                             class="collab-logo">
+                        <img src="{{ asset('images/SK_OnePortal_logo.png') }}" alt="SK OnePortal Logo" class="collab-logo">
                     </div>
                     <div class="logo-glow-wrapper logo-right">
-                        <img src="{{ asset('images/SK_Federations_logo.jpg') }}"
-                             alt="SK Federations Logo"
-                             class="collab-logo">
+                        <img src="{{ asset('images/SK_Federations_logo.jpg') }}" alt="SK Federations Logo" class="collab-logo">
                     </div>
                 </div>
                 <h1 class="brand-title" style="white-space:nowrap;">SK OnePortal</h1>
@@ -160,17 +140,9 @@
                                 </svg>
                                 Email Address
                             </label>
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                class="form-control"
-                                value="{{ old('email') }}"
-                                autofocus
-                                autocomplete="email"
-                                placeholder="Enter your email"
-                                maxlength="150"
-                            >
+                            <input type="email" id="email" name="email" class="form-control"
+                                   value="{{ old('email') }}" autofocus autocomplete="email"
+                                   placeholder="Enter your email" maxlength="150">
                             <div class="invalid-feedback fed-field-error" id="email-error" style="display:none;"></div>
                         </div>
 
@@ -182,15 +154,8 @@
                                 Password
                             </label>
                             <div class="password-input-container">
-                                <input
-                                    type="password"
-                                    id="password"
-                                    name="password"
-                                    class="form-control"
-                                    autocomplete="current-password"
-                                    placeholder="Enter your password"
-                                    maxlength="64"
-                                >
+                                <input type="password" id="password" name="password" class="form-control"
+                                       autocomplete="current-password" placeholder="Enter your password" maxlength="64">
                                 <button type="button" class="pw-toggle-btn" id="pwToggleBtn" aria-label="Show password" tabindex="-1">
                                     <svg class="pw-eye pw-eye-show" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -216,12 +181,6 @@
 
                         @include('authentication::partials.login-legal-consent')
 
-                        {{--
-                            Hidden anchor for Turnstile server-side errors.
-                            Only rendered when the backend specifically rejected the Turnstile token
-                            (messages contain "pagpapatunay" / "verification" / "turnstile").
-                            login.js detects this and auto-opens the modal so the user can re-verify.
-                        --}}
                         @php
                             $fedLoginErr = session('login_error', '');
                             $isFedTurnstileErr = $fedLoginErr && (
@@ -239,7 +198,6 @@
                             <span id="loginBtnText">Login</span>
                         </button>
                     </form>
-
                 </div>
             </div>
 
