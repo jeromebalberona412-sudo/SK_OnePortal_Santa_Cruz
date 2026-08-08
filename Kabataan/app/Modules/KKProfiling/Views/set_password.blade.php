@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Set Password - {{ $barangay }} - SK OnePortal</title>
     @vite([
-        'app/Modules/Authentication/assets/css/youth-login.css',
+        'app/Modules/Authentication/assets/css/sign-in.css',
         'app/Modules/KKProfiling/assets/css/kkprofiling.css',
         'app/Modules/KKProfiling/assets/js/kkprofiling.js',
     ])

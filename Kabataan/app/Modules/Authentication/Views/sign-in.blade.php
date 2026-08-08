@@ -48,7 +48,7 @@
     {{-- ─── Turnstile Modal Overlay ─────────────────────────────────────────────
          Rendered in the DOM at all times when Turnstile is enabled.
          Visibility is controlled purely by the .turnstile-modal-visible class
-         that youth-login.js adds/removes. The widget itself (#turnstile-container)
+         that sign-in.js adds/removes. The widget itself (#turnstile-container)
          is empty until JS calls turnstile.render() on the first reveal.
     ──────────────────────────────────────────────────────────────────────────── --}}
     @if(config('services.turnstile.enabled') && config('services.turnstile.site_key'))

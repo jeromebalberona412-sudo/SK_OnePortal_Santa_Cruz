@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Check Your Email - KK Profiling</title>
     @vite([
-        'app/Modules/Authentication/assets/css/youth-login.css',
+        'app/Modules/Authentication/assets/css/sign-in.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>

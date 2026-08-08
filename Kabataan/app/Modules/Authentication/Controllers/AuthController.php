@@ -213,7 +213,10 @@ class AuthController extends Controller
 
         return back()
             ->withInput($request->only('email'))
-            ->with('forgot_password_error', __($status));
+            ->with('forgot_password_error', $status === Password::RESET_THROTTLED
+                ? 'You recently requested a password reset. Please wait 60 seconds before requesting another link.'
+                : 'Unable to send a reset link to that email address. Please try again.'
+            );
     }
 
     public function showForgotPasswordVerifyEmail(Request $request)

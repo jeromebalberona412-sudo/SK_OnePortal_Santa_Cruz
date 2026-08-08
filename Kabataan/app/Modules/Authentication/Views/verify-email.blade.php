@@ -66,7 +66,7 @@
         </div>
 
         {{-- ─── Right Side — Verify Email Card ──────────────────────────────────── --}}
-        <div class="youth-login-section">
+        <div class="youth-login-section youth-login-section--fp">
             <div class="youth-login-card" style="padding-top: 1.75rem;">
 
                 {{-- Header --}}
@@ -117,7 +117,7 @@
                              stroke="currentColor" stroke-width="2">
                             <path d="M19 12H5M12 19l-7-7 7-7"/>
                         </svg>
-                        Back to Login
+                        Back to Sign In
                     </a>
                 </div>
 

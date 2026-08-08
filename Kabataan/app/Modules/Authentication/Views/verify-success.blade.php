@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Email Verified - SK Kabataan Portal</title>
-    @vite(['app/Modules/Authentication/assets/css/youth-login.css'])
+    @vite(['app/Modules/Authentication/assets/css/sign-in.css'])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
         .success-container {

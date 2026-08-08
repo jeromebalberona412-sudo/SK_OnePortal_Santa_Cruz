@@ -956,6 +956,35 @@ function kkpValidateContact(value, touched) {
             }
         }
 
+        // ── When Registered SK Voter = No, auto-set "Did you vote last SK?" to No ──
+        if (hiddenId === 'kkpSkVoter') {
+            const skVoterVal = hidden ? hidden.value : '';
+            const votedHidden = document.getElementById('kkpSkVoted');
+            const votedChks = document.querySelectorAll('input[name="sk_votedChk"]');
+
+            if (skVoterVal === 'No') {
+                // Force sk_voted = No, lock Yes checkbox
+                votedChks.forEach(function (cb) {
+                    if (cb.value === 'No') {
+                        cb.checked = true;
+                        cb.disabled = false;
+                    } else {
+                        cb.checked = false;
+                        cb.disabled = true;
+                    }
+                });
+                if (votedHidden) {
+                    votedHidden.value = 'No';
+                    clearDemoBlockError('kkpSkVoted');
+                }
+            } else {
+                // Unlock voted checkboxes when SK Voter is Yes or cleared
+                votedChks.forEach(function (cb) {
+                    cb.disabled = false;
+                });
+            }
+        }
+
         if (hiddenId === 'kkpGroupChat') {
             const chat = document.getElementById('kkpFooterChat') || document.querySelector('.kkp-footer-chat');
             chat?.querySelectorAll('.kkp-field-error').forEach((node) => node.remove());
@@ -1370,13 +1399,13 @@ window.validateKkProfilingForm = async function (options = {}) {
     const sigData = document.getElementById('kkpSignatureData');
     if (!sigData || !sigData.value.trim()) {
         errors.push('Signature is required.');
-        const sigSection = document.querySelector('.kkp-sig-section');
+        const sigSection = document.querySelector('.kkp-sig-section-left');
         if (sigSection) {
             let err = sigSection.querySelector('.kkp-field-error');
             if (!err) {
                 err = document.createElement('span');
                 err.className = 'kkp-field-error';
-                err.textContent = 'Please provide your signature.';
+                err.textContent = 'Please provide your signature before proceeding.';
                 sigSection.appendChild(err);
             }
         }

@@ -132,6 +132,11 @@
     flex-shrink: 0;
 }
 
+/* hidden attribute must win over display:inline-block */
+.fpve-spinner[hidden] {
+    display: none !important;
+}
+
 @keyframes fpve-spin {
     to { transform: rotate(360deg); }
 }

@@ -10,7 +10,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Verify Password Change - SK OnePortal</title>
     @vite([
-        'app/Modules/Authentication/assets/css/youth-login.css',
+        'app/Modules/Authentication/assets/css/sign-in.css',
         'app/Modules/Profile/assets/css/change-email.css',
         'app/Modules/Profile/assets/js/change-password-verify.js',
     ])

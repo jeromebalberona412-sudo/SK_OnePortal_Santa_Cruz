@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - KK Profiling - SK OnePortal</title>
     @vite([
-        'app/Modules/Authentication/assets/css/youth-login.css',
+        'app/Modules/Authentication/assets/css/sign-in.css',
         'app/Modules/KKProfiling/assets/css/kkprofiling-signup.css',
         'app/Modules/KKProfiling/assets/js/kkprofiling-signup.js',
     ])
@@ -44,7 +44,7 @@
                     </svg>
                     <span>
                         Sign-up is only available during the <strong>grace period</strong> set by your barangay SK.
-                        Check each barangay card for the open schedule (start – end date).
+                        Check each barangay card for the open schedule (start &ndash; end date).
                     </span>
                 </div>
 

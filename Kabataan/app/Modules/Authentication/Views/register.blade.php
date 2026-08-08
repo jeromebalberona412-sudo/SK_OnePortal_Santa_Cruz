@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>SK OnePortal - Kabataan Registration</title>
     @vite([
-        'app/Modules/Authentication/assets/css/youth-login.css',
+        'app/Modules/Authentication/assets/css/sign-in.css',
         'app/Modules/Authentication/assets/css/youth-register.css',
         'app/Modules/Authentication/assets/js/youth-register.js',
     ])
