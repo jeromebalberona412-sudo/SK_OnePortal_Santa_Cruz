@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Middleware;
 
@@ -37,7 +37,7 @@ class EnsureKabataanUser
 
             return redirect()
                 ->route('sign-in')
-                ->with('login_error', KabataanAuthService::LOGIN_DENIED_MESSAGE);
+                ->with('sign_in_error', KabataanAuthService::LOGIN_DENIED_MESSAGE);
         }
         $logData['auth_check_ms'] = round((microtime(true) - $authCheckStart) * 1000, 2);
 

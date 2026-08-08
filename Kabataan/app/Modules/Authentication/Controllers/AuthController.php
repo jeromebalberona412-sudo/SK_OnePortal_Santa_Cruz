@@ -49,16 +49,16 @@ class AuthController extends Controller
 
             if ($token === '') {
                 if ($request->wantsJson()) {
-                    return response()->json(['success' => false, 'message' => 'Pakumpleto ang seguridad na pagpapatunay.'], 422);
+                    return response()->json(['success' => false, 'message' => 'Please complete the security verification.'], 422);
                 }
-                return back()->withInput($request->only('email'))->with('login_error', 'Pakumpleto ang seguridad na pagpapatunay.');
+                return back()->withInput($request->only('email'))->with('sign_in_error', 'Please complete the security verification.');
             }
 
             if (! $this->turnstileService->verify($token, $request->ip())) {
                 if ($request->wantsJson()) {
-                    return response()->json(['success' => false, 'message' => 'Nabigo ang seguridad na pagpapatunay. Pakisubukang muli.'], 422);
+                    return response()->json(['success' => false, 'message' => 'Security verification failed. Please try again.'], 422);
                 }
-                return back()->withInput($request->only('email'))->with('login_error', 'Nabigo ang seguridad na pagpapatunay. Pakisubukang muli.');
+                return back()->withInput($request->only('email'))->with('sign_in_error', 'Security verification failed. Please try again.');
             }
         }
 
@@ -84,7 +84,7 @@ class AuthController extends Controller
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => KabataanAuthService::LOGIN_DENIED_MESSAGE], 422);
             }
-            return back()->withInput($request->only('email'))->with('login_error', KabataanAuthService::LOGIN_DENIED_MESSAGE);
+            return back()->withInput($request->only('email'))->with('sign_in_error', KabataanAuthService::LOGIN_DENIED_MESSAGE);
         }
 
         // ── Status checks ───────────────────────────────────────────────────
@@ -107,7 +107,7 @@ class AuthController extends Controller
                 if ($request->wantsJson()) {
                     return response()->json(['success' => false, 'message' => $msg], 422);
                 }
-                return back()->withInput($request->only('email'))->with('login_error', $msg);
+                return back()->withInput($request->only('email'))->with('sign_in_error', $msg);
             }
         }
 
@@ -119,7 +119,7 @@ class AuthController extends Controller
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
-            return back()->withInput($request->only('email'))->with('login_error', $msg);
+            return back()->withInput($request->only('email'))->with('sign_in_error', $msg);
         }
 
         if ($user->status === 'INACTIVE') {
@@ -127,7 +127,7 @@ class AuthController extends Controller
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
-            return back()->withInput($request->only('email'))->with('login_error', $msg);
+            return back()->withInput($request->only('email'))->with('sign_in_error', $msg);
         }
 
         // ── Authenticate ────────────────────────────────────────────────────

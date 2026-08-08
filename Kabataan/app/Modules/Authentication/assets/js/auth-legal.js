@@ -1,5 +1,5 @@
 /**
- * Login Terms & Privacy consent + modals
+ * Sign In Terms & Privacy consent + modals
  */
 (function () {
     'use strict';

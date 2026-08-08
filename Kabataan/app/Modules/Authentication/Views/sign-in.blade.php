@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -132,19 +132,19 @@
             </div>
         </div>
 
-        <!-- Right Side - Login Card -->
+        <!-- Right Side - Sign In Card -->
         <div class="youth-login-section">
             <div class="youth-login-card">
                 <div class="card-header">
                     <p class="card-subtitle">Sign in to your account</p>
                 </div>
 
-                @if (session('login_error'))
+                @if (session('sign_in_error'))
                     <div class="youth-alert youth-alert-error" role="alert">
                         <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
                         </svg>
-                        <span>{{ session('login_error') }}</span>
+                        <span>{{ session('sign_in_error') }}</span>
                     </div>
                 @endif
 
@@ -246,22 +246,20 @@
                         Only rendered when the backend explicitly rejected the Turnstile
                         token — NOT for wrong email/password errors. The JS checks for
                         this element on page load and auto-opens the verification modal
-                        so the user can re-verify without clicking Login again.
-                        Turnstile errors contain "pagpapatunay" (Filipino for verification).
+                        so the user can re-verify without clicking Sign In again.
                     --}}
                     @php
-                        $loginErr = session('login_error', '');
-                        $isTurnstileErr = $loginErr && (
-                            str_contains(strtolower($loginErr), 'pagpapatunay') ||
-                            str_contains(strtolower($loginErr), 'verification') ||
-                            str_contains(strtolower($loginErr), 'turnstile') ||
-                            str_contains(strtolower($loginErr), 'security check')
+                        $signInErr = session('sign_in_error', '');
+                        $isTurnstileErr = $signInErr && (
+                            str_contains(strtolower($signInErr), 'verification') ||
+                            str_contains(strtolower($signInErr), 'turnstile') ||
+                            str_contains(strtolower($signInErr), 'security check')
                         );
                     @endphp
                     @if($isTurnstileErr && config('services.turnstile.enabled') && config('services.turnstile.site_key'))
                         <div id="turnstile-server-error"
                              style="display:none;"
-                             aria-hidden="true">{{ $loginErr }}</div>
+                             aria-hidden="true">{{ $signInErr }}</div>
                     @endif
 
                     <!-- Submit Button -->

@@ -183,7 +183,7 @@
         </div>
 
         <div style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #e0e0e0;">
-            <a href="{{ route('sign-in') }}" class="btn btn-secondary">Back to Login</a>
+            <a href="{{ route('sign-in') }}" class="btn btn-secondary">Back to Sign In</a>
         </div>
     </div>
 

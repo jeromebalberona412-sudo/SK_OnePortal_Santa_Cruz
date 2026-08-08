@@ -1,4 +1,4 @@
-/**
+﻿/**
  * SK OnePortal — Kabataan Sign In
  *
  * Submit listener execution order on #signInForm:
@@ -24,7 +24,7 @@
     var isSubmitting      = false;
 
     // ─── DOM refs ─────────────────────────────────────────────────────────────
-    var loginForm, emailInput, passwordInput,
+    var signInForm, emailInput, passwordInput,
         emailError, passwordError, submitBtn,
         turnstileModal, turnstileModalBackdrop,
         turnstileContainer, turnstileCloseBtn;
@@ -90,15 +90,15 @@
     // ─── Pre-render widget on page load ──────────────────────────────────────
     //
     // Renders the Turnstile widget as soon as the API script loads — before
-    // the user clicks Login. When the modal opens, the widget is already
+    // the user clicks Sign In. When the modal opens, the widget is already
     // initialized so there is no initialization delay before the checkbox
     // appears.
 
     function preRenderTurnstile() {
-        if (!loginForm || !turnstileContainer) return;
-        if (!loginForm.dataset.turnstileEnabled) return;
+        if (!signInForm || !turnstileContainer) return;
+        if (!signInForm.dataset.turnstileEnabled) return;
 
-        var siteKey = loginForm.dataset.turnstileSitekey;
+        var siteKey = signInForm.dataset.turnstileSitekey;
         if (!siteKey) return;
 
         waitForTurnstileAPI(15000).then(function () {
@@ -138,7 +138,7 @@
         // Fallback: pre-render hasn't completed yet — render now
         waitForTurnstileAPI(10000).then(function () {
             if (isSubmitting || turnstileRendered) return;
-            var siteKey = loginForm.dataset.turnstileSitekey;
+            var siteKey = signInForm.dataset.turnstileSitekey;
             if (!siteKey) { setModalError('Verification config missing. Please refresh.'); return; }
             try {
                 turnstileWidgetId = window.turnstile.render(turnstileContainer, {
@@ -198,11 +198,11 @@
         hidden.type  = 'hidden';
         hidden.name  = 'cf-turnstile-response';
         hidden.value = token;
-        loginForm.appendChild(hidden);
+        signInForm.appendChild(hidden);
     }
 
     function removeTokenInput() {
-        loginForm.querySelectorAll('input[name="cf-turnstile-response"]')
+        signInForm.querySelectorAll('input[name="cf-turnstile-response"]')
             .forEach(function (f) { f.remove(); });
     }
 
@@ -219,7 +219,7 @@
         isSubmitting = true;
 
         // Native submit — does NOT dispatch a submit event, sends POST exactly once
-        loginForm.submit();
+        signInForm.submit();
     }
 
     function onTurnstileError() {
@@ -273,7 +273,7 @@
             e.preventDefault();
             e.stopPropagation();
             isSubmitting = true;
-            loginForm.submit();
+            signInForm.submit();
             return;
         }
 
@@ -282,9 +282,9 @@
         if (!validateFields()) return;
 
         // Turnstile disabled — submit directly
-        if (!loginForm.dataset.turnstileEnabled) {
+        if (!signInForm.dataset.turnstileEnabled) {
             isSubmitting = true;
-            loginForm.submit();
+            signInForm.submit();
             return;
         }
 
@@ -335,7 +335,7 @@
     // ─── Initialise ──────────────────────────────────────────────────────────
 
     function init() {
-        loginForm              = document.getElementById('signInForm');
+        signInForm              = document.getElementById('signInForm');
         emailInput             = document.getElementById('email');
         passwordInput          = document.getElementById('password');
         emailError             = document.getElementById('email-error');
@@ -346,7 +346,7 @@
         turnstileContainer     = document.getElementById('turnstile-container');
         turnstileCloseBtn      = document.getElementById('turnstile-close-btn');
 
-        if (!loginForm || !emailInput || !passwordInput) return;
+        if (!signInForm || !emailInput || !passwordInput) return;
 
         emailInput.addEventListener('input', function () {
             clearErr(emailInput, emailError);
@@ -358,7 +358,7 @@
         });
 
         // Single submit listener — bubbling phase, after auth-legal capturing
-        loginForm.addEventListener('submit', onFormSubmit, false);
+        signInForm.addEventListener('submit', onFormSubmit, false);
 
         // Forgot password link
         var forgotBtn = document.getElementById('forgotBtn');
@@ -377,14 +377,14 @@
 
         // Auto-open modal only when server returned a Turnstile-specific error
         var serverErrEl = document.getElementById('turnstile-server-error');
-        if (serverErrEl && loginForm.dataset.turnstileEnabled) {
+        if (serverErrEl && signInForm.dataset.turnstileEnabled) {
             showTurnstileModal();
         }
 
         bindInputAnimations();
         bindAlertDismiss();
 
-        // Pre-render Turnstile widget now so it's ready before user clicks Login
+        // Pre-render Turnstile widget now so it's ready before user clicks Sign In
         preRenderTurnstile();
     }
 
