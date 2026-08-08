@@ -24,17 +24,17 @@
     };
 
     function getLoginUrl() {
-        const loginLink = document.querySelector('a[href*="/login"]');
-        if (loginLink?.href) {
+        const signInLink = document.querySelector('a[href*="/sign-in"]');
+        if (signInLink?.href) {
             try {
-                const url = new URL(loginLink.href, window.location.origin);
+                const url = new URL(signInLink.href, window.location.origin);
                 return url.pathname;
             } catch (error) {
                 // fall through
             }
         }
 
-        return '/login';
+        return '/sign-in';
     }
 
     async function performLogout() {

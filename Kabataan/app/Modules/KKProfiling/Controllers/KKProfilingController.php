@@ -282,7 +282,7 @@ class KKProfilingController extends Controller
     {
         $user = Auth::user();
         if (!$user) {
-            return redirect()->route('login');
+            return redirect()->route('sign-in');
         }
 
         $registration = KabataanRegistration::where('user_id', $user->id)->latest()->first();
@@ -1316,6 +1316,6 @@ class KKProfilingController extends Controller
             ]);
         }
 
-        return redirect()->route('login')->with('success', $message);
+        return redirect()->route('sign-in')->with('success', $message);
     }
 }

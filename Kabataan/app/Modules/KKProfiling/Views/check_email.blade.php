@@ -384,7 +384,7 @@
                     @else
                         <a href="{{ route('kkprofiling.signup') }}" class="back-btn" onclick="handleBackClick(event)">Back to KK Profiling</a>
                     @endif
-                    <a href="{{ route('login') }}" class="login-btn" onclick="handleBackClick(event)">Go to Login</a>
+                    <a href="{{ route('sign-in') }}" class="login-btn" onclick="handleBackClick(event)">Go to Login</a>
                 </div>
             </div>
         </div>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -12,7 +12,7 @@
     ])
 </head>
 <body class="youth-login-page kk-signup-page">
-    <a href="{{ route('login') }}" class="kk-signup-back-link" aria-label="Back to signin">
+    <a href="{{ route('sign-in') }}" class="kk-signup-back-link" aria-label="Back to signin">
         <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path fill-rule="evenodd" d="M12.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L8.414 9H17a1 1 0 110 2H8.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
         </svg>
@@ -44,7 +44,7 @@
                     </svg>
                     <span>
                         Sign-up is only available during the <strong>grace period</strong> set by your barangay SK.
-                        Check each barangay card for the open schedule (start – end date).
+                        Check each barangay card for the open schedule (start � end date).
                     </span>
                 </div>
 

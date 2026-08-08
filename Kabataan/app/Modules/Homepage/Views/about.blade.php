@@ -251,7 +251,7 @@
                     </div>
                     <div class="col-lg-4">
                         <div class="about-hero-actions justify-content-lg-end">
-                            <a href="{{ route('login') }}" class="about-btn about-btn-primary">Sign In</a>
+                            <a href="{{ route('sign-in') }}" class="about-btn about-btn-primary">Sign In</a>
                             <a href="{{ route('register') }}" class="about-btn about-btn-secondary">Sign Up</a>
                         </div>
                     </div>

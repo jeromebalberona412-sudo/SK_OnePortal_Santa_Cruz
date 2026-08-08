@@ -10,10 +10,10 @@ export default defineConfig({
                 'resources/js/app.js',
 
                 // Authentication
-                'app/Modules/Authentication/assets/css/youth-login.css',
+                'app/Modules/Authentication/assets/css/sign-in.css',
                 'app/Modules/Authentication/assets/css/auth-legal.css',
                 'app/Modules/Authentication/assets/css/youth-fp-verify-email.css',
-                'app/Modules/Authentication/assets/js/youth-login.js',
+                'app/Modules/Authentication/assets/js/sign-in.js',
                 'app/Modules/Authentication/assets/js/auth-legal.js',
                 'app/Modules/Authentication/assets/js/youth-fp-verify-email.js',
                 'app/Modules/Authentication/assets/css/youth-register.css',

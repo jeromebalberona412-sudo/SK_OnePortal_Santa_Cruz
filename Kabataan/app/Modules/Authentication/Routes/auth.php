@@ -3,10 +3,13 @@
 use Illuminate\Support\Facades\Route;
 use App\Modules\Authentication\Controllers\AuthController;
 
-// Login routes (guest only)
+// Sign In routes (guest only)
 Route::middleware('guest')->group(function () {
-    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/sign-in', [AuthController::class, 'showLogin'])->name('sign-in');
+    Route::post('/sign-in', [AuthController::class, 'login']);
+
+    // Backward-compat alias: any route('sign-in') reference redirects to /sign-in
+    Route::get('/login', fn () => redirect()->route('sign-in'))->name('login');
 
 // Registration routes — direct users to KK Profiling signup
      Route::get('/register', function () {

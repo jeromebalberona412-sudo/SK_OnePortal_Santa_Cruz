@@ -34,7 +34,7 @@ class DashboardController extends Controller
         \DB::enableQueryLog();
 
         if (! Auth::check()) {
-            return redirect()->route('login');
+            return redirect()->route('sign-in');
         }
 
         $user = Auth::user();
@@ -127,7 +127,7 @@ class DashboardController extends Controller
     public function barangay(Request $request, string $slug)
     {
         if (! Auth::check()) {
-            return redirect()->route('login');
+            return redirect()->route('sign-in');
         }
 
         $user = Auth::user();

@@ -10,7 +10,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Forgot Password - SK OnePortal</title>
     @vite([
-        'app/Modules/Authentication/assets/css/youth-login.css',
+        'app/Modules/Authentication/assets/css/sign-in.css',
         'app/Modules/Authentication/assets/css/auth-legal.css',
     ])
 </head>
@@ -99,7 +99,7 @@
                 <div class="youth-register-section">
                     <p class="register-text">
                         Remember your password?
-                        <a href="{{ route('login') }}" class="register-link">Back to Login</a>
+                        <a href="{{ route('sign-in') }}" class="register-link">Back to Sign In</a>
                     </p>
                 </div>
 

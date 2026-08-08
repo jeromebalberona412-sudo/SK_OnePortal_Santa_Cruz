@@ -136,7 +136,7 @@
                     Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.
                 @endif
             </p>
-            <a href="{{ route('login') }}" class="kkp-reg-success-modal-btn">Go to Login</a>
+            <a href="{{ route('sign-in') }}" class="kkp-reg-success-modal-btn">Go to Login</a>
         </div>
     </div>
 

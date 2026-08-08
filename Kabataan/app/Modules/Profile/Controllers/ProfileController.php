@@ -35,7 +35,7 @@ class ProfileController extends Controller
     public function index(Request $request): View|RedirectResponse
     {
         if (! Auth::check()) {
-            return redirect()->route('login')->with('error', 'Please login first.');
+            return redirect()->route('sign-in')->with('error', 'Please login first.');
         }
 
         $user = Auth::user();
@@ -70,7 +70,7 @@ class ProfileController extends Controller
     public function showChangeEmail(Request $request): View|RedirectResponse
     {
         if (! Auth::check()) {
-            return redirect()->route('login')->with('error', 'Please login first.');
+            return redirect()->route('sign-in')->with('error', 'Please login first.');
         }
 
         $user = $request->user()->fresh();
@@ -109,7 +109,7 @@ class ProfileController extends Controller
     public function showChangeEmailVerify(Request $request): View|RedirectResponse
     {
         if (! Auth::check()) {
-            return redirect()->route('login')->with('error', 'Please login first.');
+            return redirect()->route('sign-in')->with('error', 'Please login first.');
         }
 
         $user = $request->user()->fresh();
@@ -153,7 +153,7 @@ class ProfileController extends Controller
 
             return response()->json([
                 'state' => 'completed',
-                'redirect' => route('login'),
+                'redirect' => route('sign-in'),
                 'message' => 'Email and password updated. Please sign in with your new credentials.',
             ]);
         }
@@ -190,7 +190,7 @@ class ProfileController extends Controller
         try {
             $result = $this->emailChangeService->confirm($id, $token);
         } catch (ValidationException $exception) {
-            return redirect()->route('login')->withErrors($exception->errors());
+            return redirect()->route('sign-in')->withErrors($exception->errors());
         }
 
         return redirect()
@@ -206,7 +206,7 @@ class ProfileController extends Controller
         try {
             $user = $this->emailChangeService->validateSetPasswordToken($id, $token);
         } catch (ValidationException $exception) {
-            return redirect()->route('login')->withErrors($exception->errors());
+            return redirect()->route('sign-in')->withErrors($exception->errors());
         }
 
         return view('profile::set-password', [
@@ -220,7 +220,7 @@ class ProfileController extends Controller
         try {
             $user = $this->emailChangeService->validateSetPasswordToken($id, $token);
         } catch (ValidationException $exception) {
-            return redirect()->route('login')->withErrors($exception->errors());
+            return redirect()->route('sign-in')->withErrors($exception->errors());
         }
 
         $validated = $request->validate([
@@ -249,14 +249,14 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()
-            ->route('login')
+            ->route('sign-in')
             ->with('status', 'Email and password updated. Sign in with your new credentials.');
     }
 
     public function showChangePassword(Request $request): View|RedirectResponse
     {
         if (! Auth::check()) {
-            return redirect()->route('login')->with('error', 'Please login first.');
+            return redirect()->route('sign-in')->with('error', 'Please login first.');
         }
 
         $user = $request->user()->fresh();
@@ -334,7 +334,7 @@ class ProfileController extends Controller
 
             return response()->json([
                 'state' => 'confirmed',
-                'redirect' => route('login'),
+                'redirect' => route('sign-in'),
                 'message' => 'Password changed successfully. Please sign in with your new password.',
             ]);
         }
@@ -373,7 +373,7 @@ class ProfileController extends Controller
         try {
             $user = $this->passwordChangeService->confirm($id, $token);
         } catch (ValidationException $exception) {
-            return redirect()->route('login')->withErrors($exception->errors());
+            return redirect()->route('sign-in')->withErrors($exception->errors());
         }
 
         if (Auth::check()) {
@@ -384,7 +384,7 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()
-            ->route('login')
+            ->route('sign-in')
             ->with('status', 'Password changed successfully for '.$user->email.'. Please sign in with your new password.');
     }
 
@@ -513,7 +513,7 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()
-            ->route('login')
+            ->route('sign-in')
             ->with('status', 'Password changed successfully. Please sign in with your new password.');
     }
 

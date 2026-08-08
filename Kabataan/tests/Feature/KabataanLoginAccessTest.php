@@ -87,7 +87,7 @@ it('logs out non-kabataan users who reach authenticated routes', function () {
 
     $response = $this->actingAs($official)->get('/dashboard');
 
-    $response->assertRedirect(route('login'));
+    $response->assertRedirect(route('sign-in'));
     $response->assertSessionHas('login_error', KabataanAuthService::LOGIN_DENIED_MESSAGE);
     $this->assertGuest();
 });

@@ -10,7 +10,7 @@
         </div>
         <div class="kab-logout-modal__body">
             <h3>Are you sure you want to logout?</h3>
-            <p>You will be redirected to the login page.</p>
+            <p>You will be redirected to the sign in page.</p>
             <div class="kab-logout-modal__actions">
                 <button type="button" class="kab-logout-modal__btn kab-logout-modal__btn--cancel" onclick="closeKabataanLogoutModal()">Cancel</button>
                 <button type="button" class="kab-logout-modal__btn kab-logout-modal__btn--confirm" id="kabataanConfirmLogoutBtn">Logout</button>

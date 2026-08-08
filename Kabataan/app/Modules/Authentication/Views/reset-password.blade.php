@@ -7,8 +7,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Reset Password - SK OnePortal</title>
     @vite([
-        'app/Modules/Authentication/assets/css/youth-login.css',
-        'app/Modules/Authentication/assets/js/youth-login.js',
+        'app/Modules/Authentication/assets/css/sign-in.css',
+        'app/Modules/Authentication/assets/js/sign-in.js',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
@@ -37,7 +37,7 @@
                     >
                 </div>
                 <h1 class="youth-main-title">SK OnePortal</h1>
-                <p class="youth-tagline">Official Youth Portal – Santa Cruz, Laguna</p>
+                <p class="youth-tagline">Official Youth Portal ï¿½ Santa Cruz, Laguna</p>
             </div>
         </div>
 
@@ -139,7 +139,7 @@
                 <div class="youth-register-section">
                     <p class="register-text">
                         Remember your password? 
-                        <a href="{{ route('login') }}" class="register-link">Back to Login</a>
+                        <a href="{{ route('sign-in') }}" class="register-link">Back to Login</a>
                     </p>
                 </div>
             </div>
@@ -161,7 +161,7 @@
                     Your password has been reset successfully.
                 </p>
                 <p style="font-size: 1rem; color: #475569; margin-bottom: 2rem;">
-                    Redirecting to login page in <span id="countdown">3</span> seconds...
+                    Redirecting to sign in page in <span id="countdown">3</span> seconds...
                 </p>
             </div>
         </div>
@@ -320,8 +320,8 @@
                         
                         if (seconds <= 0) {
                             clearInterval(interval);
-                            if (window.showLoading) showLoading('Redirecting to login');
-                            window.location.href = '{{ route("login") }}';
+                            if (window.showLoading) showLoading('Redirecting to sign in');
+                            window.location.href = '{{ route("sign-in") }}';
                         }
                     }, 1000);
                 }, 1500); // Simulate API delay
@@ -370,7 +370,7 @@
         }
 
         .password-rules li::before {
-            content: '•';
+            content: 'ï¿½';
             position: absolute;
             left: 6px;
             color: #94a3b8;

@@ -1,13 +1,13 @@
 /**
- * SK OnePortal — Kabataan Login
+ * SK OnePortal — Kabataan Sign In
  *
- * Submit listener execution order on #loginForm:
+ * Submit listener execution order on #signInForm:
  *   1. auth-legal.js  — capturing phase (useCapture=true)
  *      Blocks if consent radio unchecked; otherwise passes through.
- *   2. youth-login.js — bubbling phase (useCapture=false)
- *      Validates fields, shows Turnstile modal, then calls loginForm.submit().
+ *   2. sign-in.js — bubbling phase (useCapture=false)
+ *      Validates fields, shows Turnstile modal, then calls signInForm.submit().
  *
- * loginForm.submit() is a native call — it does NOT fire the submit event,
+ * signInForm.submit() is a native call — it does NOT fire the submit event,
  * so no listener can intercept it. It is the only path that sends the POST.
  *
  * Performance: Turnstile widget is pre-rendered on page load so the checkbox
@@ -242,7 +242,7 @@
         submitBtn.disabled = false;
         submitBtn.classList.remove('waiting-for-turnstile');
         var span = submitBtn.querySelector('span');
-        if (span) span.textContent = 'Login';
+        if (span) span.textContent = 'Sign In';
     }
 
     // ─── Field edit ───────────────────────────────────────────────────────────
@@ -335,12 +335,12 @@
     // ─── Initialise ──────────────────────────────────────────────────────────
 
     function init() {
-        loginForm              = document.getElementById('loginForm');
+        loginForm              = document.getElementById('signInForm');
         emailInput             = document.getElementById('email');
         passwordInput          = document.getElementById('password');
         emailError             = document.getElementById('email-error');
         passwordError          = document.getElementById('password-error');
-        submitBtn              = document.getElementById('loginBtn');
+        submitBtn              = document.getElementById('signInBtn');
         turnstileModal         = document.getElementById('turnstile-modal');
         turnstileModalBackdrop = document.getElementById('turnstile-modal-backdrop');
         turnstileContainer     = document.getElementById('turnstile-container');
@@ -396,9 +396,9 @@
 
     // ─── Inject animation keyframes ───────────────────────────────────────────
     (function injectStyles() {
-        if (document.getElementById('youth-login-styles')) return;
+        if (document.getElementById('youth-sign-in-styles')) return;
         var style = document.createElement('style');
-        style.id  = 'youth-login-styles';
+        style.id  = 'youth-sign-in-styles';
         style.textContent = [
             '@keyframes alertSlideOut{to{opacity:0;transform:translateY(-10px)}}',
             '@keyframes errorSlideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}',

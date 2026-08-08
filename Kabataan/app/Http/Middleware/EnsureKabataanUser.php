@@ -26,7 +26,7 @@ class EnsureKabataanUser
         $user = $request->user();
 
         if ($user === null) {
-            return redirect()->guest(route('login'));
+            return redirect()->guest(route('sign-in'));
         }
 
         $authCheckStart = microtime(true);
@@ -36,7 +36,7 @@ class EnsureKabataanUser
             $request->session()->regenerateToken();
 
             return redirect()
-                ->route('login')
+                ->route('sign-in')
                 ->with('login_error', KabataanAuthService::LOGIN_DENIED_MESSAGE);
         }
         $logData['auth_check_ms'] = round((microtime(true) - $authCheckStart) * 1000, 2);

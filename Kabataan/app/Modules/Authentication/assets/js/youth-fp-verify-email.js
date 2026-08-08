@@ -32,9 +32,9 @@
 
         if (!dataEl || !resendBtn) return;
 
-        const email          = dataEl.dataset.email        || '';
-        const resendUrl      = dataEl.dataset.resendUrl    || '';
-        const csrfToken      = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const email           = dataEl.dataset.email        || '';
+        const resendUrl       = dataEl.dataset.resendUrl    || '';
+        const csrfToken       = document.querySelector('meta[name="csrf-token"]')?.content || '';
         const backendDeadline = dataEl.dataset.resendAvailableAt || '';
 
         // localStorage key scoped per email address
@@ -96,12 +96,16 @@
 
         function disableResend(remainingSecs) {
             resendBtn.disabled = true;
+            // Always hide spinner during cooldown — only show it during active fetch
+            if (resendSpinner) resendSpinner.hidden = true;
             if (cooldownEl)  cooldownEl.hidden = false;
             if (countdownEl) countdownEl.textContent = formatTime(remainingSecs);
         }
 
         function enableResend() {
             resendBtn.disabled = false;
+            // Always ensure spinner is hidden when button is available
+            if (resendSpinner) resendSpinner.hidden = true;
             if (cooldownEl)  cooldownEl.hidden = true;
             if (countdownEl) countdownEl.textContent = '';
             setLabel('Resend Reset Link');
@@ -112,6 +116,7 @@
 
             resendInFlight     = true;
             resendBtn.disabled = true;
+            // Only show spinner here — during the active network request
             if (resendSpinner) resendSpinner.hidden = false;
             setLabel('Sending…');
             clearStatus();
@@ -132,6 +137,7 @@
                 const data = await response.json().catch(() => ({}));
 
                 if (response.status === 410 || data.expired) {
+                    if (resendSpinner) resendSpinner.hidden = true;
                     showStatus('Your session has expired. Redirecting…', 'error');
                     setTimeout(() => {
                         window.location.href = dataEl.dataset.loginUrl || '/forgot-password';
@@ -141,39 +147,38 @@
 
                 if (!response.ok || !data.ok) {
                     const msg = data.message || 'Unable to resend. Please try again.';
+                    if (resendSpinner) resendSpinner.hidden = true;
                     showStatus(msg, 'error');
 
                     if (data.resend_available_at) {
                         const newDeadline = new Date(data.resend_available_at).getTime();
                         if (newDeadline > Date.now()) {
                             persistDeadline(newDeadline);
-                            if (resendSpinner) resendSpinner.hidden = true;
                             setLabel('Resend Reset Link');
                             startTicking(newDeadline);
                             return;
                         }
                     }
 
-                    if (resendSpinner) resendSpinner.hidden = true;
                     enableResend();
                     return;
                 }
 
                 // Success
+                if (resendSpinner) resendSpinner.hidden = true;
                 showStatus(data.message || 'Reset link resent. Check your inbox.', 'success');
+                setLabel('Resend Reset Link');
 
                 const newDeadline = data.resend_available_at
                     ? new Date(data.resend_available_at).getTime()
                     : Date.now() + FALLBACK_COOLDOWN_MS;
 
                 persistDeadline(newDeadline);
-                if (resendSpinner) resendSpinner.hidden = true;
-                setLabel('Resend Reset Link');
                 startTicking(newDeadline);
 
             } catch {
-                showStatus('Network error. Please check your connection and try again.', 'error');
                 if (resendSpinner) resendSpinner.hidden = true;
+                showStatus('Network error. Please check your connection and try again.', 'error');
                 enableResend();
             } finally {
                 resendInFlight = false;

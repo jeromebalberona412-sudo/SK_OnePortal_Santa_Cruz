@@ -355,7 +355,7 @@ class KKProfilingWizardController extends Controller
                 }
             }
 
-            return redirect()->route('login')->with('success', 'Your registration has already been submitted. Please wait for SK officials to verify your account before logging in.');
+            return redirect()->route('sign-in')->with('success', 'Your registration has already been submitted. Please wait for SK officials to verify your account before logging in.');
         }
 
         $email = strtolower(trim($wizard['email'] ?? $wizard['step1_data']['email'] ?? ''));

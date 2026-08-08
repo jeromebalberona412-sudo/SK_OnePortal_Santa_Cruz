@@ -146,7 +146,7 @@ class ProgramController extends Controller
     {
         $user = Auth::user();
         if ($user === null) {
-            return redirect()->guest(route('login'));
+            return redirect()->guest(route('sign-in'));
         }
 
         $scheduleId = (int) $request->query('schedule', 0);
@@ -180,7 +180,7 @@ class ProgramController extends Controller
     {
         $user = Auth::user();
         if ($user === null) {
-            return redirect()->guest(route('login'));
+            return redirect()->guest(route('sign-in'));
         }
 
         $scheduleId = (int) $request->query('schedule', 0);

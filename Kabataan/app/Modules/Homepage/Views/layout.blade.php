@@ -49,7 +49,7 @@
             </div>
 
             <div class="kabataan-nav-actions">
-                <a href="{{ route('login') }}" class="kabataan-nav-secondary kabataan-nav-auth-btn">Sign In</a>
+                <a href="{{ route('sign-in') }}" class="kabataan-nav-secondary kabataan-nav-auth-btn">Sign In</a>
                 <a href="{{ route('register') }}" class="kabataan-nav-primary kabataan-nav-auth-btn">Sign Up</a>
                 <button type="button" class="kabataan-nav-toggle" id="kabataanNavToggle" aria-label="Open menu" aria-expanded="false">
                     <span></span><span></span><span></span>
@@ -65,7 +65,7 @@
         <a href="{{ route('homepage.section', ['section' => 'faqs']) }}" class="kabataan-drawer-link" data-section="faq">FAQs</a>
         <a href="{{ route('homepage.section', ['section' => 'contact']) }}" class="kabataan-drawer-link" data-section="kabataanFooter">Contact</a>
         <div class="kabataan-drawer-actions">
-            <a href="{{ route('login') }}" class="kabataan-nav-secondary">Sign In</a>
+            <a href="{{ route('sign-in') }}" class="kabataan-nav-secondary">Sign In</a>
             <a href="{{ route('register') }}" class="kabataan-nav-primary">Sign Up</a>
         </div>
     </div>

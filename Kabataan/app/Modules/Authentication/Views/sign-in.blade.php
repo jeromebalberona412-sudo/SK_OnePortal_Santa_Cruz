@@ -10,9 +10,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>OnePortal Youth Officials</title>
     @vite([
-        'app/Modules/Authentication/assets/css/youth-login.css',
+        'app/Modules/Authentication/assets/css/sign-in.css',
         'app/Modules/Authentication/assets/css/auth-legal.css',
-        'app/Modules/Authentication/assets/js/youth-login.js',
+        'app/Modules/Authentication/assets/js/sign-in.js',
         'app/Modules/Authentication/assets/js/auth-legal.js',
     ])
 
@@ -157,10 +157,10 @@
                     </div>
                 @endif
 
-                <!-- Login Form -->
-                <form class="youth-login-form" id="loginForm"
+                <!-- Sign In Form -->
+                <form class="youth-login-form" id="signInForm"
                       method="POST"
-                      action="{{ route('login') }}"
+                      action="{{ route('sign-in') }}"
                       novalidate
                       @if(config('services.turnstile.enabled') && config('services.turnstile.site_key'))
                           data-turnstile-enabled="true"
@@ -265,8 +265,8 @@
                     @endif
 
                     <!-- Submit Button -->
-                    <button type="submit" class="youth-submit-btn" id="loginBtn">
-                        <span>Login</span>
+                    <button type="submit" class="youth-submit-btn" id="signInBtn">
+                        <span>Sign In</span>
                     </button>
 
                 </form>

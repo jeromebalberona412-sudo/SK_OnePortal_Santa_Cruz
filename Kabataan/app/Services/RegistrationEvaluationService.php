@@ -137,7 +137,7 @@ class RegistrationEvaluationService
         if ($registration->email) {
             try {
                 $registration->loadMissing('barangay');
-                $loginUrl = URL::to(route('login', [], false));
+                $loginUrl = URL::to(route('sign-in', [], false));
 
                 Notification::route('mail', $registration->email)
                     ->notify(new KabataanRegistrationApprovedEmail(

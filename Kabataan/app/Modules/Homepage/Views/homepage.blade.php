@@ -13,7 +13,7 @@
                     </p>
 
                     <div class="kabataan-hero-actions">
-                        <a href="{{ route('login') }}" class="kabataan-button kabataan-button-primary">Get Started</a>
+                        <a href="{{ route('sign-in') }}" class="kabataan-button kabataan-button-primary">Get Started</a>
                         <a href="{{ route('homepage.section', ['section' => 'about']) }}" class="kabataan-button kabataan-button-secondary">Learn More</a>
                     </div>
 
@@ -85,7 +85,7 @@
                                     </div>
 
                                     <div class="kabataan-program-actions">
-                                        <a href="{{ route('login') }}" class="kabataan-text-link">Learn More →</a>
+                                        <a href="{{ route('sign-in') }}" class="kabataan-text-link">Learn More →</a>
                                     </div>
                                 </div>
                             </article>
@@ -159,7 +159,7 @@
                                     </div>
 
                                     <div class="kabataan-barangay-actions">
-                                        <a href="{{ route('login') }}" class="kabataan-button kabataan-button-primary kabataan-button-sm">View Details</a>
+                                        <a href="{{ route('sign-in') }}" class="kabataan-button kabataan-button-primary kabataan-button-sm">View Details</a>
                                         <button type="button" class="kabataan-chip-button">Save</button>
                                         <button type="button" class="kabataan-chip-button">Share</button>
                                     </div>

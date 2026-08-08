@@ -10,7 +10,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Check Your Email - SK OnePortal</title>
     @vite([
-        'app/Modules/Authentication/assets/css/youth-login.css',
+        'app/Modules/Authentication/assets/css/sign-in.css',
         'app/Modules/Authentication/assets/css/youth-fp-verify-email.css',
         'app/Modules/Authentication/assets/js/youth-fp-verify-email.js',
     ])
@@ -67,7 +67,7 @@
 
         {{-- ─── Right Side — Verify Email Card ──────────────────────────────────── --}}
         <div class="youth-login-section">
-            <div class="youth-login-card">
+            <div class="youth-login-card" style="padding-top: 1.75rem;">
 
                 {{-- Header --}}
                 <div class="fpve-header">
@@ -112,7 +112,7 @@
 
                 {{-- Back to login --}}
                 <div class="youth-register-section">
-                    <a href="{{ route('login') }}" class="fpve-back-link">
+                    <a href="{{ route('sign-in') }}" class="fpve-back-link">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                              stroke="currentColor" stroke-width="2">
                             <path d="M19 12H5M12 19l-7-7 7-7"/>

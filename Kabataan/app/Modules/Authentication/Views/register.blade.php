@@ -454,7 +454,7 @@
                 <div class="youth-register-section">
                     <p class="register-text">
                         Already have an account? 
-                        <a href="{{ route('login') }}" class="register-link">Login here</a>
+                        <a href="{{ route('sign-in') }}" class="register-link">Login here</a>
                     </p>
                 </div>
             </div>
@@ -479,7 +479,7 @@
                     You can now login with your credentials and start exploring the portal.
                 </p>
                 <div class="success-actions">
-                    <a href="{{ route('login') }}" class="success-btn">
+                    <a href="{{ route('sign-in') }}" class="success-btn">
                         <span>Go to Login</span>
                         <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>

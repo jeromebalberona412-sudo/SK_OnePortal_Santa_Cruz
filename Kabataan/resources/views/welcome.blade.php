@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('layout::favicon')
@@ -15,7 +15,7 @@
                 @auth
                     <a href="{{ url('/dashboard') }}">Dashboard</a>
                 @else
-                    <a href="{{ route('login') }}">Log in</a>
+                    <a href="{{ route('sign-in') }}">Log in</a>
                     @if (Route::has('register'))
                         <a href="{{ route('register') }}">Sign Up</a>
                     @endif

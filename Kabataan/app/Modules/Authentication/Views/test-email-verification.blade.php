@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -142,7 +142,7 @@
     @include('dashboard::loading')
     
     <div class="test-container">
-        <h1>🧪 Email Verification Test Page</h1>
+        <h1>?? Email Verification Test Page</h1>
         
         <div class="info-box">
             <p><strong>Note:</strong> This is a prototype. No actual emails will be sent.</p>
@@ -183,7 +183,7 @@
         </div>
 
         <div style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #e0e0e0;">
-            <a href="{{ route('login') }}" class="btn btn-secondary">Back to Login</a>
+            <a href="{{ route('sign-in') }}" class="btn btn-secondary">Back to Login</a>
         </div>
     </div>
 

@@ -38,7 +38,7 @@ class AuthController extends Controller
             request()->session()->regenerateToken();
         }
 
-        return view('authentication::login');
+        return view('authentication::sign-in');
     }
 
     public function login(Request $request)
@@ -169,7 +169,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')
+        return redirect()->route('sign-in')
             ->withHeaders([
                 'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
                 'Pragma' => 'no-cache',
@@ -332,8 +332,8 @@ class AuthController extends Controller
         );
 
         if ($status === Password::PASSWORD_RESET) {
-            return redirect()->route('login')
-                ->with('success', 'Your password has been reset. You can now log in.');
+            return redirect()->route('sign-in')
+                ->with('success', 'Your password has been reset. You can now sign in.');
         }
 
         throw ValidationException::withMessages([
