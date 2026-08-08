@@ -1,4 +1,4 @@
-.barangay-abyip-page {
+.barangay-accomplishments-page {
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     background:
         radial-gradient(circle at top left, rgba(4, 80, 168, 0.10), transparent 32%),
@@ -7,11 +7,11 @@
     color: #0f172a;
 }
 
-.barangay-abyip-page.kabataan-page-section {
+.barangay-accomplishments-page.kabataan-page-section {
     scroll-margin-top: 88px;
 }
 
-.barangay-abyip-page .abyip-shell {
+.barangay-accomplishments-page .accomplishments-shell {
     width: min(1200px, calc(100% - 48px));
     margin: 0 auto;
 }
@@ -20,14 +20,14 @@
    Hero / Page Header
    ============================================ */
 
-.barangay-abyip-page .abyip-hero,
-.barangay-abyip-page .abyip-detail-hero {
+.barangay-accomplishments-page .accomplishments-hero,
+.barangay-accomplishments-page .accomplishments-detail-hero {
     padding: 96px 0 48px;
     background: linear-gradient(135deg, #022a54 0%, #0450a8 52%, #1a6fd4 100%);
     color: #fff;
 }
 
-.barangay-abyip-page .abyip-back-link {
+.barangay-accomplishments-page .accomplishments-back-link {
     display: inline-flex;
     align-items: center;
     margin-bottom: 20px;
@@ -39,12 +39,12 @@
     transition: color 0.18s ease, transform 0.18s ease;
 }
 
-.barangay-abyip-page .abyip-back-link:hover {
+.barangay-accomplishments-page .accomplishments-back-link:hover {
     color: #ffffff;
     transform: translateX(-2px);
 }
 
-.barangay-abyip-page .abyip-detail-header {
+.barangay-accomplishments-page .accomplishments-detail-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -52,14 +52,14 @@
     margin-bottom: 16px;
 }
 
-.barangay-abyip-page .abyip-header-text {
+.barangay-accomplishments-page .accomplishments-header-text {
     display: flex;
     flex-direction: column;
     gap: 0;
     min-width: 0;
 }
 
-.barangay-abyip-page .abyip-eyebrow {
+.barangay-accomplishments-page .accomplishments-eyebrow {
     display: inline-block;
     align-self: flex-start;
     margin-bottom: 12px;
@@ -73,7 +73,7 @@
     text-transform: uppercase;
 }
 
-.barangay-abyip-page h1 {
+.barangay-accomplishments-page h1 {
     margin: 0 0 10px;
     font-family: 'Poppins', sans-serif;
     font-size: clamp(2rem, 4vw, 3rem);
@@ -82,7 +82,7 @@
     word-break: break-word;
 }
 
-.barangay-abyip-page .abyip-detail-subtitle {
+.barangay-accomplishments-page .accomplishments-detail-subtitle {
     max-width: 720px;
     margin: 0;
     color: rgba(255, 255, 255, 0.90);
@@ -92,7 +92,7 @@
     letter-spacing: 0.01em;
 }
 
-.barangay-abyip-page .abyip-print-btn {
+.barangay-accomplishments-page .accomplishments-print-btn {
     border: 0;
     border-radius: 12px;
     padding: 12px 20px;
@@ -106,7 +106,7 @@
     box-shadow: 0 6px 16px rgba(32, 180, 134, 0.28);
 }
 
-.barangay-abyip-page .abyip-print-btn:hover {
+.barangay-accomplishments-page .accomplishments-print-btn:hover {
     background: #1aa176;
     transform: translateY(-1px);
 }
@@ -116,7 +116,7 @@
    Unobtrusive, clearly visible, non-obstructing
    ============================================ */
 
-.barangay-abyip-page .abyip-pending-banner {
+.barangay-accomplishments-page .accomplishments-pending-banner {
     display: flex;
     align-items: flex-start;
     gap: 12px;
@@ -129,7 +129,7 @@
     backdrop-filter: blur(6px);
 }
 
-.barangay-abyip-page .abyip-pending-icon {
+.barangay-accomplishments-page .accomplishments-pending-icon {
     width: 22px;
     height: 22px;
     flex-shrink: 0;
@@ -137,7 +137,7 @@
     color: #fdc020;
 }
 
-.barangay-abyip-page .abyip-pending-text {
+.barangay-accomplishments-page .accomplishments-pending-text {
     font-size: 0.94rem;
     font-weight: 500;
     line-height: 1.55;
@@ -146,7 +146,7 @@
 }
 
 /* Old legacy note class (kept for safety) */
-.barangay-abyip-page .abyip-detail-note {
+.barangay-accomplishments-page .accomplishments-detail-note {
     margin-top: 8px;
     color: rgba(255, 255, 255, 0.78);
     font-size: 0.92rem;
@@ -156,14 +156,14 @@
    Budget Cards
    ============================================ */
 
-.barangay-abyip-page .abyip-budget-cards {
+.barangay-accomplishments-page .accomplishments-budget-cards {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
     margin: 32px 0 24px;
 }
 
-.barangay-abyip-page .abyip-budget-pill {
+.barangay-accomplishments-page .accomplishments-budget-pill {
     padding: 20px 22px;
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.12);
@@ -171,7 +171,7 @@
     backdrop-filter: blur(8px);
 }
 
-.barangay-abyip-page .abyip-budget-pill span {
+.barangay-accomplishments-page .accomplishments-budget-pill span {
     display: block;
     margin-bottom: 10px;
     color: rgba(255, 255, 255, 0.82);
@@ -181,7 +181,7 @@
     text-transform: uppercase;
 }
 
-.barangay-abyip-page .abyip-budget-pill strong {
+.barangay-accomplishments-page .accomplishments-budget-pill strong {
     font-size: 1.4rem;
     font-family: 'Poppins', sans-serif;
     color: #ffffff;
@@ -193,7 +193,7 @@
    PPA Table — Wrapper & Scroll UX
    ============================================ */
 
-.barangay-abyip-page .abyip-table-wrap {
+.barangay-accomplishments-page .accomplishments-table-wrap {
     position: relative;
     overflow-x: auto;
     overflow-y: visible;
@@ -207,32 +207,32 @@
     border: 1px solid rgba(148, 163, 184, 0.18);
 }
 
-.barangay-abyip-page .abyip-table-wrap:focus-visible {
+.barangay-accomplishments-page .accomplishments-table-wrap:focus-visible {
     outline: 3px solid #0450a8;
     outline-offset: 2px;
 }
 
-.barangay-abyip-page .abyip-table-wrap::-webkit-scrollbar {
+.barangay-accomplishments-page .accomplishments-table-wrap::-webkit-scrollbar {
     height: 10px;
 }
 
-.barangay-abyip-page .abyip-table-wrap::-webkit-scrollbar-track {
+.barangay-accomplishments-page .accomplishments-table-wrap::-webkit-scrollbar-track {
     background: #f1f5f9;
     border-radius: 0 0 18px 18px;
 }
 
-.barangay-abyip-page .abyip-table-wrap::-webkit-scrollbar-thumb {
+.barangay-accomplishments-page .accomplishments-table-wrap::-webkit-scrollbar-thumb {
     background: #94a3b8;
     border-radius: 5px;
     border: 2px solid #f1f5f9;
 }
 
-.barangay-abyip-page .abyip-table-wrap::-webkit-scrollbar-thumb:hover {
+.barangay-accomplishments-page .accomplishments-table-wrap::-webkit-scrollbar-thumb:hover {
     background: #64748b;
 }
 
 /* Scroll hint — shows on small screens only */
-.barangay-abyip-page .abyip-scroll-hint {
+.barangay-accomplishments-page .accomplishments-scroll-hint {
     display: none;
     padding: 10px 16px 12px;
     color: #64748b;
@@ -254,7 +254,7 @@
    PPA Table — Core Layout, Sizing & Typography
    ============================================ */
 
-.barangay-abyip-page .abyip-table {
+.barangay-accomplishments-page .accomplishments-table {
     width: 100%;
     min-width: 1100px;
     border-collapse: separate;
@@ -263,18 +263,18 @@
 }
 
 /* Fixed column widths for predictable, non-collapsing layout */
-.barangay-abyip-page .abyip-table .abyip-col-ppa            { width: 11%; min-width: 120px; }
-.barangay-abyip-page .abyip-table .abyip-col-description    { width: 21%; min-width: 230px; }
-.barangay-abyip-page .abyip-table .abyip-col-expected       { width: 18%; min-width: 200px; }
-.barangay-abyip-page .abyip-table .abyip-col-indicator      { width: 14%; min-width: 160px; }
-.barangay-abyip-page .abyip-table .abyip-col-period         { width: 9%;  min-width: 100px; }
-.barangay-abyip-page .abyip-table .abyip-col-mooe           { width: 8%;  min-width: 100px; }
-.barangay-abyip-page .abyip-table .abyip-col-co             { width: 7%;  min-width: 90px; }
-.barangay-abyip-page .abyip-table .abyip-col-total          { width: 7%;  min-width: 100px; }
-.barangay-abyip-page .abyip-table .abyip-col-person         { width: 10%; min-width: 130px; }
+.barangay-accomplishments-page .accomplishments-table .accomplishments-col-ppa            { width: 11%; min-width: 120px; }
+.barangay-accomplishments-page .accomplishments-table .accomplishments-col-description    { width: 21%; min-width: 230px; }
+.barangay-accomplishments-page .accomplishments-table .accomplishments-col-expected       { width: 18%; min-width: 200px; }
+.barangay-accomplishments-page .accomplishments-table .accomplishments-col-indicator      { width: 14%; min-width: 160px; }
+.barangay-accomplishments-page .accomplishments-table .accomplishments-col-period         { width: 9%;  min-width: 100px; }
+.barangay-accomplishments-page .accomplishments-table .accomplishments-col-mooe           { width: 8%;  min-width: 100px; }
+.barangay-accomplishments-page .accomplishments-table .accomplishments-col-co             { width: 7%;  min-width: 90px; }
+.barangay-accomplishments-page .accomplishments-table .accomplishments-col-total          { width: 7%;  min-width: 100px; }
+.barangay-accomplishments-page .accomplishments-table .accomplishments-col-person         { width: 10%; min-width: 130px; }
 
 /* Column headers — min 14px effective font, strong contrast */
-.barangay-abyip-page .abyip-table thead th {
+.barangay-accomplishments-page .accomplishments-table thead th {
     position: sticky;
     top: 0;
     z-index: 2;
@@ -292,16 +292,16 @@
     border-bottom: 2px solid #0450a8;
 }
 
-.barangay-abyip-page .abyip-table thead th:first-child {
+.barangay-accomplishments-page .accomplishments-table thead th:first-child {
     border-top-left-radius: 18px;
 }
 
-.barangay-abyip-page .abyip-table thead th:last-child {
+.barangay-accomplishments-page .accomplishments-table thead th:last-child {
     border-top-right-radius: 18px;
 }
 
 /* Table cells — MIN 14px body text font (0.9rem = 14.4px) */
-.barangay-abyip-page .abyip-table td {
+.barangay-accomplishments-page .accomplishments-table td {
     padding: 14px 14px;
     border-bottom: 1px solid #e2e8f0;
     vertical-align: top;
@@ -315,36 +315,36 @@
     hyphens: auto;
 }
 
-.barangay-abyip-page .abyip-table td.abyip-cell {
+.barangay-accomplishments-page .accomplishments-table td.accomplishments-cell {
     min-height: 44px;
 }
 
 /* Long-text cells: Description, Expected Result, Performance Indicator
    Force wrap, prevent truncation/clipping, generous line height */
-.barangay-abyip-page .abyip-table td.abyip-longtext {
+.barangay-accomplishments-page .accomplishments-table td.accomplishments-longtext {
     white-space: normal;
     line-height: 1.65;
     color: #1e293b;
 }
 
 /* Numeric columns: right-align for easy comparison, keep on one line per value */
-.barangay-abyip-page .abyip-table td.abyip-num,
-.barangay-abyip-page .abyip-table th.abyip-col-mooe,
-.barangay-abyip-page .abyip-table th.abyip-col-co,
-.barangay-abyip-page .abyip-table th.abyip-col-total {
+.barangay-accomplishments-page .accomplishments-table td.accomplishments-num,
+.barangay-accomplishments-page .accomplishments-table th.accomplishments-col-mooe,
+.barangay-accomplishments-page .accomplishments-table th.accomplishments-col-co,
+.barangay-accomplishments-page .accomplishments-table th.accomplishments-col-total {
     text-align: right;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
 
 /* Person / Period: wrap names, prevent break mid-word on tiny screens */
-.barangay-abyip-page .abyip-table .abyip-col-person,
-.barangay-abyip-page .abyip-table .abyip-col-period {
+.barangay-accomplishments-page .accomplishments-table .accomplishments-col-person,
+.barangay-accomplishments-page .accomplishments-table .accomplishments-col-period {
     white-space: normal;
 }
 
 /* Last row removes bottom border so card border is clean */
-.barangay-abyip-page .abyip-table tbody tr:last-child td {
+.barangay-accomplishments-page .accomplishments-table tbody tr:last-child td {
     border-bottom: none;
 }
 
@@ -352,7 +352,7 @@
    Table Row Types — Section / Subsection / Item
    ============================================ */
 
-.barangay-abyip-page .abyip-row-section td {
+.barangay-accomplishments-page .accomplishments-row-section td {
     background: linear-gradient(90deg, #0450a8 0%, #0d5fc4 100%);
     color: #ffffff;
     font-weight: 800;
@@ -364,12 +364,12 @@
     line-height: 1.4;
 }
 
-.barangay-abyip-page .abyip-row-section + .abyip-row-subsection td,
-.barangay-abyip-page .abyip-row-section + .abyip-row-item td {
+.barangay-accomplishments-page .accomplishments-row-section + .accomplishments-row-subsection td,
+.barangay-accomplishments-page .accomplishments-row-section + .accomplishments-row-item td {
     border-top: 1px solid #e2e8f0;
 }
 
-.barangay-abyip-page .abyip-row-subsection td {
+.barangay-accomplishments-page .accomplishments-row-subsection td {
     background: rgba(4, 80, 168, 0.10);
     color: #022a54;
     font-weight: 700;
@@ -380,27 +380,27 @@
 }
 
 /* Zebra striping on item rows for scanability */
-.barangay-abyip-page .abyip-row-item:nth-child(even) td {
+.barangay-accomplishments-page .accomplishments-row-item:nth-child(even) td {
     background: #f8fafc;
 }
 
-.barangay-abyip-page .abyip-row-item:hover td {
+.barangay-accomplishments-page .accomplishments-row-item:hover td {
     background: rgba(68, 165, 62, 0.05);
 }
 
 /* Section corners fix when section is first row */
-.barangay-abyip-page .abyip-table tbody tr:first-child.abyip-row-section td:first-child {
+.barangay-accomplishments-page .accomplishments-table tbody tr:first-child.accomplishments-row-section td:first-child {
     border-top-left-radius: 18px;
 }
-.barangay-abyip-page .abyip-table tbody tr:first-child.abyip-row-section td:last-child {
+.barangay-accomplishments-page .accomplishments-table tbody tr:first-child.accomplishments-row-section td:last-child {
     border-top-right-radius: 18px;
 }
 
 /* Last item row bottom-radius (only when no signatories / etc. inside) */
-.barangay-abyip-page .abyip-table tbody tr:last-child td:first-child {
+.barangay-accomplishments-page .accomplishments-table tbody tr:last-child td:first-child {
     border-bottom-left-radius: 18px;
 }
-.barangay-abyip-page .abyip-table tbody tr:last-child td:last-child {
+.barangay-accomplishments-page .accomplishments-table tbody tr:last-child td:last-child {
     border-bottom-right-radius: 18px;
 }
 
@@ -408,8 +408,8 @@
    Empty State
    ============================================ */
 
-.barangay-abyip-page .abyip-empty-state,
-.barangay-abyip-page .no-doc {
+.barangay-accomplishments-page .accomplishments-empty-state,
+.barangay-accomplishments-page .no-doc {
     padding: 40px 32px;
     border-radius: 18px;
     background: #fff;
@@ -418,16 +418,16 @@
     margin-top: 24px;
 }
 
-.barangay-abyip-page .abyip-empty-state h2,
-.barangay-abyip-page .no-doc h2 {
+.barangay-accomplishments-page .accomplishments-empty-state h2,
+.barangay-accomplishments-page .no-doc h2 {
     margin-top: 0;
     font-family: 'Poppins', sans-serif;
     color: #0f172a;
     font-size: 1.4rem;
 }
 
-.barangay-abyip-page .abyip-empty-state p,
-.barangay-abyip-page .no-doc p {
+.barangay-accomplishments-page .accomplishments-empty-state p,
+.barangay-accomplishments-page .no-doc p {
     color: #475569;
     font-size: 0.95rem;
     line-height: 1.6;
@@ -439,14 +439,14 @@
    Signatories
    ============================================ */
 
-.barangay-abyip-page .abyip-signatories {
+.barangay-accomplishments-page .accomplishments-signatories {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
     margin-bottom: 48px;
 }
 
-.barangay-abyip-page .abyip-signatories article {
+.barangay-accomplishments-page .accomplishments-signatories article {
     padding: 22px 24px;
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.12);
@@ -454,7 +454,7 @@
     backdrop-filter: blur(8px);
 }
 
-.barangay-abyip-page .abyip-signatories span {
+.barangay-accomplishments-page .accomplishments-signatories span {
     display: block;
     color: rgba(255, 255, 255, 0.82);
     font-size: 0.85rem;
@@ -463,7 +463,7 @@
     text-transform: uppercase;
 }
 
-.barangay-abyip-page .abyip-signatories strong {
+.barangay-accomplishments-page .accomplishments-signatories strong {
     display: block;
     margin: 10px 0;
     font-size: 1.12rem;
@@ -473,7 +473,7 @@
     line-height: 1.3;
 }
 
-.barangay-abyip-page .abyip-signatories small {
+.barangay-accomplishments-page .accomplishments-signatories small {
     color: rgba(255, 255, 255, 0.74);
     font-size: 0.85rem;
     font-weight: 500;
@@ -483,7 +483,7 @@
    Listing Page — Grid & Search (index.blade.php)
    ============================================ */
 
-.barangay-abyip-page .abyip-search {
+.barangay-accomplishments-page .accomplishments-search {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -495,7 +495,7 @@
     border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
-.barangay-abyip-page .abyip-search input {
+.barangay-accomplishments-page .accomplishments-search input {
     width: 100%;
     border: 0;
     background: transparent;
@@ -505,27 +505,27 @@
     min-height: 24px;
 }
 
-.barangay-abyip-page .abyip-search input::placeholder {
+.barangay-accomplishments-page .accomplishments-search input::placeholder {
     color: rgba(255, 255, 255, 0.72);
 }
 
-.barangay-abyip-page .abyip-list-section {
+.barangay-accomplishments-page .accomplishments-list-section {
     padding: 36px 0 72px;
 }
 
-.barangay-abyip-page .abyip-summary {
+.barangay-accomplishments-page .accomplishments-summary {
     margin-bottom: 18px;
     color: #475569;
     font-size: 0.95rem;
 }
 
-.barangay-abyip-page .abyip-barangay-grid {
+.barangay-accomplishments-page .accomplishments-barangay-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 18px;
 }
 
-.barangay-abyip-page .abyip-barangay-card {
+.barangay-accomplishments-page .accomplishments-barangay-card {
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -539,19 +539,19 @@
     transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.barangay-abyip-page .abyip-barangay-card:hover {
+.barangay-accomplishments-page .accomplishments-barangay-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 18px 36px rgba(15, 23, 42, 0.10);
 }
 
-.barangay-abyip-page .abyip-card-top {
+.barangay-accomplishments-page .accomplishments-card-top {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
 }
 
-.barangay-abyip-page .abyip-status-badge {
+.barangay-accomplishments-page .accomplishments-status-badge {
     display: inline-flex;
     align-items: center;
     padding: 4px 10px;
@@ -561,24 +561,24 @@
     white-space: nowrap;
 }
 
-.barangay-abyip-page .abyip-status-badge.is-available {
+.barangay-accomplishments-page .accomplishments-status-badge.is-available {
     background: rgba(32, 180, 134, 0.14);
     color: #047857;
 }
 
-.barangay-abyip-page .abyip-status-badge.is-missing {
+.barangay-accomplishments-page .accomplishments-status-badge.is-missing {
     background: rgba(245, 158, 11, 0.14);
     color: #b45309;
 }
 
-.barangay-abyip-page .abyip-card-copy {
+.barangay-accomplishments-page .accomplishments-card-copy {
     margin: 0;
     color: #64748b;
     line-height: 1.55;
     font-size: 0.94rem;
 }
 
-.barangay-abyip-page .abyip-card-link {
+.barangay-accomplishments-page .accomplishments-card-link {
     margin-top: auto;
     color: #0450a8;
     font-weight: 700;
@@ -590,31 +590,31 @@
    ============================================ */
 
 @media (max-width: 900px) {
-    .barangay-abyip-page .abyip-shell {
+    .barangay-accomplishments-page .accomplishments-shell {
         width: min(100%, calc(100% - 32px));
     }
 
-    .barangay-abyip-page .abyip-detail-hero {
+    .barangay-accomplishments-page .accomplishments-detail-hero {
         padding: 88px 0 40px;
     }
 
-    .barangay-abyip-page .abyip-detail-header {
+    .barangay-accomplishments-page .accomplishments-detail-header {
         flex-direction: column;
         align-items: stretch;
         gap: 16px;
         margin-bottom: 12px;
     }
 
-    .barangay-abyip-page .abyip-print-btn {
+    .barangay-accomplishments-page .accomplishments-print-btn {
         align-self: flex-start;
     }
 
-    .barangay-abyip-page .abyip-budget-cards,
-    .barangay-abyip-page .abyip-signatories {
+    .barangay-accomplishments-page .accomplishments-budget-cards,
+    .barangay-accomplishments-page .accomplishments-signatories {
         grid-template-columns: 1fr;
     }
 
-    .barangay-abyip-page .abyip-budget-cards {
+    .barangay-accomplishments-page .accomplishments-budget-cards {
         margin: 28px 0 22px;
     }
 }
@@ -624,108 +624,108 @@
    ============================================ */
 
 @media (max-width: 640px) {
-    .barangay-abyip-page .abyip-shell {
+    .barangay-accomplishments-page .accomplishments-shell {
         width: min(100%, calc(100% - 24px));
     }
 
-    .barangay-abyip-page .abyip-detail-hero {
+    .barangay-accomplishments-page .accomplishments-detail-hero {
         padding: 80px 0 32px;
     }
 
-    .barangay-abyip-page .abyip-back-link {
+    .barangay-accomplishments-page .accomplishments-back-link {
         margin-bottom: 16px;
         font-size: 0.88rem;
     }
 
-    .barangay-abyip-page .abyip-eyebrow {
+    .barangay-accomplishments-page .accomplishments-eyebrow {
         font-size: 0.75rem;
         padding: 5px 12px;
         margin-bottom: 10px;
     }
 
-    .barangay-abyip-page .abyip-detail-subtitle {
+    .barangay-accomplishments-page .accomplishments-detail-subtitle {
         font-size: 1rem;
     }
 
-    .barangay-abyip-page .abyip-pending-banner {
+    .barangay-accomplishments-page .accomplishments-pending-banner {
         margin: 14px 0 0;
         padding: 12px 14px;
         border-radius: 12px;
     }
 
-    .barangay-abyip-page .abyip-pending-icon {
+    .barangay-accomplishments-page .accomplishments-pending-icon {
         width: 20px;
         height: 20px;
     }
 
-    .barangay-abyip-page .abyip-pending-text {
+    .barangay-accomplishments-page .accomplishments-pending-text {
         font-size: 0.9rem;
     }
 
-    .barangay-abyip-page .abyip-budget-cards {
+    .barangay-accomplishments-page .accomplishments-budget-cards {
         gap: 12px;
         margin: 24px 0 18px;
     }
 
-    .barangay-abyip-page .abyip-budget-pill {
+    .barangay-accomplishments-page .accomplishments-budget-pill {
         padding: 16px 18px;
         border-radius: 14px;
     }
 
-    .barangay-abyip-page .abyip-budget-pill strong {
+    .barangay-accomplishments-page .accomplishments-budget-pill strong {
         font-size: 1.25rem;
     }
 
-    .barangay-abyip-page .abyip-table-wrap {
+    .barangay-accomplishments-page .accomplishments-table-wrap {
         border-radius: 14px;
         margin-bottom: 24px;
     }
 
-    .barangay-abyip-page .abyip-table {
+    .barangay-accomplishments-page .accomplishments-table {
         min-width: 980px;
     }
 
-    .barangay-abyip-page .abyip-table thead th {
+    .barangay-accomplishments-page .accomplishments-table thead th {
         padding: 14px 12px;
         font-size: 0.82rem;
         letter-spacing: 0.03em;
     }
 
-    .barangay-abyip-page .abyip-table td {
+    .barangay-accomplishments-page .accomplishments-table td {
         padding: 12px 12px;
         font-size: 0.88rem; /* 14.08px — still above 14px min */
         line-height: 1.5;
     }
 
-    .barangay-abyip-page .abyip-table td.abyip-longtext {
+    .barangay-accomplishments-page .accomplishments-table td.accomplishments-longtext {
         line-height: 1.6;
     }
 
-    .barangay-abyip-page .abyip-row-section td {
+    .barangay-accomplishments-page .accomplishments-row-section td {
         padding: 14px 16px;
         font-size: 0.82rem;
     }
 
-    .barangay-abyip-page .abyip-row-subsection td {
+    .barangay-accomplishments-page .accomplishments-row-subsection td {
         padding: 12px 16px;
         font-size: 0.88rem;
     }
 
-    .barangay-abyip-page .abyip-scroll-hint {
+    .barangay-accomplishments-page .accomplishments-scroll-hint {
         display: block;
     }
 
-    .barangay-abyip-page .abyip-signatories {
+    .barangay-accomplishments-page .accomplishments-signatories {
         gap: 12px;
         margin-bottom: 32px;
     }
 
-    .barangay-abyip-page .abyip-signatories article {
+    .barangay-accomplishments-page .accomplishments-signatories article {
         padding: 18px 20px;
         border-radius: 14px;
     }
 
-    .barangay-abyip-page .abyip-signatories strong {
+    .barangay-accomplishments-page .accomplishments-signatories strong {
         font-size: 1.05rem;
     }
 }
@@ -735,16 +735,16 @@
    ============================================ */
 
 @media (max-width: 420px) {
-    .barangay-abyip-page .abyip-table {
+    .barangay-accomplishments-page .accomplishments-table {
         min-width: 900px;
     }
 
-    .barangay-abyip-page .abyip-table thead th {
+    .barangay-accomplishments-page .accomplishments-table thead th {
         padding: 12px 10px;
         font-size: 0.78rem;
     }
 
-    .barangay-abyip-page .abyip-table td {
+    .barangay-accomplishments-page .accomplishments-table td {
         padding: 11px 10px;
         font-size: 0.88rem; /* keep ≥ 14px */
     }
@@ -758,74 +758,74 @@
     .kabataan-nav,
     .kabataan-drawer,
     .kabataan-footer,
-    .abyip-back-link,
-    .abyip-print-btn,
-    .abyip-scroll-hint {
+    .accomplishments-back-link,
+    .accomplishments-print-btn,
+    .accomplishments-scroll-hint {
         display: none !important;
     }
 
-    .barangay-abyip-page .abyip-detail-hero {
+    .barangay-accomplishments-page .accomplishments-detail-hero {
         padding: 24px 0;
         background: #fff;
         color: #0f172a;
     }
 
-    .barangay-abyip-page .abyip-eyebrow {
+    .barangay-accomplishments-page .accomplishments-eyebrow {
         background: #f1f5f9;
         border: 1px solid #cbd5e1;
         color: #022a54;
     }
 
-    .barangay-abyip-page h1,
-    .barangay-abyip-page .abyip-detail-subtitle {
+    .barangay-accomplishments-page h1,
+    .barangay-accomplishments-page .accomplishments-detail-subtitle {
         color: #0f172a;
     }
 
-    .barangay-abyip-page .abyip-pending-banner {
+    .barangay-accomplishments-page .accomplishments-pending-banner {
         background: #fff7ed;
         border: 1px solid #fdba74;
         color: #9a3412;
     }
-    .barangay-abyip-page .abyip-pending-icon { color: #c2410c; }
-    .barangay-abyip-page .abyip-pending-text { color: #9a3412; }
+    .barangay-accomplishments-page .accomplishments-pending-icon { color: #c2410c; }
+    .barangay-accomplishments-page .accomplishments-pending-text { color: #9a3412; }
 
-    .barangay-abyip-page .abyip-budget-pill,
-    .barangay-abyip-page .abyip-signatories article {
+    .barangay-accomplishments-page .accomplishments-budget-pill,
+    .barangay-accomplishments-page .accomplishments-signatories article {
         background: #f8fafc;
         color: #0f172a;
         border-color: #cbd5e1;
     }
 
-    .barangay-abyip-page .abyip-budget-pill span,
-    .barangay-abyip-page .abyip-signatories span,
-    .barangay-abyip-page .abyip-signatories small {
+    .barangay-accomplishments-page .accomplishments-budget-pill span,
+    .barangay-accomplishments-page .accomplishments-signatories span,
+    .barangay-accomplishments-page .accomplishments-signatories small {
         color: #475569;
     }
 
-    .barangay-abyip-page .abyip-budget-pill strong,
-    .barangay-abyip-page .abyip-signatories strong {
+    .barangay-accomplishments-page .accomplishments-budget-pill strong,
+    .barangay-accomplishments-page .accomplishments-signatories strong {
         color: #0f172a;
     }
 
-    .barangay-abyip-page .abyip-table-wrap {
+    .barangay-accomplishments-page .accomplishments-table-wrap {
         box-shadow: none;
         border: 1px solid #cbd5e1;
         overflow: visible;
     }
 
-    .barangay-abyip-page .abyip-table {
+    .barangay-accomplishments-page .accomplishments-table {
         min-width: 0;
         width: 100%;
     }
 
-    .barangay-abyip-page .abyip-table thead th {
+    .barangay-accomplishments-page .accomplishments-table thead th {
         background: #022a54 !important;
         color: #fff !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
 
-    .barangay-abyip-page .abyip-row-section td {
+    .barangay-accomplishments-page .accomplishments-row-section td {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
@@ -836,16 +836,16 @@
    ============================================ */
 
 @media (prefers-reduced-motion: reduce) {
-    .barangay-abyip-page *,
-    .barangay-abyip-page *::before,
-    .barangay-abyip-page *::after {
+    .barangay-accomplishments-page *,
+    .barangay-accomplishments-page *::before,
+    .barangay-accomplishments-page *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
 }
 
-.barangay-abyip-page *:focus-visible {
+.barangay-accomplishments-page *:focus-visible {
     outline: 3px solid #fdc020;
     outline-offset: 3px;
     border-radius: 6px;

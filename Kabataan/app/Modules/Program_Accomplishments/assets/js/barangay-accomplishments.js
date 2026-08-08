@@ -1,14 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('barangayAbyipSearch');
-    const grid = document.getElementById('abyipBarangayGrid');
-    const resultCount = document.getElementById('abyipResultCount');
-    const filterEmpty = document.getElementById('abyipFilterEmpty');
+    const grid = document.getElementById('accomplishmentsBarangayGrid');
+    const resultCount = document.getElementById('accomplishmentsResultCount');
+    const filterEmpty = document.getElementById('accomplishmentsFilterEmpty');
 
     if (!searchInput || !grid) {
         return;
     }
 
-    const cards = Array.from(grid.querySelectorAll('.abyip-barangay-card'));
+    const cards = Array.from(grid.querySelectorAll('.accomplishments-barangay-card'));
 
     const filterCards = () => {
         const query = searchInput.value.trim().toLowerCase();

@@ -10,7 +10,7 @@
                 </p>
                 <div class="about-hero-actions">
                     <a href="{{ route('register') }}" class="about-btn about-btn-primary">Create Account</a>
-                    <a href="{{ route('homepage.section', ['section' => 'faqs']) }}" class="about-btn about-btn-secondary">Read FAQs</a>
+                    <a href="{{ route('homepage') }}#faq" class="about-btn about-btn-secondary">Read FAQs</a>
                 </div>
             </div>
 

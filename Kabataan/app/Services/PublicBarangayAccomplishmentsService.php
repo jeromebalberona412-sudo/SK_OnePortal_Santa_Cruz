@@ -2,18 +2,18 @@
 
 namespace App\Services;
 
-use App\Models\Abyip;
+use App\Models\Accomplishment;
 use App\Models\Barangay;
 use Illuminate\Support\Collection;
 
-class PublicBarangayAbyipService
+class PublicBarangayAccomplishmentsService
 {
     /**
      * @return list<int>
      */
     public function barangayIdsWithDocuments(): array
     {
-        return Abyip::query()
+        return Accomplishment::query()
             ->documents()
             ->distinct()
             ->pluck('barangay_id')
@@ -22,7 +22,7 @@ class PublicBarangayAbyipService
 
     public function hasDocument(Barangay $barangay): bool
     {
-        return Abyip::query()
+        return Accomplishment::query()
             ->documents()
             ->where('barangay_id', $barangay->id)
             ->exists();
@@ -30,7 +30,7 @@ class PublicBarangayAbyipService
 
     public function latestForBarangay(Barangay $barangay): ?object
     {
-        $document = Abyip::query()
+        $document = Accomplishment::query()
             ->documents()
             ->where('barangay_id', $barangay->id)
             ->orderByDesc('fiscal_year')
@@ -41,9 +41,9 @@ class PublicBarangayAbyipService
             return null;
         }
 
-        $lines = Abyip::query()
+        $lines = Accomplishment::query()
             ->where('document_id', $document->id)
-            ->where('row_type', '!=', Abyip::ROW_DOCUMENT)
+            ->where('row_type', '!=', Accomplishment::ROW_DOCUMENT)
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
@@ -70,7 +70,7 @@ class PublicBarangayAbyipService
             'chairperson_title' => $document->prepared_by_position ?? $document->prepared_position ?? 'SK Chairperson',
             'approved_by_name' => $document->approved_by_name ?? $document->approved_by,
             'approved_by_title' => $document->approved_by_position ?? $document->approved_position ?? 'Barangay Chairman',
-            'status' => $document->status ?? Abyip::STATUS_PENDING,
+            'status' => $document->status ?? Accomplishment::STATUS_PENDING,
             'items' => $this->buildDisplayItems($lines),
         ];
     }
@@ -84,7 +84,7 @@ class PublicBarangayAbyipService
         $currentSection = null;
 
         foreach ($lines as $line) {
-            if ($line->row_type === Abyip::ROW_EXPENDITURE) {
+            if ($line->row_type === Accomplishment::ROW_EXPENDITURE) {
                 if ($currentSection !== 'expenditure') {
                     $items->push((object) [
                         'row_type' => 'section',
@@ -98,7 +98,7 @@ class PublicBarangayAbyipService
                 continue;
             }
 
-            if ($line->row_type === Abyip::ROW_YOUTH_PROGRAM) {
+            if ($line->row_type === Accomplishment::ROW_YOUTH_PROGRAM) {
                 if ($currentSection !== 'youth') {
                     $items->push((object) [
                         'row_type' => 'section',
@@ -119,7 +119,7 @@ class PublicBarangayAbyipService
                 continue;
             }
 
-            if ($line->row_type === Abyip::ROW_ACTIVITY) {
+            if ($line->row_type === Accomplishment::ROW_ACTIVITY) {
                 $items->push($this->mapItemRow($line));
             }
         }
@@ -127,7 +127,7 @@ class PublicBarangayAbyipService
         return $items;
     }
 
-    private function mapItemRow(Abyip $line): object
+    private function mapItemRow(Accomplishment $line): object
     {
         $ppa = trim((string) ($line->activity_name ?: $line->program_name ?: ''));
         $mooe = (float) ($line->mooe ?? 0);
@@ -152,7 +152,7 @@ class PublicBarangayAbyipService
         ];
     }
 
-    private function formatPeriod(Abyip $line): ?string
+    private function formatPeriod(Accomplishment $line): ?string
     {
         $start = $line->implementation_start ?? $line->implementation_period ?? null;
         $end = $line->implementation_end ?? null;

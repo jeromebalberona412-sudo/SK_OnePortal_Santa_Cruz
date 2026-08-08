@@ -89,10 +89,12 @@ export default defineConfig({
                 'app/Modules/Homepage/assets/css/faqs.css',
                 'app/Modules/Homepage/assets/css/homepage-interactions.css',
                 'app/Modules/Homepage/assets/css/homepage-responsive.css',
-                'app/Modules/Homepage/assets/css/barangay-abyip.css',
                 'app/Modules/Homepage/assets/js/homepage.js',
                 'app/Modules/Homepage/assets/js/faqs.js',
-                'app/Modules/Homepage/assets/js/barangay-abyip.js',
+
+                // Program Accomplishments
+                'app/Modules/Program_Accomplishments/assets/css/barangay-accomplishments.css',
+                'app/Modules/Program_Accomplishments/assets/js/barangay-accomplishments.js',
 
                 // KK Profiling
                 'app/Modules/KKProfiling/assets/css/kkprofiling.css',

@@ -37,4 +37,20 @@ class Barangay extends Model
         return $this->hasMany(Abyip::class)
             ->where('row_type', Abyip::ROW_DOCUMENT);
     }
+
+    public function accomplishments(): HasMany
+    {
+        return $this->hasMany(BarangayAccomplishment::class);
+    }
+
+    public function latestAccomplishment(): HasOne
+    {
+        return $this->hasOne(BarangayAccomplishment::class)->latestOfMany('year');
+    }
+
+    public function accomplishmentDocuments(): HasMany
+    {
+        return $this->hasMany(Accomplishment::class)
+            ->where('row_type', Accomplishment::ROW_DOCUMENT);
+    }
 }

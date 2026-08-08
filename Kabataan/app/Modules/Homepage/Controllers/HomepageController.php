@@ -6,14 +6,8 @@ use App\Http\Controllers\Controller;
 
 class HomepageController extends Controller
 {
-    public function index(?string $section = null)
+    public function index()
     {
-        $scrollTo = match ($section) {
-            'about' => 'about',
-            'faqs' => 'faq',
-            'contact' => 'kabataanFooter',
-            default => 'hero',
-        };
 
         $municipality = [
             'name' => 'Santa Cruz, Laguna',
@@ -116,7 +110,6 @@ class HomepageController extends Controller
             'programCategories' => $programCategories,
             'barangayProfiles'  => $barangayProfiles,
             'faqs'              => $this->getFaqs(),
-            'scrollTo'          => $scrollTo,
         ]);
     }
 
