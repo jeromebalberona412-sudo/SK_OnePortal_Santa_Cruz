@@ -43,8 +43,9 @@ Route::middleware('guest')->group(function () {
     // Forgot Password Routes
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'sendPasswordResetLink'])
-        ->middleware(['turnstile', 'throttle:skfed-password-reset-ip', 'throttle:skfed-password-reset-email'])
+        ->middleware(['throttle:skfed-password-reset-ip', 'throttle:skfed-password-reset-email'])
         ->name('password.email');
+    Route::get('/forgot-password/verify-email', [AuthController::class, 'showForgotPasswordVerifyEmail'])->name('password.verify-email');
     Route::get('/set-new-password/{token}', [AuthController::class, 'showResetPassword'])
         ->middleware(['throttle:skfed-password-reset-form'])
         ->name('password.reset');

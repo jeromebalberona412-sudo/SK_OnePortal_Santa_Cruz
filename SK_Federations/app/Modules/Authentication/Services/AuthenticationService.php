@@ -2,6 +2,7 @@
 
 namespace App\Modules\Authentication\Services;
 
+use App\Modules\Authentication\Jobs\RecordPostLoginActivityJob;
 use App\Modules\Authentication\Notifications\NewLocationLoginNotification;
 use App\Modules\Shared\Models\User;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -33,6 +34,10 @@ class AuthenticationService
     {
         $email = Str::lower(trim((string) $request->input('email', '')));
         $password = (string) $request->input('password', '');
+
+        // ── Pre-warm feature flags in a single query ───────────────────────
+        // Prevents 3 individual DB hits later in the pipeline.
+        $this->featureFlagService->preloadAuthFlags();
 
         $user = User::query()
             ->whereRaw('LOWER(email) = ?', [$email])
@@ -170,38 +175,21 @@ class AuthenticationService
             $this->trustedDeviceService->rememberDevice($user, $request);
         }
 
-        if ($this->featureFlagService->enabled('features.suspicious_login_detection')) {
-            $suspicious = $this->suspiciousLoginService->detect($user, (string) $request->ip());
+        // ── Merge blocking writes: recordLogin + resetLockout in one UPDATE ─
+        $this->recordLoginAndClearLockout($user, (string) $request->ip());
 
-            if (($suspicious['is_suspicious'] ?? false) && $this->featureFlagService->enabled('features.login_alert_notifications')) {
-                try {
-                    $user->notify(new NewLocationLoginNotification(
-                        ipAddress: (string) $request->ip(),
-                        userAgent: $request->userAgent(),
-                        signals: $suspicious['signals'] ?? [],
-                    ));
-                } catch (\Throwable $exception) {
-                    Log::warning('Failed to queue login alert notification.', [
-                        'user_id' => $user->getKey(),
-                        'error' => $exception->getMessage(),
-                    ]);
-                }
-            }
-        }
-
-        $this->loginSecurityService->recordAttempt($user, $email, true, $request, ['reason' => 'success']);
-        $this->loginSecurityService->clearAfterSuccess($user);
-        $user->recordLogin((string) $request->ip());
-        $this->emailVerificationDeviceService->upsertCurrentDevice($user, $request);
-
-        $this->auditLogService->log(
-            event: 'login_success',
-            user: $user,
-            request: $request,
-            metadata: [],
-            outcome: AuthAuditLogService::OUTCOME_SUCCESS,
-            resourceType: 'authentication',
-            resourceId: $user->getKey(),
+        // ── Dispatch all remaining post-login work to the queue ────────────
+        // Suspicious detection, alert notification, login attempt record,
+        // audit log, and device upsert all happen off the critical path.
+        RecordPostLoginActivityJob::dispatch(
+            userId: (int) $user->getKey(),
+            email: $email,
+            ipAddress: (string) $request->ip(),
+            userAgent: (string) ($request->userAgent() ?? ''),
+            deviceFingerprint: $this->deviceFingerprintService->fingerprint($request),
+            isSuspiciousCheckEnabled: $this->featureFlagService->enabled('features.suspicious_login_detection'),
+            isAlertEnabled: $this->featureFlagService->enabled('features.login_alert_notifications'),
+            via: 'password',
         );
 
         return $user;
@@ -214,9 +202,8 @@ class AuthenticationService
     {
         Auth::login($user, true);
 
-        $this->loginSecurityService->recordAttempt($user, (string) $user->email, true, $request, ['reason' => 'email_verification_completed']);
-        $this->loginSecurityService->clearAfterSuccess($user);
-        $user->recordLogin((string) $request->ip());
+        // Merge recordLogin + resetLockout into a single UPDATE
+        $this->recordLoginAndClearLockout($user, (string) $request->ip());
 
         $this->claimCurrentSession($user, $request);
         $this->emailVerificationDeviceService->markVerifiedDeviceFromPending($user, $pending);
@@ -239,17 +226,16 @@ class AuthenticationService
             }
         }
 
-        $this->auditLogService->log(
-            event: 'login_success',
-            user: $user,
-            request: $request,
-            metadata: [
-                'via' => 'email_verification',
-                'remember_device' => ! empty($pending['remember_device']),
-            ],
-            outcome: AuthAuditLogService::OUTCOME_SUCCESS,
-            resourceType: 'authentication',
-            resourceId: $user->getKey(),
+        // Dispatch non-blocking post-login work
+        RecordPostLoginActivityJob::dispatch(
+            userId: (int) $user->getKey(),
+            email: (string) $user->email,
+            ipAddress: (string) $request->ip(),
+            userAgent: (string) ($request->userAgent() ?? ''),
+            deviceFingerprint: $this->deviceFingerprintService->fingerprint($request),
+            isSuspiciousCheckEnabled: false, // device-verified logins skip suspicious detection
+            isAlertEnabled: false,
+            via: 'email_verification',
         );
     }
 

@@ -51,19 +51,7 @@
             <div class="turnstile-modal-card">
 
                 <div class="turnstile-modal-header">
-                    <div class="turnstile-modal-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0
-                                     01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332
-                                     9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h2 class="turnstile-modal-title">Verify you're human</h2>
-                        <p class="turnstile-modal-subtitle">Complete the security check to continue signing in.</p>
-                    </div>
-                    <button id="turnstile-close-btn" class="turnstile-close-btn" type="button" aria-label="Cancel verification">
+                    <button id="turnstile-close-btn" class="turnstile-close-btn" type="button" aria-label="Cancel verification" style="margin-left:auto;">
                         <svg viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                   d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414
@@ -125,7 +113,7 @@
             <div class="login-form-container">
                 <div class="login-card-inner">
                     <div class="form-header">
-                        <p style="font-size:1.35rem;font-weight:800;color:#0f172a;letter-spacing:-0.01em;margin:0;">
+                        <p style="font-size:1.35rem;font-weight:800;color:#0f172a;letter-spacing:-0.01em;margin:0;text-align:center;">
                             Login to your account
                         </p>
                     </div>

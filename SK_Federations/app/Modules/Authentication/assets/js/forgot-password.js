@@ -98,7 +98,9 @@ document.addEventListener('DOMContentLoaded', function () {
     if (emailSent || document.querySelector('.fp-success-alert')) {
         startCooldown();
     } else {
-        resumeCooldownIfActive();
+        // Not on the "email sent" page — clear any stale cooldown so the timer
+        // does NOT persist across a fresh page load of the forgot-password form.
+        localStorage.removeItem(COOLDOWN_KEY);
     }
 
     if (emailInput && emailInput.type === 'email') {
