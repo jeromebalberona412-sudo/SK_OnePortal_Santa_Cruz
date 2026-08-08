@@ -40,10 +40,10 @@
 
             <div class="kabataan-nav-links" id="kabataanNavLinks">
                 <a href="{{ route('homepage') }}" class="kabataan-nav-link" data-section="hero">Home</a>
-                <a href="{{ route('homepage') }}#about" class="kabataan-nav-link" data-section="about">About</a>
+                <a href="{{ route('homepage') }}" class="kabataan-nav-link" data-section="about">About</a>
                 <a href="{{ route('program_accomplishments.barangays') }}" class="kabataan-nav-link" data-section="barangays">Barangay Accomplishments</a>
-                <a href="{{ route('homepage') }}#faq" class="kabataan-nav-link" data-section="faq">FAQs</a>
-                <a href="{{ route('homepage') }}#kabataanFooter" class="kabataan-nav-link" data-section="kabataanFooter">Contact</a>
+                <a href="{{ route('homepage') }}" class="kabataan-nav-link" data-section="faq">FAQs</a>
+                <a href="{{ route('homepage') }}" class="kabataan-nav-link" data-section="kabataanFooter">Contact</a>
             </div>
 
             <div class="kabataan-nav-actions">
@@ -58,10 +58,10 @@
 
     <div class="kabataan-drawer" id="kabataanDrawer" aria-hidden="true">
         <a href="{{ route('homepage') }}" class="kabataan-drawer-link" data-section="hero">Home</a>
-        <a href="{{ route('homepage') }}#about" class="kabataan-drawer-link" data-section="about">About</a>
+        <a href="{{ route('homepage') }}" class="kabataan-drawer-link" data-section="about">About</a>
         <a href="{{ route('program_accomplishments.barangays') }}" class="kabataan-drawer-link" data-section="barangays">Barangay Accomplishments</a>
-        <a href="{{ route('homepage') }}#faq" class="kabataan-drawer-link" data-section="faq">FAQs</a>
-        <a href="{{ route('homepage') }}#kabataanFooter" class="kabataan-drawer-link" data-section="kabataanFooter">Contact</a>
+        <a href="{{ route('homepage') }}" class="kabataan-drawer-link" data-section="faq">FAQs</a>
+        <a href="{{ route('homepage') }}" class="kabataan-drawer-link" data-section="kabataanFooter">Contact</a>
         <div class="kabataan-drawer-actions">
             <a href="{{ route('sign-in') }}" class="kabataan-nav-secondary">Sign In</a>
             <a href="{{ route('register') }}" class="kabataan-nav-primary">Sign Up</a>
@@ -72,7 +72,9 @@
         @yield('content')
     </main>
 
-    @include('homepage::kabataan-footer')
+    @unless(isset($hideFooter) && $hideFooter)
+        @include('homepage::kabataan-footer')
+    @endunless
 
     @stack('scripts')
 </body>

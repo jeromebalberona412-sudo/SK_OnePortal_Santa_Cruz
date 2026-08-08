@@ -7,7 +7,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProgramAccomplishmentImage extends Model
 {
-    protected $table = 'programs_accomplishment_report_images';
+    public const STATUS_PUBLISHED = 'Published';
+
+    public const STATUS_UNPUBLISHED = 'Unpublished';
+
+    public const STATUS_ARCHIVED = 'Archived';
+
+    protected $table = 'programs_accomplishment';
 
     protected $fillable = [
         'accomplishment_report_id',
@@ -17,6 +23,7 @@ class ProgramAccomplishmentImage extends Model
         'display_name',
         'caption',
         'sort_order',
+        'status',
     ];
 
     protected function casts(): array
@@ -39,5 +46,15 @@ class ProgramAccomplishmentImage extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order');
+    }
+
+    public function scopePublished($query)
+    {
+        return $query->where('status', self::STATUS_PUBLISHED);
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->status === self::STATUS_PUBLISHED;
     }
 }

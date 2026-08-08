@@ -154,19 +154,43 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     navLinks.forEach((link) => {
-        link.addEventListener('click', () => {
+        link.addEventListener('click', (event) => {
             const sectionId = link.dataset.section;
             if (sectionId === 'kabataanFooter') {
                 clearActiveLinks();
             } else if (sectionId) {
                 setActiveLink(sectionId);
             }
+
+            const linkHref = link.getAttribute('href') || '';
+            const linkPath = linkHref.startsWith('/')
+                ? linkHref
+                : (linkHref ? (new URL(linkHref, window.location.origin)).pathname : '');
+            const currentPath = window.location.pathname;
+            const isHomepage = currentPath === '/homepage' || currentPath === '/';
+            const targetsHomepage = linkPath === '/homepage' || linkPath === '/';
+
+            if (isHomepage && targetsHomepage && sectionId) {
+                const target = document.getElementById(sectionId);
+                if (target) {
+                    event.preventDefault();
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+
             link.blur();
             setDrawerOpen(false);
         });
     });
 
-    const initialSection = document.body.dataset.scrollTo || 'hero';
+    const initialSection = (() => {
+        const dataScroll = document.body.dataset.scrollTo;
+        if (dataScroll && document.getElementById(dataScroll)) {
+            return dataScroll;
+        }
+        return 'hero';
+    })();
+
     if (initialSection && initialSection !== 'hero') {
         requestAnimationFrame(() => scrollToSection(initialSection));
         setActiveLink(initialSection === 'kabataanFooter' ? '' : initialSection);

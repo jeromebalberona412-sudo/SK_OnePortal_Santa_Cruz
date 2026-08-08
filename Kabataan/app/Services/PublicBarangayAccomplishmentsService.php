@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Models\Accomplishment;
 use App\Models\Barangay;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class PublicBarangayAccomplishmentsService
 {
@@ -13,40 +15,63 @@ class PublicBarangayAccomplishmentsService
      */
     public function barangayIdsWithDocuments(): array
     {
-        return Accomplishment::query()
-            ->documents()
-            ->distinct()
-            ->pluck('barangay_id')
-            ->all();
+        try {
+            return Accomplishment::query()
+                ->documents()
+                ->distinct()
+                ->pluck('barangay_id')
+                ->all();
+        } catch (QueryException $e) {
+            Log::warning('Accomplishments table unavailable (barangayIdsWithDocuments): '.$e->getMessage());
+
+            return [];
+        }
     }
 
     public function hasDocument(Barangay $barangay): bool
     {
-        return Accomplishment::query()
-            ->documents()
-            ->where('barangay_id', $barangay->id)
-            ->exists();
+        try {
+            return Accomplishment::query()
+                ->documents()
+                ->where('barangay_id', $barangay->id)
+                ->exists();
+        } catch (QueryException $e) {
+            Log::warning('Accomplishments table unavailable (hasDocument): '.$e->getMessage());
+
+            return false;
+        }
     }
 
     public function latestForBarangay(Barangay $barangay): ?object
     {
-        $document = Accomplishment::query()
-            ->documents()
-            ->where('barangay_id', $barangay->id)
-            ->orderByDesc('fiscal_year')
-            ->orderByDesc('created_at')
-            ->first();
+        try {
+            $document = Accomplishment::query()
+                ->documents()
+                ->where('barangay_id', $barangay->id)
+                ->orderByDesc('fiscal_year')
+                ->orderByDesc('created_at')
+                ->first();
+        } catch (QueryException $e) {
+            Log::warning('Accomplishments table unavailable (latestForBarangay fetch doc): '.$e->getMessage());
+
+            return null;
+        }
 
         if ($document === null) {
             return null;
         }
 
-        $lines = Accomplishment::query()
-            ->where('document_id', $document->id)
-            ->where('row_type', '!=', Accomplishment::ROW_DOCUMENT)
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get();
+        try {
+            $lines = Accomplishment::query()
+                ->where('document_id', $document->id)
+                ->where('row_type', '!=', Accomplishment::ROW_DOCUMENT)
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get();
+        } catch (QueryException $e) {
+            Log::warning('Accomplishments table unavailable (latestForBarangay fetch lines): '.$e->getMessage());
+            $lines = collect();
+        }
 
         $estimatedBudget = (float) ($document->barangay_estimated_budget ?? 0);
         $skFund = (float) ($document->sk_fund_amount ?? 0);

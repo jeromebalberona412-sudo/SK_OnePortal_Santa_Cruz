@@ -2,22 +2,23 @@
 
 @section('title', 'Barangay Accomplishments — SK OnePortal Kabataan')
 
-@section('styles')
-    @parent
+@push('styles')
     @vite([
         'app/Modules/Program_Accomplishments/assets/css/barangay-accomplishments.css',
     ])
-@endsection
+@endpush
 
-@section('scripts')
-    @parent
+@push('scripts')
     @vite([
         'app/Modules/Program_Accomplishments/assets/js/barangay-accomplishments.js',
     ])
-@endsection
+@endpush
 
 @section('content')
-<div class="barangay-accomplishments-page kabataan-page-section">
+@vite([
+    'app/Modules/Program_Accomplishments/assets/css/barangay-accomplishments.css',
+])
+<div class="barangay-accomplishments-page kabataan-page-section barangay-accomplishments-offset">
     <section class="accomplishments-hero">
         <div class="container accomplishments-shell">
             <span class="accomplishments-eyebrow">Transparency</span>

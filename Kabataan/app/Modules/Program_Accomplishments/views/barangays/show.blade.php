@@ -2,8 +2,23 @@
 
 @section('title', $barangay->name . ' Accomplishments — SK OnePortal Kabataan')
 
+@push('styles')
+    @vite([
+        'app/Modules/Program_Accomplishments/assets/css/barangay-accomplishments.css',
+    ])
+@endpush
+
+@push('scripts')
+    @vite([
+        'app/Modules/Program_Accomplishments/assets/js/barangay-accomplishments.js',
+    ])
+@endpush
+
 @section('content')
-<div class="barangay-accomplishments-page kabataan-page-section">
+@vite([
+    'app/Modules/Program_Accomplishments/assets/css/barangay-accomplishments.css',
+])
+<div class="barangay-accomplishments-page kabataan-page-section barangay-accomplishments-offset">
     <section class="accomplishments-detail-hero">
         <div class="container accomplishments-shell">
             <a href="{{ route('program_accomplishments.barangays') }}" class="accomplishments-back-link">← Back to all barangays</a>

@@ -1,16 +1,14 @@
 @extends('homepage::layout')
 
-@section('styles')
-    @parent
+@push('styles')
     @vite([
         'app/Modules/Program_Accomplishments/assets/css/barangay-accomplishments.css',
     ])
-@endsection
+@endpush
 
-@section('scripts')
-    @parent
+@push('scripts')
     @vite([
         'app/Modules/Program_Accomplishments/assets/js/barangay-accomplishments.js',
     ])
-@endsection
+@endpush
 
