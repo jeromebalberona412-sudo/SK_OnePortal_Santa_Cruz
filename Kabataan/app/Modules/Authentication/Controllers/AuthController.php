@@ -9,7 +9,9 @@ use App\Services\KabataanAuthService;
 use App\Services\KkProfilingScheduleService;
 use App\Services\RegistrationEvaluationService;
 use App\Services\TurnstileService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -197,12 +199,101 @@ class AuthController extends Controller
         $status = Password::sendResetLink($request->only('email'));
 
         if ($status === Password::RESET_LINK_SENT) {
-            return back()->with('status', 'A password reset link has been sent to your email address.');
+            $sentAt = now();
+
+            $request->session()->put('kabataan_fp_verify', [
+                'email'               => (string) $request->email,
+                'sent_at'             => $sentAt->toIso8601String(),
+                'resend_available_at' => $sentAt->copy()->addSeconds(60)->toIso8601String(),
+                'expires_at'          => $sentAt->copy()->addHours(2)->toIso8601String(),
+            ]);
+
+            return redirect()->route('password.verify-email');
         }
 
         return back()
             ->withInput($request->only('email'))
             ->with('forgot_password_error', __($status));
+    }
+
+    public function showForgotPasswordVerifyEmail(Request $request)
+    {
+        $state = $request->session()->get('kabataan_fp_verify');
+
+        if (! is_array($state) || empty($state['email'])) {
+            return redirect()->route('password.request');
+        }
+
+        $expiresAt = Carbon::parse((string) ($state['expires_at'] ?? now()->toIso8601String()));
+        if ($expiresAt->isPast()) {
+            $request->session()->forget('kabataan_fp_verify');
+            return redirect()->route('password.request')
+                ->withErrors(['email' => 'Your password reset session has expired. Please start again.']);
+        }
+
+        $resendAvailableAt = Carbon::parse((string) ($state['resend_available_at'] ?? now()->toIso8601String()));
+
+        return view('authentication::verify-email', [
+            'email'              => (string) $state['email'],
+            'resendAvailableAt'  => $resendAvailableAt->toIso8601String(),
+            'resendCooldownSecs' => max(0, (int) now()->diffInSeconds($resendAvailableAt, false)),
+        ]);
+    }
+
+    public function resendForgotPasswordEmail(Request $request): JsonResponse
+    {
+        $state = $request->session()->get('kabataan_fp_verify');
+
+        if (! is_array($state) || empty($state['email'])) {
+            return response()->json([
+                'ok'      => false,
+                'message' => 'No active password reset session. Please start again.',
+            ], 404);
+        }
+
+        $expiresAt = Carbon::parse((string) ($state['expires_at'] ?? now()->toIso8601String()));
+        if ($expiresAt->isPast()) {
+            $request->session()->forget('kabataan_fp_verify');
+            return response()->json([
+                'ok'      => false,
+                'message' => 'Your password reset session has expired. Please start again.',
+                'expired' => true,
+            ], 410);
+        }
+
+        $resendAvailableAt = Carbon::parse((string) ($state['resend_available_at'] ?? now()->toIso8601String()));
+        $remainingSecs     = (int) now()->diffInSeconds($resendAvailableAt, false);
+
+        if ($remainingSecs > 0) {
+            return response()->json([
+                'ok'                  => false,
+                'message'             => "Please wait {$remainingSecs} seconds before resending.",
+                'resend_available_at' => $resendAvailableAt->toIso8601String(),
+                'cooldown_remaining'  => $remainingSecs,
+            ], 429);
+        }
+
+        $status = Password::sendResetLink(['email' => (string) $state['email']]);
+
+        if ($status !== Password::RESET_LINK_SENT) {
+            return response()->json([
+                'ok'      => false,
+                'message' => __($status),
+            ], 422);
+        }
+
+        $newResendAvailableAt = now()->addSeconds(60);
+
+        $state['resend_available_at'] = $newResendAvailableAt->toIso8601String();
+        $state['sent_at']             = now()->toIso8601String();
+        $request->session()->put('kabataan_fp_verify', $state);
+
+        return response()->json([
+            'ok'                  => true,
+            'message'             => 'A new password reset link has been sent to your email.',
+            'resend_available_at' => $newResendAvailableAt->toIso8601String(),
+            'cooldown_remaining'  => 60,
+        ]);
     }
 
     public function showResetPassword(Request $request, string $token)

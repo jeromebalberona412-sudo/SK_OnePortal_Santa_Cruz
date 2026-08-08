@@ -21,6 +21,10 @@ Route::middleware('guest')->group(function () {
         ->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])
         ->name('password.email');
+    Route::get('/forgot-password/verify-email', [AuthController::class, 'showForgotPasswordVerifyEmail'])
+        ->name('password.verify-email');
+    Route::post('/forgot-password/verify-email/resend', [AuthController::class, 'resendForgotPasswordEmail'])
+        ->name('password.verify-email.resend');
     Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])
         ->name('password.reset');
     Route::post('/reset-password', [AuthController::class, 'resetPassword'])

@@ -209,21 +209,9 @@ html {
     backdrop-filter: blur(40px);
     border-radius: 28px;
     padding: 2.5rem 3rem;
-    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.25);
     border: 1px solid rgba(255, 255, 255, 0.2);
     position: relative;
     overflow: hidden;
-}
-
-/* Top accent bar */
-.youth-login-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 5px;
-    background: linear-gradient(90deg, var(--youth-green) 0%, var(--youth-yellow) 50%, var(--youth-blue) 100%);
 }
 
 /* ============================================

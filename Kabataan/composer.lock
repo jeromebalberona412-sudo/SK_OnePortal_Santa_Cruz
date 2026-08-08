@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "485adcb6a017262482f9ade8549354bc",
+    "content-hash": "389aea3b0b8a7caafbda21dae22d419d",
     "packages": [
         {
             "name": "altcha-org/altcha",
@@ -881,16 +881,16 @@
         },
         {
             "name": "google/cloud-core",
-            "version": "v1.73.0",
+            "version": "v1.73.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-cloud-php-core.git",
-                "reference": "4fa16075ac13a612ff1a8071a171681002195346"
+                "reference": "23f6a68674f07bc23d02a683405cd9d2d283688a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-cloud-php-core/zipball/4fa16075ac13a612ff1a8071a171681002195346",
-                "reference": "4fa16075ac13a612ff1a8071a171681002195346",
+                "url": "https://api.github.com/repos/googleapis/google-cloud-php-core/zipball/23f6a68674f07bc23d02a683405cd9d2d283688a",
+                "reference": "23f6a68674f07bc23d02a683405cd9d2d283688a",
                 "shasum": ""
             },
             "require": {
@@ -913,7 +913,7 @@
                 "phpdocumentor/reflection-docblock": "^5.3.3||^6.0",
                 "phpspec/prophecy-phpunit": "^2.0",
                 "phpunit/phpunit": "^9.0",
-                "squizlabs/php_codesniffer": "2.*"
+                "squizlabs/php_codesniffer": "3.*"
             },
             "suggest": {
                 "opis/closure": "May be used to serialize closures to process jobs in the batch daemon. Please require version ^3.",
@@ -942,22 +942,22 @@
             ],
             "description": "Google Cloud PHP shared dependency, providing functionality useful to all components.",
             "support": {
-                "source": "https://github.com/googleapis/google-cloud-php-core/tree/v1.73.0"
+                "source": "https://github.com/googleapis/google-cloud-php-core/tree/v1.73.1"
             },
-            "time": "2026-07-28T00:15:15+00:00"
+            "time": "2026-08-07T09:39:23+00:00"
         },
         {
             "name": "google/cloud-vision",
-            "version": "v2.2.1",
+            "version": "v2.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-cloud-php-vision.git",
-                "reference": "e1cab8e24fa72264f3ca69d73dfcad9c73a876aa"
+                "reference": "eb470f36e45eac3bc77e8f65bcc2d74d8d943de1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-cloud-php-vision/zipball/e1cab8e24fa72264f3ca69d73dfcad9c73a876aa",
-                "reference": "e1cab8e24fa72264f3ca69d73dfcad9c73a876aa",
+                "url": "https://api.github.com/repos/googleapis/google-cloud-php-vision/zipball/eb470f36e45eac3bc77e8f65bcc2d74d8d943de1",
+                "reference": "eb470f36e45eac3bc77e8f65bcc2d74d8d943de1",
                 "shasum": ""
             },
             "require": {
@@ -972,7 +972,7 @@
                 "phpdocumentor/reflection-docblock": "^5.3.3||^6.0",
                 "phpspec/prophecy-phpunit": "^2.0",
                 "phpunit/phpunit": "^9.0",
-                "squizlabs/php_codesniffer": "2.*"
+                "squizlabs/php_codesniffer": "3.*"
             },
             "suggest": {
                 "ext-grpc": "The gRPC extension enables use of the performant gRPC transport",
@@ -1000,9 +1000,9 @@
             ],
             "description": "Cloud Vision Client for PHP",
             "support": {
-                "source": "https://github.com/googleapis/google-cloud-php-vision/tree/v2.2.1"
+                "source": "https://github.com/googleapis/google-cloud-php-vision/tree/v2.2.2"
             },
-            "time": "2026-05-12T19:06:48+00:00"
+            "time": "2026-08-07T09:39:23+00:00"
         },
         {
             "name": "google/common-protos",
@@ -4268,16 +4268,16 @@
         },
         {
             "name": "symfony/console",
-            "version": "v7.4.15",
+            "version": "v7.4.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "088ec6fe0ef6819cbc301174093b6bfa4ad26930"
+                "reference": "f4c69c9aed03abf933b294257d618bdd9b30a06d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/088ec6fe0ef6819cbc301174093b6bfa4ad26930",
-                "reference": "088ec6fe0ef6819cbc301174093b6bfa4ad26930",
+                "url": "https://api.github.com/repos/symfony/console/zipball/f4c69c9aed03abf933b294257d618bdd9b30a06d",
+                "reference": "f4c69c9aed03abf933b294257d618bdd9b30a06d",
                 "shasum": ""
             },
             "require": {
@@ -4342,7 +4342,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v7.4.15"
+                "source": "https://github.com/symfony/console/tree/v7.4.16"
             },
             "funding": [
                 {
@@ -4362,7 +4362,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-07-27T13:51:00+00:00"
+            "time": "2026-07-31T12:37:14+00:00"
         },
         {
             "name": "symfony/css-selector",
@@ -4821,16 +4821,16 @@
         },
         {
             "name": "symfony/http-foundation",
-            "version": "v7.4.15",
+            "version": "v7.4.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-foundation.git",
-                "reference": "1f898ee8188adda9417fb52cf8425a8342c254e7"
+                "reference": "b676451bb638e99a7d34d8a2be90406822e301eb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-foundation/zipball/1f898ee8188adda9417fb52cf8425a8342c254e7",
-                "reference": "1f898ee8188adda9417fb52cf8425a8342c254e7",
+                "url": "https://api.github.com/repos/symfony/http-foundation/zipball/b676451bb638e99a7d34d8a2be90406822e301eb",
+                "reference": "b676451bb638e99a7d34d8a2be90406822e301eb",
                 "shasum": ""
             },
             "require": {
@@ -4879,7 +4879,7 @@
             "description": "Defines an object-oriented layer for the HTTP specification",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/http-foundation/tree/v7.4.15"
+                "source": "https://github.com/symfony/http-foundation/tree/v7.4.16"
             },
             "funding": [
                 {
@@ -4899,20 +4899,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-07-29T07:12:33+00:00"
+            "time": "2026-08-07T11:50:27+00:00"
         },
         {
             "name": "symfony/http-kernel",
-            "version": "v7.4.15",
+            "version": "v7.4.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-kernel.git",
-                "reference": "403275d94f94d5626c3288c599b3b48093ba24f7"
+                "reference": "f5e728670fa2218ae8be8ea91f2b44b7d6e5304c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-kernel/zipball/403275d94f94d5626c3288c599b3b48093ba24f7",
-                "reference": "403275d94f94d5626c3288c599b3b48093ba24f7",
+                "url": "https://api.github.com/repos/symfony/http-kernel/zipball/f5e728670fa2218ae8be8ea91f2b44b7d6e5304c",
+                "reference": "f5e728670fa2218ae8be8ea91f2b44b7d6e5304c",
                 "shasum": ""
             },
             "require": {
@@ -4998,7 +4998,7 @@
             "description": "Provides a structured process for converting a Request into a Response",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/http-kernel/tree/v7.4.15"
+                "source": "https://github.com/symfony/http-kernel/tree/v7.4.16"
             },
             "funding": [
                 {
@@ -5018,7 +5018,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-07-29T11:40:42+00:00"
+            "time": "2026-08-07T18:00:13+00:00"
         },
         {
             "name": "symfony/mailer",
@@ -5106,16 +5106,16 @@
         },
         {
             "name": "symfony/mime",
-            "version": "v7.4.15",
+            "version": "v7.4.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/mime.git",
-                "reference": "0c1daf58bc931628df0bea26840d1fc8b9a3d34b"
+                "reference": "20094b76a7106dbe978d31cd3bd7aa1ed248d0e5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/mime/zipball/0c1daf58bc931628df0bea26840d1fc8b9a3d34b",
-                "reference": "0c1daf58bc931628df0bea26840d1fc8b9a3d34b",
+                "url": "https://api.github.com/repos/symfony/mime/zipball/20094b76a7106dbe978d31cd3bd7aa1ed248d0e5",
+                "reference": "20094b76a7106dbe978d31cd3bd7aa1ed248d0e5",
                 "shasum": ""
             },
             "require": {
@@ -5171,7 +5171,7 @@
                 "mime-type"
             ],
             "support": {
-                "source": "https://github.com/symfony/mime/tree/v7.4.15"
+                "source": "https://github.com/symfony/mime/tree/v7.4.16"
             },
             "funding": [
                 {
@@ -5191,7 +5191,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-07-29T07:59:49+00:00"
+            "time": "2026-08-07T14:56:57+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -6352,16 +6352,16 @@
         },
         {
             "name": "symfony/translation",
-            "version": "v7.4.14",
+            "version": "v7.4.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/translation.git",
-                "reference": "a1af4dacb24eb7ef4f1ca71b94da8ddbce572281"
+                "reference": "501e0ff4553c744209ca1a68790d8a4541563710"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/translation/zipball/a1af4dacb24eb7ef4f1ca71b94da8ddbce572281",
-                "reference": "a1af4dacb24eb7ef4f1ca71b94da8ddbce572281",
+                "url": "https://api.github.com/repos/symfony/translation/zipball/501e0ff4553c744209ca1a68790d8a4541563710",
+                "reference": "501e0ff4553c744209ca1a68790d8a4541563710",
                 "shasum": ""
             },
             "require": {
@@ -6428,7 +6428,7 @@
             "description": "Provides tools to internationalize your application",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/translation/tree/v7.4.14"
+                "source": "https://github.com/symfony/translation/tree/v7.4.16"
             },
             "funding": [
                 {
@@ -6448,7 +6448,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-06-06T09:33:19+00:00"
+            "time": "2026-07-30T12:37:26+00:00"
         },
         {
             "name": "symfony/translation-contracts",
@@ -7580,16 +7580,16 @@
         },
         {
             "name": "laravel/boost",
-            "version": "v2.5.0",
+            "version": "v2.5.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/boost.git",
-                "reference": "f6b054dcbc0aacf1d187128edf7d917c6d99792a"
+                "reference": "f5f9297225aba9857d014b3140f55a7c50cb1a92"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/boost/zipball/f6b054dcbc0aacf1d187128edf7d917c6d99792a",
-                "reference": "f6b054dcbc0aacf1d187128edf7d917c6d99792a",
+                "url": "https://api.github.com/repos/laravel/boost/zipball/f5f9297225aba9857d014b3140f55a7c50cb1a92",
+                "reference": "f5f9297225aba9857d014b3140f55a7c50cb1a92",
                 "shasum": ""
             },
             "require": {
@@ -7642,20 +7642,20 @@
                 "issues": "https://github.com/laravel/boost/issues",
                 "source": "https://github.com/laravel/boost"
             },
-            "time": "2026-08-04T21:10:39+00:00"
+            "time": "2026-08-07T05:46:02+00:00"
         },
         {
             "name": "laravel/mcp",
-            "version": "v0.9.1",
+            "version": "v0.9.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/mcp.git",
-                "reference": "a08884d79a95c5143498507aec5badf751cdbec4"
+                "reference": "2bb70c3662dfc2e2ff55c38a10ddf55bed2443b3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/mcp/zipball/a08884d79a95c5143498507aec5badf751cdbec4",
-                "reference": "a08884d79a95c5143498507aec5badf751cdbec4",
+                "url": "https://api.github.com/repos/laravel/mcp/zipball/2bb70c3662dfc2e2ff55c38a10ddf55bed2443b3",
+                "reference": "2bb70c3662dfc2e2ff55c38a10ddf55bed2443b3",
                 "shasum": ""
             },
             "require": {
@@ -7716,7 +7716,7 @@
                 "issues": "https://github.com/laravel/mcp/issues",
                 "source": "https://github.com/laravel/mcp"
             },
-            "time": "2026-07-21T13:23:52+00:00"
+            "time": "2026-08-06T15:59:47+00:00"
         },
         {
             "name": "laravel/pail",
