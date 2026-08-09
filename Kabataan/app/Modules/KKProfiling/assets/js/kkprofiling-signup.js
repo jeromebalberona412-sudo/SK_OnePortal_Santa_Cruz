@@ -3,8 +3,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const barangayGrid = document.getElementById('barangayGrid');
     const noResults = document.getElementById('noResults');
     const filterButtons = Array.from(document.querySelectorAll('.kk-signup-filter'));
+    const jsErrorAlert = document.getElementById('jsErrorAlert');
+    const jsErrorAlertText = document.getElementById('jsErrorAlertText');
 
     let activeFilter = 'all';
+    const scheduleMap = new Map();
 
     const statusBadgeClass = {
         Ongoing: 'kk-signup-badge-ongoing',
@@ -13,6 +16,65 @@ document.addEventListener('DOMContentLoaded', () => {
         Completed: 'kk-signup-badge-completed',
         Cancelled: 'kk-signup-badge-cancelled',
     };
+
+    function showError(message) {
+        if (!jsErrorAlert || !jsErrorAlertText) return;
+        jsErrorAlertText.innerHTML = '';
+        const div = document.createElement('div');
+        div.textContent = message;
+        jsErrorAlertText.appendChild(div);
+        jsErrorAlert.style.display = 'flex';
+        jsErrorAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function getNoScheduleMessage(barangayName) {
+        return 'This barangay (' + barangayName + ') has no scheduled KK Profiling yet. Please contact your barangay SK officials for more information.';
+    }
+
+    function getClosedScheduleMessage(barangayName, sched) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const startDate = sched.date_start ? new Date(sched.date_start + 'T00:00:00') : null;
+        const endDate = sched.date_expiry ? new Date(sched.date_expiry + 'T00:00:00') : null;
+
+        switch (sched.status) {
+            case 'Upcoming':
+                return 'KK Profiling sign-up for ' + barangayName + ' is not yet open. The schedule will start soon.';
+            case 'Completed':
+                return 'KK Profiling sign-up for ' + barangayName + ' has already closed. Please wait for the next schedule.';
+            case 'Cancelled':
+                return 'KK Profiling sign-up for ' + barangayName + ' has been cancelled. Please contact your barangay SK officials.';
+            case 'Rescheduled':
+                return 'KK Profiling sign-up for ' + barangayName + ' has been rescheduled. Please check the new schedule dates.';
+            case 'Ongoing':
+                if (startDate && startDate > today) {
+                    return 'KK Profiling sign-up for ' + barangayName + ' is not yet open. Sign-up will start on ' + fmtDate(sched.date_start) + '.';
+                }
+                if (endDate && endDate < today) {
+                    return 'KK Profiling sign-up for ' + barangayName + ' has closed as of ' + fmtDate(sched.date_expiry) + '. Please wait for the next schedule.';
+                }
+                return 'KK Profiling sign-up for ' + barangayName + ' is not currently open. Please wait for the next schedule.';
+            default:
+                return 'KK Profiling sign-up for ' + barangayName + ' is not currently open.';
+        }
+    }
+
+    function handleBarangayClick(btn) {
+        const barangayName = btn.dataset.name || 'this barangay';
+        const barangayId = Number(btn.dataset.barangayId);
+        const sched = scheduleMap.get(barangayId);
+
+        if (sched && Boolean(sched.is_open)) {
+            window.location.href = '/kkprofiling/signup/' + btn.dataset.slug;
+            return;
+        }
+
+        const message = sched
+            ? getClosedScheduleMessage(barangayName, sched)
+            : getNoScheduleMessage(barangayName);
+
+        showError(message);
+    }
 
     function fmtDate(str) {
         if (!str) return '';
@@ -75,11 +137,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (isOpen) {
-            btn.disabled = false;
             btn.classList.add('is-open');
-            btn.onclick = () => {
-                window.location.href = `/kkprofiling/${btn.dataset.slug}`;
-            };
+        } else {
+            btn.classList.remove('is-open');
         }
     }
 
@@ -130,13 +190,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     searchInput?.addEventListener('input', applyFilters);
 
+    barangayGrid.querySelectorAll('.kk-signup-barangay').forEach((btn) => {
+        btn.addEventListener('click', () => handleBarangayClick(btn));
+    });
+
     fetch('/api/kkprofiling/open-barangays')
         .then((response) => response.json())
         .then(({ schedules }) => {
-            const map = new Map(schedules.map((item) => [item.barangay_id, item]));
+            schedules.forEach((item) => scheduleMap.set(item.barangay_id, item));
 
             barangayGrid.querySelectorAll('.kk-signup-barangay').forEach((btn) => {
-                const sched = map.get(Number(btn.dataset.barangayId));
+                const sched = scheduleMap.get(Number(btn.dataset.barangayId));
                 if (sched) {
                     applyCardSchedule(btn, sched);
                 }

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -37,6 +37,42 @@
                     <p class="kk-signup-subtitle">Select your barangay to get started</p>
                 </div>
 
+                @if($errors->any())
+                    <div class="kk-signup-alert kk-signup-alert-error" role="alert" id="flashErrorAlert">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        <span>
+                            @foreach($errors->all() as $error)
+                                <div>{{ $error }}</div>
+                            @endforeach
+                        </span>
+                        <button type="button" class="kk-signup-alert-close" aria-label="Dismiss" onclick="this.parentElement.remove()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                @endif
+
+                <div class="kk-signup-alert kk-signup-alert-error" role="alert" id="jsErrorAlert" style="display:none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <span id="jsErrorAlertText"></span>
+                    <button type="button" class="kk-signup-alert-close" aria-label="Dismiss" onclick="document.getElementById('jsErrorAlert').style.display='none'">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+
                 <div class="kk-signup-notice">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <circle cx="12" cy="12" r="10"/>
@@ -72,7 +108,6 @@
                             data-slug="{{ $slug }}"
                             data-barangay-id="{{ $brgy['id'] }}"
                             data-status="none"
-                            disabled
                         >
                             <span class="kk-signup-barangay-logo-wrap">
                                 @if($logoUrl)

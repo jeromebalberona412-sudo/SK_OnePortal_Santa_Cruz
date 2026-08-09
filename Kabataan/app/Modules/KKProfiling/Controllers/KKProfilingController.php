@@ -161,9 +161,17 @@ class KKProfilingController extends Controller
             ->where('date_expiry', '>=', $today)
             ->exists();
 
+        $hasAnySchedule = DB::table('kk_profiling_schedules')
+            ->where('barangay_id', $barangayRecord->id)
+            ->exists();
+
         if (!$hasActiveSchedule) {
+            $message = $hasAnySchedule
+                ? 'KK Profiling sign-up for ' . $displayName . ' is not currently open. Please wait for the next schedule.'
+                : 'This barangay (' . $displayName . ') has no scheduled KK Profiling yet. Please contact your barangay SK officials for more information.';
+
             return redirect()->route('kkprofiling.signup')
-                ->withErrors(['schedule' => 'KK Profiling sign-up for ' . $displayName . ' is not currently open.']);
+                ->withErrors(['schedule' => $message]);
         }
         // ──────────────────────────────────────────────────────────────────
 
@@ -708,6 +716,26 @@ class KKProfilingController extends Controller
 
         if (!$barangayRecord) {
             abort(404);
+        }
+
+        $today = now()->toDateString();
+        $hasActiveSchedule = DB::table('kk_profiling_schedules')
+            ->where('barangay_id', $barangayRecord->id)
+            ->where('status', 'Ongoing')
+            ->where('date_start', '<=', $today)
+            ->where('date_expiry', '>=', $today)
+            ->exists();
+
+        $hasAnySchedule = DB::table('kk_profiling_schedules')
+            ->where('barangay_id', $barangayRecord->id)
+            ->exists();
+
+        if (!$hasActiveSchedule) {
+            $message = $hasAnySchedule
+                ? 'KK Profiling sign-up for ' . $barangayName . ' is not currently open. Please wait for the next schedule.'
+                : 'This barangay (' . $barangayName . ') has no scheduled KK Profiling yet. Please contact your barangay SK officials for more information.';
+
+            return $this->submitErrorResponse($request, ['schedule' => $message]);
         }
 
         $validated = $request->validate([

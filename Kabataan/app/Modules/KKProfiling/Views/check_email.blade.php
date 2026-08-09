@@ -340,7 +340,7 @@
                     >
                 </div>
                 <h1 class="youth-main-title">SK OnePortal</h1>
-                <p class="youth-tagline">Official Youth Portal – Santa Cruz, Laguna</p>
+                <p class="youth-tagline">Official Youth Portal ï¿½ Santa Cruz, Laguna</p>
             </div>
         </div>
 
@@ -380,7 +380,12 @@
 
                 <div class="check-email-actions">
                     @if($barangay)
-                        <a href="{{ route('kkprofiling.show', ['barangay' => $barangay]) }}" class="back-btn" onclick="handleBackClick(event)">Back to KK Profiling</a>
+                        <?php
+                            $barangaySlug = strtolower(trim($barangay));
+                            $barangaySlug = preg_replace('/[^a-z0-9]+/', '-', $barangaySlug);
+                            $barangaySlug = trim($barangaySlug, '-');
+                        ?>
+                        <a href="{{ route('kkprofiling', ['barangay' => $barangaySlug]) }}" class="back-btn" onclick="handleBackClick(event)">Back to KK Profiling</a>
                     @else
                         <a href="{{ route('kkprofiling.signup') }}" class="back-btn" onclick="handleBackClick(event)">Back to KK Profiling</a>
                     @endif

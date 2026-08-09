@@ -4,7 +4,7 @@ use App\Modules\KKProfiling\Controllers\KKProfilingController;
 use App\Modules\KKProfiling\Controllers\KKProfilingWizardController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/kkprofiling-signup', [KKProfilingController::class, 'showSignup'])->name('kkprofiling.signup');
+Route::get('/kkprofiling/signup', [KKProfilingController::class, 'showSignup'])->name('kkprofiling.signup');
 Route::get('/api/kkprofiling/open-barangays', [KKProfilingController::class, 'openBarangays'])->name('kkprofiling.open-barangays');
 
 // Email verification
@@ -41,18 +41,18 @@ Route::prefix('/api/kkprofiling/{barangay}/wizard')->group(function () {
     Route::post('/clear-draft', [KKProfilingWizardController::class, 'clearDraft'])->name('kkprofiling.wizard.clear-draft');
 });
 
-Route::get('/kkprofiling/{barangay}', [KKProfilingController::class, 'show'])
+Route::get('/kkprofiling/signup/{barangay}', [KKProfilingController::class, 'show'])
     ->where('barangay', '^(?!wizard$).*')
     ->name('kkprofiling');
-Route::post('/kkprofiling/{barangay}', [KKProfilingController::class, 'submit'])
+Route::post('/kkprofiling/signup/{barangay}', [KKProfilingController::class, 'submit'])
     ->where('barangay', '^(?!wizard$).*')
     ->name('kkprofiling.submit');
 
 // Set Password (legacy session-based flow after kkprofiling.verify)
-Route::get('/kkprofiling/{barangay}/set-password', [KKProfilingController::class, 'showSetPassword'])
+Route::get('/kkprofiling/signup/{barangay}/set-password', [KKProfilingController::class, 'showSetPassword'])
     ->where('barangay', '^(?!wizard$).*')
     ->name('kkprofiling.set-password');
-Route::post('/kkprofiling/{barangay}/set-password', [KKProfilingController::class, 'storePassword'])
+Route::post('/kkprofiling/signup/{barangay}/set-password', [KKProfilingController::class, 'storePassword'])
     ->where('barangay', '^(?!wizard$).*')
     ->name('kkprofiling.store-password');
 
