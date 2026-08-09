@@ -1,0 +1,492 @@
+-- ============================================================
+-- ABYIP DATABASE SCHEMA
+-- Laravel + Supabase
+-- ============================================================
+
+-- UUID generation
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+
+-- ============================================================
+-- 1. ABYIP DOCUMENTS
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.abyips (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    -- Document information
+    title TEXT NOT NULL DEFAULT 'Annual Barangay Youth Investment Program',
+    year INTEGER NOT NULL,
+
+    -- Location
+    barangay TEXT,
+    municipality TEXT,
+    province TEXT,
+
+    -- Budget information from the document
+    estimated_barangay_budget NUMERIC(15,2) NOT NULL DEFAULT 0.00,
+    sk_fund NUMERIC(15,2) NOT NULL DEFAULT 0.00,
+
+    -- Source PDF
+    original_filename TEXT,
+    source_file_path TEXT,
+    source_file_url TEXT,
+
+    -- Import information
+    import_status TEXT NOT NULL DEFAULT 'draft'
+        CHECK (
+            import_status IN (
+                'draft',
+                'processing',
+                'review',
+                'confirmed',
+                'failed',
+                'cancelled'
+            )
+        ),
+
+    extraction_method TEXT
+        CHECK (
+            extraction_method IS NULL
+            OR extraction_method IN (
+                'pdf_text',
+                'pdf_table',
+                'camelot',
+                'pdfplumber',
+                'pymupdf',
+                'paddleocr',
+                'mixed',
+                'manual'
+            )
+        ),
+
+    extraction_confidence NUMERIC(5,2),
+
+    manual_review_required BOOLEAN NOT NULL DEFAULT FALSE,
+
+    created_by UUID,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    -- Prevent duplicate ABYIP for same location/year
+    CONSTRAINT unique_abyip_location_year
+        UNIQUE (
+            barangay,
+            municipality,
+            province,
+            year
+        )
+);
+
+
+-- ============================================================
+-- 2. ABYIP ITEMS
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.abyip_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    -- Parent ABYIP
+    abyip_id UUID NOT NULL,
+
+    -- PDF table information
+    code TEXT,
+
+    -- Hierarchy
+    program TEXT,
+    category TEXT,
+    ppa TEXT,
+
+    -- Details
+    description TEXT,
+    expected_result TEXT,
+    performance_indicator TEXT,
+
+    -- Implementation period
+    implementation_start DATE,
+    implementation_end DATE,
+    implementation_period_original TEXT,
+
+    -- Person responsible
+    person_responsible TEXT,
+
+    -- Budget
+    mooe NUMERIC(15,2) NOT NULL DEFAULT 0.00,
+    co NUMERIC(15,2) NOT NULL DEFAULT 0.00,
+    total NUMERIC(15,2) NOT NULL DEFAULT 0.00,
+
+    -- Extraction information
+    extraction_confidence NUMERIC(5,2),
+
+    manual_review_required BOOLEAN NOT NULL DEFAULT FALSE,
+
+    validation_status TEXT NOT NULL DEFAULT 'pending'
+        CHECK (
+            validation_status IN (
+                'pending',
+                'valid',
+                'warning',
+                'error'
+            )
+        ),
+
+    validation_message TEXT,
+
+    -- Preserve original extracted budget text if needed
+    original_budget_text TEXT,
+
+    -- Source page/row information
+    source_page INTEGER,
+    source_row INTEGER,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT fk_abyip_items_abyip
+        FOREIGN KEY (abyip_id)
+        REFERENCES public.abyips(id)
+        ON DELETE CASCADE
+);
+
+
+-- ============================================================
+-- 3. IMPORT LOGS
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.abyip_import_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    abyip_id UUID,
+
+    original_filename TEXT,
+
+    status TEXT NOT NULL DEFAULT 'processing'
+        CHECK (
+            status IN (
+                'processing',
+                'success',
+                'failed',
+                'cancelled'
+            )
+        ),
+
+    extraction_method TEXT,
+
+    total_rows_detected INTEGER NOT NULL DEFAULT 0,
+    total_rows_saved INTEGER NOT NULL DEFAULT 0,
+    total_rows_reviewed INTEGER NOT NULL DEFAULT 0,
+
+    total_mooe NUMERIC(15,2) NOT NULL DEFAULT 0.00,
+    total_co NUMERIC(15,2) NOT NULL DEFAULT 0.00,
+    total_budget NUMERIC(15,2) NOT NULL DEFAULT 0.00,
+
+    source_document_total NUMERIC(15,2),
+
+    difference NUMERIC(15,2),
+
+    warnings JSONB NOT NULL DEFAULT '[]'::JSONB,
+    errors JSONB NOT NULL DEFAULT '[]'::JSONB,
+
+    created_by UUID,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT fk_import_logs_abyip
+        FOREIGN KEY (abyip_id)
+        REFERENCES public.abyips(id)
+        ON DELETE CASCADE
+);
+
+
+-- ============================================================
+-- 4. INDEXES
+-- ============================================================
+
+CREATE INDEX IF NOT EXISTS idx_abyips_year
+ON public.abyips(year);
+
+CREATE INDEX IF NOT EXISTS idx_abyips_barangay
+ON public.abyips(barangay);
+
+CREATE INDEX IF NOT EXISTS idx_abyips_status
+ON public.abyips(import_status);
+
+CREATE INDEX IF NOT EXISTS idx_abyip_items_abyip_id
+ON public.abyip_items(abyip_id);
+
+CREATE INDEX IF NOT EXISTS idx_abyip_items_program
+ON public.abyip_items(program);
+
+CREATE INDEX IF NOT EXISTS idx_abyip_items_category
+ON public.abyip_items(category);
+
+CREATE INDEX IF NOT EXISTS idx_abyip_items_ppa
+ON public.abyip_items(ppa);
+
+CREATE INDEX IF NOT EXISTS idx_abyip_items_person
+ON public.abyip_items(person_responsible);
+
+CREATE INDEX IF NOT EXISTS idx_abyip_items_validation
+ON public.abyip_items(validation_status);
+
+CREATE INDEX IF NOT EXISTS idx_import_logs_abyip
+ON public.abyip_import_logs(abyip_id);
+
+
+-- ============================================================
+-- 5. AUTOMATIC UPDATED_AT
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.set_updated_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+
+DROP TRIGGER IF EXISTS trg_abyips_updated_at
+ON public.abyips;
+
+CREATE TRIGGER trg_abyips_updated_at
+BEFORE UPDATE ON public.abyips
+FOR EACH ROW
+EXECUTE FUNCTION public.set_updated_at();
+
+
+DROP TRIGGER IF EXISTS trg_abyip_items_updated_at
+ON public.abyip_items;
+
+CREATE TRIGGER trg_abyip_items_updated_at
+BEFORE UPDATE ON public.abyip_items
+FOR EACH ROW
+EXECUTE FUNCTION public.set_updated_at();
+
+
+-- ============================================================
+-- 6. BUDGET VALIDATION FUNCTION
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.validate_abyip_item_budget()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+
+    -- Prevent negative amounts
+    IF NEW.mooe < 0 THEN
+        RAISE EXCEPTION 'MOOE cannot be negative';
+    END IF;
+
+    IF NEW.co < 0 THEN
+        RAISE EXCEPTION 'CO cannot be negative';
+    END IF;
+
+    IF NEW.total < 0 THEN
+        RAISE EXCEPTION 'Total cannot be negative';
+    END IF;
+
+    -- Automatically determine validation status
+    IF ROUND(NEW.mooe + NEW.co, 2) = ROUND(NEW.total, 2) THEN
+
+        IF NEW.manual_review_required = TRUE THEN
+            NEW.validation_status = 'warning';
+        ELSE
+            NEW.validation_status = 'valid';
+        END IF;
+
+        NEW.validation_message =
+            'MOOE + CO matches Total.';
+
+    ELSE
+
+        NEW.validation_status = 'warning';
+
+        NEW.validation_message =
+            'MOOE + CO does not match Total. Manual review required.';
+
+        NEW.manual_review_required = TRUE;
+
+    END IF;
+
+    RETURN NEW;
+
+END;
+$$;
+
+
+DROP TRIGGER IF EXISTS trg_validate_abyip_budget
+ON public.abyip_items;
+
+CREATE TRIGGER trg_validate_abyip_budget
+BEFORE INSERT OR UPDATE ON public.abyip_items
+FOR EACH ROW
+EXECUTE FUNCTION public.validate_abyip_item_budget();
+
+
+-- ============================================================
+-- 7. VIEW FOR EASY ABYIP REPORTING
+-- ============================================================
+
+CREATE OR REPLACE VIEW public.abyip_items_with_document
+AS
+SELECT
+    i.id,
+    i.abyip_id,
+
+    a.year,
+    a.barangay,
+    a.municipality,
+    a.province,
+
+    i.code,
+    i.program,
+    i.category,
+    i.ppa,
+
+    i.description,
+    i.expected_result,
+    i.performance_indicator,
+
+    i.implementation_start,
+    i.implementation_end,
+
+    i.person_responsible,
+
+    i.mooe,
+    i.co,
+    i.total,
+
+    i.extraction_confidence,
+    i.manual_review_required,
+
+    i.validation_status,
+    i.validation_message,
+
+    i.source_page,
+    i.source_row,
+
+    i.created_at,
+    i.updated_at
+
+FROM public.abyip_items i
+
+INNER JOIN public.abyips a
+    ON a.id = i.abyip_id;
+
+
+-- ============================================================
+-- 8. VIEW FOR ABYIP TOTALS
+-- ============================================================
+
+CREATE OR REPLACE VIEW public.abyip_budget_summary
+AS
+SELECT
+    a.id AS abyip_id,
+
+    a.year,
+    a.barangay,
+    a.municipality,
+    a.province,
+
+    a.estimated_barangay_budget,
+    a.sk_fund,
+
+    COALESCE(SUM(i.mooe), 0.00) AS calculated_mooe,
+    COALESCE(SUM(i.co), 0.00) AS calculated_co,
+    COALESCE(SUM(i.total), 0.00) AS calculated_total,
+
+    COUNT(i.id) AS total_items,
+
+    COALESCE(
+        SUM(
+            CASE
+                WHEN i.validation_status = 'valid'
+                THEN 1
+                ELSE 0
+            END
+        ),
+        0
+    ) AS valid_items,
+
+    COALESCE(
+        SUM(
+            CASE
+                WHEN i.manual_review_required = TRUE
+                THEN 1
+                ELSE 0
+            END
+        ),
+        0
+    ) AS items_requiring_review
+
+FROM public.abyips a
+
+LEFT JOIN public.abyip_items i
+    ON i.abyip_id = a.id
+
+GROUP BY
+    a.id,
+    a.year,
+    a.barangay,
+    a.municipality,
+    a.province,
+    a.estimated_barangay_budget,
+    a.sk_fund;
+
+
+-- ============================================================
+-- 9. ENABLE ROW LEVEL SECURITY
+-- ============================================================
+
+ALTER TABLE public.abyips
+ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.abyip_items
+ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.abyip_import_logs
+ENABLE ROW LEVEL SECURITY;
+
+
+-- ============================================================
+-- 10. BASIC AUTHENTICATED POLICIES
+-- ============================================================
+
+DROP POLICY IF EXISTS "authenticated can read abyips"
+ON public.abyips;
+
+CREATE POLICY "authenticated can read abyips"
+ON public.abyips
+FOR SELECT
+TO authenticated
+USING (true);
+
+
+DROP POLICY IF EXISTS "authenticated can read abyip items"
+ON public.abyip_items;
+
+CREATE POLICY "authenticated can read abyip items"
+ON public.abyip_items
+FOR SELECT
+TO authenticated
+USING (true);
+
+
+DROP POLICY IF EXISTS "authenticated can read import logs"
+ON public.abyip_import_logs;
+
+CREATE POLICY "authenticated can read import logs"
+ON public.abyip_import_logs
+FOR SELECT
+TO authenticated
+USING (true);
+
+
+-- ============================================================
+-- DONE
+-- ============================================================

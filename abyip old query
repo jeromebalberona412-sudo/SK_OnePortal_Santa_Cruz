@@ -1,0 +1,137 @@
+create table public.abyip (
+  id bigserial not null,
+  document_id bigint null,
+  tenant_id bigint null,
+  barangay_id bigint not null,
+  created_by bigint null,
+  fiscal_year smallint not null,
+  country character varying(100) not null default 'Republic of the Philippines'::character varying,
+  region character varying(100) null,
+  province character varying(100) null,
+  municipality character varying(100) null,
+  barangay_name character varying(255) null,
+  document_title character varying(255) not null default ''::character varying,
+  sk_council_name character varying(255) null,
+  barangay_estimated_budget numeric(15, 2) not null default 0,
+  sk_fund_percentage numeric(5, 2) not null default 10.00,
+  sk_fund_amount numeric(15, 2) not null default 0,
+  total_budget numeric(15, 2) null,
+  prepared_by character varying(255) null,
+  prepared_position character varying(255) null,
+  prepared_by_user_id bigint null,
+  approved_by character varying(255) null,
+  approved_position character varying(255) null,
+  approved_by_user_id bigint null,
+  source_type character varying(20) not null default 'word'::character varying,
+  document_html text null,
+  pdf_data text null,
+  row_type character varying(30) not null default 'document'::character varying,
+  parent_id bigint null,
+  code character varying(20) null,
+  program_name character varying(255) null,
+  description text null,
+  expected_result text null,
+  performance_indicator text null,
+  person_responsible character varying(255) null,
+  mooe numeric(15, 2) null default 0,
+  co numeric(15, 2) null default 0,
+  total numeric(15, 2) null default 0,
+  sort_order integer null,
+  created_at timestamp without time zone null,
+  updated_at timestamp without time zone null,
+  status character varying(30) null,
+  prepared_by_name character varying(255) null,
+  prepared_by_position character varying(255) null,
+  approved_by_name character varying(255) null,
+  approved_by_position character varying(255) null,
+  reviewed_at timestamp without time zone null,
+  reviewed_by_user_id bigint null,
+  rejection_reason text null,
+  category character varying(255) null,
+  activity_name character varying(255) null,
+  implementation_start date null,
+  implementation_end date null,
+  progress_percent numeric(5, 2) null default 0,
+  accomplishment_status character varying(30) null default 'Not Started'::character varying,
+  target_date date null,
+  completed_at timestamp without time zone null,
+  submitted_at timestamp without time zone null,
+  approved_at timestamp without time zone null,
+  rejected_at timestamp without time zone null,
+  source_text text null,
+  page_number integer null,
+  constraint abyip_pkey primary key (id),
+  constraint abyip_created_by_foreign foreign KEY (created_by) references users (id) on delete set null,
+  constraint abyip_document_id_foreign foreign KEY (document_id) references abyip (id) on delete CASCADE,
+  constraint abyip_parent_id_foreign foreign KEY (parent_id) references abyip (id) on delete CASCADE,
+  constraint abyip_tenant_id_foreign foreign KEY (tenant_id) references tenants (id) on delete set null,
+  constraint abyip_barangay_id_foreign foreign KEY (barangay_id) references barangays (id) on delete CASCADE,
+  constraint fk_abyip_approved_by foreign KEY (approved_by_user_id) references users (id) on delete set null,
+  constraint fk_abyip_prepared_by foreign KEY (prepared_by_user_id) references users (id) on delete set null,
+  constraint chk_abyip_progress_percent check (
+    (
+      (progress_percent >= (0)::numeric)
+      and (progress_percent <= (100)::numeric)
+    )
+  ),
+  constraint chk_abyip_row_type check (
+    (
+      (row_type)::text = any (
+        (
+          array[
+            'document'::character varying,
+            'category'::character varying,
+            'expenditure'::character varying,
+            'youth_program'::character varying,
+            'activity'::character varying
+          ]
+        )::text[]
+      )
+    )
+  ),
+  constraint chk_abyip_accomplishment_status check (
+    (
+      (accomplishment_status)::text = any (
+        (
+          array[
+            'Not Started'::character varying,
+            'Ongoing'::character varying,
+            'Completed'::character varying,
+            'Cancelled'::character varying
+          ]
+        )::text[]
+      )
+    )
+  ),
+  constraint chk_abyip_budget_non_negative check (
+    (
+      (mooe >= (0)::numeric)
+      and (co >= (0)::numeric)
+      and (total >= (0)::numeric)
+    )
+  )
+) TABLESPACE pg_default;
+
+create index IF not exists idx_abyip_document_id on public.abyip using btree (document_id) TABLESPACE pg_default;
+
+create index IF not exists idx_abyip_parent_id on public.abyip using btree (parent_id) TABLESPACE pg_default;
+
+create unique INDEX IF not exists abyip_barangay_fiscal_year_document_idx on public.abyip using btree (barangay_id, fiscal_year) TABLESPACE pg_default
+where
+  (
+    (row_type)::text = ('document'::character varying)::text
+  );
+
+create index IF not exists abyip_barangay_id_fiscal_year_index on public.abyip using btree (barangay_id, fiscal_year) TABLESPACE pg_default;
+
+create index IF not exists abyip_document_id_index on public.abyip using btree (document_id) TABLESPACE pg_default;
+
+create index IF not exists abyip_document_id_row_type_index on public.abyip using btree (document_id, row_type) TABLESPACE pg_default;
+
+create index IF not exists abyip_parent_id_index on public.abyip using btree (parent_id) TABLESPACE pg_default;
+
+create index IF not exists idx_abyip_row_type on public.abyip using btree (row_type) TABLESPACE pg_default;
+
+create index IF not exists idx_abyip_sort_order on public.abyip using btree (sort_order) TABLESPACE pg_default;
+
+create index IF not exists idx_abyip_person_responsible on public.abyip using btree (person_responsible) TABLESPACE pg_default;
