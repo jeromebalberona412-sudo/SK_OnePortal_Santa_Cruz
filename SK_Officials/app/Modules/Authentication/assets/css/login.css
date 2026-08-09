@@ -341,28 +341,6 @@ html {
     }
 }
 
-.sk-login-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 6px;
-    background: linear-gradient(90deg, var(--sk-yellow-dark) 0%, var(--sk-yellow) 40%, var(--sk-yellow-light) 70%, var(--sk-gold) 100%);
-    background-size: 200% 100%;
-    animation: shimmer 3s linear infinite;
-}
-
-@keyframes shimmer {
-    0% {
-        background-position: -200% 0;
-    }
-
-    100% {
-        background-position: 200% 0;
-    }
-}
-
 .sk-login-card::after {
     content: '';
     position: absolute;

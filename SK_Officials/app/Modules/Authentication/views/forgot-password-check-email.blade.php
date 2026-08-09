@@ -66,23 +66,31 @@
                     </div>
                 @endif
 
-                <form class="sk-login-form" id="fpResendForm" method="POST" action="{{ route('password.email') }}" novalidate>
+                <form class="sk-login-form" id="fpResendForm" method="POST" action="{{ route('password.email') }}" novalidate
+                      data-email="{{ $email }}"
+                      data-resend-available-at="{{ $resendAvailableAt ?? 0 }}"
+                      data-resend-remaining="{{ $resendRemainingSeconds ?? 0 }}"
+                      data-cooldown-seconds="{{ $cooldownSeconds ?? 60 }}">
                     @csrf
                     <input type="hidden" name="email" id="fpHiddenEmail" value="{{ $email }}">
 
-                    <button type="submit" class="sk-submit-btn" id="fpResendBtn">
-                        <span id="fpResendBtnText">Resend Reset Link</span>
-                    </button>
-
-                    <p class="fp-cooldown-notice" id="fpCooldownNotice" hidden>
-                        You can resend the link in <strong id="fpCooldownCount">60</strong>s.
-                    </p>
+                    <div class="fp-actions">
+                        <button type="submit" class="sk-submit-btn" id="fpResendBtn">
+                            <span id="fpResendBtnText">Resend Reset Link</span>
+                        </button>
+                    </div>
                 </form>
+
+                <div class="fp-cancel-section">
+                    <a href="{{ route('password.request') }}"
+                       class="fp-cancel-link"
+                       data-no-loading>Cancel</a>
+                </div>
 
                 <div class="youth-register-section">
                     <p class="register-text">
                         Remember your password?
-                        <a href="{{ route('login') }}" class="register-link" data-no-loading>Back to Login</a>
+                        <a href="{{ route('login') }}" class="register-link" data-no-loading>Back to Sign In</a>
                     </p>
                 </div>
             </div>

@@ -1325,8 +1325,6 @@
             return false;
         }
 
-        showLoading('Saving your profile...');
-
         try {
             const formData = new FormData(form);
             formData.append('respondent_number', root.dataset.respondentNumber || '');
@@ -1340,8 +1338,6 @@
                 alert(error.message);
             }
             return false;
-        } finally {
-            hideLoading();
         }
     }
 

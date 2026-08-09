@@ -40,7 +40,7 @@
         <div class="sk-login-section">
             <div class="sk-login-card">
                 <div class="card-header">
-                    <h2 class="card-title">Forgot Password?</h2>
+                    <h2 class="card-title">Forgot Password</h2>
                     <p class="card-subtitle">Enter the email address associated with your account and we'll send you a link to reset your password.</p>
                 </div>
 
@@ -86,7 +86,7 @@
                 <div class="youth-register-section">
                     <p class="register-text">
                         Remember your password?
-                        <a href="{{ route('login') }}" class="register-link" data-no-loading>Back to Login</a>
+                        <a href="{{ route('login') }}" class="register-link" data-no-loading>Back to Sign In</a>
                     </p>
                 </div>
             </div>

@@ -26,6 +26,8 @@ use Illuminate\View\View;
 
 class AuthController extends Controller
 {
+    public const FP_RESEND_COOLDOWN_SECONDS = 60;
+
     public function __construct(
         protected AuthenticationService $authenticationService,
         protected TenantContextService $tenantContextService,
@@ -368,6 +370,48 @@ class AuthController extends Controller
         return view('authentication::forgot-password');
     }
 
+    protected function fpCooldownSessionKey(string $email): string
+    {
+        $normalized = Str::lower(trim($email));
+        return 'fp_resend_until_'.sha1($normalized);
+    }
+
+    protected function fpGetResendAvailableAt(Request $request, string $email): ?Carbon
+    {
+        $stored = $request->session()->get($this->fpCooldownSessionKey($email));
+        if ($stored === null) {
+            return null;
+        }
+
+        try {
+            $carbon = Carbon::parse($stored);
+            if ($carbon->isPast()) {
+                $request->session()->forget($this->fpCooldownSessionKey($email));
+                return null;
+            }
+            return $carbon;
+        } catch (\Throwable) {
+            $request->session()->forget($this->fpCooldownSessionKey($email));
+            return null;
+        }
+    }
+
+    protected function fpSetResendCooldown(Request $request, string $email): Carbon
+    {
+        $until = now()->addSeconds(self::FP_RESEND_COOLDOWN_SECONDS);
+        $request->session()->put($this->fpCooldownSessionKey($email), $until->toIso8601String());
+        return $until;
+    }
+
+    protected function fpGetRemainingSeconds(Request $request, string $email): int
+    {
+        $available = $this->fpGetResendAvailableAt($request, $email);
+        if ($available === null) {
+            return 0;
+        }
+        return max(0, now()->diffInSeconds($available, false));
+    }
+
     public function showForgotPasswordCheckEmail(Request $request): View|RedirectResponse
     {
         $email = session('forgot_password_email');
@@ -376,8 +420,17 @@ class AuthController extends Controller
             return redirect()->route('password.request');
         }
 
+        $normalizedEmail = Str::lower(trim((string) $email));
+
+        $resendAvailableAt = $this->fpGetResendAvailableAt($request, $normalizedEmail);
+        $resendAvailableAtTimestamp = $resendAvailableAt !== null ? $resendAvailableAt->timestamp : 0;
+        $resendRemainingSeconds = $this->fpGetRemainingSeconds($request, $normalizedEmail);
+
         return view('authentication::forgot-password-check-email', [
-            'email' => $email,
+            'email' => $normalizedEmail,
+            'resendAvailableAt' => $resendAvailableAtTimestamp,
+            'resendRemainingSeconds' => $resendRemainingSeconds,
+            'cooldownSeconds' => self::FP_RESEND_COOLDOWN_SECONDS,
         ]);
     }
 
@@ -393,15 +446,25 @@ class AuthController extends Controller
             'email' => ['required', 'string', 'email', 'max:100'],
         ]);
 
+        $email = Str::lower(trim((string) $validated['email']));
+
+        $remaining = $this->fpGetRemainingSeconds($request, $email);
+        if ($remaining > 0) {
+            return back()
+                ->withErrors([
+                    'email' => "Please wait {$remaining} seconds before requesting another reset link.",
+                ])
+                ->withInput();
+        }
+
         try {
-            $this->passwordResetService->sendResetLink($request, (string) $validated['email']);
+            $this->passwordResetService->sendResetLink($request, $email);
         } catch (ValidationException $exception) {
             return back()->withErrors($exception->errors())->withInput();
         }
 
-        $email = (string) $validated['email'];
-
         $request->session()->put('forgot_password_email', $email);
+        $this->fpSetResendCooldown($request, $email);
 
         return redirect()->route('password.check-email')
             ->with('status', 'A password reset link has been sent to your email address.');

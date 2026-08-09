@@ -26,8 +26,12 @@ class RegistrationEvaluationService
     }
 
     /**
-     * Evaluate a registration against previous kabataan profiling records.
-     * Returns true if auto-approved.
+     * Evaluate a registration. Always marks the record for manual SK Officials review.
+     * (Previous automatic approval via matching "previous kabataan" records is disabled —
+     *  every new profile goes through Not Profiled / pending manual verification.)
+     *
+     * Callers are responsible for notifications, respondent number assignment,
+     * and survey response sync based on the returned `false` (not-auto-approved) result.
      *
      * @param  array<string, mixed>|null  $idVerification
      */
@@ -39,28 +43,22 @@ class RegistrationEvaluationService
             return false;
         }
 
-        $matcher = app(PreviousKabataanMatchService::class);
-        $match = $matcher->findMatch($registration);
-
-        if ($match instanceof PreviousKabataan) {
-            return $this->applyAutoApproval(
-                $registration,
-                'Matched a previous KK profiling record for this barangay. Your account is automatically approved.',
-                [
-                    'source' => 'previous_kabataan',
-                    'evaluation_status' => 'Auto Approved',
-                    'previous_kabataan_id' => $match->id,
-                    'profiling_year' => $match->profiling_year,
-                ],
-            );
-        }
-
         $formData = $registration->form_data ?? [];
         $documents = is_array($formData['supporting_documents'] ?? null)
             ? $formData['supporting_documents']
             : [];
 
-        return $this->markPendingSkReview($registration, $documents !== []);
+        $message = $documents !== []
+            ? 'Supporting documents uploaded. No matching previous KK profiling record was found. Awaiting SK Officials review.'
+            : 'No matching previous KK profiling record was found. Please wait for SK Officials to verify your account.';
+
+        $registration->update([
+            'evaluation_status' => 'Not Profiled',
+            'evaluation_notes' => ['message' => $message],
+            'status' => 'password_set',
+        ]);
+
+        return false;
     }
 
     private function markPendingSkReview(KabataanRegistration $registration, bool $hasSupportingDocuments): bool

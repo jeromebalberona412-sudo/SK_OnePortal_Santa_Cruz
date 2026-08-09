@@ -134,7 +134,7 @@
                 <div class="card-header" style="text-align:center;">
                     <p class="card-subtitle"
                        style="font-size:1.4rem;font-weight:800;color:#0f172a;letter-spacing:-0.02em;">
-                        Login to your account
+                        Sign in to your account
                     </p>
                 </div>
 
@@ -289,7 +289,7 @@
 
                     {{-- Submit Button --}}
                     <button type="submit" class="sk-submit-btn" id="loginBtn">
-                        <span>Login</span>
+                        <span>Sign In</span>
                     </button>
 
                 </form>

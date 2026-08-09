@@ -55,7 +55,9 @@
                     </div>
                 @endif
 
-                <form class="sk-login-form" id="resetPasswordForm" method="POST" action="{{ route('password.update') }}" novalidate>
+                <form class="sk-login-form" id="resetPasswordForm" method="POST" action="{{ route('password.update') }}" novalidate
+                      data-password-min-length="{{ (int) config('sk_official_auth.password_reset.password.min_length', 8) }}"
+                      data-password-max-length="{{ (int) config('sk_official_auth.password_reset.password.max_length', 64) }}">
                     @csrf
                     <input type="hidden" name="token" value="{{ $request->route('token') }}">
                     <input type="hidden" name="email" value="{{ $request->email }}">
@@ -91,6 +93,13 @@
                                 </svg>
                             </button>
                         </div>
+                        <ul class="password-rules" id="passwordRules">
+                            <li id="rule-length"><span class="rule-mark">✕</span> Minimum <span id="rule-length-val">8</span> characters</li>
+                            <li id="rule-lowercase"><span class="rule-mark">✕</span> Lowercase letter (a-z)</li>
+                            <li id="rule-uppercase"><span class="rule-mark">✕</span> Uppercase letter (A-Z)</li>
+                            <li id="rule-number"><span class="rule-mark">✕</span> Number (0-9)</li>
+                            <li id="rule-special"><span class="rule-mark">✕</span> Special character (!@#$%^&amp;* etc.)</li>
+                        </ul>
                         <div class="sk-field-error" id="password-error" @error('password') @else hidden @enderror>
                             @error('password'){{ $message }}@enderror
                         </div>
@@ -126,6 +135,10 @@
                                 </svg>
                             </button>
                         </div>
+                        <div class="confirm-match-status" id="confirmMatchStatus" hidden>
+                            <span class="confirm-match-mark" id="confirmMatchMark">✕</span>
+                            <span id="confirmMatchText">Passwords do not match</span>
+                        </div>
                         <div class="sk-field-error" id="password-confirmation-error" hidden></div>
                     </div>
 
@@ -138,7 +151,7 @@
                 <div class="youth-register-section">
                     <p class="register-text">
                         Remember your password?
-                        <a href="{{ route('login') }}" class="register-link" data-no-loading>Back to Login</a>
+                        <a href="{{ route('login') }}" class="register-link" data-no-loading>Back to Sign In</a>
                     </p>
                 </div>
             </div>

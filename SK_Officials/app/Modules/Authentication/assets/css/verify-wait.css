@@ -3,27 +3,22 @@
 }
 
 .verify-icon {
-    width: 80px;
-    height: 80px;
+    width: 64px;
+    height: 64px;
     margin: 0 auto 2rem;
-    background: linear-gradient(135deg, #f5c518 0%, #e6a800 100%);
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 10px 40px rgba(245, 197, 24, 0.3);
-    animation: pulse-icon 2s ease-in-out infinite;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
 .verify-icon svg {
-    width: 40px;
-    height: 40px;
-    color: white;
-}
-
-@keyframes pulse-icon {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
+    width: 32px;
+    height: 32px;
+    color: #0f172a;
 }
 
 .countdown-text {

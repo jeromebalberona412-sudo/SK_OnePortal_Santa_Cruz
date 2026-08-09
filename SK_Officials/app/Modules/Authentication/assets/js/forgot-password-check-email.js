@@ -1,90 +1,133 @@
-/**
- * SK Officials — Forgot Password Check Email Page JS
- */
+(function () {
+    'use strict';
 
-document.addEventListener('DOMContentLoaded', function () {
-    const resendForm    = document.getElementById('fpResendForm');
-    const resendBtn     = document.getElementById('fpResendBtn');
-    const fpResendBtnText = document.getElementById('fpResendBtnText');
-    const cooldownNotice  = document.getElementById('fpCooldownNotice');
-    const cooldownCount   = document.getElementById('fpCooldownCount');
-    const hiddenEmail   = document.getElementById('fpHiddenEmail');
+    document.addEventListener('DOMContentLoaded', function () {
+        const resendForm = document.getElementById('fpResendForm');
+        const resendBtn = document.getElementById('fpResendBtn');
+        const resendBtnText = document.getElementById('fpResendBtnText');
+        const hiddenEmail = document.getElementById('fpHiddenEmail');
 
-    const COOLDOWN_DURATION = 60;
-    const COOLDOWN_KEY      = 'fp_cooldown_until';
-    let cooldownInterval    = null;
+        if (!resendForm) {
+            return;
+        }
 
-    // ── Cooldown helpers ─────────────────────────────────────────────────────
-    function getCooldownKey() {
-        const email = hiddenEmail?.value || '';
-        return `${COOLDOWN_KEY}_${email.trim().toLowerCase()}`;
-    }
+        const COOLDOWN_KEY = 'fp_cooldown_until';
 
-    function startCooldown() {
-        const until = Date.now() + COOLDOWN_DURATION * 1000;
-        localStorage.setItem(getCooldownKey(), String(until));
-        runCooldownTick(until);
-    }
+        if (window.__skFpCooldownInterval) {
+            clearInterval(window.__skFpCooldownInterval);
+            window.__skFpCooldownInterval = null;
+        }
 
-    function runCooldownTick(until) {
-        clearInterval(cooldownInterval);
+        function getCooldownKey() {
+            const email = hiddenEmail && hiddenEmail.value ? hiddenEmail.value : '';
+            return COOLDOWN_KEY + '_' + email.trim().toLowerCase();
+        }
 
-        function tick() {
-            const remaining = Math.ceil((until - Date.now()) / 1000);
+        function clearCooldownIntervalRef() {
+            if (window.__skFpCooldownInterval) {
+                clearInterval(window.__skFpCooldownInterval);
+                window.__skFpCooldownInterval = null;
+            }
+        }
 
-            if (remaining <= 0) {
-                clearInterval(cooldownInterval);
-                localStorage.removeItem(getCooldownKey());
+        function runCooldownTick(untilTimestampMs) {
+            clearCooldownIntervalRef();
+
+            function tick() {
+                const remainingMs = untilTimestampMs - Date.now();
+                const remaining = remainingMs > 0 ? Math.ceil(remainingMs / 1000) : 0;
+
+                if (remaining <= 0) {
+                    clearCooldownIntervalRef();
+                    try {
+                        localStorage.removeItem(getCooldownKey());
+                    } catch (_) {}
+                    if (resendBtn) resendBtn.disabled = false;
+                    if (resendBtnText) resendBtnText.textContent = 'Resend Reset Link';
+                    return;
+                }
+
+                if (resendBtn) resendBtn.disabled = true;
+                if (resendBtnText) resendBtnText.textContent = 'Resend available in ' + remaining + 's';
+            }
+
+            tick();
+            window.__skFpCooldownInterval = setInterval(tick, 1000);
+        }
+
+        function resolveCooldownUntilMs() {
+            const serverAttr = resendForm.getAttribute('data-resend-available-at');
+            const email = hiddenEmail && hiddenEmail.value ? hiddenEmail.value.trim().toLowerCase() : '';
+
+            const fromServerSeconds = serverAttr ? Number.parseInt(String(serverAttr), 10) : 0;
+            let fromServerMs = 0;
+            if (!Number.isNaN(fromServerSeconds) && fromServerSeconds > 0) {
+                fromServerMs = fromServerSeconds * 1000;
+            }
+
+            let fromLocalMs = 0;
+            try {
+                const raw = localStorage.getItem(getCooldownKey());
+                if (raw) {
+                    const parsed = Number.parseInt(raw, 10);
+                    if (!Number.isNaN(parsed) && parsed > Date.now()) {
+                        fromLocalMs = parsed;
+                    } else if (raw) {
+                        localStorage.removeItem(getCooldownKey());
+                    }
+                }
+            } catch (_) {}
+
+            let resolvedMs = 0;
+            if (fromServerMs > 0 && fromLocalMs > 0) {
+                resolvedMs = Math.max(fromServerMs, fromLocalMs);
+            } else if (fromServerMs > 0) {
+                resolvedMs = fromServerMs;
+            } else if (fromLocalMs > 0) {
+                resolvedMs = fromLocalMs;
+            }
+
+            if (fromServerMs > 0 && email) {
+                try {
+                    localStorage.setItem(getCooldownKey(), String(fromServerMs));
+                } catch (_) {}
+            }
+
+            return resolvedMs;
+        }
+
+        const hasEmail = hiddenEmail && hiddenEmail.value && hiddenEmail.value.trim();
+        if (hasEmail) {
+            const untilMs = resolveCooldownUntilMs();
+            if (untilMs > Date.now()) {
+                runCooldownTick(untilMs);
+            } else {
                 if (resendBtn) resendBtn.disabled = false;
-                if (fpResendBtnText) fpResendBtnText.textContent = 'Resend Reset Link';
-                if (cooldownNotice) cooldownNotice.hidden = true;
-                return;
-            }
-
-            if (resendBtn) resendBtn.disabled = true;
-            if (cooldownNotice) {
-                cooldownNotice.hidden = false;
-                if (cooldownCount) cooldownCount.textContent = remaining;
+                if (resendBtnText) resendBtnText.textContent = 'Resend Reset Link';
             }
         }
 
-        tick();
-        cooldownInterval = setInterval(tick, 1000);
-    }
+        let submitInProgress = false;
+        if (resendForm && resendBtn) {
+            resendForm.addEventListener('submit', function (e) {
+                if (submitInProgress) {
+                    e.preventDefault();
+                    return;
+                }
 
-    function resumeCooldownIfActive() {
-        const stored = localStorage.getItem(getCooldownKey());
-        if (!stored) return false;
-        const until = parseInt(stored, 10);
-        if (Number.isNaN(until) || Date.now() >= until) {
-            localStorage.removeItem(getCooldownKey());
-            return false;
+                if (resendBtn.disabled) {
+                    e.preventDefault();
+                    return;
+                }
+
+                submitInProgress = true;
+                resendBtn.disabled = true;
+                if (resendBtnText) resendBtnText.textContent = 'Sending...';
+
+                try {
+                    localStorage.removeItem(getCooldownKey());
+                } catch (_) {}
+            });
         }
-        runCooldownTick(until);
-        return true;
-    }
-
-    // ── Init cooldown state ───────────────────────────────────────────────────
-    // Only resume the cooldown if there's a valid email in the hidden field
-    const hasEmail = hiddenEmail?.value?.trim();
-    if (hasEmail) {
-        // Always resume the cooldown from localStorage — works on refresh too.
-        // If the timer already expired, buttons are simply left enabled.
-        resumeCooldownIfActive();
-    }
-
-    // ── Resend form ───────────────────────────────────────────────────────────
-    if (resendForm && resendBtn) {
-        resendForm.addEventListener('submit', function (e) {
-            if (resendBtn.disabled) {
-                e.preventDefault();
-                return;
-            }
-            resendBtn.disabled = true;
-            if (fpResendBtnText) fpResendBtnText.textContent = 'Sending...';
-            // Start a fresh cooldown for the resend — stored in localStorage
-            // so it survives a page refresh.
-            startCooldown();
-        });
-    }
-});
+    });
+})();
