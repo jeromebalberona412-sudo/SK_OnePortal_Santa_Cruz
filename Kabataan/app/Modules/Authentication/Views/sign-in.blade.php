@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('layout::favicon')
@@ -16,7 +16,8 @@
         'app/Modules/Authentication/assets/js/auth-legal.js',
     ])
 
-    @if(config('services.turnstile.enabled') && config('services.turnstile.site_key'))
+    @inject('turnstileService', 'App\Services\TurnstileService')
+    @if($turnstileService->isEnabled())
         {{--
             render=explicit: prevents Cloudflare from auto-scanning the DOM and
             rendering any widget it finds. Our JS calls turnstile.render() manually
@@ -51,7 +52,7 @@
          that sign-in.js adds/removes. The widget itself (#turnstile-container)
          is empty until JS calls turnstile.render() on the first reveal.
     ──────────────────────────────────────────────────────────────────────────── --}}
-    @if(config('services.turnstile.enabled') && config('services.turnstile.site_key'))
+    @if($turnstileService->isEnabled())
         <div id="turnstile-modal" class="turnstile-modal" role="dialog" aria-modal="true" aria-label="Human verification">
 
             {{-- Semi-transparent backdrop — click closes the modal --}}
@@ -72,7 +73,7 @@
                     </div>
                     <div>
                         <h2 class="turnstile-modal-title">Verify you're human</h2>
-                        <p class="turnstile-modal-subtitle">Complete the security check to continue signing in.</p>
+                        <p class="turnstile-modal-subtitle">Complete the security check to continue logging in.</p>
                     </div>
                     {{-- Close button --}}
                     <button id="turnstile-close-btn"
@@ -136,7 +137,7 @@
         <div class="youth-login-section">
             <div class="youth-login-card">
                 <div class="card-header">
-                    <p class="card-subtitle">Sign in to your account</p>
+                    <p class="card-subtitle">Login to your account</p>
                 </div>
 
                 @if (session('sign_in_error'))
@@ -157,14 +158,14 @@
                     </div>
                 @endif
 
-                <!-- Sign In Form -->
+                <!-- Login Form -->
                 <form class="youth-login-form" id="signInForm"
                       method="POST"
                       action="{{ route('sign-in') }}"
                       novalidate
-                      @if(config('services.turnstile.enabled') && config('services.turnstile.site_key'))
+                      @if($turnstileService->isEnabled())
                           data-turnstile-enabled="true"
-                          data-turnstile-sitekey="{{ config('services.turnstile.site_key') }}"
+                          data-turnstile-sitekey="{{ $turnstileService->getSiteKey() }}"
                       @endif>
                     @csrf
 
@@ -246,7 +247,7 @@
                         Only rendered when the backend explicitly rejected the Turnstile
                         token — NOT for wrong email/password errors. The JS checks for
                         this element on page load and auto-opens the verification modal
-                        so the user can re-verify without clicking Sign In again.
+                        so the user can re-verify without clicking Login again.
                     --}}
                     @php
                         $signInErr = session('sign_in_error', '');
@@ -256,7 +257,7 @@
                             str_contains(strtolower($signInErr), 'security check')
                         );
                     @endphp
-                    @if($isTurnstileErr && config('services.turnstile.enabled') && config('services.turnstile.site_key'))
+                    @if($isTurnstileErr && $turnstileService->isEnabled())
                         <div id="turnstile-server-error"
                              style="display:none;"
                              aria-hidden="true">{{ $signInErr }}</div>
@@ -264,7 +265,7 @@
 
                     <!-- Submit Button -->
                     <button type="submit" class="youth-submit-btn" id="signInBtn">
-                        <span>Sign In</span>
+                        <span>Login</span>
                     </button>
 
                 </form>

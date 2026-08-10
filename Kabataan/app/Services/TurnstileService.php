@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 class TurnstileService
 {
     protected bool $enabled;
+    protected string $siteKey;
     protected string $secretKey;
     protected string $verifyUrl;
     protected int $timeout;
@@ -16,6 +17,7 @@ class TurnstileService
     public function __construct()
     {
         $this->enabled = (bool) config('services.turnstile.enabled', true);
+        $this->siteKey = (string) config('services.turnstile.site_key', '');
         $this->secretKey = (string) config('services.turnstile.secret_key', '');
         $this->verifyUrl = (string) config('services.turnstile.verify_url', 'https://challenges.cloudflare.com/turnstile/v0/siteverify');
         $this->timeout = (int) config('services.turnstile.timeout', 10);
@@ -26,7 +28,15 @@ class TurnstileService
      */
     public function isEnabled(): bool
     {
-        return $this->enabled;
+        return $this->enabled && $this->siteKey !== '' && $this->secretKey !== '';
+    }
+
+    /**
+     * Get the configured site key.
+     */
+    public function getSiteKey(): string
+    {
+        return $this->siteKey;
     }
 
     /**
@@ -38,15 +48,15 @@ class TurnstileService
      */
     public function verify(string $token, ?string $remoteIp = null): bool
     {
-        // If Turnstile is disabled, bypass verification
-        if (!$this->enabled) {
-            Log::info('Turnstile verification bypassed (disabled in config)');
+        // If Turnstile is disabled or unconfigured, bypass verification
+        if (!$this->isEnabled()) {
+            Log::info('Turnstile verification bypassed (disabled or keys unconfigured)');
             return true;
         }
 
-        // If secret key is empty or is the dev/test bypass key, allow
-        if ($this->secretKey === '' || $this->secretKey === '1x0000000000000000000000000000000AA') {
-            Log::info('Turnstile verification bypassed (dev/test key or empty secret)');
+        // If secret key is dev/test bypass key, allow
+        if ($this->secretKey === '1x0000000000000000000000000000000AA') {
+            Log::info('Turnstile verification bypassed (dev/test secret key)');
             return true;
         }
 
@@ -87,6 +97,8 @@ class TurnstileService
                     'remote_ip' => $remoteIp,
                     'token_length' => strlen($token),
                 ]);
+            } else {
+                Log::info('Turnstile verification successful');
             }
 
             return $success;

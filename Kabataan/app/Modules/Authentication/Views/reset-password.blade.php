@@ -150,11 +150,11 @@
                     </button>
                 </form>
 
-                <!-- Back to Sign In -->
+                <!-- Back to Login -->
                 <div class="youth-register-section">
                     <p class="register-text">
                         Remember your password?
-                        <a href="{{ route('sign-in') }}" class="register-link">Back to Sign In</a>
+                        <a href="{{ route('sign-in') }}" class="register-link">Back to Login</a>
                     </p>
                 </div>
 
@@ -175,7 +175,7 @@
                 <h2 class="success-modal-title">Password Reset Successful</h2>
                 <p class="success-modal-body">Your password has been reset successfully.</p>
                 <p class="success-modal-redirect">
-                    Redirecting to sign in page in <span id="countdown">3</span> seconds...
+                    Redirecting to login page in <span id="countdown">3</span> seconds...
                 </p>
             </div>
         </div>
@@ -280,7 +280,7 @@
                         countdownEl.textContent = seconds;
                         if (seconds <= 0) {
                             clearInterval(interval);
-                            if (window.showLoading) showLoading('Redirecting to sign in');
+                            if (window.showLoading) showLoading('Redirecting to login');
                             window.location.href = '{{ route("sign-in") }}';
                         }
                     }, 1000);

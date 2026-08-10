@@ -44,7 +44,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         // ── Turnstile verification ──────────────────────────────────────────
-        if (config('services.turnstile.enabled')) {
+        if ($this->turnstileService->isEnabled()) {
             $token = (string) $request->input('cf-turnstile-response', '');
 
             if ($token === '') {

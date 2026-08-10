@@ -476,11 +476,11 @@
                     Welcome to SK OnePortal, Kabataan! Your account has been created successfully.
                 </p>
                 <p class="success-submessage">
-                    You can now sign in with your credentials and start exploring the portal.
+                    You can now login with your credentials and start exploring the portal.
                 </p>
                 <div class="success-actions">
                     <a href="{{ route('sign-in') }}" class="success-btn">
-                        <span>Go to Sign In</span>
+                        <span>Go to Login</span>
                         <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
                         </svg>

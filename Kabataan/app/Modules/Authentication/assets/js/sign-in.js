@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SK OnePortal — Kabataan Sign In
  *
  * Submit listener execution order on #signInForm:
@@ -177,6 +177,7 @@
     }
 
     function setModalError(message) {
+        isSubmitting = false;
         if (!turnstileModal) return;
         var errEl = turnstileModal.querySelector('.turnstile-modal-error');
         if (!errEl) {
@@ -223,15 +224,18 @@
     }
 
     function onTurnstileError() {
-        if (isSubmitting) return;
+        isSubmitting = false;
         turnstileToken = null;
+        removeTokenInput();
+        resetSubmitBtn();
         setModalError('Verification failed. Please try again or refresh the page.');
     }
 
     function onTurnstileExpired() {
-        if (isSubmitting) return;
+        isSubmitting = false;
         turnstileToken = null;
         removeTokenInput();
+        resetSubmitBtn();
         setModalError('Verification expired. Please complete the challenge again.');
     }
 
@@ -242,7 +246,7 @@
         submitBtn.disabled = false;
         submitBtn.classList.remove('waiting-for-turnstile');
         var span = submitBtn.querySelector('span');
-        if (span) span.textContent = 'Sign In';
+        if (span) span.textContent = 'Login';
     }
 
     // ─── Field edit ───────────────────────────────────────────────────────────
@@ -294,14 +298,14 @@
             submitBtn.disabled = true;
             submitBtn.classList.add('waiting-for-turnstile');
             var span = submitBtn.querySelector('span');
-            if (span) span.textContent = 'Signing in...';
+            if (span) span.textContent = 'Logging in...';
         }
     }
 
     // ─── Modal close ─────────────────────────────────────────────────────────
 
     function onModalClose() {
-        if (isSubmitting) return;
+        isSubmitting = false;
         hideTurnstileModal(false);
         resetSubmitBtn();
     }
