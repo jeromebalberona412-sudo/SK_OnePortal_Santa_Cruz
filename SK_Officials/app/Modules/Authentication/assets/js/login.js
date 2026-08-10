@@ -216,7 +216,7 @@
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.classList.remove('waiting-for-turnstile');
-            submitBtn.querySelector('span').textContent = 'Signing In...';
+            submitBtn.querySelector('span').textContent = 'Logging In...';
         }
 
         // Show the loading overlay
@@ -255,7 +255,7 @@
                 '<div class="overlay-backdrop"></div>' +
                 '<div class="loading-content">' +
                 '<div class="main-spinner"></div>' +
-                '<p class="loading-text">Signing In...</p>' +
+                '<p class="loading-text">Logging In...</p>' +
                 '</div>';
             document.body.appendChild(overlay);
         }
@@ -317,7 +317,7 @@
             e.preventDefault(); // Prevent the native submit racing loginForm.submit()
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.querySelector('span').textContent = 'Signing In...';
+                submitBtn.querySelector('span').textContent = 'Logging In...';
             }
             showLoadingOverlay();
             isSubmitting = true;
@@ -335,7 +335,7 @@
         if (!loginForm.dataset.turnstileEnabled) {
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.querySelector('span').textContent = 'Signing In...';
+                submitBtn.querySelector('span').textContent = 'Logging In...';
             }
             showLoadingOverlay();
             isSubmitting = true;

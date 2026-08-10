@@ -14,5 +14,5 @@
             <button type="button" class="auth-legal-link" data-open-legal-modal="privacyLegalModal">Privacy Policy</button>.
         </span>
     </label>
-    <p class="auth-legal-consent-error" id="legalConsentError" hidden>Please confirm your agreement before signing in.</p>
+    <p class="auth-legal-consent-error" id="legalConsentError" hidden>Please confirm your agreement before logging in.</p>
 </div>

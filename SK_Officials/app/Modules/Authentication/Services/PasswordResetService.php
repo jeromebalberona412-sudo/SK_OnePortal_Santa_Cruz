@@ -120,7 +120,7 @@ class PasswordResetService
 
         $user->forceFill($userUpdates)->save();
 
-        // Clear the "must_change_password" flag so the user can sign in
+        // Clear the "must_change_password" flag so the user can log in
         // normally after completing the reset. Use a raw boolean cast
         // for PostgreSQL to avoid datatype mismatch errors.
         try {

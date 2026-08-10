@@ -412,7 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (payload.state === 'expired') {
                 if (stateElement) {
                     stateElement.className = 'verification-state warning';
-                    stateElement.textContent = 'Verification window expired. Please sign in again.';
+                    stateElement.textContent = 'Verification window expired. Please login again.';
                 }
                 clearResendCooldown();
                 return;

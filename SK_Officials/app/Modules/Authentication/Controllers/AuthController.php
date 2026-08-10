@@ -73,7 +73,7 @@ class AuthController extends Controller
             $this->clearVerificationSession($request, $pending);
 
             return redirect()->route('login')->withErrors([
-                'verification' => 'Verification session expired. Please sign in again.',
+                'verification' => 'Verification session expired. Please login again.',
             ]);
         }
 

@@ -52,7 +52,7 @@
     color: #fca5a5;
 }
 
-/* Consent prompt (Sign In without radio) */
+/* Consent prompt (Login without radio) */
 .auth-legal-prompt {
     position: fixed;
     inset: 0;

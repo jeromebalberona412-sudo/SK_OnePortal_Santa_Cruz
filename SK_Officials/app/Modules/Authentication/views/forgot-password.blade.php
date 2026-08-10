@@ -86,7 +86,7 @@
                 <div class="youth-register-section">
                     <p class="register-text">
                         Remember your password?
-                        <a href="{{ route('login') }}" class="register-link" data-no-loading>Back to Sign In</a>
+                        <a href="{{ route('login') }}" class="register-link" data-no-loading>Back to Login</a>
                     </p>
                 </div>
             </div>

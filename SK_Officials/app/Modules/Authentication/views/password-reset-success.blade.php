@@ -55,9 +55,9 @@
                     </div>
                     <h1 class="success-title">Password Reset Successfully!</h1>
                     <p class="success-message">Your password has been updated successfully.</p>
-                    <p class="success-message">You can now sign in with your new password.</p>
-                    <p class="next-step">Redirecting to sign in page...</p>
-                    <a href="{{ route('login') }}" class="success-btn">Go to Sign In</a>
+                    <p class="success-message">You can now login with your new password.</p>
+                    <p class="next-step">Redirecting to login page...</p>
+                    <a href="{{ route('login') }}" class="success-btn">Go to Login</a>
                 </div>
             </div>
         </div>

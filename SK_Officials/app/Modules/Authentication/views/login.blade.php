@@ -72,7 +72,7 @@
                     </div>
                     <div>
                         <h2 class="turnstile-modal-title">Verify you're human</h2>
-                        <p class="turnstile-modal-subtitle">Complete the security check to continue signing in.</p>
+                        <p class="turnstile-modal-subtitle">Complete the security check to continue logging in.</p>
                     </div>
                     {{-- Close button --}}
                     <button id="turnstile-close-btn"
@@ -134,7 +134,7 @@
                 <div class="card-header" style="text-align:center;">
                     <p class="card-subtitle"
                        style="font-size:1.4rem;font-weight:800;color:#0f172a;letter-spacing:-0.02em;">
-                        Sign in to your account
+                        Login to your account
                     </p>
                 </div>
 
@@ -289,7 +289,7 @@
 
                     {{-- Submit Button --}}
                     <button type="submit" class="sk-submit-btn" id="loginBtn">
-                        <span>Sign In</span>
+                        <span>Login</span>
                     </button>
 
                 </form>
