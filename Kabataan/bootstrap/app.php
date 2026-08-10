@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'kabataan' => EnsureKabataanUser::class,
             'kabataan.view_only_guard' => PreventArchivedKabataanMutations::class,

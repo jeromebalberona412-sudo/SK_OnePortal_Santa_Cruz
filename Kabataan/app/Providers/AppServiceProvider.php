@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Services\KabataanNotificationService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +23,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // 🔒 Force HTTPS for Render/Production SSL & fix missing asset styles
+        if ($this->app->environment('production') || request()->server('HTTP_X_FORWARDED_PROTO') === 'https') {
+            URL::forceScheme('https');
+        }
+
         View::composer(['layout::kabataan-header', 'dashboard::notification'], function ($view) {
             $user = Auth::user();
             $notificationService = app(KabataanNotificationService::class);
