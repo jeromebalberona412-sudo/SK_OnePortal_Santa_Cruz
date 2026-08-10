@@ -28,24 +28,25 @@ chmod -R 755 /var/log/nginx /var/log/supervisor /var/run/supervisor || echo "Fai
 chmod -R 755 /var/lib/php || echo "Failed to chmod php directories"
 
 # ============================================
-# Set proper permissions for Laravel
-# ============================================
-echo "Setting Laravel permissions..."
-chown -R www-data:www-data /var/www/html/storage || echo "Failed to chown storage"
-chown -R www-data:www-data /var/www/html/bootstrap/cache || echo "Failed to chown bootstrap/cache"
-chown -R www-data:www-data /var/www/html/public/storage || echo "Failed to chown public/storage"
-chmod -R 775 /var/www/html/storage || echo "Failed to chmod storage"
-chmod -R 775 /var/www/html/bootstrap/cache || echo "Failed to chmod bootstrap/cache"
-chmod -R 775 /var/www/html/public/storage || echo "Failed to chmod public/storage"
-
-# ============================================
-# Create storage directories if missing
+# Create storage directories FIRST (before chown)
 # ============================================
 echo "Ensuring storage directories exist..."
 mkdir -p /var/www/html/storage/framework/{views,cache,sessions} || echo "Failed to create framework directories"
 mkdir -p /var/www/html/storage/logs || echo "Failed to create logs directory"
 mkdir -p /var/www/html/storage/app/public || echo "Failed to create app/public directory"
 mkdir -p /var/www/html/bootstrap/cache || echo "Failed to create bootstrap/cache directory"
+
+# Pre-create laravel.log so PHP-FPM (www-data) always has write access
+touch /var/www/html/storage/logs/laravel.log || echo "Failed to touch laravel.log"
+
+# ============================================
+# Set proper permissions for Laravel (AFTER mkdir)
+# ============================================
+echo "Setting Laravel permissions..."
+chown -R www-data:www-data /var/www/html/storage || echo "Failed to chown storage"
+chown -R www-data:www-data /var/www/html/bootstrap/cache || echo "Failed to chown bootstrap/cache"
+chmod -R 775 /var/www/html/storage || echo "Failed to chmod storage"
+chmod -R 775 /var/www/html/bootstrap/cache || echo "Failed to chmod bootstrap/cache"
 
 # ============================================
 # Verify Laravel files exist
