@@ -1,23 +1,34 @@
 <?php
 
+$envPython = env('OCR_PYTHON_PATH');
 $ocrRoot = env('OCR_ROOT');
 
-if (! is_string($ocrRoot) || $ocrRoot === '' || ! is_dir($ocrRoot)) {
+if (! is_string($ocrRoot) || $ocrRoot === '' || ! @is_dir($ocrRoot)) {
     $ocrRoot = dirname(base_path()).DIRECTORY_SEPARATOR.'python';
 }
 
-$defaultPython = PHP_OS_FAMILY === 'Windows'
-    ? (is_file($ocrRoot.'/.venv312/Scripts/python.exe')
-        ? $ocrRoot.'/.venv312/Scripts/python.exe'
-        : $ocrRoot.'/.venv/Scripts/python.exe')
-    : (is_file($ocrRoot.'/.venv312/bin/python')
-        ? $ocrRoot.'/.venv312/bin/python'
-        : $ocrRoot.'/.venv/bin/python');
+$defaultPython = null;
+
+if (! is_string($envPython) || $envPython === '') {
+    if (PHP_OS_FAMILY === 'Windows') {
+        if (@is_file($ocrRoot.'/.venv312/Scripts/python.exe')) {
+            $defaultPython = $ocrRoot.'/.venv312/Scripts/python.exe';
+        } elseif (@is_file($ocrRoot.'/.venv/Scripts/python.exe')) {
+            $defaultPython = $ocrRoot.'/.venv/Scripts/python.exe';
+        }
+    } else {
+        if (@is_file($ocrRoot.'/.venv312/bin/python')) {
+            $defaultPython = $ocrRoot.'/.venv312/bin/python';
+        } elseif (@is_file($ocrRoot.'/.venv/bin/python')) {
+            $defaultPython = $ocrRoot.'/.venv/bin/python';
+        }
+    }
+}
 
 return [
     'root' => $ocrRoot,
 
-    'python' => env('OCR_PYTHON_PATH', $defaultPython),
+    'python' => is_string($envPython) && $envPython !== '' ? $envPython : ($defaultPython ?? 'python3'),
 
     'script' => $ocrRoot.DIRECTORY_SEPARATOR.'ocr.py',
 
