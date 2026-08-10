@@ -144,9 +144,10 @@ RUN chown -R www-data:www-data /var/lib/php \
     && chmod -R 755 /var/lib/php
 
 # Fix PHP-FPM default error_log configuration in Alpine image
-RUN sed -i 's|error_log = /proc/self/fd/2|error_log = /tmp/php-fpm.log|g' /usr/local/etc/php-fpm.conf 2>/dev/null || true \
-    && sed -i 's|error_log = /proc/self/fd/2|error_log = /tmp/php-fpm.log|g' /etc/php/*/fpm/php-fpm.conf 2>/dev/null || true \
-    && sed -i 's|error_log = /proc/self/fd/2|error_log = /tmp/php-fpm.log|g' /etc/php/*/fpm/pool.d/www.conf 2>/dev/null || true
+# Remove default pool configs (www.conf, zz-docker.conf) that may have /proc/self/fd/2
+# references which cause exit status 78 on Alpine. Our custom configs replace them entirely.
+RUN rm -f /usr/local/etc/php-fpm.d/www.conf /usr/local/etc/php-fpm.d/zz-docker.conf \
+    && sed -i 's|error_log = /proc/self/fd/2|error_log = /tmp/php-fpm.log|g' /usr/local/etc/php-fpm.conf 2>/dev/null || true
 
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
