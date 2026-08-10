@@ -54,9 +54,9 @@ class TurnstileService
             return true;
         }
 
-        // If secret key is dev/test bypass key, allow
-        if ($this->secretKey === '1x0000000000000000000000000000000AA') {
-            Log::info('Turnstile verification bypassed (dev/test secret key)');
+        // If site key or secret key is dev/test bypass key, allow
+        if ($this->siteKey === '1x0000000000000000000000000000000AA' || $this->secretKey === '1x0000000000000000000000000000000AA') {
+            Log::info('Turnstile verification bypassed (dev/test key)');
             return true;
         }
 

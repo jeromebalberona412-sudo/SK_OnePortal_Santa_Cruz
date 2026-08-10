@@ -223,12 +223,19 @@
         signInForm.submit();
     }
 
-    function onTurnstileError() {
+    function onTurnstileError(errorCode) {
+        console.error('[Turnstile] Error callback triggered with code:', errorCode);
         isSubmitting = false;
         turnstileToken = null;
         removeTokenInput();
         resetSubmitBtn();
-        setModalError('Verification failed. Please try again or refresh the page.');
+        var msg = 'Verification failed. Please try again or refresh the page.';
+        if (errorCode === '110200' || errorCode === 110200) {
+            msg = 'Domain not authorized in Cloudflare Turnstile dashboard. Please add this domain (or enable localhost) in your Cloudflare widget settings.';
+        } else if (errorCode === '110100' || errorCode === 110100) {
+            msg = 'Invalid Turnstile site key. Please check your configuration.';
+        }
+        setModalError(msg);
     }
 
     function onTurnstileExpired() {
