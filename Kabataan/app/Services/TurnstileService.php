@@ -44,9 +44,10 @@ class TurnstileService
      *
      * @param  string  $token  The cf-turnstile-response token from the frontend.
      * @param  string|null  $remoteIp  Optional client IP address.
+     * @param  string|null  $expectedAction  Optional expected action (e.g. 'login').
      * @return bool True if verification succeeds, false otherwise.
      */
-    public function verify(string $token, ?string $remoteIp = null): bool
+    public function verify(string $token, ?string $remoteIp = null, ?string $expectedAction = null): bool
     {
         // If Turnstile is disabled or unconfigured, bypass verification
         if (!$this->isEnabled()) {
@@ -97,11 +98,24 @@ class TurnstileService
                     'remote_ip' => $remoteIp,
                     'token_length' => strlen($token),
                 ]);
-            } else {
-                Log::info('Turnstile verification successful');
+                return false;
             }
 
-            return $success;
+            // Verify action if expectedAction is specified and present in response
+            if ($expectedAction !== null && isset($data['action']) && $data['action'] !== '' && $data['action'] !== $expectedAction) {
+                Log::warning('Turnstile verification action mismatch', [
+                    'expected' => $expectedAction,
+                    'actual' => $data['action'],
+                ]);
+                return false;
+            }
+
+            Log::info('Turnstile verification successful', [
+                'action' => $data['action'] ?? null,
+                'hostname' => $data['hostname'] ?? null,
+            ]);
+
+            return true;
         } catch (ConnectionException $e) {
             Log::error('Turnstile verification connection exception', [
                 'message' => $e->getMessage(),
