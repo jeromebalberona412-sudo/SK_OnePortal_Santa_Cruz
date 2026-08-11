@@ -129,7 +129,7 @@ RUN chown -R www-data:www-data \
     /var/www/html/storage \
     /var/www/html/bootstrap/cache \
     /var/www/html/public/storage \
-    && chmod -R 775 \
+    && chmod -R 777 \
     /var/www/html/storage \
     /var/www/html/bootstrap/cache \
     /var/www/html/public/storage
@@ -142,6 +142,12 @@ RUN chown -R www-data:www-data /var/lib/nginx /var/cache/nginx /run/nginx \
 # Set permissions for PHP sessions
 RUN chown -R www-data:www-data /var/lib/php \
     && chmod -R 755 /var/lib/php
+
+# Create dedicated writable PHP temp directory (prevents tempnam() fallback
+# to sys_get_temp_dir() which triggers an E_NOTICE on PHP 8.1+)
+RUN mkdir -p /tmp/php-tmp \
+    && chown -R www-data:www-data /tmp/php-tmp \
+    && chmod -R 777 /tmp/php-tmp
 
 # Fix PHP-FPM default error_log configuration in Alpine image
 # Remove default pool configs (www.conf, zz-docker.conf) that may have /proc/self/fd/2

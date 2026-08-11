@@ -45,8 +45,19 @@ touch /var/www/html/storage/logs/laravel.log || echo "Failed to touch laravel.lo
 echo "Setting Laravel permissions..."
 chown -R www-data:www-data /var/www/html/storage || echo "Failed to chown storage"
 chown -R www-data:www-data /var/www/html/bootstrap/cache || echo "Failed to chown bootstrap/cache"
-chmod -R 775 /var/www/html/storage || echo "Failed to chmod storage"
-chmod -R 775 /var/www/html/bootstrap/cache || echo "Failed to chmod bootstrap/cache"
+chown -R www-data:www-data /var/www/html/public || echo "Failed to chown public"
+chmod -R 777 /var/www/html/storage || echo "Failed to chmod storage"
+chmod -R 777 /var/www/html/bootstrap/cache || echo "Failed to chmod bootstrap/cache"
+chmod -R 775 /var/www/html/public || echo "Failed to chmod public"
+
+# ============================================
+# Ensure PHP temp directory exists and is writable
+# ============================================
+echo "Setting up PHP temp directory..."
+export TMPDIR="/tmp/php-tmp"
+mkdir -p "$TMPDIR" || echo "Failed to create PHP temp dir"
+chown -R www-data:www-data "$TMPDIR" || echo "Failed to chown PHP temp dir"
+chmod -R 777 "$TMPDIR" || echo "Failed to chmod PHP temp dir"
 
 # ============================================
 # Verify Laravel files exist

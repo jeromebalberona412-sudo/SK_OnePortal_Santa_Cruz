@@ -54,6 +54,7 @@ class AppServiceProvider extends ServiceProvider
             'layout::sidebar',
             'community_feed::*',
         ], function ($view): void {
+            /** @var User|null $user */
             $user = Auth::user();
 
             $user?->loadMissing('officialProfile');
