@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     @include('partials.favicon')
@@ -40,7 +40,7 @@
                              class="collab-logo">
                     </div>
                     <div class="logo-glow-wrapper logo-right">
-                        <img src="{{ asset('images/SK_Federations_logo.jpg') }}"
+                        <img src="{{ asset('Images/SK_Federations_logo.jpg') }}"
                              alt="SK Federations Logo"
                              class="collab-logo">
                     </div>

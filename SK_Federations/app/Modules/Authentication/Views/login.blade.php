@@ -79,10 +79,10 @@
             <div class="logo-container">
                 <div class="collab-logo-wrapper">
                     <div class="logo-glow-wrapper logo-left">
-                        <img src="{{ asset('images/SK_OnePortal_logo.png') }}" alt="SK OnePortal Logo" class="collab-logo">
+                        <img src="{{ asset('Images/SK_OnePortal_logo.png') }}" alt="SK OnePortal Logo" class="collab-logo">
                     </div>
                     <div class="logo-glow-wrapper logo-right">
-                        <img src="{{ asset('images/SK_Federations_logo.jpg') }}" alt="SK Federations Logo" class="collab-logo">
+                        <img src="{{ asset('Images/SK_Federations_logo.jpg') }}" alt="SK Federations Logo" class="collab-logo">
                     </div>
                 </div>
                 <h1 class="brand-title" style="white-space:nowrap;">SK OnePortal</h1>
