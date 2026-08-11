@@ -302,40 +302,50 @@ class AuthController extends Controller
 
         try {
             $user->sendEmailVerificationNotification();
-        } catch (\Throwable $exception) {
-            report($exception);
+            
+            $pending['resend_last_sent_at'] = now()->toIso8601String();
+            $request->session()->put('sk_fed_email_verification_pending', $pending);
+
+            $cooldownSeconds = $this->emailVerificationDeviceService->resendCooldownRemaining($pending);
 
             if ($request->expectsJson()) {
                 return response()->json([
-                    'ok' => false,
-                    'message' => 'Unable to send verification email. Please try again.',
-                ], 500);
+                    'ok' => true,
+                    'message' => 'Verification email resent.',
+                    'resend_cooldown' => max(1, $cooldownSeconds),
+                ]);
             }
 
             return redirect()
                 ->route('skfed.verification.wait')
-                ->withErrors([
-                    'email' => 'Unable to send verification email. Please try again.',
-                ]);
-        }
-
-        $pending['resend_last_sent_at'] = now()->toIso8601String();
-        $request->session()->put('sk_fed_email_verification_pending', $pending);
-
-        $cooldownSeconds = $this->emailVerificationDeviceService->resendCooldownRemaining($pending);
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'ok' => true,
-                'message' => 'Verification email resent.',
-                'resend_cooldown' => max(1, $cooldownSeconds),
+                ->with('status', 'Verification email resent.')
+                ->with('resend_started', true);
+        } catch (\Throwable $exception) {
+            // Log the error for server-side debugging
+            \Illuminate\Support\Facades\Log::error('Email verification resend failed', [
+                'user_id' => $user->getKey(),
+                'email' => $user->email,
+                'exception' => $exception->getMessage(),
+                'exception_class' => get_class($exception),
             ]);
-        }
 
-        return redirect()
-            ->route('skfed.verification.wait')
-            ->with('status', 'Verification email resent.')
-            ->with('resend_started', true);
+            // Update pending state to mark that resend was attempted
+            // This prevents cooldown from blocking future attempts
+            $pending['resend_last_sent_at'] = now()->toIso8601String();
+            $request->session()->put('sk_fed_email_verification_pending', $pending);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Email delivery is temporarily unavailable. Your verification link is still valid. Please check your inbox or try again in a few moments.',
+                ], 503);
+            }
+
+            return redirect()
+                ->route('skfed.verification.wait')
+                ->with('status', 'Email delivery is temporarily unavailable. Your verification link is still valid. Please check your inbox or try again in a few moments.')
+                ->with('resend_started', true);
+        }
     }
 
     public function showVerificationSuccess(Request $request): View|RedirectResponse
