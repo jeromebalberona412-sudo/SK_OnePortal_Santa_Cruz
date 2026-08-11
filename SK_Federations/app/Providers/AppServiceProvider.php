@@ -27,12 +27,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Set custom temporary directory to avoid tempnam() errors
-        $tempDir = storage_path('temp');
-        if (! File::exists($tempDir)) {
-            File::makeDirectory($tempDir, 0755, true);
-        }
-        if (is_writable($tempDir)) {
+        // Ensure PHP temp directory is used consistently
+        // The container configures /tmp/php-tmp via php-fpm.conf and entrypoint.sh
+        // This prevents tempnam() from falling back to system temp dir
+        $tempDir = ini_get('sys_temp_dir') ?: sys_get_temp_dir();
+        if ($tempDir && is_writable($tempDir)) {
+            // Sync environment variables with PHP configuration
             putenv('TMPDIR='.$tempDir);
             putenv('TEMP='.$tempDir);
             putenv('TMP='.$tempDir);

@@ -103,7 +103,8 @@ RUN mkdir -p \
     storage/logs \
     storage/app/public \
     bootstrap/cache \
-    public/storage
+    public/storage \
+    storage/temp
 
 # Pre-create laravel.log so PHP-FPM (www-data) always has write access
 RUN touch storage/logs/laravel.log
@@ -132,7 +133,8 @@ RUN chown -R www-data:www-data \
     && chmod -R 777 \
     /var/www/html/storage \
     /var/www/html/bootstrap/cache \
-    /var/www/html/public/storage
+    /var/www/html/public/storage \
+    /var/www/html/storage/temp
 
 # Set permissions for Nginx and Supervisor
 RUN chown -R www-data:www-data /var/lib/nginx /var/cache/nginx /run/nginx \

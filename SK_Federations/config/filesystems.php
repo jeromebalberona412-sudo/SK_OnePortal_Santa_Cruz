@@ -17,18 +17,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Temporary Directory
-    |--------------------------------------------------------------------------
-    |
-    | The temporary directory that should be used for temporary files.
-    | This directory must be writable by the web server.
-    |
-    */
-
-    'temp' => storage_path('temp'),
-
-    /*
-    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |

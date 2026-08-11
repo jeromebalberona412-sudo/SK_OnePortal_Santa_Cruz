@@ -34,6 +34,7 @@ echo "Ensuring storage directories exist..."
 mkdir -p /var/www/html/storage/framework/{views,cache,sessions} || echo "Failed to create framework directories"
 mkdir -p /var/www/html/storage/logs || echo "Failed to create logs directory"
 mkdir -p /var/www/html/storage/app/public || echo "Failed to create app/public directory"
+mkdir -p /var/www/html/storage/temp || echo "Failed to create temp directory"
 mkdir -p /var/www/html/bootstrap/cache || echo "Failed to create bootstrap/cache directory"
 
 # Pre-create laravel.log so PHP-FPM (www-data) always has write access
@@ -47,6 +48,7 @@ chown -R www-data:www-data /var/www/html/storage || echo "Failed to chown storag
 chown -R www-data:www-data /var/www/html/bootstrap/cache || echo "Failed to chown bootstrap/cache"
 chown -R www-data:www-data /var/www/html/public || echo "Failed to chown public"
 chmod -R 777 /var/www/html/storage || echo "Failed to chmod storage"
+chmod -R 777 /var/www/html/storage/temp || echo "Failed to chmod storage/temp"
 chmod -R 777 /var/www/html/bootstrap/cache || echo "Failed to chmod bootstrap/cache"
 chmod -R 775 /var/www/html/public || echo "Failed to chmod public"
 
@@ -55,9 +57,12 @@ chmod -R 775 /var/www/html/public || echo "Failed to chmod public"
 # ============================================
 echo "Setting up PHP temp directory..."
 export TMPDIR="/tmp/php-tmp"
+export TEMP="/tmp/php-tmp"
+export TMP="/tmp/php-tmp"
 mkdir -p "$TMPDIR" || echo "Failed to create PHP temp dir"
 chown -R www-data:www-data "$TMPDIR" || echo "Failed to chown PHP temp dir"
 chmod -R 777 "$TMPDIR" || echo "Failed to chmod PHP temp dir"
+echo "PHP temp directory configured: $TMPDIR"
 
 # ============================================
 # Verify Laravel files exist
