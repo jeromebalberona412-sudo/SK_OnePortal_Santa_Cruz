@@ -90,17 +90,17 @@ if [ -L "/var/www/html/public/storage" ]; then
 elif [ -d "/var/www/html/public/storage" ]; then
     echo "Storage exists as a directory, removing and recreating as symlink"
     rm -rf /var/www/html/public/storage || echo "Failed to remove existing storage directory"
-    php artisan storage:link || echo "Storage link creation failed"
+    su-exec www-data php artisan storage:link || echo "Storage link creation failed"
 else
     echo "Creating storage symlink"
-    php artisan storage:link || echo "Storage link creation failed"
+    su-exec www-data php artisan storage:link || echo "Storage link creation failed"
 fi
 
 # ============================================
 # Run package:discover (skipped during composer install)
 # ============================================
 echo "Running package:discover..."
-php artisan package:discover --ansi || echo "Package discovery failed or already run"
+su-exec www-data php artisan package:discover --ansi || echo "Package discovery failed or already run"
 
 # ============================================
 # Wait for database if DB_HOST is set
@@ -130,28 +130,74 @@ fi
 # ============================================
 if [ "$RUN_MIGRATIONS" = "true" ]; then
     echo "Running database migrations..."
-    php artisan migrate --force || echo "Migrations failed or already run"
+    su-exec www-data php artisan migrate --force || echo "Migrations failed or already run"
 else
     echo "RUN_MIGRATIONS not set to true, skipping migrations"
 fi
 
 # ============================================
-# Clear and cache configurations
+# Verify writable directories as www-data user
+# ============================================
+echo "Verifying directory write permissions..."
+
+# Display current permissions
+echo "Current permissions:"
+ls -la /var/www/html/storage/framework/ || echo "Failed to list framework directory"
+ls -la /var/www/html/bootstrap/ || echo "Failed to list bootstrap directory"
+
+if ! su-exec www-data test -w /var/www/html/storage/framework/views 2>/dev/null; then
+    echo "WARNING: storage/framework/views not writable by www-data, attempting fix..."
+    chmod -R 777 /var/www/html/storage/framework/views || echo "Failed to chmod views directory"
+    chown -R www-data:www-data /var/www/html/storage/framework/views || echo "Failed to chown views directory"
+fi
+
+if ! su-exec www-data test -w /var/www/html/bootstrap/cache 2>/dev/null; then
+    echo "WARNING: bootstrap/cache not writable by www-data, attempting fix..."
+    chmod -R 777 /var/www/html/bootstrap/cache || echo "Failed to chmod bootstrap/cache"
+    chown -R www-data:www-data /var/www/html/bootstrap/cache || echo "Failed to chown bootstrap/cache"
+fi
+
+echo "Testing write access to critical directories..."
+su-exec www-data touch /var/www/html/storage/framework/views/.write-test && \
+    su-exec www-data rm /var/www/html/storage/framework/views/.write-test && \
+    echo "✓ storage/framework/views is writable by www-data" || \
+    echo "✗ WARNING: storage/framework/views is NOT writable by www-data"
+
+su-exec www-data touch /var/www/html/bootstrap/cache/.write-test && \
+    su-exec www-data rm /var/www/html/bootstrap/cache/.write-test && \
+    echo "✓ bootstrap/cache is writable by www-data" || \
+    echo "✗ WARNING: bootstrap/cache is NOT writable by www-data"
+
+# Display PHP temp directory configuration
+echo "PHP temp directory configuration:"
+php -r "echo 'sys_get_temp_dir(): ' . sys_get_temp_dir() . PHP_EOL;"
+php -r "echo 'sys_temp_dir ini: ' . ini_get('sys_temp_dir') . PHP_EOL;"
+php -r "echo 'upload_tmp_dir ini: ' . ini_get('upload_tmp_dir') . PHP_EOL;"
+echo "Laravel VIEW_COMPILED_PATH: ${VIEW_COMPILED_PATH:-not set, using default}"
+
+# Test that Laravel can determine the compiled view path
+echo "Testing Laravel view configuration..."
+php artisan tinker --execute="echo 'Compiled view path: ' . config('view.compiled') . PHP_EOL; echo 'Path exists: ' . (file_exists(config('view.compiled')) ? 'yes' : 'no') . PHP_EOL; echo 'Path writable: ' . (is_writable(config('view.compiled')) ? 'yes' : 'no') . PHP_EOL;" || echo "Failed to check Laravel view config"
+
+# ============================================
+# Clear and cache configurations (run as www-data)
 # ============================================
 echo "Optimizing application..."
-php artisan config:clear || echo "Config clear failed"
-php artisan cache:clear || echo "Cache clear failed"
-php artisan route:clear || echo "Route clear failed"
-php artisan view:clear || echo "View clear failed"
-php artisan event:clear || echo "Event clear failed"
+su-exec www-data php artisan config:clear || echo "Config clear failed"
+su-exec www-data php artisan cache:clear || echo "Cache clear failed"
+su-exec www-data php artisan route:clear || echo "Route clear failed"
+su-exec www-data php artisan view:clear || echo "View clear failed"
+su-exec www-data php artisan event:clear || echo "Event clear failed"
 
 # Only cache if APP_KEY is set (not during image build)
 if [ -n "$APP_KEY" ]; then
     echo "Caching configurations..."
-    php artisan config:cache || echo "Config cache failed"
-    php artisan route:cache || echo "Route cache failed"
-    php artisan view:cache || echo "View cache failed"
-    php artisan event:cache || echo "Event cache failed"
+    su-exec www-data php artisan config:cache || echo "Config cache failed"
+    su-exec www-data php artisan route:cache || echo "Route cache failed"
+    # DO NOT cache views during startup - let them compile on-demand
+    # view:cache creates precompiled Blade templates that may have permission issues
+    echo "Skipping view:cache - views will compile on first request"
+    su-exec www-data php artisan event:cache || echo "Event cache failed"
 else
     echo "APP_KEY not set, skipping config caching"
 fi

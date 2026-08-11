@@ -52,7 +52,9 @@ RUN apk add --no-cache \
     git \
     bash \
     # Network tools for database connection check
-    netcat-openbsd
+    netcat-openbsd \
+    # User switching tool for permission verification
+    su-exec
 
 # Configure and install PHP extensions
 RUN docker-php-ext-configure gd \
@@ -166,6 +168,11 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Copy PHP-FPM configuration
 COPY php-fpm-global.conf /usr/local/etc/php-fpm.conf
 COPY php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+
+# Create PHP configuration file for temp directory
+RUN echo "sys_temp_dir = /tmp/php-tmp" > /usr/local/etc/php/conf.d/temp-dir.ini \
+    && echo "upload_tmp_dir = /tmp/php-tmp" >> /usr/local/etc/php/conf.d/temp-dir.ini \
+    && echo "session.save_path = /var/lib/php/sessions" >> /usr/local/etc/php/conf.d/temp-dir.ini
 
 # Copy entrypoint script
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
