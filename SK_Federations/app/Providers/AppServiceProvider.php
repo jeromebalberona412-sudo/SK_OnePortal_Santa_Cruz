@@ -30,16 +30,23 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(OfficialProfile::class, AccountPolicy::class);
         Gate::define('manage-accounts', fn (User $user) => $user->isFederationAdministrator());
 
-        $applicationUrl = (string) config('app.url');
+        $applicationUrl = trim((string) config('app.url'));
 
-        if ($applicationUrl !== '') {
+        if ($applicationUrl !== '' && filter_var($applicationUrl, FILTER_VALIDATE_URL)) {
             URL::forceRootUrl($applicationUrl);
 
-            if (str_starts_with($applicationUrl, 'https://')) {
+            if (str_starts_with(strtolower($applicationUrl), 'https://')) {
                 URL::forceScheme('https');
-            } elseif (str_starts_with($applicationUrl, 'http://')) {
+            } elseif (str_starts_with(strtolower($applicationUrl), 'http://')) {
                 URL::forceScheme('http');
             }
+        }
+
+        if (
+            isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
+            && strtolower((string) $_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https'
+        ) {
+            URL::forceScheme('https');
         }
 
         View::composer([

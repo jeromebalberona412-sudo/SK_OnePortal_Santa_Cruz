@@ -39,9 +39,9 @@ class EnsureConsistentHost
         }
 
         return redirect()
-    ->to($request->getSchemeAndHttpHost().'/login')
-    ->with('status', $message)
-    ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
+            ->route('login')
+            ->with('status', $message)
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
 
     private function authorityFromRequest(Request $request): string
