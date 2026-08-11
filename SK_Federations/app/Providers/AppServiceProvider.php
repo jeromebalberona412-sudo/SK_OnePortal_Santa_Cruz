@@ -6,6 +6,7 @@ use App\Modules\Accounts\Models\OfficialProfile;
 use App\Modules\Accounts\Policies\AccountPolicy;
 use App\Modules\Shared\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -26,6 +27,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Set custom temporary directory to avoid tempnam() errors
+        $tempDir = storage_path('temp');
+        if (! File::exists($tempDir)) {
+            File::makeDirectory($tempDir, 0755, true);
+        }
+        if (is_writable($tempDir)) {
+            putenv('TMPDIR='.$tempDir);
+            putenv('TEMP='.$tempDir);
+            putenv('TMP='.$tempDir);
+        }
+
         Gate::policy(User::class, AccountPolicy::class);
         Gate::policy(OfficialProfile::class, AccountPolicy::class);
         Gate::define('manage-accounts', fn (User $user) => $user->isFederationAdministrator());
