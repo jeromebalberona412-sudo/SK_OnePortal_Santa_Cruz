@@ -36,6 +36,11 @@ Route::get('/email/verify-link/{id}/{hash}', [AuthController::class, 'verifyEmai
     ->name('skfed.verification.verify');
 Route::get('/email/verified-success', [AuthController::class, 'showVerificationSuccess'])->name('skfed.verification.success');
 
+// CSRF token refresh endpoint for login page to prevent "Page Expired" errors
+Route::get('/csrf-token', function () {
+    return response()->json(['token' => csrf_token()]);
+})->middleware('web');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::get('/email/verify/notice', [AuthController::class, 'showVerifyNotice'])->name('skfed.verification.notice');

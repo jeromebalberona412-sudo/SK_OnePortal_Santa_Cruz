@@ -411,6 +411,34 @@
 
         // Pre-render Turnstile widget now so it's ready before user clicks Sign In
         preRenderTurnstile();
+
+        // ─── Refresh CSRF token every 10 minutes to prevent "Page Expired" ───────
+        setInterval(function refreshCsrfToken() {
+            var metaTag = document.querySelector('meta[name="csrf-token"]');
+            var csrfInput = loginForm.querySelector('input[name="_token"]');
+            
+            if (!metaTag || !csrfInput) return;
+
+            // Fetch new CSRF token from a lightweight endpoint
+            fetch('/csrf-token', {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data && data.token) {
+                    metaTag.setAttribute('content', data.token);
+                    csrfInput.value = data.token;
+                }
+            })
+            .catch(function(err) {
+                console.warn('[CSRF] Token refresh failed:', err);
+            });
+        }, 10 * 60 * 1000); // Every 10 minutes
     }
 
     if (document.readyState === 'loading') {
