@@ -17,7 +17,10 @@ class ArchiveManagementServiceProvider extends ServiceProvider
             __DIR__.'/../assets' => public_path('modules/archive-management'),
         ], 'archive-management-assets');
 
-        Route::middleware('web')
-            ->group(__DIR__.'/../routes/archive_management.php');
+        $routesFile = is_file(__DIR__.'/../routes/archive_management.php')
+            ? __DIR__.'/../routes/archive_management.php'
+            : __DIR__.'/../Routes/archive_management.php';
+
+        Route::middleware('web')->group($routesFile);
     }
 }
