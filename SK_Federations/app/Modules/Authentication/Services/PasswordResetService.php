@@ -81,13 +81,28 @@ class PasswordResetService
                     return;
                 }
 
-                if ($this->shouldSendTurnoverSetupResetNotification($notifiable)) {
-                    $this->sendTurnoverSetupResetNotification($notifiable, $token);
+                try {
+                    if ($this->shouldSendTurnoverSetupResetNotification($notifiable)) {
+                        $this->sendTurnoverSetupResetNotification($notifiable, $token);
 
-                    return;
+                        return;
+                    }
+
+                    $notifiable->sendPasswordResetNotification($token);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('Password reset email failed to send', [
+                        'user_id' => $notifiable->getKey(),
+                        'email' => $notifiable->email,
+                        'exception' => $e->getMessage(),
+                        'exception_class' => get_class($e),
+                    ]);
+                    
+                    // Re-throw only if it's NOT an SMTP transport exception
+                    // SMTP failures should not block password reset token creation
+                    if (! str_contains(get_class($e), 'TransportException')) {
+                        throw $e;
+                    }
                 }
-
-                $notifiable->sendPasswordResetNotification($token);
             },
         );
 
