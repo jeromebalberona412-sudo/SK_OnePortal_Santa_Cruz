@@ -10,7 +10,6 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->useStoragePath(storage_path())
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prependToGroup('web', \App\Modules\Shared\Middleware\EnsureConsistentHost::class);
 
