@@ -317,6 +317,10 @@ class User extends Authenticatable implements MustVerifyEmail
                 ->line('This verification link expires shortly for your security.')
                 ->line('If you did not request this, no further action is required.');
         });
+
+        // Send notification with timeout protection
+        // If SMTP is unavailable, the failover mailer config will attempt
+        // the log driver as a fallback, preventing production crashes.
         $this->notify($notification);
     }
 

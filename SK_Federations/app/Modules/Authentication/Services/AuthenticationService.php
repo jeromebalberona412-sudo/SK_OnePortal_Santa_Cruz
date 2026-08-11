@@ -559,7 +559,25 @@ class AuthenticationService
         $request->session()->put('sk_fed_email_verification_pending', $pending);
         $this->storeVerificationWatch($pending);
 
-        $user->sendEmailVerificationNotification();
+        // ── Attempt to send email verification notification ────────────────
+        // Email sending must not block authentication. If SMTP fails, log the
+        // failure but allow the verification flow to continue. The user can
+        // still verify via the verification wait page or resend link.
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (\Throwable $e) {
+            Log::error('Email verification notification failed during login', [
+                'user_id' => $user->getKey(),
+                'email' => $user->email,
+                'reason' => $reason,
+                'exception' => $e->getMessage(),
+                'exception_class' => get_class($e),
+            ]);
+
+            // Update the user-facing message to reflect email delivery issue
+            $message = 'Email verification is required. If you did not receive a verification email, please check your spam folder or request a new one.';
+        }
+
         $this->loginSecurityService->recordAttempt($user, $email, false, $request, ['reason' => $reason]);
         $this->auditLogService->log(
             event: 'login_blocked_'.$reason,
@@ -649,5 +667,33 @@ class AuthenticationService
 
         return $termEnd !== null
             && Carbon::parse((string) $termEnd)->lte(now()->startOfDay());
+    }
+
+    /**
+     * Record successful login and clear any active lockout in a single UPDATE.
+     */
+    protected function recordLoginAndClearLockout(User $user, string $ipAddress): void
+    {
+        $updates = [];
+
+        if ($this->hasColumn('users', 'last_login_at')) {
+            $updates['last_login_at'] = now();
+        }
+
+        if ($this->hasColumn('users', 'last_login_ip')) {
+            $updates['last_login_ip'] = $ipAddress;
+        }
+
+        if ($this->hasColumn('users', 'lockout_count')) {
+            $updates['lockout_count'] = 0;
+        }
+
+        if ($this->hasColumn('users', 'lockout_until')) {
+            $updates['lockout_until'] = null;
+        }
+
+        if ($updates !== []) {
+            $user->forceFill($updates)->save();
+        }
     }
 }
