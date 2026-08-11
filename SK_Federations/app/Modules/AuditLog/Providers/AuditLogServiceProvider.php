@@ -26,6 +26,6 @@ class AuditLogServiceProvider extends ServiceProvider
         ], 'audit-log-assets');
 
         Route::middleware('web')
-            ->group(__DIR__.'/../Routes/audit_log.php');
+            ->group(__DIR__.'/../routes/audit_log.php');
     }
 }

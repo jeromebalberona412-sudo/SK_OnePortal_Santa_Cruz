@@ -18,6 +18,6 @@ class ArchiveManagementServiceProvider extends ServiceProvider
         ], 'archive-management-assets');
 
         Route::middleware('web')
-            ->group(__DIR__.'/../Routes/archive_management.php');
+            ->group(__DIR__.'/../routes/archive_management.php');
     }
 }
