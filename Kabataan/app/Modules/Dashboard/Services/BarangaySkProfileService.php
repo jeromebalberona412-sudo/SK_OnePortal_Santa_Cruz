@@ -7,6 +7,7 @@ use App\Models\AnnouncementComment;
 use App\Models\Barangay;
 use App\Services\BarangayLogoUrlService;
 use App\Services\CloudinaryService;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -29,11 +30,10 @@ class BarangaySkProfileService
         'councilor',
         'kagawad',
     ];
+
     private const CACHE_TTL = 600; // 10 minutes
 
-    public function __construct(private readonly BarangayLogoUrlService $logoUrlService)
-    {
-    }
+    public function __construct(private readonly BarangayLogoUrlService $logoUrlService) {}
 
     public function findBySlug(string $slug, ?int $tenantId = null): ?Barangay
     {
@@ -55,7 +55,7 @@ class BarangaySkProfileService
     {
         return Cache::remember("barangay_sk_profiles.list.{$tenantId}", self::CACHE_TTL, function () use ($tenantId) {
             return Barangay::query()
-                ->where('tenant_id', $tenantId)
+                ->when($tenantId > 0, fn ($query) => $query->where('tenant_id', $tenantId))
                 ->orderBy('name')
                 ->get()
                 ->map(function (Barangay $barangay) {
@@ -201,8 +201,8 @@ class BarangaySkProfileService
      */
     private function resolvePostImages(int $postId, CloudinaryService $cloudinary, ?string $legacyUrl): array
     {
-        $images = DB::table('announcement_images')
-            ->where('announcement_id', $postId)
+        $images = DB::table('community_feed_images')
+            ->where('community_feed_id', $postId)
             ->orderBy('sort_order')
             ->pluck('image_url')
             ->map(fn ($url) => $cloudinary->normalizeUrl((string) $url))
@@ -276,8 +276,8 @@ class BarangaySkProfileService
             return '—';
         }
 
-        $start = \Illuminate\Support\Carbon::parse($row->term_start);
-        $end = \Illuminate\Support\Carbon::parse($row->term_end);
+        $start = Carbon::parse($row->term_start);
+        $end = Carbon::parse($row->term_end);
 
         return $start->format('Y').'–'.$end->format('Y');
     }

@@ -21,6 +21,7 @@
         'app/Modules/Layout/assets/js/kabataan-header.js',
         'app/Modules/Layout/assets/js/kabataan-logout.js',
         'app/Modules/Dashboard/assets/css/dashboard.css',
+        'app/Modules/Dashboard/assets/css/community-feed-comment-preview.css',
         'app/Modules/Dashboard/assets/js/dashboard.js',
         'app/Modules/Programs/assets/js/programs.js',
         'app/Modules/Programs/assets/css/scholarship-quick-guidelines.css',
@@ -71,6 +72,7 @@
                     </div>
                 @endif
                 
+                <div class="feed-sticky-toolbar">
                 <div class="feed-header">
                     <div class="feed-header__intro">
                         <h1>SK Community Feed</h1>
@@ -122,6 +124,7 @@
                         </span>
                         <span class="feed-tab-text">Programs</span>
                     </button>
+                </div>
                 </div>
 
                 <div id="feed-posts"></div>
@@ -784,10 +787,66 @@
     window.addEventListener('unload', function () {});
     </script>
 
+    <div id="editCommentModal" class="program-modal comment-action-modal">
+        <div class="modal-overlay" onclick="closeEditCommentModal()"></div>
+        <div class="modal-container" style="max-width:440px;">
+            <div class="modal-header">
+                <h2>Edit Comment</h2>
+                <button type="button" class="modal-close" onclick="closeEditCommentModal()" aria-label="Close"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
+            </div>
+            <div class="modal-body">
+                <textarea id="editCommentBody" class="edit-comment-textarea" maxlength="500" placeholder="Write a comment..."></textarea>
+            </div>
+            <div class="modal-footer-btns" style="display:flex;gap:10px;justify-content:flex-end;padding:14px 22px;border-top:1px solid #e0e0e0;">
+                <button type="button" class="btn-secondary" onclick="closeEditCommentModal()">Cancel</button>
+                <button type="button" class="btn-primary" id="confirmEditCommentBtn" onclick="confirmEditComment()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteCommentModal" class="program-modal comment-action-modal">
+        <div class="modal-overlay" onclick="closeDeleteCommentModal()"></div>
+        <div class="modal-container" style="max-width:440px;">
+            <div class="modal-header">
+                <h2>Delete Comment</h2>
+                <button type="button" class="modal-close" onclick="closeDeleteCommentModal()" aria-label="Close"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:14px;color:#555;line-height:1.65;margin:0;">Delete this comment? This cannot be undone.</p>
+            </div>
+            <div class="modal-footer-btns" style="display:flex;gap:10px;justify-content:flex-end;padding:14px 22px;border-top:1px solid #e0e0e0;">
+                <button type="button" class="btn-secondary" onclick="closeDeleteCommentModal()">Cancel</button>
+                <button type="button" class="btn-danger" id="confirmDeleteCommentBtn" onclick="confirmDeleteComment()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    @include('dashboard::comment-preview')
+
+    <script>
+    window.CommunityFeedConfig = {
+        userAvatar: @json($userAvatarUrl ?? ''),
+        userDisplayName: @json($user->name ?? 'Kabataan'),
+        commentsPageUrl: @json(url('/dashboard/__ID__/comments')),
+        feedPollMs: 10000,
+    };
+    window.CommentPreviewConfig = {
+        post: @json($commentPreviewPost ?? null),
+        defaultLogo: @json(asset('images/SK_OnePortal_logo.png')),
+        userAvatar: @json($userAvatarUrl ?? ''),
+        userDisplayName: @json($user->name ?? 'Kabataan'),
+        feedUrl: @json(route('dashboard')),
+    };
+    </script>
+
     <script>
     // ── Community Feed ────────────────────────────────────────────────────────
     const CSRF = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
     const FEED_USER_AVATAR = @json($userAvatarUrl ?? '');
+    const LIKE_THUMB_SVG = '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/></svg>';
+    const REACTION_EMOJI = { like: '👍', love: '❤️', haha: '😂', wow: '😮', sad: '😢', angry: '😡' };
+    const REACTION_LABEL = { like: 'Like', love: 'Love', haha: 'Haha', wow: 'Wow', sad: 'Sad', angry: 'Angry' };
+    let feedPollTimer = null;
     let feedPage = 1;
     let feedLastPage = 1;
     let feedFilter = 'all';
@@ -795,6 +854,7 @@
     let feedLoading = false;
     let feedRequestToken = 0;
     const renderedPostIds = new Set();
+    const postCache = new Map();
 
     async function apiFeed(url, opts = {}) {
         const { headers: extraHeaders, ...rest } = opts;
@@ -814,8 +874,6 @@
         const requestToken = ++feedRequestToken;
         if (reset) {
             feedPage = 1;
-            renderedPostIds.clear();
-            document.getElementById('feed-posts').innerHTML = '';
         }
 
         const params = new URLSearchParams({ page: feedPage, filter: feedFilter });
@@ -831,16 +889,21 @@
             feedLastPage = data.last_page;
             const items = data.data ?? [];
             const container = document.getElementById('feed-posts');
+            if (reset) {
+                renderedPostIds.clear();
+                container.innerHTML = '';
+            }
 
             if (reset && items.length === 0) {
                 container.innerHTML =
-                    '<div class="post-card" style="text-align:center;color:#64748b;padding:32px;">No posts yet. Announcements, events, and activities from your barangay will appear here.</div>';
+                    '<div class="post-card" style="text-align:center;color:#64748b;padding:32px;">No community feed posts yet. Posts from your barangay SK and SK Federation will appear here.</div>';
                 const btn = document.getElementById('load-more-btn');
                 if (btn) btn.style.display = 'none';
                 return;
             }
 
             items.forEach(p => {
+                postCache.set(Number(p.id), p);
                 if (renderedPostIds.has(String(p.id))) return;
                 renderedPostIds.add(String(p.id));
                 const el = document.createElement('article');
@@ -848,6 +911,7 @@
                 el.dataset.postId = p.id;
                 el.innerHTML = buildFeedPost(p);
                 container.appendChild(el);
+                bindFeedReactionControls(el);
             });
 
             const btn = document.getElementById('load-more-btn');
@@ -930,30 +994,164 @@
 
     window.feedReplyTarget = null;
 
+    function reactionPickerHtml(activeType) {
+        return '<div class="reaction-picker"><div class="reaction-picker-inner">'
+            + Object.keys(REACTION_EMOJI).map(function (type) {
+                return '<button type="button" class="reaction-option' + (activeType === type ? ' is-active' : '') + '" data-type="' + type + '" title="' + type + '">' + REACTION_EMOJI[type] + '</button>';
+            }).join('')
+            + '</div></div>';
+    }
+
+    function reactionLabel(type) {
+        return type ? (REACTION_LABEL[type] || 'Like') : 'Like';
+    }
+
+    function isTouchDevice() {
+        return window.matchMedia('(hover: none), (pointer: coarse)').matches;
+    }
+
+    function bindFeedReactionControls(root) {
+        if (!root) return;
+        root.querySelectorAll('.reaction-wrap').forEach(function (wrap) {
+            if (wrap.dataset.bound === '1') return;
+            wrap.dataset.bound = '1';
+            const btn = wrap.querySelector('.reaction-btn, .comment-like-btn');
+            const picker = wrap.querySelector('.reaction-picker');
+            const postId = Number(wrap.dataset.postId);
+            const commentId = Number(wrap.dataset.commentId || 0);
+            const isComment = wrap.dataset.target === 'comment';
+            let hideTimer = null;
+            let showTimer = null;
+            function apply(type) {
+                if (isComment) feedSetCommentReaction(postId, commentId, type);
+                else feedSetReaction(postId, type);
+            }
+            wrap.addEventListener('mouseenter', function () {
+                if (isTouchDevice()) return;
+                clearTimeout(hideTimer);
+                showTimer = setTimeout(function () { wrap.classList.add('is-open'); }, 280);
+            });
+            wrap.addEventListener('mouseleave', function () {
+                if (isTouchDevice()) return;
+                clearTimeout(showTimer);
+                hideTimer = setTimeout(function () { wrap.classList.remove('is-open'); }, 320);
+            });
+            btn?.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                wrap.classList.remove('is-open');
+                apply(btn.dataset.type || 'like');
+            });
+            picker?.querySelectorAll('.reaction-option').forEach(function (opt) {
+                opt.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    wrap.classList.remove('is-open');
+                    apply(opt.dataset.type);
+                });
+            });
+        });
+    }
+
+    function commentLikeInner(type) {
+        const label = type ? (REACTION_LABEL[type] || 'Like') : 'Like';
+        if (type && type !== 'like') {
+            return `<span>${REACTION_EMOJI[type] || ''}</span><span>${feedEscape(label)}</span>`;
+        }
+        return `<span>${feedEscape(label)}</span>`;
+    }
+
+    function pickPreviewComment(comments) {
+        const list = comments || [];
+        if (!list.length) return null;
+        return [...list].sort(function (a, b) {
+            const likes = Number(b.likes || 0) - Number(a.likes || 0);
+            return likes !== 0 ? likes : Number(b.id) - Number(a.id);
+        })[0];
+    }
+
+    function buildCommentPreviewHtml(post) {
+        const total = countFeedComments(post.comments || []);
+        const comment = pickPreviewComment(post.comments || []);
+        if (!comment || total <= 0) {
+            return `<div class="comment-preview" id="comment-preview-${post.id}" hidden role="button" tabindex="0" onclick="openComments(${post.id})"></div>`;
+        }
+        const replyCount = Number(comment.reply_count || (comment.replies || []).length || 0);
+        const more = total > 1 ? `<span class="comment-preview-more">View all ${total} comments</span>` : '';
+        const replies = replyCount > 0
+            ? `<span class="fb-view-replies">View ${replyCount} ${replyCount === 1 ? 'reply' : 'replies'}</span>`
+            : '';
+        return `<div class="comment-preview" id="comment-preview-${post.id}" role="button" tabindex="0" onclick="openComments(${post.id})">
+            ${more}
+            <div class="fb-comment-row">
+                ${feedImgTag(comment.author_avatar_url, comment.author_name, 'comment-avatar')}
+                <div class="fb-comment-main">
+                    <div class="fb-comment-head">
+                        <span class="comment-author">${feedEscape(comment.author_name)}</span>
+                        <span class="fb-comment-dot">·</span>
+                        <span class="comment-time">${feedEscape(comment.time || '')}</span>
+                    </div>
+                    <p class="comment-text">${feedEscape(comment.body)}</p>
+                    <div class="comment-meta">
+                        <span class="comment-like-btn">${commentLikeInner(comment.reaction_type)}</span>
+                        <span class="comment-action-btn">Reply</span>
+                        ${replies}
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }
+
     function feedStartReply(postId, commentId, authorName) {
         window.feedReplyTarget = { postId: postId, commentId: commentId };
-        feedToggleComments(postId);
-        const input = document.querySelector('#feed-comments-' + postId + ' .comment-input');
-        if (input) {
-            input.placeholder = 'Reply to ' + authorName + '...';
-            input.focus();
-        }
+        openComments(postId);
+    }
+
+    function toggleCommentOptions(id, event) {
+        event?.preventDefault();
+        event?.stopPropagation();
+        const menu = document.getElementById('comment-options-' + id);
+        const isOpen = menu?.classList.contains('open');
+        document.querySelectorAll('.comment-options-menu.open, .cp-options-menu.open').forEach(function (m) {
+            m.classList.remove('open');
+        });
+        if (!isOpen) menu?.classList.add('open');
     }
 
     function renderCommentItem(comment, postId, depth) {
         depth = depth || 0;
+        const type = comment.reaction_type || (comment.liked ? 'like' : '');
         const replies = (comment.replies || []).map(function (reply) {
             return renderCommentItem(reply, postId, depth + 1);
         }).join('');
+        const optionsHtml = comment.owned
+            ? `<div class="comment-options-wrap">
+                <button type="button" class="comment-options-btn" onclick="toggleCommentOptions(${comment.id}, event)" aria-label="Comment options">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zm6 0a2 2 0 11-4 0 2 2 0 014 0zm6 0a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                </button>
+                <div class="comment-options-menu" id="comment-options-${comment.id}">
+                  <button type="button" onclick="editComment(${postId}, ${comment.id})">Edit</button>
+                  <button type="button" class="danger" onclick="deleteComment(${postId}, ${comment.id})">Delete</button>
+                </div>
+               </div>`
+            : '';
 
         return `
             <div class="comment-item${depth ? ' comment-item--reply' : ''}" data-comment-id="${comment.id}">
-               ${feedImgTag(comment.author_avatar_url, comment.author_name, '')}
+               ${feedImgTag(comment.author_avatar_url, comment.author_name, 'comment-avatar')}
                <div class="comment-content">
-                 <p class="comment-author">${feedEscape(comment.author_name)}</p>
-                 <p class="comment-text">${feedEscape(comment.body)}</p>
-                 <div class="comment-meta-row">
+                 <div class="fb-comment-head">
+                   <p class="comment-author">${feedEscape(comment.author_name)}</p>
+                   <span class="fb-comment-dot">·</span>
                    <span class="comment-time">${feedEscape(comment.time)}</span>
+                   ${optionsHtml}
+                 </div>
+                 <p class="comment-text" id="feed-comment-text-${comment.id}">${feedEscape(comment.body)}</p>
+                 <div class="comment-meta-row">
+                   <div class="reaction-wrap comment-like-wrap" data-target="comment" data-post-id="${postId}" data-comment-id="${comment.id}">
+                     <button type="button" class="comment-like-btn${comment.liked ? ' liked' : ''}" data-type="${feedEscape(type)}">${commentLikeInner(type)}</button>
+                     ${reactionPickerHtml(type)}
+                   </div>
                    <button type="button" class="comment-reply-btn" onclick="feedStartReply(${postId}, ${comment.id}, '${feedEscape(comment.author_name).replace(/'/g, "\\'")}')">Reply</button>
                  </div>
                </div>
@@ -962,7 +1160,7 @@
     }
 
     function buildFeedPost(p) {
-        const avatar = feedAvatarUrl(p.author_avatar_url, p.author_name);
+        const avatar = feedAvatarUrl(p.author_avatar_url || p.barangay_logo_url, p.author_name);
         
         // Build image gallery HTML
         let media = '';
@@ -1011,7 +1209,7 @@
 
         return `
           <div class="post-header">
-            ${feedImgTag(p.author_avatar_url, p.author_name, 'post-avatar')}
+            ${feedImgTag(p.author_avatar_url || p.barangay_logo_url, p.author_name, 'post-avatar')}
             <div class="post-info">
               <h3 class="post-author">${feedEscape(p.author_name ?? ('SK Brgy. ' + (p.barangay_name ?? '')))}</h3>
               <p class="post-meta">
@@ -1027,15 +1225,19 @@
           </div>
           ${reactionsSummary}
           <div class="post-actions">
-            <button class="action-btn${p.liked ? ' liked' : ''}" onclick="feedToggleLike(${p.id}, this)">
-              <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/></svg>
-              <span id="feed-like-${p.id}">Like${p.likes ? ` (${p.likes})` : ''}</span>
-            </button>
-            <button class="action-btn comment-btn" onclick="feedToggleComments(${p.id})">
+            <div class="reaction-wrap" data-target="post" data-post-id="${p.id}">
+              <button type="button" class="action-btn reaction-btn${p.liked ? ' liked' : ''}" data-type="${feedEscape(p.reaction_type || (p.liked ? 'like' : ''))}" id="feed-like-btn-${p.id}">
+                <span class="reaction-icon">${(p.reaction_type && p.reaction_type !== 'like') ? REACTION_EMOJI[p.reaction_type] : LIKE_THUMB_SVG}</span>
+                <span id="feed-like-${p.id}">${feedEscape(reactionLabel(p.reaction_type))}${p.likes ? ` (${p.likes})` : ''}</span>
+              </button>
+              ${reactionPickerHtml(p.reaction_type || (p.liked ? 'like' : ''))}
+            </div>
+            <button class="action-btn comment-btn" onclick="openComments(${p.id})">
               <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>
-              <span id="feed-comment-count-${p.id}">Comment (${commentTotal})</span>
+              <span id="feed-comment-count-${p.id}" data-count="${commentTotal}">Comment (${commentTotal})</span>
             </button>
           </div>
+          ${buildCommentPreviewHtml(p)}
           <div class="comments-section" id="feed-comments-${p.id}" style="display:none;">
             <div class="comments-list" id="feed-comments-list-${p.id}">${comments}</div>
             <div class="comment-input-wrapper">
@@ -1067,19 +1269,182 @@
         if (actions) actions.insertAdjacentHTML('beforebegin', html);
     }
 
-    async function feedToggleLike(id, btn) {
-        const data = await apiFeed(`/api/feed/${id}/react`, { method: 'POST' }).catch(() => null);
+    async function feedSetReaction(id, type) {
+        const data = await apiFeed(`/api/feed/${id}/react`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reaction_type: type || 'like' }),
+        }).catch(() => null);
         if (!data) return;
-        btn.classList.toggle('liked', data.liked);
-        const el = document.getElementById(`feed-like-${id}`);
-        if (el) el.textContent = `Like${data.count ? ` (${data.count})` : ''}`;
+        const nextType = data.liked ? (data.reaction_type || 'like') : '';
+        const btn = document.getElementById(`feed-like-btn-${id}`);
+        if (btn) {
+            btn.classList.toggle('liked', Boolean(data.liked));
+            btn.dataset.type = nextType;
+            const icon = btn.querySelector('.reaction-icon');
+            if (icon) icon.innerHTML = (nextType && nextType !== 'like') ? REACTION_EMOJI[nextType] : LIKE_THUMB_SVG;
+            const el = document.getElementById(`feed-like-${id}`);
+            if (el) el.textContent = `${reactionLabel(nextType)}${data.count ? ` (${data.count})` : ''}`;
+            btn.closest('.reaction-wrap')?.querySelectorAll('.reaction-option').forEach(function (opt) {
+                opt.classList.toggle('is-active', Boolean(nextType) && opt.dataset.type === nextType);
+            });
+        }
         if (data.reactions_summary) updateReactionsSummary(id, data.reactions_summary);
     }
 
-    function feedToggleComments(id) {
-        const s = document.getElementById(`feed-comments-${id}`);
-        if (s) s.style.display = s.style.display === 'none' ? 'block' : 'none';
+    async function feedSetCommentReaction(postId, commentId, type) {
+        const data = await apiFeed(`/api/feed/${postId}/comments/${commentId}/reactions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reaction_type: type || 'like' }),
+        }).catch(() => null);
+        if (!data) return;
+        const wrap = document.querySelector(`.reaction-wrap[data-comment-id="${commentId}"]`);
+        const btn = wrap?.querySelector('.comment-like-btn');
+        const nextType = data.liked ? (data.reaction_type || 'like') : '';
+        if (btn) {
+            btn.classList.toggle('liked', Boolean(data.liked));
+            btn.dataset.type = nextType;
+            btn.textContent = reactionLabel(nextType);
+        }
+        wrap?.querySelectorAll('.reaction-option').forEach(function (opt) {
+            opt.classList.toggle('is-active', Boolean(nextType) && opt.dataset.type === nextType);
+        });
     }
+
+    let pendingCommentAction = null;
+
+    function commentBodyText(commentId) {
+        return document.getElementById('feed-comment-text-' + commentId)?.textContent
+            || document.getElementById('cp-text-' + commentId)?.textContent
+            || '';
+    }
+
+    function editComment(postId, commentId) {
+        pendingCommentAction = { postId: Number(postId), commentId: Number(commentId) };
+        document.querySelectorAll('.comment-options-menu.open, .cp-options-menu.open').forEach(function (m) {
+            m.classList.remove('open');
+        });
+        const modal = document.getElementById('editCommentModal');
+        const field = document.getElementById('editCommentBody');
+        if (!modal || !field) return;
+        field.value = commentBodyText(commentId);
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        setTimeout(function () { field.focus(); }, 50);
+    }
+
+    function closeEditCommentModal() {
+        document.getElementById('editCommentModal')?.classList.remove('active');
+        pendingCommentAction = null;
+        if (!document.getElementById('commentPreviewShell')?.classList.contains('is-open')) {
+            document.body.style.overflow = '';
+        }
+    }
+
+    async function confirmEditComment() {
+        if (!pendingCommentAction) return;
+        const postId = pendingCommentAction.postId;
+        const commentId = pendingCommentAction.commentId;
+        const body = document.getElementById('editCommentBody')?.value.trim();
+        if (!body) return;
+        const btn = document.getElementById('confirmEditCommentBtn');
+        if (btn) btn.disabled = true;
+        try {
+            const updated = await apiFeed(`/api/feed/${postId}/comments/${commentId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ body }),
+            });
+            const feedEl = document.getElementById('feed-comment-text-' + commentId);
+            if (feedEl) feedEl.textContent = updated.body;
+            const previewEl = document.getElementById('cp-text-' + commentId);
+            if (previewEl) previewEl.textContent = updated.body;
+            document.dispatchEvent(new CustomEvent('community-feed:comment-updated', { detail: updated }));
+            closeEditCommentModal();
+        } catch (_) {
+            alert('Unable to edit comment.');
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    function deleteComment(postId, commentId) {
+        pendingCommentAction = { postId: Number(postId), commentId: Number(commentId) };
+        document.querySelectorAll('.comment-options-menu.open, .cp-options-menu.open').forEach(function (m) {
+            m.classList.remove('open');
+        });
+        const modal = document.getElementById('deleteCommentModal');
+        if (!modal) return;
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDeleteCommentModal() {
+        document.getElementById('deleteCommentModal')?.classList.remove('active');
+        pendingCommentAction = null;
+        if (!document.getElementById('commentPreviewShell')?.classList.contains('is-open')) {
+            document.body.style.overflow = '';
+        }
+    }
+
+    async function confirmDeleteComment() {
+        if (!pendingCommentAction) return;
+        const postId = pendingCommentAction.postId;
+        const commentId = pendingCommentAction.commentId;
+        const btn = document.getElementById('confirmDeleteCommentBtn');
+        if (btn) btn.disabled = true;
+        try {
+            await apiFeed(`/api/feed/${postId}/comments/${commentId}`, { method: 'DELETE' });
+            document.querySelectorAll('[data-comment-id="' + commentId + '"]').forEach(function (el) { el.remove(); });
+            document.dispatchEvent(new CustomEvent('community-feed:comment-deleted', { detail: { postId, commentId } }));
+            closeDeleteCommentModal();
+        } catch (_) {
+            alert('Unable to delete comment.');
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    async function openComments(id) {
+        const postId = Number(id);
+        if (typeof window.openCommentPreview === 'function') {
+            const cached = postCache.get(postId);
+            if (cached) {
+                window.openCommentPreview(cached);
+                return;
+            }
+            try {
+                const data = await apiFeed('/api/feed/' + postId);
+                postCache.set(postId, data);
+                window.openCommentPreview(data);
+                return;
+            } catch (_) { /* fall through */ }
+        }
+        window.location.assign('/dashboard/' + postId + '/comments');
+    }
+
+    function feedToggleComments(id) {
+        openComments(id);
+    }
+
+    window.feedSetReaction = feedSetReaction;
+    window.editComment = editComment;
+    window.deleteComment = deleteComment;
+    window.confirmEditComment = confirmEditComment;
+    window.confirmDeleteComment = confirmDeleteComment;
+    window.closeEditCommentModal = closeEditCommentModal;
+    window.closeDeleteCommentModal = closeDeleteCommentModal;
+    window.openComments = openComments;
+    window.toggleCommentOptions = toggleCommentOptions;
+
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.comment-options-wrap')) {
+            document.querySelectorAll('.comment-options-menu.open').forEach(function (m) {
+                m.classList.remove('open');
+            });
+        }
+    });
 
     async function feedSubmitComment(id, input) {
         const text = input.value.trim();
@@ -1254,7 +1619,23 @@
         else if (e.key === '0') lightboxZoomReset();
     });
 
-    document.addEventListener('DOMContentLoaded', () => loadFeed(true));
+    function startFeedPolling() {
+        if (feedPollTimer) clearInterval(feedPollTimer);
+        feedPollTimer = setInterval(function () {
+            if (document.hidden) return;
+            if (document.querySelector('.comment-input:focus, .cp-composer-input:focus')) return;
+            if (document.getElementById('commentPreviewShell')?.classList.contains('is-open')) return;
+            if (document.getElementById('editCommentModal')?.classList.contains('active')) return;
+            loadFeed(true);
+        }, Number(window.CommunityFeedConfig?.feedPollMs || 10000));
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadFeed(true);
+        startFeedPolling();
+    });
+    window.feedStartReply = feedStartReply;
+    window.feedToggleComments = feedToggleComments;
     </script>
 
     @if(!empty($kkProfilingUpdateRequired))
@@ -1290,6 +1671,7 @@
     </script>
 
     @include('programs::scholarship.partials.data-privacy-modal')
+    @vite(['app/Modules/Dashboard/assets/js/community-feed-comment-preview.js'])
     <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

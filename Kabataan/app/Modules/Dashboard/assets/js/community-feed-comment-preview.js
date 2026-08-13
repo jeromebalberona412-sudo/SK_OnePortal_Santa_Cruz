@@ -299,7 +299,7 @@ function bindReactionWrap(wrap) {
 
 async function setPostReaction(type) {
     try {
-        const data = await apiFetch(`/api/community-feed/${post.id}/react`, {
+        const data = await apiFetch(`/api/feed/${post.id}/react`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ reaction_type: type }),
@@ -316,7 +316,7 @@ async function setPostReaction(type) {
 
 async function setCommentReaction(commentId, type) {
     try {
-        const data = await apiFetch(`/api/community-feed/${post.id}/comments/${commentId}/reactions`, {
+        const data = await apiFetch(`/api/feed/${post.id}/comments/${commentId}/reactions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ reaction_type: type }),
@@ -346,7 +346,7 @@ async function submitComment(body, parentId = null) {
     try {
         const payload = { body };
         if (parentId) payload.parent_id = parentId;
-        const comment = await apiFetch(`/api/community-feed/${post.id}/comment`, {
+        const comment = await apiFetch(`/api/feed/${post.id}/comment`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
@@ -395,8 +395,8 @@ async function openViewer(target, commentId = null) {
     modal.hidden = false;
     list.innerHTML = '<p class="cp-viewer-empty">Loading...</p>';
     const url = target === 'comment'
-        ? `/api/community-feed/${post.id}/comments/${commentId}/reactions`
-        : `/api/community-feed/${post.id}/likes`;
+        ? `/api/feed/${post.id}/comments/${commentId}/reactions`
+        : `/api/feed/${post.id}/likes`;
     try {
         viewerState = { data: await apiFetch(url), filter: 'all' };
         renderViewer('all');
@@ -580,11 +580,11 @@ function commentsPath(id) {
     if (template && String(template).includes('__ID__')) {
         return String(template).replace('__ID__', String(id));
     }
-    return `/community-feed/${id}/comments`;
+    return `/dashboard/${id}/comments`;
 }
 
 function feedPath() {
-    return cfg().feedUrl || '/community-feed';
+    return cfg().feedUrl || '/dashboard';
 }
 
 function pathOf(url) {
@@ -637,14 +637,14 @@ window.closeCommentPreview = closeCommentPreview;
 
 window.addEventListener('popstate', () => {
     if (syncingUrl) return;
-    const match = window.location.pathname.match(/\/community-feed\/(\d+)\/comments\/?$/);
+    const match = window.location.pathname.match(/\/dashboard\/(\d+)\/comments\/?$/);
     if (match) {
         const id = Number(match[1]);
         if (post && Number(post.id) === id) {
             openCommentPreview(post, { skipUrl: true });
             return;
         }
-        fetch(`/api/community-feed/${id}`, {
+        fetch(`/api/feed/${id}`, {
             headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
         }).then((res) => res.ok ? res.json() : null)
             .then((data) => { if (data) openCommentPreview(data, { skipUrl: true }); })

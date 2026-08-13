@@ -11,23 +11,30 @@ class CommunityFeedAvatarService
 {
     public const HEADER_COLOR = '213F99';
 
-    public function __construct(private readonly BarangayLogoUrlService $barangayLogos)
-    {
-    }
+    public function __construct(private readonly BarangayLogoUrlService $barangayLogos) {}
 
     public function federationDefault(): string
     {
         return asset('Images/SK_Fed_profile.png');
     }
 
+    public function barangayLogo(?int $barangayId): ?string
+    {
+        if (! $barangayId) {
+            return null;
+        }
+
+        return $this->barangayLogos->resolve($barangayId);
+    }
+
     public function resolveForUser(?User $user, ?string $userType = null, ?string $fallbackName = null): string
     {
         $type = $userType ?? $user?->role;
 
-        if ($type === 'kabataan' && $user) {
-            $profileUrl = trim((string) ($user->profile_image_url ?? ''));
-            if ($profileUrl !== '') {
-                return $profileUrl;
+        if ($type === 'kabataan') {
+            $photo = $this->absoluteProfilePhoto($user);
+            if ($photo) {
+                return $photo;
             }
         }
 
@@ -42,7 +49,34 @@ class CommunityFeedAvatarService
             return $this->federationDefault();
         }
 
+        $photo = $this->absoluteProfilePhoto($user);
+        if ($photo) {
+            return $photo;
+        }
+
         return $this->uiAvatar($user?->name ?? $fallbackName ?? 'Member');
+    }
+
+    private function absoluteProfilePhoto(?User $user): ?string
+    {
+        if (! $user) {
+            return null;
+        }
+
+        $raw = trim((string) ($user->profile_image_url ?? ''));
+        if ($raw === '') {
+            return null;
+        }
+
+        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) {
+            return $raw;
+        }
+
+        if (str_starts_with($raw, '/storage/') || str_starts_with($raw, 'storage/')) {
+            return url('/'.ltrim($raw, '/'));
+        }
+
+        return $raw;
     }
 
     public function resolveForPost(Announcement $post): string

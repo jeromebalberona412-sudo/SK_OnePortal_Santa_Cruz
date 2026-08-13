@@ -547,6 +547,7 @@ class CommunityFeedPostController extends Controller
             'link_url' => $post->link_url,
             'is_federation_wide' => (bool) $post->is_federation_wide,
             'barangay_name' => $post->barangay?->name,
+            'barangay_logo_url' => $this->avatarService->barangayLogo((int) $post->barangay_id),
             'author_name' => $authorName,
             'author_avatar_url' => $this->avatarService->resolveForPost($post),
             'owned' => $post->user_id === $userId && $post->is_federation_wide,

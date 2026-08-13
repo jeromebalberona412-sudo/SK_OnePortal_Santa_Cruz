@@ -67,11 +67,36 @@
 
                 {{-- Filter Tabs --}}
                 <div class="feed-filter-bar">
-                    <button type="button" class="feed-tab active" data-filter="all" onclick="setFeedFilter(this,'all')">All</button>
-                    <button type="button" class="feed-tab" data-filter="announcement" onclick="setFeedFilter(this,'announcement')">Announcements</button>
-                    <button type="button" class="feed-tab" data-filter="event" onclick="setFeedFilter(this,'event')">Events</button>
-                    <button type="button" class="feed-tab" data-filter="activity" onclick="setFeedFilter(this,'activity')">Activities</button>
-                    <button type="button" class="feed-tab" data-filter="program" onclick="setFeedFilter(this,'program')">Programs</button>
+                    <button type="button" class="feed-tab feed-tab--icon active" data-filter="all" onclick="setFeedFilter(this,'all')" aria-label="All">
+                        <span class="feed-tab-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                        </span>
+                        <span class="feed-tab-text">All</span>
+                    </button>
+                    <button type="button" class="feed-tab feed-tab--icon" data-filter="announcement" onclick="setFeedFilter(this,'announcement')" aria-label="Announcements">
+                        <span class="feed-tab-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11 13v8a2 2 0 004 0v-6"/></svg>
+                        </span>
+                        <span class="feed-tab-text">Announcements</span>
+                    </button>
+                    <button type="button" class="feed-tab feed-tab--icon" data-filter="event" onclick="setFeedFilter(this,'event')" aria-label="Events">
+                        <span class="feed-tab-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                        </span>
+                        <span class="feed-tab-text">Events</span>
+                    </button>
+                    <button type="button" class="feed-tab feed-tab--icon" data-filter="activity" onclick="setFeedFilter(this,'activity')" aria-label="Activities">
+                        <span class="feed-tab-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"/></svg>
+                        </span>
+                        <span class="feed-tab-text">Activities</span>
+                    </button>
+                    <button type="button" class="feed-tab feed-tab--icon" data-filter="program" onclick="setFeedFilter(this,'program')" aria-label="Programs">
+                        <span class="feed-tab-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                        </span>
+                        <span class="feed-tab-text">Programs</span>
+                    </button>
                 </div>
                 </div>
 

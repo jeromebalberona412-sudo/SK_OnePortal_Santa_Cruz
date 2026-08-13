@@ -13,7 +13,8 @@ use App\Services\KabataanProfilingHistoryService;
 use App\Services\KkProfilingScheduleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
@@ -27,19 +28,13 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
-        $startTime = microtime(true);
-        $logData = [];
-
-        // Enable query logging for this request
-        \DB::enableQueryLog();
-
         if (! Auth::check()) {
             return redirect()->route('sign-in');
         }
 
         $user = Auth::user();
 
-        $registration = \Illuminate\Support\Facades\Cache::remember(
+        $registration = Cache::remember(
             "kabataan_reg_user_{$user->id}",
             60,
             fn () => KabataanRegistration::with('barangay')->where('user_id', $user->id)->latest()->first()
@@ -50,24 +45,15 @@ class DashboardController extends Controller
 
         $barangayName = $registration?->barangay?->name ?? 'Santa Cruz';
 
-        $profilingCheckStart = microtime(true);
         $requiresKkUpdate = $registration
             && $this->kkProfilingScheduleService->hasActiveProfilingSchedule((int) $registration->barangay_id)
             && $this->kkProfilingScheduleService->requiresProfilingUpdate($registration);
-        $logData['profiling_check_ms'] = round((microtime(true) - $profilingCheckStart) * 1000, 2);
 
-        $barangayProfileStart = microtime(true);
         $tenantId = (int) ($user->tenant_id ?? $registration?->barangay?->tenant_id ?? 0);
-        $barangayProfiles = $tenantId > 0
-            ? $this->barangaySkProfileService->listForTenant($tenantId)
-            : [];
-        $logData['barangay_profiles_ms'] = round((microtime(true) - $barangayProfileStart) * 1000, 2);
+        $barangayProfiles = $this->barangaySkProfileService->listForTenant($tenantId);
 
-        $programsStart = microtime(true);
         $programsPayload = $this->programService->getDashboardPayload($user);
-        $logData['programs_payload_ms'] = round((microtime(true) - $programsStart) * 1000, 2);
 
-        $viewDataStart = microtime(true);
         $viewData = [
             'user' => $user,
             'userAvatarUrl' => app(ProfileImageService::class)->resolveDisplayUrl($user),
@@ -100,28 +86,32 @@ class DashboardController extends Controller
                 ? ($formData['purok_zone'][0] ?? '')
                 : ($requiresKkUpdate ? ($formData['purok_zone'] ?? '') : ''),
             'kkSelectedFacebookProfileUrl' => '',
+            'commentPreviewPost' => null,
         ];
-        $logData['view_data_prep_ms'] = round((microtime(true) - $viewDataStart) * 1000, 2);
-
-        $logData['total_dashboard_ms'] = round((microtime(true) - $startTime) * 1000, 2);
-
-        // Log query information
-        $queries = \DB::getQueryLog();
-        $logData['query_count'] = count($queries);
-        $logData['queries'] = array_map(function($query) {
-            return [
-                'sql' => $query['query'],
-                'time_ms' => round($query['time'] * 1000, 2),
-            ];
-        }, $queries);
-
-        \Log::info('Dashboard controller profile', $logData);
 
         return view('dashboard::dashboard', $viewData)->withHeaders([
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma' => 'no-cache',
             'Expires' => 'Sat, 01 Jan 2000 00:00:00 GMT',
         ]);
+    }
+
+    public function comments(Request $request, int $id)
+    {
+        if (! Auth::check()) {
+            return redirect()->route('sign-in');
+        }
+
+        $post = app(AnnouncementFeedController::class)->formattedVisiblePost(Auth::user(), $id);
+        $response = $this->index($request);
+        if ($response instanceof View) {
+            return $response->with('commentPreviewPost', $post);
+        }
+        if (isset($response->original) && $response->original instanceof View) {
+            $response->original->with('commentPreviewPost', $post);
+        }
+
+        return $response;
     }
 
     public function barangay(Request $request, string $slug)

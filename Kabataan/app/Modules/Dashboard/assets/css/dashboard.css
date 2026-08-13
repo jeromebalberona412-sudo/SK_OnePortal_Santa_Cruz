@@ -390,6 +390,102 @@ body.youth-dashboard {
     color: #94a3b8;
 }
 
+.feed-sticky-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--bg);
+    padding: 0 0 10px;
+    margin: 0 0 4px;
+}
+
+.comment-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 4px 0 0;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+}
+.comment-preview[hidden] { display: none; }
+.comment-preview-more {
+    font-size: 13px;
+    font-weight: 600;
+    color: #65676b;
+}
+.comment-preview:hover .comment-preview-more { text-decoration: underline; }
+.fb-comment-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+}
+.fb-comment-main { flex: 1; min-width: 0; }
+.fb-comment-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+.fb-comment-dot { color: #8a8d91; font-weight: 700; line-height: 1; }
+.comment-preview .comment-avatar,
+.comment-item .comment-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.comment-preview .comment-like-btn,
+.comment-preview .comment-action-btn,
+.comment-preview .fb-view-replies { pointer-events: none; }
+.comment-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-top: 4px;
+}
+.comment-action-btn {
+    border: none; background: none; color: #65676b; font-size: 12px; font-weight: 700;
+    cursor: pointer; padding: 0; font-family: inherit;
+}
+.fb-view-replies {
+    display: inline-flex; align-items: center; gap: 4px;
+    color: #65676b; font-size: 13px; font-weight: 600;
+}
+.comment-options-wrap { position: relative; margin-left: auto; }
+.comment-options-btn {
+    width: 28px; height: 28px; border: none; background: none; border-radius: 50%;
+    color: #65676b; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.comment-options-btn:hover { background: #f0f2f5; }
+.comment-options-btn svg { width: 16px; height: 16px; }
+.comment-options-menu {
+    display: none; position: absolute; right: 0; top: 30px; min-width: 120px;
+    background: #fff; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.14);
+    border: 1px solid #eef1f5; z-index: 20; overflow: hidden;
+}
+.comment-options-menu.open { display: block; }
+.comment-options-menu button {
+    display: block; width: 100%; text-align: left; border: none; background: none;
+    padding: 9px 12px; font-size: 13px; color: #050505; cursor: pointer; font-family: inherit;
+}
+.comment-options-menu button:hover { background: #f0f2f5; }
+.comment-options-menu button.danger { color: #b91c1c; }
+.comment-action-modal { z-index: 4300; }
+.edit-comment-textarea {
+    width: 100%; min-height: 96px; resize: vertical; padding: 12px 14px;
+    border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; font-family: inherit;
+    outline: none; line-height: 1.45;
+}
+.btn-danger {
+    padding: 10px 20px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700;
+    cursor: pointer; background: #dc2626; color: #fff; font-family: inherit;
+}
+.btn-danger:hover { background: #b91c1c; }
+
 /* ── POST CARD ── */
 .post-card {
     background: var(--surface);
@@ -854,8 +950,43 @@ body.youth-dashboard {
 
 .action-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
 .action-btn:hover { background: var(--bg); color: var(--brand-mid); }
-.action-btn.liked { color: #1a56db; }
-.action-btn.liked svg { color: #1a56db; }
+.action-btn.liked { font-weight: 700; }
+.reaction-wrap { position: relative; z-index: 3; flex: 1; display: flex; }
+.reaction-wrap .action-btn { width: 100%; }
+.reaction-picker {
+    position: absolute; left: 0; bottom: calc(100% - 2px);
+    display: flex; padding: 8px 10px 14px; background: transparent;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transform: translateY(8px); z-index: 30;
+}
+.reaction-picker-inner {
+    display: flex; gap: 4px; padding: 6px 8px;
+    background: #fff; border-radius: 999px; box-shadow: 0 10px 28px rgba(0,0,0,.18);
+}
+.reaction-wrap.is-open .reaction-picker {
+    opacity: 1; visibility: visible; pointer-events: auto; transform: none;
+}
+.reaction-option {
+    border: none; background: none; width: 38px; height: 38px; border-radius: 50%;
+    font-size: 22px; cursor: pointer;
+}
+.reaction-option:hover { transform: scale(1.18); background: #f3f4f6; }
+.reaction-option.is-active { transform: scale(1.22); background: #eef2ff; box-shadow: 0 0 0 2px #1a56db; }
+.reaction-btn.liked[data-type="like"], .reaction-btn[data-type="like"] { color: #1877f2; }
+.reaction-btn.liked[data-type="like"] svg, .reaction-btn[data-type="like"] svg { color: #1877f2; }
+.reaction-btn.liked[data-type="love"], .reaction-btn[data-type="love"] { color: #f33e58; }
+.reaction-btn.liked[data-type="haha"], .reaction-btn.liked[data-type="wow"],
+.reaction-btn[data-type="haha"], .reaction-btn[data-type="wow"] { color: #f7b125; }
+.reaction-btn.liked[data-type="sad"], .reaction-btn.liked[data-type="angry"],
+.reaction-btn[data-type="sad"], .reaction-btn[data-type="angry"] { color: #e9710f; }
+.comment-like-btn {
+    border: none; background: none; color: #65676b; font-size: 12px; font-weight: 700;
+    cursor: pointer; padding: 0; font-family: inherit;
+}
+.comment-like-btn.liked[data-type="like"], .comment-like-btn[data-type="like"] { color: #1877f2; }
+.comment-like-btn.liked[data-type="love"], .comment-like-btn[data-type="love"] { color: #f33e58; }
+.comment-like-wrap { position: relative; display: inline-flex; align-items: center; }
+.comment-like-wrap .reaction-picker { top: calc(100% - 2px); bottom: auto; padding: 12px 8px 6px; }
 
 /* ── FEED REACTIONS (Facebook-style) ── */
 .feed-reactions-summary {
@@ -1532,6 +1663,7 @@ body.youth-dashboard {
 @media (max-width: 1200px) {
     .dashboard-container { grid-template-columns: 1fr; height: auto; }
     .feed-section { height: auto; overflow-y: visible; }
+    .feed-sticky-toolbar { top: var(--nav-h); }
     .dashboard-main { height: auto; overflow: visible; }
     body.youth-dashboard { overflow: auto; height: auto; }
 

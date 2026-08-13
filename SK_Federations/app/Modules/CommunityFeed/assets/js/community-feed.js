@@ -194,6 +194,10 @@ function commentAvatarUrl(c) {
     return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(c.author_name || 'Member') + '&background=213F99&color=fff&size=80';
 }
 
+function avatarImg(src, className, alt) {
+    return '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt || '') + '" class="' + className + '" onerror="this.onerror=null;this.src=\'' + escapeHtml(FED_AVATAR) + '\'">';
+}
+
 function buildImageGrid(images, postId) {
     if (!images || !images.length) return '';
 
@@ -403,7 +407,7 @@ function buildCommentItem(c, postId, isReply) {
         : '';
 
     return '<div class="comment-item' + (isReply ? ' is-reply' : '') + '" data-comment-id="' + c.id + '">'
-        + '<img src="' + escapeHtml(commentAvatarUrl(c)) + '" alt="' + escapeHtml(c.author_name) + '" class="comment-avatar">'
+        + avatarImg(commentAvatarUrl(c), 'comment-avatar', c.author_name)
         + '<div class="comment-body">'
         + '<div class="comment-bubble">'
         + '<p class="comment-author">' + escapeHtml(c.author_name) + '</p>'
@@ -466,7 +470,7 @@ window.showFedReply = showFedReply;
 function buildCommentInput(p) {
     var userAvatar = window.currentAvatar || FED_AVATAR;
     return '<div class="comment-input-wrapper">'
-        + '<img src="' + escapeHtml(userAvatar) + '" alt="You" class="comment-avatar">'
+        + avatarImg(userAvatar, 'comment-avatar', 'You')
         + '<input type="text" class="comment-input" placeholder="Write a comment..." maxlength="500" onkeydown="submitComment(event,' + p.id + ',this)">'
         + '<button type="button" class="send-comment-btn" onclick="submitCommentBtn(' + p.id + ',this)">'
         + '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>'
@@ -631,7 +635,7 @@ function buildPost(p) {
     var likeIcon = reactionType && reactionType !== 'like' ? REACTION_EMOJI[reactionType] : LIKE_THUMB_SVG;
 
     return '<div class="post-header">'
-        + '<img src="' + escapeHtml(avatar) + '" alt="' + escapeHtml(p.author_name) + '" class="post-avatar">'
+        + avatarImg(avatar, 'post-avatar', p.author_name)
         + '<div class="post-info">'
         + '<h3 class="post-author">' + escapeHtml(p.author_name || 'SK Federation') + (p.barangay_name && !p.is_federation_wide ? ' <small style="font-weight:400;color:#888;">· ' + escapeHtml(p.barangay_name) + '</small>' : '') + '</h3>'
         + '<p class="post-meta"><span class="post-type ' + escapeHtml(p.type || 'update') + '">' + escapeHtml(p.type || 'update') + '</span><span class="post-time">' + escapeHtml(p.time || '') + '</span></p>'
@@ -842,7 +846,7 @@ function buildCommentPreviewHtml(p) {
     return '<div class="comment-preview" id="comment-preview-' + p.id + '" role="button" tabindex="0" onclick="openComments(' + p.id + ')">'
         + more
         + '<div class="fb-comment-row">'
-        + '<img src="' + escapeHtml(commentAvatarUrl(last)) + '" alt="" class="comment-avatar">'
+        + avatarImg(commentAvatarUrl(last), 'comment-avatar', '')
         + '<div class="fb-comment-main">'
         + '<div class="fb-comment-head">'
         + '<span class="comment-author">' + escapeHtml(last.author_name) + '</span>'

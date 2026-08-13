@@ -5,22 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class AnnouncementReaction extends Model
+class AnnouncementCommentReaction extends Model
 {
-    public const TYPES = ['like', 'love', 'haha', 'wow', 'sad', 'angry'];
-
-    protected $table = 'community_feed_reactions';
+    protected $table = 'community_feed_comment_reactions';
 
     protected $fillable = [
-        'community_feed_id',
+        'comment_id',
         'user_id',
         'user_type',
         'reaction_type',
     ];
 
-    public function communityFeed(): BelongsTo
+    public function comment(): BelongsTo
     {
-        return $this->belongsTo(Announcement::class, 'community_feed_id');
+        return $this->belongsTo(AnnouncementComment::class, 'comment_id');
     }
 
     public function user(): BelongsTo
