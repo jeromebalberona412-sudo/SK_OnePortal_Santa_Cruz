@@ -6,6 +6,29 @@ echo "Starting Laravel application entrypoint..."
 echo "=========================================="
 
 # ============================================
+# Display environment variables for debugging
+# ============================================
+echo "=========================================="
+echo "Environment Variables Check"
+echo "=========================================="
+echo "APP_ENV: ${APP_ENV:-not set}"
+echo "APP_URL: ${APP_URL:-not set}"
+echo "MAIL_MAILER: ${MAIL_MAILER:-not set}"
+echo "MAIL_HOST: ${MAIL_HOST:-not set}"
+echo "MAIL_PORT: ${MAIL_PORT:-not set}"
+echo "MAIL_USERNAME: ${MAIL_USERNAME:-not set}"
+echo "MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-not set}"
+echo "=========================================="
+
+# ============================================
+# Test PHP environment variable access
+# ============================================
+echo "Testing PHP environment variable access..."
+php -r "echo 'PHP APP_ENV: ' . getenv('APP_ENV') . PHP_EOL;"
+php -r "echo 'PHP MAIL_MAILER: ' . getenv('MAIL_MAILER') . PHP_EOL;"
+php -r "echo 'PHP MAIL_HOST: ' . getenv('MAIL_HOST') . PHP_EOL;"
+
+# ============================================
 # Create required system directories
 # ============================================
 echo "Creating system directories..."
