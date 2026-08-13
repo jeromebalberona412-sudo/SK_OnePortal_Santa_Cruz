@@ -7,7 +7,7 @@
 
 <aside class="sidebar">
     <nav class="sidebar-nav">
-        <a href="{{ route('profile') }}" class="sidebar-profile sidebar-profile-link" id="sidebar-profile-link">
+        <a href="{{ route('profile') }}" class="sidebar-profile sidebar-profile-link" id="sidebar-profile-link" data-no-loading>
             <img src="{{ $avatar }}" alt="Profile" class="sidebar-avatar">
             <div class="sidebar-user-info">
                 <div class="s-name">{{ $displayName ?? ($user->name ?? 'User') }}</div>
@@ -15,35 +15,35 @@
             </div>
         </a>
 
-        <a href="{{ route('dashboard') }}" class="menu-item {{ request()->routeIs('dashboard') ? 'active' : '' }}" data-tooltip="Dashboard" id="sidebar-dashboard-link">
+        <a href="{{ route('dashboard') }}" class="menu-item {{ request()->routeIs('dashboard') ? 'active' : '' }}" data-tooltip="Dashboard" id="sidebar-dashboard-link" data-no-loading>
             <i class="fas fa-home"></i><span>Dashboard</span>
         </a>
 
-        <a href="{{ route('profile') }}" class="menu-item {{ request()->routeIs('profile') ? 'active' : '' }}" data-tooltip="Profile">
+        <a href="{{ route('profile') }}" class="menu-item {{ request()->routeIs('profile') ? 'active' : '' }}" data-tooltip="Profile" data-no-loading>
             <i class="fas fa-user"></i><span>Profile</span>
         </a>
 
-        <a href="{{ route('calendar') }}" class="menu-item {{ request()->routeIs('calendar') ? 'active' : '' }}" data-tooltip="Calendar">
+        <a href="{{ route('calendar') }}" class="menu-item {{ request()->routeIs('calendar') ? 'active' : '' }}" data-tooltip="Calendar" data-no-loading>
             <i class="fas fa-calendar-alt"></i><span>Calendar</span>
         </a>
 
-        <a href="{{ route('community-feed') }}" class="menu-item {{ request()->routeIs('community-feed', 'sk-fed-profile', 'skfed.barangay-profile') ? 'active' : '' }}" data-tooltip="SK Community Feed" id="sidebar-community-feed-link">
+        <a href="{{ route('community-feed') }}" class="menu-item {{ request()->routeIs('community-feed', 'sk-fed-profile', 'skfed.barangay-profile') ? 'active' : '' }}" data-tooltip="SK Community Feed" id="sidebar-community-feed-link" data-no-loading>
             <i class="fas fa-rss"></i><span>SK Community Feed</span>
         </a>
 
-        <a href="{{ route('barangay-monitoring') }}" class="menu-item {{ request()->routeIs('barangay-monitoring*') ? 'active' : '' }}" data-tooltip="Barangay Monitoring">
+        <a href="{{ route('barangay-monitoring') }}" class="menu-item {{ request()->routeIs('barangay-monitoring*') ? 'active' : '' }}" data-tooltip="Barangay Monitoring" data-no-loading>
             <i class="fas fa-map-marker-alt"></i><span>Barangay Monitoring</span>
         </a>
 
-        <a href="{{ route('kabataan-monitoring') }}" class="menu-item {{ request()->routeIs('kabataan-monitoring*') ? 'active' : '' }}" data-tooltip="Kabataan Monitoring">
+        <a href="{{ route('kabataan-monitoring') }}" class="menu-item {{ request()->routeIs('kabataan-monitoring*') ? 'active' : '' }}" data-tooltip="Kabataan Monitoring" data-no-loading>
             <i class="fas fa-users"></i><span>Kabataan Monitoring</span>
         </a>
 
-        <a href="{{ route('barangay-logos.index') }}" class="menu-item {{ request()->routeIs('barangay-logos*') ? 'active' : '' }}" data-nav-key="barangay-logos" data-tooltip="Barangay Logos">
+        <a href="{{ route('barangay-logos.index') }}" class="menu-item {{ request()->routeIs('barangay-logos*') ? 'active' : '' }}" data-nav-key="barangay-logos" data-tooltip="Barangay Logos" data-no-loading>
             <i class="fas fa-image"></i><span>Barangay Logos</span>
         </a>
 
-        <a href="{{ route('auditlogs.index') }}" class="menu-item {{ request()->routeIs('auditlogs*') ? 'active' : '' }}" data-tooltip="Audit Logs">
+        <a href="{{ route('auditlogs.index') }}" class="menu-item {{ request()->routeIs('auditlogs*') ? 'active' : '' }}" data-tooltip="Audit Logs" data-no-loading>
             <i class="fas fa-clipboard-list"></i><span>Audit Logs</span>
         </a>
 
@@ -53,10 +53,10 @@
         </button>
 
         <div id="accountsSubmenu" class="sidebar-submenu {{ $accountsOpen ? 'is-open' : '' }}">
-            <a href="{{ route('accounts.officials.index') }}" class="menu-item submenu-item submenu-item--plain {{ $isOfficialsAccountsActive ? 'active' : '' }}">
+            <a href="{{ route('accounts.officials.index') }}" class="menu-item submenu-item submenu-item--plain {{ $isOfficialsAccountsActive ? 'active' : '' }}" data-no-loading>
                 <span>SK Officials</span>
             </a>
-            <a href="{{ route('accounts.federation.index') }}" class="menu-item submenu-item submenu-item--plain {{ $isFederationAccountsActive ? 'active' : '' }}">
+            <a href="{{ route('accounts.federation.index') }}" class="menu-item submenu-item submenu-item--plain {{ $isFederationAccountsActive ? 'active' : '' }}" data-no-loading>
                 <span>SK Federation</span>
             </a>
         </div>
@@ -67,16 +67,16 @@
         </button>
 
         <div id="archiveManagementSubmenu" class="sidebar-submenu {{ $archiveManagementOpen ? 'is-open' : '' }}">
-            <a href="{{ route('archived.deleted-sk-officials') }}" class="menu-item submenu-item submenu-item--plain {{ request()->routeIs('archived.deleted-sk-officials') ? 'active' : '' }}">
+            <a href="{{ route('archived.deleted-sk-officials') }}" class="menu-item submenu-item submenu-item--plain {{ request()->routeIs('archived.deleted-sk-officials') ? 'active' : '' }}" data-no-loading>
                 <span>Deleted SK Officials</span>
             </a>
-            <a href="{{ route('archived.sk-federation-records') }}" class="menu-item submenu-item submenu-item--plain {{ request()->routeIs('archived.sk-federation-records') ? 'active' : '' }}">
+            <a href="{{ route('archived.sk-federation-records') }}" class="menu-item submenu-item submenu-item--plain {{ request()->routeIs('archived.sk-federation-records') ? 'active' : '' }}" data-no-loading>
                 <span>SK Federation Records</span>
             </a>
-            <a href="{{ route('archived.sk-officials-records') }}" class="menu-item submenu-item submenu-item--plain {{ request()->routeIs('archived.sk-officials-records') ? 'active' : '' }}">
+            <a href="{{ route('archived.sk-officials-records') }}" class="menu-item submenu-item submenu-item--plain {{ request()->routeIs('archived.sk-officials-records') ? 'active' : '' }}" data-no-loading>
                 <span>SK Officials Records</span>
             </a>
-            <a href="{{ route('archived.deleted-posts') }}" class="menu-item submenu-item submenu-item--plain {{ request()->routeIs('archived.deleted-posts*') ? 'active' : '' }}">
+            <a href="{{ route('archived.deleted-posts') }}" class="menu-item submenu-item submenu-item--plain {{ request()->routeIs('archived.deleted-posts*') ? 'active' : '' }}" data-no-loading>
                 <span>Deleted Posts</span>
             </a>
         </div>

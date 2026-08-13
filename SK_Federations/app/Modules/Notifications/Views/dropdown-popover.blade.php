@@ -41,7 +41,7 @@
     </div>
 
     <div class="notif-popover-footer">
-        <a href="{{ route('notifications.index') }}" class="notif-see-all-btn">
+        <a href="{{ route('notifications.index') }}" class="notif-see-all-btn" data-no-loading>
             See All Notifications
         </a>
     </div>

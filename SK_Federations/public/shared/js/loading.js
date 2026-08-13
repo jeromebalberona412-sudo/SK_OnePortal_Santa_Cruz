@@ -302,6 +302,35 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    document.addEventListener('click', (e) => {
+        const anchor = e.target.closest('a[href]');
+        if (!anchor) return;
+
+        const href = anchor.getAttribute('href');
+        if (!href || href.startsWith('#') || href.startsWith('javascript') || href.startsWith('mailto')) return;
+        if (anchor.dataset.noLoading !== undefined) return;
+
+        const currentPath = window.location.pathname;
+        if (
+            currentPath === '/login' || currentPath.endsWith('/login') ||
+            currentPath === '/register' || currentPath.endsWith('/register') ||
+            currentPath.includes('forgot-password') ||
+            currentPath.includes('password/reset') ||
+            currentPath.includes('reset-password')
+        ) {
+            return;
+        }
+
+        if (href.startsWith('http') || href.startsWith('//')) {
+            try {
+                const url = new URL(href, window.location.href);
+                if (url.origin !== window.location.origin) return;
+            } catch (_) { return; }
+        }
+
+        showLoading(MESSAGES.redirect);
+    });
 });
 
 if (document.readyState === 'loading') {
