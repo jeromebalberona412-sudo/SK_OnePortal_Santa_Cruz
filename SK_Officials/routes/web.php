@@ -37,10 +37,13 @@ Route::get('/health', function () {
 })->name('health');
 
 use App\Http\Controllers\ArchiveTermController;
-use App\Modules\Announcement\Controllers\AnnouncementController;
-use App\Modules\Announcement\Controllers\AnnouncementPageController;
-use App\Modules\Announcement\Controllers\ArchiveAnnouncementController;
-use App\Modules\Announcement\Controllers\BarangayProfileController;
+use App\Modules\Community_feed\Controllers\ArchiveCommunityFeedController;
+use App\Modules\Community_feed\Controllers\BarangayProfileController;
+use App\Modules\Community_feed\Controllers\CommunityFeedCommentController;
+use App\Modules\Community_feed\Controllers\CommunityFeedController;
+use App\Modules\Community_feed\Controllers\CommunityFeedImageController;
+use App\Modules\Community_feed\Controllers\CommunityFeedPageController;
+use App\Modules\Community_feed\Controllers\CommunityFeedReactionController;
 use App\Modules\Archived_Youth_Records\Controllers\ArchivedYouthRecordsController;
 use App\Modules\Authentication\Controllers\AuthController;
 use App\Modules\Barangay_ABYIP\Controllers\AbyipController;
@@ -149,38 +152,48 @@ Route::middleware([
         Route::delete('/notes/{id}', [CalendarController::class, 'destroy'])->name('api.calendar.notes.destroy');
     });
 
-    Route::get('/announcements', [AnnouncementPageController::class, 'index'])
-        ->name('announcements');
+    Route::get('/community-feed', [CommunityFeedPageController::class, 'index'])
+        ->name('community-feed.index');
 
-    Route::get('/announcements/archive', [ArchiveAnnouncementController::class, 'index'])
-        ->name('announcements.archive');
+    Route::get('/community-feed/archive', [ArchiveCommunityFeedController::class, 'index'])
+        ->name('community-feed.archive');
 
-    Route::get('/announcements/archive/data', [ArchiveAnnouncementController::class, 'data'])
-        ->name('announcements.archive.data');
+    Route::get('/community-feed/archive/data', [ArchiveCommunityFeedController::class, 'data'])
+        ->name('community-feed.archive.data');
 
-    Route::get('/announcements/archive/{id}', [ArchiveAnnouncementController::class, 'show'])
-        ->name('announcements.archive.show');
+    Route::get('/community-feed/archive/{id}', [ArchiveCommunityFeedController::class, 'show'])
+        ->name('community-feed.archive.show');
 
-    Route::post('/announcements/archive/{id}/restore', [ArchiveAnnouncementController::class, 'restore'])
-        ->name('announcements.archive.restore');
+    Route::post('/community-feed/archive/{id}/restore', [ArchiveCommunityFeedController::class, 'restore'])
+        ->name('community-feed.archive.restore');
 
-    Route::delete('/announcements/archive/{id}', [ArchiveAnnouncementController::class, 'destroy'])
-        ->name('announcements.archive.destroy');
+    Route::delete('/community-feed/archive/{id}', [ArchiveCommunityFeedController::class, 'destroy'])
+        ->name('community-feed.archive.destroy');
 
-    // Announcement API
-    Route::prefix('api/announcements')->group(function () {
-        Route::get('/', [AnnouncementController::class, 'feed'])->name('api.announcements.feed');
-        Route::get('/{id}', [AnnouncementController::class, 'show'])->name('api.announcements.show');
-        Route::post('/', [AnnouncementController::class, 'store'])->name('api.announcements.store');
-        Route::post('/upload-image', [AnnouncementController::class, 'uploadImage'])->name('api.announcements.upload-image');
-        Route::put('/{id}', [AnnouncementController::class, 'update'])->name('api.announcements.update');
-        Route::delete('/{id}', [AnnouncementController::class, 'destroy'])->name('api.announcements.destroy');
-        Route::post('/{id}/react', [AnnouncementController::class, 'react'])->name('api.announcements.react');
-        Route::post('/{id}/comment', [AnnouncementController::class, 'comment'])->name('api.announcements.comment');
+    Route::prefix('api/community-feed')->group(function () {
+        Route::get('/', [CommunityFeedController::class, 'feed'])->name('community-feed.feed');
+        Route::get('/{id}', [CommunityFeedController::class, 'show'])->name('community-feed.show');
+        Route::post('/', [CommunityFeedController::class, 'store'])->name('community-feed.store');
+        Route::post('/upload-image', [CommunityFeedController::class, 'uploadImage'])->name('community-feed.images.upload');
+        Route::put('/{id}', [CommunityFeedController::class, 'update'])->name('community-feed.update');
+        Route::delete('/{id}', [CommunityFeedController::class, 'destroy'])->name('community-feed.destroy');
+        Route::post('/{id}/comments', [CommunityFeedCommentController::class, 'store'])->name('community-feed.comments.store');
+        Route::put('/{id}/comments/{comment}', [CommunityFeedCommentController::class, 'update'])->name('community-feed.comments.update');
+        Route::delete('/{id}/comments/{comment}', [CommunityFeedCommentController::class, 'destroy'])->name('community-feed.comments.destroy');
+        Route::get('/{id}/reactions', [CommunityFeedReactionController::class, 'index'])->name('community-feed.reactions.index');
+        Route::post('/{id}/reactions', [CommunityFeedReactionController::class, 'store'])->name('community-feed.reactions.store');
+        Route::delete('/{id}/reactions', [CommunityFeedReactionController::class, 'destroy'])->name('community-feed.reactions.destroy');
+        Route::get('/{id}/comments/{comment}/reactions', [CommunityFeedReactionController::class, 'commentIndex'])->name('community-feed.comment-reactions.index');
+        Route::post('/{id}/comments/{comment}/reactions', [CommunityFeedReactionController::class, 'commentStore'])->name('community-feed.comment-reactions.store');
+        Route::post('/{id}/images', [CommunityFeedImageController::class, 'store'])->name('community-feed.images.store');
+        Route::delete('/{id}/images/{image}', [CommunityFeedImageController::class, 'destroy'])->name('community-feed.images.destroy');
     });
 
-    Route::get('/announcements/barangay/{slug}', [BarangayProfileController::class, 'show'])
-        ->name('sk-officials.barangay-profile');
+    Route::get('/community-feed/barangay/{slug}', [BarangayProfileController::class, 'show'])
+        ->name('community-feed.barangay');
+
+    Route::redirect('/announcements', '/community-feed');
+    Route::redirect('/announcements/archive', '/community-feed/archive');
 
     Route::get('/committees', function () {
         $catalog = app(AbyipProgramCatalogService::class);

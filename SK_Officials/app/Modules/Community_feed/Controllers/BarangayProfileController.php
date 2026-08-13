@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Modules\Announcement\Controllers;
+namespace App\Modules\Community_feed\Controllers;
 
-use App\Modules\Announcement\Services\BarangayProfileService;
+use App\Modules\Community_feed\Services\BarangayProfileService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\View\View;
@@ -22,6 +22,6 @@ class BarangayProfileController extends Controller
 
         $profile = $this->barangayProfileService->buildProfile($barangay);
 
-        return view('Announcement::barangay-profile', $profile);
+        return view('Community_feed::barangay-profile', $profile);
     }
 }

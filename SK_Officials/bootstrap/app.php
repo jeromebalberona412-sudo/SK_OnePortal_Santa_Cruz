@@ -11,7 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/health',
     )
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
-        $schedule->command('announcements:purge-archived')->daily();
+        $schedule->command('community-feed:purge-archived')->daily();
         $schedule->command('sports-programs:purge-archived')->daily();
         $schedule->command('archive:purge-expired')->daily();
         $schedule->command('kabataan:archive-aged-out')->daily();

@@ -7,8 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Announcement extends Model
+class CommunityFeed extends Model
 {
+    protected $table = 'community_feeds';
+
     protected $fillable = [
         'user_id',
         'barangay_id',
@@ -39,19 +41,19 @@ class Announcement extends Model
         return $this->belongsTo(Barangay::class);
     }
 
-    public function reactions(): HasMany
-    {
-        return $this->hasMany(AnnouncementReaction::class);
-    }
-
     public function comments(): HasMany
     {
-        return $this->hasMany(AnnouncementComment::class)->orderBy('created_at');
+        return $this->hasMany(CommunityFeedComment::class, 'community_feed_id')->orderBy('created_at');
+    }
+
+    public function reactions(): HasMany
+    {
+        return $this->hasMany(CommunityFeedReaction::class, 'community_feed_id');
     }
 
     public function images(): HasMany
     {
-        return $this->hasMany(AnnouncementImage::class, 'announcement_id')->orderBy('sort_order');
+        return $this->hasMany(CommunityFeedImage::class, 'community_feed_id')->orderBy('sort_order');
     }
 
     public function scopeActive(Builder $query): Builder

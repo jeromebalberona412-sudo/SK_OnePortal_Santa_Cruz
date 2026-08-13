@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Modules\Announcement\Controllers;
+namespace App\Modules\Community_feed\Controllers;
 
-use App\Models\Announcement;
+use App\Models\CommunityFeed;
 use App\Models\User;
-use App\Modules\Announcement\Services\AnnouncementArchiveService;
+use App\Modules\Community_feed\Services\CommunityFeedArchiveService;
 use App\Services\CloudinaryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,17 +12,17 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
-class ArchiveAnnouncementController extends Controller
+class ArchiveCommunityFeedController extends Controller
 {
     public function __construct(
-        private readonly AnnouncementArchiveService $archiveService,
+        private readonly CommunityFeedArchiveService $archiveService,
         private readonly CloudinaryService $cloudinary,
     ) {
     }
 
     public function index(): View
     {
-        return view('Announcement::archive');
+        return view('Community_feed::archive');
     }
 
     public function data(Request $request): JsonResponse
@@ -30,7 +30,7 @@ class ArchiveAnnouncementController extends Controller
         $user = Auth::user();
         $this->ensureAuthorized($user);
 
-        $query = Announcement::query()
+        $query = CommunityFeed::query()
             ->archived()
             ->with(['user', 'barangay', 'images'])
             ->orderByDesc('archived_at');
@@ -46,16 +46,16 @@ class ArchiveAnnouncementController extends Controller
 
         $posts = $query->paginate(12);
 
-        $items = collect($posts->items())->map(fn (Announcement $post) => $this->formatArchivedPost($post));
+        $items = collect($posts->items())->map(fn (CommunityFeed $post) => $this->formatArchivedPost($post));
 
-        $allArchived = Announcement::query()->archived();
+        $allArchived = CommunityFeed::query()->archived();
         $this->scopeBarangay($allArchived, $user);
 
         $stats = [
             'total' => (clone $allArchived)->count(),
             'expiring_soon' => (clone $allArchived)
                 ->whereNotNull('archived_at')
-                ->where('archived_at', '<=', now()->subDays(AnnouncementArchiveService::RETENTION_DAYS - 7))
+                ->where('archived_at', '<=', now()->subDays(CommunityFeedArchiveService::RETENTION_DAYS - 7))
                 ->count(),
         ];
 
@@ -137,9 +137,9 @@ class ArchiveAnnouncementController extends Controller
         }
     }
 
-    private function findArchivedPost(int $id, User $user): Announcement
+    private function findArchivedPost(int $id, User $user): CommunityFeed
     {
-        $query = Announcement::query()->archived()->where('id', $id);
+        $query = CommunityFeed::query()->archived()->where('id', $id);
         $this->scopeBarangay($query, $user);
 
         return $query->firstOrFail();
@@ -148,7 +148,7 @@ class ArchiveAnnouncementController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formatArchivedPost(Announcement $post): array
+    private function formatArchivedPost(CommunityFeed $post): array
     {
         $daysRemaining = $this->archiveService->daysRemaining($post->archived_at);
         $tier = $this->archiveService->daysRemainingTier($daysRemaining);

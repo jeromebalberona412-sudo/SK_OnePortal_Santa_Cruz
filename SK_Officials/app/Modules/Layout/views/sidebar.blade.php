@@ -54,7 +54,7 @@
 
                 <!-- Community Feed -->
                 <li class="nav-item">
-                    <a href="{{ route('announcements') }}" class="nav-link {{ request()->routeIs('announcements') ? 'active' : '' }}" data-no-loading>
+                    <a href="{{ route('community-feed.index') }}" class="nav-link {{ request()->routeIs('community-feed.index') ? 'active' : '' }}" data-no-loading>
                         <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <!-- Group of people: 3 persons together -->
                             <circle cx="9" cy="6" r="3"></circle>
@@ -169,7 +169,7 @@
                 </li>
 
                 <!-- ── Archived (Dropdown) ── -->
-                <li class="nav-item nav-item-dropdown {{ request()->routeIs('archived-youth-records', 'deleted-abyip', 'rejected-kkprofiling', 'rejected-scholars', 'rejected-scholarship', 'rejected-sports', 'announcements.archive', 'sports-programs.archived') ? 'open' : '' }}" id="archivedDropdown">
+                <li class="nav-item nav-item-dropdown {{ request()->routeIs('archived-youth-records', 'deleted-abyip', 'rejected-kkprofiling', 'rejected-scholars', 'rejected-scholarship', 'rejected-sports', 'community-feed.archive', 'sports-programs.archived') ? 'open' : '' }}" id="archivedDropdown">
                     <a href="#" class="nav-link nav-link-dropdown" id="archivedToggleLink">
                         <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="21 8 21 21 3 21 3 8"></polyline>
@@ -226,7 +226,7 @@
 
                         <!-- Deleted Posts -->
                         <li class="nav-subitem">
-                            <a href="{{ route('announcements.archive') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('announcements.archive') ? 'active' : '' }}" data-no-loading>
+                            <a href="{{ route('community-feed.archive') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('community-feed.archive') ? 'active' : '' }}" data-no-loading>
                                 <span>Deleted Posts</span>
                             </a>
                         </li>

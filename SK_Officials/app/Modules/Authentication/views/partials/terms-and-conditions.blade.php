@@ -45,7 +45,7 @@
         <li>ABYIP Report Management</li>
         <li>Program Management</li>
         <li>KK Profiling Scheduling</li>
-        <li>SK Community Announcements</li>
+        <li>SK Community Feed</li>
         <li>Report Monitoring</li>
         <li>Dashboard Analytics</li>
         <li>Archive Records</li>

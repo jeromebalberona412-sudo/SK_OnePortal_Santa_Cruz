@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Modules\Announcement\Controllers;
+namespace App\Modules\Community_feed\Controllers;
 
 use App\Models\Barangay;
-use App\Modules\Announcement\Services\BarangayProfileService;
+use App\Modules\Community_feed\Services\BarangayProfileService;
 use App\Services\BarangayLogoUrlService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
-class AnnouncementPageController extends Controller
+class CommunityFeedPageController extends Controller
 {
     public function __construct(private readonly BarangayProfileService $barangayProfileService)
     {
@@ -40,7 +40,7 @@ class AnnouncementPageController extends Controller
             ];
         }
 
-        return view('Announcement::announcement', compact(
+        return view('Community_feed::community-feed', compact(
             'slug',
             'name',
             'color',

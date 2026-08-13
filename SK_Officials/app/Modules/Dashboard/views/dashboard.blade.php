@@ -203,12 +203,12 @@
                 </svg>
                 Create Sports Program
             </a>
-            <a href="{{ route('announcements') }}" class="qa-btn qa-tone-4">
+            <a href="{{ route('community-feed.index') }}" class="qa-btn qa-tone-4">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 11l18-5v6l-18 5z"></path>
                     <path d="M6 21v-5.5"></path>
                 </svg>
-                Post Community Announcement
+                Post to Community Feed
             </a>
             <a href="{{ route('scholarship.applications') }}" class="qa-btn qa-tone-5">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -386,7 +386,7 @@
         </div>
     </div>
 
-    <!-- ══ Bottom Row: Activity + Announcements + Events ═════ -->
+    <!-- ══ Bottom Row: Activity + Community Feed + Events ═════ -->
     <div class="charts-grid-3">
 
         <!-- Activity Timeline -->

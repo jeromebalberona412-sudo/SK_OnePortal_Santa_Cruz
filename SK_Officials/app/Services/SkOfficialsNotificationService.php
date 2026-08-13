@@ -203,7 +203,7 @@ class SkOfficialsNotificationService
             self::CATEGORY_SURVEY => 'Survey',
             self::CATEGORY_PROGRAM => 'Program',
             self::CATEGORY_REMINDER => 'Reminder',
-            self::CATEGORY_ANNOUNCEMENT => 'Announcement',
+            self::CATEGORY_ANNOUNCEMENT => 'Community Feed',
             default => 'General',
         };
     }

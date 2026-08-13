@@ -11,7 +11,7 @@
         'app/Modules/Layout/css/header.css',
         'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Layout/css/table-row-actions-menu.css',
-        'app/Modules/Announcement/assets/css/announcement-archive.css',
+        'app/Modules/Community_feed/assets/css/community-feed-archive.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
@@ -126,9 +126,9 @@
 
 <script>
     window.ArchiveConfig = {
-        dataUrl: @json(route('announcements.archive.data')),
-        showUrl: (id) => @json(url('/announcements/archive')) + '/' + id,
-        restoreUrl: (id) => @json(url('/announcements/archive')) + '/' + id + '/restore',
+        dataUrl: @json(route('community-feed.archive.data')),
+        showUrl: (id) => @json(url('/community-feed/archive')) + '/' + id,
+        restoreUrl: (id) => @json(url('/community-feed/archive')) + '/' + id + '/restore',
         csrf: @json(csrf_token()),
     };
 </script>
@@ -137,7 +137,7 @@
     'app/Modules/Layout/js/header.js',
     'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Layout/js/table-row-actions-menu.js',
-    'app/Modules/Announcement/assets/js/announcement-archive.js',
+    'app/Modules/Community_feed/assets/js/community-feed-archive.js',
 ])
 
 </body>

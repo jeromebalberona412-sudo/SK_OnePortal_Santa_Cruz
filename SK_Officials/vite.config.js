@@ -42,11 +42,11 @@ export default defineConfig({
                 // Calendar module assets
                 'app/Modules/Calendar/assets/css/calendar.css',
                 'app/Modules/Calendar/assets/js/calendar.js',
-                // Announcement module assets
-                'app/Modules/Announcement/assets/css/announcement.css',
-                'app/Modules/Announcement/assets/js/announcement.js',
-                'app/Modules/Announcement/assets/css/announcement-archive.css',
-                'app/Modules/Announcement/assets/js/announcement-archive.js',
+                // Community Feed module assets
+                'app/Modules/Community_feed/assets/css/community-feed.css',
+                'app/Modules/Community_feed/assets/js/community-feed.js',
+                'app/Modules/Community_feed/assets/css/community-feed-archive.css',
+                'app/Modules/Community_feed/assets/js/community-feed-archive.js',
                 // Committees module assets
                 'app/Modules/Committees/assets/css/committees.css',
                 'app/Modules/Committees/assets/js/committees.js',

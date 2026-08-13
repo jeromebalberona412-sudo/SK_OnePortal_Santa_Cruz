@@ -10,7 +10,7 @@
     @vite([
         'app/Modules/Layout/css/header.css',
         'app/Modules/Layout/css/sidebar.css',
-        'app/Modules/Announcement/assets/css/announcement.css',
+        'app/Modules/Community_feed/assets/css/community-feed.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
@@ -76,7 +76,7 @@
 
 <main class="main-content">
     <div class="bfp-wrap">
-        <a href="{{ route('announcements') }}" class="bfp-back">
+        <a href="{{ route('community-feed.index') }}" class="bfp-back">
             <i class="fas fa-arrow-left"></i> Back to Community Feed
         </a>
 

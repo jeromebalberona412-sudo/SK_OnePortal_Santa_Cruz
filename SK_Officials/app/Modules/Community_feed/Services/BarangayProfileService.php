@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Modules\Announcement\Services;
+namespace App\Modules\Community_feed\Services;
 
-use App\Models\Announcement;
+use App\Models\CommunityFeed;
 use App\Models\Barangay;
 use App\Models\OfficialTerm;
 use App\Models\User;
@@ -138,7 +138,7 @@ class BarangayProfileService
      */
     private function listPosts(int $barangayId): Collection
     {
-        return Announcement::query()
+        return CommunityFeed::query()
             ->with(['user', 'barangay', 'images'])
             ->active()
             ->withCount(['reactions', 'comments'])
@@ -146,7 +146,7 @@ class BarangayProfileService
             ->whereRaw('"is_federation_wide" = false')
             ->orderByDesc('created_at')
             ->get()
-            ->map(function (Announcement $post) use ($barangayId) {
+            ->map(function (CommunityFeed $post) use ($barangayId) {
                 $type = strtolower((string) $post->type);
 
                 return [

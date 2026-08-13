@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Modules\Announcement\Services;
+namespace App\Modules\Community_feed\Services;
 
-use App\Models\Announcement;
+use App\Models\CommunityFeed;
 use App\Models\User;
 use App\Services\CloudinaryService;
 use App\Services\SkOfficialActivityService;
@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
-class AnnouncementArchiveService
+class CommunityFeedArchiveService
 {
     public const RETENTION_DAYS = 30;
 
@@ -20,11 +20,11 @@ class AnnouncementArchiveService
     ) {
     }
 
-    public function archive(Announcement $post, User $user): Announcement
+    public function archive(CommunityFeed $post, User $user): CommunityFeed
     {
         $now = now();
 
-        DB::table('announcements')
+        DB::table('community_feeds')
             ->where('id', $post->id)
             ->update([
                 'is_archived' => DB::raw('true'),
@@ -35,19 +35,19 @@ class AnnouncementArchiveService
 
         $this->activityService->log(
             $user,
-            'announcement.archive',
-            'Archived announcement: '.($post->title ?: 'Post #'.$post->id),
-            ['announcement_id' => $post->id]
+            'community_feed.archive',
+            'Archived community feed post: '.($post->title ?: 'Post #'.$post->id),
+            ['community_feed_id' => $post->id]
         );
 
         return $post->fresh(['user', 'barangay', 'images']);
     }
 
-    public function restore(Announcement $post, User $user): Announcement
+    public function restore(CommunityFeed $post, User $user): CommunityFeed
     {
         $now = now();
 
-        DB::table('announcements')
+        DB::table('community_feeds')
             ->where('id', $post->id)
             ->update([
                 'is_archived' => DB::raw('false'),
@@ -58,15 +58,15 @@ class AnnouncementArchiveService
 
         $this->activityService->log(
             $user,
-            'announcement.restore',
-            'Restored announcement: '.($post->title ?: 'Post #'.$post->id),
-            ['announcement_id' => $post->id]
+            'community_feed.restore',
+            'Restored community feed post: '.($post->title ?: 'Post #'.$post->id),
+            ['community_feed_id' => $post->id]
         );
 
         return $post->fresh(['user', 'barangay', 'images']);
     }
 
-    public function permanentlyDelete(Announcement $post, User $user): void
+    public function permanentlyDelete(CommunityFeed $post, User $user): void
     {
         DB::transaction(function () use ($post, $user) {
             $post->loadMissing('images');
@@ -82,9 +82,9 @@ class AnnouncementArchiveService
 
             $this->activityService->log(
                 $user,
-                'announcement.permanent_delete',
-                'Permanently deleted announcement: '.$title,
-                ['announcement_id' => $postId]
+                'community_feed.permanent_delete',
+                'Permanently deleted community feed post: '.$title,
+                ['community_feed_id' => $postId]
             );
         });
     }
@@ -94,7 +94,7 @@ class AnnouncementArchiveService
         $cutoff = now()->subDays(self::RETENTION_DAYS);
         $purged = 0;
 
-        Announcement::query()
+        CommunityFeed::query()
             ->whereRaw('"is_archived" = true')
             ->whereNotNull('archived_at')
             ->where('archived_at', '<=', $cutoff)
@@ -144,7 +144,7 @@ class AnnouncementArchiveService
         return 'red';
     }
 
-    public function userCanAccess(Announcement $post, User $user): bool
+    public function userCanAccess(CommunityFeed $post, User $user): bool
     {
         if (! in_array($user->role, [User::ROLE_SK_OFFICIAL, User::ROLE_SK_FED, User::ROLE_ADMIN], true)) {
             return false;
@@ -157,7 +157,7 @@ class AnnouncementArchiveService
         return (int) $post->barangay_id === (int) $user->barangay_id;
     }
 
-    private function deleteCloudinaryAssets(Announcement $post): void
+    private function deleteCloudinaryAssets(CommunityFeed $post): void
     {
         foreach ($post->images as $image) {
             $publicId = $image->public_id;

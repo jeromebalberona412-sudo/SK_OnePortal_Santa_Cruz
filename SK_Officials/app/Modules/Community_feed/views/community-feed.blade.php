@@ -11,7 +11,7 @@
     @vite([
         'app/Modules/Layout/css/header.css',
         'app/Modules/Layout/css/sidebar.css',
-        'app/Modules/Announcement/assets/css/announcement.css',
+        'app/Modules/Community_feed/assets/css/community-feed.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/sk-archive-terms.css') }}">
@@ -34,8 +34,8 @@
                     <img src="{{ $barangayLogoUrl ?? asset('images/logo.png') }}" alt="SK Barangay {{ $name }} logo" class="sk-fed-card-logo">
                     <div class="sk-fed-card-info">
                         <h2 class="sk-fed-card-name">SK Barangay {{ $name }}</h2>
-                        <p class="sk-fed-card-sub">SK Officials Portal ù Santa Cruz, Laguna</p>
-                        <a href="{{ route('sk-officials.barangay-profile', ['slug' => $slug]) }}" style="font-size:11px;color:rgba(255,255,255,0.85);font-weight:600;margin-top:4px;text-decoration:none;display:inline-block;">View Your Barangay Profile ?</a>
+                        <p class="sk-fed-card-sub">SK Officials Portal ? Santa Cruz, Laguna</p>
+                        <a href="{{ route('community-feed.barangay', ['slug' => $slug]) }}" style="font-size:11px;color:rgba(255,255,255,0.85);font-weight:600;margin-top:4px;text-decoration:none;display:inline-block;">View Your Barangay Profile ?</a>
                     </div>
                 </div>
                 {{-- Create Post button --}}
@@ -111,7 +111,7 @@
                 <p class="sidebar-subtitle">Browse SK officials from each barangay.</p>
                 <div class="brgy-link-list" id="brgyLinkList">
                     @forelse($barangayProfiles as $brgy)
-                    <a href="{{ route('sk-officials.barangay-profile', ['slug' => $brgy['slug']]) }}" class="brgy-link-item">
+                    <a href="{{ route('community-feed.barangay', ['slug' => $brgy['slug']]) }}" class="brgy-link-item">
                         <div class="brgy-link-dot">
                             @if(!empty($brgy['logo_url']))
                                 <img src="{{ $brgy['logo_url'] }}" alt="Brgy. {{ $brgy['name'] }} logo" class="brgy-link-logo">
@@ -203,6 +203,18 @@
     <div id="lightboxCounter" class="lightbox-counter"></div>
 </div>
 
+{{-- Who reacted --}}
+<div id="reactionViewerModal" class="reaction-viewer" aria-hidden="true">
+    <div class="reaction-viewer-overlay" onclick="closeReactionViewer()"></div>
+    <div class="reaction-viewer-panel" role="dialog" aria-label="People who reacted">
+        <div class="reaction-viewer-header">
+            <div class="reaction-viewer-tabs" id="reactionViewerTabs"></div>
+            <button type="button" class="reaction-viewer-close" onclick="closeReactionViewer()" aria-label="Close">&times;</button>
+        </div>
+        <div class="reaction-viewer-list" id="reactionViewerList"></div>
+    </div>
+</div>
+
 {{-- Archive Post confirmation --}}
 <div id="archivePostModal" class="program-modal">
     <div class="modal-overlay" onclick="closeArchiveModal()"></div>
@@ -231,11 +243,11 @@
 @vite([
     'app/Modules/Layout/js/header.js',
     'app/Modules/Layout/js/sidebar.js',
-    'app/Modules/Announcement/assets/js/announcement.js',
+    'app/Modules/Community_feed/assets/js/community-feed.js',
 ])
 
 <script>
-window.AnnConfig = {
+window.CommunityFeedConfig = {
     defaultLogo: @json(asset('images/logo.png')),
     barangayLogo: @json($barangayLogoUrl),
     userAvatar: @json($barangayLogoUrl ?: asset('images/SK_OnePortal_logo.png')),
@@ -260,7 +272,7 @@ window.showFeedToast = showFeedToast;
     <div class="restore-modal-box view-modal-box" id="profilePreviewModalBox">
         <div class="restore-modal-header view-modal-header">
             <div>
-                <p class="profile-preview-kicker">Preview ù What Kabataan Sees</p>
+                <p class="profile-preview-kicker">Preview ? What Kabataan Sees</p>
                 <h2 class="restore-modal-title" id="profilePreviewTitle">SK Barangay {{ $name }}</h2>
                 <span class="dk-view-subtitle" id="profilePreviewLocation">Barangay {{ $name }}, Santa Cruz, Laguna</span>
             </div>
@@ -274,9 +286,9 @@ window.showFeedToast = showFeedToast;
                 <div class="profile-field-group">
                     <div class="profile-field-group-label">Overview</div>
                     <div class="profile-field-row">
-                        <div class="profile-field"><label>Posts</label><p id="profilePreviewPostCount">ù</p></div>
-                        <div class="profile-field"><label>SK Term</label><p id="profilePreviewTerm">ù</p></div>
-                        <div class="profile-field"><label>Officials</label><p id="profilePreviewOfficialCount">ù</p></div>
+                        <div class="profile-field"><label>Posts</label><p id="profilePreviewPostCount">?</p></div>
+                        <div class="profile-field"><label>SK Term</label><p id="profilePreviewTerm">?</p></div>
+                        <div class="profile-field"><label>Officials</label><p id="profilePreviewOfficialCount">?</p></div>
                     </div>
                 </div>
                 <div class="profile-field-group">

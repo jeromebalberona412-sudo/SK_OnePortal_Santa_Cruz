@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Announcement\Services;
+namespace App\Modules\Community_feed\Services;
 
 use App\Services\CloudinaryService as BaseCloudinaryService;
 
