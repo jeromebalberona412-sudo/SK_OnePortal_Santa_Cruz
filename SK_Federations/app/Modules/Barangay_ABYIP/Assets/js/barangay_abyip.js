@@ -58,13 +58,30 @@
             .replace(/"/g, '&quot;');
     }
 
+    function pdfPreviewSrc(fileUrl) {
+        const base = String(fileUrl || '').split('#')[0];
+        return base + '#toolbar=0&navpanes=0&scrollbar=0&view=FitH';
+    }
+
+    function setResizeButtonState(isFullscreen) {
+        const btn = document.getElementById('fullscreenBtn');
+        if (!btn) return;
+        btn.classList.toggle('is-restore', !!isFullscreen);
+        btn.title = isFullscreen ? 'Restore Down' : 'Maximize';
+        btn.setAttribute('aria-label', btn.title);
+    }
+
     function populateModalFields(item) {
-        document.getElementById('modalBarangay').textContent = item.barangay || '-';
-        document.getElementById('modalDateSubmitted').textContent = item.date_submitted || '-';
-        document.getElementById('modalSubmittedBy').textContent = item.submitted_by || '-';
-        document.getElementById('modalTitle').textContent = item.title || '-';
-        document.getElementById('modalSubmittedTime').textContent = item.submitted_time || '-';
-        document.getElementById('modalFiscalYear').textContent = item.fiscal_year ? String(item.fiscal_year) : '-';
+        document.getElementById('modalBarangay').textContent = item.barangay || 'N/A';
+        document.getElementById('modalDateSubmitted').textContent = item.date_submitted || 'N/A';
+        document.getElementById('modalSubmittedBy').textContent = item.submitted_by || 'N/A';
+        document.getElementById('modalTitle').textContent = item.title || 'N/A';
+        document.getElementById('modalSubmittedTime').textContent = item.submitted_time || 'N/A';
+        document.getElementById('modalFiscalYear').textContent = item.fiscal_year ? String(item.fiscal_year) : 'N/A';
+        const roleEl = document.getElementById('modalSubmittedRole');
+        if (roleEl) {
+            roleEl.textContent = item.submitted_by_role || 'N/A';
+        }
 
         const statusBadge = document.getElementById('modalStatus');
         statusBadge.textContent = statusLabel(item.status);
@@ -97,7 +114,7 @@
 
         if (item.has_pdf && item.file_url) {
             preview.innerHTML =
-                '<iframe src="' + escapeHtml(item.file_url) + '#toolbar=1&navpanes=0" class="abyip-pdf-frame" title="ABYIP PDF"></iframe>';
+                '<div class="abyip-pdf-clip"><iframe src="' + escapeHtml(pdfPreviewSrc(item.file_url)) + '" class="abyip-pdf-frame" title="ABYIP PDF"></iframe></div>';
             return;
         }
 
@@ -342,6 +359,7 @@
 
     window.closeViewModal = function () {
         document.getElementById('viewModal').classList.remove('active', 'fullscreen');
+        setResizeButtonState(false);
         document.body.style.overflow = '';
         hideRejectForm();
         currentSubmissionId = null;
@@ -349,7 +367,9 @@
     };
 
     window.toggleFullscreen = function () {
-        document.getElementById('viewModal').classList.toggle('fullscreen');
+        const modal = document.getElementById('viewModal');
+        modal.classList.toggle('fullscreen');
+        setResizeButtonState(modal.classList.contains('fullscreen'));
     };
 
     window.showToast = function (message, type) {

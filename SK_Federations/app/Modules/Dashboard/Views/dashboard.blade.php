@@ -47,7 +47,7 @@
                     <div class="stat-label">Total SK Chairpersons</div>
                 </div>
             </a>
-            <a href="{{ route('barangay-monitoring') }}" class="stat-card stat-card-link stat-card-clickable">
+            <a href="{{ route('barangay-monitoring') }}" class="stat-card stat-card-link stat-card-clickable" data-no-loading>
                 <div class="stat-icon green"><i class="fas fa-file-invoice-dollar"></i></div>
                 <div class="stat-info">
                     <div class="stat-value">{{ number_format($totalBarangaysAbyipSubmitted ?? 0) }}</div>
@@ -118,7 +118,7 @@
                         <i class="fas fa-user-plus"></i>
                         <span>Add SK Officials</span>
                     </a>
-                    <a href="{{ route('barangay-monitoring') }}" class="qa-btn" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap;transition:all 0.2s ease;box-shadow:0 1px 3px rgba(37,99,235,0.3);">
+                    <a href="{{ route('barangay-monitoring') }}" class="qa-btn" data-no-loading style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap;transition:all 0.2s ease;box-shadow:0 1px 3px rgba(37,99,235,0.3);">
                         <i class="fas fa-file-invoice-dollar"></i>
                         <span>Barangay ABYIP</span>
                     </a>

@@ -10,15 +10,16 @@
     --km-radius: 16px;
 }
 
-.km-main {
+.main-content.km-main {
     background: var(--km-bg);
     min-height: calc(100vh - 64px);
+    padding: 20px 20px 28px;
 }
 
 .km-container {
     max-width: 1360px;
     margin: 0 auto;
-    padding: 22px;
+    padding: 0;
     display: grid;
     gap: 20px;
 }
@@ -142,9 +143,16 @@
 }
 
 .km-select {
-    padding: 8px 12px; border: 1.5px solid var(--km-border);
-    border-radius: 8px; font-size: 13px; font-family: inherit;
-    background: #f8fafc; color: var(--km-text); cursor: pointer;
+    height: 36px;
+    min-width: 120px;
+    padding: 0 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    background: transparent;
+    color: var(--km-text);
+    cursor: pointer;
     outline: none;
 }
 .km-select:focus { border-color: var(--km-blue); }
@@ -188,12 +196,13 @@
 .km-search-input {
     flex: 1;
     min-width: 200px;
-    padding: 8px 12px;
+    height: 36px;
+    padding: 0 12px;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 13px;
     font-family: inherit;
-    background: #fff;
+    background: transparent;
     color: var(--km-text);
 }
 
@@ -204,12 +213,13 @@
 }
 
 .km-search-btn {
-    padding: 8px 16px;
-    background: #2c2c3e;
+    height: 36px;
+    padding: 0 14px;
+    background: var(--km-blue);
     color: #fff;
     border: none;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     display: inline-flex;
@@ -219,7 +229,7 @@
 }
 
 .km-search-btn:hover {
-    background: #3a3a4a;
+    background: #1b3380;
 }
 
 .km-chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -460,12 +470,66 @@
 }
 
 /* ── Masterlist top bar ── */
+.km-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+.km-filter-bar--detail .km-search-group {
+    flex: 1;
+    min-width: 240px;
+}
+
+.km-batch-print-btn {
+    margin-left: auto;
+    height: 36px;
+    padding: 0 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    border-radius: 8px;
+    background: #16a34a;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.km-batch-print-btn:hover:not(:disabled) {
+    background: #15803d;
+}
+
+.km-batch-print-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.km-col-check {
+    width: 42px;
+    min-width: 42px;
+    text-align: center;
+}
+
+.km-col-check input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--km-blue);
+    cursor: pointer;
+}
+
 .km-masterlist-top {
-    background: #fff;
-    border: 1px solid var(--km-border);
-    border-radius: var(--km-radius);
-    box-shadow: var(--km-card-shadow);
-    overflow: hidden;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    overflow: visible;
 }
 
 .km-masterlist-topbar {
@@ -841,9 +905,10 @@
     position: relative;
     background: #fff;
     border-radius: 16px;
-    width: 95vw;
-    max-width: 1100px;
-    max-height: 90vh;
+    width: min(96vw, 1280px);
+    max-width: none;
+    height: 92vh;
+    max-height: 92vh;
     display: flex;
     flex-direction: column;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -881,22 +946,65 @@
     color: var(--km-blue);
 }
 
-.km-kkp-modal-close {
-    background: none;
-    border: none;
-    font-size: 24px;
-    color: var(--km-muted);
-    cursor: pointer;
-    padding: 0;
-    width: 32px;
-    height: 32px;
+.km-kkp-modal-controls {
     display: flex;
     align-items: center;
-    justify-content: center;
-    transition: color 0.15s;
+    gap: 4px;
 }
-.km-kkp-modal-close:hover {
-    color: var(--km-red);
+
+.km-kkp-modal-control-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: #475569;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+    font-size: 20px;
+}
+
+.km-kkp-modal-control-btn:hover {
+    color: #0f172a;
+}
+
+.km-kkp-modal-control-btn svg {
+    display: block;
+    pointer-events: none;
+}
+
+.km-kkp-resize-btn .modal-win-icon-restore {
+    display: none;
+}
+
+.km-kkp-resize-btn.is-restore .modal-win-icon-max {
+    display: none;
+}
+
+.km-kkp-resize-btn.is-restore .modal-win-icon-restore {
+    display: block;
+}
+
+.km-kkp-modal.is-fullscreen {
+    padding: var(--navbar-height, 64px) 0 0;
+    align-items: stretch;
+    justify-content: stretch;
+}
+
+.km-kkp-modal.is-fullscreen .km-kkp-modal-overlay {
+    top: var(--navbar-height, 64px);
+}
+
+.km-kkp-modal.is-fullscreen .km-kkp-modal-content {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
 }
 
 .km-kkp-modal-body {
@@ -966,12 +1074,13 @@
     background: #f1f5f9;
 }
 .km-kkp-btn-print {
-    background: linear-gradient(135deg, var(--km-blue), var(--km-red));
+    background: #16a34a;
     color: #fff;
     border-color: transparent;
 }
 .km-kkp-btn-print:hover {
-    opacity: 0.9;
+    background: #15803d;
+    opacity: 1;
 }
 
 /* ── KK Form Styles ── */
@@ -1196,7 +1305,9 @@
 
 /* ── Barangay detail page ── */
 .km-barangay-detail-page {
-    gap: 18px;
+    gap: 16px;
+    max-width: none;
+    width: 100%;
 }
 
 .km-brgy-hero {
@@ -1257,14 +1368,6 @@
     margin: 6px 0 0;
     font-size: 0.95rem;
     color: var(--km-muted);
-}
-
-.km-masterlist-top {
-    background: #fff;
-    border: 1px solid var(--km-border);
-    border-radius: var(--km-radius);
-    box-shadow: var(--km-card-shadow);
-    padding: 16px 20px;
 }
 
 .km-masterlist-topbar .km-filter-row-inner--compact {
@@ -1374,6 +1477,17 @@
     .km-brgy-hero {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .km-filter-bar .km-batch-print-btn {
+        margin-left: 0;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .km-filter-bar .km-select,
+    .km-filter-bar .km-search-group {
+        width: 100%;
     }
 
     .km-table-footer {

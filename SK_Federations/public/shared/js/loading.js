@@ -303,6 +303,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function skipRedirectLoading(pathname) {
+        return (
+            pathname.includes('/change-email') ||
+            pathname.includes('/change-password') ||
+            pathname.includes('/barangay-monitoring')
+        );
+    }
+
     document.addEventListener('click', (e) => {
         const anchor = e.target.closest('a[href]');
         if (!anchor) return;
@@ -317,8 +325,19 @@ document.addEventListener('DOMContentLoaded', () => {
             currentPath === '/register' || currentPath.endsWith('/register') ||
             currentPath.includes('forgot-password') ||
             currentPath.includes('password/reset') ||
-            currentPath.includes('reset-password')
+            currentPath.includes('reset-password') ||
+            skipRedirectLoading(currentPath)
         ) {
+            return;
+        }
+
+        let targetPath = href;
+        try {
+            targetPath = new URL(href, window.location.href).pathname;
+        } catch (_) {
+            targetPath = href;
+        }
+        if (skipRedirectLoading(targetPath)) {
             return;
         }
 

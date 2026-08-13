@@ -14,11 +14,9 @@
         $accountAuthCssVersion = @filemtime(app_path('Modules/Profile/assets/css/account-auth.css')) ?: time();
     @endphp
     <link rel="stylesheet" href="{{ url('/modules/profile/css/account-auth.css') }}?v={{ $accountAuthCssVersion }}">
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     @stack('styles')
 </head>
 <body>
-    @include('partials.loading')
 
     <div class="login-page">
         {{-- Background --}}
@@ -65,7 +63,6 @@
 
     @stack('scripts-before')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
     @stack('scripts')
 </body>
 </html>

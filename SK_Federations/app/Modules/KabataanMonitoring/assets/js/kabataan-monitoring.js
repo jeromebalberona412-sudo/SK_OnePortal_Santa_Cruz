@@ -1,6 +1,7 @@
 (function () {
     const config = window.kmConfig || {};
     const records = [];
+    const selectedIds = new Set();
 
     const state = { search: '', status: 'all', barangay: 'all', year: 'all' };
 
@@ -264,6 +265,7 @@
         if (yearFilter) {
             yearFilter.addEventListener('change', function(e) {
                 state.year = e.target.value || 'all';
+                selectedIds.clear();
                 resetBarangayPagination();
                 renderBarangayDetail();
             });
@@ -305,6 +307,105 @@
                 window.nextPage();
             });
         }
+
+        var selectAll = document.getElementById('km-select-all');
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                toggleSelectAllFiltered(selectAll.checked);
+            });
+        }
+
+        var tbody = document.getElementById('km-table-tbody');
+        if (tbody) {
+            tbody.addEventListener('change', function(e) {
+                var checkbox = e.target.closest('.km-row-checkbox');
+                if (!checkbox) return;
+                var id = String(checkbox.getAttribute('data-id') || '');
+                if (!id) return;
+                if (checkbox.checked) {
+                    selectedIds.add(id);
+                } else {
+                    selectedIds.delete(id);
+                }
+                syncSelectAllCheckbox();
+                updateBatchPrintButton();
+            });
+        }
+
+        var batchBtn = document.getElementById('km-batch-print-btn');
+        if (batchBtn) {
+            batchBtn.addEventListener('click', openBatchPrint);
+        }
+
+        updateBatchPrintButton();
+    }
+
+    function filteredBarangayRecords() {
+        var brgy = window.kmBarangay || '';
+        return getFiltered().filter(function(r){ return r.barangay === brgy; });
+    }
+
+    function toggleSelectAllFiltered(checked) {
+        filteredBarangayRecords().forEach(function(r) {
+            var id = String(r.id || r.slug || '');
+            if (!id) return;
+            if (checked) {
+                selectedIds.add(id);
+            } else {
+                selectedIds.delete(id);
+            }
+        });
+        renderPaginatedTable();
+        updateBatchPrintButton();
+    }
+
+    function syncSelectAllCheckbox() {
+        var selectAll = document.getElementById('km-select-all');
+        if (!selectAll) return;
+        var ids = filteredBarangayRecords().map(function(r) {
+            return String(r.id || r.slug || '');
+        }).filter(Boolean);
+        var selectedCount = ids.filter(function(id) { return selectedIds.has(id); }).length;
+        selectAll.checked = ids.length > 0 && selectedCount === ids.length;
+        selectAll.indeterminate = selectedCount > 0 && selectedCount < ids.length;
+    }
+
+    function updateBatchPrintButton() {
+        var batchBtn = document.getElementById('km-batch-print-btn');
+        if (!batchBtn) return;
+        batchBtn.disabled = selectedIds.size === 0;
+        batchBtn.title = selectedIds.size
+            ? 'Print ' + selectedIds.size + ' selected record' + (selectedIds.size === 1 ? '' : 's')
+            : 'Select records to batch print';
+    }
+
+    function openBatchPrint() {
+        var ids = Array.from(selectedIds);
+        if (!ids.length) return;
+
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = (window.kmConfig && window.kmConfig.batchPrintUrl) || '/kabataan-monitoring/batch-print';
+        form.target = '_blank';
+        form.style.display = 'none';
+
+        var token = document.createElement('input');
+        token.type = 'hidden';
+        token.name = '_token';
+        token.value = (window.kmConfig && window.kmConfig.csrfToken) || '';
+        form.appendChild(token);
+
+        ids.forEach(function(id) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'ids[]';
+            input.value = String(id);
+            form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+        form.remove();
     }
 
     function resetBarangayPagination() {
@@ -347,8 +448,11 @@
         }
 
         if (!filtered.length) {
-            tbody.innerHTML = '<tr class="km-empty-row"><td colspan="7">No profiles match your current filters.</td></tr>';
+            tbody.innerHTML = '<tr class="km-empty-row"><td colspan="8">No profiles match your current filters.</td></tr>';
             if (empty) empty.hidden = true;
+            selectedIds.clear();
+            syncSelectAllCheckbox();
+            updateBatchPrintButton();
             updatePagination([], 0);
             return;
         }
@@ -398,18 +502,23 @@
 
         var rows = pageItems.map(function(r) {
             var fullName = formatFullName(r);
+            var recordId = String(r.id || r.slug || '');
+            var checked = selectedIds.has(recordId) ? ' checked' : '';
             return '<tr>' +
+                '<td class="km-col-check"><input type="checkbox" class="km-row-checkbox" data-id="' + escapeHtml(recordId) + '" aria-label="Select row"' + checked + '></td>' +
                 '<td class="km-respondent-cell">' + escapeHtml(r.respondentNumber || '—') + '</td>' +
                 '<td class="km-fullname-cell"><span class="km-fullname">' + escapeHtml(fullName) + '</span></td>' +
                 '<td>' + escapeHtml(String(r.age ?? '—')) + '</td>' +
                 '<td>' + escapeHtml(r.barangay || '—') + '</td>' +
                 '<td>' + escapeHtml(r.purokZone || '—') + '</td>' +
                 '<td>' + escapeHtml(r.registeredVoter || '—') + '</td>' +
-                '<td><div class="km-actions"><button type="button" class="km-btn-view" onclick="openKKPModal(\'' + r.slug.replace(/'/g, "\\'") + '\')">View</button></div></td>' +
+                '<td><div class="km-actions"><button type="button" class="km-btn-view" onclick="openKKPModal(\'' + String(r.slug || '').replace(/'/g, "\\'") + '\')">View</button></div></td>' +
                 '</tr>';
         }).join('');
         tbody.innerHTML = rows;
 
+        syncSelectAllCheckbox();
+        updateBatchPrintButton();
         updatePagination(state.allItems, state.currentPage);
     }
 
@@ -485,6 +594,13 @@
 
         container.innerHTML = '<p class="km-kkp-loading">Loading questionnaire...</p>';
         modal.classList.add('show');
+        modal.classList.remove('is-fullscreen');
+        var resizeBtn = document.getElementById('kmKKPFullscreenBtn');
+        if (resizeBtn) {
+            resizeBtn.classList.remove('is-restore');
+            resizeBtn.title = 'Maximize';
+            resizeBtn.setAttribute('aria-label', 'Maximize');
+        }
         document.body.style.overflow = 'hidden';
 
         fetch(fetchUrl, {
@@ -511,7 +627,26 @@
         var modal = document.getElementById('kmKKPModal');
         if (modal) {
             modal.classList.remove('show');
+            modal.classList.remove('is-fullscreen');
             document.body.style.overflow = '';
+        }
+        var resizeBtn = document.getElementById('kmKKPFullscreenBtn');
+        if (resizeBtn) {
+            resizeBtn.classList.remove('is-restore');
+            resizeBtn.title = 'Maximize';
+            resizeBtn.setAttribute('aria-label', 'Maximize');
+        }
+    };
+
+    window.toggleKKPFullscreen = function() {
+        var modal = document.getElementById('kmKKPModal');
+        var resizeBtn = document.getElementById('kmKKPFullscreenBtn');
+        if (!modal) return;
+        var isFullscreen = modal.classList.toggle('is-fullscreen');
+        if (resizeBtn) {
+            resizeBtn.classList.toggle('is-restore', isFullscreen);
+            resizeBtn.title = isFullscreen ? 'Restore Down' : 'Maximize';
+            resizeBtn.setAttribute('aria-label', isFullscreen ? 'Restore Down' : 'Maximize');
         }
     };
 
@@ -525,6 +660,7 @@
 
         printWindow.document.write('<html><head><title>KK Survey Questionnaire</title>');
         printWindow.document.write('<link rel="stylesheet" href="' + viewCssHref + '">');
+        printWindow.document.write('<style>@page{size:Letter portrait;margin:.35in;}body{margin:0;} .kk-view-paper{zoom:.88;box-shadow:none;border:none;padding:0;} .kkp-notice-body br{display:none;}</style>');
         printWindow.document.write('</head><body>');
         printWindow.document.write(formHTML);
         printWindow.document.write('</body></html>');

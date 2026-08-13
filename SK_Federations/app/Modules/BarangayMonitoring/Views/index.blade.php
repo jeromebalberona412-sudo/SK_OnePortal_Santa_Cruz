@@ -59,7 +59,7 @@
 
             <section class="bm-card bm-schedule-summary-card" id="abyipScheduleSection" aria-label="ABYIP submission schedule">
                 <div class="bm-card-head bm-card-head-flex">
-                    <div>
+                    <div class="bm-schedule-head-copy">
                         <h3><i class="fas fa-calendar-check"></i> ABYIP Submission Schedule</h3>
                         <p class="bm-schedule-summary-note">Set when barangay SK Officials may upload ABYIP documents.</p>
                     </div>
@@ -68,7 +68,7 @@
                         <button type="button" class="bm-btn-schedule secondary" id="btnViewSchedule">
                             <i class="fas fa-eye"></i> View Schedule
                         </button>
-                        <button type="button" class="bm-btn-schedule secondary" id="btnCreateSchedule">
+                        <button type="button" class="bm-btn-schedule" id="btnCreateSchedule">
                             <i class="fas fa-edit"></i> Edit Schedule
                         </button>
                         @elseif(!empty($canCreateAbyipSchedule))
@@ -82,14 +82,19 @@
                         @endif
                     </div>
                 </div>
-                <div class="bm-card-body">
+                <div class="bm-card-body bm-schedule-summary-body">
                     @if(!empty($abyipSchedule))
                         <div class="bm-schedule-compact">
-                            <span class="bm-schedule-status">{{ $abyipSchedule['status_label'] }}</span>
-                            <p class="bm-schedule-compact-title">{{ $abyipSchedule['title'] }} · CY {{ $abyipSchedule['fiscal_year'] }}</p>
-                            <p class="bm-schedule-compact-dates">
-                                Open: {{ $abyipSchedule['date_start'] }} — Deadline: {{ $abyipSchedule['deadline'] }}
-                            </p>
+                            <span class="bm-schedule-status is-{{ strtolower($abyipSchedule['status'] ?? 'active') }}">{{ $abyipSchedule['status_label'] }}</span>
+                            <span class="bm-schedule-cy">CY {{ $abyipSchedule['fiscal_year'] }}</span>
+                            <span class="bm-schedule-date-chip">
+                                <span class="bm-schedule-meta-label">Open</span>
+                                <span class="bm-schedule-meta-value">{{ $abyipSchedule['date_start'] }}</span>
+                            </span>
+                            <span class="bm-schedule-date-chip">
+                                <span class="bm-schedule-meta-label">Deadline</span>
+                                <span class="bm-schedule-meta-value">{{ $abyipSchedule['deadline'] }}</span>
+                            </span>
                         </div>
                     @else
                         <p class="bm-empty">No ABYIP submission schedule yet. Create one before barangay SK Officials can upload ABYIP.</p>
@@ -144,6 +149,7 @@
                             <a
                                 href="{{ route('barangay-monitoring.show', ['barangay' => $barangay['slug']]) }}"
                                 class="bm-list-item"
+                                data-no-loading
                                 data-status="{{ $barangay['status'] }}"
                                 data-name="{{ strtolower($barangay['name']) }}"
                                 data-barangay="{{ strtolower($barangay['name']) }}"
@@ -193,32 +199,40 @@
         </div>
         <div class="bm-modal-body" id="scheduleViewModalBody">
             @if(!empty($abyipSchedule))
+                @php
+                    $createdBy = trim((string) ($abyipSchedule['created_by'] ?? ''));
+                    $createdByRole = trim((string) ($abyipSchedule['created_by_role'] ?? ''));
+                    $showCreatedBy = $createdBy !== '' && $createdBy !== '—';
+                    $showCreatedByRole = $createdByRole !== '' && $createdByRole !== '—';
+                    $originalDeadline = trim((string) ($abyipSchedule['original_deadline'] ?? ''));
+                    $showOriginalDeadline = $originalDeadline !== '' && $originalDeadline !== ($abyipSchedule['deadline'] ?? '');
+                @endphp
                 <div class="bm-schedule-current">
                     <div class="bm-schedule-current-head">
-                        <h4>{{ $abyipSchedule['title'] }}</h4>
-                        <span class="bm-schedule-status">{{ $abyipSchedule['status_label'] }}</span>
+                        <h4>CY {{ $abyipSchedule['fiscal_year'] }}</h4>
+                        <span class="bm-schedule-status is-{{ strtolower($abyipSchedule['status'] ?? 'active') }}">{{ $abyipSchedule['status_label'] }}</span>
                     </div>
                     <div class="bm-schedule-grid">
-                        <div>
-                            <p class="bm-schedule-label">Calendar Year</p>
-                            <p class="bm-schedule-value">{{ $abyipSchedule['fiscal_year'] }}</p>
-                        </div>
-                        <div>
-                            <p class="bm-schedule-label">Start</p>
+                        <div class="bm-schedule-item">
+                            <p class="bm-schedule-label">Open</p>
                             <p class="bm-schedule-value">{{ $abyipSchedule['date_start'] }}</p>
                         </div>
-                        <div>
+                        <div class="bm-schedule-item">
                             <p class="bm-schedule-label">Deadline</p>
                             <p class="bm-schedule-value">{{ $abyipSchedule['deadline'] }}</p>
                         </div>
-                        <div>
+                        @if($showOriginalDeadline)
+                        <div class="bm-schedule-item">
                             <p class="bm-schedule-label">Original Deadline</p>
-                            <p class="bm-schedule-value">{{ $abyipSchedule['original_deadline'] }}</p>
+                            <p class="bm-schedule-value">{{ $originalDeadline }}</p>
                         </div>
-                        <div>
+                        @endif
+                        @if($showCreatedBy)
+                        <div class="bm-schedule-item">
                             <p class="bm-schedule-label">Created By</p>
-                            <p class="bm-schedule-value">{{ $abyipSchedule['created_by'] }}@if(!empty($abyipSchedule['created_by_role'])) <span class="bm-schedule-role">({{ $abyipSchedule['created_by_role'] }})</span>@endif</p>
+                            <p class="bm-schedule-value">{{ $createdBy }}@if($showCreatedByRole) <span class="bm-schedule-role">({{ $createdByRole }})</span>@endif</p>
                         </div>
+                        @endif
                     </div>
                     @if(!empty($abyipSchedule['histories']))
                         <div class="bm-schedule-history">
@@ -373,7 +387,6 @@
         canCreateSchedule: @json($canCreateAbyipSchedule ?? true),
     };
 </script>
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 <script src="{{ url('/modules/barangay-monitoring/js/barangay-monitoring.js') }}"></script>
 <script src="{{ url('/modules/barangay-monitoring/js/barangay-monitoring-schedule.js') }}?v={{ time() }}"></script>
 @endpush

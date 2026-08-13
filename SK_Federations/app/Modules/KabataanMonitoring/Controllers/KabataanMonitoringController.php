@@ -63,4 +63,26 @@ class KabataanMonitoringController extends Controller
             'registrationYears' => $this->service->registrationYears($barangayName),
         ]);
     }
+
+    public function batchPrint(Request $request): View
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer'],
+        ]);
+
+        $sheets = [];
+        foreach (array_values(array_unique($validated['ids'])) as $id) {
+            $html = $this->service->renderQuestionnaireHtml((int) $id);
+            if ($html !== null) {
+                $sheets[] = $html;
+            }
+        }
+
+        abort_if($sheets === [], 404, 'No KK profiling records found for print.');
+
+        return view('kabataan_monitoring::print-batch', [
+            'sheets' => $sheets,
+        ]);
+    }
 }

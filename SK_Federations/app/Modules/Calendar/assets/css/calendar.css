@@ -114,11 +114,12 @@
 }
 
 .legend-dot.has-notes {
-    background: #3b82f6;
+    background: #F7D31E;
+    box-shadow: 0 0 0 1px rgba(33, 63, 153, 0.15);
 }
 
 .legend-dot.today {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: #213F99;
 }
 
 .calendar-grid {
@@ -151,88 +152,82 @@
 }
 
 .calendar-day:hover {
-    background: rgba(59, 130, 246, 0.08);
-    border-color: #3b82f6;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    background: rgba(33, 63, 153, 0.06);
+    border-color: #213F99;
+    box-shadow: 0 4px 12px rgba(33, 63, 153, 0.18);
 }
 
 .calendar-day.has-notes:hover {
-    background: #bfdbfe;
-    border-color: #2563eb;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    background: #fde68a;
+    border-color: #eab308;
+    box-shadow: 0 4px 12px rgba(247, 211, 30, 0.35);
 }
 
-/* ══════════════════════════════════════════════════════════
-   TODAY HIGHLIGHT LOGIC
-   - Today WITHOUT notes: white bg + blue border (outline only)
-   - Today WITH notes: light blue fill + stronger border
-══════════════════════════════════════════════════════════ */
+/* Today = navy. Day with notes = gold. Distinct palettes. */
 
-/* Today WITHOUT notes — white bg, blue border only */
 .calendar-day.is-today {
-    background: #ffffff !important;
-    border: 2px solid #3b82f6 !important;
-    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3) !important;
+    background: #eef2ff !important;
+    border: 2px solid #213F99 !important;
+    box-shadow: 0 0 0 1px rgba(33, 63, 153, 0.2) !important;
 }
 
 .calendar-day.is-today .calendar-day-number {
-    color: #111827 !important;
+    color: #213F99 !important;
     font-weight: 800;
 }
 
 .calendar-day.is-today:hover {
-    background: rgba(59, 130, 246, 0.08) !important;
-    border-color: #2563eb !important;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25) !important;
+    background: #e0e7ff !important;
+    border-color: #1a3278 !important;
+    box-shadow: 0 4px 12px rgba(33, 63, 153, 0.25) !important;
 }
 
-/* Today WITH notes */
 .calendar-day.is-today.has-notes {
-    background: #dbeafe !important;
-    border: 2px solid #2563eb !important;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25) !important;
+    background: #fef9c3 !important;
+    border: 2px solid #213F99 !important;
+    box-shadow: 0 4px 14px rgba(33, 63, 153, 0.22) !important;
 }
 
 .calendar-day.is-today.has-notes .calendar-day-number {
-    color: #1e3a8a !important;
+    color: #213F99 !important;
     font-weight: 800;
 }
 
 .calendar-day.is-today.has-notes .calendar-day-notes-preview {
-    color: #1e40af !important;
+    color: #854d0e !important;
     font-weight: 600;
 }
 
 .calendar-day.is-today.has-notes .calendar-day-add {
-    color: #2563eb !important;
+    color: #213F99 !important;
     font-weight: 600;
 }
 
 .calendar-day.is-today.has-notes:hover {
-    background: #bfdbfe !important;
-    border-color: #1d4ed8 !important;
-    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.3) !important;
+    background: #fde68a !important;
+    border-color: #1a3278 !important;
+    box-shadow: 0 6px 18px rgba(33, 63, 153, 0.28) !important;
 }
 
 .calendar-day.has-notes {
-    background: #dbeafe;
-    border: 1px solid #93c5fd;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+    background: #fef9c3;
+    border: 1px solid #F7D31E;
+    box-shadow: 0 2px 8px rgba(247, 211, 30, 0.28);
 }
 
 .calendar-day.has-notes .calendar-day-number {
-    color: #1e3a8a;
+    color: #854d0e;
     font-weight: 700;
 }
 
 .calendar-day.has-notes .calendar-day-notes-preview {
-    color: #1e40af;
+    color: #a16207;
     font-weight: 600;
     line-height: 1.35;
 }
 
 .calendar-day.has-notes .calendar-day-add {
-    color: #2563eb;
+    color: #213F99;
     font-weight: 600;
 }
 

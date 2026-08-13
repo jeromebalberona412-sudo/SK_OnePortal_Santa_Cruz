@@ -26,30 +26,30 @@
             <span class="km-brgy-hero-logo-fallback" @if(!empty($barangayLogoUrl)) hidden @endif>{{ strtoupper(mb_substr($barangay, 0, 1)) }}</span>
         </div>
         <div class="km-brgy-hero-copy">
-            <p class="km-brgy-hero-eyebrow">{{ $barangay }}</p>
-            <h1 class="km-brgy-hero-title">KKK Profiling Masterlist</h1>
+            <p class="km-brgy-hero-eyebrow">Kabataan Monitoring</p>
+            <h1 class="km-brgy-hero-title">{{ $barangay }}</h1>
             <p class="km-brgy-hero-subtitle">Youth profiling records for {{ $barangay }}</p>
         </div>
     </section>
 
-    <section class="km-masterlist-top">
-        <div class="km-masterlist-topbar">
-            <div class="km-filter-row-inner km-filter-row-inner--compact">
-                <select id="km-brgy-year-filter" class="km-select" aria-label="Filter by year">
-                    <option value="all">All Years</option>
-                    @foreach($registrationYears as $year)
-                        <option value="{{ $year }}">{{ $year }}</option>
-                    @endforeach
-                </select>
+    <section class="km-filter-bar km-filter-bar--detail" aria-label="Profiling filters">
+        <select id="km-brgy-year-filter" class="km-select" aria-label="Filter by year">
+            <option value="all">All Years</option>
+            @foreach($registrationYears as $year)
+                <option value="{{ $year }}">{{ $year }}</option>
+            @endforeach
+        </select>
 
-                <div class="km-search-group">
-                    <input type="text" id="km-brgy-search" class="km-search-input" placeholder="Search by name, respondent #, purok...">
-                    <button type="button" class="km-search-btn" onclick="performBarangaySearch()">
-                        <i class="fas fa-search"></i> Search
-                    </button>
-                </div>
-            </div>
+        <div class="km-search-group">
+            <input type="text" id="km-brgy-search" class="km-search-input" placeholder="Search by name, respondent #, purok...">
+            <button type="button" class="km-search-btn" onclick="performBarangaySearch()">
+                <i class="fas fa-search"></i> Search
+            </button>
         </div>
+
+        <button type="button" class="km-batch-print-btn" id="km-batch-print-btn" disabled>
+            <i class="fas fa-print"></i> Batch Print
+        </button>
     </section>
 
     <div class="km-table-card">
@@ -57,6 +57,9 @@
             <table class="km-table km-table--masterlist">
                 <thead>
                     <tr>
+                        <th class="km-col-check">
+                            <input type="checkbox" id="km-select-all" aria-label="Select all records">
+                        </th>
                         <th>Respondent #</th>
                         <th>
                             FULLNAME
@@ -71,7 +74,7 @@
                 </thead>
                 <tbody id="km-table-tbody">
                     <tr class="km-loading-row">
-                        <td colspan="7">Loading records…</td>
+                        <td colspan="8">Loading records…</td>
                     </tr>
                 </tbody>
             </table>
@@ -108,7 +111,18 @@
     <div class="km-kkp-modal-content">
         <div class="km-kkp-modal-header">
             <h2><i class="fas fa-file-alt"></i> KK Survey Questionnaire</h2>
-            <button type="button" class="km-kkp-modal-close" onclick="closeKKPModal()"><i class="fas fa-times"></i></button>
+            <div class="km-kkp-modal-controls">
+                <button type="button" class="km-kkp-modal-control-btn km-kkp-resize-btn" id="kmKKPFullscreenBtn" onclick="toggleKKPFullscreen()" title="Maximize" aria-label="Maximize">
+                    <svg class="modal-win-icon-max" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                        <rect x="2.5" y="2.5" width="11" height="11" rx="0.5"></rect>
+                    </svg>
+                    <svg class="modal-win-icon-restore" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                        <path d="M5 3.5h7.5V11"></path>
+                        <rect x="2.5" y="5.5" width="8" height="8" rx="0.5"></rect>
+                    </svg>
+                </button>
+                <button type="button" class="km-kkp-modal-control-btn km-kkp-modal-close" onclick="closeKKPModal()" title="Close" aria-label="Close">&times;</button>
+            </div>
         </div>
         <div class="km-kkp-modal-body kk-qs-body" id="kmKKPFormContainer">
             <p class="km-kkp-loading">Loading questionnaire...</p>
@@ -128,8 +142,9 @@
         window.kmConfig = {
             dataUrl: @json(route('api.kabataan-monitoring.index')),
             questionnaireUrl: @json(url('/api/kabataan-monitoring/__ID__/questionnaire')),
+            batchPrintUrl: @json(route('kabataan-monitoring.batch-print')),
+            csrfToken: @json(csrf_token()),
         };
     </script>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
     <script src="{{ url('/modules/kabataan-monitoring/js/kabataan-monitoring.js') }}?v={{ time() }}"></script>
 @endpush

@@ -21,11 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let confirmationHandled = false;
     const serverCooldown = Number(window.cpResendCooldown || 0);
 
-    function showPageLoading(message) {
-        if (window.showLoading) {
-            window.showLoading(message);
-        }
-    }
+    function showPageLoading() {}
 
     function clearResendCooldown() {
         localStorage.removeItem(cooldownKey);

@@ -99,30 +99,52 @@
     }
 
     function formatDateSubmitted(raw) {
-        if (!raw) return '-';
+        if (!raw) return 'N/A';
         const date = new Date(raw);
         if (Number.isNaN(date.getTime())) return raw;
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
     function formatSubmittedTime(raw) {
-        if (!raw) return '-';
+        if (!raw) return 'N/A';
         const date = new Date(raw);
-        if (Number.isNaN(date.getTime())) return '-';
+        if (Number.isNaN(date.getTime())) return 'N/A';
         return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     }
 
+    function pdfPreviewSrc(fileUrl) {
+        const base = String(fileUrl || '').split('#')[0];
+        return base + '#toolbar=0&navpanes=0&scrollbar=0&view=FitH';
+    }
+
+    function setResizeButtonState(isFullscreen) {
+        const btn = document.getElementById('fullscreenBtn');
+        if (!btn) return;
+        btn.classList.toggle('is-restore', !!isFullscreen);
+        btn.title = isFullscreen ? 'Restore Down' : 'Maximize';
+        btn.setAttribute('aria-label', btn.title);
+    }
+
     function populateModalFields(item) {
-        document.getElementById('modalFiscalYear').textContent = item.fiscal_year ? String(item.fiscal_year) : '-';
+        const barangayEl = document.getElementById('modalBarangay');
+        if (barangayEl) {
+            barangayEl.textContent = item.barangay
+                || config.barangayName
+                || document.getElementById('bmShowApp')?.dataset.barangayName
+                || 'N/A';
+        }
+        document.getElementById('modalFiscalYear').textContent = item.fiscal_year || item.calendar_year
+            ? String(item.fiscal_year || item.calendar_year)
+            : 'N/A';
         document.getElementById('modalDateSubmitted').textContent = item.date_submitted
             ? formatDateSubmitted(item.date_submitted)
-            : (item.date_submitted_raw || '-');
-        document.getElementById('modalSubmittedBy').textContent = item.submitted_by || '-';
+            : (item.date_submitted_raw || 'N/A');
+        document.getElementById('modalSubmittedBy').textContent = item.submitted_by || 'N/A';
         const roleEl = document.getElementById('modalSubmittedRole');
         if (roleEl) {
-            roleEl.textContent = item.submitted_by_role || '-';
+            roleEl.textContent = item.submitted_by_role || 'N/A';
         }
-        document.getElementById('modalTitle').textContent = item.title || item.name || '-';
+        document.getElementById('modalTitle').textContent = item.title || item.name || 'N/A';
         document.getElementById('modalSubmittedTime').textContent = item.submitted_time
             || formatSubmittedTime(item.date_submitted);
 
@@ -155,7 +177,7 @@
         const fileUrl = item.file_url || item.file;
         if ((item.has_pdf || fileUrl) && fileUrl) {
             preview.innerHTML =
-                '<iframe src="' + escapeHtml(fileUrl) + '#toolbar=1&navpanes=0" class="abyip-pdf-frame" title="ABYIP PDF"></iframe>';
+                '<div class="abyip-pdf-clip"><iframe src="' + escapeHtml(pdfPreviewSrc(fileUrl)) + '" class="abyip-pdf-frame" title="ABYIP PDF"></iframe></div>';
             return;
         }
 
@@ -559,6 +581,7 @@
 
     window.closeViewModal = function () {
         document.getElementById('viewModal').classList.remove('active', 'fullscreen');
+        setResizeButtonState(false);
         if (!document.getElementById('approveModal').classList.contains('active')
             && !document.getElementById('rejectModal').classList.contains('active')
             && !document.getElementById('revokeModal').classList.contains('active')) {
@@ -569,7 +592,9 @@
     };
 
     window.toggleFullscreen = function () {
-        document.getElementById('viewModal').classList.toggle('fullscreen');
+        const modal = document.getElementById('viewModal');
+        modal.classList.toggle('fullscreen');
+        setResizeButtonState(modal.classList.contains('fullscreen'));
     };
 
     window.showToast = function (message, type) {

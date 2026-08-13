@@ -42,14 +42,14 @@ class ProfileService
     {
         $term = $this->resolveLatestTerm($officialProfile);
 
-        return $term?->term_start ? $this->formatDate($term->term_start) : '—';
+        return $term?->term_start ? $this->formatDate($term->term_start) : 'N/A';
     }
 
     private function resolveTermEnd(?OfficialProfile $officialProfile): string
     {
         $term = $this->resolveLatestTerm($officialProfile);
 
-        return $term?->term_end ? $this->formatDate($term->term_end) : '—';
+        return $term?->term_end ? $this->formatDate($term->term_end) : 'N/A';
     }
 
     private function resolveLatestTerm(?OfficialProfile $officialProfile): ?object
@@ -79,14 +79,14 @@ class ProfileService
     {
         $trimmed = trim((string) $value);
 
-        return $trimmed !== '' ? $trimmed : '—';
+        return $trimmed !== '' ? $trimmed : 'N/A';
     }
 
     private function displayName(?string $value): string
     {
         $trimmed = trim((string) $value);
 
-        return $trimmed !== '' ? mb_strtoupper($trimmed, 'UTF-8') : '—';
+        return $trimmed !== '' ? mb_strtoupper($trimmed, 'UTF-8') : 'N/A';
     }
 
     private function displaySuffix(?string $suffix): string
@@ -94,7 +94,7 @@ class ProfileService
         $trimmed = trim((string) $suffix);
 
         if ($trimmed === '' || strcasecmp($trimmed, 'none') === 0 || strcasecmp($trimmed, 'n/a') === 0) {
-            return '—';
+            return 'N/A';
         }
 
         return $trimmed;
@@ -104,19 +104,19 @@ class ProfileService
     {
         $trimmed = trim((string) $position);
 
-        return $trimmed !== '' ? $trimmed : '—';
+        return $trimmed !== '' ? $trimmed : 'N/A';
     }
 
     private function formatDate(mixed $value): string
     {
         if ($value === null || $value === '') {
-            return '—';
+            return 'N/A';
         }
 
         try {
             return \Illuminate\Support\Carbon::parse($value)->format('F d, Y');
         } catch (\Throwable) {
-            return '—';
+            return 'N/A';
         }
     }
 

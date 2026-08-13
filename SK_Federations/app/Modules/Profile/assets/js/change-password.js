@@ -68,9 +68,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (btnText) {
             btnText.textContent = 'Sending verification...';
         }
-        if (window.showLoading) {
-            window.showLoading('Sending verification email...');
-        }
     }
 
     function validatePasswordStrength(password) {

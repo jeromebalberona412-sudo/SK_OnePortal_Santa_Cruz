@@ -16,7 +16,7 @@
      data-barangay-slug="{{ $barangayData['slug'] }}"
      data-barangay-name="{{ $barangayData['name'] }}">
 
-    <a class="bm-back-link" href="{{ route('barangay-monitoring') }}">
+    <a class="bm-back-link" href="{{ route('barangay-monitoring') }}" data-no-loading>
         <i class="fas fa-arrow-left"></i>
         <span>Back to All Barangays</span>
     </a>
@@ -87,13 +87,6 @@
     @endif
 
     <section class="bm-card bm-table-card">
-        <div class="bm-table-header">
-            <div class="bm-table-header-title">
-                <h3><i class="fas fa-file-invoice-dollar"></i> Submitted ABYIP Reports</h3>
-                <p>Review ABYIP submissions from this barangay</p>
-            </div>
-        </div>
-
         <div class="bm-table-filters">
             <div class="bm-search-wrap">
                 <i class="fas fa-search"></i>
@@ -202,12 +195,16 @@
                 ABYIP Submission Details
             </h3>
             <div class="view-modal-controls">
-                <button type="button" class="view-modal-control-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen" id="fullscreenBtn">
-                    <i class="fas fa-expand"></i>
+                <button type="button" class="view-modal-control-btn view-modal-resize-btn" onclick="toggleFullscreen()" title="Maximize" aria-label="Maximize" id="fullscreenBtn">
+                    <svg class="modal-win-icon-max" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                        <rect x="2.5" y="2.5" width="11" height="11" rx="0.5"></rect>
+                    </svg>
+                    <svg class="modal-win-icon-restore" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                        <path d="M5 3.5h7.5V11"></path>
+                        <rect x="2.5" y="5.5" width="8" height="8" rx="0.5"></rect>
+                    </svg>
                 </button>
-                <button type="button" class="view-modal-control-btn" onclick="closeViewModal()" title="Close">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button type="button" class="view-modal-control-btn view-modal-close-btn" onclick="closeViewModal()" title="Close" aria-label="Close">&times;</button>
             </div>
         </div>
         <div class="view-modal-body">
@@ -372,6 +369,7 @@
             revokeUrl: @json(url('/api/barangay-abyip/__ID__/revoke')),
             csrfToken: @json(csrf_token()),
             abyipReports: @json($barangayData['abyip']['reports'] ?? []),
+            barangayName: @json($barangayData['name'] ?? ''),
         };
     </script>
     <script src="{{ url('/modules/barangay-monitoring/js/barangay-monitoring-show.js') }}?v={{ time() }}"></script>

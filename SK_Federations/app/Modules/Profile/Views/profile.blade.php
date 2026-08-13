@@ -147,7 +147,7 @@ class="profile-page" data-heartbeat-interval-ms="{{ (int) config('sk_fed_auth.si
                                 <div class="account-settings-desc">{{ $profile['email'] }}</div>
                             </div>
                         </div>
-                        <a href="{{ route('change-email') }}" class="account-settings-btn">
+                        <a href="{{ route('change-email') }}" class="account-settings-btn" data-no-loading>
                             <i class="fa-solid fa-envelope"></i>
                             Change Email
                         </a>
@@ -165,7 +165,7 @@ class="profile-page" data-heartbeat-interval-ms="{{ (int) config('sk_fed_auth.si
                                 <div class="account-settings-desc">Update your account password securely.</div>
                             </div>
                         </div>
-                        <a href="{{ route('change-password') }}" class="account-settings-btn">
+                        <a href="{{ route('change-password') }}" class="account-settings-btn" data-no-loading>
                             <i class="fa-solid fa-key"></i>
                             Change Password
                         </a>

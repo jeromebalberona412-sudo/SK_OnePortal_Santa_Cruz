@@ -161,7 +161,7 @@ body.profile-page .profile-page-sub {
     margin-top: 4px;
 }
 
-/* Tab bar — matches SK Officials profile toggle */
+/* Tab bar — SK Federation colors (navy + white, not Officials charcoal/yellow) */
 body.profile-page .profile-tab-bar {
     display: inline-flex;
     gap: 8px;
@@ -208,18 +208,18 @@ body.profile-page .profile-tab:hover i {
 }
 
 body.profile-page .profile-tab.active {
-    background: #2c2c3e;
-    color: #f4c20d;
-    border-color: #f4c20d;
-    box-shadow: 0 2px 8px rgba(44, 44, 62, 0.25);
+    background: #213F99;
+    color: #ffffff;
+    border-color: #213F99;
+    box-shadow: 0 2px 8px rgba(33, 63, 153, 0.28);
 }
 
 body.profile-page .profile-tab.active i {
-    color: #f4c20d;
+    color: #ffffff;
 }
 
 body.profile-page .profile-tab:focus-visible {
-    outline: 2px solid #2c2c3e;
+    outline: 2px solid #213F99;
     outline-offset: 2px;
 }
 

@@ -78,15 +78,17 @@ class BarangayMonitoringService
             ->map(fn (Abyip $document) => [
                 'id' => $document->id,
                 'name' => $document->document_title ?: 'ABYIP '.$document->fiscal_year,
+                'title' => $document->document_title ?: 'ABYIP '.$document->fiscal_year,
                 'fiscal_year' => $document->fiscal_year,
                 'calendar_year' => $document->fiscal_year,
                 'date_submitted' => $document->created_at?->toDateTimeString(),
-                'submitted_by' => $document->creator?->name ?? '—',
+                'submitted_by' => $document->creator?->name ?? 'N/A',
                 'submitted_by_role' => $this->formatOfficialPosition($document->creator?->officialProfile?->position),
                 'status' => strtolower((string) ($document->status ?? Abyip::STATUS_PENDING)),
                 'rejection_reason' => $document->rejection_reason,
                 'has_pdf' => filled($document->pdf_data),
                 'file' => filled($document->pdf_data) ? url('/api/barangay-abyip/'.$document->id.'/file') : null,
+                'file_url' => filled($document->pdf_data) ? url('/api/barangay-abyip/'.$document->id.'/file') : null,
             ])
             ->all();
     }

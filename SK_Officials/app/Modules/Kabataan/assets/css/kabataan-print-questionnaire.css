@@ -1,6 +1,6 @@
 @page {
-    size: A4 portrait;
-    margin: 6mm;
+    size: Letter portrait;
+    margin: 0.35in;
 }
 
 body.kk-print-body {
@@ -106,10 +106,104 @@ body.kk-print-body {
     .kk-print-sheet {
         max-width: none;
         padding: 0;
+        page-break-inside: avoid;
+        break-inside: avoid-page;
     }
 
     .kk-print-questionnaire.kk-view-paper {
-        font-size: 11px;
+        font-size: 10px;
+        zoom: 0.88;
+    }
+
+    .kk-print-questionnaire .kkf-notice-box,
+    .kk-print-questionnaire .kkp-notice-box {
+        padding: 4px 8px;
+        margin: 3px 0 5px;
+    }
+
+    .kk-print-questionnaire .kkf-notice-body,
+    .kk-print-questionnaire .kkp-notice-body {
+        line-height: 1.25;
+        margin-bottom: 3px;
+        font-size: 9px;
+    }
+
+    .kk-print-questionnaire .kkf-notice-body br,
+    .kk-print-questionnaire .kkp-notice-body br {
+        display: none;
+    }
+
+    .kk-print-questionnaire .kkf-section-title,
+    .kk-print-questionnaire .kkp-section-heading {
+        margin: 4px 0 3px;
+        padding-bottom: 1px;
+        font-size: 10px;
+    }
+
+    .kk-print-questionnaire .kkf-instruction,
+    .kk-print-questionnaire .kkp-instruction {
+        margin-bottom: 3px;
+        font-size: 9px;
+    }
+
+    .kk-print-questionnaire .kkf-name-row,
+    .kk-print-questionnaire .kkf-loc-row,
+    .kk-print-questionnaire .kkp-name-row,
+    .kk-print-questionnaire .kkp-loc-row {
+        margin-bottom: 3px;
+        gap: 4px;
+    }
+
+    .kk-print-questionnaire .kkf-personal-row {
+        margin-bottom: 4px;
+    }
+
+    .kk-print-questionnaire .kkf-demo-grid,
+    .kk-print-questionnaire .kkp-demo-grid {
+        gap: 5px;
+        margin-bottom: 4px;
+    }
+
+    .kk-print-questionnaire .kkf-demo-col {
+        gap: 3px;
+    }
+
+    .kk-print-questionnaire .kkf-demo-block-options,
+    .kk-print-questionnaire .kkp-demo-block-options {
+        padding: 3px 6px;
+        gap: 1px;
+    }
+
+    .kk-print-questionnaire .kkf-chk-lbl,
+    .kk-print-questionnaire .kkp-chk-lbl {
+        font-size: 9px;
+        line-height: 1.2;
+    }
+
+    .kk-print-questionnaire .kkf-footer-row {
+        margin-top: 4px;
+        margin-bottom: 2px;
+    }
+
+    .kk-print-questionnaire .kkf-sig-section,
+    .kk-print-questionnaire .kkp-sig-section {
+        margin-top: 6px;
+        padding-top: 4px;
+    }
+
+    .kk-print-questionnaire .kkf-sig-overlay {
+        top: -8px;
+    }
+
+    .kk-print-questionnaire .kkf-voter-section,
+    .kk-print-questionnaire .kkf-voter-row {
+        margin-top: 3px;
+        gap: 4px;
+    }
+
+    .kk-print-questionnaire .kkf-row-label,
+    .kk-print-questionnaire .kkp-row-label {
+        margin-bottom: 1px;
     }
 
     /* Header: everything right-aligned */

@@ -16,7 +16,7 @@
                 Review and approve ABYIP uploads from barangay SK Officials
             </p>
         </div>
-        <a href="{{ route('barangay-monitoring') }}" class="back-button">
+        <a href="{{ route('barangay-monitoring') }}" class="back-button" data-no-loading>
             <i class="fas fa-arrow-left"></i> Back to Barangay Monitoring
         </a>
     </div>
@@ -76,12 +76,16 @@
                 ABYIP Submission Details
             </h3>
             <div class="view-modal-controls">
-                <button type="button" class="view-modal-control-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen" id="fullscreenBtn">
-                    <i class="fas fa-expand"></i>
+                <button type="button" class="view-modal-control-btn view-modal-resize-btn" onclick="toggleFullscreen()" title="Maximize" aria-label="Maximize" id="fullscreenBtn">
+                    <svg class="modal-win-icon-max" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                        <rect x="2.5" y="2.5" width="11" height="11" rx="0.5"></rect>
+                    </svg>
+                    <svg class="modal-win-icon-restore" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                        <path d="M5 3.5h7.5V11"></path>
+                        <rect x="2.5" y="5.5" width="8" height="8" rx="0.5"></rect>
+                    </svg>
                 </button>
-                <button type="button" class="view-modal-control-btn" onclick="closeViewModal()" title="Close">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button type="button" class="view-modal-control-btn view-modal-close-btn" onclick="closeViewModal()" title="Close" aria-label="Close">&times;</button>
             </div>
         </div>
         <div class="view-modal-body">
@@ -91,7 +95,7 @@
                     <span class="meta-value" id="modalBarangay">-</span>
                 </div>
                 <div class="meta-item">
-                    <span class="meta-label">Fiscal Year</span>
+                    <span class="meta-label">Calendar Year</span>
                     <span class="meta-value" id="modalFiscalYear">-</span>
                 </div>
                 <div class="meta-item">
@@ -105,6 +109,10 @@
                 <div class="meta-item">
                     <span class="meta-label">Submitted By</span>
                     <span class="meta-value" id="modalSubmittedBy">-</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Role</span>
+                    <span class="meta-value" id="modalSubmittedRole">-</span>
                 </div>
                 <div class="meta-item">
                     <span class="meta-label">Status</span>

@@ -31,6 +31,7 @@ Route::middleware(['auth', 'verified', 'single.session', 'sk_fed.access', 'trust
         Route::get('/kabataan-monitoring', [KabataanMonitoringController::class, 'index'])->name('kabataan-monitoring');
         Route::get('/api/kabataan-monitoring', [KabataanMonitoringController::class, 'data'])->name('api.kabataan-monitoring.index');
         Route::get('/api/kabataan-monitoring/{id}/questionnaire', [KabataanMonitoringController::class, 'questionnaire'])->name('api.kabataan-monitoring.questionnaire');
+        Route::post('/kabataan-monitoring/batch-print', [KabataanMonitoringController::class, 'batchPrint'])->name('kabataan-monitoring.batch-print');
         Route::get('/kabataan-monitoring/barangay/{barangay}', [KabataanMonitoringController::class, 'barangayDetail'])->name('kabataan-monitoring.barangay');
         Route::get('/kabataan-monitoring/{kabataan}', [KabataanMonitoringController::class, 'show'])->name('kabataan-monitoring.show');
     });
