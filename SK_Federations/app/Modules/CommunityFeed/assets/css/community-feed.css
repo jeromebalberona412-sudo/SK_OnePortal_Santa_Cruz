@@ -1398,12 +1398,12 @@ body.sk-fed-feed .main-content,
 .feed-toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(16px);
     padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600;
-    color: #fff; background: #15803d; box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    color: #fff; background: #22c55e; box-shadow: 0 8px 24px rgba(0,0,0,0.18);
     opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease;
     z-index: 4000; max-width: min(92vw, 420px); text-align: center;
 }
 .feed-toast.is-visible { opacity: 1; transform: translateX(-50%) translateY(0); }
-.feed-toast--error { background: #dc2626; }
+.feed-toast--error { background: #22c55e; }
 
 /* ── BARANGAY SK PROFILE PAGE ── */
 .bfp-wrap { padding: 8px 4px 24px; }

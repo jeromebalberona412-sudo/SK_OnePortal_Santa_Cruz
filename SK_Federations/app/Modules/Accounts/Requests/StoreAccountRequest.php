@@ -3,6 +3,7 @@
 namespace App\Modules\Accounts\Requests;
 
 use App\Modules\Accounts\Models\OfficialProfile;
+use App\Modules\Accounts\Support\SkOfficialTermDates;
 use App\Modules\Shared\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
@@ -67,7 +68,7 @@ class StoreAccountRequest extends FormRequest
         $isOfficial = $this->input('role') === User::ROLE_SK_OFFICIAL;
         $isFederation = $this->input('role') === User::ROLE_SK_FED;
         $currentYear = Carbon::now()->year;
-        $termStartMin = $isOfficial ? '2023-01-01' : "{$currentYear}-01-01";
+        $termStartMin = $isOfficial ? SkOfficialTermDates::FIRST_START : "{$currentYear}-01-01";
         $termStartMax = $isOfficial ? Carbon::now()->toDateString() : "{$currentYear}-12-31";
         $ageMin = ($isOfficial || $isFederation) ? 18 : 15;
         $ageMax = ($isOfficial || $isFederation) ? 24 : 30;
@@ -160,34 +161,18 @@ class StoreAccountRequest extends FormRequest
                 return;
             }
 
+            if ($this->input('role') === User::ROLE_SK_OFFICIAL) {
+                foreach (SkOfficialTermDates::errorsFor($termStart, $termEnd) as $field => $message) {
+                    $validator->errors()->add($field, $message);
+                }
+
+                return;
+            }
+
             try {
                 $start = Carbon::parse($termStart)->startOfDay();
                 $end = Carbon::parse($termEnd)->startOfDay();
             } catch (\Throwable) {
-                return;
-            }
-
-            if ($end->year !== $start->year + 4) {
-                $validator->errors()->add(
-                    'term_end',
-                    'Term end year must be exactly 4 years after the term start year.'
-                );
-
-                return;
-            }
-
-            if ($this->input('role') === User::ROLE_SK_OFFICIAL) {
-                $requiredEndYear = $start->year + 4;
-                $endYearStart = Carbon::create($requiredEndYear, 1, 1)->startOfDay();
-                $endYearEnd = Carbon::create($requiredEndYear, 12, 31)->startOfDay();
-
-                if ($end->lt($endYearStart) || $end->gt($endYearEnd)) {
-                    $validator->errors()->add(
-                        'term_end',
-                        'Term end date must fall within the term end year.'
-                    );
-                }
-
                 return;
             }
 
@@ -226,12 +211,14 @@ class StoreAccountRequest extends FormRequest
             'suffix_other.regex' => 'Other suffix must not contain spaces.',
             'contact_number.regex' => 'Contact number must be 11 digits starting with 09.',
             'term_start.after_or_equal' => $this->input('role') === User::ROLE_SK_OFFICIAL
-                ? 'Term start date must be on or after January 1, 2023.'
+                ? SkOfficialTermDates::startRuleMessage()
                 : 'Term start date must be within the current year.',
             'term_start.before_or_equal' => $this->input('role') === User::ROLE_SK_OFFICIAL
-                ? 'Term start date cannot be in the future.'
+                ? 'Term start date cannot be in the future. Use the current SK term that began on November 30.'
                 : 'Term start date must be within the current year.',
-            'term_end.after' => 'Term end date must be exactly 4 years after the term start date.',
+            'term_end.after' => $this->input('role') === User::ROLE_SK_OFFICIAL
+                ? SkOfficialTermDates::endRuleMessage()
+                : 'Term end date must be exactly 4 years after the term start date.',
         ];
     }
 }

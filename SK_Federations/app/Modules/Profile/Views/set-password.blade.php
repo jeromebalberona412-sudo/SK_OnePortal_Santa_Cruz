@@ -7,6 +7,10 @@
     $pwMax = (int) config('sk_fed_auth.password_reset.password.max_length', 64);
 @endphp
 
+@push('styles')
+    <link rel="stylesheet" href="{{ url('/modules/profile/css/change-password.css') }}?v={{ @filemtime(app_path('Modules/Profile/assets/css/change-password.css')) ?: time() }}">
+@endpush
+
 @push('scripts')
     <script src="{{ url('/modules/profile/js/change-password.js') }}"></script>
 @endpush

@@ -4,6 +4,10 @@
 
 @section('card-class', 'ce-verify-card sk-fed-compact-card')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ url('/modules/profile/css/change-password.css') }}?v={{ @filemtime(app_path('Modules/Profile/assets/css/change-password.css')) ?: time() }}">
+@endpush
+
 @push('scripts-before')
     <script>
         window.cpResendCooldown = {{ (int) $resendCooldown }};

@@ -480,7 +480,7 @@ function showDsoToast(message) {
         fontSize: '0.875rem',
         fontWeight: '600',
         color: '#fff',
-        background: '#16a34a',
+        background: '#22c55e',
         boxShadow: '0 4px 18px rgba(0,0,0,.18)',
     });
     document.body.appendChild(toast);

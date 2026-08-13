@@ -2,6 +2,10 @@
 
 @section('title', 'Change Email')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ url('/modules/profile/css/change-email.css') }}?v={{ @filemtime(app_path('Modules/Profile/assets/css/change-email.css')) ?: time() }}">
+@endpush
+
 @push('scripts')
     <script src="{{ url('/modules/profile/js/change-email.js') }}"></script>
 @endpush

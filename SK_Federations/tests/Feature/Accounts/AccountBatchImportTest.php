@@ -25,8 +25,8 @@ it('validates batch rows using simplified officials template rules', function ()
             'sex' => 'Male',
             'date_of_birth' => '2000-01-01',
             'contact_number' => '09171234567',
-            'term_start' => now()->startOfYear()->toDateString(),
-            'term_end' => '2029-06-30',
+            'term_start' => '2023-11-30',
+            'term_end' => '2026-11-30',
         ],
     ], User::ROLE_SK_OFFICIAL);
 
@@ -43,16 +43,16 @@ it('normalizes valid officials batch rows with strict template validation', func
         'last_name' => 'DELA CRUZ',
         'suffix' => 'Jr.',
         'sex' => 'Male',
-        'date_of_birth' => '2000-01-15',
+        'date_of_birth' => '2005-01-15',
         'contact_number' => '09171234567',
-        'email' => 'juan.batch.'.uniqid().'@email.com',
+        'email' => 'juan.batch.'.uniqid().'@gmail.com',
         'barangay' => 'San Roque',
         'position' => 'Chairperson',
-        'term_start' => now()->startOfYear()->toDateString(),
-        'term_end' => '2029-06-30',
+        'term_start' => '2023-11-30',
+        'term_end' => '2026-11-30',
     ], User::ROLE_SK_OFFICIAL, true);
 
-    expect($row['email'])->toContain('@email.com')
+    expect($row['email'])->toContain('@gmail.com')
         ->and($row['position'])->toBe('Chairperson')
         ->and($row['middle_name'])->toBeNull()
         ->and($row['status'])->toBe(User::STATUS_ACTIVE);
@@ -114,10 +114,10 @@ it('rejects duplicate emails during batch validation', function () {
             'barangay' => 'San Roque',
             'position' => 'Secretary',
             'sex' => 'Female',
-            'date_of_birth' => '2001-05-10',
+            'date_of_birth' => '2005-05-10',
             'contact_number' => '09179876543',
-            'term_start' => now()->startOfYear()->toDateString(),
-            'term_end' => '2029-06-30',
+            'term_start' => '2023-11-30',
+            'term_end' => '2026-11-30',
         ],
     ], User::ROLE_SK_OFFICIAL);
 

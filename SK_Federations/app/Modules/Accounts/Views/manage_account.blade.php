@@ -117,12 +117,18 @@
                                     <span class="accounts-sort-icon" aria-hidden="true"></span>
                                 </button>
                             </th>
-                            <th class="th-email">Email Address</th>
-                            @if($isOfficials)
-                                <th class="th-barangay">Barangay</th>
-                            @else
-                                <th class="th-barangay">Barangay</th>
-                            @endif
+                            <th class="th-email accounts-th-sortable" data-sort-key="email" data-sort-type="text" aria-sort="none">
+                                <button type="button" class="accounts-sort-btn" aria-haspopup="menu" aria-expanded="false">
+                                    Email Address
+                                    <span class="accounts-sort-icon" aria-hidden="true"></span>
+                                </button>
+                            </th>
+                            <th class="th-barangay accounts-th-sortable" data-sort-key="barangay" data-sort-type="text" aria-sort="none">
+                                <button type="button" class="accounts-sort-btn" aria-haspopup="menu" aria-expanded="false">
+                                    Barangay
+                                    <span class="accounts-sort-icon" aria-hidden="true"></span>
+                                </button>
+                            </th>
                             <th class="th-position">{{ $isOfficials ? 'Position' : 'SK Position' }}</th>
                             @if($isOfficials)
                                 <th class="th-term">Term Start</th>

@@ -156,12 +156,14 @@
 
 .modal-header-blue-grad .modal-win-btn {
     color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.28);
+    border: none;
+    background: transparent;
 }
 
-.modal-header-blue-grad .modal-win-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
-    border-color: rgba(255, 255, 255, 0.45);
+.modal-header-blue-grad .modal-win-btn:hover,
+.modal-header-blue-grad .modal-win-btn:focus {
+    background: transparent;
+    border: none;
 }
 
 .modal-controls {
@@ -191,14 +193,14 @@
 .modal-minimize-btn:hover,
 .modal-fullscreen-btn:hover,
 .modal-restore-btn:hover {
-    background: rgba(255, 255, 255, 0.17);
+    background: transparent;
 }
 
 .modal-header-yellow .modal-close-btn:hover,
 .modal-header-yellow .modal-fullscreen-btn:hover,
 .modal-header-yellow .modal-restore-btn:hover,
 .modal-header-yellow .modal-win-btn:hover {
-    background: rgba(255, 255, 255, 0.22);
+    background: transparent;
 }
 
 /* Window-style resize/close buttons (all modals) */
@@ -219,22 +221,27 @@
     line-height: 1;
 }
 
-.modal-win-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
+.modal-win-btn:hover,
+.modal-win-btn:focus {
+    background: transparent;
 }
 
 .modal-win-btn svg {
     pointer-events: none;
+    display: block;
+    flex-shrink: 0;
 }
 
-/* Maximize / restore icon — square character */
-.modal-win-icon {
-    font-size: 20px;
-    font-weight: 400;
-    line-height: 1;
+.modal-win-btn-maximize .modal-win-icon-restore {
+    display: none;
+}
+
+.modal-win-btn-maximize.is-restore .modal-win-icon-max {
+    display: none;
+}
+
+.modal-win-btn-maximize.is-restore .modal-win-icon-restore {
     display: block;
-    pointer-events: none;
-    user-select: none;
 }
 
 /* Close button — same size as maximize */
@@ -1279,21 +1286,49 @@ select.form-input-light option {
 
 .table-responsive {
     overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-y: hidden;
 }
 
-.accounts-page .table-card-modern,
+.accounts-page .table-card-modern {
+    overflow: hidden;
+}
+
 .accounts-page .table-responsive {
     overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #94a3b8 #e2e8f0;
+}
+
+.accounts-page .table-responsive::-webkit-scrollbar {
+    height: 8px;
+    width: 0;
+}
+
+.accounts-page .table-responsive::-webkit-scrollbar-track {
+    background: #e2e8f0;
+}
+
+.accounts-page .table-responsive::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 8px;
+}
+
+.accounts-page .table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
 }
 
 .accounts-table {
     width: 100%;
-    min-width: 760px;
+    min-width: 980px;
+    table-layout: auto;
     border-collapse: separate;
     border-spacing: 0;
     font-size: 13px;
+}
+
+.accounts-table:has(.th-term) {
+    min-width: 1180px;
 }
 
 .accounts-table thead th {
@@ -1336,6 +1371,8 @@ select.form-input-light option {
     background: #ffffff;
     text-align: center;
     vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .accounts-table tbody td:last-child {
@@ -1927,10 +1964,6 @@ body.sidebar-collapsed .accounts-page-footer {
         grid-template-columns: 1fr;
     }
 
-    .accounts-table {
-        min-width: 640px;
-    }
-
     .accounts-table thead th,
     .accounts-table tbody td {
         padding: 0.62rem 0.7rem;
@@ -2015,10 +2048,6 @@ body.sidebar-collapsed .accounts-page-footer {
 @media (max-width: 480px) {
     .page-title-modern {
         font-size: 1.35rem;
-    }
-
-    .accounts-table {
-        min-width: 700px;
     }
 
     .btn-view-modern,
@@ -2264,28 +2293,13 @@ body.sidebar-collapsed .accounts-page-footer {
     font-weight: 600;
     white-space: nowrap;
     color: #ffffff;
+    background: #22c55e;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-/* green — add/create */
-#accountToast {
-    background: #16a34a;
-}
-
-/* amber — edit/update */
-#accountToastEdit {
-    background: #d97706;
-}
-
-/* red — delete */
-#accountToastDelete {
-    background: #dc2626;
-}
-
 #accountToastError {
-    background: #dc2626;
     white-space: normal;
     max-width: min(92vw, 520px);
     text-align: center;
@@ -2300,20 +2314,11 @@ body.sidebar-collapsed .accounts-page-footer {
     pointer-events: auto;
 }
 
-:root.dark #accountToast {
-    background: #15803d;
-}
-
-:root.dark #accountToastEdit {
-    background: #b45309;
-}
-
-:root.dark #accountToastDelete {
-    background: #b91c1c;
-}
-
+:root.dark #accountToast,
+:root.dark #accountToastEdit,
+:root.dark #accountToastDelete,
 :root.dark #accountToastError {
-    background: #b91c1c;
+    background: #16a34a;
 }
 
 /* ── Batch Upload Enhancements ─────────────────────────────── */
@@ -2893,23 +2898,35 @@ body.sidebar-collapsed .accounts-page-footer {
 }
 
 .th-name, .td-name {
-    min-width: 200px;
-    max-width: 280px;
+    width: 22%;
+    min-width: 180px;
     text-align: left !important;
     padding-left: 0.75rem !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .th-email, .td-email {
-    min-width: 220px;
+    width: 20%;
+    min-width: 180px;
     text-align: left !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
     word-break: break-word;
 }
-.th-barangay, .td-barangay { min-width: 120px; }
-.th-position, .td-position { min-width: 120px; }
-.th-federation-position, .td-federation-position { min-width: 150px; }
-.th-term, .td-term { min-width: 100px; }
-.th-status, .td-status { min-width: 110px; }
-.th-actions, .td-actions { min-width: 72px; width: 72px; }
+.th-barangay, .td-barangay { width: 12%; min-width: 110px; }
+.th-position, .td-position { width: 12%; min-width: 110px; }
+.th-federation-position, .td-federation-position { width: 16%; min-width: 140px; }
+.th-term,
+.td-term {
+    width: 120px;
+    min-width: 120px;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: unset;
+}
+.th-status, .td-status { width: 10%; }
+.th-actions, .td-actions { width: 72px; }
 
 .accounts-th-sortable {
     position: relative;
@@ -3232,7 +3249,8 @@ body.sidebar-collapsed .accounts-page-footer {
     text-align: center;
 }
 
-.td-actions {
+.td-actions,
+.accounts-table tbody td.td-actions {
     text-align: center;
     overflow: visible;
     position: relative;
@@ -3244,14 +3262,13 @@ body.sidebar-collapsed .accounts-page-footer {
 
 .accounts-page .table-card-modern .table-responsive {
     overflow-x: auto !important;
-    overflow-y: visible !important;
-    -webkit-overflow-scrolling: touch;
+    overflow-y: hidden !important;
 }
 
 @media (max-width: 768px) {
     .accounts-page .table-responsive {
         overflow-x: auto !important;
-        overflow-y: visible !important;
+        overflow-y: hidden !important;
     }
 
     .account-actions-menu.is-open .account-actions-dropdown.is-floating {
@@ -3749,10 +3766,6 @@ body.sidebar-collapsed .accounts-page-footer {
         min-width: 32px;
         min-height: 32px;
         flex-shrink: 0;
-    }
-
-    .modal-win-icon {
-        font-size: 18px;
     }
 
     .modal-body,

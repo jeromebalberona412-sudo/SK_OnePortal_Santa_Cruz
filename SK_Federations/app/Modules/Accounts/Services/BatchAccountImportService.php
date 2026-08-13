@@ -4,6 +4,7 @@ namespace App\Modules\Accounts\Services;
 
 use App\Modules\Accounts\Models\Barangay;
 use App\Modules\Accounts\Models\OfficialProfile;
+use App\Modules\Accounts\Support\SkOfficialTermDates;
 use App\Modules\Shared\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
@@ -355,12 +356,6 @@ class BatchAccountImportService
 
             if ($data['term_start'] === null) {
                 $errors[] = 'Term start date is required.';
-            } else {
-                $termStartMin = '2023-01-01';
-                $termStartMax = now()->toDateString();
-                if ($data['term_start'] < $termStartMin || $data['term_start'] > $termStartMax) {
-                    $errors[] = 'Term start date must be between 2023 and today.';
-                }
             }
 
             if ($data['term_end'] === null) {
@@ -369,14 +364,18 @@ class BatchAccountImportService
         }
 
         if ($data['term_start'] !== null && $data['term_end'] !== null) {
-            $start = Carbon::parse($data['term_start']);
-            $end = Carbon::parse($data['term_end']);
-            $requiredEndYear = $start->year + 4;
+            if ($isOfficial) {
+                $errors = array_merge($errors, array_values(SkOfficialTermDates::errorsFor(
+                    $data['term_start'],
+                    $data['term_end']
+                )));
+            } else {
+                $start = Carbon::parse($data['term_start']);
+                $end = Carbon::parse($data['term_end']);
 
-            if ($end->year !== $requiredEndYear) {
-                $errors[] = 'Term end year must be exactly 4 years after the term start year.';
-            } elseif ($end->format('Y-m-d') < "{$requiredEndYear}-01-01" || $end->format('Y-m-d') > "{$requiredEndYear}-12-31") {
-                $errors[] = 'Term end date must fall within the term end year.';
+                if ($end->ne($start->copy()->addYears(4))) {
+                    $errors[] = 'Term end date must be exactly 4 years after the term start date.';
+                }
             }
         }
 

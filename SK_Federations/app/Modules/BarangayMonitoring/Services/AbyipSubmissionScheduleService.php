@@ -14,9 +14,7 @@ use Illuminate\Validation\ValidationException;
 
 class AbyipSubmissionScheduleService
 {
-    public function __construct(private readonly AuditLogInterface $auditLog)
-    {
-    }
+    public function __construct(private readonly AuditLogInterface $auditLog) {}
 
     /**
      * @return Collection<int, array<string, mixed>>
@@ -28,7 +26,7 @@ class AbyipSubmissionScheduleService
         }
 
         return AbyipSubmissionSchedule::query()
-            ->with(['creator:id,name', 'creator.officialProfile:id,user_id,federation_position,position', 'updater:id,name'])
+            ->with($this->scheduleRelations())
             ->orderByDesc('fiscal_year')
             ->get()
             ->map(fn (AbyipSubmissionSchedule $schedule) => $this->formatSchedule($schedule));
@@ -46,14 +44,14 @@ class AbyipSubmissionScheduleService
         $year = $fiscalYear ?? (int) date('Y');
 
         $schedule = AbyipSubmissionSchedule::query()
-            ->with(['creator:id,name', 'creator.officialProfile:id,user_id,federation_position,position', 'histories.updater:id,name'])
+            ->with($this->scheduleRelations(includeHistory: true))
             ->where('fiscal_year', $year)
             ->where('status', '!=', AbyipSubmissionSchedule::STATUS_CANCELLED)
             ->first();
 
         if ($schedule === null) {
             $schedule = AbyipSubmissionSchedule::query()
-                ->with(['creator:id,name', 'creator.officialProfile:id,user_id,federation_position,position', 'histories.updater:id,name'])
+                ->with($this->scheduleRelations(includeHistory: true))
                 ->where('status', '!=', AbyipSubmissionSchedule::STATUS_CANCELLED)
                 ->orderByDesc('fiscal_year')
                 ->first();
@@ -119,7 +117,7 @@ class AbyipSubmissionScheduleService
                 'new_date_start' => $schedule->date_start?->format('M j, Y'),
             ]);
 
-            return $this->formatSchedule($schedule->fresh(['creator', 'updater', 'histories.updater']));
+            return $this->formatSchedule($schedule->fresh($this->scheduleRelations(includeHistory: true)));
         });
     }
 
@@ -127,7 +125,7 @@ class AbyipSubmissionScheduleService
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    public function update(User $user, int $id, array $data): array
+    public function update(User $user, int|string $id, array $data): array
     {
         $schedule = $this->findSchedule($id);
         $this->assertEditable($schedule);
@@ -163,14 +161,14 @@ class AbyipSubmissionScheduleService
                 'new_deadline' => $schedule->deadline?->format('M j, Y'),
             ]);
 
-            return $this->formatSchedule($schedule->fresh(['creator', 'updater', 'histories.updater']), includeHistory: true);
+            return $this->formatSchedule($schedule->fresh($this->scheduleRelations(includeHistory: true)), includeHistory: true);
         });
     }
 
     /**
      * @return array<string, mixed>
      */
-    public function extendDeadline(User $user, int $id, string $newDeadline, ?string $reason = null): array
+    public function extendDeadline(User $user, int|string $id, string $newDeadline, ?string $reason = null): array
     {
         $schedule = $this->findSchedule($id);
         $this->assertExtendable($schedule);
@@ -210,14 +208,14 @@ class AbyipSubmissionScheduleService
                 'reason' => $reason,
             ]);
 
-            return $this->formatSchedule($schedule->fresh(['creator', 'updater', 'histories.updater']), includeHistory: true);
+            return $this->formatSchedule($schedule->fresh($this->scheduleRelations(includeHistory: true)), includeHistory: true);
         });
     }
 
     /**
      * @return array<string, mixed>
      */
-    public function cancel(User $user, int $id, ?string $reason = null): array
+    public function cancel(User $user, int|string $id, ?string $reason = null): array
     {
         $schedule = $this->findSchedule($id);
 
@@ -251,11 +249,11 @@ class AbyipSubmissionScheduleService
                 'reason' => $reason,
             ]);
 
-            return $this->formatSchedule($schedule->fresh(['creator', 'updater', 'histories.updater']), includeHistory: true);
+            return $this->formatSchedule($schedule->fresh($this->scheduleRelations(includeHistory: true)), includeHistory: true);
         });
     }
 
-    public function destroy(User $user, int $id): void
+    public function destroy(User $user, int|string $id): void
     {
         $schedule = $this->findSchedule($id);
 
@@ -273,7 +271,7 @@ class AbyipSubmissionScheduleService
         ]);
     }
 
-    private function findSchedule(int $id): AbyipSubmissionSchedule
+    private function findSchedule(int|string $id): AbyipSubmissionSchedule
     {
         $this->assertTableExists();
 
@@ -289,7 +287,7 @@ class AbyipSubmissionScheduleService
         }
     }
 
-    private function assertNoDuplicateYear(int $fiscalYear, ?int $exceptId = null): void
+    private function assertNoDuplicateYear(int $fiscalYear, int|string|null $exceptId = null): void
     {
         $query = AbyipSubmissionSchedule::query()->where('fiscal_year', $fiscalYear);
 
@@ -326,7 +324,7 @@ class AbyipSubmissionScheduleService
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    private function validateSchedulePayload(array $data, ?int $exceptId = null): array
+    private function validateSchedulePayload(array $data, int|string|null $exceptId = null): array
     {
         $tz = config('app.timezone', 'Asia/Manila');
         $currentYear = (int) Carbon::now($tz)->format('Y');
@@ -437,6 +435,10 @@ class AbyipSubmissionScheduleService
         ?string $reason,
         User $user
     ): void {
+        if (! $this->historyTableExists()) {
+            return;
+        }
+
         AbyipSubmissionScheduleHistory::query()->create([
             'schedule_id' => $schedule->id,
             'action' => $action,
@@ -491,23 +493,53 @@ class AbyipSubmissionScheduleService
         ];
 
         if ($includeHistory) {
-            $data['histories'] = $schedule->histories
-                ->map(fn (AbyipSubmissionScheduleHistory $history) => [
-                    'action' => $history->action,
-                    'action_label' => ucfirst(str_replace('_', ' ', $history->action)),
-                    'old_deadline' => $history->old_deadline?->format('M j, Y'),
-                    'new_deadline' => $history->new_deadline?->format('M j, Y'),
-                    'old_date_start' => $history->old_date_start?->format('M j, Y'),
-                    'new_date_start' => $history->new_date_start?->format('M j, Y'),
-                    'reason' => $history->reason,
-                    'updated_by' => $history->updater?->name ?? '—',
-                    'created_at' => $history->created_at?->format('M j, Y g:i A'),
-                ])
-                ->values()
-                ->all();
+            $data['histories'] = ($this->historyTableExists() && $schedule->relationLoaded('histories'))
+                ? $schedule->histories
+                    ->map(fn (AbyipSubmissionScheduleHistory $history) => [
+                        'action' => $history->action,
+                        'action_label' => ucfirst(str_replace('_', ' ', $history->action)),
+                        'old_deadline' => $history->old_deadline?->format('M j, Y'),
+                        'new_deadline' => $history->new_deadline?->format('M j, Y'),
+                        'old_date_start' => $history->old_date_start?->format('M j, Y'),
+                        'new_date_start' => $history->new_date_start?->format('M j, Y'),
+                        'reason' => $history->reason,
+                        'updated_by' => $history->updater?->name ?? '—',
+                        'created_at' => $history->created_at?->format('M j, Y g:i A'),
+                    ])
+                    ->values()
+                    ->all()
+                : [];
         }
 
         return $data;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function scheduleRelations(bool $includeHistory = false): array
+    {
+        $with = [];
+
+        if (Schema::hasColumn('abyip_submission_schedules', 'created_by_user_id')) {
+            $with[] = 'creator:id,name';
+            $with[] = 'creator.officialProfile:id,user_id,federation_position,position';
+        }
+
+        if (Schema::hasColumn('abyip_submission_schedules', 'updated_by_user_id')) {
+            $with[] = 'updater:id,name';
+        }
+
+        if ($includeHistory && $this->historyTableExists()) {
+            $with[] = 'histories.updater:id,name';
+        }
+
+        return $with;
+    }
+
+    private function historyTableExists(): bool
+    {
+        return Schema::hasTable('abyip_submission_schedule_histories');
     }
 
     private function statusLabel(string $status): string

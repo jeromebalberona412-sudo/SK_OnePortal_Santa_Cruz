@@ -109,7 +109,7 @@ window.AccountsDeleteModal = (function () {
         if (!input || !confirmBtn) return;
 
         const value = input.value;
-        const matched = value === 'Delete';
+        const matched = value === 'Confirm';
 
         if (hintError) hintError.style.display = value.length > 0 && !matched ? 'block' : 'none';
         if (hintSuccess) hintSuccess.style.display = matched ? 'block' : 'none';
@@ -153,7 +153,7 @@ window.AccountsDeleteModal = (function () {
 
     async function confirmDelete() {
         const { input } = els();
-        if (!input || input.value !== 'Delete') return;
+        if (!input || input.value !== 'Confirm') return;
 
         const token = csrfToken();
         if (!token) {
@@ -494,6 +494,10 @@ function escapeHtml(value) {
 
 // ── Inline validation helpers (light-theme forms) ─────────────
 const ACCOUNT_TERM_YEARS = 4;
+const SK_OFFICIAL_TERM_YEARS = 3;
+const SK_OFFICIAL_FIRST_TERM_START = '2023-11-30';
+const SK_OFFICIAL_TERM_START_MESSAGE = 'Term start must be November 30 of an SK term year (2023, 2026, 2029, …) under RA 11935. December 1 is not the legal commencement.';
+const SK_OFFICIAL_TERM_END_MESSAGE = 'Term end must be November 30, exactly 3 years after term start (for example November 30, 2023 to November 30, 2026).';
 const SK_OFFICIAL_NAME_MIN = 3;
 const SK_OFFICIAL_NAME_MAX = 50;
 const SK_OFFICIAL_FIRST_NAME_REGEX = /^(?!\s)[A-Z.\-]+(?: [A-Z.\-]+)?$/;
@@ -507,8 +511,8 @@ const BATCH_SK_FED_NAME_MAX = 35;
 const BATCH_LOCATION_MAX = 100;
 const BATCH_POSITION_MAX = 100;
 const BATCH_CONTACT_NUMBER_LENGTH = 11;
-const MODAL_ICON_MAXIMIZE = '\u{1F5D6}';
-const MODAL_ICON_RESTORE = '\u{1F5D7}';
+const MODAL_TITLE_MAXIMIZE = 'Maximize';
+const MODAL_TITLE_RESTORE = 'Restore Down';
 
 function formatLocalDate(date) {
     const y = date.getFullYear();
@@ -564,9 +568,54 @@ function getCurrentYearEndDate() {
     return `${new Date().getFullYear()}-12-31`;
 }
 
+function allowedSkOfficialTermStarts(asOf = new Date()) {
+    const dates = [];
+    const asOfTime = new Date(asOf.getFullYear(), asOf.getMonth(), asOf.getDate()).getTime();
+    for (let year = 2023; ; year += SK_OFFICIAL_TERM_YEARS) {
+        const start = new Date(year, 10, 30);
+        if (start.getTime() > asOfTime) {
+            break;
+        }
+        dates.push(formatLocalDate(start));
+    }
+    return dates;
+}
+
+function currentSkOfficialTermStart(asOf = new Date()) {
+    const allowed = allowedSkOfficialTermStarts(asOf);
+    return allowed.length ? allowed[allowed.length - 1] : SK_OFFICIAL_FIRST_TERM_START;
+}
+
+function snapToSkOfficialTermStart(dateStr) {
+    const allowed = allowedSkOfficialTermStarts();
+    if (!allowed.length) {
+        return SK_OFFICIAL_FIRST_TERM_START;
+    }
+    if (!dateStr) {
+        return allowed[allowed.length - 1];
+    }
+    let picked = allowed[0];
+    for (const date of allowed) {
+        if (date <= dateStr) {
+            picked = date;
+        } else {
+            break;
+        }
+    }
+    return picked;
+}
+
+function isValidSkOfficialTermStart(dateStr) {
+    return allowedSkOfficialTermStarts().includes(dateStr);
+}
+
+function skOfficialTermEndForStart(startDateStr) {
+    return addYearsToDateString(startDateStr, SK_OFFICIAL_TERM_YEARS);
+}
+
 function getTermStartMinDate(form) {
     if (form && isSkOfficialsForm(form)) {
-        return '2023-01-01';
+        return SK_OFFICIAL_FIRST_TERM_START;
     }
     return getCurrentYearStartDate();
 }
@@ -578,44 +627,6 @@ function getTermStartMaxDate(form) {
     return getCurrentYearEndDate();
 }
 
-function getTermEndBoundsForStart(startDateStr) {
-    const start = parseLocalDateString(startDateStr);
-    if (!start) {
-        return { min: '', max: '', year: null };
-    }
-
-    const endYear = start.getFullYear() + ACCOUNT_TERM_YEARS;
-
-    return {
-        min: `${endYear}-01-01`,
-        max: `${endYear}-12-31`,
-        year: endYear,
-    };
-}
-
-function enforceTermEndWithinBounds(endInput, bounds) {
-    if (!endInput || !bounds?.year || !endInput.value) {
-        return;
-    }
-
-    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(endInput.value);
-    if (!match) {
-        return;
-    }
-
-    let month = match[2];
-    let day = match[3];
-    let nextValue = `${bounds.year}-${month}-${day}`;
-
-    if (nextValue < bounds.min) {
-        nextValue = bounds.min;
-    } else if (nextValue > bounds.max) {
-        nextValue = bounds.max;
-    }
-
-    endInput.value = nextValue;
-}
-
 function addYearsToDateString(dateStr, years) {
     const date = parseLocalDateString(dateStr);
     if (!date) {
@@ -625,28 +636,34 @@ function addYearsToDateString(dateStr, years) {
     return formatLocalDate(date);
 }
 
-function applyModalResizeState({ overlay, content, iconEl, btn, isMaximized }) {
+function setModalResizeButton(btn, isMaximized) {
+    if (!btn) {
+        return;
+    }
+    const title = isMaximized ? MODAL_TITLE_RESTORE : MODAL_TITLE_MAXIMIZE;
+    btn.title = title;
+    btn.setAttribute('aria-label', title);
+    btn.classList.toggle('is-restore', !!isMaximized);
+}
+
+function applyModalResizeState({ overlay, content, btn, isMaximized }) {
     if (!overlay || !content) {
         return;
     }
     if (isMaximized) {
         content.style.cssText = 'width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0';
         overlay.style.padding = '0';
-        if (btn) btn.title = 'Restore Down';
-        if (iconEl) iconEl.textContent = MODAL_ICON_RESTORE;
     } else {
         content.style.cssText = '';
         overlay.style.padding = '';
-        if (btn) btn.title = 'Maximize';
-        if (iconEl) iconEl.textContent = MODAL_ICON_MAXIMIZE;
     }
+    setModalResizeButton(btn, isMaximized);
 }
 
-function resetModalResizeState({ overlay, content, iconEl, btn }) {
+function resetModalResizeState({ overlay, content, btn }) {
     if (content) content.style.cssText = '';
     if (overlay) overlay.style.padding = '';
-    if (iconEl) iconEl.textContent = MODAL_ICON_MAXIMIZE;
-    if (btn) btn.title = 'Maximize';
+    setModalResizeButton(btn, false);
 }
 
 
@@ -1217,21 +1234,20 @@ function validateTermRange(form) {
         _showErr(
             startInput,
             isOfficialsForm
-                ? 'Term start date must be between 2023 and today'
+                ? SK_OFFICIAL_TERM_START_MESSAGE
                 : 'Term start date must be within the current year'
         );
         return false;
     }
+    if (isOfficialsForm && start && !isValidSkOfficialTermStart(start)) {
+        _showErr(startInput, SK_OFFICIAL_TERM_START_MESSAGE);
+        return false;
+    }
     if (start && end) {
         if (isOfficialsForm) {
-            const bounds = getTermEndBoundsForStart(start);
-            const endYear = parseInt(end.split('-')[0], 10);
-            if (endYear !== bounds.year) {
-                _showErr(endInput, `Term end year must be exactly ${ACCOUNT_TERM_YEARS} years after term start year`);
-                return false;
-            }
-            if (end < bounds.min || end > bounds.max) {
-                _showErr(endInput, 'Term end date must be within the term end year');
+            const requiredEnd = skOfficialTermEndForStart(start);
+            if (end !== requiredEnd) {
+                _showErr(endInput, SK_OFFICIAL_TERM_END_MESSAGE);
                 return false;
             }
         } else {
@@ -1356,25 +1372,36 @@ function applyTermDateConstraints(form) {
 
     startInput.min = getTermStartMinDate(form);
     startInput.max = getTermStartMaxDate(form);
-    clampDateInputYear(startInput);
-    clampDateInputYear(endInput);
+
+    if (isOfficialsForm) {
+        endInput.readOnly = true;
+        endInput.tabIndex = -1;
+        if (!startInput.value) {
+            startInput.value = currentSkOfficialTermStart();
+        } else {
+            startInput.value = snapToSkOfficialTermStart(startInput.value);
+        }
+    }
+
+    const alreadyWired = form.dataset.termConstraintsWired === '1';
 
     const syncEndConstraints = () => {
-        const startVal = startInput.value;
-        if (startVal && (startVal < startInput.min || startVal > startInput.max)) {
+        if (isOfficialsForm) {
+            if (startInput.value) {
+                startInput.value = snapToSkOfficialTermStart(startInput.value);
+            } else if (form.id === 'addSkOfficialsForm') {
+                startInput.value = currentSkOfficialTermStart();
+            }
+        } else if (startInput.value && (startInput.value < startInput.min || startInput.value > startInput.max)) {
             startInput.value = '';
         }
         const effectiveStart = startInput.value;
         if (effectiveStart) {
             if (isOfficialsForm) {
-                const bounds = getTermEndBoundsForStart(effectiveStart);
-                endInput.min = bounds.min;
-                endInput.max = bounds.max;
-                if (!endInput.value) {
-                    endInput.value = addYearsToDateString(effectiveStart, ACCOUNT_TERM_YEARS);
-                } else {
-                    enforceTermEndWithinBounds(endInput, bounds);
-                }
+                const exactEnd = skOfficialTermEndForStart(effectiveStart);
+                endInput.min = exactEnd;
+                endInput.max = exactEnd;
+                endInput.value = exactEnd;
             } else {
                 const exactEnd = addYearsToDateString(effectiveStart, ACCOUNT_TERM_YEARS);
                 endInput.min = exactEnd;
@@ -1389,20 +1416,26 @@ function applyTermDateConstraints(form) {
         validateTermRange(form);
     };
 
-    startInput.addEventListener('change', syncEndConstraints);
-    startInput.addEventListener('input', syncEndConstraints);
-    endInput.addEventListener('change', () => {
-        if (isOfficialsForm && startInput.value) {
-            enforceTermEndWithinBounds(endInput, getTermEndBoundsForStart(startInput.value));
-        }
-        validateTermRange(form);
-    });
-    endInput.addEventListener('input', () => {
-        if (isOfficialsForm && startInput.value) {
-            enforceTermEndWithinBounds(endInput, getTermEndBoundsForStart(startInput.value));
-        }
-    });
-    endInput.addEventListener('blur', () => validateTermRange(form));
+    if (!alreadyWired) {
+        clampDateInputYear(startInput);
+        clampDateInputYear(endInput);
+        startInput.addEventListener('change', syncEndConstraints);
+        startInput.addEventListener('input', syncEndConstraints);
+        endInput.addEventListener('change', () => {
+            if (isOfficialsForm) {
+                syncEndConstraints();
+                return;
+            }
+            validateTermRange(form);
+        });
+        endInput.addEventListener('input', () => {
+            if (isOfficialsForm) {
+                syncEndConstraints();
+            }
+        });
+        endInput.addEventListener('blur', () => validateTermRange(form));
+        form.dataset.termConstraintsWired = '1';
+    }
     syncEndConstraints();
 }
 
@@ -1456,11 +1489,10 @@ let addOfficialsIsMaximized = false;
 window.toggleAddOfficialsSize = function () {
     const overlay = document.getElementById('addSkOfficialsModal');
     const content = document.getElementById('addSkOfficialsModalContent');
-    const icon = document.getElementById('addOfficialsResizeIcon');
     const btn = document.getElementById('addOfficialsResizeBtn');
-    if (!overlay || !content || !icon) return;
+    if (!overlay || !content) return;
     addOfficialsIsMaximized = !addOfficialsIsMaximized;
-    applyModalResizeState({ overlay, content, iconEl: icon, btn, isMaximized: addOfficialsIsMaximized });
+    applyModalResizeState({ overlay, content, btn, isMaximized: addOfficialsIsMaximized });
 };
 
 window.openAddSkOfficialsModal = function () {
@@ -1479,9 +1511,8 @@ window.closeAddSkOfficialsModal = function () {
     addOfficialsIsMaximized = false;
     const overlay = document.getElementById('addSkOfficialsModal');
     const content = document.getElementById('addSkOfficialsModalContent');
-    const icon = document.getElementById('addOfficialsResizeIcon');
     const btn = document.getElementById('addOfficialsResizeBtn');
-    resetModalResizeState({ overlay, content, iconEl: icon, btn });
+    resetModalResizeState({ overlay, content, btn });
     const form = document.getElementById('addSkOfficialsForm');
     if (form) {
         form.reset();
@@ -1553,9 +1584,8 @@ window.closeEditSkOfficialsModal = function () {
     editOfficialsIsMaximized = false;
     const overlay = document.getElementById('editSkOfficialsModal');
     const content = overlay ? overlay.querySelector('.modal-content') : null;
-    const icon = document.getElementById('editOfficialsResizeIcon');
     const btn = document.getElementById('editOfficialsResizeBtn');
-    resetModalResizeState({ overlay, content, iconEl: icon, btn });
+    resetModalResizeState({ overlay, content, btn });
     const form = document.getElementById('editSkOfficialsForm');
     resetEditSkOfficialsFormState(form);
     toggleModal('editSkOfficialsModal', false);
@@ -1570,11 +1600,10 @@ window.closeEditSkOfficialsSuccessModal = function () { };
 window.toggleEditOfficialsSize = function () {
     const overlay = document.getElementById('editSkOfficialsModal');
     const content = overlay ? overlay.querySelector('.modal-content') : null;
-    const icon = document.getElementById('editOfficialsResizeIcon');
     const btn = document.getElementById('editOfficialsResizeBtn');
-    if (!overlay || !content || !icon) return;
+    if (!overlay || !content) return;
     editOfficialsIsMaximized = !editOfficialsIsMaximized;
-    applyModalResizeState({ overlay, content, iconEl: icon, btn, isMaximized: editOfficialsIsMaximized });
+    applyModalResizeState({ overlay, content, btn, isMaximized: editOfficialsIsMaximized });
 };
 // Keep legacy aliases so any remaining references don't break
 window.toggleFullscreenEditSkOfficialsModal = window.toggleEditOfficialsSize;
@@ -1587,11 +1616,10 @@ let addFedIsMaximized = false;
 window.toggleAddFedSize = function () {
     const overlay = document.getElementById('addAccountModal');
     const content = document.getElementById('addSkFedModalContent');
-    const icon = document.getElementById('addFedResizeIcon');
     const btn = document.getElementById('addFedResizeBtn');
-    if (!overlay || !content || !icon) return;
+    if (!overlay || !content) return;
     addFedIsMaximized = !addFedIsMaximized;
-    applyModalResizeState({ overlay, content, iconEl: icon, btn, isMaximized: addFedIsMaximized });
+    applyModalResizeState({ overlay, content, btn, isMaximized: addFedIsMaximized });
 };
 
 window.openAddAccountModal = function () {
@@ -1617,9 +1645,8 @@ window.closeAddAccountModal = function () {
     addFedIsMaximized = false;
     const overlay = document.getElementById('addAccountModal');
     const content = document.getElementById('addSkFedModalContent');
-    const icon = document.getElementById('addFedResizeIcon');
     const btn = document.getElementById('addFedResizeBtn');
-    resetModalResizeState({ overlay, content, iconEl: icon, btn });
+    resetModalResizeState({ overlay, content, btn });
     const form = document.getElementById('addSkFedForm');
     if (form) {
         form.reset();
@@ -1644,9 +1671,8 @@ window.closeEditModal = function () {
     editFedIsMaximized = false;
     const overlay = document.getElementById('editAccountModal');
     const content = overlay ? overlay.querySelector('.modal-content') : null;
-    const icon = document.getElementById('editFedResizeIcon');
     const btn = document.getElementById('editFedResizeBtn');
-    resetModalResizeState({ overlay, content, iconEl: icon, btn });
+    resetModalResizeState({ overlay, content, btn });
     const form = document.getElementById('editAccountForm');
     if (form) {
         form.reset();
@@ -1665,11 +1691,10 @@ window.closeEditSuccessModal = function () { };
 window.toggleEditFedSize = function () {
     const overlay = document.getElementById('editAccountModal');
     const content = overlay ? overlay.querySelector('.modal-content') : null;
-    const icon = document.getElementById('editFedResizeIcon');
     const btn = document.getElementById('editFedResizeBtn');
-    if (!overlay || !content || !icon) return;
+    if (!overlay || !content) return;
     editFedIsMaximized = !editFedIsMaximized;
-    applyModalResizeState({ overlay, content, iconEl: icon, btn, isMaximized: editFedIsMaximized });
+    applyModalResizeState({ overlay, content, btn, isMaximized: editFedIsMaximized });
 };
 // Keep legacy aliases so any remaining references don't break
 window.toggleFullscreenEditAccountModal = window.toggleEditFedSize;
@@ -1686,36 +1711,22 @@ window.closeViewModal = function () {
     viewIsMaximized = false;
     const overlay = document.getElementById('viewAccountModal');
     const content = overlay ? overlay.querySelector('.modal-content') : null;
-    const icon = document.getElementById('viewResizeIcon');
     const btn = document.getElementById('viewToggleBtn');
-    resetModalResizeState({ overlay, content, iconEl: icon, btn });
+    resetModalResizeState({ overlay, content, btn });
     toggleModal('viewAccountModal', false);
 };
 window.toggleFullscreenViewModal = function () {
     const overlay = document.getElementById('viewAccountModal');
     const content = overlay ? overlay.querySelector('.modal-content') : null;
-    const icon = document.getElementById('viewResizeIcon');
     const btn = document.getElementById('viewToggleBtn');
-    if (!overlay || !content || !icon) return;
+    if (!overlay || !content) return;
     viewIsMaximized = !viewIsMaximized;
-    applyModalResizeState({ overlay, content, iconEl: icon, btn, isMaximized: viewIsMaximized });
+    applyModalResizeState({ overlay, content, btn, isMaximized: viewIsMaximized });
 };
 window.toggleRestoreViewModal = window.toggleFullscreenViewModal;
 window.restoreViewModal = window.toggleFullscreenViewModal;
 
 // ── Internal helpers ──────────────────────────────────────────
-function _setModalBtns(modal, state) {
-    const fb = modal.querySelector('.modal-fullscreen-btn');
-    const rb = modal.querySelector('.modal-restore-btn');
-    if (state === 'fullscreen') {
-        if (fb) { fb.title = 'Restore Down'; fb.style.display = 'none'; }
-        if (rb) rb.style.display = 'inline-flex';
-    } else {
-        if (fb) { fb.title = 'Maximize'; fb.style.display = 'inline-flex'; }
-        if (rb) rb.style.display = 'none';
-    }
-}
-
 function _getModalIds(type) {
     if (type === 'sk_officials') return { addModalId: 'addSkOfficialsModal', successModalId: 'skOfficialsSuccessModal' };
     return { addModalId: 'addAccountModal', successModalId: 'addSuccessModal' };
@@ -2321,14 +2332,14 @@ function validateBatchAccountRow(row, rowNumber, role, seenEmails, seenFingerpri
     }
 
     if (data.term_start) {
-        const termStartMin = isOfficial ? '2023-01-01' : getCurrentYearStartDate();
+        const termStartMin = isOfficial ? SK_OFFICIAL_FIRST_TERM_START : getCurrentYearStartDate();
         const termStartMax = isOfficial ? formatLocalDate(new Date()) : getCurrentYearEndDate();
-        if (data.term_start < termStartMin || data.term_start > termStartMax) {
+        if (data.term_start < termStartMin || data.term_start > termStartMax || (isOfficial && !isValidSkOfficialTermStart(data.term_start))) {
             errors.push({
                 row: rowNumber,
                 field: 'term_start',
                 error: isOfficial
-                    ? 'Term start date must be between 2023 and today.'
+                    ? SK_OFFICIAL_TERM_START_MESSAGE
                     : 'Term start date must be within the current year.',
             });
         }
@@ -2336,16 +2347,9 @@ function validateBatchAccountRow(row, rowNumber, role, seenEmails, seenFingerpri
 
     if (data.term_start && data.term_end) {
         if (isOfficial) {
-            const bounds = getTermEndBoundsForStart(data.term_start);
-            const endYear = parseInt(String(data.term_end).split('-')[0], 10);
-            if (endYear !== bounds.year) {
-                errors.push({
-                    row: rowNumber,
-                    field: 'term_end',
-                    error: `Term end year must be exactly ${ACCOUNT_TERM_YEARS} years after term start year.`,
-                });
-            } else if (data.term_end < bounds.min || data.term_end > bounds.max) {
-                errors.push({ row: rowNumber, field: 'term_end', error: 'Term end date must fall within the term end year.' });
+            const requiredEnd = skOfficialTermEndForStart(data.term_start);
+            if (data.term_end !== requiredEnd) {
+                errors.push({ row: rowNumber, field: 'term_end', error: SK_OFFICIAL_TERM_END_MESSAGE });
             }
         } else {
             const requiredEnd = addYearsToDateString(data.term_start, ACCOUNT_TERM_YEARS);
@@ -3044,7 +3048,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function applyAccountsSort(key, dir, type) {
         if (!tableBody) return;
-        const dataAttr = key === 'name' ? 'sortName' : 'sortTerm';
+        const sortAttrMap = {
+            name: 'sortName',
+            email: 'sortEmail',
+            barangay: 'sortBarangay',
+            term: 'sortTerm',
+        };
+        const dataAttr = sortAttrMap[key] || 'sortName';
         filteredAccounts.sort((rowA, rowB) => {
             const valA = rowA.element.dataset[dataAttr] || '';
             const valB = rowB.element.dataset[dataAttr] || '';

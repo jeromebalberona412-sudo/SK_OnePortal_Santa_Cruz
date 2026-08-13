@@ -18,10 +18,10 @@
 
             <label class="delete-confirm-label" for="deleteConfirmationInput">Confirmation Required</label>
             <input type="text" id="deleteConfirmationInput" class="delete-confirm-input"
-                   placeholder="Type Delete to confirm" autocomplete="off">
+                   placeholder="Confirm" autocomplete="off">
 
             <p class="delete-confirm-hint delete-confirm-hint-error" id="deleteConfirmHintError" style="display:none;">
-                Please type &quot;Delete&quot; exactly to continue.
+                Please type &quot;Confirm&quot; exactly to continue.
             </p>
             <p class="delete-confirm-hint delete-confirm-hint-success" id="deleteConfirmHintSuccess" style="display:none;">
                 ✓ Confirmation text matched.

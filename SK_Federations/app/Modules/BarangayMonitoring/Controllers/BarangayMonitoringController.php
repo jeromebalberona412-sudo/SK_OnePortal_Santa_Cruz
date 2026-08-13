@@ -16,8 +16,7 @@ class BarangayMonitoringController extends Controller
     public function __construct(
         private readonly BarangayMonitoringService $monitoringService,
         private readonly AbyipSubmissionScheduleService $scheduleService,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): View
     {
@@ -106,7 +105,7 @@ class BarangayMonitoringController extends Controller
         ], 201);
     }
 
-    public function scheduleUpdate(Request $request, int $id): JsonResponse
+    public function scheduleUpdate(Request $request, string $id): JsonResponse
     {
         try {
             $schedule = $this->scheduleService->update($request->user(), $id, $request->all());
@@ -123,7 +122,7 @@ class BarangayMonitoringController extends Controller
         ]);
     }
 
-    public function scheduleExtend(Request $request, int $id): JsonResponse
+    public function scheduleExtend(Request $request, string $id): JsonResponse
     {
         $validated = $request->validate([
             'new_deadline' => ['required', 'date'],
@@ -150,7 +149,7 @@ class BarangayMonitoringController extends Controller
         ]);
     }
 
-    public function scheduleCancel(Request $request, int $id): JsonResponse
+    public function scheduleCancel(Request $request, string $id): JsonResponse
     {
         $validated = $request->validate([
             'reason' => ['nullable', 'string', 'max:1000'],
@@ -171,7 +170,7 @@ class BarangayMonitoringController extends Controller
         ]);
     }
 
-    public function scheduleDestroy(Request $request, int $id): JsonResponse
+    public function scheduleDestroy(Request $request, string $id): JsonResponse
     {
         try {
             $this->scheduleService->destroy($request->user(), $id);

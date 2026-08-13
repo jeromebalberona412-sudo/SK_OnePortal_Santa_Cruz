@@ -3,6 +3,7 @@
 namespace App\Modules\Accounts\Requests;
 
 use App\Modules\Accounts\Models\OfficialProfile;
+use App\Modules\Accounts\Support\SkOfficialTermDates;
 use App\Modules\Shared\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
@@ -78,7 +79,14 @@ class UpdateAccountRequest extends FormRequest
                 Rule::in(OfficialProfile::positionsForRole($accountRole !== '' ? $accountRole : User::ROLE_SK_FED)),
             ],
             'federation_position' => ['nullable', Rule::in(OfficialProfile::FEDERATION_POSITIONS)],
-            'term_start' => ['required', 'date', 'after_or_equal:2023-01-01', 'before_or_equal:'.Carbon::now()->toDateString()],
+            'term_start' => [
+                'required',
+                'date',
+                'after_or_equal:'.($accountRole === User::ROLE_SK_OFFICIAL
+                    ? SkOfficialTermDates::FIRST_START
+                    : '2023-01-01'),
+                'before_or_equal:'.Carbon::now()->toDateString(),
+            ],
             'term_end' => ['required', 'date', 'after:term_start'],
             'term_status' => ['required', Rule::in(['ACTIVE', 'INACTIVE', 'EXPIRED', 'REPLACED'])],
         ];
@@ -99,31 +107,8 @@ class UpdateAccountRequest extends FormRequest
                 return;
             }
 
-            try {
-                $start = Carbon::parse($termStart)->startOfDay();
-                $end = Carbon::parse($termEnd)->startOfDay();
-            } catch (\Throwable) {
-                return;
-            }
-
-            $requiredEndYear = $start->year + 4;
-            if ($end->year !== $requiredEndYear) {
-                $validator->errors()->add(
-                    'term_end',
-                    'Term end year must be exactly 4 years after the term start year.'
-                );
-
-                return;
-            }
-
-            $endYearStart = Carbon::create($requiredEndYear, 1, 1)->startOfDay();
-            $endYearEnd = Carbon::create($requiredEndYear, 12, 31)->startOfDay();
-
-            if ($end->lt($endYearStart) || $end->gt($endYearEnd)) {
-                $validator->errors()->add(
-                    'term_end',
-                    'Term end date must fall within the term end year.'
-                );
+            foreach (SkOfficialTermDates::errorsFor($termStart, $termEnd) as $field => $message) {
+                $validator->errors()->add($field, $message);
             }
         });
     }
@@ -137,6 +122,15 @@ class UpdateAccountRequest extends FormRequest
             'email.unique' => 'This email is already taken.',
             'email.required' => 'Email address is required.',
             'email.email' => 'Please enter a valid email address.',
+            'term_start.after_or_equal' => (string) ($this->route('user')?->role) === User::ROLE_SK_OFFICIAL
+                ? SkOfficialTermDates::startRuleMessage()
+                : 'Term start date must be on or after January 1, 2023.',
+            'term_start.before_or_equal' => (string) ($this->route('user')?->role) === User::ROLE_SK_OFFICIAL
+                ? 'Term start date cannot be in the future. Use the current SK term that began on November 30.'
+                : 'Term start date cannot be in the future.',
+            'term_end.after' => (string) ($this->route('user')?->role) === User::ROLE_SK_OFFICIAL
+                ? SkOfficialTermDates::endRuleMessage()
+                : 'Term end date must be after the term start date.',
         ];
     }
 }

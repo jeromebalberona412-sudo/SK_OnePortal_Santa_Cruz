@@ -7,9 +7,42 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class AbyipSubmissionSchedule extends Model
 {
+    protected static function booted(): void
+    {
+        static::creating(function (self $model) {
+            if (! $model->getIncrementing() && empty($model->getKey())) {
+                $model->{$model->getKeyName()} = (string) Str::uuid();
+            }
+        });
+    }
+
+    public function getKeyType(): string
+    {
+        return $this->usesUuidKey() ? 'string' : 'int';
+    }
+
+    public function getIncrementing(): bool
+    {
+        return ! $this->usesUuidKey();
+    }
+
+    private function usesUuidKey(): bool
+    {
+        static $usesUuid = null;
+
+        if ($usesUuid === null) {
+            $usesUuid = Schema::hasTable($this->getTable())
+                && in_array(Schema::getColumnType($this->getTable(), $this->getKeyName()), ['uuid', 'guid'], true);
+        }
+
+        return $usesUuid;
+    }
+
     public const STATUS_UPCOMING = 'upcoming';
 
     public const STATUS_ONGOING = 'ongoing';

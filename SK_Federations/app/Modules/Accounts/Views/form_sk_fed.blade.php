@@ -10,17 +10,11 @@
 
         <div class="modal-header modal-header-blue-grad">
             <h3 class="modal-title">Add SK Federation Account</h3>
-            <div class="modal-controls">
-                <button type="button" class="modal-win-btn modal-win-btn-maximize" id="addFedResizeBtn"
-                        onclick="toggleAddFedSize()" title="Maximize">
-                    <svg id="addFedResizeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-                    </svg>
-                </button>
-                <button type="button" class="modal-win-btn modal-win-btn-close" onclick="closeAddAccountModal()" title="Close">
-                    &times;
-                </button>
-            </div>
+            @include('accounts::modal_window_controls', [
+                'resizeId' => 'addFedResizeBtn',
+                'resizeFn' => 'toggleAddFedSize',
+                'closeFn' => 'closeAddAccountModal',
+            ])
         </div>
 
         <div class="modal-body modal-body-light account-modal-scroll">
@@ -236,17 +230,11 @@
     <div class="modal-content modal-large modal-light">
         <div class="modal-header modal-header-blue-grad">
             <h3 class="modal-title">Edit SK Federation Account</h3>
-            <div class="modal-controls">
-                <button type="button" class="modal-win-btn modal-win-btn-maximize" id="editFedResizeBtn"
-                        onclick="toggleEditFedSize()" title="Maximize">
-                    <svg id="editFedResizeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-                    </svg>
-                </button>
-                <button type="button" class="modal-win-btn modal-win-btn-close" onclick="closeEditModal()" title="Close">
-                    &times;
-                </button>
-            </div>
+            @include('accounts::modal_window_controls', [
+                'resizeId' => 'editFedResizeBtn',
+                'resizeFn' => 'toggleEditFedSize',
+                'closeFn' => 'closeEditModal',
+            ])
         </div>
         <div class="modal-body modal-body-light account-modal-scroll">
             <form id="editAccountForm" class="sk-officials-form account-modal-form" data-account-id="" novalidate>

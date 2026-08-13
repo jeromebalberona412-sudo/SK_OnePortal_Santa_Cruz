@@ -10,15 +10,11 @@
 
         <div class="modal-header modal-header-blue-grad">
             <h3 class="modal-title">Add SK Official Account</h3>
-            <div class="modal-controls">
-                <button type="button" class="modal-win-btn modal-win-btn-maximize" id="addOfficialsResizeBtn"
-                        onclick="toggleAddOfficialsSize()" title="Maximize">
-                    <span id="addOfficialsResizeIcon" class="modal-win-icon" aria-hidden="true">🗖</span>
-                </button>
-                <button type="button" class="modal-win-btn modal-win-btn-close" onclick="closeAddSkOfficialsModal()" title="Close">
-                    &times;
-                </button>
-            </div>
+            @include('accounts::modal_window_controls', [
+                'resizeId' => 'addOfficialsResizeBtn',
+                'resizeFn' => 'toggleAddOfficialsSize',
+                'closeFn' => 'closeAddSkOfficialsModal',
+            ])
         </div>
 
         <div class="modal-body modal-body-light account-modal-scroll">
@@ -178,11 +174,13 @@
                             <div class="form-group-light">
                                 <label class="form-label-light required">Term Start Date</label>
                                 <input type="date" name="term_start" id="official_term_start" class="form-input-light" required>
+                                <p class="form-hint-light">November 30, 12:00 noon (RA 11935). Use 2023-11-30 for the 2023 SK term — not December 1.</p>
                                 <span class="form-error-light"></span>
                             </div>
                             <div class="form-group-light">
                                 <label class="form-label-light required">Term End Date</label>
-                                <input type="date" name="term_end" id="official_term_end" class="form-input-light" required>
+                                <input type="date" name="term_end" id="official_term_end" class="form-input-light" required readonly tabindex="-1">
+                                <p class="form-hint-light">Exactly 3 years later on November 30 (2023–2026, 2026–2029, and so on).</p>
                                 <span class="form-error-light"></span>
                             </div>
                         </div>
@@ -235,15 +233,11 @@
     <div class="modal-content modal-large modal-light">
         <div class="modal-header modal-header-blue-grad">
             <h3 class="modal-title">Edit SK Officials Account</h3>
-            <div class="modal-controls">
-                <button type="button" class="modal-win-btn modal-win-btn-maximize" id="editOfficialsResizeBtn"
-                        onclick="toggleEditOfficialsSize()" title="Maximize">
-                    <span id="editOfficialsResizeIcon" class="modal-win-icon" aria-hidden="true">🗖</span>
-                </button>
-                <button type="button" class="modal-win-btn modal-win-btn-close" onclick="closeEditSkOfficialsModal()" title="Close">
-                    &times;
-                </button>
-            </div>
+            @include('accounts::modal_window_controls', [
+                'resizeId' => 'editOfficialsResizeBtn',
+                'resizeFn' => 'toggleEditOfficialsSize',
+                'closeFn' => 'closeEditSkOfficialsModal',
+            ])
         </div>
         <div class="modal-body modal-body-light account-modal-scroll">
             <form id="editSkOfficialsForm" class="sk-officials-form account-modal-form" data-account-id="" novalidate>
@@ -350,11 +344,13 @@
                         <div class="form-group-light">
                             <label for="edit_sk_officials_term_start" class="form-label-light required">Term Start</label>
                             <input type="date" id="edit_sk_officials_term_start" name="term_start" class="form-input-light" required>
+                            <p class="form-hint-light">November 30, 12:00 noon (RA 11935). Use 2023-11-30 for the 2023 SK term — not December 1.</p>
                             <span class="form-error-light"></span>
                         </div>
                         <div class="form-group-light">
                             <label for="edit_sk_officials_term_end" class="form-label-light required">Term End</label>
-                            <input type="date" id="edit_sk_officials_term_end" name="term_end" class="form-input-light" required>
+                            <input type="date" id="edit_sk_officials_term_end" name="term_end" class="form-input-light" required readonly tabindex="-1">
+                            <p class="form-hint-light">Exactly 3 years later on November 30 (2023–2026, 2026–2029, and so on).</p>
                             <span class="form-error-light"></span>
                         </div>
                     </div>

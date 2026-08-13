@@ -22,7 +22,7 @@
             Download Excel Template
         </a>
     </div>
-    <p class="batch-hint">Use the Excel template columns exactly. Middle Name is optional. Region, Province, and Municipality are pre-filled in the template (IV-A CALABARZON, Laguna, Santa Cruz). Term dates use MM/DD/YYYY format (example: 06/30/2026). Lowercase text is accepted and will be converted to uppercase automatically. Maximum <strong>{{ \App\Modules\Accounts\Requests\BatchStoreAccountsRequest::MAX_ACCOUNTS }}</strong> accounts per upload — you can fix validation errors directly in the preview table before importing.</p>
+    <p class="batch-hint">Use the Excel template columns exactly. Middle Name is optional. Region, Province, and Municipality are pre-filled in the template (IV-A CALABARZON, Laguna, Santa Cruz). Term dates use MM/DD/YYYY format. For SK officials, term start must be November 30 of a term year under RA 11935 (example: 11/30/2023) and term end must be November 30 three years later (example: 11/30/2026) — not December 1. Lowercase text is accepted and will be converted to uppercase automatically. Maximum <strong>{{ \App\Modules\Accounts\Requests\BatchStoreAccountsRequest::MAX_ACCOUNTS }}</strong> accounts per upload — you can fix validation errors directly in the preview table before importing.</p>
     <p class="batch-limit-note" id="{{ $prefix }}_batchLimitNote" hidden>Maximum upload limit reached ({{ \App\Modules\Accounts\Requests\BatchStoreAccountsRequest::MAX_ACCOUNTS }} accounts per file).</p>
 </div>
 
