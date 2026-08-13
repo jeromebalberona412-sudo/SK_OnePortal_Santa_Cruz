@@ -176,12 +176,16 @@
 }
 
 .barangay-info-section:hover,
-.sk-chairman-section:hover,
 .sk-kagawad-section:hover,
 .sk-secretary-section:hover,
 .sk-treasurer-section:hover {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
     transform: translateY(-2px);
+}
+
+.sk-chairman-section:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transform: none;
 }
 
 .section-header {

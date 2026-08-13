@@ -113,18 +113,25 @@ class BootstrapSkFedAdminService
         }
 
         $exists = DB::table('official_profiles')->where('user_id', $user->getKey())->exists();
+        $now = now();
 
         if ($exists) {
+            DB::table('official_profiles')->where('user_id', $user->getKey())->update([
+                'first_name' => 'Admin',
+                'middle_name' => 'Admin',
+                'position' => 'Admin',
+                'updated_at' => $now,
+            ]);
+
             return;
         }
 
-        $now = now();
-
         DB::table('official_profiles')->insert([
             'user_id' => $user->getKey(),
-            'first_name' => 'SK Federation',
+            'first_name' => 'Admin',
+            'middle_name' => 'Admin',
             'last_name' => 'Administrator',
-            'position' => 'President',
+            'position' => 'Admin',
             'municipality' => 'Santa Cruz',
             'province' => 'Laguna',
             'region' => 'IV-A CALABARZON',

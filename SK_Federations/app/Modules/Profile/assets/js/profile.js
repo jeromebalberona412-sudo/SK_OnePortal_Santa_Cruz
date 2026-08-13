@@ -38,7 +38,4 @@ function initTabs() {
         });
     }
 
-    if (window.location.hash === '#settings') {
-        activateTab(1);
-    }
 }

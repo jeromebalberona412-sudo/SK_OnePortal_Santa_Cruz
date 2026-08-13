@@ -86,7 +86,7 @@
 
             <div class="youth-register-section ce-back-section">
                 <p class="register-text">
-                    <a href="{{ route('profile') }}#settings" class="register-link">← Back to Profile</a>
+                    <a href="{{ route('profile') }}" class="register-link">← Back to Profile</a>
                 </p>
             </div>
         </div>

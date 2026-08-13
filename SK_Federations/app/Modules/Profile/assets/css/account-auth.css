@@ -42,6 +42,13 @@ html { overflow: hidden; height: 100%; scroll-behavior: smooth; }
     html { overflow-y: auto; overflow-x: hidden; height: auto; }
 }
 
+html, body {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
 /* ── Page ── */
 .login-page {
     min-height: 100vh;
@@ -50,7 +57,7 @@ html { overflow: hidden; height: 100%; scroll-behavior: smooth; }
     flex-direction: column;
     position: relative;
     background: linear-gradient(135deg, #213F99 0%, #2563eb 100%);
-    overflow-y: auto;
+    overflow: visible;
 }
 
 @media (max-width: 1024px) {
@@ -209,10 +216,10 @@ html { overflow: hidden; height: 100%; scroll-behavior: smooth; }
 /* ── RIGHT: Login Card (matches SK Officials sk-login-section + sk-login-card) ── */
 .login-form-container {
     width: 580px;
-    display: flex; align-items: center; justify-content: center;
-    padding: 2rem;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 2.5rem 2rem 3rem;
     margin-left: auto; margin-right: 8rem;
-    overflow-y: auto; overflow-x: hidden;
+    overflow: visible;
     animation: slideInRight 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -228,7 +235,7 @@ html { overflow: hidden; height: 100%; scroll-behavior: smooth; }
     border-radius: 28px; padding: 2.5rem 3rem;
     box-shadow: none;
     border: none;
-    position: relative; overflow: hidden;
+    position: relative; overflow: visible;
 }
 
 /* Shimmer top bar: removed */

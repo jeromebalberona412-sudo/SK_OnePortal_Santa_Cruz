@@ -2,10 +2,12 @@
 
 namespace App\Modules\Profile\Services;
 
+use App\Modules\Authentication\Services\BootstrapSkFedAdminService;
 use App\Modules\Profile\Models\Barangay;
 use App\Modules\Profile\Models\OfficialProfile;
 use App\Modules\Shared\Models\User;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class ProfileService
 {
@@ -15,16 +17,17 @@ class ProfileService
     public function getDisplayData(User $user, ?OfficialProfile $officialProfile, ?Barangay $barangay): array
     {
         $nameFallback = $this->splitFullName($user->name);
+        $isBootstrapAdmin = Str::lower((string) $user->email) === BootstrapSkFedAdminService::bootstrapEmailNormalized();
 
         return [
-            'first_name' => $this->displayName($officialProfile?->first_name ?? $nameFallback['first_name']),
-            'middle_name' => $this->displayName($officialProfile?->middle_name ?? $nameFallback['middle_name']),
+            'first_name' => $this->displayName($isBootstrapAdmin ? 'Admin' : ($officialProfile?->first_name ?? $nameFallback['first_name'])),
+            'middle_name' => $this->displayName($isBootstrapAdmin ? 'Admin' : ($officialProfile?->middle_name ?? $nameFallback['middle_name'])),
             'last_name' => $this->displayName($officialProfile?->last_name ?? $nameFallback['last_name']),
             'suffix' => $this->displaySuffix($officialProfile?->suffix),
             'sex' => $this->displayValue($officialProfile?->sex ?? null),
             'birthdate' => $this->formatDate($officialProfile?->date_of_birth),
             'contact_number' => $this->displayValue($officialProfile?->contact_number),
-            'position' => $this->displayPosition($officialProfile?->position),
+            'position' => $this->displayPosition($isBootstrapAdmin ? 'Admin' : $officialProfile?->position),
             'region' => $this->displayValue($officialProfile?->region ?? 'IV-A CALABARZON'),
             'province' => $this->displayValue($officialProfile?->province ?? 'Laguna'),
             'municipality' => $this->displayValue($officialProfile?->municipality ?? 'Santa Cruz'),
@@ -39,14 +42,14 @@ class ProfileService
     {
         $term = $this->resolveLatestTerm($officialProfile);
 
-        return $term?->term_start ? $this->formatDate($term->term_start) : 'N/A';
+        return $term?->term_start ? $this->formatDate($term->term_start) : '—';
     }
 
     private function resolveTermEnd(?OfficialProfile $officialProfile): string
     {
         $term = $this->resolveLatestTerm($officialProfile);
 
-        return $term?->term_end ? $this->formatDate($term->term_end) : 'N/A';
+        return $term?->term_end ? $this->formatDate($term->term_end) : '—';
     }
 
     private function resolveLatestTerm(?OfficialProfile $officialProfile): ?object
@@ -76,14 +79,14 @@ class ProfileService
     {
         $trimmed = trim((string) $value);
 
-        return $trimmed !== '' ? $trimmed : 'N/A';
+        return $trimmed !== '' ? $trimmed : '—';
     }
 
     private function displayName(?string $value): string
     {
         $trimmed = trim((string) $value);
 
-        return $trimmed !== '' ? $trimmed : 'N/A';
+        return $trimmed !== '' ? mb_strtoupper($trimmed, 'UTF-8') : '—';
     }
 
     private function displaySuffix(?string $suffix): string
@@ -91,7 +94,7 @@ class ProfileService
         $trimmed = trim((string) $suffix);
 
         if ($trimmed === '' || strcasecmp($trimmed, 'none') === 0 || strcasecmp($trimmed, 'n/a') === 0) {
-            return 'N/A';
+            return '—';
         }
 
         return $trimmed;
@@ -101,19 +104,19 @@ class ProfileService
     {
         $trimmed = trim((string) $position);
 
-        return $trimmed !== '' ? $trimmed : 'N/A';
+        return $trimmed !== '' ? $trimmed : '—';
     }
 
     private function formatDate(mixed $value): string
     {
         if ($value === null || $value === '') {
-            return 'N/A';
+            return '—';
         }
 
         try {
             return \Illuminate\Support\Carbon::parse($value)->format('F d, Y');
         } catch (\Throwable) {
-            return 'N/A';
+            return '—';
         }
     }
 

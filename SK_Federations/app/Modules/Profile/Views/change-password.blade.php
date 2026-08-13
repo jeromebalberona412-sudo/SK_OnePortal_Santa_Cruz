@@ -1,6 +1,7 @@
 @extends('profile::layouts.account-auth')
 
 @section('title', 'Change Password')
+@section('card-class', 'cp-change-card')
 
 @php
     $pwMin = (int) config('sk_fed_auth.password_reset.password.min_length', 8);
@@ -16,8 +17,8 @@
 @endpush
 
 @section('content')
-    <div class="form-header">
-        <h2 class="nowrap">Change Password <span class="wave-emoji">🔒</span></h2>
+    <div class="form-header cp-form-header">
+        <h2>Change Password</h2>
         <p>Set a new password for your account</p>
     </div>
 
@@ -113,6 +114,6 @@
     </form>
 
     <div class="form-footer">
-        <a href="{{ route('profile') }}#settings" class="back-link">← Back to Profile</a>
+        <a href="{{ route('profile') }}" class="back-link">← Back to Profile</a>
     </div>
 @endsection

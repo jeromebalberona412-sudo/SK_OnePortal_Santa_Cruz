@@ -336,6 +336,8 @@
 .calendar-modal-backdrop.modal-maximized {
     align-items: stretch;
     justify-content: stretch;
+    inset: var(--navbar-height, 64px) 0 0 0;
+    height: auto;
 }
 
 .calendar-modal-backdrop.modal-maximized .calendar-modal {
@@ -882,7 +884,7 @@
 /* Success/action toast - top-center */
 .app-toast {
     position: fixed;
-    top: 24px;
+    top: calc(var(--navbar-height, 64px) + 12px);
     left: 50%;
     transform: translateX(-50%) translateY(-100px);
     padding: 12px 24px;
@@ -898,7 +900,7 @@
 }
 
 .app-toast.app-toast-error {
-    background: #22c55e;
+    background: #dc2626;
 }
 
 .app-toast.app-toast-show {

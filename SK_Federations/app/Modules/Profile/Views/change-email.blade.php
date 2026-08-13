@@ -1,18 +1,19 @@
 @extends('profile::layouts.account-auth')
 
 @section('title', 'Change Email')
+@section('card-class', 'ce-change-card')
 
 @push('styles')
     <link rel="stylesheet" href="{{ url('/modules/profile/css/change-email.css') }}?v={{ @filemtime(app_path('Modules/Profile/assets/css/change-email.css')) ?: time() }}">
 @endpush
 
 @push('scripts')
-    <script src="{{ url('/modules/profile/js/change-email.js') }}"></script>
+    <script src="{{ url('/modules/profile/js/change-email.js') }}?v={{ @filemtime(app_path('Modules/Profile/assets/js/change-email.js')) ?: time() }}"></script>
 @endpush
 
 @section('content')
-    <div class="form-header">
-        <h2 class="nowrap">Change Email <span class="wave-emoji">✉️</span></h2>
+    <div class="form-header ce-form-header">
+        <h2>Change Email</h2>
         <p>Update your email address</p>
     </div>
 
@@ -94,6 +95,6 @@
     </form>
 
     <div class="form-footer">
-        <a href="{{ route('profile') }}#settings" class="back-link">← Back to Profile</a>
+        <a href="{{ route('profile') }}" class="back-link">← Back to Profile</a>
     </div>
 @endsection

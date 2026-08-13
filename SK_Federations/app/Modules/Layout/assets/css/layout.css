@@ -286,8 +286,20 @@ body.profile-page .profile-field-group-label--bold i {
 
 body.profile-page .profile-field-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px 20px;
+}
+
+@media (max-width: 900px) {
+    body.profile-page .profile-field-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    body.profile-page .profile-field-row {
+        grid-template-columns: 1fr;
+    }
 }
 
 body.profile-page .profile-field label {

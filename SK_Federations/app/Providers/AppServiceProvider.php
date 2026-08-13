@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Modules\Accounts\Models\OfficialProfile;
 use App\Modules\Accounts\Policies\AccountPolicy;
+use App\Modules\Authentication\Services\BootstrapSkFedAdminService;
 use App\Modules\Shared\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -76,6 +77,7 @@ class AppServiceProvider extends ServiceProvider
                 'avatar' => asset('Images/SK_Fed_profile.png'),
                 'displayName' => $this->resolveSidebarDisplayName($user),
                 'formattedRole' => match (true) {
+                    $user && strtolower((string) $user->email) === BootstrapSkFedAdminService::bootstrapEmailNormalized() => 'Admin',
                     $user?->isSkFed() => 'SK Federation',
                     $user?->hasFederationLeadershipAccess() => (string) ($user->officialProfile?->federation_position ?? 'SK Federation'),
                     (string) ($user?->role ?? '') === 'admin' => 'Administrator',
@@ -91,6 +93,10 @@ class AppServiceProvider extends ServiceProvider
     {
         if (! $user) {
             return 'User';
+        }
+
+        if (strtolower((string) $user->email) === BootstrapSkFedAdminService::bootstrapEmailNormalized()) {
+            return 'Admin';
         }
 
         $profile = $user->officialProfile;

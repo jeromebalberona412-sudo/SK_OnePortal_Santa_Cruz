@@ -137,12 +137,6 @@ class="profile-page" data-heartbeat-interval-ms="{{ (int) config('sk_fed_auth.si
         <div class="profile-tab-content" id="tabSettings">
             <section class="sk-account-settings-section">
                 <div class="account-settings-card">
-                    <div class="account-settings-card-header">
-                        <h2 class="account-settings-card-title">
-                            <i class="fa-solid fa-gear"></i> Account Settings
-                        </h2>
-                    </div>
-
                     <div class="account-settings-row">
                         <div class="account-settings-info">
                             <div class="account-settings-icon">

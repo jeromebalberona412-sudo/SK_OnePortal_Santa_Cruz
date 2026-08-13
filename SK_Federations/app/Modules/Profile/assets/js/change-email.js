@@ -33,8 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
             lowercase: /[a-z]/.test(password),
             uppercase: /[A-Z]/.test(password),
             number: /[0-9]/.test(password),
-            special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+            special: /[^A-Za-z0-9]/.test(password)
         };
+        rules.isValid = rules.length && rules.lowercase && rules.uppercase && rules.number && rules.special;
         return rules;
     }
 
@@ -42,15 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!passwordRules) return;
 
         const rules = validatePassword(password);
-
-        // Show rules when typing
-        if (password.length > 0) {
-            passwordRules.hidden = false;
-        } else {
-            passwordRules.hidden = true;
-        }
-
-        // Update each rule's visual state
         const ruleElements = {
             'ce-rule-length': rules.length,
             'ce-rule-lowercase': rules.lowercase,
@@ -64,20 +56,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (ruleElement) {
                 ruleElement.classList.toggle('valid', isValid);
                 ruleElement.classList.toggle('ok', isValid);
+                ruleElement.classList.toggle('fail', !isValid);
             }
+        }
+
+        if (password.length > 0 && !rules.isValid) {
+            passwordRules.hidden = false;
+            passwordRules.classList.add('active');
+        } else {
+            passwordRules.hidden = true;
+            passwordRules.classList.remove('active');
         }
     }
 
-    // Real-time password validation
     if (passwordInput) {
         passwordInput.addEventListener('input', () => {
             updatePasswordRules(passwordInput.value);
-        });
-
-        passwordInput.addEventListener('blur', () => {
-            if (passwordInput.value.length > 0) {
-                passwordRules.hidden = false;
-            }
         });
     }
 

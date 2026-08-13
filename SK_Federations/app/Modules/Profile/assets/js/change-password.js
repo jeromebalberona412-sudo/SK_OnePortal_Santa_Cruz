@@ -105,10 +105,12 @@ document.addEventListener('DOMContentLoaded', function () {
             if (node) {
                 node.classList.toggle('ok', rule.ok);
                 node.classList.toggle('valid', rule.ok);
+                node.classList.toggle('fail', !rule.ok);
+                node.hidden = false;
             }
         });
 
-        if (password.length > 0) {
+        if (password.length > 0 && !state.isValid) {
             passwordRules.hidden = false;
             passwordRules.classList.add('active');
         } else {
