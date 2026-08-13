@@ -189,6 +189,10 @@ Route::middleware([
         Route::delete('/{id}/images/{image}', [CommunityFeedImageController::class, 'destroy'])->name('community-feed.images.destroy');
     });
 
+    Route::get('/community-feed/{id}/comments', [CommunityFeedPageController::class, 'comments'])
+        ->whereNumber('id')
+        ->name('community-feed.comments');
+
     Route::get('/community-feed/barangay/{slug}', [BarangayProfileController::class, 'show'])
         ->name('community-feed.barangay');
 

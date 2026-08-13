@@ -48,6 +48,7 @@ let feedPollTimer = null;
 let knownPostIds = new Set();
 let feedLoading = false;
 let feedSearch = '';
+const postCache = new Map();
 
 const SK_AVATAR = () => window.CommunityFeedConfig?.userAvatar || window.CommunityFeedConfig?.barangayLogo || DEFAULT_LOGO();
 const DEFAULT_LOGO = () => window.CommunityFeedConfig?.defaultLogo || '/images/logo.png';
@@ -131,6 +132,7 @@ function postExistsInDom(postId) {
 
 function upsertPost(p, mode = 'append') {
     const id = Number(p.id);
+    if (id) postCache.set(id, p);
     if (!id || knownPostIds.has(id) || postExistsInDom(id)) {
         return;
     }
@@ -251,15 +253,28 @@ function loadMorePosts() {
     loadFeed(false);
 }
 
+function scrollFeedHome() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function setFeedFilter(btn, filter) {
-    if (feedLoading || (filter === currentFilter && btn.classList.contains('active'))) {
-        return;
-    }
+    if (feedLoading) return;
+
+    const goHome = filter === 'all';
     currentFilter = filter;
     document.querySelectorAll('.feed-tab').forEach((t) => t.classList.remove('active'));
     btn.classList.add('active');
+
+    if (goHome) {
+        feedSearch = '';
+        const search = document.getElementById('feedSearchInput');
+        if (search) search.value = '';
+    }
+
     setFilterTabsDisabled(true);
-    loadFeed(true);
+    loadFeed(true).then(() => {
+        if (goHome) scrollFeedHome();
+    });
 }
 
 function setFilterTabsDisabled(disabled) {
@@ -296,8 +311,10 @@ function buildPost(p) {
             </div>
            </div>` : '';
 
-    const commentsHtml = (p.comments ?? []).map((c) => buildCommentItem(c, p.id)).join('');
-    const totalComments = Number(p.comment_count ?? countComments(p.comments ?? []));
+    const comments = p.comments ?? [];
+    const commentsHtml = comments.map((c) => buildCommentItem(c, p.id)).join('');
+    const totalComments = Number(p.comment_count ?? countComments(comments));
+    const featured = pickFeaturedComment(comments);
     const reactionType = p.reaction_type || '';
     const reactionIcon = reactionType
         ? `<span class="reaction-current">${escapeHtml(REACTION_EMOJI[reactionType] || '👍')}</span>`
@@ -337,18 +354,19 @@ function buildPost(p) {
             </div>
           </div>
         </div>
-        <button class="action-btn comment-btn" onclick="toggleComments(${p.id})">
+        <button type="button" class="action-btn comment-btn" onclick="toggleComments(${p.id})">
           <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>
           <span id="comment-count-${p.id}" data-count="${totalComments}">Comment</span>
         </button>
         </div>
       </div>
+      ${buildCommentPreviewHtml(featured, p.id, totalComments)}
       <div class="comments-section" id="comments-${p.id}" style="display:none;">
         <div class="comments-list" id="comments-list-${p.id}">${commentsHtml}</div>
         <div class="comment-input-wrapper">
           <img src="${escapeHtml(SK_AVATAR())}" alt="You" class="comment-avatar">
-          <input type="text" class="comment-input" placeholder="Write a comment..." maxlength="500" onkeydown="if(event.key==='Enter')submitComment(${p.id},this)">
-          <button class="send-comment-btn" onclick="submitComment(${p.id},this.previousElementSibling)">
+          <input type="text" class="comment-input" placeholder="Write a comment..." maxlength="500" onkeydown="handleCommentKey(event, ${p.id}, this)">
+          <button type="button" class="send-comment-btn" onclick="submitComment(${p.id},this.previousElementSibling)">
             <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
           </button>
         </div>
@@ -453,6 +471,71 @@ function countComments(comments) {
     return (comments || []).reduce((sum, comment) => sum + 1 + countComments(comment.replies || []), 0);
 }
 
+function flattenComments(comments) {
+    return (comments || []).reduce((list, comment) => {
+        list.push(comment);
+        return list.concat(flattenComments(comment.replies || []));
+    }, []);
+}
+
+function pickFeaturedComment(comments) {
+    const all = flattenComments(comments);
+    if (!all.length) return null;
+    return all.reduce((best, current) => {
+        const bestLikes = Number(best.likes || 0);
+        const currentLikes = Number(current.likes || 0);
+        if (currentLikes > bestLikes) return current;
+        if (currentLikes === bestLikes && Number(current.id) > Number(best.id)) return current;
+        return best;
+    });
+}
+
+function commentLikeInner(type) {
+    const label = type ? (REACTION_LABEL[type] || 'Like') : 'Like';
+    if (type && type !== 'like') {
+        return `<span class="comment-react-emoji">${REACTION_EMOJI[type] || ''}</span><span>${escapeHtml(label)}</span>`;
+    }
+    return `<span>${escapeHtml(label)}</span>`;
+}
+
+function buildCommentPreviewHtml(comment, postId, total) {
+    const count = Number(total || 0);
+    if (!comment || count <= 0) {
+        return `<div class="comment-preview" id="comment-preview-${postId}" hidden role="button" tabindex="0" onclick="openComments(${postId})"></div>`;
+    }
+    const likes = Number(comment.likes || 0);
+    const replyCount = Number(comment.reply_count || (comment.replies || []).length || 0);
+    const badge = likes > 0
+        ? `<span class="comment-react-badge comment-react-inline">${buildCommentBadgeHtml(comment.reaction_counts, likes)}</span>`
+        : '';
+    const more = count > 1
+        ? `<span class="comment-preview-more">View all ${count} comments</span>`
+        : '';
+    const replies = replyCount > 0
+        ? `<span class="fb-view-replies"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>View ${replyCount} ${replyCount === 1 ? 'reply' : 'replies'}</span>`
+        : '';
+    return `<div class="comment-preview" id="comment-preview-${postId}" role="button" tabindex="0" onclick="openComments(${postId})">
+        ${more}
+        <div class="fb-comment-row">
+            <img src="${escapeHtml(commentAvatarUrl(comment))}" alt="" class="comment-avatar">
+            <div class="fb-comment-main">
+                <div class="fb-comment-head">
+                    <span class="comment-author">${escapeHtml(comment.author_name)}</span>
+                    <span class="fb-comment-dot">·</span>
+                    <span class="comment-time">${escapeHtml(comment.time || '')}</span>
+                </div>
+                <p class="comment-text">${escapeHtml(comment.body)}</p>
+                ${badge}
+                <div class="comment-meta">
+                    <span class="comment-like-btn">${commentLikeInner(comment.reaction_type)}</span>
+                    <span class="comment-action-btn">Reply</span>
+                    ${replies}
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
 function reactionPickerHtml(activeType, pickerId) {
     return `<div class="reaction-picker" id="${pickerId}">
         <div class="reaction-picker-inner">
@@ -476,39 +559,56 @@ function buildCommentBadgeHtml(counts, total) {
 }
 
 function buildCommentItem(comment, postId, isReply = false) {
-    const replies = (comment.replies || []).map((reply) => buildCommentItem(reply, postId, true)).join('');
+    const nested = comment.replies || [];
+    const repliesHtml = nested.map((reply) => buildCommentItem(reply, postId, true)).join('');
+    const replyCount = nested.length;
     const reactionType = comment.reaction_type || '';
     const likes = Number(comment.likes || 0);
     const badgeHtml = buildCommentBadgeHtml(comment.reaction_counts, likes);
-    const likeLabel = reactionType ? (REACTION_LABEL[reactionType] || 'Like') : 'Like';
+    const optionsHtml = comment.owned
+        ? `<div class="comment-options-wrap">
+            <button type="button" class="comment-options-btn" onclick="toggleCommentOptions(${comment.id}, event)" aria-label="Comment options">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zm6 0a2 2 0 11-4 0 2 2 0 014 0zm6 0a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            </button>
+            <div class="comment-options-menu" id="comment-options-${comment.id}">
+              <button type="button" onclick="editComment(${postId}, ${comment.id})">Edit</button>
+              <button type="button" class="danger" onclick="deleteComment(${postId}, ${comment.id})">Delete</button>
+            </div>
+           </div>`
+        : '';
+    const viewReplies = replyCount > 0 && !isReply
+        ? `<button type="button" class="fb-view-replies" id="view-replies-${comment.id}" data-count="${replyCount}" onclick="toggleReplies(${comment.id}, event)">
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+            View ${replyCount} ${replyCount === 1 ? 'reply' : 'replies'}
+           </button>`
+        : '';
 
     return `<div class="comment-item${isReply ? ' is-reply' : ''}" data-comment-id="${comment.id}">
         <img src="${escapeHtml(commentAvatarUrl(comment))}" alt="${escapeHtml(comment.author_name)}" class="comment-avatar">
         <div class="comment-body">
-            <div class="comment-bubble-wrap">
-                <div class="comment-bubble">
-                    <p class="comment-author">${escapeHtml(comment.author_name)}</p>
-                    <p class="comment-text" id="comment-text-${comment.id}">${escapeHtml(comment.body)}</p>
-                </div>
-                <button type="button" class="comment-react-badge" id="comment-react-badge-${comment.id}" ${likes > 0 ? '' : 'hidden'} onclick="openReactionViewer('comment', ${postId}, ${comment.id})">${badgeHtml}</button>
+            <div class="fb-comment-head">
+                <span class="comment-author">${escapeHtml(comment.author_name)}</span>
+                <span class="fb-comment-dot">·</span>
+                <span class="comment-time">${escapeHtml(comment.time || '')}</span>
+                ${optionsHtml}
             </div>
+            <p class="comment-text" id="comment-text-${comment.id}">${escapeHtml(comment.body)}</p>
+            <button type="button" class="comment-react-badge comment-react-inline" id="comment-react-badge-${comment.id}" ${likes > 0 ? '' : 'hidden'} onclick="openReactionViewer('comment', ${postId}, ${comment.id})">${badgeHtml}</button>
             <div class="comment-meta">
                 <div class="reaction-wrap comment-like-wrap" data-target="comment" data-post-id="${postId}" data-comment-id="${comment.id}">
-                    <button type="button" class="comment-like-btn reaction-btn${comment.liked ? ' liked' : ''}" data-type="${escapeHtml(reactionType)}">${escapeHtml(likeLabel)}</button>
+                    <button type="button" class="comment-like-btn reaction-btn${comment.liked ? ' liked' : ''}" data-type="${escapeHtml(reactionType)}">${commentLikeInner(reactionType)}</button>
                     ${reactionPickerHtml(reactionType, `reaction-picker-c${comment.id}`)}
                 </div>
                 <button type="button" class="comment-action-btn" onclick="showReplyInput(${postId}, ${comment.id})">Reply</button>
-                <span class="comment-time">${escapeHtml(comment.time)}</span>
-                ${comment.owned ? `<button type="button" class="comment-action-btn" onclick="editComment(${postId}, ${comment.id})">Edit</button>
-                <button type="button" class="comment-action-btn danger" onclick="deleteComment(${postId}, ${comment.id})">Delete</button>` : ''}
             </div>
+            ${viewReplies}
             <div class="comment-reply-box" id="reply-box-${comment.id}" style="display:none;">
-                <input type="text" class="comment-input" placeholder="Write a reply..." maxlength="500" onkeydown="if(event.key==='Enter')submitComment(${postId},this,${comment.id})">
-                <button class="send-comment-btn" onclick="submitComment(${postId},this.previousElementSibling,${comment.id})">
+                <input type="text" class="comment-input" placeholder="Write a reply..." maxlength="500" onkeydown="handleCommentKey(event, ${postId}, this, ${comment.id})">
+                <button type="button" class="send-comment-btn" onclick="submitComment(${postId},this.previousElementSibling,${comment.id})">
                     <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
                 </button>
             </div>
-            ${replies ? `<div class="comment-replies">${replies}</div>` : ''}
+            ${repliesHtml ? `<div class="comment-replies" id="comment-replies-${comment.id}" hidden>${repliesHtml}</div>` : ''}
         </div>
     </div>`;
 }
@@ -628,7 +728,7 @@ function bindReactionWrap(wrap) {
 
     const openPicker = () => {
         closeAllReactionPickers(wrap);
-        document.querySelectorAll('.post-options-menu.open').forEach((m) => m.classList.remove('open'));
+        document.querySelectorAll('.post-options-menu.open, .comment-options-menu.open').forEach((m) => m.classList.remove('open'));
         clearTimeout(hideTimer);
         wrap.classList.add('is-open');
     };
@@ -739,12 +839,11 @@ async function setCommentReaction(postId, commentId, reactionType) {
 function applyCommentReactionState(commentId, data) {
     const wrap = document.querySelector(`.reaction-wrap[data-comment-id="${commentId}"]`);
     const type = data.reaction_type || '';
-    const label = type ? (REACTION_LABEL[type] || 'Like') : 'Like';
     const btn = wrap?.querySelector('.comment-like-btn');
     if (btn) {
         btn.classList.toggle('liked', Boolean(type));
         btn.dataset.type = type;
-        btn.textContent = label;
+        btn.innerHTML = commentLikeInner(type);
     }
     wrap?.querySelectorAll('.reaction-option').forEach((option) => {
         option.classList.toggle('is-active', option.dataset.type === type);
@@ -828,12 +927,45 @@ function renderReactionViewer(filter = 'all') {
     `).join('');
 }
 
-function toggleComments(id) {
+function isCommentsOpen(id) {
     const section = document.getElementById(`comments-${id}`);
-    if (!section) return;
-    const open = section.style.display === 'none';
-    section.style.display = open ? 'block' : 'none';
-    if (open) bindReactionControls(section);
+    return Boolean(section && section.style.display !== 'none');
+}
+
+function commentsPageUrl(id) {
+    const template = window.CommunityFeedConfig?.commentsPageUrl;
+    if (template && String(template).includes('__ID__')) {
+        return String(template).replace('__ID__', String(id));
+    }
+    return `/community-feed/${id}/comments`;
+}
+
+async function openComments(id) {
+    const postId = Number(id);
+    if (typeof window.openCommentPreview === 'function') {
+        const cached = postCache.get(postId);
+        if (cached) {
+            window.openCommentPreview(cached);
+            return;
+        }
+        try {
+            const data = await apiFetch(`/api/community-feed/${postId}`);
+            postCache.set(postId, data);
+            window.openCommentPreview(data);
+            return;
+        } catch (_) { /* fall through to page URL */ }
+    }
+    window.location.assign(commentsPageUrl(postId));
+}
+
+function toggleComments(id) {
+    openComments(id);
+}
+
+function handleCommentKey(event, postId, input, parentId = null) {
+    if (event.key !== 'Enter' || event.shiftKey || event.isComposing || event.repeat) return;
+    event.preventDefault();
+    submitComment(postId, input, parentId);
 }
 
 function showReplyInput(postId, commentId) {
@@ -853,12 +985,19 @@ function bumpCommentCount(postId, delta) {
 }
 
 async function submitComment(id, input, parentId = null) {
+    if (!input || input.dataset.sending === '1') return;
     const text = input.value.trim();
     if (!text) return;
     if (text.length > 500) {
         alert('Comments are limited to 500 characters.');
         return;
     }
+
+    input.dataset.sending = '1';
+    input.value = '';
+    const sendBtn = input.parentElement?.querySelector('.send-comment-btn');
+    if (sendBtn) sendBtn.disabled = true;
+
     try {
         const payload = { body: text };
         if (parentId) payload.parent_id = parentId;
@@ -867,7 +1006,9 @@ async function submitComment(id, input, parentId = null) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
-        input.value = '';
+        if (document.getElementById(`comment-item-sent-${comment.id}`) || document.querySelector(`[data-comment-id="${comment.id}"]`)) {
+            return;
+        }
         if (parentId) {
             const parentEl = document.querySelector(`[data-comment-id="${parentId}"] .comment-body`)
                 || document.querySelector(`[data-comment-id="${parentId}"]`);
@@ -878,8 +1019,16 @@ async function submitComment(id, input, parentId = null) {
                 parentEl.appendChild(replies);
             }
             replies?.insertAdjacentHTML('beforeend', buildCommentItem(comment, id, true));
+            if (replies) replies.hidden = false;
             const box = document.getElementById(`reply-box-${parentId}`);
             if (box) box.style.display = 'none';
+            const viewBtn = document.getElementById(`view-replies-${parentId}`);
+            if (viewBtn) {
+                const nextCount = Number(viewBtn.dataset.count || 0) + 1;
+                viewBtn.dataset.count = String(nextCount);
+                viewBtn.classList.add('is-open');
+                viewBtn.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>Hide replies`;
+            }
         } else {
             const list = document.getElementById(`comments-list-${id}`);
             list?.insertAdjacentHTML('beforeend', buildCommentItem(comment, id));
@@ -888,40 +1037,197 @@ async function submitComment(id, input, parentId = null) {
         const postCard = document.querySelector(`.post-card[data-post-id="${id}"]`);
         if (postCard) bindReactionControls(postCard);
         bumpCommentCount(id, 1);
+        refreshCommentPreview(id);
+        if (isCommentsOpen(id)) {
+            const preview = document.getElementById(`comment-preview-${id}`);
+            if (preview) preview.hidden = true;
+        }
     } catch (err) {
+        input.value = text;
         alert(err?.message || 'Unable to post comment.');
+    } finally {
+        input.dataset.sending = '';
+        if (sendBtn) sendBtn.disabled = false;
+        input.focus();
     }
 }
 
-async function editComment(postId, commentId) {
-    const textEl = document.getElementById(`comment-text-${commentId}`);
-    const current = textEl?.textContent || '';
-    const next = window.prompt('Edit comment', current);
-    if (next === null) return;
-    const body = next.trim();
+function refreshCommentPreview(postId) {
+    const list = document.getElementById(`comments-list-${postId}`);
+    const preview = document.getElementById(`comment-preview-${postId}`);
+    const countEl = document.getElementById(`comment-count-${postId}`);
+    if (!list || !preview) return;
+
+    const items = [...list.querySelectorAll('.comment-item')];
+    const total = Number(countEl?.dataset.count || items.length || 0);
+    if (!items.length || total <= 0) {
+        preview.innerHTML = '';
+        preview.hidden = true;
+        return;
+    }
+
+    let best = items[0];
+    let bestScore = -1;
+    items.forEach((item) => {
+        const count = Number(item.querySelector('.comment-react-badge .reaction-total')?.textContent || 0);
+        const id = Number(item.dataset.commentId || 0);
+        const score = count * 1e9 + id;
+        if (score >= bestScore) {
+            bestScore = score;
+            best = item;
+        }
+    });
+
+    const avatar = best.querySelector(':scope > .comment-avatar')?.getAttribute('src') || '';
+    const author = best.querySelector('.comment-author')?.textContent || '';
+    const text = best.querySelector('.comment-text')?.textContent || '';
+    const time = best.querySelector('.comment-time')?.textContent || '';
+    const likeType = best.querySelector('.comment-like-btn')?.dataset.type || '';
+    const replyCount = Number(best.querySelector('.fb-view-replies')?.dataset.count || 0);
+    const badgeEl = best.querySelector(':scope > .comment-body > .comment-react-badge');
+    const badgeHtml = badgeEl && !badgeEl.hidden
+        ? `<span class="comment-react-badge comment-react-inline">${badgeEl.innerHTML}</span>`
+        : '';
+    const more = total > 1 ? `<span class="comment-preview-more">View all ${total} comments</span>` : '';
+    const replies = replyCount > 0
+        ? `<span class="fb-view-replies"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>View ${replyCount} ${replyCount === 1 ? 'reply' : 'replies'}</span>`
+        : '';
+
+    preview.innerHTML = `${more}
+        <div class="fb-comment-row">
+            <img src="${escapeHtml(avatar)}" alt="" class="comment-avatar">
+            <div class="fb-comment-main">
+                <div class="fb-comment-head">
+                    <span class="comment-author">${escapeHtml(author)}</span>
+                    <span class="fb-comment-dot">·</span>
+                    <span class="comment-time">${escapeHtml(time)}</span>
+                </div>
+                <p class="comment-text">${escapeHtml(text)}</p>
+                ${badgeHtml}
+                <div class="comment-meta">
+                    <span class="comment-like-btn">${commentLikeInner(likeType)}</span>
+                    <span class="comment-action-btn">Reply</span>
+                    ${replies}
+                </div>
+            </div>
+        </div>`;
+    preview.hidden = isCommentsOpen(postId);
+}
+
+function toggleReplies(commentId, event) {
+    event?.preventDefault();
+    event?.stopPropagation();
+    const replies = document.getElementById(`comment-replies-${commentId}`);
+    const btn = document.getElementById(`view-replies-${commentId}`);
+    if (!replies) return;
+    const opening = replies.hidden;
+    replies.hidden = !opening;
+    const count = Number(btn?.dataset.count || 0);
+    if (btn) {
+        btn.classList.toggle('is-open', opening);
+        btn.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>${opening ? 'Hide replies' : `View ${count} ${count === 1 ? 'reply' : 'replies'}`}`;
+    }
+}
+
+function toggleCommentOptions(id, event) {
+    event?.preventDefault();
+    event?.stopPropagation();
+    const menu = document.getElementById(`comment-options-${id}`);
+    const isOpen = menu?.classList.contains('open');
+    document.querySelectorAll('.comment-options-menu.open, .post-options-menu.open').forEach((m) => m.classList.remove('open'));
+    closeAllReactionPickers();
+    if (!isOpen) menu?.classList.add('open');
+}
+
+let pendingCommentAction = null;
+
+function commentBodyText(commentId) {
+    return document.getElementById(`comment-text-${commentId}`)?.textContent
+        || document.getElementById(`cp-text-${commentId}`)?.textContent
+        || '';
+}
+
+function editComment(postId, commentId) {
+    pendingCommentAction = { postId: Number(postId), commentId: Number(commentId) };
+    document.querySelectorAll('.comment-options-menu.open, .cp-options-menu.open, .post-options-menu.open').forEach((m) => m.classList.remove('open'));
+    const modal = document.getElementById('editCommentModal');
+    const field = document.getElementById('editCommentBody');
+    if (!modal || !field) return;
+    field.value = commentBodyText(commentId);
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => field.focus(), 50);
+}
+
+function closeEditCommentModal() {
+    document.getElementById('editCommentModal')?.classList.remove('active');
+    pendingCommentAction = null;
+    if (!document.getElementById('commentPreviewShell')?.classList.contains('is-open')) {
+        document.body.style.overflow = '';
+    }
+}
+
+async function confirmEditComment() {
+    if (!pendingCommentAction) return;
+    const { postId, commentId } = pendingCommentAction;
+    const body = document.getElementById('editCommentBody')?.value.trim();
     if (!body) return;
+    const btn = document.getElementById('confirmEditCommentBtn');
+    if (btn) btn.disabled = true;
     try {
         const updated = await apiFetch(`/api/community-feed/${postId}/comments/${commentId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ body }),
         });
-        if (textEl) textEl.textContent = updated.body;
+        const feedEl = document.getElementById(`comment-text-${commentId}`);
+        if (feedEl) feedEl.textContent = updated.body;
+        const previewEl = document.getElementById(`cp-text-${commentId}`);
+        if (previewEl) previewEl.textContent = updated.body;
+        document.dispatchEvent(new CustomEvent('community-feed:comment-updated', { detail: updated }));
+        closeEditCommentModal();
     } catch (err) {
         alert(err?.message || 'Unable to edit comment.');
+    } finally {
+        if (btn) btn.disabled = false;
     }
 }
 
-async function deleteComment(postId, commentId) {
-    if (!window.confirm('Delete this comment?')) return;
-    try {
-        await apiFetch(`/api/community-feed/${postId}/comments/${commentId}`, { method: 'DELETE' });
-        document.querySelector(`[data-comment-id="${commentId}"]`)?.remove();
-        bumpCommentCount(postId, -1);
-    } catch (err) {
-        alert(err?.message || 'Unable to delete comment.');
+function deleteComment(postId, commentId) {
+    pendingCommentAction = { postId: Number(postId), commentId: Number(commentId) };
+    document.querySelectorAll('.comment-options-menu.open, .cp-options-menu.open, .post-options-menu.open').forEach((m) => m.classList.remove('open'));
+    const modal = document.getElementById('deleteCommentModal');
+    if (!modal) return;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDeleteCommentModal() {
+    document.getElementById('deleteCommentModal')?.classList.remove('active');
+    pendingCommentAction = null;
+    if (!document.getElementById('commentPreviewShell')?.classList.contains('is-open')) {
+        document.body.style.overflow = '';
     }
 }
+
+async function confirmDeleteComment() {
+    if (!pendingCommentAction) return;
+    const { postId, commentId } = pendingCommentAction;
+    const btn = document.getElementById('confirmDeleteCommentBtn');
+    if (btn) btn.disabled = true;
+    try {
+        await apiFetch(`/api/community-feed/${postId}/comments/${commentId}`, { method: 'DELETE' });
+        document.querySelectorAll(`[data-comment-id="${commentId}"]`).forEach((el) => el.remove());
+        bumpCommentCount(postId, -1);
+        document.dispatchEvent(new CustomEvent('community-feed:comment-deleted', { detail: { postId, commentId } }));
+        closeDeleteCommentModal();
+    } catch (err) {
+        alert(err?.message || 'Unable to delete comment.');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
 
 function resetComposeForm() {
     editingPostId = null;
@@ -983,7 +1289,7 @@ function toggleComposeFullscreen() {
 }
 
 async function editPost(id) {
-    document.querySelectorAll('.post-options-menu.open').forEach((m) => m.classList.remove('open'));
+    document.querySelectorAll('.post-options-menu.open, .comment-options-menu.open').forEach((m) => m.classList.remove('open'));
 
     try {
         const post = await apiFetch(`/api/community-feed/${id}`);
@@ -1017,7 +1323,7 @@ let pendingArchivePostId = null;
 function openArchiveModal(id) {
     pendingArchivePostId = id;
     document.getElementById('archivePostModal')?.classList.add('active');
-    document.querySelectorAll('.post-options-menu.open').forEach((m) => m.classList.remove('open'));
+    document.querySelectorAll('.post-options-menu.open, .comment-options-menu.open').forEach((m) => m.classList.remove('open'));
 }
 
 function closeArchiveModal() {
@@ -1233,7 +1539,7 @@ function togglePostOptions(id, e) {
     e.stopPropagation();
     const menu = document.getElementById(`options-menu-${id}`);
     const isOpen = menu?.classList.contains('open');
-    document.querySelectorAll('.post-options-menu.open').forEach((m) => m.classList.remove('open'));
+    document.querySelectorAll('.post-options-menu.open, .comment-options-menu.open').forEach((m) => m.classList.remove('open'));
     closeAllReactionPickers();
     if (!isOpen) menu?.classList.add('open');
 }
@@ -1273,7 +1579,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!event.target.closest('.reaction-wrap')) {
             closeAllReactionPickers();
         }
-        document.querySelectorAll('.post-options-menu.open').forEach((m) => m.classList.remove('open'));
+        document.querySelectorAll('.post-options-menu.open, .comment-options-menu.open').forEach((m) => m.classList.remove('open'));
         document.getElementById('notifPopover')?.classList.remove('show');
         document.getElementById('profileDropdown')?.classList.remove('show');
     });
@@ -1295,8 +1601,21 @@ document.addEventListener('DOMContentLoaded', () => {
         else lightboxZoomOut();
     }, { passive: false });
 
+    document.getElementById('editCommentBody')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeEditCommentModal();
+    });
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeReactionViewer();
+        if (e.key === 'Escape') {
+            if (document.getElementById('editCommentModal')?.classList.contains('active')) {
+                closeEditCommentModal();
+                return;
+            }
+            if (document.getElementById('deleteCommentModal')?.classList.contains('active')) {
+                closeDeleteCommentModal();
+                return;
+            }
+            closeReactionViewer();
+        }
         const lb = document.getElementById('imageLightbox');
         if (!lb?.classList.contains('active')) return;
         if (e.key === 'Escape') closeLightbox();
@@ -1318,6 +1637,13 @@ document.addEventListener('DOMContentLoaded', () => {
     fab?.addEventListener('click', (e) => { e.stopPropagation(); sidebar?.classList.add('drawer-open'); backdrop?.classList.add('active'); document.body.style.overflow = 'hidden'; });
     backdrop?.addEventListener('click', closeDrawer);
     window.addEventListener('resize', () => { if (window.innerWidth > 1100) closeDrawer(); });
+    const brgyList = document.getElementById('brgyLinkList');
+    const profilesSidebar = document.getElementById('programsSidebar');
+    profilesSidebar?.addEventListener('wheel', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (brgyList) brgyList.scrollTop += event.deltaY;
+    }, { passive: false });
 });
 
 window.openComposeModal = openComposeModal;
@@ -1332,10 +1658,18 @@ window.setCommentReaction = setCommentReaction;
 window.openReactionViewer = openReactionViewer;
 window.closeReactionViewer = closeReactionViewer;
 window.toggleComments = toggleComments;
+window.openComments = openComments;
+window.toggleReplies = toggleReplies;
+window.toggleCommentOptions = toggleCommentOptions;
+window.handleCommentKey = handleCommentKey;
 window.submitComment = submitComment;
 window.showReplyInput = showReplyInput;
 window.editComment = editComment;
 window.deleteComment = deleteComment;
+window.closeEditCommentModal = closeEditCommentModal;
+window.confirmEditComment = confirmEditComment;
+window.closeDeleteCommentModal = closeDeleteCommentModal;
+window.confirmDeleteComment = confirmDeleteComment;
 window.togglePostOptions = togglePostOptions;
 window.editPost = editPost;
 window.deletePost = deletePost;

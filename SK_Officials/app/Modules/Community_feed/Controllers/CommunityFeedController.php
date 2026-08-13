@@ -119,7 +119,10 @@ class CommunityFeedController extends Controller
             ->with(['barangay', 'comments.user', 'comments.reactions', 'user', 'images', 'reactions'])
             ->withCount('reactions')
             ->where('id', $id)
-            ->where('user_id', $user->id)
+            ->where(function ($query) use ($user) {
+                $query->where('barangay_id', $user->barangay_id)
+                    ->orWhereRaw('"is_federation_wide" = true');
+            })
             ->firstOrFail();
 
         return response()->json($this->presenter->formatPost($post, $user->id, 'sk_official'));

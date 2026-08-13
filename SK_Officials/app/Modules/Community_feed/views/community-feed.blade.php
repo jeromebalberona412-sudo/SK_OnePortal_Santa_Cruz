@@ -12,6 +12,7 @@
         'app/Modules/Layout/css/header.css',
         'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Community_feed/assets/css/community-feed.css',
+        'app/Modules/Community_feed/assets/css/community-feed-comment-preview.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/sk-archive-terms.css') }}">
@@ -237,14 +238,48 @@
     </div>
 </div>
 
+{{-- Edit comment --}}
+<div id="editCommentModal" class="program-modal comment-action-modal">
+    <div class="modal-overlay" onclick="closeEditCommentModal()"></div>
+    <div class="modal-container" style="max-width:440px;">
+        <div class="modal-header">
+            <h2>Edit Comment</h2>
+            <button type="button" class="modal-close" onclick="closeEditCommentModal()" aria-label="Close"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
+        </div>
+        <div class="modal-body">
+            <textarea id="editCommentBody" class="edit-comment-textarea" maxlength="500" placeholder="Write a comment..."></textarea>
+        </div>
+        <div class="modal-footer-btns">
+            <button type="button" class="btn-secondary" onclick="closeEditCommentModal()">Cancel</button>
+            <button type="button" class="btn-primary" id="confirmEditCommentBtn" onclick="confirmEditComment()">Save</button>
+        </div>
+    </div>
+</div>
+
+{{-- Delete comment --}}
+<div id="deleteCommentModal" class="program-modal comment-action-modal">
+    <div class="modal-overlay" onclick="closeDeleteCommentModal()"></div>
+    <div class="modal-container" style="max-width:440px;">
+        <div class="modal-header">
+            <h2>Delete Comment</h2>
+            <button type="button" class="modal-close" onclick="closeDeleteCommentModal()" aria-label="Close"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:14px;color:#555;line-height:1.65;margin:0;">
+                Delete this comment? This cannot be undone.
+            </p>
+        </div>
+        <div class="modal-footer-btns">
+            <button type="button" class="btn-secondary" onclick="closeDeleteCommentModal()">Cancel</button>
+            <button type="button" class="btn-danger" id="confirmDeleteCommentBtn" onclick="confirmDeleteComment()">Delete</button>
+        </div>
+    </div>
+</div>
+
 {{-- Education Program Modal --}}
 {{-- removed program modals --}}
 
-@vite([
-    'app/Modules/Layout/js/header.js',
-    'app/Modules/Layout/js/sidebar.js',
-    'app/Modules/Community_feed/assets/js/community-feed.js',
-])
+@include('Community_feed::comment-preview')
 
 <script>
 window.CommunityFeedConfig = {
@@ -254,8 +289,26 @@ window.CommunityFeedConfig = {
     userDisplayName: @json($user->name ?? 'SK Official'),
     feedPollMs: 30000,
     profilePreview: @json($profilePreview ?? null),
+    commentsPageUrl: @json(url('/community-feed/__ID__/comments')),
 };
+window.CommentPreviewConfig = {
+    post: @json($commentPreviewPost ?? null),
+    defaultLogo: @json(asset('images/logo.png')),
+    barangayLogo: @json($barangayLogoUrl),
+    userAvatar: @json($barangayLogoUrl ?: asset('images/SK_OnePortal_logo.png')),
+    userDisplayName: @json($user->name ?? 'SK Official'),
+    feedUrl: @json(route('community-feed.index')),
+};
+</script>
 
+@vite([
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
+    'app/Modules/Community_feed/assets/js/community-feed.js',
+    'app/Modules/Community_feed/assets/js/community-feed-comment-preview.js',
+])
+
+<script>
 function showFeedToast(message, type) {
     const el = document.getElementById('feedToast');
     if (!el) return;

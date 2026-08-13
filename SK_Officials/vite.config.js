@@ -47,6 +47,8 @@ export default defineConfig({
                 'app/Modules/Community_feed/assets/js/community-feed.js',
                 'app/Modules/Community_feed/assets/css/community-feed-archive.css',
                 'app/Modules/Community_feed/assets/js/community-feed-archive.js',
+                'app/Modules/Community_feed/assets/css/community-feed-comment-preview.css',
+                'app/Modules/Community_feed/assets/js/community-feed-comment-preview.js',
                 // Committees module assets
                 'app/Modules/Committees/assets/css/committees.css',
                 'app/Modules/Committees/assets/js/committees.js',
