@@ -132,7 +132,7 @@
 
                     <!-- See All Notifications -->
                     <div class="notif-dropdown-footer">
-                        <a href="{{ route('notifications') }}" class="notif-see-all-btn">
+                        <a href="{{ route('notifications') }}" class="notif-see-all-btn" data-no-loading>
                             See All Notifications
                         </a>
                     </div>
@@ -162,7 +162,7 @@
                     <div class="dropdown-divider"></div>
 
                     <!-- View Profile -->
-                    <a href="{{ route('profile') }}" class="dropdown-item">
+                    <a href="{{ route('profile') }}" class="dropdown-item" data-no-loading>
                         <span class="dropdown-item-icon dropdown-item-icon--profile">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="12" cy="7" r="4"></circle>
@@ -173,7 +173,7 @@
                     </a>
 
                     <!-- Change Password -->
-                    <a href="{{ route('change-password') }}" class="dropdown-item" id="changePasswordTrigger">
+                    <a href="{{ route('change-password') }}" class="dropdown-item" id="changePasswordTrigger" data-no-loading>
                         <span class="dropdown-item-icon dropdown-item-icon--password">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>

@@ -19,7 +19,7 @@
 
                 <!-- Home -->
                 <li class="nav-item">
-                    <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                    <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" data-no-loading>
                         <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                             <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -30,7 +30,7 @@
 
                 <!-- Profile -->
                 <li class="nav-item">
-                    <a href="{{ route('profile') }}" class="nav-link {{ request()->routeIs('profile') ? 'active' : '' }}">
+                    <a href="{{ route('profile') }}" class="nav-link {{ request()->routeIs('profile') ? 'active' : '' }}" data-no-loading>
                         <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="7" r="4"></circle>
                             <path d="M5.5 21a6.5 6.5 0 0 1 13 0"></path>
@@ -41,7 +41,7 @@
 
                 <!-- Calendar -->
                 <li class="nav-item">
-                    <a href="{{ route('calendar') }}" class="nav-link {{ request()->routeIs('calendar') ? 'active' : '' }}">
+                    <a href="{{ route('calendar') }}" class="nav-link {{ request()->routeIs('calendar') ? 'active' : '' }}" data-no-loading>
                         <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                             <line x1="3" y1="10" x2="21" y2="10"></line>
@@ -54,7 +54,7 @@
 
                 <!-- Community Feed -->
                 <li class="nav-item">
-                    <a href="{{ route('announcements') }}" class="nav-link {{ request()->routeIs('announcements') ? 'active' : '' }}">
+                    <a href="{{ route('announcements') }}" class="nav-link {{ request()->routeIs('announcements') ? 'active' : '' }}" data-no-loading>
                         <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <!-- Group of people: 3 persons together -->
                             <circle cx="9" cy="6" r="3"></circle>
@@ -85,28 +85,28 @@
 
                         <!-- Schedule KK Profiling -->
                         <li class="nav-subitem">
-                            <a href="{{ route('schedule-kk-profiling') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('schedule-kk-profiling') ? 'active' : '' }}">
+                            <a href="{{ route('schedule-kk-profiling') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('schedule-kk-profiling') ? 'active' : '' }}" data-no-loading>
                                 <span>Schedule KK Profiling</span>
                             </a>
                         </li>
 
                         <!-- KK Profiling Requests -->
                         <li class="nav-subitem">
-                            <a href="{{ route('kk-profiling-requests') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('kk-profiling-requests') ? 'active' : '' }}">
+                            <a href="{{ route('kk-profiling-requests') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('kk-profiling-requests') ? 'active' : '' }}" data-no-loading>
                                 <span>KK Profiling Requests</span>
                             </a>
                         </li>
 
                         <!-- Kabataan -->
                         <li class="nav-subitem">
-                            <a href="{{ route('kabataan') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('kabataan') ? 'active' : '' }}">
+                            <a href="{{ route('kabataan') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('kabataan') ? 'active' : '' }}" data-no-loading>
                                 <span>Kabataan</span>
                             </a>
                         </li>
 
                         <!-- Previous Kabataan -->
                         <li class="nav-subitem">
-                            <a href="{{ route('previous-kabataan') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('previous-kabataan') ? 'active' : '' }}">
+                            <a href="{{ route('previous-kabataan') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('previous-kabataan') ? 'active' : '' }}" data-no-loading>
                                 <span>Previous Kabataan</span>
                             </a>
                         </li>
@@ -132,35 +132,35 @@
 
                         <!-- ABYIP -->
                         <li class="nav-subitem">
-                            <a href="{{ route('abyip.index') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('abyip.*') ? 'active' : '' }}">
+                            <a href="{{ route('abyip.index') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('abyip.*') ? 'active' : '' }}" data-no-loading>
                                 <span>ABYIP</span>
                             </a>
                         </li>
 
                         <!-- Program Accomplishments -->
                         <li class="nav-subitem">
-                            <a href="{{ route('program-accomplishment.index') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('program-accomplishment.*') ? 'active' : '' }}">
+                            <a href="{{ route('program-accomplishment.index') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('program-accomplishment.*') ? 'active' : '' }}" data-no-loading>
                                 <span>Program Accomplishments</span>
                             </a>
                         </li>
 
                         <!-- Committees -->
                         <li class="nav-subitem">
-                            <a href="{{ route('committees') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('committees') ? 'active' : '' }}">
+                            <a href="{{ route('committees') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('committees') ? 'active' : '' }}" data-no-loading>
                                 <span>Committees</span>
                             </a>
                         </li>
 
                         <!-- Programs -->
                         <li class="nav-subitem">
-                            <a href="{{ route('programs') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('programs') ? 'active' : '' }}">
+                            <a href="{{ route('programs') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('programs') ? 'active' : '' }}" data-no-loading>
                                 <span>Programs</span>
                             </a>
                         </li>
 
                         <!-- Programs Management -->
                         <li class="nav-subitem">
-                            <a href="{{ route('schedule-programs') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('schedule-programs', '*.survey.*') ? 'active' : '' }}">
+                            <a href="{{ route('schedule-programs') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('schedule-programs', '*.survey.*') ? 'active' : '' }}" data-no-loading>
                                 <span>Programs Management</span>
                             </a>
                         </li>
@@ -198,7 +198,7 @@
                         </li>
 
                         <li class="nav-subitem">
-                            <a href="{{ route('archived-youth-records') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('archived-youth-records') ? 'active' : '' }}">
+                            <a href="{{ route('archived-youth-records') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('archived-youth-records') ? 'active' : '' }}" data-no-loading>
                                 <span>Archived Youth Records</span>
                             </a>
                         </li>
@@ -219,14 +219,14 @@
 
                         <!-- Archived Sports Programs -->
                         <li class="nav-subitem">
-                            <a href="{{ route('sports-programs.archived') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('sports-programs.archived') ? 'active' : '' }}">
+                            <a href="{{ route('sports-programs.archived') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('sports-programs.archived') ? 'active' : '' }}" data-no-loading>
                                 <span>Archived Sports Programs</span>
                             </a>
                         </li>
 
                         <!-- Deleted Posts -->
                         <li class="nav-subitem">
-                            <a href="{{ route('announcements.archive') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('announcements.archive') ? 'active' : '' }}">
+                            <a href="{{ route('announcements.archive') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('announcements.archive') ? 'active' : '' }}" data-no-loading>
                                 <span>Deleted Posts</span>
                             </a>
                         </li>
@@ -245,21 +245,21 @@
 
                         <!-- Rejected KK Profiling -->
                         <li class="nav-subitem">
-                            <a href="{{ route('rejected-kkprofiling') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('rejected-kkprofiling') ? 'active' : '' }}">
+                            <a href="{{ route('rejected-kkprofiling') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('rejected-kkprofiling') ? 'active' : '' }}" data-no-loading>
                                 <span>Rejected KK Profiling</span>
                             </a>
                         </li>
 
                         <!-- Rejected Scholarship -->
                         <li class="nav-subitem">
-                            <a href="{{ route('rejected-scholars') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('rejected-scholars', 'rejected-scholarship') ? 'active' : '' }}">
+                            <a href="{{ route('rejected-scholars') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('rejected-scholars', 'rejected-scholarship') ? 'active' : '' }}" data-no-loading>
                                 <span>Rejected Scholarships</span>
                             </a>
                         </li>
 
                         <!-- Rejected Sports Applications -->
                         <li class="nav-subitem">
-                            <a href="{{ route('rejected-sports') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('rejected-sports') ? 'active' : '' }}">
+                            <a href="{{ route('rejected-sports') }}" class="nav-sublink nav-sublink-child {{ request()->routeIs('rejected-sports') ? 'active' : '' }}" data-no-loading>
                                 <span>Rejected Sports</span>
                             </a>
                         </li>

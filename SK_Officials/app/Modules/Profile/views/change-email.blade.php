@@ -10,48 +10,44 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Change Email - SK Officials</title>
     @vite([
-        'app/Modules/Authentication/assets/css/forgot-password.css',
-        'app/Modules/Profile/assets/css/change-email.css',
+        'app/Modules/Authentication/assets/css/login.css',
         'app/Modules/Profile/assets/js/change-email.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="sk-login-page">
-    @include('loading')
-
-    <!-- Animated Background -->
-    <div class="sk-bg-wrapper">
-        <div class="sk-bg-image"></div>
-        <div class="sk-gradient-overlay"></div>
-        <div class="floating-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
-        </div>
-    </div>
 
     <main class="sk-login-container">
 
-        <!-- Left Side — Logo & Branding -->
+        <!-- Left Side â€” Logo & Branding -->
         <div class="sk-branding-section">
             <div class="branding-content">
-                <div class="logo-wrapper">
-                    <img src="{{ asset('images/logo.png') }}"
-                         alt="SK Officials Logo"
-                         class="sk-logo">
+                <div class="collab-logo-wrapper">
+                    <div class="logo-glow-wrapper logo-left">
+                        <img src="{{ asset('images/skoneportal_logo.webp') }}"
+                             alt="SK OnePortal Logo"
+                             class="collab-logo">
+                    </div>
+                    <div class="logo-glow-wrapper logo-right">
+                        <img src="{{ asset('images/logo.png') }}"
+                             alt="SK Officials Logo"
+                             class="collab-logo">
+                    </div>
                 </div>
                 <h1 class="sk-main-title">SK OnePortal</h1>
                 <p class="sk-tagline">SK Officials Portal - Santa Cruz, Laguna</p>
             </div>
         </div>
 
-        <!-- Right Side — Card -->
+        <!-- Right Side â€” Card -->
         <div class="sk-login-section">
             <div class="sk-login-card">
 
                 <div id="ceStep1">
-                    <div class="card-header">
-                        <h2 class="card-title">Change Email</h2>
+                    <div class="card-header" style="text-align:center;">
+                        <p class="card-subtitle"
+                           style="font-size:1.4rem;font-weight:800;color:#0f172a;letter-spacing:-0.02em;">
+                            Change Email
+                        </p>
                         <p class="card-subtitle">Enter your current email, new email address, and current password to request a change.</p>
                     </div>
 
@@ -73,55 +69,62 @@
 
                         {{-- Current Email --}}
                         <div class="sk-form-group">
-                            <label for="ceCurrentEmail" class="sk-label">Current Email</label>
-                            <div class="input-wrapper">
-                                <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <label for="ceCurrentEmail" class="sk-label">
+                                <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
                                     <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
                                 </svg>
-                                <input
-                                    type="email"
-                                    id="ceCurrentEmail"
-                                    name="current_email"
-                                    class="sk-input"
-                                    placeholder="Enter your current email"
-                                    autocomplete="email"
-                                    maxlength="100"
-                                    value="{{ old('current_email', $user->email ?? '') }}"
-                                    autofocus
-                                    required
-                                >
-                            </div>
+                                Current Email
+                            </label>
+                            <input
+                                type="email"
+                                id="ceCurrentEmail"
+                                name="current_email"
+                                class="sk-input"
+                                placeholder="Enter your current email"
+                                autocomplete="email"
+                                maxlength="100"
+                                value="{{ old('current_email', $user->email ?? '') }}"
+                                autofocus
+                                required
+                            >
                             <div class="sk-field-error" id="ceCurrentEmailError" hidden></div>
                         </div>
 
                         {{-- New Email Address --}}
                         <div class="sk-form-group">
-                            <label for="ceNewEmail" class="sk-label">New Email Address</label>
-                            <div class="input-wrapper">
-                                <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <label for="ceNewEmail" class="sk-label">
+                                <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
                                     <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
                                 </svg>
-                                <input
-                                    type="email"
-                                    id="ceNewEmail"
-                                    name="new_email"
-                                    class="sk-input"
-                                    placeholder="Enter your new email address"
-                                    autocomplete="off"
-                                    maxlength="100"
-                                    value="{{ old('new_email') }}"
-                                    required
-                                >
-                            </div>
+                                New Email Address
+                            </label>
+                            <input
+                                type="email"
+                                id="ceNewEmail"
+                                name="new_email"
+                                class="sk-input"
+                                placeholder="Enter your new email address"
+                                autocomplete="off"
+                                maxlength="100"
+                                value="{{ old('new_email') }}"
+                                required
+                            >
                             <div class="sk-field-error" id="ceNewEmailError" hidden></div>
                         </div>
 
                         {{-- Current Password --}}
                         <div class="sk-form-group">
-                            <label for="cePassword" class="sk-label">Current Password</label>
-                            <div class="password-wrapper ce-password-wrapper">
+                            <label for="cePassword" class="sk-label">
+                                <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                          d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                                          clip-rule="evenodd"/>
+                                </svg>
+                                Current Password
+                            </label>
+                            <div class="password-wrapper">
                                 <input
                                     type="password"
                                     id="cePassword"
@@ -132,13 +135,21 @@
                                     maxlength="64"
                                     required
                                 >
-                                <button type="button" class="toggle-password" data-target="cePassword" aria-label="Toggle password visibility" tabindex="-1">
-                                    <svg class="eye-icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <button type="button" class="toggle-password" aria-label="Toggle password visibility" onclick="togglePassword('cePassword')">
+                                    <svg class="eye-icon eye-open" id="eyeOpen-cePassword"
+                                         viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor" stroke-width="2">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                         <circle cx="12" cy="12" r="3"></circle>
                                     </svg>
-                                    <svg class="eye-icon eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
-                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                    <svg class="eye-icon eye-closed" id="eyeClosed-cePassword"
+                                         viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor" stroke-width="2"
+                                         style="display:none;">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45
+                                             18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0
+                                             11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1
+                                             1-4.24-4.24"></path>
                                         <line x1="1" y1="1" x2="23" y2="23"></line>
                                     </svg>
                                 </button>
@@ -147,18 +158,12 @@
                         </div>
 
                         <button type="submit" class="sk-submit-btn" id="ceSubmitBtn">
-                            <span id="ceBtnText">Send Verification Link</span>
-                            <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
-                            </svg>
+                            <span>Send Verification Link</span>
                         </button>
                     </form>
 
-                    <div class="youth-register-section ce-back-section">
-                        <p class="register-text">
-                            <a href="{{ route('profile') }}" class="register-link">Back to Profile</a>
-                        </p>
+                    <div class="sk-form-options">
+                        <a href="{{ route('profile') }}" class="sk-link">Back to Profile</a>
                     </div>
                 </div>
 
@@ -167,6 +172,21 @@
 
     </main>
 
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
+    <script>
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const eyeOpen = document.getElementById('eyeOpen-' + inputId);
+            const eyeClosed = document.getElementById('eyeClosed-' + inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeOpen.style.display = 'none';
+                eyeClosed.style.display = 'block';
+            } else {
+                input.type = 'password';
+                eyeOpen.style.display = 'block';
+                eyeClosed.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>
