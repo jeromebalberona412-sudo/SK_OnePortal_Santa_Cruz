@@ -560,30 +560,10 @@ class AuthenticationService
 
         try {
             $user->sendEmailVerificationNotification();
-            $deliveryResult = User::lastDeliveryResult();
-            $actuallyDelivered = (bool) ($deliveryResult['delivered'] ?? false);
-            $pending['email_sent'] = $actuallyDelivered;
-            $pending['last_error_message'] = $deliveryResult['error'] ?? null;
-            if ($actuallyDelivered) {
-                $pending['resend_last_sent_at'] = now()->toIso8601String();
-            }
-
-            if (! $actuallyDelivered) {
-                Log::warning('startEmailVerificationWait: verification email NOT actually delivered to recipient', [
-                    'user_id' => $user->getKey(),
-                    'email' => $user->email,
-                    'reason' => $reason,
-                    'fallback_used' => $deliveryResult['fallback_used'] ?? true,
-                    'delivery_error' => $pending['last_error_message'],
-                ]);
-                $message = 'Email verification is required. If you did not receive a verification email, please check your spam folder or request a new one.';
-                if (! empty($pending['last_error_message'])) {
-                    $request->session()->put('sk_fed_verification_delivery_failed', true);
-                }
-            } else {
-                $message = 'A verification email has been sent. Complete verification to continue.';
-                $request->session()->forget('sk_fed_verification_delivery_failed');
-            }
+            $pending['email_sent'] = true;
+            $pending['resend_last_sent_at'] = now()->toIso8601String();
+            $message = 'A verification email has been sent. Complete verification to continue.';
+            $request->session()->forget('sk_fed_verification_delivery_failed');
         } catch (\Throwable $e) {
             Log::error('Email verification notification threw during login', [
                 'user_id' => $user->getKey(),

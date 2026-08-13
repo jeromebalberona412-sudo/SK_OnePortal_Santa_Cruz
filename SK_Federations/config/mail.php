@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', env('APP_ENV') === 'local' ? 'log' : 'smtp'),
+    'default' => env('MAIL_MAILER', 'log'),
 
     /*
     |--------------------------------------------------------------------------
@@ -43,10 +43,9 @@ return [
             'url' => env('MAIL_URL'),
             'host' => env('MAIL_HOST', '127.0.0.1'),
             'port' => env('MAIL_PORT', 2525),
-            'encryption' => env('MAIL_ENCRYPTION', 'tls'),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'timeout' => (int) env('MAIL_TIMEOUT', 20),
+            'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
@@ -78,20 +77,11 @@ return [
 
         'failover' => [
             'transport' => 'failover',
-            'mailers' => (static function (): array {
-                $mailers = [];
-
-                if (env('MAIL_MAILER') === 'smtp'
-                    || (env('MAIL_HOST') !== null && trim((string) env('MAIL_HOST')) !== '')
-                ) {
-                    $mailers[] = 'smtp';
-                }
-
-                $mailers[] = 'log';
-
-                return $mailers;
-            })(),
-            'retry_after' => 10,
+            'mailers' => [
+                'smtp',
+                'log',
+            ],
+            'retry_after' => 60,
         ],
 
         'roundrobin' => [

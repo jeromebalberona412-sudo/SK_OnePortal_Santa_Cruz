@@ -18,7 +18,6 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 
@@ -319,144 +318,12 @@ class User extends Authenticatable implements MustVerifyEmail
                 ->line('If you did not request this, no further action is required.');
         });
 
-        $deliveryResult = self::deliverWithFallback(fn () => $this->notify($notification));
-
-        Log::info('Email verification notification dispatch result', [
-            'user_id' => $this->getKey(),
-            'email' => $this->email,
-            'type' => 'email_verification',
-            'delivered' => $deliveryResult['delivered'],
-            'fallback_used' => $deliveryResult['fallback_used'],
-            'error' => $deliveryResult['error'],
-            'exception_class' => $deliveryResult['exception_class'],
-        ]);
-
-        self::setLastDeliveryResult($deliveryResult);
+        $this->notify($notification);
     }
 
     public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
     {
-        $deliveryResult = self::deliverWithFallback(fn () => $this->notify(new SkFedResetPasswordNotification($token)));
-
-        Log::info('Password reset notification dispatch result', [
-            'user_id' => $this->getKey(),
-            'email' => $this->email,
-            'type' => 'password_reset',
-            'delivered' => $deliveryResult['delivered'],
-            'fallback_used' => $deliveryResult['fallback_used'],
-            'error' => $deliveryResult['error'],
-            'exception_class' => $deliveryResult['exception_class'],
-        ]);
-
-        self::setLastDeliveryResult($deliveryResult);
-    }
-
-    /**
-     * Deliver notification with explicit handling so the caller can
-     * distinguish "actually delivered" from "written to log fallback".
-     *
-     * The Laravel `failover` mailer will silently write to the log driver
-     * when upstream transports (smtp) fail. To the caller this
-     * looks like "success", so here we track whether any real transport
-     * was attempted before we let the failover chain proceed.
-     *
-     * @param  callable  $sender  function that will trigger `notify()`
-     * @return array{delivered:bool,fallback_used:bool,error:?string,exception_class:?string}
-     */
-    protected static function deliverWithFallback(callable $sender): array
-    {
-        $realMailers = ['smtp', 'postmark', 'ses', 'mailgun', 'ses-v2', 'sendmail'];
-        $configuredMailer = (string) config('mail.default', '');
-        $failoverMailers = config('mail.mailers.failover.mailers');
-        $mailerCandidates = is_array($failoverMailers)
-            ? $failoverMailers
-            : [$configuredMailer];
-
-        $hasRealTransport = false;
-        foreach ($mailerCandidates as $candidate) {
-            if (in_array((string) $candidate, $realMailers, true)) {
-                $transportConfig = config('mail.mailers.'.(string) $candidate);
-                if (! is_array($transportConfig)) {
-                    continue;
-                }
-
-                $transport = (string) ($transportConfig['transport'] ?? (string) $candidate);
-                if (! in_array($transport, $realMailers, true)) {
-                    continue;
-                }
-
-                if ($transport === 'smtp') {
-                    $host = trim((string) ($transportConfig['host'] ?? ''));
-                    $user = trim((string) ($transportConfig['username'] ?? ''));
-                    if ($host !== '' && $user !== '' && $host !== '127.0.0.1' && $host !== 'localhost') {
-                        $hasRealTransport = true;
-                        break;
-                    }
-                } else {
-                    $hasRealTransport = true;
-                    break;
-                }
-            }
-        }
-
-        $result = [
-            'delivered' => ! $hasRealTransport,
-            'fallback_used' => ! $hasRealTransport,
-            'error' => null,
-            'exception_class' => null,
-        ];
-
-        try {
-            $sender();
-            if ($hasRealTransport) {
-                $result['delivered'] = true;
-                $result['fallback_used'] = false;
-            }
-        } catch (\Throwable $e) {
-            Log::error('Mail transport exception caught during dispatch', [
-                'error' => $e->getMessage(),
-                'exception_class' => get_class($e),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-            $result['delivered'] = false;
-            $result['fallback_used'] = true;
-            $result['error'] = $e->getMessage();
-            $result['exception_class'] = get_class($e);
-        }
-
-        return $result;
-    }
-
-    /**
-     * In-request memory for the most recent notification delivery result so
-     * the controller/service layer can report status accurately.
-     *
-     * @var array{delivered:bool,fallback_used:bool,error:?string,exception_class:?string}|null
-     */
-    protected static ?array $_lastDeliveryResult = null;
-
-    /**
-     * Thread-safe delivery result slot for the current request.
-     *
-     * @return array{delivered:bool,fallback_used:bool,error:?string,exception_class:?string}
-     */
-    public static function lastDeliveryResult(): array
-    {
-        return self::$_lastDeliveryResult ?? [
-            'delivered' => false,
-            'fallback_used' => false,
-            'error' => null,
-            'exception_class' => null,
-        ];
-    }
-
-    /**
-     * @param  array{delivered:bool,fallback_used:bool,error:?string,exception_class:?string}  $result
-     */
-    protected static function setLastDeliveryResult(array $result): void
-    {
-        self::$_lastDeliveryResult = $result;
+        $this->notify(new SkFedResetPasswordNotification($token));
     }
 
     protected function hasTableColumn(string $column): bool

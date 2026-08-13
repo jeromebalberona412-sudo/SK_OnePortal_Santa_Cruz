@@ -315,46 +315,10 @@ class AuthController extends Controller
 
         try {
             $user->sendEmailVerificationNotification();
-            $deliveryResult = User::lastDeliveryResult();
-            $actuallyDelivered = (bool) ($deliveryResult['delivered'] ?? false);
-
-            if ($actuallyDelivered) {
-                $pending['resend_last_sent_at'] = now()->toIso8601String();
-                $pending['email_sent'] = true;
-                $pending['last_error_message'] = null;
-                $request->session()->put('sk_fed_email_verification_pending', $pending);
-                $request->session()->forget('sk_fed_verification_delivery_failed');
-            } else {
-                Log::error('Email verification resend: delivery did not reach a real transport', [
-                    'user_id' => $user->getKey(),
-                    'email' => $user->email,
-                    'fallback_used' => $deliveryResult['fallback_used'] ?? true,
-                    'delivery_error' => $deliveryResult['error'] ?? null,
-                    'exception_class' => $deliveryResult['exception_class'] ?? null,
-                ]);
-
-                $pending['email_sent'] = false;
-                $pending['last_error_message'] = $deliveryResult['error'] ?? null;
-                $request->session()->put('sk_fed_email_verification_pending', $pending);
-                $request->session()->put('sk_fed_verification_delivery_failed', true);
-
-                $errorMessage = 'Unable to send the verification email right now. Please try again later.';
-                $cooldownSeconds = 10;
-
-                if ($request->expectsJson()) {
-                    return response()->json([
-                        'ok' => false,
-                        'message' => $errorMessage,
-                        'resend_cooldown' => $cooldownSeconds,
-                        'delivery_failed' => true,
-                    ], 503);
-                }
-
-                return redirect()
-                    ->route('skfed.verification.wait')
-                    ->withErrors(['email' => $errorMessage])
-                    ->with('resend_started', false);
-            }
+            $pending['resend_last_sent_at'] = now()->toIso8601String();
+            $pending['email_sent'] = true;
+            $request->session()->put('sk_fed_email_verification_pending', $pending);
+            $request->session()->forget('sk_fed_verification_delivery_failed');
 
             $cooldownSeconds = $this->emailVerificationDeviceService->resendCooldownRemaining($pending);
 
