@@ -1,0 +1,57 @@
+.abyip-preview-table-wrap {
+    max-height: min(58vh, 640px);
+    overflow: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+}
+
+.abyip-preview-table {
+    width: 100%;
+    min-width: 1480px;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+.abyip-preview-table textarea {
+    width: 100%;
+    min-height: 64px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font: inherit;
+    resize: vertical;
+}
+
+.abyip-preview-table th,
+.abyip-preview-table td {
+    border-bottom: 1px solid #e5e7eb;
+    padding: 8px;
+    vertical-align: top;
+}
+
+.abyip-preview-table th {
+    position: sticky;
+    top: 0;
+    background: #f8fafc;
+    text-align: left;
+    font-weight: 600;
+}
+
+.abyip-preview-table input[type="text"] {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font: inherit;
+}
+
+.abyip-preview-table input[readonly] {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.abyip-source-page {
+    display: block;
+    margin-top: 4px;
+    color: #6b7280;
+}

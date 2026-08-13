@@ -7,6 +7,7 @@ use App\Models\OfficialProfile;
 use App\Models\User;
 use App\Modules\Barangay_ABYIP\Services\Normalization\AbyipNumericNormalizer;
 use App\Modules\Barangay_ABYIP\Services\Parsing\AbyipBudgetExtractor;
+use App\Modules\Barangay_ABYIP\Services\Parsing\AbyipBudgetValidator;
 use App\Modules\Barangay_ABYIP\Services\Persistence\AbyipLineWriter;
 use App\Services\AbyipPdfExtractionService;
 use App\Services\SkFederationsNotificationDispatcher;
@@ -27,66 +28,11 @@ class AbyipService
         private readonly AbyipNumericNormalizer $normalizer,
         private readonly AbyipBudgetExtractor $budgetExtractor,
         private readonly AbyipLineWriter $lineWriter,
+        private readonly AbyipBudgetValidator $budgetValidator,
     ) {}
 
     /** @var list<string> */
     private const YOUTH_PROGRAM_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
-
-    /** @var array<string, string> */
-    private const YOUTH_PROGRAM_NAMES = [
-        'A' => 'Equitable Access to Quality Education',
-        'B' => 'Environmental Protection',
-        'C' => 'Disaster Risk Reduction and Resiliency',
-        'D' => 'Youth Employment and Livelihood',
-        'E' => 'Health',
-        'F' => 'Anti-Drug and Peace and Order',
-        'G' => 'Gender Sensitivity',
-        'H' => 'Feeding Program for KK Members',
-        'I' => 'Sports Development',
-        'J' => 'Other Programs',
-    ];
-
-    /** @var array<string, list<string>> */
-    private const YOUTH_PROGRAM_ACTIVITIES = [
-        'A' => [
-            'Support to ALS and RIC',
-            '150 Students for Educational Assistance',
-            'Support to Elementary and Daycare',
-        ],
-        'B' => [
-            'Clean-Up Drive',
-            'Payroll for Laborer',
-            'Tree Planting',
-        ],
-        'C' => [
-            'Training on Disaster Preparedness for Organization of Youth Volunteer Groups (Food and Accommodations)',
-            'Distribution of Relief Goods for KK Members',
-        ],
-        'D' => [
-            'Livelihood Training',
-            'Food and other supplies',
-        ],
-        'E' => [
-            'Medicines/Medical Equipment',
-        ],
-        'F' => [
-            'Orientation for Anti-Drug and Physical Abuse',
-            'Foods and Accommodations',
-        ],
-        'G' => [
-            'Orientation on GAD and VAWC',
-            'Foods and Accommodations',
-        ],
-        'H' => [],
-        'I' => [
-            'Supplies and Materials, Food and Accommodation, Officiating fees',
-        ],
-        'J' => [
-            'Katipunan ng Kabataan (KK) General Assembly',
-            'Barangay Day Celebration',
-            'Youth Week',
-        ],
-    ];
 
     // =====================================================================
     // PUBLIC API — CRUD orchestration for ABYIP documents.
@@ -150,6 +96,10 @@ class AbyipService
                 extractedText: ''
             );
 
+        if (! empty($data['rows']) && is_array($data['rows'])) {
+            $parsed = $this->hydrateParsedFromClientRows($parsed, $data['rows'], $data['document'] ?? []);
+        }
+
         $fiscalYear = (int) ($parsed['fiscal_year'] ?? $data['calendar_year'] ?? now()->year);
         $this->assertUniqueYear($user, $fiscalYear);
 
@@ -188,6 +138,7 @@ class AbyipService
                 'source_type' => $sourceType,
                 'document_html' => $data['document_html'] ?? null,
                 'pdf_data' => $data['pdf_data'] ?? null,
+                'extraction_status' => $sourceType === Abyip::SOURCE_PDF ? 'extracted' : null,
             ];
 
             Log::info('ABYIP document insert payload', $documentPayload);
@@ -214,7 +165,10 @@ class AbyipService
             $fiscalYear,
         );
 
-        return $this->formatDocument($document->fresh(['lines.children']));
+        $formatted = $this->formatDocument($document->fresh(['lines.children']));
+        $formatted['import_summary'] = $this->buildImportSummary($document);
+
+        return $formatted;
     }
 
     /**
@@ -223,11 +177,83 @@ class AbyipService
      */
     public function update(User $user, int $documentId, array $data): array
     {
-        $this->findDocumentModel($user, $documentId);
+        $document = $this->findDocumentModel($user, $documentId);
 
-        throw ValidationException::withMessages([
-            'document' => ['Uploaded ABYIP documents are view-only.'],
-        ]);
+        if (array_key_exists('tenant_id', $data) || array_key_exists('barangay_id', $data) || array_key_exists('created_by', $data)) {
+            throw ValidationException::withMessages([
+                'document' => ['Protected ownership fields cannot be changed.'],
+            ]);
+        }
+
+        $editableDocumentFields = [
+            'document_title',
+            'title',
+            'country',
+            'region',
+            'province',
+            'municipality',
+            'barangay_name',
+            'sk_council_name',
+            'barangay_estimated_budget',
+            'sk_fund_percentage',
+            'sk_fund_amount',
+            'total_budget',
+            'prepared_by',
+            'prepared_position',
+            'prepared_by_name',
+            'prepared_by_position',
+            'approved_by',
+            'approved_position',
+            'approved_by_name',
+            'approved_by_position',
+            'edit_reason',
+        ];
+
+        $documentUpdates = [];
+        foreach ($editableDocumentFields as $field) {
+            if (! array_key_exists($field, $data)) {
+                continue;
+            }
+
+            $documentUpdates[$field === 'title' ? 'document_title' : $field] = $data[$field];
+        }
+
+        $lines = $data['lines'] ?? $data['rows'] ?? null;
+
+        $document = DB::transaction(function () use ($user, $document, $documentUpdates, $lines, $data) {
+            if ($documentUpdates !== []) {
+                $documentUpdates['last_edited_by'] = $user->id;
+                $documentUpdates['last_edited_at'] = now();
+                $document->forceFill($documentUpdates)->save();
+            }
+
+            if (is_array($lines)) {
+                $this->updateDocumentLines($user, $document, $lines, (string) ($data['edit_reason'] ?? ''));
+            }
+
+            return $document;
+        });
+
+        return $this->formatDocument($document->fresh(['lines.children']));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function buildImportSummary(Abyip $document): array
+    {
+        $lines = Abyip::query()
+            ->where('document_id', $document->id)
+            ->where('id', '!=', $document->id)
+            ->get(['id', 'row_type', 'manual_review_required']);
+
+        return [
+            'barangay' => $document->barangay_name,
+            'fiscal_year' => $document->fiscal_year,
+            'programs_detected' => $lines->whereIn('row_type', [Abyip::ROW_CATEGORY, Abyip::ROW_YOUTH_PROGRAM])->count(),
+            'activities_imported' => $lines->whereIn('row_type', [Abyip::ROW_EXPENDITURE, Abyip::ROW_ACTIVITY])->count(),
+            'rows_requiring_review' => $lines->where('manual_review_required', true)->count(),
+        ];
     }
 
     public function delete(User $user, int $documentId): void
@@ -288,6 +314,10 @@ class AbyipService
                 documentHtml: (string) ($data['document_html'] ?? ''),
                 extractedText: ''
             );
+
+        if (! empty($data['rows']) && is_array($data['rows'])) {
+            $parsed = $this->hydrateParsedFromClientRows($parsed, $data['rows'], $data['document'] ?? []);
+        }
 
         $signatureUserIds = $this->resolveSignatureUserIds($user->barangay_id, $parsed);
         $parsed = $this->normalizer->normalizeDocumentForInsert($parsed);
@@ -366,6 +396,7 @@ class AbyipService
             ->documents()
             ->where('id', $documentId)
             ->where('barangay_id', $user->barangay_id)
+            ->when($user->tenant_id, fn ($query) => $query->where('tenant_id', $user->tenant_id))
             ->first();
 
         if ($document === null) {
@@ -424,6 +455,8 @@ class AbyipService
             'province' => $document->province,
             'municipality' => $document->municipality,
             'barangay_name' => $document->barangay_name,
+            'organization' => $document->sk_council_name,
+            'sk_council_name' => $document->sk_council_name,
             'document_title' => $document->document_title,
             'source_type' => $document->source_type,
             'document_html' => $forList ? null : $document->document_html,
@@ -501,10 +534,23 @@ class AbyipService
             'implementation_start' => $line->implementation_start?->format('Y-m-d'),
             'implementation_end' => $line->implementation_end?->format('Y-m-d'),
             'person_responsible' => $line->person_responsible,
+            'activity_name' => $line->activity_name,
             'row_type' => $line->row_type,
             'mooe' => $line->mooe,
             'co' => $line->co,
             'total' => $line->total,
+            'source_text' => $line->source_text,
+            'page_number' => $line->page_number,
+            'validation_status' => $line->validation_status,
+            'validation_message' => $line->validation_message,
+            'manual_review_required' => (bool) $line->manual_review_required,
+            'progress_percent' => $line->progress_percent,
+            'accomplishment_status' => $line->accomplishment_status,
+            'target_date' => $line->target_date?->format('Y-m-d'),
+            'completed_at' => $line->completed_at?->toIso8601String(),
+            'submitted_at' => $line->submitted_at?->toIso8601String(),
+            'approved_at' => $line->approved_at?->toIso8601String(),
+            'rejected_at' => $line->rejected_at?->toIso8601String(),
             'activities' => $line->relationLoaded('children')
                 ? $line->children->map(fn (Abyip $activity) => $this->formatLineAsActivity($activity))->values()->all()
                 : [],
@@ -519,6 +565,8 @@ class AbyipService
         return [
             'id' => $activity->id,
             'program_id' => $activity->parent_id,
+            'program_name' => $activity->program_name,
+            'category' => $activity->category,
             'activity_name' => $activity->activity_name ?? $activity->program_name,
             'description' => $activity->description,
             'expected_result' => $activity->expected_result,
@@ -529,6 +577,18 @@ class AbyipService
             'mooe' => $activity->mooe,
             'co' => $activity->co,
             'total' => $activity->total,
+            'source_text' => $activity->source_text,
+            'page_number' => $activity->page_number,
+            'validation_status' => $activity->validation_status,
+            'validation_message' => $activity->validation_message,
+            'manual_review_required' => (bool) $activity->manual_review_required,
+            'progress_percent' => $activity->progress_percent,
+            'accomplishment_status' => $activity->accomplishment_status,
+            'target_date' => $activity->target_date?->format('Y-m-d'),
+            'completed_at' => $activity->completed_at?->toIso8601String(),
+            'submitted_at' => $activity->submitted_at?->toIso8601String(),
+            'approved_at' => $activity->approved_at?->toIso8601String(),
+            'rejected_at' => $activity->rejected_at?->toIso8601String(),
         ];
     }
 
@@ -1279,9 +1339,6 @@ class AbyipService
         }
 
         $programs = [];
-        $ppasFragments = [];
-        $metaByLetter = [];
-        $amountsByLetter = [];
         $lines = preg_split('/\R/u', $text) ?: [];
 
         foreach ($lines as $line) {
@@ -1295,81 +1352,96 @@ class AbyipService
                 continue;
             }
 
+            $programName = $this->youthCategorySection(
+                $letter,
+                trim((string) ($fields['PROGRAM'] ?? $fields['CATEGORY'] ?? ''))
+            );
+            $parentProgram = trim((string) ($fields['PARENT'] ?? ''));
             if (! isset($programs[$letter])) {
-                $programs[$letter] = $this->makeYouthProgramShell($letter);
+                $programs[$letter] = $this->makeYouthProgramShell($letter, $programName !== '' ? $programName : null);
+                $programs[$letter]['parent_program'] = $parentProgram !== '' ? $parentProgram : null;
+            } elseif ($programName !== '' && (($programs[$letter]['name'] ?? '') === $letter || ($programs[$letter]['name'] ?? '') === '')) {
+                $programs[$letter]['name'] = $programName;
+                $programs[$letter]['label'] = $programName;
             }
 
-            $ppas = (string) ($fields['PPAS'] ?? '');
-            if ($ppas !== '') {
-                $ppasFragments[$letter][] = $ppas;
+            if ($parentProgram !== '') {
+                $programs[$letter]['parent_program'] = $parentProgram;
             }
 
+            $ppas = trim((string) ($fields['PPAS'] ?? ''));
+            $period = (string) ($fields['PERIOD'] ?? '');
+            $periodDates = $this->parsePeriodDates($period);
             $shared = [
                 'description' => $fields['DESC'] ?? null,
                 'expected_result' => $fields['EXP'] ?? null,
                 'performance_indicator' => $fields['PERF'] ?? null,
-                'period_of_implementation' => $fields['PERIOD'] ?? null,
+                'period_of_implementation' => $period !== '' ? $period : null,
+                'implementation_start' => $periodDates['start'],
+                'implementation_end' => $periodDates['end'],
                 'person_responsible' => $fields['PERSON'] ?? null,
+                'source_text' => $fields['SOURCE'] ?? ($ppas !== '' ? $ppas : $programName),
+                'page_number' => $fields['PAGE'] ?? null,
+                'parent_program' => $parentProgram !== '' ? $parentProgram : ($programs[$letter]['parent_program'] ?? null),
+                'category' => $programName !== '' ? $programName : ($programs[$letter]['name'] ?? null),
+                'program_name' => $parentProgram !== '' ? $parentProgram : ($programs[$letter]['parent_program'] ?? null),
             ];
 
-            $metaByLetter[$letter] = $this->mergeStructuredRowFields(
-                $metaByLetter[$letter] ?? [],
+            $programs[$letter]['_meta'] = $this->mergeStructuredRowFields(
+                $programs[$letter]['_meta'] ?? [],
                 $shared
             );
 
-            $mooeList = $this->parseAmountsFromCell($fields['MOOE'] ?? '');
-            $coList = $this->parseAmountsFromCell($fields['CO'] ?? '');
-            $totalList = $this->parseAmountsFromCell($fields['TOTAL'] ?? '');
-
-            if ($mooeList !== [] || $coList !== [] || $totalList !== []) {
-                $existing = $amountsByLetter[$letter] ?? ['mooe' => [], 'co' => [], 'total' => []];
-                if (count($mooeList) >= count($existing['mooe'])) {
-                    $amountsByLetter[$letter] = [
-                        'mooe' => $mooeList,
-                        'co' => $coList,
-                        'total' => $totalList,
-                    ];
-                }
-            }
-        }
-
-        foreach ($programs as $letter => &$program) {
-            $ppasBlob = implode("\n", $ppasFragments[$letter] ?? []);
-            $extracted = $this->extractBulletActivitiesFromText($ppasBlob);
-            $activityNames = $this->resolveYouthActivitiesForLetter($letter, $extracted);
-            $shared = $metaByLetter[$letter] ?? [];
-            $amounts = $amountsByLetter[$letter] ?? ['mooe' => [], 'co' => [], 'total' => []];
-            $activityCount = max(1, count($activityNames));
-            $mooeList = $this->normalizeBudgetAmountList($amounts['mooe'], $activityCount);
-            $coList = $this->normalizeBudgetAmountList($amounts['co'], $activityCount);
-            $totalList = $this->normalizeBudgetAmountList($amounts['total'], $activityCount);
-
-            $program['activities'] = [];
-            $program['budget_mooe'] = 0;
-            $program['budget_co'] = 0;
-            $program['budget_total'] = 0;
-
-            $program['_meta'] = $shared;
-
-            if ($activityNames === []) {
+            if ($ppas === '') {
                 continue;
             }
 
-            foreach ($activityNames as $index => $activityName) {
-                $activity = $this->buildYouthActivityRecord(
-                    $activityName,
-                    $shared,
-                    $mooeList[$index] ?? ($mooeList[0] ?? null),
-                    $coList[$index] ?? ($coList[0] ?? null),
-                    $totalList[$index] ?? ($totalList[0] ?? null),
-                );
-                $program['activities'][] = $activity;
-                $program['budget_mooe'] += (float) ($activity['budget_mooe'] ?? 0);
-                $program['budget_co'] += (float) ($activity['budget_co'] ?? 0);
-                $program['budget_total'] += (float) ($activity['budget_total'] ?? 0);
+            $grouped = (string) ($fields['GROUPED'] ?? '') === '1';
+            $activity = $this->buildYouthActivityRecord(
+                $ppas,
+                $shared,
+                $grouped ? null : ($fields['MOOE'] ?? null),
+                $grouped ? null : ($fields['CO'] ?? null),
+                $grouped ? null : ($fields['TOTAL'] ?? null),
+            );
+            $activity['source_text'] = $shared['source_text'];
+            $activity['page_number'] = $shared['page_number'];
+            $activity['implementation_start'] = $periodDates['start'];
+            $activity['implementation_end'] = $periodDates['end'];
+            $activity['program_name'] = $shared['program_name'];
+            $activity['category'] = $shared['category'];
+            $activity['activity_name'] = $activity['ppa_name'];
+            $activity['grouped_budget'] = $grouped;
+
+            if ($grouped) {
+                $ownerAmount = $fields['INCLUDED'] ?? null;
+                if ($ownerAmount === null || trim((string) $ownerAmount) === '') {
+                    foreach (array_reverse($programs[$letter]['activities']) as $previous) {
+                        if (! ($previous['grouped_budget'] ?? false)) {
+                            $ownerAmount = $previous['budget_mooe'] ?? $previous['budget_total'] ?? null;
+                            break;
+                        }
+                    }
+                }
+
+                $activity['budget_mooe'] = null;
+                $activity['budget_co'] = null;
+                $activity['budget_total'] = null;
+                $activity['validation_status'] = 'valid';
+                $activity['validation_message'] = $this->includedInNote($ownerAmount);
+                $activity['manual_review_required'] = false;
+            } else {
+                $budget = $this->budgetValidator->validate($activity);
+                $activity['validation_status'] = $budget['validation_status'];
+                $activity['validation_message'] = $budget['validation_message'];
+                $activity['manual_review_required'] = $budget['manual_review_required'];
             }
+
+            $programs[$letter]['activities'][] = $activity;
+            $programs[$letter]['budget_mooe'] += (float) ($activity['budget_mooe'] ?? 0);
+            $programs[$letter]['budget_co'] += (float) ($activity['budget_co'] ?? 0);
+            $programs[$letter]['budget_total'] += (float) ($activity['budget_total'] ?? 0);
         }
-        unset($program);
 
         ksort($programs);
 
@@ -1392,6 +1464,29 @@ class AbyipService
         $lines = preg_split('/\R/u', $text) ?: [];
 
         foreach ($lines as $line) {
+            if (str_starts_with($line, '@ABYIP_CATEGORY@')) {
+                if ($current !== null) {
+                    $items[] = $this->finalizeStructuredAbyipRow($current);
+                    $current = null;
+                }
+
+                $fields = $this->parseStructuredTagFields($line, '@ABYIP_CATEGORY@');
+                $type = strtolower((string) ($fields['TYPE'] ?? ''));
+                $name = $fields['NAME'] ?? null;
+                $items[] = [
+                    'row_type' => 'category',
+                    'hierarchy_level' => $type !== '' ? $type : null,
+                    'ppa_name' => $name,
+                    'program_name' => $type === 'program' ? $name : ($fields['PARENT'] ?? $name),
+                    'category' => $name,
+                    'program_section' => $name ?? 'Expenditure Program',
+                    'source_text' => $fields['SOURCE'] ?? $name,
+                    'page_number' => $fields['PAGE'] ?? null,
+                ];
+
+                continue;
+            }
+
             if (! str_starts_with($line, '@ABYIP_ROW@')) {
                 continue;
             }
@@ -1408,6 +1503,9 @@ class AbyipService
                 $current = [
                     'row_type' => 'data',
                     'ppa_name' => $ppas !== '' ? $ppas : null,
+                    'program_name' => $fields['PROGRAM'] ?? null,
+                    'category' => $fields['CATEGORY'] ?? null,
+                    'activity_name' => $ppas !== '' ? $ppas : null,
                     'description' => null,
                     'expected_result' => null,
                     'performance_indicator' => null,
@@ -1417,6 +1515,8 @@ class AbyipService
                     'budget_co' => null,
                     'budget_total' => null,
                     'program_section' => 'Expenditure Program',
+                    'source_text' => $fields['SOURCE'] ?? ($ppas !== '' ? $ppas : null),
+                    'page_number' => $fields['PAGE'] ?? null,
                 ];
             } elseif ($ppas !== '') {
                 $current['ppa_name'] = $ppas;
@@ -1437,7 +1537,13 @@ class AbyipService
 
         return array_values(array_filter(
             $items,
-            fn (array $item) => $this->rowHasContent($item) && ! $this->isNonProgramLineItem($item)
+            function (array $item) {
+                if (($item['row_type'] ?? '') === 'category') {
+                    return trim((string) ($item['ppa_name'] ?? $item['program_name'] ?? '')) !== '';
+                }
+
+                return $this->rowHasContent($item) && ! $this->isNonProgramLineItem($item);
+            }
         ));
     }
 
@@ -1519,6 +1625,25 @@ class AbyipService
         $row['budget_total'] = $budgets['budget_total'];
         $row['person_responsible'] = $this->budgetExtractor->extractPersonResponsibleFromValue($row['person_responsible'] ?? null);
 
+        $periodDates = $this->parsePeriodDates($row['period_of_implementation'] ?? null);
+        $row['implementation_start'] = $row['implementation_start'] ?? $periodDates['start'];
+        $row['implementation_end'] = $row['implementation_end'] ?? $periodDates['end'];
+
+        $hasBudget = $budgets['budget_mooe'] !== null
+            || $budgets['budget_co'] !== null
+            || $budgets['budget_total'] !== null;
+
+        if ($hasBudget) {
+            $budget = $this->budgetValidator->validate($row);
+            $row['validation_status'] = $budget['validation_status'];
+            $row['validation_message'] = $budget['validation_message'];
+            $row['manual_review_required'] = $budget['manual_review_required'];
+        } else {
+            $row['validation_status'] = 'valid';
+            $row['validation_message'] = null;
+            $row['manual_review_required'] = false;
+        }
+
         return $row;
     }
 
@@ -1588,27 +1713,34 @@ class AbyipService
                 }
             }
 
-            $activityCount = max(1, count($activities));
-            $mooeList = $this->normalizer->normalizeBudgetAmountList($allMooe, $activityCount);
-            $coList = $this->normalizer->normalizeBudgetAmountList($allCo, $activityCount);
-            $totalList = $this->normalizer->normalizeBudgetAmountList($allTotal, $activityCount);
-
             $program['budget_mooe'] = 0;
             $program['budget_co'] = 0;
             $program['budget_total'] = 0;
+
+            $hasStructuredBudget = false;
+            foreach ($activities as $activity) {
+                if (
+                    (float) $this->normalizer->numericAmount($activity['budget_mooe'] ?? 0) > 0
+                    || (float) $this->normalizer->numericAmount($activity['budget_co'] ?? 0) > 0
+                    || (float) $this->normalizer->numericAmount($activity['budget_total'] ?? 0) > 0
+                ) {
+                    $hasStructuredBudget = true;
+                    break;
+                }
+            }
 
             foreach ($activities as $index => &$activity) {
                 $hasBudget = (float) $this->normalizer->numericAmount($activity['budget_mooe'] ?? 0) > 0
                     || (float) $this->normalizer->numericAmount($activity['budget_co'] ?? 0) > 0
                     || (float) $this->normalizer->numericAmount($activity['budget_total'] ?? 0) > 0;
 
-                if (! $hasBudget) {
+                if (! $hasBudget && ! $hasStructuredBudget && ! ($activity['grouped_budget'] ?? false)) {
                     $activity = $this->buildYouthActivityRecord(
                         $activity['ppa_name'] ?? null,
                         array_merge($program['_meta'] ?? [], ['person_responsible' => $sharedPerson]),
-                        $mooeList[$index] ?? ($mooeList[0] ?? null),
-                        $coList[$index] ?? ($coList[0] ?? null),
-                        $totalList[$index] ?? ($totalList[0] ?? null),
+                        $allMooe[$index] ?? null,
+                        $allCo[$index] ?? null,
+                        $allTotal[$index] ?? null,
                     );
                 } elseif (empty($activity['person_responsible']) && $sharedPerson !== null) {
                     $activity['person_responsible'] = $sharedPerson;
@@ -1638,11 +1770,9 @@ class AbyipService
         $patterns = [
             'barangay estimated budget',
             'sangguniang kabataan fund',
-            '10% of the general fund',
-            'receipts program',
-            'i. receipts',
             'general administration program',
             'maintenance and other operating',
+            'current operating expenditures',
             'capital outlay',
             'sk youth development and empowerment',
         ];
@@ -1919,20 +2049,50 @@ class AbyipService
     /**
      * @return array<string, mixed>
      */
-    protected function makeYouthProgramShell(string $letter): array
+    protected function makeYouthProgramShell(string $letter, ?string $name = null): array
     {
         $letter = strtoupper($letter);
-        $name = self::YOUTH_PROGRAM_NAMES[$letter] ?? $letter;
+        $programName = $this->youthCategorySection($letter, $name);
 
         return [
             'letter' => $letter,
-            'label' => $letter.'. '.$name,
-            'name' => $name,
+            'label' => $programName,
+            'name' => $programName,
             'activities' => [],
             'budget_mooe' => 0,
             'budget_co' => 0,
             'budget_total' => 0,
         ];
+    }
+
+    protected function youthCategorySection(string $letter, ?string $name): string
+    {
+        $name = trim((string) $name);
+        $letter = strtoupper(trim($letter));
+        if ($name === '' || $name === $letter) {
+            return $letter;
+        }
+
+        if (preg_match('/^[A-J]\.\s+/i', $name) === 1) {
+            return $name;
+        }
+
+        return $letter.'. '.$name;
+    }
+
+    protected function includedInNote(mixed $amount): string
+    {
+        $raw = trim((string) ($amount ?? ''));
+        if ($raw !== '' && preg_match('/^Included in/i', $raw) === 1) {
+            return $raw;
+        }
+
+        $normalized = $this->normalizer->numericAmountOrNull($raw !== '' ? $raw : $amount);
+        if ($normalized === null) {
+            return 'Included in the shared PDF allocation';
+        }
+
+        return 'Included in ₱'.number_format((float) $normalized, 2, '.', ',');
     }
 
     /**
@@ -1963,10 +2123,14 @@ class AbyipService
             'expected_result' => $shared['expected_result'] ?? null,
             'performance_indicator' => $shared['performance_indicator'] ?? null,
             'period_of_implementation' => $shared['period_of_implementation'] ?? null,
+            'implementation_start' => $shared['implementation_start'] ?? null,
+            'implementation_end' => $shared['implementation_end'] ?? null,
             'budget_mooe' => $budgets['budget_mooe'],
             'budget_co' => $budgets['budget_co'],
             'budget_total' => $budgets['budget_total'],
             'person_responsible' => $shared['person_responsible'] ?? null,
+            'source_text' => $shared['source_text'] ?? null,
+            'page_number' => $shared['page_number'] ?? null,
         ];
     }
 
@@ -2020,6 +2184,33 @@ class AbyipService
             }
 
             $canonicalName = $this->canonicalYouthProgramName($letter, (string) ($program['name'] ?? ''));
+
+            $existingActivities = array_values(array_filter(
+                $program['activities'] ?? [],
+                fn (array $activity) => $this->isValidYouthActivityRecord($activity)
+            ));
+
+            if ($existingActivities !== []) {
+                $shell = $this->makeYouthProgramShell($letter, $canonicalName);
+                $shell['activities'] = [];
+                $shell['_meta'] = $program['_meta'] ?? [];
+
+                foreach ($existingActivities as $activity) {
+                    $budget = $this->budgetValidator->validate($activity);
+                    $activity['validation_status'] = $budget['validation_status'];
+                    $activity['validation_message'] = $budget['validation_message'];
+                    $activity['manual_review_required'] = $budget['manual_review_required'];
+                    $shell['activities'][] = $activity;
+                    $shell['budget_mooe'] += (float) ($activity['budget_mooe'] ?? 0);
+                    $shell['budget_co'] += (float) ($activity['budget_co'] ?? 0);
+                    $shell['budget_total'] += (float) ($activity['budget_total'] ?? 0);
+                }
+
+                $finalized[$letter] = $shell;
+
+                continue;
+            }
+
             $extractedNames = [];
             $sharedMeta = [
                 'description' => $program['_meta']['description'] ?? null,
@@ -2108,17 +2299,7 @@ class AbyipService
             }
         }
 
-        $normalized = array_values(array_unique($normalized));
-
-        if ($normalized !== []) {
-            return $normalized;
-        }
-
-        if (array_key_exists($letter, self::YOUTH_PROGRAM_ACTIVITIES)) {
-            return self::YOUTH_PROGRAM_ACTIVITIES[$letter];
-        }
-
-        return [];
+        return array_values(array_unique($normalized));
     }
 
     /**
@@ -2158,9 +2339,9 @@ class AbyipService
 
     protected function activityNameLooksLikeProgramTitle(string $name, string $letter): bool
     {
-        $programName = self::YOUTH_PROGRAM_NAMES[$letter] ?? '';
+        $programName = $this->canonicalYouthProgramName($letter);
 
-        return $programName !== ''
+        return $programName !== null
             && (
                 strcasecmp($name, $programName) === 0
                 || str_starts_with(mb_strtolower($name), mb_strtolower(rtrim($programName, 's')))
@@ -2339,13 +2520,9 @@ class AbyipService
 
     protected function canonicalYouthProgramName(?string $letter, ?string $fallback = null): ?string
     {
-        $letter = strtoupper((string) $letter);
+        $name = trim((string) $fallback);
 
-        if ($this->isValidYouthProgramLetter($letter)) {
-            return self::YOUTH_PROGRAM_NAMES[$letter] ?? $fallback;
-        }
-
-        return $fallback;
+        return $name !== '' ? $name : null;
     }
 
     protected function isValidYouthProgramLetter(string $letter): bool
@@ -3439,7 +3616,11 @@ class AbyipService
             return ['start' => null, 'end' => null];
         }
 
-        if (preg_match('/(\w+\s+\d{1,2},?\s+\d{4})\s+to\s+(\w+\s+\d{1,2},?\s+\d{4})/i', $period, $matches)) {
+        $normalizedPeriod = preg_replace('/(?<=[A-Za-z])(?=\d)/', ' ', $period) ?? $period;
+        $normalizedPeriod = preg_replace('/(?<=\d)(?=[A-Za-z])/', ' ', $normalizedPeriod) ?? $normalizedPeriod;
+        $normalizedPeriod = preg_replace('/\s+to\s+/i', ' to ', $normalizedPeriod) ?? $normalizedPeriod;
+
+        if (preg_match('/([A-Za-z]+\s+\d{1,2},?\s+\d{4})\s*(?:to|-)\s*([A-Za-z]+\s+\d{1,2},?\s+\d{4})/i', $normalizedPeriod, $matches)) {
             try {
                 return [
                     'start' => Carbon::parse($matches[1])->toDateString(),
@@ -3450,6 +3631,203 @@ class AbyipService
             }
         }
 
+        if (preg_match('/([A-Za-z]+)\.?\s*(\d{1,2})\s*[-–—to]+\s*([A-Za-z]+)\.?\s*(\d{1,2}),?\s*(\d{4})/i', $normalizedPeriod, $matches)) {
+            try {
+                return [
+                    'start' => Carbon::parse($matches[1].' '.$matches[2].' '.$matches[5])->toDateString(),
+                    'end' => Carbon::parse($matches[3].' '.$matches[4].' '.$matches[5])->toDateString(),
+                ];
+            } catch (\Throwable) {
+                return ['start' => null, 'end' => null];
+            }
+        }
+
         return ['start' => null, 'end' => null];
+    }
+
+    /**
+     * @param  array<string, mixed>  $parsed
+     * @param  list<array<string, mixed>>  $rows
+     * @param  array<string, mixed>  $document
+     * @return array<string, mixed>
+     */
+    protected function hydrateParsedFromClientRows(array $parsed, array $rows, array $document): array
+    {
+        foreach ($document as $key => $value) {
+            if ($value !== null && $value !== '' && ! in_array($key, ['tenant_id', 'barangay_id', 'created_by'], true)) {
+                $parsed[$key] = $value;
+            }
+        }
+
+        $lineItems = [];
+        $youthPrograms = [];
+
+        foreach ($rows as $row) {
+            $rowType = (string) ($row['row_type'] ?? 'activity');
+            $grouped = (bool) ($row['grouped_budget'] ?? false) || (string) ($row['grouped'] ?? '') === '1';
+            $hasAmounts = ($row['mooe'] ?? $row['budget_mooe'] ?? null) !== null && ($row['mooe'] ?? $row['budget_mooe'] ?? '') !== ''
+                || ($row['co'] ?? $row['budget_co'] ?? null) !== null && ($row['co'] ?? $row['budget_co'] ?? '') !== ''
+                || ($row['total'] ?? $row['budget_total'] ?? null) !== null && ($row['total'] ?? $row['budget_total'] ?? '') !== '';
+            $budget = $grouped
+                ? [
+                    'mooe' => null,
+                    'co' => null,
+                    'total' => null,
+                    'validation_status' => 'valid',
+                    'validation_message' => $this->includedInNote($row['included_in'] ?? $row['validation_message'] ?? null),
+                    'manual_review_required' => false,
+                ]
+                : ($hasAmounts
+                    ? $this->budgetValidator->validate([
+                        'budget_mooe' => $row['mooe'] ?? $row['budget_mooe'] ?? null,
+                        'budget_co' => $row['co'] ?? $row['budget_co'] ?? null,
+                        'budget_total' => $row['total'] ?? $row['budget_total'] ?? null,
+                    ])
+                    : [
+                        'mooe' => null,
+                        'co' => null,
+                        'total' => null,
+                        'validation_status' => ! empty($row['manual_review_required']) ? 'warning' : 'valid',
+                        'validation_message' => $row['validation_message'] ?? null,
+                        'manual_review_required' => (bool) ($row['manual_review_required'] ?? false),
+                    ]);
+
+            $periodDates = $this->parsePeriodDates($row['implementation_period'] ?? $row['period'] ?? null);
+
+            $item = [
+                'row_type' => $rowType === 'expenditure' ? 'data' : $rowType,
+                'hierarchy_level' => $row['hierarchy_level'] ?? null,
+                'code' => $row['code'] ?? null,
+                'category' => $row['category'] ?? null,
+                'ppa_name' => $rowType === 'category'
+                    ? ($row['category'] ?? $row['program_name'] ?? null)
+                    : ($row['activity_name'] ?? $row['program_name'] ?? null),
+                'program_name' => $row['program_name'] ?? null,
+                'activity_name' => $row['activity_name'] ?? null,
+                'description' => $row['description'] ?? null,
+                'expected_result' => $row['expected_result'] ?? null,
+                'performance_indicator' => $row['performance_indicator'] ?? null,
+                'implementation_start' => $row['implementation_start'] ?? $periodDates['start'] ?? null,
+                'implementation_end' => $row['implementation_end'] ?? $periodDates['end'] ?? null,
+                'person_responsible' => $row['person_responsible'] ?? null,
+                'budget_mooe' => $budget['mooe'],
+                'budget_co' => $budget['co'],
+                'budget_total' => $budget['total'],
+                'source_text' => $row['source_text'] ?? null,
+                'page_number' => $row['page_number'] ?? null,
+                'grouped_budget' => $grouped,
+                'validation_status' => $budget['validation_status'],
+                'validation_message' => $budget['validation_message'],
+                'manual_review_required' => $budget['manual_review_required'] || (bool) ($row['manual_review_required'] ?? false),
+                'program_section' => $rowType === 'activity' || $rowType === 'youth_program'
+                    ? 'SK Youth Development and Empowerment Programs'
+                    : 'Expenditure Program',
+            ];
+
+            if ($rowType === 'youth_program') {
+                $letter = strtoupper((string) ($row['code'] ?? ''));
+                if ($this->isValidYouthProgramLetter($letter)) {
+                    $youthPrograms[$letter] = $this->makeYouthProgramShell($letter, $row['program_name'] ?? null);
+                    $youthPrograms[$letter]['parent_program'] = $row['category'] ?? null;
+                    $youthPrograms[$letter]['_meta']['parent_program'] = $row['category'] ?? null;
+                }
+
+                continue;
+            }
+
+            if ($rowType === 'activity') {
+                $letter = strtoupper((string) ($row['code'] ?? ''));
+                if (! $this->isValidYouthProgramLetter($letter)) {
+                    continue;
+                }
+                if (! isset($youthPrograms[$letter])) {
+                    $youthPrograms[$letter] = $this->makeYouthProgramShell($letter, $row['category'] ?? null);
+                    $youthPrograms[$letter]['parent_program'] = $row['program_name'] ?? null;
+                }
+                $item['program_name'] = $row['program_name'] ?? $youthPrograms[$letter]['parent_program'] ?? null;
+                $item['category'] = $row['category'] ?? $youthPrograms[$letter]['name'] ?? null;
+                $item['activity_name'] = $row['activity_name'] ?? $item['ppa_name'] ?? null;
+                $youthPrograms[$letter]['activities'][] = $item;
+
+                continue;
+            }
+
+            $lineItems[] = $item;
+        }
+
+        if ($lineItems !== []) {
+            $parsed['line_items'] = $lineItems;
+        }
+
+        if ($youthPrograms !== []) {
+            ksort($youthPrograms);
+            $parsed['sk_youth_development_and_empowerment_programs'] = array_values($youthPrograms);
+        }
+
+        return $parsed;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $lines
+     */
+    protected function updateDocumentLines(User $user, Abyip $document, array $lines, string $editReason): void
+    {
+        foreach ($lines as $lineData) {
+            $lineId = (int) ($lineData['id'] ?? 0);
+            if ($lineId <= 0) {
+                continue;
+            }
+
+            $line = Abyip::query()
+                ->where('id', $lineId)
+                ->where('document_id', $document->id)
+                ->where('barangay_id', $user->barangay_id)
+                ->where('row_type', '!=', Abyip::ROW_DOCUMENT)
+                ->first();
+
+            if ($line === null) {
+                continue;
+            }
+
+            $updates = [];
+            foreach ([
+                'code',
+                'program_name',
+                'category',
+                'activity_name',
+                'description',
+                'expected_result',
+                'performance_indicator',
+                'implementation_start',
+                'implementation_end',
+                'person_responsible',
+            ] as $field) {
+                if (array_key_exists($field, $lineData)) {
+                    $updates[$field] = $lineData[$field] ?: null;
+                }
+            }
+
+            if (isset($lineData['mooe']) || isset($lineData['co']) || isset($lineData['total'])) {
+                $budget = $this->budgetValidator->validate([
+                    'budget_mooe' => $lineData['mooe'] ?? $line->mooe,
+                    'budget_co' => $lineData['co'] ?? $line->co,
+                    'budget_total' => $lineData['total'] ?? $line->total,
+                ]);
+                $updates['mooe'] = $budget['mooe'];
+                $updates['co'] = $budget['co'];
+                $updates['total'] = $budget['total'];
+                $updates['validation_status'] = $budget['validation_status'];
+                $updates['validation_message'] = $budget['validation_message'];
+                $updates['manual_review_required'] = $budget['manual_review_required'];
+            }
+
+            $updates['last_edited_by'] = $user->id;
+            $updates['last_edited_at'] = now();
+            if ($editReason !== '') {
+                $updates['edit_reason'] = $editReason;
+            }
+
+            $line->forceFill($updates)->save();
+        }
     }
 }

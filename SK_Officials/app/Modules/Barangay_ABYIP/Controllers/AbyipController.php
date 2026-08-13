@@ -44,14 +44,14 @@ class AbyipController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $validated = $request->validate(array_merge($this->importPayloadRules(), [
             'title' => ['required', 'string', 'max:255'],
             'source_type' => ['required', Rule::in(['word', 'pdf'])],
             'calendar_year' => ['nullable', 'integer', 'min:2000', 'max:2100'],
             'document_html' => ['nullable', 'string'],
             'pdf_data' => ['nullable', 'string'],
             'extracted_text' => ['nullable', 'string'],
-        ]);
+        ]));
 
         if ($validated['source_type'] === 'pdf' && empty($validated['pdf_data'])) {
             return response()->json([
@@ -83,17 +83,34 @@ class AbyipController extends Controller
         );
 
         return response()->json([
-            'message' => 'ABYIP record saved.',
+            'message' => 'ABYIP imported successfully.',
             'data' => $document,
         ], 201);
     }
 
     public function update(Request $request, int $id): JsonResponse
     {
-        $validated = $request->validate([
+        $validated = $request->validate(array_merge($this->importPayloadRules(), [
             'title' => ['sometimes', 'string', 'max:255'],
-            'document_html' => ['required', 'string'],
-        ]);
+            'document_html' => ['nullable', 'string'],
+            'edit_reason' => ['nullable', 'string', 'max:1000'],
+            'lines' => ['nullable', 'array'],
+            'lines.*.id' => ['required_with:lines', 'integer'],
+            'lines.*.code' => ['nullable', 'string', 'max:20'],
+            'lines.*.program_name' => ['nullable', 'string', 'max:255'],
+            'lines.*.category' => ['nullable', 'string', 'max:255'],
+            'lines.*.activity_name' => ['nullable', 'string', 'max:255'],
+            'lines.*.description' => ['nullable', 'string'],
+            'lines.*.expected_result' => ['nullable', 'string'],
+            'lines.*.performance_indicator' => ['nullable', 'string'],
+            'lines.*.implementation_start' => ['nullable', 'date'],
+            'lines.*.implementation_end' => ['nullable', 'date', 'after_or_equal:lines.*.implementation_start'],
+            'lines.*.person_responsible' => ['nullable', 'string', 'max:255'],
+            'lines.*.mooe' => ['nullable', 'numeric', 'min:0'],
+            'lines.*.co' => ['nullable', 'numeric', 'min:0'],
+            'lines.*.total' => ['nullable', 'numeric', 'min:0'],
+            'lines.*.progress_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+        ]));
 
         try {
             $document = $this->abyipService->update($request->user(), $id, $validated);
@@ -134,13 +151,13 @@ class AbyipController extends Controller
 
     public function resubmit(Request $request, int $id): JsonResponse
     {
-        $validated = $request->validate([
+        $validated = $request->validate(array_merge($this->importPayloadRules(), [
             'title' => ['required', 'string', 'max:255'],
             'source_type' => ['required', Rule::in(['word', 'pdf'])],
             'document_html' => ['nullable', 'string'],
             'pdf_data' => ['nullable', 'string'],
             'extracted_text' => ['nullable', 'string'],
-        ]);
+        ]));
 
         if ($validated['source_type'] === 'pdf' && empty($validated['pdf_data'])) {
             return response()->json([
@@ -175,5 +192,41 @@ class AbyipController extends Controller
             'message' => 'ABYIP resubmitted for review.',
             'data' => $document,
         ]);
+    }
+
+    /**
+     * @return array<string, list<mixed>>
+     */
+    private function importPayloadRules(): array
+    {
+        return [
+            'confirm_budget_warnings' => ['nullable', 'boolean'],
+            'document' => ['nullable', 'array'],
+            'document.fiscal_year' => ['nullable', 'integer', 'min:2000', 'max:2100'],
+            'document.barangay_estimated_budget' => ['nullable', 'numeric', 'min:0'],
+            'document.sk_fund_percentage' => ['nullable', 'numeric', 'min:0'],
+            'document.sk_fund_amount' => ['nullable', 'numeric', 'min:0'],
+            'rows' => ['nullable', 'array'],
+            'rows.*.row_type' => ['nullable', Rule::in(['document', 'category', 'expenditure', 'youth_program', 'activity', 'data'])],
+            'rows.*.hierarchy_level' => ['nullable', Rule::in(['program', 'category'])],
+            'rows.*.grouped_budget' => ['nullable', 'boolean'],
+            'rows.*.implementation_period' => ['nullable', 'string', 'max:255'],
+            'rows.*.code' => ['nullable', 'string', 'max:20'],
+            'rows.*.program_name' => ['nullable', 'string', 'max:255'],
+            'rows.*.category' => ['nullable', 'string', 'max:255'],
+            'rows.*.activity_name' => ['nullable', 'string', 'max:255'],
+            'rows.*.description' => ['nullable', 'string'],
+            'rows.*.expected_result' => ['nullable', 'string'],
+            'rows.*.performance_indicator' => ['nullable', 'string'],
+            'rows.*.implementation_start' => ['nullable', 'date'],
+            'rows.*.implementation_end' => ['nullable', 'date'],
+            'rows.*.person_responsible' => ['nullable', 'string', 'max:255'],
+            'rows.*.mooe' => ['nullable', 'numeric', 'min:0'],
+            'rows.*.co' => ['nullable', 'numeric', 'min:0'],
+            'rows.*.total' => ['nullable', 'numeric', 'min:0'],
+            'rows.*.page_number' => ['nullable', 'integer', 'min:1'],
+            'rows.*.source_text' => ['nullable', 'string'],
+            'rows.*.progress_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+        ];
     }
 }

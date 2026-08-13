@@ -24,62 +24,6 @@ class AbyipService
     /** @var list<string> */
     private const YOUTH_PROGRAM_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 
-    /** @var array<string, string> */
-    private const YOUTH_PROGRAM_NAMES = [
-        'A' => 'Equitable Access to Quality Education',
-        'B' => 'Environmental Protection',
-        'C' => 'Disaster Risk Reduction and Resiliency',
-        'D' => 'Youth Employment and Livelihood',
-        'E' => 'Health',
-        'F' => 'Anti-Drug and Peace and Order',
-        'G' => 'Gender Sensitivity',
-        'H' => 'Feeding Program for KK Members',
-        'I' => 'Sports Development',
-        'J' => 'Other Programs',
-    ];
-
-    /** @var array<string, list<string>> */
-    private const YOUTH_PROGRAM_ACTIVITIES = [
-        'A' => [
-            'Support to ALS and RIC',
-            '150 Students for Educational Assistance',
-            'Support to Elementary and Daycare',
-        ],
-        'B' => [
-            'Clean-Up Drive',
-            'Payroll for Laborer',
-            'Tree Planting',
-        ],
-        'C' => [
-            'Training on Disaster Preparedness for Organization of Youth Volunteer Groups (Food and Accommodations)',
-            'Distribution of Relief Goods for KK Members',
-        ],
-        'D' => [
-            'Livelihood Training',
-            'Food and other supplies',
-        ],
-        'E' => [
-            'Medicines/Medical Equipment',
-        ],
-        'F' => [
-            'Orientation for Anti-Drug and Physical Abuse',
-            'Foods and Accommodations',
-        ],
-        'G' => [
-            'Orientation on GAD and VAWC',
-            'Foods and Accommodations',
-        ],
-        'H' => [],
-        'I' => [
-            'Supplies and Materials, Food and Accommodation, Officiating fees',
-        ],
-        'J' => [
-            'Katipunan ng Kabataan (KK) General Assembly',
-            'Barangay Day Celebration',
-            'Youth Week',
-        ],
-    ];
-
     /**
      * @return Collection<int, array<string, mixed>>
      */
@@ -497,19 +441,19 @@ class AbyipService
         array $defaults = []
     ): ?Abyip {
         $rowType = (string) ($defaults['row_type'] ?? Abyip::ROW_EXPENDITURE);
-        
+
         // For activities, use activity_name field; for programs, use ppa_name or program_name
         $isActivity = $rowType === Abyip::ROW_ACTIVITY;
         $programName = '';
         $activityName = null;
-        
+
         if ($isActivity) {
             $activityName = trim((string) ($item['activity_name'] ?? $item['ppa_name'] ?? ''));
             $programName = $activityName; // Fallback for program_name field
         } else {
             $programName = trim((string) ($item['ppa_name'] ?? $item['program_name'] ?? ''));
         }
-        
+
         if ($programName === '' && $activityName === null) {
             return null;
         }
@@ -547,6 +491,8 @@ class AbyipService
             'total' => $total,
             'sort_order' => $sortOrder,
             'progress_percent' => $this->numericAmount($item['progress_percent'] ?? 0),
+            'source_text' => $item['source_text'] ?? null,
+            'page_number' => $item['page_number'] ?? null,
         ];
 
         Log::info('ABYIP program insert payload', $linePayload);
@@ -1010,20 +956,16 @@ class AbyipService
             $metadata['country'] = 'Republic of the Philippines';
         }
 
-        if (preg_match('/Region\s*(IV[\-\s]?A|IVA)/i', $normalized, $match)) {
-            $metadata['region'] = 'Region IV-A';
+        if (preg_match('/Region\s*([IVX]+[A-Z]*)/i', $normalized, $match)) {
+            $metadata['region'] = 'Region '.$match[1];
         }
 
         if (preg_match('/Province\s*of\s*([A-Za-z\s]+?)(?:\s+Municipality|\s+BARANGAY|$)/i', $normalized, $match)) {
             $metadata['province'] = 'Province of '.trim($match[1]);
-        } elseif (str_contains($compact, 'PROVINCEOFLAGUNA')) {
-            $metadata['province'] = 'Province of Laguna';
         }
 
         if (preg_match('/Municipality\s*of\s*([A-Za-z\s]+?)(?:\s+BARANGAY|$)/i', $normalized, $match)) {
             $metadata['municipality'] = 'Municipality of '.trim($match[1]);
-        } elseif (str_contains($compact, 'MUNICIPALITYOFSANTACRUZ')) {
-            $metadata['municipality'] = 'Municipality of Santa Cruz';
         }
 
         if (preg_match('/BARANGAY\s+([A-Za-z\s]+?)(?:\s+SANGGUNIANG|\s+ANNUAL|$)/i', $normalized, $match)) {
@@ -1340,6 +1282,7 @@ class AbyipService
         $ppasFragments = [];
         $metaByLetter = [];
         $amountsByLetter = [];
+        $programNamesByLetter = [];
         $lines = preg_split('/\R/u', $text) ?: [];
 
         foreach ($lines as $line) {
@@ -1353,8 +1296,13 @@ class AbyipService
                 continue;
             }
 
+            $programName = (string) ($fields['PROGRAM'] ?? '');
+            if ($programName !== '' && ! isset($programNamesByLetter[$letter])) {
+                $programNamesByLetter[$letter] = $programName;
+            }
+
             if (! isset($programs[$letter])) {
-                $programs[$letter] = $this->makeYouthProgramShell($letter);
+                $programs[$letter] = $this->makeYouthProgramShell($letter, $programNamesByLetter[$letter] ?? null);
             }
 
             $ppas = (string) ($fields['PPAS'] ?? '');
@@ -1572,6 +1520,23 @@ class AbyipService
         $row['budget_co'] = $budgets['budget_co'];
         $row['budget_total'] = $budgets['budget_total'];
         $row['person_responsible'] = $this->extractPersonResponsibleFromValue($row['person_responsible'] ?? null);
+
+        $mooe = (float) $this->numericAmount($row['budget_mooe'] ?? 0);
+        $co = (float) $this->numericAmount($row['budget_co'] ?? 0);
+        $total = (float) $this->numericAmount($row['budget_total'] ?? 0);
+
+        if ($mooe > 0 || $co > 0 || $total > 0) {
+            $calculatedTotal = $mooe + $co;
+            if (abs($calculatedTotal - $total) > 0.01) {
+                $row['_budget_validation_warning'] = true;
+                $row['_budget_mismatch'] = [
+                    'mooe' => $mooe,
+                    'co' => $co,
+                    'total' => $total,
+                    'calculated' => $calculatedTotal,
+                ];
+            }
+        }
 
         return $row;
     }
@@ -2259,15 +2224,15 @@ class AbyipService
     /**
      * @return array<string, mixed>
      */
-    protected function makeYouthProgramShell(string $letter): array
+    protected function makeYouthProgramShell(string $letter, ?string $name = null): array
     {
         $letter = strtoupper($letter);
-        $name = self::YOUTH_PROGRAM_NAMES[$letter] ?? $letter;
+        $programName = $name ?? $letter;
 
         return [
             'letter' => $letter,
-            'label' => $letter.'. '.$name,
-            'name' => $name,
+            'label' => $letter.'. '.$programName,
+            'name' => $programName,
             'activities' => [],
             'budget_mooe' => 0,
             'budget_co' => 0,
@@ -2448,17 +2413,7 @@ class AbyipService
             }
         }
 
-        $normalized = array_values(array_unique($normalized));
-
-        if ($normalized !== []) {
-            return $normalized;
-        }
-
-        if (array_key_exists($letter, self::YOUTH_PROGRAM_ACTIVITIES)) {
-            return self::YOUTH_PROGRAM_ACTIVITIES[$letter];
-        }
-
-        return [];
+        return array_values(array_unique($normalized));
     }
 
     /**
@@ -2498,9 +2453,9 @@ class AbyipService
 
     protected function activityNameLooksLikeProgramTitle(string $name, string $letter): bool
     {
-        $programName = self::YOUTH_PROGRAM_NAMES[$letter] ?? '';
+        $programName = $this->canonicalYouthProgramName($letter);
 
-        return $programName !== ''
+        return $programName !== null
             && (
                 strcasecmp($name, $programName) === 0
                 || str_starts_with(mb_strtolower($name), mb_strtolower(rtrim($programName, 's')))
@@ -2737,12 +2692,6 @@ class AbyipService
 
     protected function canonicalYouthProgramName(?string $letter, ?string $fallback = null): ?string
     {
-        $letter = strtoupper((string) $letter);
-
-        if ($this->isValidYouthProgramLetter($letter)) {
-            return self::YOUTH_PROGRAM_NAMES[$letter] ?? $fallback;
-        }
-
         return $fallback;
     }
 

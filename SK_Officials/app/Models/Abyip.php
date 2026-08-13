@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Abyip extends Model
 {
     public const ROW_DOCUMENT = 'document';
+
+    public const ROW_CATEGORY = 'category';
 
     public const ROW_EXPENDITURE = 'expenditure';
 
@@ -88,6 +91,14 @@ class Abyip extends Model
         'rejected_at',
         'source_text',
         'page_number',
+        'extraction_confidence',
+        'extraction_status',
+        'manual_review_required',
+        'validation_status',
+        'validation_message',
+        'last_edited_by',
+        'last_edited_at',
+        'edit_reason',
     ];
 
     protected function casts(): array
@@ -112,7 +123,21 @@ class Abyip extends Model
             'implementation_start' => 'date',
             'implementation_end' => 'date',
             'page_number' => 'integer',
+            'extraction_confidence' => 'decimal:2',
+            'last_edited_at' => 'datetime',
         ];
+    }
+
+    /**
+     * PostgreSQL rejects integer 0/1 for native boolean columns.
+     * Store SQL literals Laravel/PDO will bind as text that Postgres accepts.
+     */
+    protected function manualReviewRequired(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => filter_var($value, FILTER_VALIDATE_BOOLEAN),
+            set: fn ($value) => filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false',
+        );
     }
 
     public function scopeDocuments(Builder $query): Builder
@@ -180,7 +205,7 @@ class Abyip extends Model
     public function lines(): HasMany
     {
         return $this->hasMany(self::class, 'document_id')
-            ->whereIn('row_type', [self::ROW_EXPENDITURE, self::ROW_YOUTH_PROGRAM])
+            ->whereIn('row_type', [self::ROW_CATEGORY, self::ROW_EXPENDITURE, self::ROW_YOUTH_PROGRAM])
             ->orderBy('sort_order')
             ->orderBy('id');
     }

@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Log;
 
 class AbyipLineWriter
 {
+    private ?int $skYouthProgramId = null;
+
     public function __construct(
         private readonly AbyipNumericNormalizer $normalizer,
         private readonly AbyipBudgetExtractor $budgetExtractor,
@@ -27,6 +29,7 @@ class AbyipLineWriter
         callable $isValidYouthProgramLetter,
         callable $isValidYouthActivityRecord,
     ): void {
+        $this->skYouthProgramId = null;
         $sortOrder = 0;
 
         $sortOrder = $this->syncExpenditureLines(
@@ -60,8 +63,43 @@ class AbyipLineWriter
         callable $isNonProgramLineItem,
         callable $rowHasContent,
     ): int {
+        $categoryId = null;
+        $programId = null;
+
         foreach ($lineItems as $item) {
-            if (($item['row_type'] ?? '') !== 'data' || ! $rowHasContent($item)) {
+            $rowType = (string) ($item['row_type'] ?? 'data');
+            $section = (string) ($item['program_section'] ?? '');
+
+            if (in_array($rowType, ['category', Abyip::ROW_CATEGORY], true)) {
+                $isProgram = $this->isProgramHeadingItem($item);
+                $categoryRow = $this->createLineRow($document, $item, $sortOrder++, [
+                    'code' => $item['code'] ?? null,
+                    'row_type' => Abyip::ROW_CATEGORY,
+                    'parent_id' => $isProgram ? null : $programId,
+                ]);
+
+                if ($isProgram) {
+                    $programId = $categoryRow?->id;
+                    $categoryId = $programId;
+                    if ($this->isYouthDevelopmentHeading($item)) {
+                        $this->skYouthProgramId = $programId;
+                    }
+                } else {
+                    $categoryId = $categoryRow?->id ?? $categoryId;
+                }
+
+                continue;
+            }
+
+            if ($section === 'SK Youth Development and Empowerment Programs') {
+                continue;
+            }
+
+            if ($rowType !== 'data' && $rowType !== Abyip::ROW_EXPENDITURE) {
+                continue;
+            }
+
+            if (! $rowHasContent($item)) {
                 continue;
             }
 
@@ -69,14 +107,10 @@ class AbyipLineWriter
                 continue;
             }
 
-            $section = (string) ($item['program_section'] ?? '');
-            if ($section === 'SK Youth Development and Empowerment Programs') {
-                continue;
-            }
-
             $this->createLineRow($document, $item, $sortOrder++, [
                 'code' => $item['code'] ?? null,
                 'row_type' => Abyip::ROW_EXPENDITURE,
+                'parent_id' => $categoryId,
             ]);
         }
 
@@ -105,12 +139,17 @@ class AbyipLineWriter
             }
 
             $meta = $program['_meta'] ?? [];
+            $parentProgram = trim((string) ($program['parent_program'] ?? $meta['parent_program'] ?? ''));
+            $sectionName = $this->youthSectionName($letter, $name);
             $programRow = $this->createLineRow($document, array_merge($meta, [
-                'ppa_name' => $name,
+                'ppa_name' => $sectionName,
+                'program_name' => $sectionName,
+                'category' => $parentProgram !== '' ? $parentProgram : ($meta['category'] ?? null),
                 'code' => $letter,
             ]), $sortOrder++, [
                 'code' => $letter,
                 'row_type' => Abyip::ROW_YOUTH_PROGRAM,
+                'parent_id' => $this->skYouthProgramId,
             ]);
 
             if ($programRow === null) {
@@ -144,6 +183,12 @@ class AbyipLineWriter
                 continue;
             }
 
+            $activity['program_name'] = $activity['program_name']
+                ?? $programRow->category
+                ?? $programRow->program_name;
+            $activity['category'] = $activity['category'] ?? $programRow->program_name;
+            $activity['activity_name'] = $activity['activity_name'] ?? $activity['ppa_name'] ?? null;
+
             $this->createLineRow(
                 $document,
                 $activity,
@@ -171,7 +216,7 @@ class AbyipLineWriter
         $rowType = (string) ($defaults['row_type'] ?? Abyip::ROW_EXPENDITURE);
         $isActivity = $rowType === Abyip::ROW_ACTIVITY;
 
-        [$programName, $activityName] = $this->resolveProgramName($item, $isActivity);
+        [$programName, $activityName] = $this->resolveProgramName($item, $isActivity, $rowType);
 
         if ($programName === '') {
             return null;
@@ -190,24 +235,73 @@ class AbyipLineWriter
     }
 
     /**
-     * Determines the program/activity name for a row. Activity rows use the
-     * activity name as both fields; program/expenditure rows only populate
-     * program_name and leave activity_name null.
+     * Maps Excel-style columns onto abyip rows:
+     * program → program_name, category_section → category, activity_ppa → activity_name.
      *
      * @param  array<string, mixed>  $item
      * @return array{0: string, 1: ?string} [$programName, $activityName]
      */
-    private function resolveProgramName(array $item, bool $isActivity): array
+    private function resolveProgramName(array $item, bool $isActivity, string $rowType = ''): array
     {
-        if ($isActivity) {
+        if ($isActivity || $rowType === Abyip::ROW_EXPENDITURE) {
             $activityName = trim((string) ($item['activity_name'] ?? $item['ppa_name'] ?? ''));
+            $programName = trim((string) ($item['program_name'] ?? ''));
 
-            return [$activityName, $activityName];
+            return [$programName !== '' ? $programName : $activityName, $activityName !== '' ? $activityName : null];
         }
 
-        $programName = trim((string) ($item['ppa_name'] ?? $item['program_name'] ?? ''));
+        $programName = trim((string) ($item['program_name'] ?? $item['ppa_name'] ?? ''));
+        $activityName = trim((string) ($item['activity_name'] ?? ''));
 
-        return [$programName, null];
+        return [$programName, $activityName !== '' ? $activityName : null];
+    }
+
+    private function youthSectionName(string $letter, string $name): string
+    {
+        $name = trim($name);
+        $letter = strtoupper(trim($letter));
+        if ($name === '' || $name === $letter) {
+            return $letter;
+        }
+
+        if (preg_match('/^[A-J]\.\s+/i', $name) === 1) {
+            return $name;
+        }
+
+        return $letter.'. '.$name;
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     */
+    private function isProgramHeadingItem(array $item): bool
+    {
+        $level = strtolower((string) ($item['hierarchy_level'] ?? ''));
+        if ($level === 'program') {
+            return true;
+        }
+        if ($level === 'category') {
+            return false;
+        }
+
+        return $this->isYouthDevelopmentHeading($item)
+            || (bool) preg_match('/GENERAL ADMINISTRATION PROGRAM/i', $this->headingName($item));
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     */
+    private function isYouthDevelopmentHeading(array $item): bool
+    {
+        return (bool) preg_match('/SK YOUTH DEVELOPMENT AND EMPOWERMENT/i', $this->headingName($item));
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     */
+    private function headingName(array $item): string
+    {
+        return trim((string) ($item['ppa_name'] ?? $item['program_name'] ?? $item['category'] ?? ''));
     }
 
     /**
@@ -231,24 +325,35 @@ class AbyipLineWriter
             'row_type' => $resolved['row_type'],
             'parent_id' => $defaults['parent_id'] ?? null,
             'code' => $defaults['code'] ?? ($item['code'] ?? null),
-            'category' => $item['category'] ?? null,
+            'category' => $this->nullableText($item['category'] ?? null),
             'program_name' => $resolved['program_name'],
-            'activity_name' => $resolved['activity_name'],
-            'description' => $item['description'] ?? null,
-            'expected_result' => $item['expected_result'] ?? null,
-            'performance_indicator' => $item['performance_indicator'] ?? null,
-            'implementation_start' => $item['implementation_start'] ?? null,
-            'implementation_end' => $item['implementation_end'] ?? null,
-            'person_responsible' => $this->normalizePersonResponsible($item['person_responsible'] ?? null),
-            // numericAmountOrNull() keeps a genuinely blank cell (most often
-            // CO, which is empty for almost every ABYIP line item) as NULL
-            // instead of writing a fabricated '0.00' to the database.
+            'activity_name' => $this->nullableText($resolved['activity_name']),
+            'description' => $this->nullableText($item['description'] ?? null),
+            'expected_result' => $this->nullableText($item['expected_result'] ?? null),
+            'performance_indicator' => $this->nullableText($item['performance_indicator'] ?? null),
+            'implementation_start' => $item['implementation_start'] ?? $item['period_start'] ?? null,
+            'implementation_end' => $item['implementation_end'] ?? $item['period_end'] ?? null,
+            'person_responsible' => $this->nullableText(
+                $this->normalizePersonResponsible($item['person_responsible'] ?? null)
+            ),
             'mooe' => $this->normalizer->numericAmountOrNull($budgets['budget_mooe']),
             'co' => $this->normalizer->numericAmountOrNull($budgets['budget_co']),
             'total' => $this->normalizer->numericAmountOrNull($budgets['budget_total']),
             'sort_order' => $resolved['sort_order'],
-            'progress_percent' => $this->normalizer->numericAmount($item['progress_percent'] ?? 0),
-            'accomplishment_status' => $item['accomplishment_status'] ?? 'Not Started',
+            'progress_percent' => $item['progress_percent'] ?? null,
+            'accomplishment_status' => $this->nullableText($item['accomplishment_status'] ?? null),
+            'target_date' => $item['target_date'] ?? null,
+            'completed_at' => $item['completed_at'] ?? null,
+            'submitted_at' => $item['submitted_at'] ?? null,
+            'approved_at' => $item['approved_at'] ?? null,
+            'rejected_at' => $item['rejected_at'] ?? null,
+            'source_text' => $this->nullableText($item['source_text'] ?? $item['SOURCE'] ?? null),
+            'page_number' => $item['page_number'] ?? $item['PAGE'] ?? null,
+            'extraction_confidence' => $item['extraction_confidence'] ?? null,
+            'extraction_status' => $item['extraction_status'] ?? 'extracted',
+            'manual_review_required' => filter_var($item['manual_review_required'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'validation_status' => $this->nullableText($item['validation_status'] ?? null),
+            'validation_message' => $this->nullableText($item['validation_message'] ?? null),
         ];
     }
 
@@ -261,6 +366,14 @@ class AbyipLineWriter
      */
     private function normalizeBudget(array $item): array
     {
+        if (! empty($item['grouped_budget'])) {
+            return [
+                'budget_mooe' => null,
+                'budget_co' => null,
+                'budget_total' => null,
+            ];
+        }
+
         return $this->normalizer->normalizeBudgetFields([
             'budget_mooe' => $item['budget_mooe'] ?? null,
             'budget_co' => $item['budget_co'] ?? null,
@@ -275,5 +388,15 @@ class AbyipLineWriter
     private function normalizePersonResponsible(mixed $value): ?string
     {
         return $this->budgetExtractor->extractPersonResponsibleFromValue($value);
+    }
+
+    private function nullableText(mixed $value): ?string
+    {
+        $text = trim((string) ($value ?? ''));
+        if ($text === '' || in_array($text, ['-', '—', '–', 'n/a', 'N/A', 'NA', 'none'], true)) {
+            return null;
+        }
+
+        return $text;
     }
 }

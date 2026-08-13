@@ -1,7 +1,7 @@
-// ABYIP — document totals, records (database), modals
-// Create flow: Upload Word/PDF → save via API.
-(function () {
-'use strict';
+import { extractPdfTextForPrograms } from './parser.js';
+import { parsePdfFile, buildSavePayload } from './import.js';
+import { bindBudgetEditors } from './editor.js';
+import { collectPreviewEdits, renderImportPreview } from './preview.js';
 
 const DEFAULT_RECORD_TITLE = 'ABYIP CY 2026';
 
@@ -9,10 +9,12 @@ let abyipRecords = [];
 let abyipModalMode = 'create';
 let recordPendingDeleteId = null;
 let resubmitRecordId = null;
-let pendingPdfData = null; // Store PDF data temporarily
-let pendingPdfExtractedText = null; // Text extracted from PDF for program auto-detection
-let pendingIsImported = false; // Track if pending record is an imported Word doc
+let pendingPdfData = null;
+let pendingPdfExtractedText = null;
+let pendingIsImported = false;
 let pendingPdfUploadFile = null;
+let pendingExtractedPayload = null;
+let editingRecordId = null;
 
 let filterSearchText = '';
 let filterYear = '';
@@ -356,6 +358,9 @@ function renderRecordsTable() {
                 '<button type="button" class="btn-action-view" data-action="view" data-id="' +
                 record.id +
                 '">View</button>' +
+                '<button type="button" class="btn-action-view" data-action="edit" data-id="' +
+                record.id +
+                '">Edit</button>' +
                 (isRejected
                     ? '<button type="button" class="btn-action-resubmit" data-action="resubmit" data-id="' +
                       record.id +
@@ -500,10 +505,179 @@ function closeAbyipModal() {
     }
     document.body.style.overflow = '';
     resubmitRecordId = null;
+    editingRecordId = null;
     setMainModalFooterMode('edit');
 }
 
+function flattenDocumentToPreviewRows(documentData) {
+    const rows = [];
+    (documentData.programs || []).forEach((program) => {
+        const isYouthProgram = (program.row_type || '') === 'youth_program';
+        if (!isYouthProgram) {
+            rows.push({
+                id: program.id,
+                row_type: program.row_type || 'expenditure',
+                code: program.code,
+                category: program.category,
+                program_name: program.program_name,
+                activity_name: program.activity_name || program.program_name,
+                description: program.description,
+                expected_result: program.expected_result,
+                performance_indicator: program.performance_indicator,
+                implementation_start: program.implementation_start,
+                implementation_end: program.implementation_end,
+                person_responsible: program.person_responsible,
+                mooe: program.mooe,
+                co: program.co,
+                total: program.total,
+                page_number: program.page_number,
+                source_text: program.source_text,
+                validation_status: program.validation_status,
+                validation_message: program.validation_message,
+                manual_review_required: program.manual_review_required,
+                grouped_budget: false,
+                progress_percent: program.progress_percent,
+                accomplishment_status: program.accomplishment_status,
+                target_date: program.target_date,
+                completed_at: program.completed_at,
+                submitted_at: program.submitted_at,
+                approved_at: program.approved_at,
+                rejected_at: program.rejected_at,
+            });
+        }
+
+        (program.activities || []).forEach((activity) => {
+            const grouped = /^Included in/i.test(String(activity.validation_message || ''));
+            rows.push({
+                id: activity.id,
+                row_type: 'activity',
+                code: program.code,
+                category: activity.category || program.program_name,
+                program_name: activity.program_name || program.category || program.program_name,
+                activity_name: activity.activity_name,
+                description: activity.description,
+                expected_result: activity.expected_result,
+                performance_indicator: activity.performance_indicator,
+                implementation_start: activity.implementation_start,
+                implementation_end: activity.implementation_end,
+                person_responsible: activity.person_responsible,
+                mooe: grouped ? null : activity.mooe,
+                co: grouped ? null : activity.co,
+                total: grouped ? null : activity.total,
+                page_number: activity.page_number,
+                source_text: activity.source_text,
+                validation_status: activity.validation_status,
+                validation_message: activity.validation_message,
+                included_in: grouped ? activity.validation_message : null,
+                manual_review_required: activity.manual_review_required,
+                grouped_budget: grouped,
+                progress_percent: activity.progress_percent,
+                accomplishment_status: activity.accomplishment_status,
+                target_date: activity.target_date,
+                completed_at: activity.completed_at,
+                submitted_at: activity.submitted_at,
+                approved_at: activity.approved_at,
+                rejected_at: activity.rejected_at,
+            });
+        });
+    });
+
+    return rows;
+}
+
+async function openExtractedEditor(recordId) {
+    const modal = document.getElementById('abyipModal');
+    const titleEl = document.getElementById('abyipModalTitle');
+    const mount = document.getElementById('abyipModalContentMount');
+    if (!modal || !mount) {
+        return;
+    }
+
+    try {
+        const response = await abyipApiFetch('/api/abyip/' + recordId, { method: 'GET' });
+        const documentData = response.data || {};
+        editingRecordId = recordId;
+        abyipModalMode = 'edit';
+        pendingExtractedPayload = {
+            document: documentData,
+            rows: flattenDocumentToPreviewRows(documentData),
+            stats: {},
+        };
+
+        if (titleEl) {
+            titleEl.textContent = 'Edit ABYIP extracted data';
+        }
+        renderImportPreview(pendingExtractedPayload, mount);
+        setMainModalFooterMode('edit');
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    } catch (error) {
+        showNotification(error.message || 'Unable to load ABYIP for editing.', 'error');
+    }
+}
+
+async function saveExtractedEdits() {
+    if (!editingRecordId || !pendingExtractedPayload) {
+        return;
+    }
+
+    const mount = document.getElementById('abyipModalContentMount');
+    const rows = collectPreviewEdits(mount, pendingExtractedPayload.rows || []);
+    if (rows.some((row) => row.manual_review_required)) {
+        const confirmed = window.confirm('Some budget rows do not reconcile (MOOE + CO = Total). Save anyway and keep them marked for review?');
+        if (!confirmed) {
+            return;
+        }
+    }
+
+    const saveBtn = document.getElementById('abyipModalSave');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+    }
+
+    try {
+        await abyipApiFetch('/api/abyip/' + editingRecordId, {
+            method: 'PUT',
+            body: {
+                lines: rows.filter((row) => row.id).map((row) => ({
+                    id: row.id,
+                    code: row.code,
+                    program_name: row.program_name,
+                    category: row.category,
+                    activity_name: row.activity_name,
+                    description: row.description,
+                    expected_result: row.expected_result,
+                    performance_indicator: row.performance_indicator,
+                    implementation_start: row.implementation_start,
+                    implementation_end: row.implementation_end,
+                    person_responsible: row.person_responsible,
+                    mooe: row.mooe,
+                    co: row.co,
+                    total: row.total,
+                })),
+            },
+        });
+        editingRecordId = null;
+        pendingExtractedPayload = null;
+        closeAbyipModal();
+        await loadRecords();
+        renderRecordsTable();
+        showNotification('ABYIP updated successfully.', 'success');
+    } catch (error) {
+        showNotification(error.message || 'Failed to update ABYIP.', 'error');
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+        }
+    }
+}
+
 async function saveAbyip() {
+    if (editingRecordId) {
+        return saveExtractedEdits();
+    }
+
     if (resubmitRecordId) {
         return saveResubmitAbyip();
     }
@@ -1052,6 +1226,35 @@ async function confirmDeleteRecord() {
     }
 }
 
+function setImportStatus(message, isBusy) {
+    const status = document.getElementById('abyipPdfImportStatus');
+    const statusText = document.getElementById('abyipPdfImportStatusText');
+    const uploadZone = document.getElementById('abyipPdfUploadZone');
+    const result = document.getElementById('abyipPdfImportResult');
+
+    if (result) {
+        result.hidden = true;
+        result.innerHTML = '';
+    }
+    if (status) {
+        status.hidden = !isBusy && !message;
+    }
+    if (statusText && message) {
+        statusText.textContent = message;
+    }
+    if (uploadZone) {
+        uploadZone.classList.toggle('is-importing', Boolean(isBusy));
+    }
+
+    if (typeof window.showLoading === 'function') {
+        if (isBusy) {
+            window.showLoading(message || 'Importing ABYIP PDF...');
+        } else {
+            window.hideLoading();
+        }
+    }
+}
+
 function setUploadModalPreviewMode(isPreviewing) {
     const modal = document.getElementById('createOptionsModal');
     const modalBox = document.getElementById('abyipUploadModalBox');
@@ -1086,21 +1289,27 @@ function setUploadModalPreviewMode(isPreviewing) {
 
 function resetPdfUploadModal() {
     pendingPdfUploadFile = null;
+    pendingExtractedPayload = null;
     const fileInput = document.getElementById('pdfFileInput');
     if (fileInput) {
         fileInput.value = '';
     }
 
-    const pagesContainer = document.getElementById('abyipUploadPdfPages');
-    const continueBtn = document.getElementById('abyipPdfUploadContinueBtn');
-
+    setImportStatus('', false);
     setUploadModalPreviewMode(false);
-
+    const pagesContainer = document.getElementById('abyipUploadPdfPages');
     if (pagesContainer) {
         pagesContainer.innerHTML = '';
     }
+    const continueBtn = document.getElementById('abyipPdfUploadContinueBtn');
     if (continueBtn) {
         continueBtn.disabled = true;
+        continueBtn.textContent = 'Import ABYIP';
+    }
+    const result = document.getElementById('abyipPdfImportResult');
+    if (result) {
+        result.hidden = true;
+        result.innerHTML = '';
     }
 }
 
@@ -1179,31 +1388,6 @@ function openImportPdfFilePicker() {
     document.getElementById('pdfFileInput')?.click();
 }
 
-function renderUploadModalPdfPreview(file) {
-    const pagesContainer = document.getElementById('abyipUploadPdfPages');
-    if (!pagesContainer || typeof pdfjsLib === 'undefined') {
-        return;
-    }
-
-    setUploadModalPreviewMode(true);
-    pagesContainer.innerHTML = '<p class="abyip-pdf-loading">Loading PDF preview...</p>';
-
-    const reader = new FileReader();
-    reader.onload = function (event) {
-        const loadingTask = pdfjsLib.getDocument({ data: event.target.result });
-        loadingTask.promise.then(function (pdf) {
-            pagesContainer.innerHTML = '';
-            renderAllPdfPages(pdf, pagesContainer);
-        }).catch(function () {
-            pagesContainer.innerHTML = '<div class="pdf-error">Unable to preview this PDF.</div>';
-        });
-    };
-    reader.onerror = function () {
-        pagesContainer.innerHTML = '<div class="pdf-error">Unable to read this PDF.</div>';
-    };
-    reader.readAsArrayBuffer(file);
-}
-
 function handlePdfFileChosen(event) {
     const fileInput = event.target;
     const file = fileInput?.files?.[0];
@@ -1225,20 +1409,40 @@ function handlePdfFileChosen(event) {
     }
 
     pendingPdfUploadFile = file;
-
     const continueBtn = document.getElementById('abyipPdfUploadContinueBtn');
-
-    setUploadModalPreviewMode(true);
-
     if (continueBtn) {
         continueBtn.disabled = true;
     }
-
     renderUploadModalPdfPreview(file);
+}
 
-    if (continueBtn) {
-        continueBtn.disabled = false;
+function renderUploadModalPdfPreview(file) {
+    const pagesContainer = document.getElementById('abyipUploadPdfPages');
+    if (!pagesContainer || typeof pdfjsLib === 'undefined') {
+        importPdfDirectly(file);
+        return;
     }
+
+    setUploadModalPreviewMode(true);
+    pagesContainer.innerHTML = '<p class="abyip-pdf-loading">Loading PDF preview...</p>';
+
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        pdfjsLib.getDocument({ data: event.target.result }).promise.then(function (pdf) {
+            pagesContainer.innerHTML = '';
+            renderAllPdfPages(pdf, pagesContainer);
+            const continueBtn = document.getElementById('abyipPdfUploadContinueBtn');
+            if (continueBtn) {
+                continueBtn.disabled = !pendingPdfUploadFile;
+            }
+        }).catch(function () {
+            pagesContainer.innerHTML = '<div class="pdf-error">Unable to preview this PDF.</div>';
+        });
+    };
+    reader.onerror = function () {
+        pagesContainer.innerHTML = '<div class="pdf-error">Unable to read this PDF.</div>';
+    };
+    reader.readAsArrayBuffer(file);
 }
 
 function continuePdfUpload() {
@@ -1246,109 +1450,104 @@ function continuePdfUpload() {
         return;
     }
 
-    const file = pendingPdfUploadFile;
+    importPdfDirectly(pendingPdfUploadFile);
+}
+
+function showImportSummary(summary, documentData) {
+    const result = document.getElementById('abyipPdfImportResult');
+    const status = document.getElementById('abyipPdfImportStatus');
+    if (status) {
+        status.hidden = true;
+    }
+
+    const barangay = summary?.barangay || documentData?.barangay_name || '—';
+    const fiscalYear = summary?.fiscal_year || documentData?.fiscal_year || '—';
+    const programs = summary?.programs_detected ?? 0;
+    const activities = summary?.activities_imported ?? 0;
+    const review = summary?.rows_requiring_review ?? 0;
+
+    if (result) {
+        result.hidden = false;
+        result.innerHTML = `
+            <h4>ABYIP imported successfully.</h4>
+            <ul>
+                <li>Barangay: <strong>${barangay}</strong></li>
+                <li>Fiscal Year: <strong>${fiscalYear}</strong></li>
+                <li>Programs detected: <strong>${programs}</strong></li>
+                <li>Activities imported: <strong>${activities}</strong></li>
+                <li>Rows requiring review: <strong>${review}</strong></li>
+            </ul>
+        `;
+    }
+
+    showNotification(
+        `ABYIP imported successfully. Barangay: ${barangay}. FY ${fiscalYear}. ${programs} programs, ${activities} activities, ${review} need review.`,
+        'success'
+    );
+}
+
+function importPdfDirectly(file) {
     const continueBtn = document.getElementById('abyipPdfUploadContinueBtn');
     if (continueBtn) {
         continueBtn.disabled = true;
+        continueBtn.textContent = 'Importing...';
     }
+    setImportStatus('Importing ABYIP PDF...', true);
 
-    if (typeof window.showLoading === 'function') {
-        window.showLoading(resubmitRecordId ? 'Resubmitting ABYIP' : 'Saving ABYIP');
-    }
+    parsePdfFile(file, (message) => setImportStatus(message, true))
+        .then(function (payload) {
+            if (!payload.extractedText || !String(payload.extractedText).trim()) {
+                throw new Error('Could not read program data from this PDF. Please re-upload the file.');
+            }
 
-    prepareAndUploadPdfFile(file)
-        .then(function () {
+            pendingExtractedPayload = payload;
+            pendingPdfData = payload.pdfData;
+            pendingPdfExtractedText = payload.extractedText;
+            setImportStatus('Validating budgets...', true);
+
+            const calendarYear = abyipSubmissionStatus.fiscal_year || new Date().getFullYear();
+            const body = buildSavePayload(payload, DEFAULT_RECORD_TITLE, calendarYear);
+            setImportStatus('Saving ABYIP...', true);
+
+            return resubmitRecordId
+                ? abyipApiFetch('/api/abyip/' + resubmitRecordId + '/resubmit', { method: 'POST', body })
+                : abyipApiFetch('/api/abyip', { method: 'POST', body });
+        })
+        .then(function (response) {
             const wasResubmit = Boolean(resubmitRecordId);
+            const documentData = response?.data || {};
             resubmitRecordId = null;
-            closeCreateOptionsModal();
+            pendingExtractedPayload = null;
+            pendingPdfData = null;
+            pendingPdfExtractedText = null;
+            pendingPdfUploadFile = null;
+            setImportStatus('', false);
+            showImportSummary(documentData.import_summary || {}, documentData);
+
             return loadRecords().then(function () {
                 renderRecordsTable();
-                showNotification(
-                    wasResubmit ? 'ABYIP resubmitted for federation review.' : 'ABYIP record saved.',
-                    'success'
-                );
+                window.setTimeout(function () {
+                    closeCreateOptionsModal();
+                    if (documentData.id && !wasResubmit) {
+                        openAbyipModal('view', documentData.id);
+                    } else {
+                        showNotification(
+                            wasResubmit ? 'ABYIP resubmitted for federation review.' : 'ABYIP imported successfully.',
+                            'success'
+                        );
+                    }
+                }, 1200);
             });
         })
         .catch(function (error) {
-            showNotification(error.message || 'Failed to save ABYIP record.', 'error');
-        })
-        .finally(function () {
-            if (typeof window.hideLoading === 'function') {
-                window.hideLoading();
-            }
+            pendingExtractedPayload = null;
+            setImportStatus('', false);
             if (continueBtn) {
                 continueBtn.disabled = false;
+                continueBtn.textContent = 'Import ABYIP';
             }
+            showNotification(error.message || 'Failed to import ABYIP PDF.', 'error');
         });
-}
-
-function prepareAndUploadPdfFile(file) {
-    return new Promise(function (resolve, reject) {
-        if (typeof pdfjsLib === 'undefined') {
-            reject(new Error('PDF library is not available.'));
-            return;
-        }
-
-        const reader = new FileReader();
-
-        reader.onload = function (event) {
-            const arrayBuffer = event.target.result;
-            const base64String = btoa(
-                new Uint8Array(arrayBuffer).reduce(function (data, byte) {
-                    return data + String.fromCharCode(byte);
-                }, '')
-            );
-
-            pdfjsLib.getDocument({ data: arrayBuffer }).promise
-                .then(function (pdf) {
-                    return extractPdfTextForPrograms(pdf).then(function (extractedText) {
-                        if (!extractedText || !String(extractedText).trim()) {
-                            throw new Error('Could not read program data from this PDF. Please re-upload the file.');
-                        }
-
-                        if (resubmitRecordId) {
-                            return abyipApiFetch('/api/abyip/' + resubmitRecordId + '/resubmit', {
-                                method: 'POST',
-                                body: {
-                                    title: DEFAULT_RECORD_TITLE,
-                                    source_type: 'pdf',
-                                    pdf_data: base64String,
-                                    extracted_text: extractedText,
-                                },
-                            });
-                        }
-
-                        const calendarYear = abyipSubmissionStatus.fiscal_year || new Date().getFullYear();
-                        return abyipApiFetch('/api/abyip', {
-                            method: 'POST',
-                            body: {
-                                title: DEFAULT_RECORD_TITLE,
-                                source_type: 'pdf',
-                                calendar_year: calendarYear,
-                                document_html: null,
-                                pdf_data: base64String,
-                                extracted_text: extractedText,
-                            },
-                        });
-                    });
-                })
-                .then(function () {
-                    pendingPdfData = null;
-                    pendingPdfExtractedText = null;
-                    pendingPdfUploadFile = null;
-                    resolve();
-                })
-                .catch(function (error) {
-                    reject(error instanceof Error ? error : new Error('Failed to upload ABYIP PDF.'));
-                });
-        };
-
-        reader.onerror = function () {
-            reject(new Error('Error reading file. Please try again.'));
-        };
-
-        reader.readAsArrayBuffer(file);
-    });
 }
 
 function openImportWordFilePicker() {
@@ -1490,876 +1689,7 @@ function openAbyipModalWithImport(importedTable) {
     requestAnimationFrame(() => updateTotals());
 }
 
-const ABYIP_COLUMN_DEFAULTS = {
-    ppas: [0, 0.20],
-    description: [0.20, 0.34],
-    expected: [0.34, 0.42],
-    performance: [0.42, 0.50],
-    period: [0.50, 0.62],
-    mooe: [0.62, 0.70],
-    co: [0.70, 0.74],
-    total: [0.74, 0.82],
-    person: [0.82, 1.05],
-};
 
-let abyipColumnBounds = null;
-
-function resetAbyipColumnBounds() {
-    abyipColumnBounds = null;
-}
-
-function midpoint(left, right) {
-    return (left + right) / 2;
-}
-
-function detectAbyipColumnBounds(pageRows) {
-    if (abyipColumnBounds) {
-        return abyipColumnBounds;
-    }
-
-    for (let i = 0; i < pageRows.length; i++) {
-        const entry = pageRows[i];
-        const width = entry.width;
-        const parts = entry.row.parts;
-        const markers = {};
-
-        parts.forEach(function (part) {
-            const ratio = part.x / width;
-            const text = String(part.text || '').trim().toLowerCase();
-
-            if (text === 'mooe') {
-                markers.mooe = ratio;
-            } else if (text === 'co') {
-                markers.co = ratio;
-            } else if (text === 'total') {
-                markers.total = ratio;
-            } else if (/^performance$/i.test(text) || text.indexOf('indicator') !== -1) {
-                markers.performance = markers.performance === undefined ? ratio : Math.min(markers.performance, ratio);
-            } else if (text.indexOf('period') !== -1 || text.indexOf('implementation') !== -1) {
-                markers.period = markers.period === undefined ? ratio : Math.min(markers.period, ratio);
-            } else if (text.indexOf('person') !== -1 || text.indexOf('responsible') !== -1) {
-                markers.person = markers.person === undefined ? ratio : Math.min(markers.person, ratio);
-            } else if (text === 'description') {
-                markers.description = ratio;
-            } else if (text.indexOf('expected') !== -1) {
-                markers.expected = ratio;
-            } else if (/^ppas$/i.test(text) || text.indexOf('programs') !== -1) {
-                markers.ppas = markers.ppas === undefined ? ratio : Math.min(markers.ppas, ratio);
-            }
-        });
-
-        if (markers.mooe === undefined || markers.total === undefined) {
-            continue;
-        }
-
-        const co = markers.co !== undefined ? markers.co : markers.mooe + 0.04;
-        const person = markers.person !== undefined ? markers.person : 0.84;
-        const performance = markers.performance !== undefined ? markers.performance : 0.44;
-        const period = markers.period !== undefined ? markers.period : 0.54;
-        const expected = markers.expected !== undefined ? markers.expected : 0.38;
-        const description = markers.description !== undefined ? markers.description : 0.22;
-        const ppas = markers.ppas !== undefined ? markers.ppas : 0.05;
-
-        abyipColumnBounds = {
-            ppas: [0, midpoint(ppas, description)],
-            description: [midpoint(ppas, description), midpoint(description, expected)],
-            expected: [midpoint(description, expected), midpoint(expected, performance)],
-            performance: [midpoint(expected, performance), midpoint(performance, period)],
-            period: [midpoint(performance, period), midpoint(period, markers.mooe)],
-            mooe: [midpoint(period, markers.mooe), midpoint(markers.mooe, co)],
-            co: [midpoint(markers.mooe, co), midpoint(co, markers.total)],
-            total: [midpoint(co, markers.total), midpoint(markers.total, person)],
-            person: [midpoint(markers.total, person), 1.05],
-        };
-
-        return abyipColumnBounds;
-    }
-
-    abyipColumnBounds = ABYIP_COLUMN_DEFAULTS;
-    return abyipColumnBounds;
-}
-
-function collectColumnText(parts, width, startRatio, endRatio) {
-    const start = width * startRatio;
-    const end = width * endRatio;
-
-    return parts
-        .filter(function (part) { return part.x >= start && part.x < end; })
-        .map(function (part) { return part.text; })
-        .join(' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-}
-
-function mergeNumericParts(parts) {
-    const sorted = parts.slice().sort(function (a, b) { return a.x - b.x; });
-    const merged = [];
-    let buffer = '';
-    let bufferX = 0;
-
-    sorted.forEach(function (part) {
-        const text = String(part.text || '').replace(/\s/g, '');
-        if (!text) {
-            return;
-        }
-
-        const isNumericFragment = /^[\d,.]+$/.test(text);
-        if (isNumericFragment) {
-            if (!buffer) {
-                bufferX = part.x;
-            }
-            buffer += text;
-            return;
-        }
-
-        if (buffer) {
-            merged.push({ x: bufferX, text: buffer });
-            buffer = '';
-        }
-
-        merged.push({ x: part.x, text: text });
-    });
-
-    if (buffer) {
-        merged.push({ x: bufferX, text: buffer });
-    }
-
-    return merged;
-}
-
-function normalizeAmountToken(text) {
-    let value = String(text || '').replace(/\s/g, '').replace(/,/g, '');
-    if (/^[\d]+\.\d{2}$/.test(value)) {
-        return value;
-    }
-
-    // Pure-digit values represent whole pesos (e.g. "50000" = 50,000.00).
-    // Do NOT insert a decimal before the last 2 digits — that would divide
-    // the amount by 100 and corrupt every non-formatted number in the PDF.
-    if (/^[\d]+$/.test(value)) {
-        return value + '.00';
-    }
-
-    return '';
-}
-
-function extractColumnAmounts(parts, width, startRatio, endRatio) {
-    const start = width * startRatio;
-    const end = width * endRatio;
-
-    return mergeNumericParts(parts)
-        .filter(function (part) { return part.x >= start && part.x < end; })
-        .map(function (part) { return normalizeAmountToken(part.text); })
-        .filter(Boolean);
-}
-
-function extractBudgetAmountsFromParts(parts, width, columns) {
-    const budgetStart = width * ((columns && columns.mooe) ? columns.mooe[0] : 0.55);
-
-    return mergeNumericParts(parts)
-        .filter(function (part) { return part.x >= budgetStart; })
-        .map(function (part) { return normalizeAmountToken(part.text); })
-        .filter(Boolean);
-}
-
-function assignBudgetColumns(amounts) {
-    if (!amounts || !amounts.length) {
-        return {
-            mooe: '',
-            co: '',
-            total: '',
-            mooeAmounts: [],
-            coAmounts: [],
-            totalAmounts: [],
-        };
-    }
-
-    if (amounts.length >= 3) {
-        for (var i = amounts.length - 3; i >= 0; i--) {
-            var m = parseFloat(amounts[i]) || 0;
-            var c = parseFloat(amounts[i + 1]) || 0;
-            var t = parseFloat(amounts[i + 2]) || 0;
-            if (Math.abs(m + c - t) < 1.01) {
-                return {
-                    mooe: amounts[i],
-                    co: amounts[i + 1],
-                    total: amounts[i + 2],
-                    mooeAmounts: [amounts[i]],
-                    coAmounts: c ? [amounts[i + 1]] : [],
-                    totalAmounts: [amounts[i + 2]],
-                };
-            }
-        }
-        var last = amounts.length - 1;
-        return {
-            mooe: amounts[last - 2] || '',
-            co: amounts[last - 1] || '',
-            total: amounts[last],
-            mooeAmounts: amounts[last - 2] ? [amounts[last - 2]] : [],
-            coAmounts: amounts[last - 1] ? [amounts[last - 1]] : [],
-            totalAmounts: [amounts[last]],
-        };
-    }
-
-    if (amounts.length === 2) {
-        return {
-            mooe: amounts[0],
-            co: '',
-            total: amounts[1],
-            mooeAmounts: [amounts[0]],
-            coAmounts: [],
-            totalAmounts: [amounts[1]],
-        };
-    }
-
-    return {
-        mooe: '',
-        co: '',
-        total: amounts[0],
-        mooeAmounts: [],
-        coAmounts: [],
-        totalAmounts: [amounts[0]],
-    };
-}
-
-function appendBlockField(block, key, value) {
-    const text = String(value || '').trim();
-    if (!text) {
-        return;
-    }
-
-    if (!block[key]) {
-        block[key] = text;
-        return;
-    }
-
-    if (!block[key].includes(text)) {
-        block[key] += '\n' + text;
-    }
-}
-
-function appendBlockAmounts(block, key, amounts) {
-    if (!amounts || !amounts.length) {
-        return;
-    }
-
-    const line = amounts.join('\n');
-    if (!block[key]) {
-        block[key] = line;
-        return;
-    }
-
-    block[key] += '\n' + line;
-}
-
-function parseRowColumns(row, width, bounds) {
-    const columns = bounds || abyipColumnBounds || ABYIP_COLUMN_DEFAULTS;
-    let mooeAmounts = extractColumnAmounts(row.parts, width, columns.mooe[0], columns.mooe[1]);
-    let coAmounts = extractColumnAmounts(row.parts, width, columns.co[0], columns.co[1]);
-    let totalAmounts = extractColumnAmounts(row.parts, width, columns.total[0], columns.total[1]);
-
-    let mooe = mooeAmounts[0] || '';
-    let co = coAmounts[0] || '';
-    let total = totalAmounts[0] || '';
-
-    if (!mooe && !co && !total) {
-        const fallback = assignBudgetColumns(extractBudgetAmountsFromParts(row.parts, width, columns));
-        mooe = fallback.mooe;
-        co = fallback.co;
-        total = fallback.total;
-        mooeAmounts = fallback.mooeAmounts;
-        coAmounts = fallback.coAmounts;
-        totalAmounts = fallback.totalAmounts;
-    }
-
-    if (!total && mooe && co) {
-        total = String((parseFloat(mooe) || 0) + (parseFloat(co) || 0));
-        totalAmounts = [total];
-    } else if (!total && mooe && !co) {
-        total = mooe;
-        totalAmounts = [total];
-    }
-
-    const fullLine = row.parts.map(function (part) { return part.text; }).join(' ').replace(/\s+/g, ' ').trim();
-    let person = extractPersonResponsibleValue(row.parts, width, columns.person[0]);
-    if (!person) {
-        person = extractPersonFromFullLine(fullLine);
-    }
-
-    return {
-        ppas: collectColumnText(row.parts, width, columns.ppas[0], columns.ppas[1]),
-        description: collectColumnText(row.parts, width, columns.description[0], columns.description[1]),
-        expected: collectColumnText(row.parts, width, columns.expected[0], columns.expected[1]),
-        performance: collectColumnText(row.parts, width, columns.performance[0], columns.performance[1]),
-        period: collectColumnText(row.parts, width, columns.period[0], columns.period[1]),
-        mooeAmounts: mooeAmounts,
-        coAmounts: coAmounts,
-        totalAmounts: total ? [total] : totalAmounts,
-        mooe: mooe,
-        co: co,
-        total: total,
-        person: person,
-        fullLine: fullLine,
-    };
-}
-
-function mergeRowIntoBlock(block, cols) {
-    appendBlockField(block, 'ppas', cols.ppas);
-    appendBlockField(block, 'description', cols.description);
-    appendBlockField(block, 'expected', cols.expected);
-    appendBlockField(block, 'performance', cols.performance);
-    appendBlockField(block, 'period', cols.period);
-    appendBlockAmounts(block, 'mooe', cols.mooeAmounts);
-    appendBlockAmounts(block, 'co', cols.coAmounts);
-    appendBlockAmounts(block, 'total', cols.totalAmounts);
-
-    if (cols.person) {
-        block.person = cols.person;
-    }
-}
-
-function isYouthProgramHeader(ppas, fullLine) {
-    const source = ppas || fullLine;
-    return /^([A-J])\.\s/i.test(source);
-}
-
-function extractYouthLetter(ppas, fullLine) {
-    const source = ppas || fullLine;
-    const match = source.match(/^([A-J])\.\s/i);
-    return match ? match[1].toUpperCase() : '';
-}
-
-function startsWithBulletChar(text) {
-    if (!text) {
-        return false;
-    }
-
-    const first = text.charAt(0);
-    return first === '-' || first === '\u2022' || first === '\u25CF' || first === '\uF0B7' || first === '\u00B7';
-}
-
-function isGeneralExpenditurePrimaryRow(ppas) {
-    const text = String(ppas || '').trim();
-    if (!text) {
-        return false;
-    }
-
-    if (startsWithBulletChar(text)) {
-        return false;
-    }
-
-    if (/^(A|B|C|D|E|F|G|H|I|J)\.\s/i.test(text)) {
-        return false;
-    }
-
-    if (/^(Support|Training|Clean|Payroll|Tree|Distribution|150\s|Barangay|Livelihood|Food|Medicines|Educational)/i.test(text)) {
-        return false;
-    }
-
-    return text.length <= 90;
-}
-
-function flushGeneralBlock(block, lines) {
-    if (!block || !block.ppas) {
-        return;
-    }
-
-    lines.push(buildStructuredTagRow('@ABYIP_ROW@', {
-        PPAS: block.ppas,
-        DESC: block.description || '',
-        EXP: block.expected || '',
-        PERF: block.performance || '',
-        PERIOD: block.period || '',
-        MOOE: block.mooe || '',
-        CO: block.co || '',
-        TOTAL: block.total || '',
-        PERSON: block.person || '',
-    }));
-}
-
-function flushYouthBlock(block, lines) {
-    if (!block || !block.letter) {
-        return;
-    }
-
-    lines.push(buildStructuredTagRow('@YOUTH_ROW@', {
-        LETTER: block.letter,
-        PPAS: block.ppas || '',
-        DESC: block.description || '',
-        EXP: block.expected || '',
-        PERF: block.performance || '',
-        PERIOD: block.period || '',
-        MOOE: block.mooe || '',
-        CO: block.co || '',
-        TOTAL: block.total || '',
-        PERSON: block.person || '',
-    }));
-}
-
-function createEmptyBlock(letter) {
-    return {
-        letter: letter || '',
-        ppas: '',
-        description: '',
-        expected: '',
-        performance: '',
-        period: '',
-        mooe: '',
-        co: '',
-        total: '',
-        person: '',
-    };
-}
-
-function extractAmountFromText(text) {
-    const source = String(text || '');
-
-    const decimalMatches = source.match(/[\d,]+\.\d{2}/g);
-    if (decimalMatches && decimalMatches.length) {
-        return decimalMatches[decimalMatches.length - 1].replace(/,/g, '');
-    }
-
-    const groupedMatches = source.match(/\d{1,3}(?:,\d{3})+/g);
-    if (groupedMatches && groupedMatches.length) {
-        return groupedMatches[groupedMatches.length - 1].replace(/,/g, '');
-    }
-
-    return '';
-}
-
-function extractPersonColumn(parts, width, startRatio) {
-    const threshold = width * (startRatio !== undefined ? startRatio : 0.82);
-    const personParts = parts
-        .filter(function (part) {
-            return part.x >= threshold && !/^\d[\d,.-]*$/.test(part.text);
-        })
-        .map(function (part) { return part.text; });
-
-    if (personParts.length) {
-        return personParts.join(' ').replace(/\s+/g, ' ').trim();
-    }
-
-    return collectColumnText(parts, width, startRatio !== undefined ? startRatio : 0.82, 1.05);
-}
-
-function extractPersonFromFullLine(fullLine) {
-    const source = String(fullLine || '').replace(/\s+/g, ' ').trim();
-    if (!source) {
-        return '';
-    }
-
-    const patterns = [
-        /Sangguniang\s*Kabataan\s*Council\s*\/\s*BADAC/i,
-        /Sangguniang\s*Kabataan\s*Council\s*\/\s*ALS/i,
-        /SK\s*Chairman\s*\/\s*SK\s*Treasurer/i,
-        /Sangguniang\s*Kabataan\s*Council/i,
-        /Sangguniang\s*Kabataan\s*Counci[l]?/i,
-        /SK\s*Treasurer/i,
-        /SK\s*Chairman/i,
-        /SK\s*Chairperson/i,
-    ];
-
-    for (let i = 0; i < patterns.length; i++) {
-        const match = source.match(patterns[i]);
-        if (match) {
-            return normalizePersonColumnText(match[0]);
-        }
-    }
-
-    return '';
-}
-
-function extractPersonResponsibleValue(parts, width, startRatio) {
-    const threshold = width * (startRatio !== undefined ? startRatio : 0.82);
-    const raw = parts
-        .filter(function (part) { return part.x >= threshold; })
-        .map(function (part) { return part.text; })
-        .join(' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-    const fromColumn = extractPersonFromFullLine(raw);
-    if (fromColumn) {
-        return fromColumn;
-    }
-
-    const fallback = normalizePersonColumnText(extractPersonColumn(parts, width, startRatio));
-    if (fallback) {
-        // Strip any amount noise that leaked into the person column region
-        const cleaned = fallback.replace(/[\d,]+\.\d{2}\s*/g, '').trim();
-        if (cleaned.length >= 3) {
-            // Starts with a known prefix — complete entry.
-            if (/^(SK|Sangguniang)/i.test(cleaned)) {
-                return cleaned;
-            }
-            // Multi-word value containing a known keyword — likely complete.
-            if (cleaned.split(/\s+/).length >= 2) {
-                if (/\b(Kabataan|Council|Chairman|Chairperson|Treasurer|BADAC|ALS)\b/i.test(cleaned)) {
-                    return cleaned;
-                }
-            }
-        }
-    }
-
-    const fullLine = parts.map(function (part) { return part.text; }).join(' ').replace(/\s+/g, ' ').trim();
-
-    return extractPersonFromFullLine(fullLine);
-}
-
-function normalizePersonColumnText(value) {
-    if (!value) {
-        return '';
-    }
-
-    let text = String(value).replace(/\bPerson\s*Responsible\b:?/gi, '').replace(/\s+/g, ' ').trim();
-    const replacements = [
-        [/SangguniangKabataanCouncil/gi, 'Sangguniang Kabataan Council'],
-        [/SKTreasurer/gi, 'SK Treasurer'],
-        [/SKChairman\/SKTreasurer/gi, 'SK Chairman/SK Treasurer'],
-        [/SKChairman/gi, 'SK Chairman'],
-        [/SKChairperson/gi, 'SK Chairperson'],
-        [/SangguniangKabataanCouncil\/ALS/gi, 'Sangguniang Kabataan Council/ALS'],
-        [/SangguniangKabataanCouncil\/BADAC/gi, 'Sangguniang Kabataan Council/BADAC'],
-        [/^Council$/i, 'Sangguniang Kabataan Council'],
-        [/^Kabataan Council$/i, 'Sangguniang Kabataan Council'],
-    ];
-
-    replacements.forEach(function (entry) {
-        text = text.replace(entry[0], entry[1]);
-    });
-
-    if (/^(January|February|March|April|May|June|July|August|September|October|November|December)\b/i.test(text)) {
-        return '';
-    }
-
-    if (/^\d[\d,.-]*$/.test(text)) {
-        return '';
-    }
-
-    if (/\b(payment|professional|rendered|payroll|months|charge|incurred|transport|services|nominally|without|given)\b/i.test(text)) {
-        return '';
-    }
-
-    return text;
-}
-
-function isAbyipHeaderRow(line) {
-    return /^(Code|PPAs|Description|Expected|Performance|Period|Budget|Person|MOOE|CO|Total|I\.\s*Receipts|II\.\s*Expenditure|GENERAL ADMINISTRATION|Maintenance and Other|Capital Outlay|SK\s+YOUTH\s+DEVELOPMENT|Barangay\s+Estimated\s+Budget|Sangguniang\s+Kabataan\s+Fund|10%\s+of\s+the\s+General\s+Fund)/i.test(line);
-}
-
-function isAbyipBudgetHeaderRow(line) {
-    return /Barangay\s+Estimated\s+Budget|Sangguniang\s+Kabataan\s+Fund|10%\s+of\s+the\s+General\s+Fund/i.test(line);
-}
-
-function hasStructuredTableData(ppas, description, expected, performance, period, mooe, co, total, person) {
-    const hasMoney = Boolean(mooe || co || total);
-    const hasMeta = Boolean(description || expected || performance || period || person);
-    const hasPpas = Boolean(ppas);
-
-    return hasMoney || (hasPpas && hasMeta) || (hasMeta && hasPpas);
-}
-
-function buildStructuredTagRow(tag, fields) {
-    return tag + Object.keys(fields).map(function (key) {
-        return key + ':' + (fields[key] || '');
-    }).join('|');
-}
-
-function appendAbyipFooterMetadata(lines) {
-    let grandTotal = '';
-
-    for (let i = lines.length - 1; i >= 0; i--) {
-        const line = lines[i];
-        if (/^TOTAL\b/i.test(line) && !line.startsWith('@')) {
-            const amounts = line.match(/[\d,]+\.\d{2}/g);
-            if (amounts && amounts.length) {
-                grandTotal = amounts[amounts.length - 1];
-                break;
-            }
-        }
-    }
-
-    if (grandTotal) {
-        lines.push('@ABYIP_GRAND_TOTAL@' + grandTotal);
-    }
-
-    const preparedIdx = lines.findIndex(function (line) {
-        return /Prepared\s+by/i.test(line);
-    });
-
-    if (preparedIdx < 0) {
-        return;
-    }
-
-    const blockLines = lines.slice(preparedIdx, Math.min(preparedIdx + 8, lines.length));
-    const blockText = blockLines.join('\n');
-    const names = [];
-    const nameRegex = /HON\.?\s*([A-Z][A-Za-z.\s]+?)(?=\s+HON\.|\s+SK\s+Chair|\s+Barangay\s+Chair|\n|$)/gi;
-    let nameMatch;
-
-    while ((nameMatch = nameRegex.exec(blockText)) !== null) {
-        names.push(('HON. ' + nameMatch[1].trim()).replace(/\s+/g, ' '));
-    }
-
-    if (names.length < 2) {
-        blockLines.forEach(function (blockLine) {
-            if (!/HON\./i.test(blockLine)) {
-                return;
-            }
-
-            blockLine.split(/\s{2,}|\t/).forEach(function (part) {
-                part = part.trim();
-                if (part && /HON\./i.test(part) && names.indexOf(part) < 0) {
-                    names.push(part.replace(/\s+/g, ' '));
-                }
-            });
-        });
-    }
-
-    let preparedPos = '';
-    let approvedPos = '';
-
-    blockLines.forEach(function (blockLine) {
-        if (/SK\s+Chair(?:person|man)?/i.test(blockLine)) {
-            preparedPos = 'SK Chairperson';
-        }
-        if (/Barangay\s+Chair(?:man|person)?/i.test(blockLine)) {
-            approvedPos = 'Barangay Chairman';
-        }
-    });
-
-    const fields = {};
-    if (names[0]) {
-        fields.PREPARED_NAME = names[0];
-    }
-    if (preparedPos) {
-        fields.PREPARED_POS = preparedPos;
-    }
-    if (names[1]) {
-        fields.APPROVED_NAME = names[1];
-    }
-    if (approvedPos) {
-        fields.APPROVED_POS = approvedPos;
-    }
-
-    if (Object.keys(fields).length) {
-        lines.push(buildStructuredTagRow('@ABYIP_SIGNATURE@', fields));
-    }
-}
-
-async function extractPdfTextForPrograms(pdfDoc) {
-    resetAbyipColumnBounds();
-    const lines = [];
-    let inYouthSection = false;
-    let inExpenditureSection = false;
-    let inReceiptsSection = true;
-    let generalBlock = null;
-    let youthBlock = null;
-    let pendingData = [];
-    let pendingYouthData = [];
-    const pageRows = [];
-
-    for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-        const page = await pdfDoc.getPage(pageNum);
-        const viewport = page.getViewport({ scale: 1 });
-        const textContent = await page.getTextContent();
-        const width = viewport.width;
-        const rowMap = new Map();
-
-        textContent.items.forEach(function (item) {
-            const text = (item.str || '').trim();
-            if (!text) {
-                return;
-            }
-
-            const x = item.transform[4];
-            const y = Math.round(item.transform[5]);
-            const rowKey = pageNum + ':' + y;
-            const bucket = rowMap.get(rowKey) || { y: y, parts: [] };
-            bucket.parts.push({ x: x, text: text });
-            rowMap.set(rowKey, bucket);
-        });
-
-        Array.from(rowMap.values())
-            .sort(function (a, b) { return b.y - a.y; })
-            .forEach(function (row) {
-                row.parts.sort(function (a, b) { return a.x - b.x; });
-                pageRows.push({ width: width, row: row });
-            });
-    }
-
-    const columnBounds = detectAbyipColumnBounds(pageRows);
-
-    pageRows.forEach(function (entry) {
-        const width = entry.width;
-        const row = entry.row;
-        row.parts.sort(function (a, b) { return a.x - b.x; });
-        const cols = parseRowColumns(row, width, columnBounds);
-        const fullLine = cols.fullLine;
-
-        if (!fullLine) {
-            return;
-        }
-
-        if (/I\.\s*RECEIPTS/i.test(fullLine)) {
-            inReceiptsSection = true;
-            inExpenditureSection = false;
-        }
-
-        if (/II\.\s*EXPENDITURE/i.test(fullLine)) {
-            inExpenditureSection = true;
-            inReceiptsSection = false;
-        }
-
-        if (/Barangay\s+Estimated\s+Budget/i.test(fullLine)) {
-            const amount = extractAmountFromText(fullLine);
-            if (amount) {
-                lines.push('@ABYIP_HEADER@BARANGAY_BUDGET:' + amount);
-            }
-            lines.push(fullLine);
-            return;
-        }
-
-        if (/Sangguniang\s+Kabataan\s+Fund/i.test(fullLine)) {
-            const pctMatch = fullLine.match(/(\d+(?:\.\d+)?)\s*%/);
-            const amount = extractAmountFromText(fullLine);
-            let headerTag = '@ABYIP_HEADER@';
-            if (pctMatch) {
-                headerTag += 'SK_FUND_PERCENT:' + pctMatch[1];
-            }
-            if (amount) {
-                headerTag += (pctMatch ? '|' : '') + 'SK_FUND_AMOUNT:' + amount;
-            }
-            if (headerTag !== '@ABYIP_HEADER@') {
-                lines.push(headerTag);
-            }
-            lines.push(fullLine);
-            return;
-        }
-
-        if (isAbyipBudgetHeaderRow(fullLine)) {
-            lines.push(fullLine);
-            return;
-        }
-
-        if (/SK\s+YOUTH\s+DEVELOPMENT/i.test(fullLine)) {
-            flushGeneralBlock(generalBlock, lines);
-            generalBlock = null;
-            pendingData = [];
-            pendingYouthData = [];
-            inYouthSection = true;
-            inExpenditureSection = true;
-            lines.push(fullLine);
-            return;
-        }
-
-        if (/Prepared\s+by/i.test(fullLine) || /Approved\s+by/i.test(fullLine)) {
-            flushGeneralBlock(generalBlock, lines);
-            generalBlock = null;
-            pendingData = [];
-            pendingYouthData = [];
-            flushYouthBlock(youthBlock, lines);
-            youthBlock = null;
-            lines.push(fullLine);
-            return;
-        }
-
-        if (inYouthSection && /^(TOTAL|Prepared\s+by|Approved\s+by)\b/i.test(fullLine)) {
-            flushYouthBlock(youthBlock, lines);
-            youthBlock = null;
-            pendingYouthData = [];
-            inYouthSection = false;
-            if (/^TOTAL\b/i.test(fullLine)) {
-                const totalAmounts = fullLine.match(/[\d,]+\.\d{2}/g);
-                if (totalAmounts && totalAmounts.length) {
-                    lines.push('@ABYIP_GRAND_TOTAL@' + totalAmounts[totalAmounts.length - 1]);
-                }
-                lines.push(fullLine);
-            } else if (!/Prepared\s+by/i.test(fullLine) && !/Approved\s+by/i.test(fullLine)) {
-                lines.push(fullLine);
-            }
-            return;
-        }
-
-        if (inReceiptsSection && !inExpenditureSection) {
-            lines.push(fullLine);
-            return;
-        }
-
-        if (inYouthSection) {
-            const letter = extractYouthLetter(cols.ppas, fullLine);
-            const hasData = hasStructuredTableData(
-                cols.ppas,
-                cols.description,
-                cols.expected,
-                cols.performance,
-                cols.period,
-                cols.mooe,
-                cols.co,
-                cols.total,
-                cols.person
-            );
-
-            if (letter) {
-                flushYouthBlock(youthBlock, lines);
-                youthBlock = createEmptyBlock(letter);
-                pendingYouthData.forEach(function (pd) {
-                    mergeRowIntoBlock(youthBlock, pd);
-                });
-                pendingYouthData = [];
-                mergeRowIntoBlock(youthBlock, cols);
-            } else if (hasData) {
-                if (youthBlock) {
-                    mergeRowIntoBlock(youthBlock, cols);
-                } else {
-                    pendingYouthData.push(cols);
-                }
-            }
-
-            lines.push(fullLine);
-            return;
-        }
-
-        if (inExpenditureSection && !inReceiptsSection && !isAbyipHeaderRow(fullLine) && !isAbyipBudgetHeaderRow(fullLine)) {
-            const isPrimary = isGeneralExpenditurePrimaryRow(cols.ppas);
-            const hasData = hasStructuredTableData(
-                cols.ppas,
-                cols.description,
-                cols.expected,
-                cols.performance,
-                cols.period,
-                cols.mooe,
-                cols.co,
-                cols.total,
-                cols.person
-            );
-
-            if (isPrimary) {
-                flushGeneralBlock(generalBlock, lines);
-                generalBlock = createEmptyBlock('');
-                pendingData.forEach(function (pd) {
-                    mergeRowIntoBlock(generalBlock, pd);
-                });
-                pendingData = [];
-                mergeRowIntoBlock(generalBlock, cols);
-            } else if (hasData) {
-                if (generalBlock) {
-                    mergeRowIntoBlock(generalBlock, cols);
-                } else {
-                    pendingData.push(cols);
-                }
-            }
-        }
-
-        lines.push(fullLine);
-    });
-
-    flushGeneralBlock(generalBlock, lines);
-    flushYouthBlock(youthBlock, lines);
-    appendAbyipFooterMetadata(lines);
-
-    return lines.join('\n');
-}
 
 function openImportPdfFilePickerLegacy() {
     document.getElementById('pdfFileInput')?.click();
@@ -2590,7 +1920,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             openImportPdfFilePicker();
         }
     });
-    document.getElementById('abyipPdfUploadContinueBtn')?.addEventListener('click', continuePdfUpload);
     document.getElementById('createOptionsCancelBtn')?.addEventListener('click', closeCreateOptionsModal);
     document.getElementById('abyipUploadFooterCancelBtn')?.addEventListener('click', closeCreateOptionsModal);
     document.getElementById('createOptionsClose')?.addEventListener('click', closeCreateOptionsModal);
@@ -2599,6 +1928,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
 
     document.getElementById('pdfFileInput')?.addEventListener('change', handlePdfFileChosen);
+    document.getElementById('abyipPdfUploadContinueBtn')?.addEventListener('click', continuePdfUpload);
 
     document.getElementById('abyipModalClose')?.addEventListener('click', closeAbyipModal);
     document.getElementById('abyipModalCancel')?.addEventListener('click', closeAbyipModal);
@@ -2611,6 +1941,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const id = parseInt(btn.getAttribute('data-id'), 10);
         const action = btn.getAttribute('data-action');
         if (action === 'view') openAbyipModal('view', id);
+        else if (action === 'edit') openExtractedEditor(id);
         else if (action === 'resubmit') openResubmitFlow(id);
         else if (action === 'delete') {
             if (btn.disabled || btn.classList.contains('is-disabled')) return;
@@ -2662,6 +1993,5 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     updateTotals();
+    bindBudgetEditors(document.getElementById('abyipModalContentMount'));
 });
-
-})();

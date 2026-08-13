@@ -17,6 +17,10 @@
         'app/Modules/Layout/css/header.css',
         'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Barangay_ABYIP/Assets/css/abyip.css',
+        'app/Modules/Barangay_ABYIP/Assets/css/import.css',
+        'app/Modules/Barangay_ABYIP/Assets/css/table.css',
+        'app/Modules/Barangay_ABYIP/Assets/css/editor.css',
+        'app/Modules/Barangay_ABYIP/Assets/css/review.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
@@ -417,6 +421,10 @@
 
             <div class="modal-body" id="abyipModalBody">
                 <div id="abyipModalContentMount"></div>
+                @include('Barangay_ABYIP::partials.document-information')
+                @include('Barangay_ABYIP::partials.budget-summary')
+                @include('Barangay_ABYIP::partials.review-panel')
+                @include('Barangay_ABYIP::partials.accomplishment-panel')
             </div>
 
             <div class="modal-footer" id="abyipModalFooter">
@@ -458,7 +466,7 @@
                 <button type="button" class="modal-close-btn" id="createOptionsClose">&times;</button>
             </div>
             <div class="abyip-meta-modal-inner abyip-pdf-upload-inner" id="abyipUploadInner">
-                <p class="abyip-meta-hint">Upload your Annual Barangay Youth Investment Program document in PDF format. The file will be saved for viewing and printing.</p>
+                <p class="abyip-meta-hint">Upload your Annual Barangay Youth Investment Program PDF. You will see a view-only preview of the original file before it is imported.</p>
                 <div class="abyip-pdf-upload-zone" id="abyipPdfUploadZone" role="button" tabindex="0" aria-label="Upload ABYIP PDF">
                     <div class="abyip-pdf-upload-icon" aria-hidden="true">
                         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -468,17 +476,25 @@
                             <polyline points="9 15 12 12 15 15"></polyline>
                         </svg>
                     </div>
-                    <p class="abyip-pdf-upload-title">Click to browse or drag and drop</p>
-                    <p class="abyip-pdf-upload-hint">PDF files only � Maximum 15MB</p>
+                    <p class="abyip-pdf-upload-title">Choose PDF</p>
+                    <p class="abyip-pdf-upload-hint">PDF files only — Maximum 15MB</p>
                 </div>
+                <div class="abyip-pdf-import-status" id="abyipPdfImportStatus" hidden>
+                    <div class="abyip-pdf-import-spinner" aria-hidden="true"></div>
+                    <p id="abyipPdfImportStatusText">Importing ABYIP PDF...</p>
+                </div>
+                <div class="abyip-pdf-import-result" id="abyipPdfImportResult" hidden></div>
             </div>
             <div class="abyip-pdf-preview-stage" id="abyipPdfPreviewStage" hidden>
                 <div class="abyip-preview-canvas-wrap">
                     <div class="pdf-pages-wrapper" id="abyipUploadPdfPages"></div>
                 </div>
                 <div class="abyip-preview-action-bar">
-                    <button type="button" class="btn-cancel" id="createOptionsCancelBtn">Cancel</button>
-                    <button type="button" class="btn primary-btn" id="abyipPdfUploadContinueBtn" disabled>Upload ABYIP</button>
+                    <p class="abyip-preview-view-only">View only — this is the original PDF. It cannot be edited here.</p>
+                    <div class="abyip-preview-action-buttons">
+                        <button type="button" class="btn-cancel" id="createOptionsCancelBtn">Cancel</button>
+                        <button type="button" class="btn primary-btn" id="abyipPdfUploadContinueBtn" disabled>Import ABYIP</button>
+                    </div>
                 </div>
             </div>
             <div class="abyip-pdf-upload-footer" id="abyipUploadFooter">

@@ -1,0 +1,62 @@
+.abyip-pdf-import-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px solid #dbeafe;
+    border-radius: 12px;
+    background: #eff6ff;
+    color: #1e3a8a;
+}
+
+.abyip-pdf-import-status[hidden] {
+    display: none !important;
+}
+
+.abyip-pdf-import-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #93c5fd;
+    border-top-color: #1d4ed8;
+    border-radius: 50%;
+    animation: abyip-import-spin 0.8s linear infinite;
+}
+
+@keyframes abyip-import-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.abyip-pdf-upload-zone.is-importing {
+    pointer-events: none;
+    opacity: 0.55;
+}
+
+.abyip-pdf-import-result {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    background: #f0fdf4;
+    color: #14532d;
+}
+
+.abyip-pdf-import-result[hidden] {
+    display: none !important;
+}
+
+.abyip-pdf-import-result h4 {
+    margin: 0 0 8px;
+    font-size: 1rem;
+}
+
+.abyip-pdf-import-result ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.abyip-pdf-import-result li {
+    margin: 4px 0;
+}

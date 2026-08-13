@@ -11,9 +11,11 @@ class AbyipNumericNormalizer
         }
 
         $raw = trim((string) $value);
-        if ($raw === '' || $raw === '-') {
+        if ($raw === '' || in_array($raw, ['-', '—', '–', 'n/a', 'N/A', 'NA'], true)) {
             return null;
         }
+
+        $raw = preg_replace('/^₱\s*/u', '', $raw) ?? $raw;
 
         // A bare 4-digit value such as "2025" or "2026" is virtually always a
         // fiscal/calendar year, page number, or document revision year picked
@@ -130,15 +132,13 @@ class AbyipNumericNormalizer
             $total = $co;
         }
 
-        // Deliberately NOT deriving a missing MOOE or CO from "total minus
-        // the other one": in the ABYIP table, CO is blank for almost every
-        // line item, and blank means "not applicable here", not "solve for
-        // it". Backfilling it with total-mooe (usually 0.00) would make a
-        // genuinely empty cell indistinguishable from an explicit zero, and
-        // store a fabricated value instead of the NULL the source actually
-        // has. TOTAL is the one exception above, since it is effectively
-        // always present in the source and computing it from the other two
-        // is a safe fallback rather than a guess.
+        if ($mooe !== null && $total !== null && $co === null
+            && abs((float) $mooe - (float) $total) < 0.01) {
+            $co = '0.00';
+        } elseif ($co !== null && $total !== null && $mooe === null
+            && abs((float) $co - (float) $total) < 0.01) {
+            $mooe = '0.00';
+        }
 
         // Use the null-preserving formatter here: if a field genuinely has
         // no value in the source (e.g. CO left blank in the ABYIP table),

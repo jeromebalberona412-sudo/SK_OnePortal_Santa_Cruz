@@ -42,6 +42,7 @@ use App\Modules\Announcement\Controllers\AnnouncementPageController;
 use App\Modules\Announcement\Controllers\ArchiveAnnouncementController;
 use App\Modules\Announcement\Controllers\BarangayProfileController;
 use App\Modules\Archived_Youth_Records\Controllers\ArchivedYouthRecordsController;
+use App\Modules\Authentication\Controllers\AuthController;
 use App\Modules\Barangay_ABYIP\Controllers\AbyipController;
 use App\Modules\Calendar\Controllers\CalendarController;
 use App\Modules\Committees\Controllers\CommitteeController;
@@ -71,7 +72,7 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::get('/forgot-password/check-email', [App\Modules\Authentication\Controllers\AuthController::class, 'showForgotPasswordCheckEmail'])
+Route::get('/forgot-password/check-email', [AuthController::class, 'showForgotPasswordCheckEmail'])
     ->middleware('guest')
     ->name('password.check-email');
 
@@ -228,6 +229,7 @@ Route::middleware([
         Route::post('/', [AbyipController::class, 'store'])->name('api.abyip.store');
         Route::post('/{id}/resubmit', [AbyipController::class, 'resubmit'])->name('api.abyip.resubmit');
         Route::put('/{id}', [AbyipController::class, 'update'])->name('api.abyip.update');
+        Route::patch('/{id}', [AbyipController::class, 'update'])->name('api.abyip.patch');
         Route::delete('/{id}', [AbyipController::class, 'destroy'])->name('api.abyip.destroy');
     });
 

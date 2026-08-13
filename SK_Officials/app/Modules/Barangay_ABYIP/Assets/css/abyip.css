@@ -3704,11 +3704,6 @@ html {
     line-height: 1.5;
 }
 
-.abyip-pdf-upload-inner.is-previewing .abyip-meta-hint,
-.abyip-pdf-upload-inner.is-previewing .abyip-pdf-upload-zone {
-    display: none !important;
-}
-
 .abyip-pdf-preview-stage[hidden],
 .abyip-pdf-upload-footer[hidden],
 .abyip-upload-modal-header[hidden],
@@ -3761,15 +3756,23 @@ html {
 
 .abyip-preview-action-bar {
     display: flex;
-    justify-content: flex-end;
-    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     padding: 12px 16px;
     background: #1e293b;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.abyip-pdf-preview-mount {
-    margin-top: 12px;
+.abyip-preview-view-only {
+    margin: 0;
+    color: #cbd5e1;
+    font-size: 13px;
+}
+
+.abyip-preview-action-buttons {
+    display: flex;
+    gap: 10px;
 }
 
 .abyip-upload-pdf-viewer {

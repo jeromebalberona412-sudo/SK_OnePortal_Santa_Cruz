@@ -1,0 +1,32 @@
+.abyip-preview-status {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 3px 9px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.abyip-preview-status.is-valid {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.abyip-preview-status.is-warning {
+    background: #ffedd5;
+    color: #9a3412;
+}
+
+.abyip-review-panel,
+.abyip-accomplishment-panel {
+    margin-top: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px;
+    background: #fff;
+}
+
+.abyip-review-panel h4,
+.abyip-accomplishment-panel h4 {
+    margin: 0 0 8px;
+}

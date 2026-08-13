@@ -69,6 +69,10 @@ export default defineConfig({
                 'app/Modules/KKProfilingRequests/assets/js/kkprofiling-requests.js',
                 // Barangay ABYIP module assets
                 'app/Modules/Barangay_ABYIP/Assets/css/abyip.css',
+                'app/Modules/Barangay_ABYIP/Assets/css/import.css',
+                'app/Modules/Barangay_ABYIP/Assets/css/table.css',
+                'app/Modules/Barangay_ABYIP/Assets/css/editor.css',
+                'app/Modules/Barangay_ABYIP/Assets/css/review.css',
                 'app/Modules/Barangay_ABYIP/Assets/js/abyip.js',
                 // Deleted Kabataan module assets
                 'app/Modules/Deleted_Kabataan/assets/css/deleted-kabataan.css',
