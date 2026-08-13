@@ -6,12 +6,19 @@
     class="sk-fed-feed"
 @endpush
 
+@push('main-class')
+    cf-main
+@endpush
+
 @push('styles')
     @php
         $communityFeedCssPath = app_path('Modules/CommunityFeed/assets/css/community-feed.css');
         $communityFeedCssVersion = file_exists($communityFeedCssPath) ? filemtime($communityFeedCssPath) : time();
+        $commentPreviewCssPath = app_path('Modules/CommunityFeed/assets/css/community-feed-comment-preview.css');
+        $commentPreviewCssVersion = file_exists($commentPreviewCssPath) ? filemtime($commentPreviewCssPath) : time();
     @endphp
     <link rel="stylesheet" href="{{ url('/modules/community-feed/css/community-feed.css') }}?v={{ $communityFeedCssVersion }}">
+    <link rel="stylesheet" href="{{ url('/modules/community-feed/css/community-feed-comment-preview.css') }}?v={{ $commentPreviewCssVersion }}">
 @endpush
 
 @section('content')
@@ -60,36 +67,11 @@
 
                 {{-- Filter Tabs --}}
                 <div class="feed-filter-bar">
-                    <button type="button" class="feed-tab feed-tab--icon active" data-filter="all" onclick="setFeedFilter(this,'all')" aria-label="All">
-                        <span class="feed-tab-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                        </span>
-                        <span class="feed-tab-text">All</span>
-                    </button>
-                    <button type="button" class="feed-tab feed-tab--icon" data-filter="announcement" onclick="setFeedFilter(this,'announcement')" aria-label="Announcements">
-                        <span class="feed-tab-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11 13v8a2 2 0 004 0v-6"/></svg>
-                        </span>
-                        <span class="feed-tab-text">Announcements</span>
-                    </button>
-                    <button type="button" class="feed-tab feed-tab--icon" data-filter="event" onclick="setFeedFilter(this,'event')" aria-label="Events">
-                        <span class="feed-tab-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                        </span>
-                        <span class="feed-tab-text">Events</span>
-                    </button>
-                    <button type="button" class="feed-tab feed-tab--icon" data-filter="activity" onclick="setFeedFilter(this,'activity')" aria-label="Activities">
-                        <span class="feed-tab-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"/></svg>
-                        </span>
-                        <span class="feed-tab-text">Activities</span>
-                    </button>
-                    <button type="button" class="feed-tab feed-tab--icon" data-filter="program" onclick="setFeedFilter(this,'program')" aria-label="Programs">
-                        <span class="feed-tab-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-                        </span>
-                        <span class="feed-tab-text">Programs</span>
-                    </button>
+                    <button type="button" class="feed-tab active" data-filter="all" onclick="setFeedFilter(this,'all')">All</button>
+                    <button type="button" class="feed-tab" data-filter="announcement" onclick="setFeedFilter(this,'announcement')">Announcements</button>
+                    <button type="button" class="feed-tab" data-filter="event" onclick="setFeedFilter(this,'event')">Events</button>
+                    <button type="button" class="feed-tab" data-filter="activity" onclick="setFeedFilter(this,'activity')">Activities</button>
+                    <button type="button" class="feed-tab" data-filter="program" onclick="setFeedFilter(this,'program')">Programs</button>
                 </div>
                 </div>
 
@@ -98,35 +80,36 @@
             </div>
 
             {{-- ── RIGHT: Barangay SK Profiles Sidebar ── --}}
-            <aside class="feed-sidebar" id="feedSidebar">
-                <div class="sidebar-card cf-barangay-profiles-card">
+            <aside class="programs-sidebar" id="programsSidebar">
+                <div class="sidebar-card">
                     <h2 class="sidebar-title">Barangay SK Profiles</h2>
                     <p class="sidebar-subtitle">Browse SK officials from each barangay ({{ count($barangayProfiles ?? []) }} barangays).</p>
-                    <div class="cf-barangay-profiles-list" id="cfBrgyLinkList">
+                    <div class="brgy-link-list" id="brgyLinkList">
                         @forelse($barangayProfiles ?? [] as $brgy)
-                        <a href="{{ route('skfed.barangay-profile', ['slug' => $brgy['slug']]) }}" class="cf-barangay-profile-link">
-                            @if(!empty($brgy['logo_url']))
-                                <img src="{{ $brgy['logo_url'] }}" alt="Brgy. {{ $brgy['name'] }}" class="cf-barangay-profile-logo">
-                            @else
-                                <div class="cf-barangay-profile-avatar">
-                                    {{ $brgy['initials'] }}
-                                </div>
-                            @endif
-                            <div class="cf-barangay-profile-text">
-                                <p class="cf-barangay-profile-name">Brgy. {{ $brgy['name'] }}</p>
-                                <p class="cf-barangay-profile-sub">SK Officials</p>
+                        <a href="{{ route('skfed.barangay-profile', ['slug' => $brgy['slug']]) }}" class="brgy-link-item">
+                            <div class="brgy-link-dot">
+                                @if(!empty($brgy['logo_url']))
+                                    <img src="{{ $brgy['logo_url'] }}" alt="Brgy. {{ $brgy['name'] }} logo" class="brgy-link-logo">
+                                @else
+                                    <span class="brgy-link-initials">{{ $brgy['initials'] }}</span>
+                                @endif
                             </div>
-                            <svg class="chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                            </svg>
+                            <div class="brgy-link-info">
+                                <p class="brgy-link-name">Brgy. {{ $brgy['name'] }}</p>
+                                <p class="brgy-link-sub">SK Officials</p>
+                            </div>
+                            <svg style="width:14px;height:14px;color:#bbb;flex-shrink:0;" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
                         </a>
                         @empty
-                        <p class="cf-barangay-profiles-empty">No barangay profiles available.</p>
+                        <p class="brgy-link-empty">No barangays found for your municipality.</p>
                         @endforelse
                     </div>
                 </div>
             </aside>
         </div>
+
+<div class="programs-drawer-backdrop" id="programsDrawerBackdrop"></div>
+<button type="button" class="programs-fab" id="programsFab" aria-label="View Barangay Profiles"><i class="fas fa-users"></i></button>
 @endsection
 
 @push('scripts')
@@ -217,35 +200,73 @@
         <div id="lightboxCounter" class="lightbox-counter"></div>
     </div>
 
-    {{-- ── LIKES MODAL ── --}}
-    <div id="likesModal" class="cf-likes-modal" aria-hidden="true">
-        <div class="modal-overlay" onclick="closeLikesModal()"></div>
-        <div class="cf-likes-dialog" role="dialog" aria-labelledby="likesModalTitle">
-            <div class="cf-likes-header">
-                <h3 id="likesModalTitle">Reactions</h3>
-                <button type="button" class="modal-close" onclick="closeLikesModal()" aria-label="Close">
+    <div id="reactionViewerModal" class="reaction-viewer" aria-hidden="true">
+        <div class="reaction-viewer-overlay" onclick="closeReactionViewer()"></div>
+        <div class="reaction-viewer-panel" role="dialog" aria-label="People who reacted">
+            <div class="reaction-viewer-header">
+                <div class="reaction-viewer-tabs" id="reactionViewerTabs"></div>
+                <button type="button" class="reaction-viewer-close" onclick="closeReactionViewer()" aria-label="Close">&times;</button>
+            </div>
+            <div class="reaction-viewer-list" id="reactionViewerList"></div>
+        </div>
+    </div>
+
+    <div id="editCommentModal" class="program-modal comment-action-modal">
+        <div class="modal-overlay" onclick="closeEditCommentModal()"></div>
+        <div class="modal-container" style="max-width:440px;">
+            <div class="modal-header">
+                <h2>Edit Comment</h2>
+                <button type="button" class="modal-close" onclick="closeEditCommentModal()" aria-label="Close">
                     <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
                 </button>
             </div>
-            <div class="cf-likes-tabs">
-                <button type="button" class="cf-likes-tab active" aria-current="true">
-                    All <span id="likesModalCount">0</span>
-                </button>
-                <button type="button" class="cf-likes-tab" tabindex="-1" aria-hidden="true" style="cursor:default;">
-                    <span class="cf-likes-tab-icon">
-                        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/></svg>
-                    </span>
-                    Like
-                </button>
+            <div class="modal-body">
+                <textarea id="editCommentBody" class="edit-comment-textarea" maxlength="500" placeholder="Write a comment..."></textarea>
             </div>
-            <div class="cf-likes-list" id="likesModalList">
-                <div class="cf-likes-loading">Loading...</div>
+            <div class="modal-footer-btns">
+                <button type="button" class="btn-secondary" onclick="closeEditCommentModal()">Cancel</button>
+                <button type="button" class="btn-primary" id="confirmEditCommentBtn" onclick="confirmEditComment()">Save</button>
             </div>
         </div>
     </div>
 
+    <div id="deleteCommentModal" class="program-modal comment-action-modal">
+        <div class="modal-overlay" onclick="closeDeleteCommentModal()"></div>
+        <div class="modal-container" style="max-width:440px;">
+            <div class="modal-header">
+                <h2>Delete Comment</h2>
+                <button type="button" class="modal-close" onclick="closeDeleteCommentModal()" aria-label="Close">
+                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:14px;color:#555;line-height:1.65;margin:0;">
+                    Delete this comment? This cannot be undone.
+                </p>
+            </div>
+            <div class="modal-footer-btns">
+                <button type="button" class="btn-secondary" onclick="closeDeleteCommentModal()">Cancel</button>
+                <button type="button" class="btn-danger" id="confirmDeleteCommentBtn" onclick="confirmDeleteComment()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    @include('community_feed::comment-preview')
+
     <script>
         window.currentAvatar = @json($avatar ?? '');
+        window.CommunityFeedConfig = {
+            userAvatar: @json($avatar ?? ''),
+            userDisplayName: @json($user->name ?? 'SK Federation'),
+            feedPollMs: 30000,
+            commentsPageUrl: @json(url('/community-feed/__ID__/comments')),
+        };
+        window.CommentPreviewConfig = {
+            post: @json($commentPreviewPost ?? null),
+            userAvatar: @json($avatar ?? ''),
+            userDisplayName: @json($user->name ?? 'SK Federation'),
+            feedUrl: @json(route('community-feed')),
+        };
         function showFeedToast(message, type) {
             var el = document.getElementById('feedToast');
             if (!el) return;
@@ -257,10 +278,12 @@
             }, 3200);
         }
     </script>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
     @php
         $communityFeedJsPath = app_path('Modules/CommunityFeed/assets/js/community-feed.js');
         $communityFeedJsVersion = file_exists($communityFeedJsPath) ? filemtime($communityFeedJsPath) : time();
+        $commentPreviewJsPath = app_path('Modules/CommunityFeed/assets/js/community-feed-comment-preview.js');
+        $commentPreviewJsVersion = file_exists($commentPreviewJsPath) ? filemtime($commentPreviewJsPath) : time();
     @endphp
     <script src="{{ url('/modules/community-feed/js/community-feed.js') }}?v={{ $communityFeedJsVersion }}"></script>
+    <script src="{{ url('/modules/community-feed/js/community-feed-comment-preview.js') }}?v={{ $commentPreviewJsVersion }}"></script>
 @endpush

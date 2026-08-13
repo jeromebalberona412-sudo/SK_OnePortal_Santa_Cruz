@@ -44,6 +44,31 @@ final class KabataanApprovedStatuses
     }
 
     /**
+     * Portal signups that still need email/account verification.
+     *
+     * @return list<string>
+     */
+    public static function unverifiedAccountStatuses(): array
+    {
+        return ['pending_verification', 'email_verified'];
+    }
+
+    public static function hasVerifiedAccount(KabataanRegistration $registration): bool
+    {
+        $attrs = $registration->getAttributes();
+
+        if (in_array((string) ($attrs['status'] ?? ''), self::unverifiedAccountStatuses(), true)) {
+            return false;
+        }
+
+        if (! empty($attrs['user_id'])) {
+            return ! empty($attrs['email_verified_at']) && ! empty($attrs['password_set_at']);
+        }
+
+        return empty($attrs['email_verified_at']) && empty($attrs['password_set_at']);
+    }
+
+    /**
      * Approved Kabataan records — with or without uploaded supporting documents.
      *
      * @param  Builder<KabataanRegistration>  $query
@@ -51,8 +76,24 @@ final class KabataanApprovedStatuses
     public static function applyKabataanListScope(Builder $query): Builder
     {
         return $query
-            ->whereNotIn('status', self::rejectedRegistrationStatuses())
-            ->whereIn('evaluation_status', self::evaluationStatuses());
+            ->whereNotIn('status', array_merge(
+                self::rejectedRegistrationStatuses(),
+                self::unverifiedAccountStatuses(),
+            ))
+            ->whereIn('evaluation_status', self::evaluationStatuses())
+            ->where(function (Builder $account) {
+                $account
+                    ->where(function (Builder $portal) {
+                        $portal->whereNotNull('user_id')
+                            ->whereNotNull('email_verified_at')
+                            ->whereNotNull('password_set_at');
+                    })
+                    ->orWhere(function (Builder $walkIn) {
+                        $walkIn->whereNull('user_id')
+                            ->whereNull('email_verified_at')
+                            ->whereNull('password_set_at');
+                    });
+            });
     }
 
     /**
@@ -64,26 +105,28 @@ final class KabataanApprovedStatuses
     {
         return $query
             ->whereNotIn('status', self::rejectedRegistrationStatuses())
+            ->where(function (Builder $notRejectedEval) {
+                $notRejectedEval
+                    ->whereNull('evaluation_status')
+                    ->orWhere('evaluation_status', '')
+                    ->orWhereNotIn('evaluation_status', self::rejectedEvaluationStatuses());
+            })
             ->where(function (Builder $pending) {
                 $pending
-                    ->whereIn('evaluation_status', self::pendingEvaluationStatuses())
-                    ->orWhere(function (Builder $workflow) {
-                        $workflow
-                            ->whereIn('status', ['pending_verification', 'email_verified', 'password_set', 'active'])
-                            ->where(function (Builder $eval) {
-                                $eval->whereNull('evaluation_status')
-                                    ->orWhere('evaluation_status', '')
-                                    ->orWhereIn('evaluation_status', self::pendingEvaluationStatuses());
-                            });
-                    });
-            })
-            ->whereNotIn('evaluation_status', self::rejectedEvaluationStatuses())
-            ->whereNotIn('evaluation_status', self::evaluationStatuses());
+                    ->whereIn('status', self::unverifiedAccountStatuses())
+                    ->orWhereNull('evaluation_status')
+                    ->orWhere('evaluation_status', '')
+                    ->orWhereIn('evaluation_status', self::pendingEvaluationStatuses());
+            });
     }
 
     public static function isListedInKabataan(KabataanRegistration $registration): bool
     {
         if (in_array($registration->status, self::rejectedRegistrationStatuses(), true)) {
+            return false;
+        }
+
+        if (! self::hasVerifiedAccount($registration)) {
             return false;
         }
 

@@ -10,6 +10,7 @@ use App\Modules\Shared\Models\AnnouncementComment;
 use App\Modules\Shared\Models\AnnouncementCommentReaction;
 use App\Modules\Shared\Models\AnnouncementImage;
 use App\Modules\Shared\Models\AnnouncementReaction;
+use App\Modules\Shared\Models\User;
 use App\Services\CommunityFeedAvatarService;
 use App\Services\FeedCommentRateLimiter;
 use App\Services\SkFederationsNotificationService;
@@ -74,6 +75,30 @@ class CommunityFeedPostController extends Controller
             'total' => $posts->total(),
             'user_id' => $user->id,
         ]);
+    }
+
+    public function formatPostForPage(Announcement $post, int $userId): array
+    {
+        return $this->formatPost($post, $userId);
+    }
+
+    public function show(int $id): JsonResponse
+    {
+        $user = Auth::user();
+        $post = Announcement::query()
+            ->active()
+            ->with([
+                'barangay',
+                'comments.user',
+                'comments.reactions',
+                'user',
+                'images',
+                'reactions.user',
+            ])
+            ->withCount('reactions')
+            ->findOrFail($id);
+
+        return response()->json($this->formatPost($post, $user->id));
     }
 
     // POST /api/community-feed
@@ -384,6 +409,88 @@ class CommunityFeedPostController extends Controller
             $this->formatComment($comment->load(['user', 'reactions']), $user->id),
             201
         );
+    }
+
+    public function updateComment(Request $request, int $id, int $commentId): JsonResponse
+    {
+        $user = Auth::user();
+        $validated = $request->validate([
+            'body' => 'required|string|max:'.FeedCommentRateLimiter::MAX_BODY_LENGTH,
+        ]);
+
+        $comment = $this->ownedComment($id, $commentId, $user);
+        $comment->update(['body' => $validated['body']]);
+
+        return response()->json(
+            $this->formatComment($comment->fresh(['user', 'reactions']), $user->id)
+        );
+    }
+
+    public function destroyComment(int $id, int $commentId): JsonResponse
+    {
+        $user = Auth::user();
+        $comment = AnnouncementComment::query()
+            ->where('community_feed_id', $id)
+            ->where('id', $commentId)
+            ->firstOrFail();
+
+        $isOwner = (int) $comment->user_id === (int) $user->id && $comment->user_type === 'sk_fed';
+        $isAdmin = $user->role === User::ROLE_ADMIN;
+
+        if (! $isOwner && ! $isAdmin) {
+            return response()->json(['message' => 'You cannot delete this comment.'], 403);
+        }
+
+        $comment->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    public function commentReactions(int $id, int $commentId): JsonResponse
+    {
+        Announcement::query()->findOrFail($id);
+        $comment = AnnouncementComment::query()
+            ->where('community_feed_id', $id)
+            ->where('id', $commentId)
+            ->firstOrFail();
+
+        $reactions = AnnouncementCommentReaction::query()
+            ->with('user')
+            ->where('comment_id', $comment->id)
+            ->latest()
+            ->get();
+
+        $reactors = $reactions->map(fn (AnnouncementCommentReaction $reaction) => [
+            'name' => $reaction->user?->name ?: 'Member',
+            'avatar_url' => $this->avatarService->resolveForUser(
+                $reaction->user,
+                $reaction->user_type,
+                $reaction->user?->name
+            ),
+            'role_label' => match ($reaction->user_type) {
+                'sk_fed' => 'SK Federation',
+                'sk_official' => 'SK Official',
+                'kabataan' => 'Kabataan Member',
+                default => 'Member',
+            },
+            'reaction_type' => $reaction->reaction_type ?: 'like',
+        ])->values();
+
+        return response()->json([
+            'count' => $reactors->count(),
+            'reaction_counts' => $this->countsFromReactions($reactions),
+            'reactors' => $reactors,
+        ]);
+    }
+
+    private function ownedComment(int $feedId, int $commentId, User $user): AnnouncementComment
+    {
+        return AnnouncementComment::query()
+            ->where('community_feed_id', $feedId)
+            ->where('id', $commentId)
+            ->where('user_id', $user->id)
+            ->where('user_type', 'sk_fed')
+            ->firstOrFail();
     }
 
     // POST /api/community-feed/upload-image

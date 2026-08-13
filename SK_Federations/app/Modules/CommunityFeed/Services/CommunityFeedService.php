@@ -24,9 +24,11 @@ class CommunityFeedService
      */
     public function listBarangayProfiles(?int $tenantId = null): array
     {
-        $bySlug = [];
-        foreach ($this->monitoringService->slugToNameMap() as $slug => $name) {
-            $bySlug[$slug] = [
+        $canonical = $this->monitoringService->slugToNameMap();
+        $profiles = [];
+
+        foreach ($canonical as $slug => $name) {
+            $profiles[$slug] = [
                 'slug' => $slug,
                 'name' => $name,
                 'id' => null,
@@ -43,28 +45,50 @@ class CommunityFeedService
             }
 
             foreach ($query->get() as $barangay) {
-                $slug = Str::slug($barangay->name);
-                $bySlug[$slug] = [
-                    'slug' => $slug,
-                    'name' => $barangay->name,
+                $matchedSlug = $this->matchCanonicalSlug($canonical, (string) $barangay->name);
+                if ($matchedSlug === null) {
+                    continue;
+                }
+
+                $name = $canonical[$matchedSlug];
+                $profiles[$matchedSlug] = [
+                    'slug' => $matchedSlug,
+                    'name' => $name,
                     'id' => $barangay->id,
                     'logo_url' => $this->logoUrls->resolve($barangay->id),
-                    'initials' => $this->initials($barangay->name),
+                    'initials' => $this->initials($name),
                     'color' => self::DEFAULT_PROFILE_COLOR,
                 ];
-
-                foreach ($this->monitoringService->slugToNameMap() as $mappedSlug => $mappedName) {
-                    if ($mappedSlug !== $slug && strcasecmp($mappedName, $barangay->name) === 0) {
-                        unset($bySlug[$mappedSlug]);
-                    }
-                }
             }
         }
 
-        return collect($bySlug)
+        return collect($profiles)
             ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
             ->values()
             ->all();
+    }
+
+    /**
+     * @param  array<string, string>  $canonical
+     */
+    private function matchCanonicalSlug(array $canonical, string $name): ?string
+    {
+        $needle = trim($name);
+        if ($needle === '') {
+            return null;
+        }
+
+        foreach ($canonical as $slug => $canonicalName) {
+            if (strcasecmp($canonicalName, $needle) === 0) {
+                return $slug;
+            }
+
+            if (Str::slug($needle) === $slug || Str::slug($needle) === Str::slug($canonicalName)) {
+                return $slug;
+            }
+        }
+
+        return null;
     }
 
     public function resolveBarangayProfile(string $slug, ?int $tenantId = null): ?array
@@ -167,6 +191,7 @@ class CommunityFeedService
                     'posted_at' => $post->created_at?->diffForHumans() ?? '',
                     'title' => $post->title ?: 'Barangay Update',
                     'text' => $post->body,
+                    'image_url' => $post->images->first()?->image_url,
                     'likes' => (int) ($post->reactions_count ?? 0),
                     'comments' => (int) ($post->comments_count ?? 0),
                 ];

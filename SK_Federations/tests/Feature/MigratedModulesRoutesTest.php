@@ -20,6 +20,15 @@ it('registers community feed reaction routes in sk federation', function () {
     expect(Route::has('api.community-feed.react'))->toBeTrue();
     expect(Route::has('api.community-feed.comment-react'))->toBeTrue();
     expect(Route::has('community-feed'))->toBeTrue();
+    expect(Route::has('community-feed.comments'))->toBeTrue();
+    expect(Route::has('api.community-feed.show'))->toBeTrue();
+    expect(Route::has('api.community-feed.comments.update'))->toBeTrue();
+    expect(Route::has('api.community-feed.comments.destroy'))->toBeTrue();
+    expect(Route::has('api.community-feed.comment-reactions'))->toBeTrue();
+});
+
+it('redirects guests away from community feed comment preview', function () {
+    get('/community-feed/1/comments')->assertRedirect('/login');
 });
 
 it('registers archive management routes in sk federation', function () {

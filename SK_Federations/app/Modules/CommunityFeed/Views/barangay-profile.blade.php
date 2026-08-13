@@ -3,7 +3,11 @@
 @section('title', 'SK Barangay ' . ($name ?? '') . ' - SK OnePortal')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ url('/modules/community-feed/css/community-feed.css') }}">
+    @php
+        $communityFeedCssPath = base_path('app/Modules/CommunityFeed/assets/css/community-feed.css');
+        $communityFeedCssVersion = file_exists($communityFeedCssPath) ? filemtime($communityFeedCssPath) : time();
+    @endphp
+    <link rel="stylesheet" href="{{ url('/modules/community-feed/css/community-feed.css') }}?v={{ $communityFeedCssVersion }}">
 @endpush
 
 @push('navbar-center')
@@ -26,11 +30,13 @@
                 <div class="bfp-cover"></div>
                 <div class="bfp-info-row">
                     <div class="bfp-avatar-wrap">
-                        @if(!empty($profile['logo_url']))
-                            <img src="{{ $profile['logo_url'] }}" alt="Brgy. {{ $name }}" class="bfp-avatar-img">
-                        @else
-                            <div class="bfp-avatar">{{ $profile['initials'] ?? strtoupper(substr($name, 0, 2)) }}</div>
-                        @endif
+                        <div class="bfp-avatar">
+                            @if(!empty($profile['logo_url']))
+                                <img src="{{ $profile['logo_url'] }}" alt="SK Barangay {{ $name }} logo">
+                            @else
+                                {{ $profile['initials'] ?? strtoupper(substr($name, 0, 2)) }}
+                            @endif
+                        </div>
                     </div>
                     <div class="bfp-meta">
                         <div class="bfp-badge"><i class="fas fa-check-circle" style="font-size:10px;"></i> Sangguniang Kabataan</div>
@@ -63,7 +69,10 @@
                             </div>
                         </div>
                         @empty
-                        <p class="cf-barangay-profiles-empty">No SK officials listed for this barangay yet.</p>
+                        <div class="bfp-empty">
+                            <i class="fas fa-user-friends"></i>
+                            No SK officials found for this barangay.
+                        </div>
                         @endforelse
                     </div>
 
@@ -106,7 +115,13 @@
                             @forelse($posts as $post)
                             <div class="bfp-post" data-post-type="{{ $post['type_class'] }}">
                                 <div class="bfp-post-header">
-                                    <div class="bfp-post-avatar">{{ strtoupper(substr($name,0,2)) }}</div>
+                                    <div class="bfp-post-avatar">
+                                        @if(!empty($profile['logo_url']))
+                                            <img src="{{ $profile['logo_url'] }}" alt="">
+                                        @else
+                                            {{ $profile['initials'] ?? strtoupper(substr($name, 0, 2)) }}
+                                        @endif
+                                    </div>
                                     <div>
                                         <p class="bfp-post-author">{{ $post['author'] }}</p>
                                         <p class="bfp-post-meta">
@@ -115,15 +130,25 @@
                                         </p>
                                     </div>
                                 </div>
-                                <h3 class="bfp-post-title">{{ $post['title'] }}</h3>
-                                <p class="bfp-post-text">{{ $post['text'] }}</p>
-                                <div class="bfp-post-actions">
-                                    <span class="bfp-action-btn"><i class="fas fa-thumbs-up"></i> {{ $post['likes'] }}</span>
-                                    <span class="bfp-action-btn"><i class="fas fa-comment"></i> {{ $post['comments'] }}</span>
+                                @if(!empty($post['title']))
+                                    <h3 class="bfp-post-title">{{ $post['title'] }}</h3>
+                                @endif
+                                @if(!empty($post['text']))
+                                    <p class="bfp-post-text">{{ $post['text'] }}</p>
+                                @endif
+                                @if(!empty($post['image_url']))
+                                    <img src="{{ $post['image_url'] }}" alt="" class="bfp-post-image">
+                                @endif
+                                <div class="bfp-post-stats">
+                                    <span><i class="fas fa-thumbs-up"></i> {{ $post['likes'] }}</span>
+                                    <span><i class="fas fa-comment"></i> {{ $post['comments'] }}</span>
                                 </div>
                             </div>
                             @empty
-                            <p class="cf-barangay-profiles-empty">No community feed posts from this barangay yet.</p>
+                            <div class="bfp-empty">
+                                <i class="fas fa-newspaper"></i>
+                                No posts yet from this barangay.
+                            </div>
                             @endforelse
                         </div>
                     </div>
@@ -134,5 +159,16 @@
 @endsection
 
 @push('scripts')
-<script src="{{ url('/shared/js/loading.js') }}"></script>
+<script>
+document.querySelectorAll('.bfp-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.bfp-tab').forEach(function(t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        var filter = tab.dataset.tab;
+        document.querySelectorAll('#bfpFeed .bfp-post').forEach(function(post) {
+            post.style.display = (filter === 'all' || post.dataset.postType === filter) ? 'block' : 'none';
+        });
+    });
+});
+</script>
 @endpush

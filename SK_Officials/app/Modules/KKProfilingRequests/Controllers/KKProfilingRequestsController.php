@@ -4,21 +4,21 @@ namespace App\Modules\KKProfilingRequests\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
+use App\Models\User;
+use App\Modules\KKProfilingRequests\Notifications\KabataanApprovedNotification;
+use App\Modules\KKProfilingRequests\Notifications\KabataanRejectedNotification;
 use App\Services\BarangayLogoUrlService;
 use App\Services\BarangayZoneService;
-use App\Services\KkSupportingDocumentService;
 use App\Services\KkProfilingRequestDataService;
+use App\Services\KkSupportingDocumentService;
 use App\Services\KkSurveyResponseService;
 use App\Services\RejectedKkProfilingService;
 use App\Services\RespondentNumberService;
-use App\Modules\KKProfilingRequests\Notifications\KabataanApprovedNotification;
-use App\Modules\KKProfilingRequests\Notifications\KabataanRejectedNotification;
 use App\Services\SkOfficialActivityService;
 use App\Support\KabataanApprovedStatuses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Notification;
 
 class KKProfilingRequestsController extends Controller
 {
@@ -26,8 +26,7 @@ class KKProfilingRequestsController extends Controller
         private readonly SkOfficialActivityService $activityService,
         private readonly KkSupportingDocumentService $supportingDocumentService,
         private readonly KkProfilingRequestDataService $profilingDataService,
-    ) {
-    }
+    ) {}
 
     public function index()
     {
@@ -42,9 +41,9 @@ class KKProfilingRequestsController extends Controller
         }
 
         return view('KKProfilingRequests::kkprofiling-requests', [
-            'barangayName'    => $barangayName,
+            'barangayName' => $barangayName,
             'barangayLogoUrl' => $barangayLogoUrl,
-            'barangayZones'   => $user?->barangay_id
+            'barangayZones' => $user?->barangay_id
                 ? app(BarangayZoneService::class)->activeZonesForBarangay((int) $user->barangay_id)
                 : collect(),
         ]);
@@ -54,7 +53,7 @@ class KKProfilingRequestsController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user || !$user->barangay_id) {
+        if (! $user || ! $user->barangay_id) {
             return response()->json(['data' => [], 'stats' => $this->emptyStats()]);
         }
 
@@ -73,9 +72,9 @@ class KKProfilingRequestsController extends Controller
             $q = $request->search;
             $query->where(function ($qb) use ($q) {
                 $qb->where('last_name', 'ilike', "%{$q}%")
-                   ->orWhere('first_name', 'ilike', "%{$q}%")
-                   ->orWhere('email', 'ilike', "%{$q}%")
-                   ->orWhere('contact_number', 'ilike', "%{$q}%");
+                    ->orWhere('first_name', 'ilike', "%{$q}%")
+                    ->orWhere('email', 'ilike', "%{$q}%")
+                    ->orWhere('contact_number', 'ilike', "%{$q}%");
             });
         }
 
@@ -99,7 +98,7 @@ class KKProfilingRequestsController extends Controller
             $formData = $r->form_data ?? [];
 
             // Helper: extract value whether stored as string or array
-            $val = fn($key) => is_array($formData[$key] ?? null)
+            $val = fn ($key) => is_array($formData[$key] ?? null)
                 ? ($formData[$key][0] ?? '—')
                 : ($formData[$key] ?? '—');
 
@@ -108,51 +107,51 @@ class KKProfilingRequestsController extends Controller
                 : null;
 
             $payload = [
-                'id'              => $r->id,
-                'respondent_number'   => $r->respondent_number,
+                'id' => $r->id,
+                'respondent_number' => $r->respondent_number,
                 'respondent_sequence' => $r->respondent_sequence,
-                'respondent_display'  => RespondentNumberService::displaySequence(
+                'respondent_display' => RespondentNumberService::displaySequence(
                     $r->respondent_sequence,
                     $r->respondent_number
                 ),
-                'last_name'       => $r->last_name,
-                'first_name'      => $r->first_name,
-                'middle_name'     => $r->middle_name ?: ($val('middle_name') !== '—' ? $val('middle_name') : null),
-                'suffix'          => $this->profilingDataService->resolveSuffixForDisplay($r->suffix, $formData),
-                'suffix_other'    => is_array($formData['custom_suffix'] ?? null)
+                'last_name' => $r->last_name,
+                'first_name' => $r->first_name,
+                'middle_name' => $r->middle_name ?: ($val('middle_name') !== '—' ? $val('middle_name') : null),
+                'suffix' => $this->profilingDataService->resolveSuffixForDisplay($r->suffix, $formData),
+                'suffix_other' => is_array($formData['custom_suffix'] ?? null)
                     ? ($formData['custom_suffix'][0] ?? null)
                     : ($formData['custom_suffix'] ?? ($formData['suffix_other'] ?? null)),
-                'form_data'       => $formData,
-                'full_name'       => $r->full_name,
-                'age'             => $val('age'),
-                'birthday'        => $val('birthday'),
-                'sex'             => $val('sex'),
-                'email'           => $r->email,
-                'contact_number'  => $r->contact_number,
-                'barangay'        => $r->barangay?->name ?? '—',
-                'region'          => $r->barangay?->region ?? 'Region IV-A (CALABARZON)',
-                'province'        => $r->barangay?->province ?? 'Laguna',
-                'city'            => $r->barangay?->municipality ?? 'Santa Cruz',
-                'purok_zone'      => $val('purok_zone'),
-                'sk_voter'        => $val('sk_voter'),
-                'national_voter'  => $val('national_voter'),
-                'civil_status'    => $val('civil_status'),
+                'form_data' => $formData,
+                'full_name' => $r->full_name,
+                'age' => $val('age'),
+                'birthday' => $val('birthday'),
+                'sex' => $val('sex'),
+                'email' => $r->email,
+                'contact_number' => $r->contact_number,
+                'barangay' => $r->barangay?->name ?? '—',
+                'region' => $r->barangay?->region ?? 'Region IV-A (CALABARZON)',
+                'province' => $r->barangay?->province ?? 'Laguna',
+                'city' => $r->barangay?->municipality ?? 'Santa Cruz',
+                'purok_zone' => $val('purok_zone'),
+                'sk_voter' => $val('sk_voter'),
+                'national_voter' => $val('national_voter'),
+                'civil_status' => $val('civil_status'),
                 'youth_classification' => $val('youth_classification'),
                 'youth_age_group' => $val('youth_age_group'),
-                'work_status'     => $val('work_status'),
-                'education'       => $val('education'),
-                'sk_voted'        => $val('sk_voted'),
-                'kk_assembly'     => $val('kk_assembly'),
-                'kk_times'        => $val('kk_times'),
-                'kk_reason'       => $val('kk_reason'),
-                'facebook'        => $val('facebook_profile_url') ?: $val('facebook'),
-                'group_chat'      => $val('group_chat'),
-                'signature'       => $formData['signature'] ?? '—',
-                'status'          => $r->status,
+                'work_status' => $val('work_status'),
+                'education' => $val('education'),
+                'sk_voted' => $val('sk_voted'),
+                'kk_assembly' => $val('kk_assembly'),
+                'kk_times' => $val('kk_times'),
+                'kk_reason' => $val('kk_reason'),
+                'facebook' => $val('facebook_profile_url') ?: $val('facebook'),
+                'group_chat' => $val('group_chat'),
+                'signature' => $formData['signature'] ?? '—',
+                'status' => $r->status,
                 'evaluation_status' => $r->evaluation_status,
-                'evaluation_notes'  => $r->evaluation_notes,
-                'submitted_at'    => $r->submitted_at?->format('m/d/Y'),
-                'review_notes'    => $r->review_notes,
+                'evaluation_notes' => $r->evaluation_notes,
+                'submitted_at' => $r->submitted_at?->format('m/d/Y'),
+                'review_notes' => $r->review_notes,
                 'barangay_logo_url' => app(BarangayLogoUrlService::class)->resolve($r->barangay_id),
                 'supporting_documents' => $this->supportingDocumentService->formatForApi($r),
                 'id_verification' => $idVerification ? [
@@ -193,14 +192,14 @@ class KKProfilingRequestsController extends Controller
         $all = KabataanRegistration::forBarangay($user->barangay_id)->get();
 
         $stats = [
-            'active'               => $all->filter(
+            'active' => $all->filter(
                 fn (KabataanRegistration $r) => KabataanApprovedStatuses::isListedInKabataan($r)
             )->count(),
             'pending_verification' => $all->filter(
                 fn (KabataanRegistration $r) => KabataanApprovedStatuses::isPendingInKkProfiling($r)
             )->count(),
-            'rejected'             => $all->where('evaluation_status', 'Duplicate')->count() + $all->where('status', 'rejected')->count(),
-            'total'                => $data->count(),
+            'rejected' => $all->where('evaluation_status', 'Duplicate')->count() + $all->where('status', 'rejected')->count(),
+            'total' => $data->count(),
         ];
 
         return response()->json(['data' => $data, 'stats' => $stats]);
@@ -210,30 +209,38 @@ class KKProfilingRequestsController extends Controller
     {
         try {
             $user = Auth::user();
-            
-            if (!$user || !$user->barangay_id) {
+
+            if (! $user || ! $user->barangay_id) {
                 \Log::error('Approve failed: No authenticated user or barangay_id', ['id' => $id]);
+
                 return response()->json(['success' => false, 'message' => 'Authentication error'], 401);
             }
 
             $registration = KabataanRegistration::forBarangay($user->barangay_id)->findOrFail($id);
-            
+
+            if (! KabataanApprovedStatuses::hasVerifiedAccount($registration)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This youth must verify their email and create an account before the KK profiling request can be approved.',
+                ], 422);
+            }
+
             \Log::info('Approving registration', [
                 'id' => $id,
                 'current_status' => $registration->status,
                 'evaluation_status' => $registration->evaluation_status,
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
 
             DB::transaction(function () use ($registration, $user) {
                 app(RespondentNumberService::class)->ensureAssigned($registration);
 
                 $registration->update([
-                    'status'              => 'active',
-                    'evaluation_status'   => 'active',
+                    'status' => 'active',
+                    'evaluation_status' => 'active',
                     'reviewed_by_user_id' => $user->id,
-                    'reviewed_at'         => now(),
-                    'review_notes'        => null,
+                    'reviewed_at' => now(),
+                    'review_notes' => null,
                 ]);
 
                 app(RespondentNumberService::class)->ensureAssigned($registration->fresh());
@@ -243,10 +250,10 @@ class KKProfilingRequestsController extends Controller
                 \Log::info('Updated registration status', ['id' => $registration->id, 'new_status' => 'active']);
 
                 if ($registration->user_id) {
-                    $kabataanUser = \App\Models\User::find($registration->user_id);
+                    $kabataanUser = User::find($registration->user_id);
                     if ($kabataanUser) {
                         $kabataanUser->update(['status' => 'ACTIVE']);
-                        $kabataanUser->notify(new KabataanApprovedNotification());
+                        $kabataanUser->notify(new KabataanApprovedNotification);
                         \Log::info('Notified kabataan user', ['user_id' => $kabataanUser->id]);
                     }
                 }
@@ -264,10 +271,10 @@ class KKProfilingRequestsController extends Controller
             );
 
             return response()->json([
-                'success'             => true,
-                'message'             => 'KK Profiling approved successfully.',
+                'success' => true,
+                'message' => 'KK Profiling approved successfully.',
                 'respondent_sequence' => $approved?->respondent_sequence,
-                'respondent_display'  => RespondentNumberService::displaySequence(
+                'respondent_display' => RespondentNumberService::displaySequence(
                     $approved?->respondent_sequence,
                     $approved?->respondent_number
                 ),
@@ -278,9 +285,10 @@ class KKProfilingRequestsController extends Controller
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            return response()->json(['success' => false, 'message' => 'Failed to approve: ' . $e->getMessage()], 500);
+
+            return response()->json(['success' => false, 'message' => 'Failed to approve: '.$e->getMessage()], 500);
         }
     }
 
@@ -314,14 +322,14 @@ class KKProfilingRequestsController extends Controller
             $previousEvaluationStatus = $registration->evaluation_status;
             $previousUserStatus = null;
             if ($registration->user_id) {
-                $previousUserStatus = \App\Models\User::find($registration->user_id)?->status;
+                $previousUserStatus = User::find($registration->user_id)?->status;
             }
 
             $registration->update([
-                'status'              => 'rejected',
+                'status' => 'rejected',
                 'reviewed_by_user_id' => $user->id,
-                'reviewed_at'         => now(),
-                'review_notes'        => $reasons,
+                'reviewed_at' => now(),
+                'review_notes' => $reasons,
             ]);
 
             $rejectedService->recordRejection(
@@ -336,7 +344,7 @@ class KKProfilingRequestsController extends Controller
             $surveyService->syncStatus($registration->fresh(), 'rejected');
 
             if ($registration->user_id) {
-                $kabataanUser = \App\Models\User::find($registration->user_id);
+                $kabataanUser = User::find($registration->user_id);
                 if ($kabataanUser) {
                     $kabataanUser->update(['status' => 'REJECTED']);
                     $kabataanUser->notify(new KabataanRejectedNotification($reasons));

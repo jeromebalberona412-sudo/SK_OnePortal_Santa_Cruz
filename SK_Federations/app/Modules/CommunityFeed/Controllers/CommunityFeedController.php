@@ -4,6 +4,7 @@ namespace App\Modules\CommunityFeed\Controllers;
 
 use App\Modules\CommunityFeed\Services\CommunityFeedService;
 use App\Modules\Shared\Controllers\Controller;
+use App\Modules\Shared\Models\Announcement;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -19,6 +20,30 @@ class CommunityFeedController extends Controller
         return view('community_feed::index', [
             'user' => $request->user(),
             'barangayProfiles' => $this->feedService->listBarangayProfiles($tenantId),
+            'commentPreviewPost' => null,
+        ]);
+    }
+
+    public function comments(Request $request, int $id): View
+    {
+        $user = $request->user();
+        $post = Announcement::query()
+            ->active()
+            ->with([
+                'barangay',
+                'comments.user',
+                'comments.reactions',
+                'user',
+                'images',
+                'reactions.user',
+            ])
+            ->withCount('reactions')
+            ->findOrFail($id);
+
+        return view('community_feed::index', [
+            'user' => $user,
+            'barangayProfiles' => $this->feedService->listBarangayProfiles($user?->tenant_id),
+            'commentPreviewPost' => app(CommunityFeedPostController::class)->formatPostForPage($post, (int) $user->id),
         ]);
     }
 

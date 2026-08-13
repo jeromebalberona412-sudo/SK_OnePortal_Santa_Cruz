@@ -27,7 +27,7 @@
             <i class="fas fa-calendar-alt"></i><span>Calendar</span>
         </a>
 
-        <a href="{{ route('community-feed') }}" class="menu-item {{ request()->routeIs('community-feed', 'sk-fed-profile', 'skfed.barangay-profile') ? 'active' : '' }}" data-tooltip="SK Community Feed" id="sidebar-community-feed-link" data-no-loading>
+        <a href="{{ route('community-feed') }}" class="menu-item {{ request()->routeIs('community-feed', 'community-feed.comments', 'sk-fed-profile', 'skfed.barangay-profile') ? 'active' : '' }}" data-tooltip="SK Community Feed" id="sidebar-community-feed-link" data-no-loading>
             <i class="fas fa-rss"></i><span>SK Community Feed</span>
         </a>
 

@@ -16,6 +16,9 @@ const LIGHTBOX_ZOOM_MAX = 4;
 const LIGHTBOX_ZOOM_STEP = 0.25;
 const commentSections = new Set();
 const expandedComments = new Set();
+const postCache = new Map();
+const knownPostIds = new Set();
+let feedPollTimer = null;
 
 const FED_AVATAR = window.currentAvatar || 'https://ui-avatars.com/api/?name=SK+Federation&background=213F99&color=fff&size=80';
 
@@ -40,17 +43,17 @@ function apiFetch(url, options) {
 
 /* ── LOAD POSTS FROM API ── */
 function loadPosts(reset) {
-    if (isLoading) return;
+    if (isLoading) return Promise.resolve();
     isLoading = true;
 
     var container = document.getElementById('feed-posts');
-    if (reset) { posts = []; container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">Loading...</div>'; }
+    if (reset) { posts = []; knownPostIds.clear(); postCache.clear(); container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">Loading...</div>'; }
 
     var url = '/api/community-feed?per_page=100&page=1'
         + (currentFilter !== 'all' ? '&filter=' + encodeURIComponent(currentFilter) : '')
         + (feedSearch ? '&search=' + encodeURIComponent(feedSearch) : '');
 
-    apiFetch(url, { method: 'GET' })
+    return apiFetch(url, { method: 'GET' })
         .then(function(r) {
             return r.json().catch(function () { return {}; }).then(function(data) {
                 if (!r.ok) {
@@ -69,6 +72,8 @@ function loadPosts(reset) {
                 container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">No posts found.</div>';
             } else {
                 posts.forEach(function(p) {
+                    knownPostIds.add(Number(p.id));
+                    postCache.set(Number(p.id), p);
                     var el = document.createElement('div');
                     el.className = 'post-card';
                     el.dataset.postId = p.id;
@@ -86,7 +91,60 @@ function loadPosts(reset) {
                     + '</div>';
             }
         })
-        .finally(function() { isLoading = false; });
+        .finally(function() {
+            isLoading = false;
+            setFilterTabsDisabled(false);
+            startFeedPolling();
+        });
+}
+
+function postExistsInDom(id) {
+    return Boolean(document.querySelector('.post-card[data-post-id="' + id + '"]'));
+}
+
+function pollFeedUpdates() {
+    if (document.hidden || isLoading) return;
+    if (document.getElementById('composeModal')?.classList.contains('active')) return;
+    if (document.getElementById('commentPreviewShell')?.classList.contains('is-open')) return;
+
+    var params = '/api/community-feed?per_page=100&page=1'
+        + (currentFilter !== 'all' ? '&filter=' + encodeURIComponent(currentFilter) : '')
+        + (feedSearch ? '&search=' + encodeURIComponent(feedSearch) : '');
+
+    apiFetch(params, { method: 'GET' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+            if (!data) return;
+            var fresh = (data.data || []).filter(function (p) {
+                var id = Number(p.id);
+                return id && !knownPostIds.has(id) && !postExistsInDom(id);
+            });
+            if (!fresh.length) return;
+            var container = document.getElementById('feed-posts');
+            fresh.reverse().forEach(function (p) {
+                knownPostIds.add(Number(p.id));
+                postCache.set(Number(p.id), p);
+                posts.unshift(p);
+                var el = document.createElement('div');
+                el.className = 'post-card post-card-new';
+                el.dataset.postId = p.id;
+                el.innerHTML = buildPost(p);
+                bindPostImageClicks(el, p);
+                bindReactionControls(el);
+                if (container.firstChild) container.insertBefore(el, container.firstChild);
+                else container.appendChild(el);
+            });
+            setTimeout(function () {
+                document.querySelectorAll('.post-card-new').forEach(function (el) { el.classList.remove('post-card-new'); });
+            }, 1200);
+        })
+        .catch(function () { /* silent poll failure */ });
+}
+
+function startFeedPolling() {
+    var interval = window.CommunityFeedConfig?.feedPollMs || 30000;
+    if (feedPollTimer) clearInterval(feedPollTimer);
+    feedPollTimer = setInterval(pollFeedUpdates, interval);
 }
 
 /* ── RENDER (alias kept for filter/search callers) ── */
@@ -286,6 +344,32 @@ function buildReactionAvatarsHtml(summary) {
     }).join('');
 }
 
+function formatCount(n) {
+    var num = Number(n || 0);
+    if (num >= 1000000) {
+        var millions = num / 1000000;
+        return (millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1).replace(/\.0$/, '')) + 'M';
+    }
+    if (num >= 1000) {
+        var thousands = num / 1000;
+        return (thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(1).replace(/\.0$/, '')) + 'K';
+    }
+    return String(num);
+}
+
+function topReactionTypes(counts) {
+    return Object.keys(REACTION_EMOJI)
+        .filter(function (type) { return Number((counts || {})[type] || 0) > 0; })
+        .sort(function (a, b) { return Number(counts[b] || 0) - Number(counts[a] || 0); })
+        .slice(0, 3);
+}
+
+function reactionFacesHtml(counts) {
+    return topReactionTypes(counts).map(function (type) {
+        return '<span class="reaction-face reaction-face--' + type + '" title="' + escapeHtml(REACTION_LABEL[type] || type) + '">' + (REACTION_EMOJI[type] || '') + '</span>';
+    }).join('');
+}
+
 function buildStatsBar(p) {
     var likeCount = p.likes || 0;
     var commentCount = countAllComments(p.comments || []);
@@ -293,16 +377,16 @@ function buildStatsBar(p) {
 
     var likesHtml = '';
     if (likeCount > 0) {
-        likesHtml = '<button type="button" class="post-stats-likes" onclick="event.stopPropagation();openLikesModal(' + p.id + ')">'
-            + '<span class="post-like-avatars">' + buildReactionAvatarsHtml(p.reactions_summary) + '</span>'
-            + '<span>' + likeCount + '</span>'
+        likesHtml = '<button type="button" class="post-stats-likes" onclick="event.stopPropagation();openReactionViewer(\'post\',' + p.id + ')">'
+            + '<span class="reaction-faces">' + reactionFacesHtml(p.reaction_counts || {}) + '</span>'
+            + '<span class="reaction-total">' + formatCount(likeCount) + '</span>'
             + '</button>';
     }
 
     var commentsHtml = '';
     if (commentCount > 0) {
-        commentsHtml = '<button type="button" class="post-stats-comments" onclick="event.stopPropagation();toggleComments(' + p.id + ')">'
-            + commentCount + ' comment' + (commentCount === 1 ? '' : 's')
+        commentsHtml = '<button type="button" class="post-stats-comments" onclick="event.stopPropagation();openComments(' + p.id + ')">'
+            + formatCount(commentCount) + ' comment' + (commentCount === 1 ? '' : 's')
             + '</button>';
     }
 
@@ -311,7 +395,7 @@ function buildStatsBar(p) {
 
 function buildCommentItem(c, postId, isReply) {
     var replies = c.replies || [];
-    var type = c.reaction_type || '';
+    var type = c.reaction_type || (c.liked ? 'like' : '');
     var likeLabel = reactionLabel(type);
     var repliesHtml = replies.map(function (r) { return buildCommentItem(r, postId, true); }).join('');
     var viewReplies = replies.length && !isReply
@@ -330,6 +414,12 @@ function buildCommentItem(c, postId, isReply) {
         + '<button type="button" class="comment-like-btn' + (c.liked ? ' liked' : '') + '" data-type="' + escapeHtml(type) + '">' + escapeHtml(likeLabel) + '</button>'
         + reactionPickerHtml(type)
         + '</div>'
+        + (Number(c.likes || 0) > 0
+            ? '<button type="button" class="comment-react-badge" onclick="openReactionViewer(\'comment\',' + postId + ',' + c.id + ')">'
+                + '<span class="reaction-faces">' + reactionFacesHtml(c.reaction_counts || {}) + '</span>'
+                + '<span class="reaction-total">' + formatCount(c.likes) + '</span>'
+                + '</button>'
+            : '')
         + '<button type="button" class="comment-action-btn" onclick="showFedReply(' + postId + ',' + c.id + ')">Reply</button>'
         + '<span class="comment-time">' + escapeHtml(c.time || '') + '</span>'
         + '</div>'
@@ -404,7 +494,7 @@ window.expandAllComments = expandAllComments;
 function formatLikeCountLabel(postId, count) {
     var total = count || 0;
     if (total > 0) {
-        return 'Like (<span class="post-like-count-link" onclick="event.stopPropagation();openLikesModal(' + postId + ')">' + total + '</span>)';
+        return 'Like (<span class="post-like-count-link" onclick="event.stopPropagation();openReactionViewer(\'post\',' + postId + ')">' + total + '</span>)';
     }
     return 'Like (0)';
 }
@@ -414,59 +504,89 @@ function updateLikeCountLabel(postId, count) {
     if (el) el.innerHTML = formatLikeCountLabel(postId, count);
 }
 
-function openLikesModal(postId) {
-    var modal = document.getElementById('likesModal');
-    var list = document.getElementById('likesModalList');
-    var countEl = document.getElementById('likesModalCount');
+var reactionViewerState = { target: 'post', postId: null, commentId: null, data: null, filter: 'all' };
+
+function openReactionViewer(target, postId, commentId) {
+    var modal = document.getElementById('reactionViewerModal');
+    var list = document.getElementById('reactionViewerList');
+    var tabs = document.getElementById('reactionViewerTabs');
     if (!modal || !list) return;
 
-    modal.classList.add('active');
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
-    list.innerHTML = '<div class="cf-likes-loading">Loading...</div>';
-    if (countEl) countEl.textContent = '0';
+    if (tabs) tabs.innerHTML = '';
+    list.innerHTML = '<p class="reaction-viewer-empty">Loading...</p>';
 
-    apiFetch('/api/community-feed/' + postId + '/likes', { method: 'GET' })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-            if (countEl) countEl.textContent = String(data.count || 0);
-            renderLikesList(data.reactors || []);
+    var url = target === 'comment'
+        ? '/api/community-feed/' + postId + '/comments/' + commentId + '/reactions'
+        : '/api/community-feed/' + postId + '/likes';
+
+    apiFetch(url, { method: 'GET' })
+        .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+        .then(function (result) {
+            if (!result.ok) throw new Error(result.data.message || 'Unable to load reactions.');
+            reactionViewerState = { target: target, postId: postId, commentId: commentId || null, data: result.data, filter: 'all' };
+            renderReactionViewer('all');
         })
-        .catch(function () {
-            list.innerHTML = '<div class="cf-likes-empty">Could not load likes.</div>';
+        .catch(function (err) {
+            list.innerHTML = '<p class="reaction-viewer-empty">' + escapeHtml(err.message || 'Unable to load reactions.') + '</p>';
         });
 }
 
-function renderLikesList(reactors) {
-    var list = document.getElementById('likesModalList');
-    if (!list) return;
+function closeReactionViewer() {
+    var modal = document.getElementById('reactionViewerModal');
+    if (!modal || !modal.classList.contains('open')) return;
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+    if (!document.getElementById('imageLightbox')?.classList.contains('active')) {
+        document.body.style.overflow = '';
+    }
+}
 
-    if (!reactors.length) {
-        list.innerHTML = '<div class="cf-likes-empty">No likes yet.</div>';
-        return;
+function renderReactionViewer(filter) {
+    reactionViewerState.filter = filter || 'all';
+    var data = reactionViewerState.data || { reactors: [], reaction_counts: {}, count: 0 };
+    var counts = data.reaction_counts || {};
+    var tabs = document.getElementById('reactionViewerTabs');
+    if (tabs) {
+        var items = [['all', 'All ' + formatCount(data.count || 0)]].concat(
+            Object.keys(REACTION_EMOJI)
+                .filter(function (type) { return Number(counts[type] || 0) > 0; })
+                .map(function (type) { return [type, REACTION_EMOJI[type] + ' ' + formatCount(counts[type])]; })
+        );
+        tabs.innerHTML = items.map(function (item) {
+            return '<button type="button" class="reaction-viewer-tab' + (reactionViewerState.filter === item[0] ? ' is-active' : '') + '" data-type="' + item[0] + '">' + item[1] + '</button>';
+        }).join('');
+        tabs.querySelectorAll('.reaction-viewer-tab').forEach(function (tab) {
+            tab.addEventListener('click', function () { renderReactionViewer(tab.dataset.type); });
+        });
     }
 
-    list.innerHTML = reactors.map(function (r) {
-        return '<div class="cf-likes-item">'
-            + '<div class="cf-likes-avatar-wrap">'
-            + '<img src="' + escapeHtml(r.avatar_url) + '" alt="' + escapeHtml(r.name) + '" class="cf-likes-avatar">'
-            + '<span class="cf-likes-reaction-badge">' + (REACTION_EMOJI[r.reaction_type] || LIKE_THUMB_SVG) + '</span>'
+    var reactors = (data.reactors || []).filter(function (row) {
+        return reactionViewerState.filter === 'all' || row.reaction_type === reactionViewerState.filter;
+    });
+    var list = document.getElementById('reactionViewerList');
+    if (!list) return;
+    if (!reactors.length) {
+        list.innerHTML = '<p class="reaction-viewer-empty">No reactions yet.</p>';
+        return;
+    }
+    list.innerHTML = reactors.map(function (row) {
+        return '<div class="reaction-viewer-row">'
+            + '<div class="reaction-viewer-avatar-wrap">'
+            + '<img src="' + escapeHtml(row.avatar_url) + '" alt="">'
+            + '<span class="reaction-viewer-emoji">' + (REACTION_EMOJI[row.reaction_type] || '') + '</span>'
             + '</div>'
-            + '<div class="cf-likes-user">'
-            + '<p class="cf-likes-name">' + escapeHtml(r.name) + '</p>'
-            + '<p class="cf-likes-role">' + escapeHtml(r.role_label || 'Member') + '</p>'
-            + '</div>'
+            + '<span class="reaction-viewer-name">' + escapeHtml(row.name) + '</span>'
             + '</div>';
     }).join('');
 }
 
-function closeLikesModal() {
-    var modal = document.getElementById('likesModal');
-    if (modal) modal.classList.remove('active');
-    document.body.style.overflow = '';
-}
-
-window.openLikesModal = openLikesModal;
-window.closeLikesModal = closeLikesModal;
+window.openReactionViewer = openReactionViewer;
+window.closeReactionViewer = closeReactionViewer;
+window.openLikesModal = function (postId) { openReactionViewer('post', postId); };
+window.closeLikesModal = closeReactionViewer;
 
 function buildPost(p) {
     var liked = p.liked || false;
@@ -507,7 +627,7 @@ function buildPost(p) {
 
     var commentCount = countAllComments(p.comments || []);
     var statsHtml = buildStatsBar(p);
-    var reactionType = p.reaction_type || '';
+    var reactionType = p.reaction_type || (liked ? 'like' : '');
     var likeIcon = reactionType && reactionType !== 'like' ? REACTION_EMOJI[reactionType] : LIKE_THUMB_SVG;
 
     return '<div class="post-header">'
@@ -529,14 +649,11 @@ function buildPost(p) {
         + '<span id="like-count-' + p.id + '">' + escapeHtml(reactionLabel(reactionType)) + (p.likes ? ' (' + p.likes + ')' : '') + '</span></button>'
         + reactionPickerHtml(reactionType)
         + '</div>'
-        + '<button class="action-btn comment-btn" onclick="toggleComments(' + p.id + ')">'
+        + '<button class="action-btn comment-btn" onclick="openComments(' + p.id + ')">'
         + '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>'
         + '<span id="comment-count-' + p.id + '">Comment (' + commentCount + ')</span></button>'
         + '</div>'
-        + '<div class="comments-section" id="comments-' + p.id + '" style="display:none;">'
-        + '<div class="comments-list" id="comments-list-' + p.id + '">' + buildCommentsList(p) + '</div>'
-        + buildCommentInput(p)
-        + '</div>';
+        + buildCommentPreviewHtml(p);
 }
 
 /* ── INTERACTIONS ── */
@@ -604,13 +721,18 @@ function setReaction(id, type) {
             }
             var card = document.querySelector('[data-post-id="' + id + '"]');
             var btn = document.getElementById('like-btn-' + id);
+            var nextType = data.liked ? (data.reaction_type || 'like') : '';
             if (btn) {
                 btn.classList.toggle('liked', Boolean(data.liked));
-                btn.dataset.type = data.reaction_type || '';
+                btn.dataset.type = nextType;
                 var icon = btn.querySelector('.reaction-icon');
-                if (icon) icon.innerHTML = (data.reaction_type && data.reaction_type !== 'like') ? REACTION_EMOJI[data.reaction_type] : LIKE_THUMB_SVG;
+                if (icon) icon.innerHTML = (nextType && nextType !== 'like') ? REACTION_EMOJI[nextType] : LIKE_THUMB_SVG;
                 var label = document.getElementById('like-count-' + id);
-                if (label) label.textContent = reactionLabel(data.reaction_type) + (data.count ? ' (' + data.count + ')' : '');
+                if (label) label.textContent = reactionLabel(nextType) + (data.count ? ' (' + data.count + ')' : '');
+                var wrap = btn.closest('.reaction-wrap');
+                wrap && wrap.querySelectorAll('.reaction-option').forEach(function (opt) {
+                    opt.classList.toggle('is-active', Boolean(nextType) && opt.dataset.type === nextType);
+                });
             }
             if (p && card) {
                 var statsBar = card.querySelector('.post-stats-bar');
@@ -635,10 +757,30 @@ function setCommentReaction(postId, commentId, type) {
         .then(function (data) {
             var wrap = document.querySelector('.reaction-wrap[data-comment-id="' + commentId + '"]');
             var btn = wrap && wrap.querySelector('.comment-like-btn');
+            var nextType = data.liked ? (data.reaction_type || 'like') : '';
             if (btn) {
                 btn.classList.toggle('liked', Boolean(data.liked));
-                btn.dataset.type = data.reaction_type || '';
-                btn.textContent = reactionLabel(data.reaction_type);
+                btn.dataset.type = nextType;
+                btn.textContent = reactionLabel(nextType);
+                wrap.querySelectorAll('.reaction-option').forEach(function (opt) {
+                    opt.classList.toggle('is-active', Boolean(nextType) && opt.dataset.type === nextType);
+                });
+            }
+
+            var count = Number(data.count || 0);
+            var badgeHtml = count > 0
+                ? '<button type="button" class="comment-react-badge" onclick="openReactionViewer(\'comment\',' + postId + ',' + commentId + ')">'
+                    + '<span class="reaction-faces">' + reactionFacesHtml(data.reaction_counts || {}) + '</span>'
+                    + '<span class="reaction-total">' + formatCount(count) + '</span>'
+                    + '</button>'
+                : '';
+            var item = wrap && wrap.closest('.comment-item');
+            var badge = item && item.querySelector('.comment-react-badge');
+            if (badge) {
+                if (badgeHtml) badge.outerHTML = badgeHtml;
+                else badge.remove();
+            } else if (badgeHtml && wrap) {
+                wrap.insertAdjacentHTML('afterend', badgeHtml);
             }
         });
 }
@@ -647,19 +789,71 @@ function toggleLike(id) {
     setReaction(id, 'like');
 }
 
-function toggleComments(id) {
-    var section = document.getElementById('comments-' + id);
-    if (!section) return;
-
-    if (commentSections.has(id)) {
-        commentSections.delete(id);
-        section.style.display = 'none';
-    } else {
-        commentSections.add(id);
-        section.style.display = 'block';
-        var input = section.querySelector('.comment-input');
-        if (input) input.focus();
+function commentsPageUrl(id) {
+    var template = window.CommunityFeedConfig?.commentsPageUrl;
+    if (template && String(template).indexOf('__ID__') !== -1) {
+        return String(template).replace('__ID__', String(id));
     }
+    return '/community-feed/' + id + '/comments';
+}
+
+function openComments(id) {
+    var postId = Number(id);
+    var cached = postCache.get(postId) || posts.find(function (x) { return Number(x.id) === postId; });
+
+    if (typeof window.openCommentPreview === 'function') {
+        if (cached) {
+            window.openCommentPreview(cached);
+            return;
+        }
+        apiFetch('/api/community-feed/' + postId, { method: 'GET' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (data) {
+                if (data && typeof window.openCommentPreview === 'function') {
+                    postCache.set(postId, data);
+                    window.openCommentPreview(data);
+                    return;
+                }
+                alert('Unable to open comments for this post.');
+            })
+            .catch(function () {
+                alert('Unable to open comments for this post.');
+            });
+        return;
+    }
+
+    if (cached) {
+        postCache.set(postId, cached);
+    }
+}
+
+function toggleComments(id) {
+    openComments(id);
+}
+
+function buildCommentPreviewHtml(p) {
+    var comments = p.comments || [];
+    var total = countAllComments(comments);
+    var last = comments.length ? comments[comments.length - 1] : null;
+    if (!last || total <= 0) {
+        return '<div class="comment-preview" id="comment-preview-' + p.id + '" hidden role="button" tabindex="0" onclick="openComments(' + p.id + ')"></div>';
+    }
+    var more = total > 1 ? '<span class="comment-preview-more">View all ' + total + ' comments</span>' : '';
+    return '<div class="comment-preview" id="comment-preview-' + p.id + '" role="button" tabindex="0" onclick="openComments(' + p.id + ')">'
+        + more
+        + '<div class="fb-comment-row">'
+        + '<img src="' + escapeHtml(commentAvatarUrl(last)) + '" alt="" class="comment-avatar">'
+        + '<div class="fb-comment-main">'
+        + '<div class="fb-comment-head">'
+        + '<span class="comment-author">' + escapeHtml(last.author_name) + '</span>'
+        + '<span class="fb-comment-dot">·</span>'
+        + '<span class="comment-time">' + escapeHtml(last.time || '') + '</span>'
+        + '</div>'
+        + '<p class="comment-text" id="comment-text-' + last.id + '">' + escapeHtml(last.body) + '</p>'
+        + '<div class="comment-meta">'
+        + '<span class="comment-like-btn">' + escapeHtml(reactionLabel(last.reaction_type)) + '</span>'
+        + '<span class="comment-action-btn">Reply</span>'
+        + '</div></div></div></div>';
 }
 
 function submitComment(e, id, input) {
@@ -672,12 +866,14 @@ function submitCommentBtn(id, btn) {
 }
 
 function addComment(id, input, parentId) {
+    if (!input || input.dataset.sending === '1') return;
     var text = input.value.trim();
     if (!text) return;
     if (text.length > 500) {
         alert('Comments are limited to 500 characters.');
         return;
     }
+    input.dataset.sending = '1';
     input.value = '';
     var payload = { body: text };
     if (parentId) payload.parent_id = parentId;
@@ -735,14 +931,152 @@ function addComment(id, input, parentId) {
         })
         .catch(function(err) {
             alert(err.message || 'Unable to post comment.');
+        })
+        .finally(function () {
+            if (input) input.dataset.sending = '0';
         });
 }
 
+let pendingCommentAction = null;
+
+function commentBodyText(commentId) {
+    return document.getElementById('comment-text-' + commentId)?.textContent
+        || document.getElementById('cp-text-' + commentId)?.textContent
+        || '';
+}
+
+function editComment(postId, commentId) {
+    pendingCommentAction = { postId: Number(postId), commentId: Number(commentId) };
+    document.querySelectorAll('.comment-options-menu.open, .cp-options-menu.open, .post-options-menu.open').forEach(function (m) {
+        m.classList.remove('open');
+    });
+    var modal = document.getElementById('editCommentModal');
+    var field = document.getElementById('editCommentBody');
+    if (!modal || !field) return;
+    field.value = commentBodyText(commentId);
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    setTimeout(function () { field.focus(); }, 50);
+}
+
+function closeEditCommentModal() {
+    document.getElementById('editCommentModal')?.classList.remove('active');
+    pendingCommentAction = null;
+    if (!document.getElementById('commentPreviewShell')?.classList.contains('is-open')) {
+        document.body.style.overflow = '';
+    }
+}
+
+function confirmEditComment() {
+    if (!pendingCommentAction) return;
+    var postId = pendingCommentAction.postId;
+    var commentId = pendingCommentAction.commentId;
+    var body = document.getElementById('editCommentBody')?.value.trim();
+    if (!body) return;
+    var btn = document.getElementById('confirmEditCommentBtn');
+    if (btn) btn.disabled = true;
+    apiFetch('/api/community-feed/' + postId + '/comments/' + commentId, {
+        method: 'PUT',
+        body: JSON.stringify({ body: body }),
+    })
+        .then(function (r) {
+            return r.json().then(function (data) {
+                if (!r.ok) throw new Error(data.message || 'Unable to edit comment.');
+                return data;
+            });
+        })
+        .then(function (updated) {
+            var feedEl = document.getElementById('comment-text-' + commentId);
+            if (feedEl) feedEl.textContent = updated.body;
+            var previewEl = document.getElementById('cp-text-' + commentId);
+            if (previewEl) previewEl.textContent = updated.body;
+            document.dispatchEvent(new CustomEvent('community-feed:comment-updated', { detail: updated }));
+            closeEditCommentModal();
+        })
+        .catch(function (err) {
+            alert(err.message || 'Unable to edit comment.');
+        })
+        .finally(function () {
+            if (btn) btn.disabled = false;
+        });
+}
+
+function deleteComment(postId, commentId) {
+    pendingCommentAction = { postId: Number(postId), commentId: Number(commentId) };
+    document.querySelectorAll('.comment-options-menu.open, .cp-options-menu.open, .post-options-menu.open').forEach(function (m) {
+        m.classList.remove('open');
+    });
+    var modal = document.getElementById('deleteCommentModal');
+    if (!modal) return;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDeleteCommentModal() {
+    document.getElementById('deleteCommentModal')?.classList.remove('active');
+    pendingCommentAction = null;
+    if (!document.getElementById('commentPreviewShell')?.classList.contains('is-open')) {
+        document.body.style.overflow = '';
+    }
+}
+
+function confirmDeleteComment() {
+    if (!pendingCommentAction) return;
+    var postId = pendingCommentAction.postId;
+    var commentId = pendingCommentAction.commentId;
+    var btn = document.getElementById('confirmDeleteCommentBtn');
+    if (btn) btn.disabled = true;
+    apiFetch('/api/community-feed/' + postId + '/comments/' + commentId, { method: 'DELETE' })
+        .then(function (r) {
+            return r.json().then(function (data) {
+                if (!r.ok) throw new Error(data.message || 'Unable to delete comment.');
+                return data;
+            });
+        })
+        .then(function () {
+            document.querySelectorAll('[data-comment-id="' + commentId + '"]').forEach(function (el) { el.remove(); });
+            document.dispatchEvent(new CustomEvent('community-feed:comment-deleted', { detail: { postId: postId, commentId: commentId } }));
+            closeDeleteCommentModal();
+        })
+        .catch(function (err) {
+            alert(err.message || 'Unable to delete comment.');
+        })
+        .finally(function () {
+            if (btn) btn.disabled = false;
+        });
+}
+
+window.editComment = editComment;
+window.deleteComment = deleteComment;
+window.closeEditCommentModal = closeEditCommentModal;
+window.confirmEditComment = confirmEditComment;
+window.closeDeleteCommentModal = closeDeleteCommentModal;
+window.confirmDeleteComment = confirmDeleteComment;
+window.openComments = openComments;
+window.toggleComments = toggleComments;
+
 function setFeedFilter(btn, filter) {
+    if (isLoading) return;
+    var goHome = filter === 'all';
     currentFilter = filter;
     document.querySelectorAll('.feed-tab').forEach(function(t) { t.classList.remove('active'); });
     btn.classList.add('active');
-    renderPosts(true);
+    if (goHome) {
+        feedSearch = '';
+        var search = document.getElementById('feedSearchInput');
+        if (search) search.value = '';
+    }
+    setFilterTabsDisabled(true);
+    loadPosts(true).then(function () {
+        if (goHome) window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+}
+
+function setFilterTabsDisabled(disabled) {
+    document.querySelectorAll('.feed-tab').forEach(function (tab) {
+        tab.disabled = disabled;
+        tab.classList.toggle('is-loading', disabled);
+    });
 }
 
 function togglePostOptions(id, e) {
@@ -1052,8 +1386,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            closeLikesModal();
+            if (document.getElementById('editCommentModal')?.classList.contains('active')) {
+                closeEditCommentModal();
+                return;
+            }
+            if (document.getElementById('deleteCommentModal')?.classList.contains('active')) {
+                closeDeleteCommentModal();
+                return;
+            }
+            closeReactionViewer();
             closeLightbox();
+        }
+    });
+
+    document.getElementById('editCommentBody')?.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            confirmEditComment();
         }
     });
 
@@ -1067,11 +1416,33 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target && e.target.id === 'imageLightbox') closeLightbox();
     });
 
-    var brgyList = document.getElementById('cfBrgyLinkList');
-    var feedSidebar = document.getElementById('feedSidebar');
+    var brgyList = document.getElementById('brgyLinkList') || document.getElementById('cfBrgyLinkList');
+    var feedSidebar = document.getElementById('programsSidebar') || document.getElementById('feedSidebar');
     feedSidebar?.addEventListener('wheel', function (event) {
         event.preventDefault();
         event.stopPropagation();
         if (brgyList) brgyList.scrollTop += event.deltaY;
     }, { passive: false });
+
+    var fab = document.getElementById('programsFab');
+    var backdrop = document.getElementById('programsDrawerBackdrop');
+    var closeDrawer = function () {
+        feedSidebar?.classList.remove('drawer-open');
+        backdrop?.classList.remove('active');
+        document.body.style.overflow = '';
+    };
+    fab?.addEventListener('click', function (e) {
+        e.stopPropagation();
+        feedSidebar?.classList.add('drawer-open');
+        backdrop?.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    });
+    backdrop?.addEventListener('click', closeDrawer);
+    window.addEventListener('resize', function () {
+        if (window.innerWidth > 1100) closeDrawer();
+    });
+
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) pollFeedUpdates();
+    });
 });
