@@ -356,7 +356,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * distinguish "actually delivered" from "written to log fallback".
      *
      * The Laravel `failover` mailer will silently write to the log driver
-     * when upstream transports (smtp/resend) fail. To the caller this
+     * when upstream transports (smtp) fail. To the caller this
      * looks like "success", so here we track whether any real transport
      * was attempted before we let the failover chain proceed.
      *
@@ -365,7 +365,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected static function deliverWithFallback(callable $sender): array
     {
-        $realMailers = ['smtp', 'resend', 'postmark', 'ses', 'mailgun', 'ses-v2', 'sendmail'];
+        $realMailers = ['smtp', 'postmark', 'ses', 'mailgun', 'ses-v2', 'sendmail'];
         $configuredMailer = (string) config('mail.default', '');
         $failoverMailers = config('mail.mailers.failover.mailers');
         $mailerCandidates = is_array($failoverMailers)
@@ -389,12 +389,6 @@ class User extends Authenticatable implements MustVerifyEmail
                     $host = trim((string) ($transportConfig['host'] ?? ''));
                     $user = trim((string) ($transportConfig['username'] ?? ''));
                     if ($host !== '' && $user !== '' && $host !== '127.0.0.1' && $host !== 'localhost') {
-                        $hasRealTransport = true;
-                        break;
-                    }
-                } elseif ($transport === 'resend') {
-                    $key = trim((string) config('services.resend.key', ''));
-                    if ($key !== '') {
                         $hasRealTransport = true;
                         break;
                     }

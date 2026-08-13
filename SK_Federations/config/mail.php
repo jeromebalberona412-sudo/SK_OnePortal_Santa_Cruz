@@ -14,13 +14,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', (static function (): string {
-        if (env('RESEND_API_KEY') !== null && trim((string) env('RESEND_API_KEY')) !== '') {
-            return 'failover';
-        }
-
-        return env('APP_ENV') === 'local' ? 'log' : 'failover';
-    })()),
+    'default' => env('MAIL_MAILER', env('APP_ENV') === 'local' ? 'log' : 'smtp'),
 
     /*
     |--------------------------------------------------------------------------
@@ -36,7 +30,7 @@ return [
     | your mailers below. You may also add additional mailers if needed.
     |
     | Supported: "smtp", "sendmail", "mailgun", "ses", "ses-v2",
-    |            "postmark", "resend", "log", "array",
+    |            "postmark", "log", "array",
     |            "failover", "roundrobin"
     |
     */
@@ -68,10 +62,6 @@ return [
             // ],
         ],
 
-        'resend' => [
-            'transport' => 'resend',
-        ],
-
         'sendmail' => [
             'transport' => 'sendmail',
             'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
@@ -95,10 +85,6 @@ return [
                     || (env('MAIL_HOST') !== null && trim((string) env('MAIL_HOST')) !== '')
                 ) {
                     $mailers[] = 'smtp';
-                }
-
-                if (env('RESEND_API_KEY') !== null && trim((string) env('RESEND_API_KEY')) !== '') {
-                    $mailers[] = 'resend';
                 }
 
                 $mailers[] = 'log';
