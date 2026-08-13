@@ -554,29 +554,53 @@ class AuthenticationService
             'requires_fresh_verification' => $reason === 'email_device_changed',
             'verified_at_snapshot' => $user->email_verified_at?->toIso8601String(),
             'remember_device' => $rememberDevice,
+            'email_sent' => false,
+            'last_error_message' => null,
         ];
 
-        $request->session()->put('sk_fed_email_verification_pending', $pending);
-        $this->storeVerificationWatch($pending);
-
-        // ── Attempt to send email verification notification ────────────────
-        // Email sending must not block authentication. If SMTP fails, log the
-        // failure but allow the verification flow to continue. The user can
-        // still verify via the verification wait page or resend link.
         try {
             $user->sendEmailVerificationNotification();
+            $deliveryResult = User::lastDeliveryResult();
+            $actuallyDelivered = (bool) ($deliveryResult['delivered'] ?? false);
+            $pending['email_sent'] = $actuallyDelivered;
+            $pending['last_error_message'] = $deliveryResult['error'] ?? null;
+            if ($actuallyDelivered) {
+                $pending['resend_last_sent_at'] = now()->toIso8601String();
+            }
+
+            if (! $actuallyDelivered) {
+                Log::warning('startEmailVerificationWait: verification email NOT actually delivered to recipient', [
+                    'user_id' => $user->getKey(),
+                    'email' => $user->email,
+                    'reason' => $reason,
+                    'fallback_used' => $deliveryResult['fallback_used'] ?? true,
+                    'delivery_error' => $pending['last_error_message'],
+                ]);
+                $message = 'Email verification is required. If you did not receive a verification email, please check your spam folder or request a new one.';
+                if (! empty($pending['last_error_message'])) {
+                    $request->session()->put('sk_fed_verification_delivery_failed', true);
+                }
+            } else {
+                $message = 'A verification email has been sent. Complete verification to continue.';
+                $request->session()->forget('sk_fed_verification_delivery_failed');
+            }
         } catch (\Throwable $e) {
-            Log::error('Email verification notification failed during login', [
+            Log::error('Email verification notification threw during login', [
                 'user_id' => $user->getKey(),
                 'email' => $user->email,
                 'reason' => $reason,
                 'exception' => $e->getMessage(),
                 'exception_class' => get_class($e),
             ]);
+            $pending['email_sent'] = false;
+            $pending['last_error_message'] = $e->getMessage();
+            $request->session()->put('sk_fed_verification_delivery_failed', true);
 
-            // Update the user-facing message to reflect email delivery issue
             $message = 'Email verification is required. If you did not receive a verification email, please check your spam folder or request a new one.';
         }
+
+        $request->session()->put('sk_fed_email_verification_pending', $pending);
+        $this->storeVerificationWatch($pending);
 
         $this->loginSecurityService->recordAttempt($user, $email, false, $request, ['reason' => $reason]);
         $this->auditLogService->log(
@@ -588,10 +612,12 @@ class AuthenticationService
             resourceId: $user->getKey(),
             metadata: [
                 'reason' => $reason,
+                'email_sent' => $pending['email_sent'],
             ],
         );
         $request->session()->flash('status', $message);
         $request->session()->flash('verification_wait', true);
+        $request->session()->flash('verification_email_sent', $pending['email_sent']);
     }
 
     protected function verificationWatchUserCacheKey(int $userId): string

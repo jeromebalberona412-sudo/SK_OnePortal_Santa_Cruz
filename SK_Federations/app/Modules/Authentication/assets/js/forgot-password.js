@@ -57,6 +57,20 @@ document.addEventListener('DOMContentLoaded', function () {
         return String(Math.max(0, s));
     }
 
+    // ── CSRF Token Refresh ────────────────────────────────────────────────────
+
+    function refreshCsrfToken() {
+        const csrfInput = form.querySelector('input[name="_token"]');
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        
+        if (csrfInput && csrfMeta) {
+            csrfInput.value = csrfMeta.content;
+        }
+    }
+
+    // Refresh CSRF token every 5 minutes to prevent expiration
+    setInterval(refreshCsrfToken, 5 * 60 * 1000);
+
     // ── Cooldown timer ────────────────────────────────────────────────────────
 
     function getStoredUntil() {
@@ -154,6 +168,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Submit handler ────────────────────────────────────────────────────────
 
     form.addEventListener('submit', function (e) {
+        // Refresh CSRF token before submission
+        refreshCsrfToken();
+
         const email = emailInput ? emailInput.value.trim() : '';
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

@@ -27,6 +27,13 @@ class NewLocationLoginNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
+        \Illuminate\Support\Facades\Log::info('Building new location login email', [
+            'user_id' => method_exists($notifiable, 'getKey') ? $notifiable->getKey() : null,
+            'email' => $notifiable->email ?? 'unknown',
+            'ip' => $this->ipAddress,
+            'type' => 'new_location_login',
+        ]);
+
         return (new MailMessage)
             ->subject('New Login Activity Detected')
             ->greeting('Security Alert')

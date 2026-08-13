@@ -64,16 +64,30 @@ class RecordPostLoginActivityJob implements ShouldQueue
                 $suspicious = $suspiciousLoginService->detect($user, $this->ipAddress);
 
                 if (($suspicious['is_suspicious'] ?? false) && $this->isAlertEnabled) {
+                    Log::info('Sending new location login notification', [
+                        'user_id' => $this->userId,
+                        'email' => $user->email,
+                        'ip' => $this->ipAddress,
+                        'signals' => $suspicious['signals'] ?? [],
+                        'type' => 'new_location_login',
+                    ]);
+
                     $user->notify(new NewLocationLoginNotification(
                         ipAddress: $this->ipAddress,
                         userAgent: $this->userAgent,
                         signals: $suspicious['signals'] ?? [],
                     ));
+
+                    Log::info('New location login notification sent successfully', [
+                        'user_id' => $this->userId,
+                        'email' => $user->email,
+                    ]);
                 }
             } catch (\Throwable $e) {
-                Log::warning('[RecordPostLoginActivityJob] Suspicious login detection failed.', [
+                Log::error('[RecordPostLoginActivityJob] Suspicious login detection or notification failed.', [
                     'user_id' => $this->userId,
                     'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
                 ]);
             }
         }

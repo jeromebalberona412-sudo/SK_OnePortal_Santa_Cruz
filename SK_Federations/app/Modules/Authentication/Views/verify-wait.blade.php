@@ -57,11 +57,23 @@
                         <p style="font-size:1.35rem;font-weight:800;color:#0f172a;letter-spacing:-0.01em;margin:0 0 0.4rem;">
                             Verify Your Email
                         </p>
-                        <p style="font-size:0.875rem;color:#64748b;font-weight:400;margin:0;line-height:1.55;">
-                            We sent a verification link to
-                            <strong style="color:#213F99;">{{ $email }}</strong>.
-                            Click the link in your email to continue.
-                        </p>
+                        @php
+                            $headerIntroSent = $emailSent ?? true;
+                            $headerDeliveryFailed = $deliveryFailed ?? false;
+                        @endphp
+                        @if($headerDeliveryFailed && !$headerIntroSent)
+                            <p style="font-size:0.875rem;color:#b91c1c;font-weight:500;margin:0;line-height:1.55;">
+                                We couldn&rsquo;t reach your email provider right now. Your session is still valid;
+                                use <strong>Resend Verification Email</strong> below to try again, or check spam if
+                                a previous attempt delivered.
+                            </p>
+                        @else
+                            <p style="font-size:0.875rem;color:#64748b;font-weight:400;margin:0;line-height:1.55;">
+                                We sent a verification link to
+                                <strong style="color:#213F99;">{{ $email }}</strong>.
+                                Click the link in your email to continue.
+                            </p>
+                        @endif
                     </div>
 
                     <div class="verify-content"
@@ -73,12 +85,21 @@
                          data-session-key="{{ $sessionKey ?? '' }}"
                          data-fresh-session="0"
                          data-resend-cooldown="{{ ($resendStarted ?? false) ? (int) $resendCooldown : 0 }}"
-                         data-resend-just-sent="{{ ($resendStarted ?? false) ? '1' : '0' }}">
+                         data-resend-just-sent="{{ ($resendStarted ?? false) ? '1' : '0' }}"
+                         data-delivery-failed="{{ ($deliveryFailed ?? false) ? '1' : '0' }}"
+                         data-email-sent="{{ ($emailSent ?? false) ? '1' : '0' }}">
 
-                        <div id="verification-state" class="alert alert-info" role="alert"
-                             style="border-radius:12px;font-size:0.9rem;text-align:center;">
-                            Waiting for email verification...
-                        </div>
+                        @if($headerDeliveryFailed && !($emailSent ?? false))
+                            <div id="verification-state" class="alert alert-warning" role="alert"
+                                 style="border-radius:12px;font-size:0.9rem;text-align:center;">
+                                Email delivery is temporarily unavailable. Use Resend to try again shortly.
+                            </div>
+                        @else
+                            <div id="verification-state" class="alert alert-info" role="alert"
+                                 style="border-radius:12px;font-size:0.9rem;text-align:center;">
+                                Waiting for email verification...
+                            </div>
+                        @endif
 
                         @if ($errors->any())
                             <div class="alert alert-danger" role="alert" style="border-radius:12px;font-size:0.9rem;">

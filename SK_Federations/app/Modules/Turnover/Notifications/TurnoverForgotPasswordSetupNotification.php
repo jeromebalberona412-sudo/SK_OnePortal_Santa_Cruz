@@ -32,6 +32,13 @@ class TurnoverForgotPasswordSetupNotification extends Notification
         $setupUrl = "{$baseUrl}/reset-password/{$this->token}?email={$email}";
         $expiryLabel = $this->passwordExpiryLabel();
 
+        \Illuminate\Support\Facades\Log::info('Building turnover forgot password setup email', [
+            'user_id' => method_exists($notifiable, 'getKey') ? $notifiable->getKey() : null,
+            'email' => $notifiable->getEmailForPasswordReset(),
+            'position' => $this->position,
+            'type' => 'turnover_forgot_password_setup',
+        ]);
+
         return (new MailMessage)
             ->subject('Complete Your SK Federation Account Setup')
             ->greeting('Hello!')

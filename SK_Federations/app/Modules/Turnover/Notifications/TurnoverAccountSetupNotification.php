@@ -32,6 +32,13 @@ class TurnoverAccountSetupNotification extends Notification
         $setupUrl = "{$baseUrl}/reset-password/{$this->token}?email={$email}";
         $expiryHours = max(1, (int) round((int) config('turnover.invitation_expire_minutes', 1440) / 60));
 
+        \Illuminate\Support\Facades\Log::info('Building turnover account setup email', [
+            'user_id' => method_exists($notifiable, 'getKey') ? $notifiable->getKey() : null,
+            'email' => $notifiable->getEmailForPasswordReset(),
+            'position' => $this->position,
+            'type' => 'turnover_account_setup',
+        ]);
+
         return (new MailMessage)
             ->subject('SK One Portal Account Setup')
             ->greeting('Congratulations!')

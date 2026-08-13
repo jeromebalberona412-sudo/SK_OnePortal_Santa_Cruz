@@ -25,6 +25,12 @@ class TurnoverCompletedNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
+        \Illuminate\Support\Facades\Log::info('Building turnover completed email', [
+            'user_id' => method_exists($notifiable, 'getKey') ? $notifiable->getKey() : null,
+            'email' => isset($notifiable->email) ? $notifiable->email : 'unknown',
+            'type' => 'turnover_completed',
+        ]);
+
         return (new MailMessage)
             ->subject('Federation Turnover Completed')
             ->greeting('Hello!')

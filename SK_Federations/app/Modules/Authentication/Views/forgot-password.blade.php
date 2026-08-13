@@ -7,6 +7,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Reset Your Password - SK OnePortal</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     @vite([
@@ -33,7 +34,7 @@
 
     <div class="login-page">
 
-        {{-- Background wrapper kept for HTML compatibility — bg-image is hidden via CSS --}}
+        {{-- Background wrapper kept for HTML compatibility ï¿½ bg-image is hidden via CSS --}}
         <div class="bg-wrapper">
             <div class="bg-image"></div>
             <div class="gradient-overlay"></div>
@@ -133,5 +134,49 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @vite(['app/Modules/Authentication/assets/js/forgot-password.js'])
+    
+    <script>
+        // CSRF Token Refresh - Prevent 419 Page Expired Error
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('forgotPasswordForm');
+            if (!form) return;
+
+            // Refresh CSRF token before form submission
+            form.addEventListener('submit', function(e) {
+                // Check if CSRF token exists
+                const csrfInput = form.querySelector('input[name="_token"]');
+                if (!csrfInput) return;
+
+                // Get fresh CSRF token from meta tag if available
+                const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                if (csrfMeta) {
+                    csrfInput.value = csrfMeta.content;
+                }
+            });
+
+            // Handle 419 error responses
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+                return originalFetch.apply(this, args).then(response => {
+                    if (response.status === 419) {
+                        // Show user-friendly error message
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-warning';
+                        alertDiv.role = 'alert';
+                        alertDiv.style.marginBottom = '20px';
+                        alertDiv.style.borderRadius = '12px';
+                        alertDiv.innerHTML = 'Your session has expired. Please refresh the page and try again.';
+                        
+                        const formHeader = document.querySelector('.form-header');
+                        if (formHeader && formHeader.nextSibling) {
+                            formHeader.parentNode.insertBefore(alertDiv, formHeader.nextSibling);
+                        }
+                    }
+                    return response;
+                });
+            };
+        });
+    </script>
 </body>
 </html>

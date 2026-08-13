@@ -14,6 +14,12 @@ class SkFedResetPasswordNotification extends ResetPassword
             'email' => $notifiable->getEmailForPasswordReset(),
         ], false));
 
+        \Illuminate\Support\Facades\Log::info('Building password reset email', [
+            'user_id' => method_exists($notifiable, 'getKey') ? $notifiable->getKey() : null,
+            'email' => $notifiable->getEmailForPasswordReset(),
+            'type' => 'password_reset',
+        ]);
+
         return (new MailMessage)
             ->subject('Reset Your SK Federation Password')
             ->greeting('Hello!')

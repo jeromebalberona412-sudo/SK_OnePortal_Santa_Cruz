@@ -14,7 +14,13 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'failover'),
+    'default' => env('MAIL_MAILER', (static function (): string {
+        if (env('RESEND_API_KEY') !== null && trim((string) env('RESEND_API_KEY')) !== '') {
+            return 'failover';
+        }
+
+        return env('APP_ENV') === 'local' ? 'log' : 'failover';
+    })()),
 
     /*
     |--------------------------------------------------------------------------
@@ -46,7 +52,7 @@ return [
             'encryption' => env('MAIL_ENCRYPTION', 'tls'),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'timeout' => (int) env('MAIL_TIMEOUT', 10),
+            'timeout' => (int) env('MAIL_TIMEOUT', 20),
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
@@ -82,11 +88,24 @@ return [
 
         'failover' => [
             'transport' => 'failover',
-            'mailers' => [
-                'smtp',
-                'log',
-            ],
-            'retry_after' => 60,
+            'mailers' => (static function (): array {
+                $mailers = [];
+
+                if (env('MAIL_MAILER') === 'smtp'
+                    || (env('MAIL_HOST') !== null && trim((string) env('MAIL_HOST')) !== '')
+                ) {
+                    $mailers[] = 'smtp';
+                }
+
+                if (env('RESEND_API_KEY') !== null && trim((string) env('RESEND_API_KEY')) !== '') {
+                    $mailers[] = 'resend';
+                }
+
+                $mailers[] = 'log';
+
+                return $mailers;
+            })(),
+            'retry_after' => 10,
         ],
 
         'roundrobin' => [
