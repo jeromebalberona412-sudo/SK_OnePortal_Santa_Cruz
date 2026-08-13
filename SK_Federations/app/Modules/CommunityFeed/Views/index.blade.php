@@ -102,7 +102,7 @@
                 <div class="sidebar-card cf-barangay-profiles-card">
                     <h2 class="sidebar-title">Barangay SK Profiles</h2>
                     <p class="sidebar-subtitle">Browse SK officials from each barangay ({{ count($barangayProfiles ?? []) }} barangays).</p>
-                    <div class="cf-barangay-profiles-list">
+                    <div class="cf-barangay-profiles-list" id="cfBrgyLinkList">
                         @forelse($barangayProfiles ?? [] as $brgy)
                         <a href="{{ route('skfed.barangay-profile', ['slug' => $brgy['slug']]) }}" class="cf-barangay-profile-link">
                             @if(!empty($brgy['logo_url']))

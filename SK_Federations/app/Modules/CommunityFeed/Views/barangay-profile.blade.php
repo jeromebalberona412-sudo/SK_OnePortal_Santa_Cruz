@@ -38,7 +38,7 @@
                         <p class="bfp-loc"><i class="fas fa-map-marker-alt" style="color:#213F99;margin-right:4px;"></i>Barangay {{ $name }}, Santa Cruz, Laguna</p>
                         <div class="bfp-stats">
                             <div class="bfp-stat"><strong>{{ count($posts) }}</strong><span>Posts</span></div>
-                            <div class="bfp-stat"><strong>{{ count($officers['councilors']) + 5 }}</strong><span>Officers</span></div>
+                            <div class="bfp-stat"><strong>{{ count($officials) }}</strong><span>Officers</span></div>
                             <div class="bfp-stat"><strong>2023–2026</strong><span>SK Term</span></div>
                         </div>
                     </div>
@@ -54,40 +54,23 @@
                     {{-- Officers --}}
                     <div class="bfp-card">
                         <div class="bfp-card-title"><i class="fas fa-users"></i> SK Officers</div>
-                        @php
-                        $officerList = [
-                            ['name'=>$officers['chairman'], 'role'=>'SK Chairman'],
-                            ['name'=>$officers['vice'],     'role'=>'Vice Chairman'],
-                            ['name'=>$officers['secretary'],'role'=>'Secretary'],
-                            ['name'=>$officers['treasurer'],'role'=>'Treasurer'],
-                            ['name'=>$officers['auditor'],  'role'=>'Auditor'],
-                            ['name'=>$officers['pro'],      'role'=>'Public Relations Officer'],
-                        ];
-                        @endphp
-                        @foreach($officerList as $o)
+                        @forelse($officials as $o)
                         <div class="bfp-officer-item">
-                            <div class="bfp-officer-dot">{{ strtoupper(substr(trim($o['name'],'[]'),0,2)) }}</div>
+                            <div class="bfp-officer-dot">{{ $o['initials'] }}</div>
                             <div>
                                 <p class="bfp-officer-name">{{ $o['name'] }}</p>
                                 <p class="bfp-officer-role">{{ $o['role'] }}</p>
                             </div>
                         </div>
-                        @endforeach
-                        <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin:14px 0 8px;">SK Councilors</p>
-                        <div class="bfp-councilor-grid">
-                            @foreach($officers['councilors'] as $c)
-                            <div class="bfp-councilor-chip">
-                                <div class="bfp-councilor-dot">{{ strtoupper(substr(trim($c,'[]'),0,2)) }}</div>
-                                <span class="bfp-councilor-name">{{ $c }}</span>
-                            </div>
-                            @endforeach
-                        </div>
+                        @empty
+                        <p class="cf-barangay-profiles-empty">No SK officials listed for this barangay yet.</p>
+                        @endforelse
                     </div>
 
                     {{-- Barangay Info --}}
                     <div class="bfp-card">
                         <div class="bfp-card-title"><i class="fas fa-info-circle"></i> Barangay Information</div>
-                        @foreach([['Barangay',$name],['Municipality','Santa Cruz'],['Province','Laguna'],['Region','Region IV-A (CALABARZON)'],['SK Term','2023 – 2026'],['Total Officers',count($officers['councilors'])+5]] as $row)
+                        @foreach([['Barangay',$name],['Municipality','Santa Cruz'],['Province','Laguna'],['Region','Region IV-A (CALABARZON)'],['SK Term','2023 – 2026'],['Total Officers',count($officials)]] as $row)
                         <div class="bfp-contact-row">
                             <div><p class="bfp-contact-label">{{ $row[0] }}</p><p class="bfp-contact-value">{{ $row[1] }}</p></div>
                         </div>
@@ -120,7 +103,7 @@
                         </div>
 
                         <div id="bfpFeed">
-                            @foreach($posts as $post)
+                            @forelse($posts as $post)
                             <div class="bfp-post" data-post-type="{{ $post['type_class'] }}">
                                 <div class="bfp-post-header">
                                     <div class="bfp-post-avatar">{{ strtoupper(substr($name,0,2)) }}</div>
@@ -134,16 +117,14 @@
                                 </div>
                                 <h3 class="bfp-post-title">{{ $post['title'] }}</h3>
                                 <p class="bfp-post-text">{{ $post['text'] }}</p>
-                                <div class="bfp-post-detail"><i class="fas fa-calendar-alt"></i> {{ $post['date'] }} | {{ $post['time'] }}</div>
-                                <div class="bfp-post-detail"><i class="fas fa-map-marker-alt"></i> {{ $post['venue'] }}</div>
-                                <div class="bfp-post-detail"><i class="fas fa-users"></i> {{ $post['audience'] }}</div>
                                 <div class="bfp-post-actions">
-                                    <button class="bfp-action-btn"><i class="fas fa-thumbs-up"></i> Like</button>
-                                    <button class="bfp-action-btn"><i class="fas fa-comment"></i> Comment</button>
-                                    <button class="bfp-action-btn"><i class="fas fa-share"></i> Share</button>
+                                    <span class="bfp-action-btn"><i class="fas fa-thumbs-up"></i> {{ $post['likes'] }}</span>
+                                    <span class="bfp-action-btn"><i class="fas fa-comment"></i> {{ $post['comments'] }}</span>
                                 </div>
                             </div>
-                            @endforeach
+                            @empty
+                            <p class="cf-barangay-profiles-empty">No community feed posts from this barangay yet.</p>
+                            @endforelse
                         </div>
                     </div>
                 </div>

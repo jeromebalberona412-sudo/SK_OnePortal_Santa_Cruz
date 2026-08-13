@@ -101,6 +101,7 @@
     box-shadow: 0 2px 10px rgba(0,0,0,0.07);
     transition: box-shadow 0.3s;
     margin-bottom: 20px;
+    overflow: visible;
 }
 .post-card:last-child { margin-bottom: 0; }
 .post-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.11); }
@@ -647,6 +648,11 @@
     grid-row: 1 / span 2;
 }
 
+.comment-body {
+    grid-column: 2;
+    min-width: 0;
+}
+
 .comment-bubble {
     background: #f0f2f5;
     padding: 8px 12px;
@@ -728,11 +734,27 @@
 .programs-sidebar,
 .feed-sidebar {
     min-width: 0;
+    align-self: start;
+    position: sticky;
+    top: 16px;
+    max-height: calc(100vh - 90px);
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar-card {
     background: white; border-radius: 16px;
     padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.cf-barangay-profiles-card {
+    margin-top: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-height: calc(100vh - 90px);
+    overflow: hidden;
 }
 
 .sidebar-title { font-size: 16px; font-weight: 700; color: #333; margin-bottom: 3px; }
@@ -773,16 +795,18 @@
 .chevron { width: 16px; height: 16px; color: #bbb; transition: color 0.25s; flex-shrink: 0; }
 
 /* Barangay profile sidebar list */
-.cf-barangay-profiles-card { margin-top: 16px; }
-
 .cf-barangay-profiles-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-height: 420px;
     overflow-y: auto;
-    padding-right: 2px;
+    overscroll-behavior: contain;
+    flex: 1;
+    min-height: 0;
+    padding-right: 4px;
 }
+.cf-barangay-profiles-list::-webkit-scrollbar { width: 6px; }
+.cf-barangay-profiles-list::-webkit-scrollbar-thumb { background: rgba(33,63,153,0.35); border-radius: 6px; }
 
 .cf-barangay-profile-link {
     display: flex;
@@ -850,6 +874,46 @@
 }
 
 .action-btn.liked .post-like-count-link { color: var(--fed-red); }
+
+.reaction-wrap { position: relative; z-index: 3; flex: 1; display: flex; }
+.reaction-wrap .action-btn { width: 100%; }
+.reaction-picker {
+    position: absolute; left: 0; bottom: calc(100% - 2px);
+    display: flex; padding: 8px 10px 14px; background: transparent;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transform: translateY(8px); z-index: 30;
+}
+.reaction-picker-inner {
+    display: flex; gap: 4px; padding: 6px 8px;
+    background: #fff; border-radius: 999px; box-shadow: 0 10px 28px rgba(0,0,0,.18);
+}
+.reaction-wrap.is-open { z-index: 8; }
+.reaction-wrap.is-open .reaction-picker {
+    opacity: 1; visibility: visible; pointer-events: auto; transform: none;
+}
+.reaction-option {
+    border: none; background: none; width: 38px; height: 38px; border-radius: 50%;
+    font-size: 22px; cursor: pointer;
+}
+.reaction-option:hover { transform: scale(1.18); background: #f3f4f6; }
+.action-btn.liked[data-type="like"] { color: #1877f2; }
+.action-btn.liked[data-type="love"] { color: #f33e58; }
+.action-btn.liked[data-type="haha"],
+.action-btn.liked[data-type="wow"] { color: #f7b125; }
+.action-btn.liked[data-type="sad"],
+.action-btn.liked[data-type="angry"] { color: #e9710f; }
+.comment-meta { display: flex; align-items: center; gap: 16px; margin-top: 4px; min-height: 16px; }
+.comment-like-wrap { position: relative; display: inline-flex; align-items: center; }
+.comment-like-wrap .reaction-picker { top: calc(100% - 2px); bottom: auto; padding: 12px 8px 6px; }
+.comment-like-btn, .comment-action-btn {
+    border: none; background: none; color: #65676b; font-size: 12px; font-weight: 700;
+    cursor: pointer; padding: 0; font-family: inherit; line-height: 16px; height: 16px;
+    display: inline-flex; align-items: center;
+}
+.comment-like-btn.liked[data-type="like"] { color: #1877f2; }
+.comment-like-btn.liked[data-type="love"] { color: #f33e58; }
+.comment-item.is-reply { margin-left: 44px; }
+.fb-view-replies { border: none; background: none; color: #65676b; font-size: 13px; font-weight: 600; cursor: pointer; padding: 0; margin-top: 6px; font-family: inherit; }
 
 /* ── COMPOSE MODAL ── */
 .compose-author-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
@@ -970,13 +1034,10 @@
 .btn-secondary:hover { background: #e0e0e0; }
 
 /* ── PROGRAMS SIDEBAR — sticky on desktop ── */
-.programs-sidebar,
-.feed-sidebar {
-    position: sticky;
-    top: 0;
-    max-height: calc(100vh - var(--navbar-height));
-    overflow-y: auto;
-}
+.programs-sidebar::-webkit-scrollbar,
+.feed-sidebar::-webkit-scrollbar { width: 6px; }
+.programs-sidebar::-webkit-scrollbar-thumb,
+.feed-sidebar::-webkit-scrollbar-thumb { background: rgba(33,63,153,0.2); border-radius: 6px; }
 .programs-sidebar::-webkit-scrollbar { width: 6px; }
 .programs-sidebar::-webkit-scrollbar-thumb { background: rgba(33,63,153,0.2); border-radius: 6px; }
 

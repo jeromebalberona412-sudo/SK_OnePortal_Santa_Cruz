@@ -20,6 +20,7 @@ class AuditLogQueryService
         'barangay_logos' => 'Barangay Logos',
         'security' => 'Security',
         'announcements' => 'Announcements',
+        'community_feeds' => 'Community Feed',
         'programs' => 'Programs',
         'surveys' => 'Surveys',
         'scholarships' => 'Scholarships',

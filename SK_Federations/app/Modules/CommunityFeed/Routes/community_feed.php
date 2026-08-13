@@ -5,24 +5,24 @@ use App\Modules\CommunityFeed\Controllers\CommunityFeedPostController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/modules/community-feed/{type}/{file}', function ($type, $file) {
-    $path = __DIR__ . "/../assets/{$type}/{$file}";
+    $path = __DIR__."/../assets/{$type}/{$file}";
 
     if (! file_exists($path)) {
         abort(404);
     }
 
     $mimeTypes = [
-        'css'  => 'text/css',
-        'js'   => 'application/javascript',
+        'css' => 'text/css',
+        'js' => 'application/javascript',
         'webp' => 'image/webp',
-        'png'  => 'image/png',
-        'jpg'  => 'image/jpeg',
+        'png' => 'image/png',
+        'jpg' => 'image/jpeg',
         'jpeg' => 'image/jpeg',
-        'svg'  => 'image/svg+xml',
+        'svg' => 'image/svg+xml',
     ];
 
     $extension = pathinfo($file, PATHINFO_EXTENSION);
-    $mimeType  = $mimeTypes[$extension] ?? 'application/octet-stream';
+    $mimeType = $mimeTypes[$extension] ?? 'application/octet-stream';
 
     return response()->file($path, ['Content-Type' => $mimeType]);
 })->where('type', 'css|js|images')->where('file', '.*');
@@ -37,13 +37,16 @@ Route::middleware(['auth', 'verified', 'single.session', 'sk_fed.access', 'trust
 
         // Federation-wide post API
         Route::prefix('api/community-feed')->group(function () {
-            Route::get('/',              [CommunityFeedPostController::class, 'feed'])->name('api.community-feed.feed');
-            Route::post('/',             [CommunityFeedPostController::class, 'store'])->name('api.community-feed.store');
+            Route::get('/', [CommunityFeedPostController::class, 'feed'])->name('api.community-feed.feed');
+            Route::post('/', [CommunityFeedPostController::class, 'store'])->name('api.community-feed.store');
             Route::post('/upload-image', [CommunityFeedPostController::class, 'uploadImage'])->name('api.community-feed.upload-image');
-            Route::put('/{id}',          [CommunityFeedPostController::class, 'update'])->name('api.community-feed.update');
-            Route::delete('/{id}',       [CommunityFeedPostController::class, 'destroy'])->name('api.community-feed.destroy');
-            Route::get('/{id}/likes',    [CommunityFeedPostController::class, 'likes'])->name('api.community-feed.likes');
-            Route::post('/{id}/react',   [CommunityFeedPostController::class, 'react'])->name('api.community-feed.react');
+            Route::put('/{id}', [CommunityFeedPostController::class, 'update'])->name('api.community-feed.update');
+            Route::delete('/{id}', [CommunityFeedPostController::class, 'destroy'])->name('api.community-feed.destroy');
+            Route::get('/{id}/likes', [CommunityFeedPostController::class, 'likes'])->name('api.community-feed.likes');
+            Route::post('/{id}/react', [CommunityFeedPostController::class, 'react'])->name('api.community-feed.react');
             Route::post('/{id}/comment', [CommunityFeedPostController::class, 'comment'])->name('api.community-feed.comment');
+            Route::post('/{id}/comments/{comment}/reactions', [CommunityFeedPostController::class, 'commentReact'])
+                ->whereNumber('comment')
+                ->name('api.community-feed.comment-react');
         });
     });

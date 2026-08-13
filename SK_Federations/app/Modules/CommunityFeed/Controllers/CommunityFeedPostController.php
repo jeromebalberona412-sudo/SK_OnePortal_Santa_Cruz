@@ -2,21 +2,23 @@
 
 namespace App\Modules\CommunityFeed\Controllers;
 
+use App\Modules\Archive_Management\Services\FederationPostArchiveService;
 use App\Modules\CommunityFeed\Services\CloudinaryService;
 use App\Modules\Shared\Controllers\Controller;
+use App\Modules\Shared\Models\Announcement;
+use App\Modules\Shared\Models\AnnouncementComment;
+use App\Modules\Shared\Models\AnnouncementCommentReaction;
+use App\Modules\Shared\Models\AnnouncementImage;
+use App\Modules\Shared\Models\AnnouncementReaction;
 use App\Services\CommunityFeedAvatarService;
 use App\Services\FeedCommentRateLimiter;
 use App\Services\SkFederationsNotificationService;
-use App\Modules\Shared\Models\Announcement;
-use App\Modules\Shared\Models\AnnouncementComment;
-use App\Modules\Shared\Models\AnnouncementReaction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Throwable;
 
 class CommunityFeedPostController extends Controller
@@ -29,25 +31,22 @@ class CommunityFeedPostController extends Controller
         private readonly CloudinaryService $cloudinary,
         private readonly SkFederationsNotificationService $notificationService,
         private readonly CommunityFeedAvatarService $avatarService,
-    ) {
-    }
+    ) {}
 
     // GET /api/community-feed?filter=all&page=1
     public function feed(Request $request): JsonResponse
     {
-        $user  = Auth::user();
+        $user = Auth::user();
         $query = Announcement::with([
             'barangay',
             'comments.user',
+            'comments.reactions',
             'user',
             'images',
-            'reactions' => fn ($q) => $q->with('user')->latest()->limit(12),
+            'reactions.user',
         ])
-            ->withCount('reactions');
-
-        if (Schema::hasColumn((new Announcement)->getTable(), 'is_archived')) {
-            $query->active();
-        }
+            ->withCount('reactions')
+            ->active();
 
         $query->orderByDesc('created_at');
 
@@ -69,11 +68,11 @@ class CommunityFeedPostController extends Controller
         $posts = $query->paginate($perPage);
 
         return response()->json([
-            'data'         => collect($posts->items())->map(fn($p) => $this->formatPost($p, $user->id)),
+            'data' => collect($posts->items())->map(fn ($p) => $this->formatPost($p, $user->id)),
             'current_page' => $posts->currentPage(),
-            'last_page'    => $posts->lastPage(),
-            'total'        => $posts->total(),
-            'user_id'      => $user->id,
+            'last_page' => $posts->lastPage(),
+            'total' => $posts->total(),
+            'user_id' => $user->id,
         ]);
     }
 
@@ -82,42 +81,38 @@ class CommunityFeedPostController extends Controller
     {
         $request->merge([
             'link_url' => filled($request->input('link_url')) ? $request->input('link_url') : null,
-            'title'    => filled($request->input('title')) ? $request->input('title') : null,
+            'title' => filled($request->input('title')) ? $request->input('title') : null,
         ]);
 
         $validated = $request->validate([
-            'type'      => 'required|in:announcement,event,activity,program,update',
-            'title'     => 'nullable|string|max:255',
-            'body'      => 'required|string|max:'.self::MAX_BODY_LENGTH,
-            'link_url'  => 'nullable|url|max:4096',
-            'images'    => 'nullable|array|max:'.self::MAX_IMAGES,
-            'images.*'  => 'image|max:5120',
+            'type' => 'required|in:announcement,event,activity,program,update',
+            'title' => 'nullable|string|max:255',
+            'body' => 'required|string|max:'.self::MAX_BODY_LENGTH,
+            'link_url' => 'nullable|url|max:4096',
+            'images' => 'nullable|array|max:'.self::MAX_IMAGES,
+            'images.*' => 'image|max:5120',
         ]);
 
         $user = Auth::user();
         $post = Announcement::create([
-            'type'               => $validated['type'],
-            'title'              => $validated['title'] ?? null,
-            'body'               => $validated['body'],
-            'link_url'           => $validated['link_url'] ?? null,
-            'user_id'            => $user->id,
-            'barangay_id'        => null,
+            'type' => $validated['type'],
+            'title' => $validated['title'] ?? null,
+            'body' => $validated['body'],
+            'link_url' => $validated['link_url'] ?? null,
+            'user_id' => $user->id,
+            'barangay_id' => null,
+            'is_federation_wide' => true,
         ]);
-
-        DB::table('announcements')
-            ->where('id', $post->id)
-            ->update(['is_federation_wide' => DB::raw('true')]);
-
-        $post->refresh();
 
         $this->storePostImages($post, $request);
 
         $fresh = Announcement::with([
             'barangay',
             'comments.user',
+            'comments.reactions',
             'user',
             'images',
-            'reactions' => fn ($q) => $q->with('user')->latest()->limit(12),
+            'reactions.user',
         ])
             ->withCount('reactions')
             ->findOrFail($post->id);
@@ -135,17 +130,17 @@ class CommunityFeedPostController extends Controller
 
         $request->merge([
             'link_url' => filled($request->input('link_url')) ? $request->input('link_url') : null,
-            'title'    => filled($request->input('title')) ? $request->input('title') : null,
+            'title' => filled($request->input('title')) ? $request->input('title') : null,
         ]);
 
         $validated = $request->validate([
-            'type'              => 'sometimes|in:announcement,event,activity,program,update',
-            'title'             => 'nullable|string|max:255',
-            'body'              => 'sometimes|string|max:'.self::MAX_BODY_LENGTH,
-            'link_url'          => 'nullable|url|max:4096',
-            'images'            => 'nullable|array|max:'.self::MAX_IMAGES,
-            'images.*'          => 'image|max:5120',
-            'removed_image_ids'   => 'nullable|array',
+            'type' => 'sometimes|in:announcement,event,activity,program,update',
+            'title' => 'nullable|string|max:255',
+            'body' => 'sometimes|string|max:'.self::MAX_BODY_LENGTH,
+            'link_url' => 'nullable|url|max:4096',
+            'images' => 'nullable|array|max:'.self::MAX_IMAGES,
+            'images.*' => 'image|max:5120',
+            'removed_image_ids' => 'nullable|array',
             'removed_image_ids.*' => 'integer',
         ]);
 
@@ -163,7 +158,7 @@ class CommunityFeedPostController extends Controller
         }
 
         return response()->json($this->formatPost(
-            $post->load(['barangay', 'comments.user', 'user', 'images', 'reactions' => fn ($q) => $q->with('user')->latest()->limit(12)])
+            $post->load(['barangay', 'comments.user', 'comments.reactions', 'user', 'images', 'reactions.user'])
                 ->loadCount('reactions'),
             Auth::id()
         ));
@@ -177,7 +172,7 @@ class CommunityFeedPostController extends Controller
             ->whereRaw('"is_federation_wide" = true')
             ->firstOrFail();
 
-        app(\App\Modules\Archive_Management\Services\FederationPostArchiveService::class)
+        app(FederationPostArchiveService::class)
             ->archive($post, Auth::user());
 
         return response()->json(['success' => true]);
@@ -190,7 +185,7 @@ class CommunityFeedPostController extends Controller
 
         $reactions = AnnouncementReaction::query()
             ->with('user')
-            ->where('announcement_id', $id)
+            ->where('community_feed_id', $id)
             ->latest()
             ->get();
 
@@ -198,35 +193,46 @@ class CommunityFeedPostController extends Controller
             'name' => $this->resolveReactorName($reaction),
             'avatar_url' => $this->resolveReactorAvatar($reaction),
             'role_label' => $this->resolveReactorRoleLabel($reaction),
+            'reaction_type' => $reaction->reaction_type ?: 'like',
         ])->values();
 
         return response()->json([
             'count' => $reactors->count(),
+            'reaction_counts' => $this->countsFromReactions($reactions),
             'reactors' => $reactors,
         ]);
     }
 
     // POST /api/community-feed/{id}/react
-    public function react(int $id): JsonResponse
+    public function react(Request $request, int $id): JsonResponse
     {
-        $user     = Auth::user();
-        $post     = Announcement::query()->findOrFail($id);
-        $existing = AnnouncementReaction::where([
-            'announcement_id' => $id,
-            'user_id'         => $user->id,
-            'user_type'       => 'sk_fed',
-        ])->first();
+        $user = Auth::user();
+        $post = Announcement::query()->findOrFail($id);
+        $validated = $request->validate([
+            'reaction_type' => ['nullable', 'string', Rule::in(AnnouncementReaction::TYPES)],
+        ]);
+        $type = $validated['reaction_type'] ?? 'like';
 
-        if ($existing) {
+        $existing = AnnouncementReaction::query()
+            ->where('community_feed_id', $id)
+            ->where('user_id', $user->id)
+            ->where('user_type', 'sk_fed')
+            ->first();
+
+        $userReaction = $type;
+
+        if ($existing && $existing->reaction_type === $type) {
             $existing->delete();
-            $liked = false;
+            $userReaction = null;
+        } elseif ($existing) {
+            $existing->update(['reaction_type' => $type]);
         } else {
             AnnouncementReaction::create([
-                'announcement_id' => $id,
-                'user_id'         => $user->id,
-                'user_type'       => 'sk_fed',
+                'community_feed_id' => $id,
+                'user_id' => $user->id,
+                'user_type' => 'sk_fed',
+                'reaction_type' => $type,
             ]);
-            $liked = true;
 
             $postLabel = $this->notificationService->postLabel($post->title, $post->body);
             if ($post->is_federation_wide) {
@@ -247,18 +253,65 @@ class CommunityFeedPostController extends Controller
             }
         }
 
+        $counts = $this->reactionCountsForPost($id);
+        $count = array_sum($counts);
         $reactions = AnnouncementReaction::with('user')
-            ->where('announcement_id', $id)
+            ->where('community_feed_id', $id)
             ->latest()
             ->limit(12)
             ->get();
 
-        $count = AnnouncementReaction::where('announcement_id', $id)->count();
+        return response()->json([
+            'liked' => $userReaction !== null,
+            'count' => $count,
+            'reaction_type' => $userReaction,
+            'reaction_counts' => $counts,
+            'reactions_summary' => $this->formatReactionsSummary($reactions, $count),
+        ]);
+    }
+
+    public function commentReact(Request $request, int $id, int $commentId): JsonResponse
+    {
+        $user = Auth::user();
+        Announcement::query()->findOrFail($id);
+        $comment = AnnouncementComment::query()
+            ->where('community_feed_id', $id)
+            ->where('id', $commentId)
+            ->firstOrFail();
+
+        $validated = $request->validate([
+            'reaction_type' => ['required', 'string', Rule::in(AnnouncementReaction::TYPES)],
+        ]);
+        $type = $validated['reaction_type'];
+
+        $existing = AnnouncementCommentReaction::query()
+            ->where('comment_id', $comment->id)
+            ->where('user_id', $user->id)
+            ->where('user_type', 'sk_fed')
+            ->first();
+
+        $userReaction = $type;
+        if ($existing && $existing->reaction_type === $type) {
+            $existing->delete();
+            $userReaction = null;
+        } elseif ($existing) {
+            $existing->update(['reaction_type' => $type]);
+        } else {
+            AnnouncementCommentReaction::create([
+                'comment_id' => $comment->id,
+                'user_id' => $user->id,
+                'user_type' => 'sk_fed',
+                'reaction_type' => $type,
+            ]);
+        }
+
+        $counts = $this->reactionCountsForComment($comment->id);
 
         return response()->json([
-            'liked' => $liked,
-            'count' => $count,
-            'reactions_summary' => $this->formatReactionsSummary($reactions, $count),
+            'liked' => $userReaction !== null,
+            'count' => array_sum($counts),
+            'reaction_type' => $userReaction,
+            'reaction_counts' => $counts,
         ]);
     }
 
@@ -281,22 +334,27 @@ class CommunityFeedPostController extends Controller
             'parent_id' => 'nullable|integer',
         ]);
 
-        $post    = Announcement::query()->findOrFail($id);
+        $post = Announcement::query()->findOrFail($id);
 
-        if ($request->filled('parent_id')) {
-            AnnouncementComment::query()
-                ->where('id', (int) $request->parent_id)
-                ->where('announcement_id', $id)
+        $parentId = $request->input('parent_id');
+        if ($parentId) {
+            $parent = AnnouncementComment::query()
+                ->where('id', (int) $parentId)
+                ->where('community_feed_id', $id)
                 ->firstOrFail();
+
+            if ($parent->parent_id !== null) {
+                $parentId = $parent->parent_id;
+            }
         }
 
         $comment = AnnouncementComment::create([
-            'announcement_id' => $id,
-            'parent_id' => $request->input('parent_id'),
-            'user_id'         => $user->id,
-            'user_type'       => 'sk_fed',
-            'author_name'     => $user->name,
-            'body'            => $request->body,
+            'community_feed_id' => $id,
+            'parent_id' => $parentId,
+            'user_id' => $user->id,
+            'user_type' => 'sk_fed',
+            'author_name' => $user->name,
+            'body' => $request->body,
         ]);
 
         if ((int) $post->user_id !== (int) $user->id) {
@@ -322,7 +380,10 @@ class CommunityFeedPostController extends Controller
 
         $limiter->hit('sk_fed', (int) $user->id);
 
-        return response()->json($this->formatComment($comment->load('user')), 201);
+        return response()->json(
+            $this->formatComment($comment->load(['user', 'reactions']), $user->id),
+            201
+        );
     }
 
     // POST /api/community-feed/upload-image
@@ -331,75 +392,122 @@ class CommunityFeedPostController extends Controller
         $request->validate(['image' => 'required|image|max:5120']);
 
         try {
-            $publicId = 'fed_post_' . Auth::id() . '_' . Str::random(8);
-            $result   = $this->cloudinary->upload($request->file('image'), $publicId);
+            $publicId = 'fed_post_'.Auth::id().'_'.Str::random(8);
+            $result = $this->cloudinary->upload($request->file('image'), $publicId);
+
             return response()->json(['url' => $result['url']]);
         } catch (Throwable $e) {
-            \Log::error('Cloudinary upload failed: ' . $e->getMessage());
+            \Log::error('Cloudinary upload failed: '.$e->getMessage());
+
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
     private function formatPost(Announcement $post, int $userId): array
     {
-        $liked = AnnouncementReaction::where([
-            'announcement_id' => $post->id,
-            'user_id'         => $userId,
-            'user_type'       => 'sk_fed',
-        ])->exists();
+        $userReaction = $this->userReactionType(
+            $post->relationLoaded('reactions') ? $post->reactions : null,
+            $userId,
+            'sk_fed'
+        );
+        $reactionCounts = $this->countsFromReactions(
+            $post->relationLoaded('reactions') ? $post->reactions : collect()
+        );
 
         $authorName = $post->user?->name
-            ?? ($post->is_federation_wide ? 'SK Federation' : ('SK Brgy. ' . ($post->barangay?->name ?? '')));
+            ?? ($post->is_federation_wide ? 'SK Federation' : ('SK Brgy. '.($post->barangay?->name ?? '')));
 
         $imageRecords = $post->relationLoaded('images') ? $post->images : collect();
         $imageItems = $imageRecords
             ->map(fn ($img) => [
-                'id'  => $img->id,
+                'id' => $img->id,
                 'url' => $this->cloudinary->normalizeUrl($img->image_url),
             ])
             ->filter(fn ($item) => ! empty($item['url']))
             ->values()
             ->all();
         $images = array_values(array_unique(array_column($imageItems, 'url')));
+        $comments = $post->relationLoaded('comments') ? $post->comments : collect();
 
         return [
-            'id'                 => $post->id,
-            'type'               => $post->type,
-            'title'              => $post->title,
-            'body'               => $post->body,
-            'image_url'          => $images[0] ?? null,
-            'images'             => $images,
-            'image_items'        => $imageItems,
-            'link_url'           => $post->link_url,
+            'id' => $post->id,
+            'type' => $post->type,
+            'title' => $post->title,
+            'body' => $post->body,
+            'image_url' => $images[0] ?? null,
+            'images' => $images,
+            'image_items' => $imageItems,
+            'link_url' => $post->link_url,
             'is_federation_wide' => (bool) $post->is_federation_wide,
-            'barangay_name'      => $post->barangay?->name,
-            'author_name'        => $authorName,
-            'author_avatar_url'  => $this->avatarService->resolveForPost($post),
-            'owned'              => $post->user_id === $userId && $post->is_federation_wide,
-            'likes'              => $post->reactions_count ?? $post->reactions()->count(),
-            'liked'              => $liked,
-            'time'               => $post->created_at?->diffForHumans() ?? 'Just now',
-            'reactions_summary'  => $this->formatReactionsSummary(
+            'barangay_name' => $post->barangay?->name,
+            'author_name' => $authorName,
+            'author_avatar_url' => $this->avatarService->resolveForPost($post),
+            'owned' => $post->user_id === $userId && $post->is_federation_wide,
+            'likes' => array_sum($reactionCounts),
+            'liked' => $userReaction !== null,
+            'reaction_type' => $userReaction,
+            'reaction_counts' => $reactionCounts,
+            'time' => $post->created_at?->diffForHumans() ?? 'Just now',
+            'reactions_summary' => $this->formatReactionsSummary(
                 $post->relationLoaded('reactions') ? $post->reactions : collect(),
-                (int) ($post->reactions_count ?? 0),
+                array_sum($reactionCounts),
             ),
-            'comments'           => $post->comments->map(fn ($c) => $this->formatComment($c))->values(),
+            'comment_count' => $comments->count(),
+            'comments' => $this->formatCommentTree($comments, $userId),
         ];
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function formatComment(AnnouncementComment $comment): array
+    private function formatComment(AnnouncementComment $comment, int $userId): array
     {
+        $reactionCounts = $this->countsFromReactions(
+            $comment->relationLoaded('reactions') ? $comment->reactions : collect()
+        );
+        $userReaction = $this->userReactionType(
+            $comment->relationLoaded('reactions') ? $comment->reactions : null,
+            $userId,
+            'sk_fed'
+        );
+
         return [
-            'id'          => $comment->id,
+            'id' => $comment->id,
+            'parent_id' => $comment->parent_id,
             'author_name' => $comment->author_name,
-            'body'        => $comment->body,
-            'time'        => $comment->created_at?->diffForHumans() ?? 'Just now',
-            'user_type'   => $comment->user_type,
-            'avatar_url'  => $this->avatarService->resolveForComment($comment),
+            'body' => $comment->body,
+            'time' => $comment->created_at?->diffForHumans() ?? 'Just now',
+            'user_type' => $comment->user_type,
+            'owned' => (int) $comment->user_id === $userId && $comment->user_type === 'sk_fed',
+            'avatar_url' => $this->avatarService->resolveForComment($comment),
+            'author_avatar_url' => $this->avatarService->resolveForComment($comment),
+            'likes' => array_sum($reactionCounts),
+            'liked' => $userReaction !== null,
+            'reaction_type' => $userReaction,
+            'reaction_counts' => $reactionCounts,
+            'reply_count' => $comment->relationLoaded('replies') ? $comment->replies->count() : 0,
+            'replies' => $comment->relationLoaded('replies')
+                ? $comment->replies->map(fn ($reply) => $this->formatComment($reply, $userId))->values()->all()
+                : [],
         ];
+    }
+
+    /**
+     * @param  Collection<int, AnnouncementComment>  $comments
+     * @return list<array<string, mixed>>
+     */
+    private function formatCommentTree(Collection $comments, int $userId): array
+    {
+        $byParent = $comments->groupBy(fn (AnnouncementComment $comment) => $comment->parent_id ?? 0);
+
+        return $byParent->get(0, collect())
+            ->map(function (AnnouncementComment $comment) use ($byParent, $userId) {
+                $comment->setRelation('replies', $byParent->get($comment->id, collect())->values());
+
+                return $this->formatComment($comment, $userId);
+            })
+            ->values()
+            ->all();
     }
 
     /**
@@ -412,6 +520,7 @@ class CommunityFeedPostController extends Controller
             'name' => $this->resolveReactorName($reaction),
             'avatar_url' => $this->resolveReactorAvatar($reaction),
             'role_label' => $this->resolveReactorRoleLabel($reaction),
+            'reaction_type' => $reaction->reaction_type ?: 'like',
         ])->values();
 
         return [
@@ -468,12 +577,12 @@ class CommunityFeedPostController extends Controller
                 $publicId = 'fed_post_'.$post->id.'_'.Str::random(10);
                 $result = $this->cloudinary->upload($file, $publicId);
 
-                \App\Modules\Shared\Models\AnnouncementImage::create([
-                    'announcement_id' => $post->id,
-                    'image_url'       => $result['url'],
-                    'public_id'       => $result['public_id'],
-                    'sort_order'      => $sort,
-                    'created_at'      => $now,
+                AnnouncementImage::create([
+                    'community_feed_id' => $post->id,
+                    'image_url' => $result['url'],
+                    'public_id' => $result['public_id'],
+                    'sort_order' => $sort,
+                    'created_at' => $now,
                 ]);
 
                 $uploaded[] = ['url' => $result['url'], 'public_id' => $result['public_id']];
@@ -484,5 +593,91 @@ class CommunityFeedPostController extends Controller
         }
 
         return $uploaded;
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private function emptyReactionCounts(): array
+    {
+        return array_fill_keys(AnnouncementReaction::TYPES, 0);
+    }
+
+    /**
+     * @param  Collection<int, object>  $reactions
+     * @return array<string, int>
+     */
+    private function countsFromReactions(Collection $reactions): array
+    {
+        $counts = $this->emptyReactionCounts();
+        foreach ($reactions as $reaction) {
+            $type = (string) ($reaction->reaction_type ?: 'like');
+            if (isset($counts[$type])) {
+                $counts[$type]++;
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private function reactionCountsForPost(int $feedId): array
+    {
+        return $this->countsFromQuery(
+            AnnouncementReaction::query()
+                ->where('community_feed_id', $feedId)
+                ->selectRaw('reaction_type, COUNT(*) as aggregate')
+                ->groupBy('reaction_type')
+                ->pluck('aggregate', 'reaction_type')
+        );
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private function reactionCountsForComment(int $commentId): array
+    {
+        return $this->countsFromQuery(
+            AnnouncementCommentReaction::query()
+                ->where('comment_id', $commentId)
+                ->selectRaw('reaction_type, COUNT(*) as aggregate')
+                ->groupBy('reaction_type')
+                ->pluck('aggregate', 'reaction_type')
+        );
+    }
+
+    /**
+     * @param  Collection<string, mixed>  $grouped
+     * @return array<string, int>
+     */
+    private function countsFromQuery(Collection $grouped): array
+    {
+        $counts = $this->emptyReactionCounts();
+        foreach ($grouped as $type => $count) {
+            $key = $type !== '' && $type !== null ? (string) $type : 'like';
+            if (isset($counts[$key])) {
+                $counts[$key] = (int) $count;
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
+     * @param  Collection<int, object>|null  $reactions
+     */
+    private function userReactionType(?Collection $reactions, int $userId, string $userType): ?string
+    {
+        if ($reactions === null) {
+            return null;
+        }
+
+        $match = $reactions->first(
+            fn ($reaction) => (int) $reaction->user_id === $userId && $reaction->user_type === $userType
+        );
+
+        return $match?->reaction_type ? (string) $match->reaction_type : ($match ? 'like' : null);
     }
 }

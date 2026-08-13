@@ -12,15 +12,13 @@ class FederationPostArchiveService
 {
     public const RETENTION_DAYS = 30;
 
-    public function __construct(private readonly CloudinaryService $cloudinary)
-    {
-    }
+    public function __construct(private readonly CloudinaryService $cloudinary) {}
 
     public function archive(Announcement $post, User $user): Announcement
     {
         $now = now();
 
-        DB::table('announcements')
+        DB::table('community_feeds')
             ->where('id', $post->id)
             ->update([
                 'is_archived' => DB::raw('true'),
@@ -36,7 +34,7 @@ class FederationPostArchiveService
     {
         $now = now();
 
-        DB::table('announcements')
+        DB::table('community_feeds')
             ->where('id', $post->id)
             ->update([
                 'is_archived' => DB::raw('false'),

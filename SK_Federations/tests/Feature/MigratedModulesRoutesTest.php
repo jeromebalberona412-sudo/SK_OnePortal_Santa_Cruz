@@ -16,6 +16,12 @@ it('registers audit log routes in sk federation', function () {
     expect(Route::has('auditlogs.export.csv'))->toBeTrue();
 });
 
+it('registers community feed reaction routes in sk federation', function () {
+    expect(Route::has('api.community-feed.react'))->toBeTrue();
+    expect(Route::has('api.community-feed.comment-react'))->toBeTrue();
+    expect(Route::has('community-feed'))->toBeTrue();
+});
+
 it('registers archive management routes in sk federation', function () {
     expect(Route::has('archived.deleted-sk-federation'))->toBeFalse();
     expect(Route::has('archived.deleted-sk-officials'))->toBeTrue();

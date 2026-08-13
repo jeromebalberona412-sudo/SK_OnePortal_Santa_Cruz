@@ -17,6 +17,7 @@ class BarangayMonitoringService
         return [
             'alipit' => 'Alipit',
             'bagumbayan' => 'Bagumbayan',
+            'bubukal' => 'Bubukal',
             'calios' => 'Calios',
             'duhat' => 'Duhat',
             'gatid' => 'Gatid',

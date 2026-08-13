@@ -74,6 +74,7 @@ function loadPosts(reset) {
                     el.dataset.postId = p.id;
                     el.innerHTML = buildPost(p);
                     bindPostImageClicks(el, p);
+                    bindReactionControls(el);
                     container.appendChild(el);
                 });
             }
@@ -98,6 +99,30 @@ function escapeHtml(v) {
 }
 
 const LIKE_THUMB_SVG = '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/></svg>';
+const REACTION_EMOJI = { like: '👍', love: '❤️', haha: '😂', wow: '😮', sad: '😢', angry: '😡' };
+const REACTION_LABEL = { like: 'Like', love: 'Love', haha: 'Haha', wow: 'Wow', sad: 'Sad', angry: 'Angry' };
+
+function isTouchDevice() {
+    return window.matchMedia('(hover: none), (pointer: coarse)').matches;
+}
+
+function reactionPickerHtml(activeType) {
+    return '<div class="reaction-picker"><div class="reaction-picker-inner">'
+        + Object.keys(REACTION_EMOJI).map(function (type) {
+            return '<button type="button" class="reaction-option' + (activeType === type ? ' is-active' : '') + '" data-type="' + type + '" title="' + type + '">' + REACTION_EMOJI[type] + '</button>';
+        }).join('')
+        + '</div></div>';
+}
+
+function reactionLabel(type) {
+    return type ? (REACTION_LABEL[type] || 'Like') : 'Like';
+}
+
+function countAllComments(comments) {
+    return (comments || []).reduce(function (sum, c) {
+        return sum + 1 + countAllComments(c.replies || []);
+    }, 0);
+}
 
 function postAvatarUrl(p) {
     if (p.author_avatar_url) return p.author_avatar_url;
@@ -263,7 +288,7 @@ function buildReactionAvatarsHtml(summary) {
 
 function buildStatsBar(p) {
     var likeCount = p.likes || 0;
-    var commentCount = (p.comments || []).length;
+    var commentCount = countAllComments(p.comments || []);
     if (likeCount <= 0 && commentCount <= 0) return '';
 
     var likesHtml = '';
@@ -284,30 +309,69 @@ function buildStatsBar(p) {
     return '<div class="post-stats-bar">' + likesHtml + commentsHtml + '</div>';
 }
 
+function buildCommentItem(c, postId, isReply) {
+    var replies = c.replies || [];
+    var type = c.reaction_type || '';
+    var likeLabel = reactionLabel(type);
+    var repliesHtml = replies.map(function (r) { return buildCommentItem(r, postId, true); }).join('');
+    var viewReplies = replies.length && !isReply
+        ? '<button type="button" class="fb-view-replies" onclick="toggleFedReplies(' + c.id + ')">View ' + replies.length + (replies.length === 1 ? ' reply' : ' replies') + '</button>'
+        : '';
+
+    return '<div class="comment-item' + (isReply ? ' is-reply' : '') + '" data-comment-id="' + c.id + '">'
+        + '<img src="' + escapeHtml(commentAvatarUrl(c)) + '" alt="' + escapeHtml(c.author_name) + '" class="comment-avatar">'
+        + '<div class="comment-body">'
+        + '<div class="comment-bubble">'
+        + '<p class="comment-author">' + escapeHtml(c.author_name) + '</p>'
+        + '<p class="comment-text">' + escapeHtml(c.body) + '</p>'
+        + '</div>'
+        + '<div class="comment-meta">'
+        + '<div class="reaction-wrap comment-like-wrap" data-target="comment" data-post-id="' + postId + '" data-comment-id="' + c.id + '">'
+        + '<button type="button" class="comment-like-btn' + (c.liked ? ' liked' : '') + '" data-type="' + escapeHtml(type) + '">' + escapeHtml(likeLabel) + '</button>'
+        + reactionPickerHtml(type)
+        + '</div>'
+        + '<button type="button" class="comment-action-btn" onclick="showFedReply(' + postId + ',' + c.id + ')">Reply</button>'
+        + '<span class="comment-time">' + escapeHtml(c.time || '') + '</span>'
+        + '</div>'
+        + viewReplies
+        + '<div class="comment-reply-box" id="fed-reply-' + c.id + '" style="display:none;gap:8px;margin-top:8px;">'
+        + '<input type="text" class="comment-input" placeholder="Write a reply..." maxlength="500" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addComment(' + postId + ',this,' + c.id + ');}">'
+        + '</div>'
+        + (repliesHtml ? '<div class="comment-replies" id="fed-replies-' + c.id + '" hidden>' + repliesHtml + '</div>' : '')
+        + '</div></div>';
+}
+
 function buildCommentsList(p) {
     var comments = p.comments || [];
     var expanded = expandedComments.has(p.id);
     var html = '';
+    var total = countAllComments(comments);
 
     if (comments.length > 2 && !expanded) {
         html += '<button type="button" class="view-more-comments" onclick="expandAllComments(' + p.id + ')">'
-            + 'View all ' + comments.length + ' comments</button>';
+            + 'View all ' + total + ' comments</button>';
     }
 
     var visible = expanded ? comments : comments.slice(-2);
-    html += visible.map(function (c) {
-        return '<div class="comment-item">'
-            + '<img src="' + escapeHtml(commentAvatarUrl(c)) + '" alt="' + escapeHtml(c.author_name) + '" class="comment-avatar">'
-            + '<div class="comment-bubble">'
-            + '<p class="comment-author">' + escapeHtml(c.author_name) + '</p>'
-            + '<p class="comment-text">' + escapeHtml(c.body) + '</p>'
-            + '</div>'
-            + '<span class="comment-time">' + escapeHtml(c.time) + '</span>'
-            + '</div>';
-    }).join('');
-
+    html += visible.map(function (c) { return buildCommentItem(c, p.id, false); }).join('');
     return html;
 }
+
+function toggleFedReplies(commentId) {
+    var el = document.getElementById('fed-replies-' + commentId);
+    if (el) el.hidden = !el.hidden;
+}
+
+function showFedReply(postId, commentId) {
+    var box = document.getElementById('fed-reply-' + commentId);
+    if (!box) return;
+    box.style.display = box.style.display === 'none' ? 'flex' : 'none';
+    var input = box.querySelector('input');
+    if (input) input.focus();
+}
+
+window.toggleFedReplies = toggleFedReplies;
+window.showFedReply = showFedReply;
 
 function buildCommentInput(p) {
     var userAvatar = window.currentAvatar || FED_AVATAR;
@@ -323,7 +387,10 @@ function refreshCommentsSection(p) {
     var section = document.getElementById('comments-' + p.id);
     if (!section) return;
     var list = section.querySelector('.comments-list');
-    if (list) list.innerHTML = buildCommentsList(p);
+    if (list) {
+        list.innerHTML = buildCommentsList(p);
+        bindReactionControls(list);
+    }
 }
 
 function expandAllComments(id) {
@@ -382,7 +449,7 @@ function renderLikesList(reactors) {
         return '<div class="cf-likes-item">'
             + '<div class="cf-likes-avatar-wrap">'
             + '<img src="' + escapeHtml(r.avatar_url) + '" alt="' + escapeHtml(r.name) + '" class="cf-likes-avatar">'
-            + '<span class="cf-likes-reaction-badge">' + LIKE_THUMB_SVG + '</span>'
+            + '<span class="cf-likes-reaction-badge">' + (REACTION_EMOJI[r.reaction_type] || LIKE_THUMB_SVG) + '</span>'
             + '</div>'
             + '<div class="cf-likes-user">'
             + '<p class="cf-likes-name">' + escapeHtml(r.name) + '</p>'
@@ -438,8 +505,10 @@ function buildPost(p) {
             + '</div></div>';
     }
 
-    var commentCount = (p.comments || []).length;
+    var commentCount = countAllComments(p.comments || []);
     var statsHtml = buildStatsBar(p);
+    var reactionType = p.reaction_type || '';
+    var likeIcon = reactionType && reactionType !== 'like' ? REACTION_EMOJI[reactionType] : LIKE_THUMB_SVG;
 
     return '<div class="post-header">'
         + '<img src="' + escapeHtml(avatar) + '" alt="' + escapeHtml(p.author_name) + '" class="post-avatar">'
@@ -454,9 +523,12 @@ function buildPost(p) {
         + '</div>'
         + statsHtml
         + '<div class="post-actions">'
-        + '<button class="action-btn' + (liked ? ' liked' : '') + '" onclick="toggleLike(' + p.id + ', this)">'
-        + LIKE_THUMB_SVG
-        + '<span id="like-count-' + p.id + '">' + formatLikeCountLabel(p.id, p.likes || 0) + '</span></button>'
+        + '<div class="reaction-wrap" data-target="post" data-post-id="' + p.id + '">'
+        + '<button type="button" class="action-btn reaction-btn' + (liked ? ' liked' : '') + '" data-type="' + escapeHtml(reactionType) + '" id="like-btn-' + p.id + '">'
+        + '<span class="reaction-icon">' + likeIcon + '</span>'
+        + '<span id="like-count-' + p.id + '">' + escapeHtml(reactionLabel(reactionType)) + (p.likes ? ' (' + p.likes + ')' : '') + '</span></button>'
+        + reactionPickerHtml(reactionType)
+        + '</div>'
         + '<button class="action-btn comment-btn" onclick="toggleComments(' + p.id + ')">'
         + '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>'
         + '<span id="comment-count-' + p.id + '">Comment (' + commentCount + ')</span></button>'
@@ -468,33 +540,111 @@ function buildPost(p) {
 }
 
 /* ── INTERACTIONS ── */
-function toggleLike(id, btn) {
-    apiFetch('/api/community-feed/' + id + '/react', { method: 'POST' })
+function bindReactionControls(root) {
+    if (!root) return;
+    root.querySelectorAll('.reaction-wrap').forEach(bindReactionWrap);
+}
+
+function bindReactionWrap(wrap) {
+    if (!wrap || wrap.dataset.bound === '1') return;
+    wrap.dataset.bound = '1';
+    var btn = wrap.querySelector('.reaction-btn, .comment-like-btn');
+    var picker = wrap.querySelector('.reaction-picker');
+    var hideTimer = null;
+    var showTimer = null;
+    var postId = Number(wrap.dataset.postId);
+    var commentId = Number(wrap.dataset.commentId || 0);
+    var isComment = wrap.dataset.target === 'comment';
+
+    function apply(type) {
+        if (isComment) setCommentReaction(postId, commentId, type);
+        else setReaction(postId, type);
+    }
+
+    wrap.addEventListener('mouseenter', function () {
+        if (isTouchDevice()) return;
+        clearTimeout(hideTimer);
+        showTimer = setTimeout(function () { wrap.classList.add('is-open'); }, 280);
+    });
+    wrap.addEventListener('mouseleave', function () {
+        if (isTouchDevice()) return;
+        clearTimeout(showTimer);
+        hideTimer = setTimeout(function () { wrap.classList.remove('is-open'); }, 320);
+    });
+    btn && btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        wrap.classList.remove('is-open');
+        apply(btn.dataset.type || 'like');
+    });
+    picker && picker.querySelectorAll('.reaction-option').forEach(function (opt) {
+        opt.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            wrap.classList.remove('is-open');
+            apply(opt.dataset.type);
+        });
+    });
+}
+
+function setReaction(id, type) {
+    apiFetch('/api/community-feed/' + id + '/react', {
+        method: 'POST',
+        body: JSON.stringify({ reaction_type: type || 'like' }),
+    })
         .then(function (r) { return r.json(); })
         .then(function (data) {
-            if (data.liked) btn.classList.add('liked');
-            else btn.classList.remove('liked');
-
             var p = posts.find(function (x) { return x.id === id; });
             if (p) {
                 p.likes = data.count;
                 p.liked = data.liked;
+                p.reaction_type = data.reaction_type || '';
+                p.reaction_counts = data.reaction_counts || p.reaction_counts;
                 if (data.reactions_summary) p.reactions_summary = data.reactions_summary;
-                updateLikeCountLabel(id, data.count);
-                var card = document.querySelector('[data-post-id="' + id + '"]');
-                if (card) {
-                    var statsBar = card.querySelector('.post-stats-bar');
-                    var newStats = buildStatsBar(p);
-                    if (statsBar) {
-                        if (newStats) statsBar.outerHTML = newStats;
-                        else statsBar.remove();
-                    } else if (newStats) {
-                        var actions = card.querySelector('.post-actions');
-                        if (actions) actions.insertAdjacentHTML('beforebegin', newStats);
-                    }
+            }
+            var card = document.querySelector('[data-post-id="' + id + '"]');
+            var btn = document.getElementById('like-btn-' + id);
+            if (btn) {
+                btn.classList.toggle('liked', Boolean(data.liked));
+                btn.dataset.type = data.reaction_type || '';
+                var icon = btn.querySelector('.reaction-icon');
+                if (icon) icon.innerHTML = (data.reaction_type && data.reaction_type !== 'like') ? REACTION_EMOJI[data.reaction_type] : LIKE_THUMB_SVG;
+                var label = document.getElementById('like-count-' + id);
+                if (label) label.textContent = reactionLabel(data.reaction_type) + (data.count ? ' (' + data.count + ')' : '');
+            }
+            if (p && card) {
+                var statsBar = card.querySelector('.post-stats-bar');
+                var newStats = buildStatsBar(p);
+                if (statsBar) {
+                    if (newStats) statsBar.outerHTML = newStats;
+                    else statsBar.remove();
+                } else if (newStats) {
+                    var actions = card.querySelector('.post-actions');
+                    if (actions) actions.insertAdjacentHTML('beforebegin', newStats);
                 }
             }
         });
+}
+
+function setCommentReaction(postId, commentId, type) {
+    apiFetch('/api/community-feed/' + postId + '/comments/' + commentId + '/reactions', {
+        method: 'POST',
+        body: JSON.stringify({ reaction_type: type || 'like' }),
+    })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            var wrap = document.querySelector('.reaction-wrap[data-comment-id="' + commentId + '"]');
+            var btn = wrap && wrap.querySelector('.comment-like-btn');
+            if (btn) {
+                btn.classList.toggle('liked', Boolean(data.liked));
+                btn.dataset.type = data.reaction_type || '';
+                btn.textContent = reactionLabel(data.reaction_type);
+            }
+        });
+}
+
+function toggleLike(id) {
+    setReaction(id, 'like');
 }
 
 function toggleComments(id) {
@@ -521,7 +671,7 @@ function submitCommentBtn(id, btn) {
     if (input) addComment(id, input);
 }
 
-function addComment(id, input) {
+function addComment(id, input, parentId) {
     var text = input.value.trim();
     if (!text) return;
     if (text.length > 500) {
@@ -529,8 +679,10 @@ function addComment(id, input) {
         return;
     }
     input.value = '';
+    var payload = { body: text };
+    if (parentId) payload.parent_id = parentId;
 
-    apiFetch('/api/community-feed/' + id + '/comment', { method: 'POST', body: JSON.stringify({ body: text }) })
+    apiFetch('/api/community-feed/' + id + '/comment', { method: 'POST', body: JSON.stringify(payload) })
         .then(function(r) {
             if (!r.ok) {
                 return r.json().then(function(data) {
@@ -543,7 +695,23 @@ function addComment(id, input) {
             var p = posts.find(function(x) { return x.id === id; });
             if (p) {
                 if (!p.comments) p.comments = [];
-                p.comments.push(c);
+                if (parentId) {
+                    var nested = false;
+                    (function nest(list) {
+                        for (var i = 0; i < list.length; i++) {
+                            if (list[i].id === parentId) {
+                                list[i].replies = list[i].replies || [];
+                                list[i].replies.push(c);
+                                nested = true;
+                                return;
+                            }
+                            nest(list[i].replies || []);
+                        }
+                    })(p.comments);
+                    if (!nested) p.comments.push(c);
+                } else {
+                    p.comments.push(c);
+                }
                 commentSections.add(id);
                 expandedComments.add(id);
                 var section = document.getElementById('comments-' + id);
@@ -552,7 +720,7 @@ function addComment(id, input) {
                     refreshCommentsSection(p);
                 }
                 var countEl = document.getElementById('comment-count-' + id);
-                if (countEl) countEl.textContent = 'Comment (' + p.comments.length + ')';
+                if (countEl) countEl.textContent = 'Comment (' + countAllComments(p.comments) + ')';
                 var card = document.querySelector('[data-post-id="' + id + '"]');
                 if (card) {
                     var statsBar = card.querySelector('.post-stats-bar');
@@ -898,4 +1066,12 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('imageLightbox')?.addEventListener('click', function (e) {
         if (e.target && e.target.id === 'imageLightbox') closeLightbox();
     });
+
+    var brgyList = document.getElementById('cfBrgyLinkList');
+    var feedSidebar = document.getElementById('feedSidebar');
+    feedSidebar?.addEventListener('wheel', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (brgyList) brgyList.scrollTop += event.deltaY;
+    }, { passive: false });
 });
