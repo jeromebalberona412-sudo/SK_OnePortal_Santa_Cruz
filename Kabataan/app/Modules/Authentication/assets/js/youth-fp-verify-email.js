@@ -140,7 +140,7 @@
                     if (resendSpinner) resendSpinner.hidden = true;
                     showStatus('Your session has expired. Redirecting…', 'error');
                     setTimeout(() => {
-                        window.location.href = dataEl.dataset.loginUrl || '/forgot-password';
+                        window.location.href = dataEl.dataset.signinUrl || '/forgot-password';
                     }, 1500);
                     return;
                 }

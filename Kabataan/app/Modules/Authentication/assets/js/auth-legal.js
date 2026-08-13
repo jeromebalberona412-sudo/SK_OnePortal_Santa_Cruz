@@ -9,7 +9,7 @@
     let pendingSubmit = false;
 
     function getAckKey(type) {
-        const portal = document.body.classList.contains('sk-login-page') ? 'officials' : 'kabataan';
+        const portal = document.body.classList.contains('sk-signin-page') ? 'officials' : 'kabataan';
         return `${ACK_STORAGE_PREFIX}${portal}_${type}`;
     }
 
@@ -171,7 +171,7 @@
             return false;
         }
 
-        if (document.body.classList.contains('sk-login-page')) {
+        if (document.body.classList.contains('sk-signin-page')) {
             return password.length >= 8 && password.length <= 64;
         }
 
@@ -201,8 +201,8 @@
         });
 
         document.getElementById('legalConsentAgreeBtn')?.addEventListener('click', () => {
-            const consent = document.getElementById('loginLegalConsent');
-            const form = document.getElementById('loginForm');
+            const consent = document.getElementById('signinLegalConsent');
+            const form = document.getElementById('signinForm');
             if (consent) {
                 consent.checked = true;
                 consent.dispatchEvent(new Event('change', { bubbles: true }));
@@ -230,11 +230,11 @@
         });
     }
 
-    function bindLoginConsent() {
-        const form = document.getElementById('loginForm');
-        const consent = document.getElementById('loginLegalConsent');
+    function bindSigninConsent() {
+        const form = document.getElementById('signinForm');
+        const consent = document.getElementById('signinLegalConsent');
         const consentError = document.getElementById('legalConsentError');
-        const submitBtn = document.getElementById('loginBtn') || form?.querySelector('button[type="submit"]');
+        const submitBtn = document.getElementById('signinBtn') || form?.querySelector('button[type="submit"]');
 
         if (!form || !consent) return;
 
@@ -274,6 +274,6 @@
     document.addEventListener('DOMContentLoaded', () => {
         initLegalModalScrollGates();
         bindModals();
-        bindLoginConsent();
+        bindSigninConsent();
     });
 })();

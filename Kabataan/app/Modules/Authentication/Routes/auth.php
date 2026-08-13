@@ -5,10 +5,10 @@ use App\Modules\Authentication\Controllers\AuthController;
 
 // Sign In routes (guest only)
 Route::middleware('guest')->group(function () {
-    Route::get('/sign-in', [AuthController::class, 'showLogin'])->name('sign-in');
-    Route::post('/sign-in', [AuthController::class, 'login']);
+    Route::get('/sign-in', [AuthController::class, 'showSignin'])->name('sign-in');
+    Route::post('/sign-in', [AuthController::class, 'signin']);
 
-    // Backward-compat alias: any route('sign-in') reference redirects to /sign-in
+    // Backward-compat alias: any route('signin') reference redirects to /sign-in
     Route::get('/login', fn () => redirect()->route('sign-in'))->name('login');
 
 // Registration routes — direct users to KK Profiling signup

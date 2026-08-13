@@ -65,7 +65,7 @@ html {
    Background
    ============================================ */
 
-.youth-login-page {
+.youth-signin-page {
     min-height: 100vh;
     height: 100vh;
     display: flex;
@@ -76,7 +76,7 @@ html {
 }
 
 @media (max-width: 1024px) {
-    .youth-login-page {
+    .youth-signin-page {
         height: auto;
         min-height: 100vh;
         overflow-y: auto;
@@ -97,7 +97,7 @@ html {
    Main Container
    ============================================ */
 
-.youth-login-container {
+.youth-signin-container {
     position: relative;
     z-index: 10;
     flex: 1;
@@ -117,7 +117,7 @@ html {
 }
 
 @media (max-width: 1024px) {
-    .youth-login-container {
+    .youth-signin-container {
         height: auto;
         min-height: 100vh;
         overflow-y: visible;
@@ -189,10 +189,10 @@ html {
 }
 
 /* ============================================
-   Right Side - Login Card
+   Right Side - Sign In Card
    ============================================ */
 
-.youth-login-section {
+.youth-signin-section {
     width: 580px;
     display: flex;
     align-items: center;
@@ -203,7 +203,7 @@ html {
     overflow: hidden;
 }
 
-.youth-login-card {
+.youth-signin-card {
     width: 100%;
     background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(40px);
@@ -295,7 +295,7 @@ html {
    Form
    ============================================ */
 
-.youth-login-form {
+.youth-signin-form {
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
@@ -533,6 +533,16 @@ html {
     transform: none;
 }
 
+/* Button Loading State */
+.youth-submit-btn.loading {
+    pointer-events: none;
+    opacity: 0.85;
+}
+
+.youth-submit-btn.loading span {
+    opacity: 0.9;
+}
+
 .youth-homepage-btn {
     width: 100%;
     margin-top: 12px;
@@ -628,14 +638,14 @@ html {
    ============================================ */
 
 @media (max-width: 1200px) {
-    .youth-login-container { padding: 0 2rem; }
+    .youth-signin-container { padding: 0 2rem; }
     .youth-branding-section { padding: 3rem; }
     .youth-main-title { font-size: 4rem; }
-    .youth-login-section { width: 500px; padding: 3rem 3rem 3rem 2rem; }
+    .youth-signin-section { width: 500px; padding: 3rem 3rem 3rem 2rem; }
 }
 
 @media (max-width: 1024px) {
-    .youth-login-container {
+    .youth-signin-container {
         flex-direction: column;
         padding: 0;
         overflow-y: auto;
@@ -653,7 +663,7 @@ html {
     }
     .youth-main-title { font-size: 4rem; }
     .youth-tagline { font-size: 1.35rem; max-width: 600px; }
-    .youth-login-section {
+    .youth-signin-section {
         width: 100%;
         max-width: 580px;
         margin: 0 auto;
@@ -668,8 +678,8 @@ html {
     .youth-tagline { font-size: 1.2rem; }
     .logo-wrapper::before { width: 240px; height: 240px; }
     .youth-logo { width: 180px; height: 180px; }
-    .youth-login-section { padding: 0 2rem 3rem; }
-    .youth-login-card { padding: 3rem 2.5rem; border-radius: 28px; }
+    .youth-signin-section { padding: 0 2rem 3rem; }
+    .youth-signin-card { padding: 3rem 2.5rem; border-radius: 28px; }
     .card-header { min-height: 36px; margin-bottom: 1.5rem; }
     .card-subtitle { font-size: 1.25rem; }
 }
@@ -681,8 +691,8 @@ html {
     .logo-wrapper { margin-bottom: 2rem; }
     .logo-wrapper::before { width: 200px; height: 200px; }
     .youth-logo { width: 150px; height: 150px; }
-    .youth-login-section { padding: 0 1.5rem 2.5rem; }
-    .youth-login-card { padding: 2.5rem 2rem; border-radius: 24px; }
+    .youth-signin-section { padding: 0 1.5rem 2.5rem; }
+    .youth-signin-card { padding: 2.5rem 2rem; border-radius: 24px; }
     .card-header { min-height: 32px; margin-bottom: 1.5rem; }
     .card-subtitle { font-size: 1.15rem; }
     .youth-form-options { flex-direction: row; align-items: center; gap: 0.5rem; }
@@ -695,8 +705,8 @@ html {
     .logo-wrapper { margin-bottom: 1.5rem; }
     .logo-wrapper::before { width: 160px; height: 160px; }
     .youth-logo { width: 120px; height: 120px; }
-    .youth-login-section { padding: 0 1.25rem 2rem; }
-    .youth-login-card { padding: 2rem 1.75rem; border-radius: 20px; }
+    .youth-signin-section { padding: 0 1.25rem 2rem; }
+    .youth-signin-card { padding: 2rem 1.75rem; border-radius: 20px; }
     .card-header { min-height: 28px; margin-bottom: 1.25rem; }
     .card-subtitle { font-size: 1.1rem; }
     .youth-input { padding: 0.875rem 1rem; font-size: 0.95rem; }
@@ -717,8 +727,8 @@ html {
 
 @media print {
     .youth-bg-wrapper, .floating-shapes, .youth-footer { display: none; }
-    .youth-login-page { background: white; }
-    .youth-login-card { box-shadow: none; border: 2px solid var(--youth-gray-300); }
+    .youth-signin-page { background: white; }
+    .youth-signin-card { box-shadow: none; border: 2px solid var(--youth-gray-300); }
 }
 
 *:focus-visible {
@@ -834,7 +844,7 @@ html {
 }
 
 /* Loading blur state */
-.youth-login-container.blurred {
+.youth-signin-container.blurred {
     filter: blur(3px);
     pointer-events: none;
     user-select: none;
@@ -862,7 +872,7 @@ html {
 
 /**
  * Full-screen overlay. Hidden by default; JS adds .turnstile-modal-visible
- * to reveal it. z-index sits above the login card (z-index:10) but below
+ * to reveal it. z-index sits above the signin card (z-index:10) but below
  * the loading overlay (z-index:9999).
  */
 .turnstile-modal {
@@ -1093,17 +1103,17 @@ html {
    Forgot Password — card header override
    ============================================ */
 
-/* Slightly narrower card (~half inch less than the 580px login card) */
-.youth-login-section--fp {
+/* Slightly narrower card (~half inch less than the 580px signin card) */
+.youth-signin-section--fp {
     width: 484px;
 }
 
 @media (max-width: 1200px) {
-    .youth-login-section--fp { width: 452px; }
+    .youth-signin-section--fp { width: 452px; }
 }
 
 @media (max-width: 1024px) {
-    .youth-login-section--fp {
+    .youth-signin-section--fp {
         width: 100%;
         max-width: 484px;
     }

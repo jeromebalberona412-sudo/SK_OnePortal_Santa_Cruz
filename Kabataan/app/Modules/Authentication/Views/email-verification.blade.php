@@ -13,9 +13,9 @@
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
-<body class="youth-login-page">
+<body class="youth-signin-page">
     @include('dashboard::loading')
-    <!-- Animated Background (same as login page) -->
+    <!-- Animated Background (same as signin page) -->
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
         <div class="youth-gradient-overlay"></div>
@@ -26,8 +26,8 @@
         </div>
     </div>
 
-    <main class="youth-login-container">
-        <!-- Left Side - Logo & Branding (same as login page) -->
+    <main class="youth-signin-container">
+        <!-- Left Side - Logo & Branding (same as signin page) -->
         <div class="youth-branding-section">
             <div class="branding-content">
                 <div class="logo-wrapper">
@@ -43,7 +43,7 @@
         </div>
 
         <!-- Right Side - Verification Card -->
-        <div class="youth-login-section">
+        <div class="youth-signin-section">
             <div class="verification-card">
             <div class="verification-icon">
                 <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -51,7 +51,7 @@
     <p>The system safeguards your information through:</p>
     <ul>
         <li>Password encryption</li>
-        <li>Secure login authentication</li>
+        <li>Secure signin authentication</li>
         <li>Authorized access only</li>
         <li>Database protection</li>
         <li>Audit logs</li>

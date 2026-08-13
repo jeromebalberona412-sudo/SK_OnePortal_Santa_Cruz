@@ -26,7 +26,7 @@ class AuthController extends Controller
         private readonly TurnstileService $turnstileService,
     ) {}
 
-    public function showLogin()
+    public function showSignin()
     {
         if (Auth::check()) {
             if ($this->kabataanAuthService->canAccessPortal(Auth::user())) {
@@ -41,7 +41,7 @@ class AuthController extends Controller
         return view('authentication::sign-in');
     }
 
-    public function login(Request $request)
+    public function signin(Request $request)
     {
         // ── Turnstile verification ──────────────────────────────────────────
         if ($this->turnstileService->isEnabled()) {
@@ -82,9 +82,9 @@ class AuthController extends Controller
             || ! $this->kabataanAuthService->canAccessPortal($user)
         ) {
             if ($request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => KabataanAuthService::LOGIN_DENIED_MESSAGE], 422);
+                return response()->json(['success' => false, 'message' => KabataanAuthService::SIGNIN_DENIED_MESSAGE], 422);
             }
-            return back()->withInput($request->only('email'))->with('sign_in_error', KabataanAuthService::LOGIN_DENIED_MESSAGE);
+            return back()->withInput($request->only('email'))->with('sign_in_error', KabataanAuthService::SIGNIN_DENIED_MESSAGE);
         }
 
         // ── Status checks ───────────────────────────────────────────────────

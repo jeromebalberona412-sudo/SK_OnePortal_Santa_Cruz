@@ -10,12 +10,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     const successModal = document.getElementById('successModal');
 
-    // Wire "Go to Login" button in success modal to show loading overlay
+    // Wire "Go to Sign In" button in success modal to show loading overlay
     if (successModal) {
-        const goToLoginBtn = successModal.querySelector('a[href]');
-        if (goToLoginBtn) {
-            goToLoginBtn.addEventListener('click', function() {
-                if (window.showLoading) window.showLoading('Redirecting to login');
+        const goToSigninBtn = successModal.querySelector('a[href]');
+        if (goToSigninBtn) {
+            goToSigninBtn.addEventListener('click', function() {
+                if (window.showLoading) window.showLoading('Redirecting to signin');
             });
         }
     }
@@ -341,30 +341,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             if (isValid) {
-                // For demo/testing: Show success modal directly on this page
-                e.preventDefault();
-                if (window.showLoading) window.showLoading('Creating your account');
-                setTimeout(() => {
-                    if (window.hideLoading) window.hideLoading();
-                    if (successModal) successModal.style.display = 'flex';
-                }, 800);
-                return;
-                
-                // Show loading state (this won't run because of return above)
+                // Show loading state on button
                 const submitBtn = this.querySelector('.youth-submit-btn[type="submit"]');
                 if (submitBtn) {
                     submitBtn.disabled = true;
-                    submitBtn.innerHTML = `
-                        <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <circle cx="12" cy="12" r="10" stroke-width="4" stroke-opacity="0.25"/>
-                            <path d="M12 2a10 10 0 0 1 10 10" stroke-width="4" stroke-linecap="round"/>
-                        </svg>
-                        <span>Creating Account...</span>
-                    `;
+                    submitBtn.classList.add('loading');
+                    const btnText = submitBtn.querySelector('.btn-text');
+                    if (btnText) btnText.textContent = 'Creating Account...';
                 }
                 
-                // Submit form
+                // Submit the form
                 this.submit();
+                return;
             } else {
                 // Scroll to first error
                 const firstError = document.querySelector('.input-error');

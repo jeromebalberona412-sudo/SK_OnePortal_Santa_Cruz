@@ -156,9 +156,9 @@
         }
     </style>
 </head>
-<body class="youth-login-page">
+<body class="youth-signin-page">
     @include('dashboard::loading')
-    <!-- Animated Background (same as login page) -->
+    <!-- Animated Background (same as signin page) -->
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
         <div class="youth-gradient-overlay"></div>

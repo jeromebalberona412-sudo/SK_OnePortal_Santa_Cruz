@@ -308,35 +308,35 @@
     font-size: 0.8125rem !important;
 }
 
-/* SK Officials dark login card overrides */
-.sk-login-card {
+/* SK Officials dark signin card overrides */
+.sk-signin-card {
     --auth-legal-text: #cbd5e1;
     --auth-legal-link: #2dd4bf;
     --auth-legal-link-hover: #5eead4;
     --auth-legal-accent: #f5c518;
 }
 
-.sk-login-card .auth-legal-consent-error {
+.sk-signin-card .auth-legal-consent-error {
     color: #fca5a5;
 }
 
-.sk-login-card .auth-legal-modal-btn {
+.sk-signin-card .auth-legal-modal-btn {
     color: #1a1a2e;
 }
 
 /* Kabataan light card */
-.youth-login-card {
+.youth-signin-card {
     --auth-legal-accent: #44a53e;
     --auth-legal-link: #0d9488;
     --auth-legal-link-hover: #0f766e;
 }
 
-/* Kabataan login — slightly compact card */
-.youth-login-page .youth-login-card {
+/* Kabataan signin — slightly compact card */
+.youth-signin-page .youth-signin-card {
     padding: 2rem 2.5rem;
 }
 
-.youth-login-page .card-header {
+.youth-signin-page .card-header {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -345,7 +345,7 @@
     text-align: center;
 }
 
-.youth-login-page .card-subtitle {
+.youth-signin-page .card-subtitle {
     font-size: 1.1rem;
     font-weight: 600;
     text-align: center;
@@ -354,16 +354,16 @@
     line-height: 1.5;
 }
 
-.youth-login-page .youth-login-form {
+.youth-signin-page .youth-signin-form {
     gap: 1rem;
 }
 
-.youth-login-page .youth-alert {
+.youth-signin-page .youth-alert {
     margin-bottom: 1rem;
     padding: 0.75rem 1rem;
 }
 
-.youth-login-page .youth-register-section {
+.youth-signin-page .youth-register-section {
     padding-top: 1rem;
     margin-top: 0.25rem;
 }

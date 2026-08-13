@@ -1,6 +1,6 @@
 /* ============================================
    SK OnePortal - Registration Form Styles
-   Extends youth-login.css
+   Extends youth-signin.css
    ============================================ */
 
 /* ============================================
@@ -805,4 +805,17 @@
     .file-upload-label {
         border-style: solid;
     }
+}
+
+/* ============================================
+   Button Loading State
+   ============================================ */
+
+.youth-submit-btn.loading {
+    pointer-events: none;
+    opacity: 0.85;
+}
+
+.youth-submit-btn.loading .btn-text {
+    opacity: 0.9;
 }

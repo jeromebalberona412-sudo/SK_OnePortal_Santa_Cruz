@@ -44,7 +44,7 @@
         }
     </style>
 </head>
-<body class="youth-login-page">
+<body class="youth-signin-page">
 
     {{-- ─── Turnstile Modal Overlay ─────────────────────────────────────────────
          Rendered in the DOM at all times when Turnstile is enabled.
@@ -117,7 +117,7 @@
         </div>
     </div>
 
-    <main class="youth-login-container">
+    <main class="youth-signin-container">
         <!-- Left Side - Logo & Branding -->
         <div class="youth-branding-section">
             <div class="branding-content">
@@ -134,10 +134,10 @@
         </div>
 
         <!-- Right Side - Sign In Card -->
-        <div class="youth-login-section">
-            <div class="youth-login-card">
+        <div class="youth-signin-section">
+            <div class="youth-signin-card">
                 <div class="card-header">
-                    <p class="card-subtitle">Login to your account</p>
+                    <p class="card-subtitle">Sign in to your account</p>
                 </div>
 
                 @if (session('sign_in_error'))
@@ -158,8 +158,8 @@
                     </div>
                 @endif
 
-                <!-- Login Form -->
-                <form class="youth-login-form" id="signInForm"
+                <!-- Sign In Form -->
+                <form class="youth-signin-form" id="signInForm"
                       method="POST"
                       action="{{ route('sign-in') }}"
                       novalidate
@@ -240,14 +240,14 @@
                         <a href="{{ route('password.request') }}" class="youth-link" id="forgotBtn">Forgot password?</a>
                     </div>
 
-                    @include('authentication::partials.login-legal-consent')
+                    @include('authentication::partials.signin-legal-consent')
 
                     {{--
                         Hidden Turnstile server-error anchor.
                         Only rendered when the backend explicitly rejected the Turnstile
                         token — NOT for wrong email/password errors. The JS checks for
                         this element on page load and auto-opens the verification modal
-                        so the user can re-verify without clicking Login again.
+                        so the user can re-verify without clicking Sign In again.
                     --}}
                     @php
                         $signInErr = session('sign_in_error', '');
@@ -265,7 +265,7 @@
 
                     <!-- Submit Button -->
                     <button type="submit" class="youth-submit-btn" id="signInBtn">
-                        <span>Login</span>
+                        <span>Sign In</span>
                     </button>
 
                 </form>
@@ -285,7 +285,7 @@
     </main>
 
     @include('authentication::partials.legal-modals')
-    @include('authentication::partials.login-legal-prompt')
+    @include('authentication::partials.signin-legal-prompt')
 
     <script>
         // Password toggle — self-contained, no conflict with form submit handlers

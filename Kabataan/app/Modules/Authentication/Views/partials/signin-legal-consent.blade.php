@@ -1,9 +1,9 @@
-<div class="auth-legal-consent-wrap" id="loginLegalConsentWrap">
-    <label class="auth-legal-consent" for="loginLegalConsent">
+<div class="auth-legal-consent-wrap" id="signinLegalConsentWrap">
+    <label class="auth-legal-consent" for="signinLegalConsent">
         <input
             type="radio"
             name="legal_consent"
-            id="loginLegalConsent"
+            id="signinLegalConsent"
             value="1"
             class="auth-legal-consent-radio"
         >

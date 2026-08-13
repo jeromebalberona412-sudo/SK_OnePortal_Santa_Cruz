@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class KabataanAuthService
 {
-    public const LOGIN_DENIED_MESSAGE = 'Invalid Email or Password';
+    public const SIGNIN_DENIED_MESSAGE = 'Invalid Email or Password';
     private const CACHE_TTL = 3600; // 1 hour
 
     public function canAccessPortal(?User $user): bool

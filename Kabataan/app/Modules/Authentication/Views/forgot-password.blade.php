@@ -14,9 +14,9 @@
         'app/Modules/Authentication/assets/css/auth-legal.css',
     ])
 </head>
-<body class="youth-login-page">
+<body class="youth-signin-page">
 
-    <main class="youth-login-container">
+    <main class="youth-signin-container">
 
         {{-- ─── Left Side — Logo & Branding ─────────────────────────────────────── --}}
         <div class="youth-branding-section">
@@ -34,8 +34,8 @@
         </div>
 
         {{-- ─── Right Side — Forgot Password Card ───────────────────────────────── --}}
-        <div class="youth-login-section youth-login-section--fp">
-            <div class="youth-login-card">
+        <div class="youth-signin-section youth-signin-section--fp">
+            <div class="youth-signin-card">
 
                 {{-- Card Header: centered bold title + small helper text --}}
                 <div class="card-header fp-card-header">
@@ -63,7 +63,7 @@
                 @endif
 
                 {{-- Forgot Password Form --}}
-                <form class="youth-login-form" method="POST" action="{{ route('password.email') }}" id="forgotPasswordForm" novalidate>
+                <form class="youth-signin-form" method="POST" action="{{ route('password.email') }}" id="forgotPasswordForm" novalidate>
                     @csrf
 
                     {{-- Email Field --}}
@@ -91,20 +91,21 @@
 
                     {{-- Submit Button --}}
                     <button type="submit" class="youth-submit-btn" id="sendResetLinkBtn">
+                        <span class="spinner"></span>
                         <span id="fpBtnText">Send Reset Link</span>
                     </button>
                 </form>
 
-                {{-- Back to Login --}}
+                {{-- Back to Sign In --}}
                 <div class="youth-register-section">
                     <p class="register-text">
                         Remember your password?
-                        <a href="{{ route('sign-in') }}" class="register-link">Back to Login</a>
+                        <a href="{{ route('sign-in') }}" class="register-link">Back to Sign In</a>
                     </p>
                 </div>
 
-            </div>{{-- /.youth-login-card --}}
-        </div>{{-- /.youth-login-section --}}
+            </div>{{-- /.youth-signin-card --}}
+        </div>{{-- /.youth-signin-section --}}
 
     </main>
 
@@ -136,16 +137,21 @@
                 emailError.style.display = 'none';
             }
 
-            function setBtn(disabled, text) {
+            function setBtn(disabled, text, loading) {
                 if (!btn || !btnText) return;
                 btn.disabled = disabled;
                 btnText.textContent = text;
+                if (loading) {
+                    btn.classList.add('loading');
+                } else {
+                    btn.classList.remove('loading');
+                }
             }
 
             function clearCooldown() {
                 localStorage.removeItem(cooldownKey);
                 if (timerIv) { clearInterval(timerIv); timerIv = null; }
-                setBtn(false, 'Send Reset Link');
+                setBtn(false, 'Send Reset Link', false);
             }
 
             function applyCooldown(until) {
@@ -154,7 +160,7 @@
                 timerIv = setInterval(function () {
                     var remaining = Math.ceil((until - Date.now()) / 1000);
                     if (remaining <= 0) { clearCooldown(); return; }
-                    setBtn(true, 'Send Reset Link (' + remaining + 's)');
+                    setBtn(true, 'Send Reset Link (' + remaining + 's)', false);
                 }, 250);
             }
 
@@ -201,7 +207,7 @@
                         return;
                     }
 
-                    setBtn(true, 'Sending...');
+                    setBtn(true, 'Sending...', true);
                     form.submit();
                 });
             }

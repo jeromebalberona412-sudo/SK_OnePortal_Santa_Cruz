@@ -219,6 +219,14 @@
         // Set lock BEFORE submit — prevents any re-entrant handler from firing
         isSubmitting = true;
 
+        // Show loading state on button
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('loading');
+            var span = submitBtn.querySelector('span');
+            if (span) span.textContent = 'Signing in...';
+        }
+
         // Native submit — does NOT dispatch a submit event, sends POST exactly once
         signInForm.submit();
     }
@@ -252,8 +260,9 @@
         if (!submitBtn) return;
         submitBtn.disabled = false;
         submitBtn.classList.remove('waiting-for-turnstile');
+        submitBtn.classList.remove('loading');
         var span = submitBtn.querySelector('span');
-        if (span) span.textContent = 'Login';
+        if (span) span.textContent = 'Sign In';
     }
 
     // ─── Field edit ───────────────────────────────────────────────────────────
@@ -284,6 +293,12 @@
             e.preventDefault();
             e.stopPropagation();
             isSubmitting = true;
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('loading');
+                var span = submitBtn.querySelector('span');
+                if (span) span.textContent = 'Signing in...';
+            }
             signInForm.submit();
             return;
         }
@@ -295,6 +310,12 @@
         // Turnstile disabled — submit directly
         if (!signInForm.dataset.turnstileEnabled) {
             isSubmitting = true;
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('loading');
+                var span = submitBtn.querySelector('span');
+                if (span) span.textContent = 'Signing in...';
+            }
             signInForm.submit();
             return;
         }
@@ -304,8 +325,9 @@
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.classList.add('waiting-for-turnstile');
+            submitBtn.classList.add('loading');
             var span = submitBtn.querySelector('span');
-            if (span) span.textContent = 'Logging in...';
+            if (span) span.textContent = 'Signing in...';
         }
     }
 

@@ -260,7 +260,7 @@ body {
 
 /* Responsive */
 @media (max-width: 968px) {
-    .youth-login-container {
+    .youth-signin-container {
         flex-direction: column;
     }
 
@@ -268,7 +268,7 @@ body {
         padding: 40px 20px;
     }
 
-    .youth-login-section {
+    .youth-signin-section {
         padding: 40px 20px;
     }
 }

@@ -52,7 +52,7 @@ it('blocks sk official accounts with invalid credentials message', function () {
     ]);
 
     $response->assertRedirect();
-    $response->assertSessionHas('login_error', KabataanAuthService::LOGIN_DENIED_MESSAGE);
+    $response->assertSessionHas('login_error', KabataanAuthService::SIGNIN_DENIED_MESSAGE);
     $this->assertGuest();
 });
 
@@ -65,7 +65,7 @@ it('blocks sk federation accounts with invalid credentials message', function ()
     ]);
 
     $response->assertRedirect();
-    $response->assertSessionHas('login_error', KabataanAuthService::LOGIN_DENIED_MESSAGE);
+    $response->assertSessionHas('login_error', KabataanAuthService::SIGNIN_DENIED_MESSAGE);
     $this->assertGuest();
 });
 
@@ -78,7 +78,7 @@ it('blocks the bootstrap skoneportal account even when credentials are correct',
     ]);
 
     $response->assertRedirect();
-    $response->assertSessionHas('login_error', KabataanAuthService::LOGIN_DENIED_MESSAGE);
+    $response->assertSessionHas('login_error', KabataanAuthService::SIGNIN_DENIED_MESSAGE);
     $this->assertGuest();
 });
 
@@ -88,7 +88,7 @@ it('logs out non-kabataan users who reach authenticated routes', function () {
     $response = $this->actingAs($official)->get('/dashboard');
 
     $response->assertRedirect(route('sign-in'));
-    $response->assertSessionHas('login_error', KabataanAuthService::LOGIN_DENIED_MESSAGE);
+    $response->assertSessionHas('login_error', KabataanAuthService::SIGNIN_DENIED_MESSAGE);
     $this->assertGuest();
 });
 

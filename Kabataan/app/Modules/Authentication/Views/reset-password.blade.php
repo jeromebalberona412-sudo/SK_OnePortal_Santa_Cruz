@@ -12,7 +12,7 @@
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
-<body class="youth-login-page">
+<body class="youth-signin-page">
     @include('dashboard::loading')
     <!-- Animated Background -->
     <div class="youth-bg-wrapper">
@@ -25,7 +25,7 @@
         </div>
     </div>
 
-    <main class="youth-login-container">
+    <main class="youth-signin-container">
         <!-- Left Side - Logo & Branding -->
         <div class="youth-branding-section">
             <div class="branding-content">
@@ -42,8 +42,8 @@
         </div>
 
         <!-- Right Side - Reset Password Card -->
-        <div class="youth-login-section youth-login-section--fp">
-            <div class="youth-login-card">
+        <div class="youth-signin-section youth-signin-section--fp">
+            <div class="youth-signin-card">
 
                 {{-- Card Header — centered, same pattern as forgot-password --}}
                 <div class="card-header fp-card-header">
@@ -52,7 +52,7 @@
                 </div>
 
                 <!-- Reset Password Form -->
-                <form class="youth-login-form" method="POST" action="{{ route('password.update') }}" id="resetPasswordForm" novalidate>
+                <form class="youth-signin-form" method="POST" action="{{ route('password.update') }}" id="resetPasswordForm" novalidate>
                     @csrf
                     <input type="hidden" name="token" value="{{ $token ?? '' }}">
                     <input type="hidden" name="email" value="{{ $email ?? request()->email }}">
@@ -150,11 +150,11 @@
                     </button>
                 </form>
 
-                <!-- Back to Login -->
+                <!-- Back to Sign In -->
                 <div class="youth-register-section">
                     <p class="register-text">
                         Remember your password?
-                        <a href="{{ route('sign-in') }}" class="register-link">Back to Login</a>
+                        <a href="{{ route('sign-in') }}" class="register-link">Back to Sign In</a>
                     </p>
                 </div>
 
@@ -175,7 +175,7 @@
                 <h2 class="success-modal-title">Password Reset Successful</h2>
                 <p class="success-modal-body">Your password has been reset successfully.</p>
                 <p class="success-modal-redirect">
-                    Redirecting to login page in <span id="countdown">3</span> seconds...
+                    Redirecting to sign in page in <span id="countdown">3</span> seconds...
                 </p>
             </div>
         </div>
@@ -264,6 +264,7 @@
 
                 // All valid — show loading
                 submitBtn.disabled = true;
+                submitBtn.classList.add('loading');
                 btnText.textContent = 'Resetting...';
                 if (window.showLoading) showLoading('Resetting password');
 
@@ -280,7 +281,7 @@
                         countdownEl.textContent = seconds;
                         if (seconds <= 0) {
                             clearInterval(interval);
-                            if (window.showLoading) showLoading('Redirecting to login');
+                            if (window.showLoading) showLoading('Redirecting to sign in');
                             window.location.href = '{{ route("sign-in") }}';
                         }
                     }, 1000);

@@ -15,7 +15,7 @@
         'app/Modules/Authentication/assets/js/youth-fp-verify-email.js',
     ])
 </head>
-<body class="youth-login-page">
+<body class="youth-signin-page">
 
     <script>
         (function () {
@@ -31,7 +31,7 @@
     <div id="fp-verify-data"
          data-email="{{ $email }}"
          data-resend-url="{{ route('password.verify-email.resend', [], false) }}"
-         data-login-url="{{ route('password.request', [], false) }}"
+         data-signin-url="{{ route('password.request', [], false) }}"
          data-resend-available-at="{{ $resendAvailableAt }}"
          data-cooldown-secs="{{ $resendCooldownSecs }}"
          hidden
@@ -48,7 +48,7 @@
         </div>
     </div>
 
-    <main class="youth-login-container">
+    <main class="youth-signin-container">
 
         {{-- ─── Left Side — Logo & Branding ─────────────────────────────────────── --}}
         <div class="youth-branding-section">
@@ -66,8 +66,8 @@
         </div>
 
         {{-- ─── Right Side — Verify Email Card ──────────────────────────────────── --}}
-        <div class="youth-login-section youth-login-section--fp">
-            <div class="youth-login-card" style="padding-top: 1.75rem;">
+        <div class="youth-signin-section youth-signin-section--fp">
+            <div class="youth-signin-card" style="padding-top: 1.75rem;">
 
                 {{-- Header --}}
                 <div class="fpve-header">
@@ -110,7 +110,7 @@
 
                 </div>
 
-                {{-- Back to login --}}
+                {{-- Back to signin --}}
                 <div class="youth-register-section">
                     <a href="{{ route('sign-in') }}" class="fpve-back-link">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -121,8 +121,8 @@
                     </a>
                 </div>
 
-            </div>{{-- /.youth-login-card --}}
-        </div>{{-- /.youth-login-section --}}
+            </div>{{-- /.youth-signin-card --}}
+        </div>{{-- /.youth-signin-section --}}
 
     </main>
 
