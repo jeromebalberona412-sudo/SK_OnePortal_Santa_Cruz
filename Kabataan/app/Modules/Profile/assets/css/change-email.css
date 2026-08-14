@@ -192,30 +192,53 @@
 
 /* Password eye toggle uses youth-login.css (.pw-toggle-btn / .pw-eye) */
 
-/* ── No-scroll override for change-email page ───────────── */
+/* ── Scroll override so the form matches sign-in but can grow ─ */
 html,
 body {
     overflow: visible !important;
     height: auto !important;
 }
 
-.youth-login-page {
+body.youth-signin-page {
     height: auto !important;
     overflow-y: auto !important;
+    overflow-x: hidden !important;
 }
 
-.youth-login-container {
+.youth-signin-container {
     height: auto !important;
     min-height: 100vh;
     overflow: visible !important;
 }
 
-.youth-login-section {
+.youth-signin-section {
     overflow-y: visible !important;
     overflow-x: visible !important;
     align-items: flex-start;
     padding-top: 2rem;
     padding-bottom: 2rem;
+}
+
+.youth-signin-card {
+    max-width: 500px;
+    overflow: visible;
+}
+
+.ce-card-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.youth-signin-card .card-title {
+    white-space: normal;
+    text-align: center;
+    width: 100%;
+    margin: 0;
+}
+
+.youth-signin-card .card-helper-text {
+    text-align: center;
 }
 
 .cp-listening-badge {

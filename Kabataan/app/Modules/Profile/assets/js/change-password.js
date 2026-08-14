@@ -63,10 +63,44 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    const confirmInput = document.getElementById('password_confirmation');
+    const errorElement = document.getElementById('confirmPasswordError');
+
+    function updateConfirmMatch() {
+        const newPassword = passwordInput?.value || '';
+        const confirmation = confirmInput?.value || '';
+
+        if (!errorElement) return;
+
+        if (!confirmation.length) {
+            errorElement.textContent = '';
+            errorElement.style.display = 'none';
+            confirmInput?.classList.remove('error');
+            return;
+        }
+
+        if (newPassword !== confirmation) {
+            errorElement.textContent = 'Passwords do not match.';
+            errorElement.style.display = 'block';
+            confirmInput?.classList.add('error');
+            return;
+        }
+
+        errorElement.textContent = '';
+        errorElement.style.display = 'none';
+        confirmInput?.classList.remove('error');
+    }
+
     if (passwordInput) {
         passwordInput.addEventListener('input', function () {
             updatePasswordRules(this.value);
+            updateConfirmMatch();
         });
+    }
+
+    if (confirmInput) {
+        confirmInput.addEventListener('input', updateConfirmMatch);
+        confirmInput.addEventListener('blur', updateConfirmMatch);
     }
 
     const changePasswordForm = document.getElementById('changePasswordForm');
@@ -77,9 +111,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const passwordConfirmation = document.getElementById('password_confirmation')?.value || '';
         const submitBtn = document.getElementById('cpSubmitBtn');
         const btnText = document.getElementById('cpBtnText');
-        const errorElement = document.getElementById('confirmPasswordError');
-
-        if (errorElement) errorElement.style.display = 'none';
 
         const strength = validatePasswordStrength(newPassword);
 
@@ -87,8 +118,11 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             updatePasswordRules(newPassword);
             if (passwordRules) passwordRules.classList.add('active');
+            updateConfirmMatch();
             return;
         }
+
+        updateConfirmMatch();
 
         if (newPassword !== passwordConfirmation) {
             e.preventDefault();
@@ -96,11 +130,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 errorElement.textContent = 'Passwords do not match.';
                 errorElement.style.display = 'block';
             }
+            confirmInput?.classList.add('error');
+            confirmInput?.focus();
             return;
         }
 
         if (submitBtn) submitBtn.disabled = true;
         if (btnText) btnText.textContent = 'Sending…';
-        if (window.showLoading) window.showLoading('Sending verification link…');
     });
 });

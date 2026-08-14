@@ -376,6 +376,13 @@ body.kabataan-has-view-only-banner {
 
 .kabataan-header__dropdown-icon--profile svg { stroke: #3b82f6; }
 
+.kabataan-header__dropdown-icon--email {
+    background: #fff7ed;
+    color: #ea580c;
+}
+
+.kabataan-header__dropdown-icon--email svg { stroke: #ea580c; }
+
 .kabataan-header__dropdown-icon--password {
     background: #f0fdf4;
     color: #22c55e;

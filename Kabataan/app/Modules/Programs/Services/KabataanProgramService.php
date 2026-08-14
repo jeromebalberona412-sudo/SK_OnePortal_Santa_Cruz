@@ -120,7 +120,7 @@ class KabataanProgramService
      */
     public function getDashboardPayload(User $user): array
     {
-        return Cache::remember("kabataan_dashboard_payload_u{$user->id}", self::CACHE_TTL, function () use ($user) {
+        return Cache::remember("kabataan_dashboard_payload_v2_u{$user->id}", self::CACHE_TTL, function () use ($user) {
             $barangayId = $this->resolveUserBarangayId($user);
             $document = $this->getLatestAbyipDocument($barangayId);
 
@@ -128,10 +128,7 @@ class KabataanProgramService
             if ($document !== null) {
                 $programModels = Abyip::query()
                     ->where('document_id', $document->id)
-                    ->where(function ($query) {
-                        $query->where('row_type', Abyip::ROW_YOUTH_PROGRAM)
-                            ->orWhereIn('code', self::YOUTH_PROGRAM_LETTERS);
-                    })
+                    ->whereIn('code', self::YOUTH_PROGRAM_LETTERS)
                     ->with(['children' => fn ($q) => $q->orderBy('sort_order')->orderBy('id')])
                     ->orderBy('sort_order')
                     ->orderBy('id')
@@ -184,6 +181,7 @@ class KabataanProgramService
     public function clearUserDashboardCache(User $user): void
     {
         Cache::forget("kabataan_dashboard_payload_u{$user->id}");
+        Cache::forget("kabataan_dashboard_payload_v2_u{$user->id}");
     }
 
     /**

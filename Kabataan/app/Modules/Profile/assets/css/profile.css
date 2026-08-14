@@ -272,10 +272,7 @@ body.youth-profile {
 }
 
 .profile-cover {
-    height: 96px;
-    background: linear-gradient(135deg, #1a56db 0%, #1e40af 100%);
-    position: relative;
-    overflow: hidden;
+    display: none;
 }
 
 .cover-gradient {
@@ -288,16 +285,16 @@ body.youth-profile {
 }
 
 .profile-info-section {
-    padding: 0 32px 32px;
+    padding: 28px 32px;
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     gap: 24px;
     position: relative;
 }
 
 .profile-avatar-wrapper {
     position: relative;
-    margin-top: -60px;
+    margin-top: 0;
 }
 
 .profile-avatar-wrapper--interactive {
@@ -945,7 +942,7 @@ body.youth-profile {
 
 .profile-header-info {
     flex: 1;
-    padding-top: 16px;
+    padding-top: 0;
 }
 
 .profile-name {
@@ -1866,11 +1863,11 @@ body.youth-profile {
         flex-direction: column;
         align-items: center;
         text-align: center;
-        padding: 0 20px 24px;
+        padding: 24px 20px;
     }
     
     .profile-avatar-wrapper {
-        margin-top: -60px;
+        margin-top: 0;
     }
     
     .profile-avatar {
@@ -1921,7 +1918,7 @@ body.youth-profile {
     }
     
     .profile-cover {
-        height: 72px;
+        display: none;
     }
     
     .profile-avatar {

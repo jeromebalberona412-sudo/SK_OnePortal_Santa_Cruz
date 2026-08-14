@@ -65,6 +65,13 @@
                         View Profile
                     </a>
 
+                    <a href="{{ route('change-email') }}" class="kabataan-header__dropdown-link dropdown-item">
+                        <span class="kabataan-header__dropdown-icon kabataan-header__dropdown-icon--email">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        </span>
+                        Change Email
+                    </a>
+
                     <a href="{{ route('change-password') }}" class="kabataan-header__dropdown-link dropdown-item">
                         <span class="kabataan-header__dropdown-icon kabataan-header__dropdown-icon--password">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>

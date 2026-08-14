@@ -63,10 +63,44 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    const confirmInput = document.getElementById('password_confirmation');
+    const errorElement = document.getElementById('confirmPasswordError');
+
+    function updateConfirmMatch() {
+        const newPassword = passwordInput?.value || '';
+        const confirmation = confirmInput?.value || '';
+
+        if (!errorElement) return;
+
+        if (!confirmation.length) {
+            errorElement.textContent = '';
+            errorElement.style.display = 'none';
+            confirmInput?.classList.remove('error');
+            return;
+        }
+
+        if (newPassword !== confirmation) {
+            errorElement.textContent = 'Passwords do not match.';
+            errorElement.style.display = 'block';
+            confirmInput?.classList.add('error');
+            return;
+        }
+
+        errorElement.textContent = '';
+        errorElement.style.display = 'none';
+        confirmInput?.classList.remove('error');
+    }
+
     if (passwordInput) {
         passwordInput.addEventListener('input', function () {
             updatePasswordRules(this.value);
+            updateConfirmMatch();
         });
+    }
+
+    if (confirmInput) {
+        confirmInput.addEventListener('input', updateConfirmMatch);
+        confirmInput.addEventListener('blur', updateConfirmMatch);
     }
 
     const form = document.getElementById('setPasswordForm');
@@ -77,10 +111,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const passwordConfirmation = document.getElementById('password_confirmation')?.value || '';
         const submitBtn = document.getElementById('spSubmitBtn');
         const btnText = document.getElementById('spBtnText');
-        const errorElement = document.getElementById('confirmPasswordError');
         const successOverlay = document.getElementById('spSuccessOverlay');
 
-        if (errorElement) errorElement.style.display = 'none';
+        updateConfirmMatch();
 
         const strength = validatePasswordStrength(newPassword);
 

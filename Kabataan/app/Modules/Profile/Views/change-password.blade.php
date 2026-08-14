@@ -14,12 +14,9 @@
         'app/Modules/Profile/assets/css/change-password.css',
         'app/Modules/Profile/assets/js/change-password.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
-<body class="youth-login-page">
-    @include('dashboard::loading')
+<body class="youth-signin-page">
 
-    <!-- Animated Background -->
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
         <div class="youth-gradient-overlay"></div>
@@ -30,9 +27,8 @@
         </div>
     </div>
 
-    <main class="youth-login-container">
+    <main class="youth-signin-container">
 
-        <!-- Left Side — Logo & Branding -->
         <div class="youth-branding-section">
             <div class="branding-content">
                 <div class="logo-wrapper">
@@ -47,14 +43,11 @@
             </div>
         </div>
 
-        <!-- Right Side — Card -->
-        <div class="youth-login-section">
-            <div class="youth-login-card">
-                <div class="card-header">
-                    <h2 class="card-title">
-                        Change Password 🔐
-                    </h2>
-                    <p class="card-subtitle">Create a new password for your account. We will email you a confirmation link before the change takes effect.</p>
+        <div class="youth-signin-section">
+            <div class="youth-signin-card">
+                <div class="card-header cp-card-header">
+                    <h2 class="card-title">Change Password</h2>
+                    <p class="card-helper-text">Create a new password for your account. We will email you a confirmation link before the change takes effect.</p>
                 </div>
 
                 @if ($errors->any())
@@ -66,7 +59,7 @@
                 @endif
 
                 <!-- Change Password Form -->
-                <form class="youth-login-form" method="POST" action="{{ route('change-password.post') }}" id="changePasswordForm" novalidate>
+                <form class="youth-signin-form" method="POST" action="{{ route('change-password.post') }}" id="changePasswordForm" novalidate>
                     @csrf
 
                     <!-- New Password Field -->
@@ -157,6 +150,5 @@
         </div>
     </main>
 
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

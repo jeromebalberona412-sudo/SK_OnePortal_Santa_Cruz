@@ -73,7 +73,6 @@
         <div class="profile-container">
             <!-- Profile Header Card -->
             <div class="profile-header-card">
-                <div class="profile-cover"></div>
                 <div class="profile-info-section">
                     <div
                         class="profile-avatar-wrapper profile-avatar-wrapper--interactive"
@@ -234,6 +233,34 @@
                                         <p class="stat-value">{{ $completedPrograms ?? 0 }}</p>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-card account-settings-card">
+                        <div class="card-header">
+                            <h2>
+                                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                                </svg>
+                                Account Settings
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="account-setting-item">
+                                <div class="setting-info">
+                                    <h3>Change Email</h3>
+                                    <p>Update the email address used to sign in to your Kabataan account.</p>
+                                </div>
+                                <a href="{{ route('change-email') }}" class="btn-setting-action">Change Email</a>
+                            </div>
+                            <div class="setting-divider"></div>
+                            <div class="account-setting-item">
+                                <div class="setting-info">
+                                    <h3>Change Password</h3>
+                                    <p>Create a new password. A confirmation link will be sent to your email first.</p>
+                                </div>
+                                <a href="{{ route('change-password') }}" class="btn-setting-action">Change Password</a>
                             </div>
                         </div>
                     </div>
@@ -482,7 +509,7 @@
                 <div class="kkp-docs-upload-section">
                     <h3 class="kkp-docs-upload-heading">Upload document</h3>
                     <p class="kkp-docs-upload-intro">
-                        Upload <strong>one</strong> optional supporting ID — School ID or PhilSys / National ID. Provide front and back images. JPG or PNG, max 10MB each.
+                        Upload <strong>one</strong> optional supporting ID Â— School ID or PhilSys / National ID. Provide front and back images. JPG or PNG, max 10MB each.
                     </p>
 
                     <fieldset class="kkp-wizard-doc-type-fieldset" id="profileDocTypeFieldset">
@@ -496,7 +523,7 @@
                                     </span>
                                     <span class="kkp-wizard-doc-type-text">
                                         <span class="kkp-wizard-doc-type-name">School ID</span>
-                                        <span class="kkp-wizard-doc-type-desc">Front and back · optional upload</span>
+                                        <span class="kkp-wizard-doc-type-desc">Front and back Â· optional upload</span>
                                     </span>
                                 </span>
                             </label>
@@ -508,7 +535,7 @@
                                     </span>
                                     <span class="kkp-wizard-doc-type-text">
                                         <span class="kkp-wizard-doc-type-name">PhilSys / National ID</span>
-                                        <span class="kkp-wizard-doc-type-desc">Front and back · optional upload</span>
+                                        <span class="kkp-wizard-doc-type-desc">Front and back Â· optional upload</span>
                                     </span>
                                 </span>
                             </label>
@@ -520,7 +547,7 @@
                         ['type' => 'national_id', 'panelId' => 'profileNationalIdUpload', 'label' => 'PhilSys / National ID', 'prefix' => 'profileNationalId'],
                     ] as $doc)
                     <div class="kkp-wizard-upload-panel" id="{{ $doc['panelId'] }}" hidden>
-                        <p class="kkp-wizard-upload-panel-title">{{ $doc['label'] }} — upload front and back</p>
+                        <p class="kkp-wizard-upload-panel-title">{{ $doc['label'] }} Â— upload front and back</p>
                         <div class="kkp-wizard-upload-grid">
                             @foreach(['front' => 'Front', 'back' => 'Back'] as $side => $sideLabel)
                             @php $inputId = $doc['prefix'].ucfirst($side); @endphp
@@ -532,7 +559,7 @@
                                         <span class="kkp-wizard-dropzone-icon" aria-hidden="true">??</span>
                                         <span class="kkp-wizard-dropzone-title">{{ $sideLabel }} image</span>
                                         <span class="kkp-wizard-dropzone-sub">Drop or <span class="kkp-wizard-dropzone-link">browse</span></span>
-                                        <span class="kkp-wizard-dropzone-hint">JPG or PNG · max 10MB</span>
+                                        <span class="kkp-wizard-dropzone-hint">JPG or PNG Â· max 10MB</span>
                                     </span>
                                 </label>
                                 <div class="kkp-wizard-dropzone-preview" id="{{ $inputId }}Preview" hidden>

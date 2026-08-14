@@ -79,6 +79,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (submitBtn) submitBtn.disabled = true;
         if (btnText) btnText.textContent = 'Sending…';
-        if (window.showLoading) window.showLoading('Sending verification link…');
     });
 });

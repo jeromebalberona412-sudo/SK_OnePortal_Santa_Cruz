@@ -29,14 +29,16 @@
             overflow-y: auto;
             height: auto;
         }
-        .profile-cover {
-            animation: none !important;
-            background: linear-gradient(135deg, {{ $color }} 0%, #022a54 100%) !important;
-        }
-        .cover-gradient { display: none; }
         .profile-header-card { transform: none !important; }
+        .brgy-header-card .profile-info-section {
+            padding: 28px 32px 28px;
+            align-items: center;
+        }
+        .brgy-header-card .profile-avatar-wrapper {
+            margin-top: 0;
+        }
 
-        /* Normal page scroll ó left column sticky, right column scrolls with page */
+        /* Normal page scroll ù left column sticky, right column scrolls with page */
         .profile-main {
             position: static !important;
             overflow: visible !important;
@@ -82,33 +84,65 @@
         @media (max-width: 768px) {
             .profile-container { padding: 0 16px 32px !important; }
         }
-        .brgy-cover-overlay {
-            position: absolute; inset: 0;
-            background-image: url('/images/Background.png');
-            background-size: cover; background-position: center;
-            opacity: 0.08; pointer-events: none;
+        .brgy-header-card {
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 8px 24px rgba(2, 42, 84, 0.06);
+        }
+        .brgy-header-card .profile-name {
+            font-size: 28px;
+            color: #022a54;
+            margin: 4px 0 6px;
+        }
+        .brgy-header-card .profile-location {
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .brgy-header-card .profile-location svg {
+            color: #0450a8;
+        }
+        .brgy-posts-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 18px 22px 8px;
+            border-bottom: none;
+        }
+        .brgy-posts-header h2 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 18px;
+            font-weight: 800;
+            color: #022a54;
+            margin: 0;
+        }
+        .brgy-posts-header h2 svg {
+            width: 20px;
+            height: 20px;
+            color: #0450a8;
         }
         .brgy-badge {
             display: inline-flex; align-items: center; gap: 6px;
-            background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35);
-            color: #fff; font-size: 11px; font-weight: 700;
+            background: #eff6ff; border: 1px solid #dbeafe;
+            color: #0450a8; font-size: 11px; font-weight: 700;
             letter-spacing: 0.08em; text-transform: uppercase;
             padding: 4px 12px; border-radius: 999px; margin-bottom: 6px;
         }
         .brgy-stat-row {
-            display: flex; gap: 20px; margin-top: 8px; flex-wrap: wrap;
+            display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;
         }
-        .brgy-stat-item { text-align: center; }
-        .brgy-stat-item strong { display: block; font-size: 20px; font-weight: 800; color: #022a54; }
-        .brgy-stat-item span { font-size: 12px; color: #999; }
-        .back-link {
-            display: inline-flex; align-items: center; gap: 6px;
-            color: #667eea; font-size: 13px; font-weight: 600;
-            text-decoration: none; margin-bottom: 16px;
-            transition: color 0.2s;
+        .brgy-stat-item {
+            text-align: left;
+            min-width: 108px;
+            padding: 10px 14px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
         }
-        .back-link:hover { color: #022a54; }
-        .back-link svg { width: 16px; height: 16px; }
+        .brgy-stat-item strong { display: block; font-size: 18px; font-weight: 800; color: #0450a8; line-height: 1.2; }
+        .brgy-stat-item span { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #64748b; }
         .officer-list { display: flex; flex-direction: column; gap: 0; }
         .officer-item {
             display: flex; align-items: center; gap: 12px;
@@ -165,17 +199,20 @@
         .contact-label { font-size: 11px; color: #999; }
         .contact-value { font-size: 13px; font-weight: 600; color: #333; }
         .feed-tab-bar {
-            display: flex; gap: 4px; margin-bottom: 20px;
-            border-bottom: 2px solid #e0e0e0; padding-bottom: 0;
+            display: flex; gap: 8px; margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         .feed-tab {
-            padding: 10px 18px; border: none; background: none;
-            font-size: 14px; font-weight: 600; color: #999;
-            cursor: pointer; border-bottom: 2px solid transparent;
-            margin-bottom: -2px; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 6px;
+            flex: 0 0 auto; bottom: auto;
+            padding: 8px 14px; border: 1px solid #e2e8f0; background: #fff;
+            font-size: 13px; font-weight: 600; color: #64748b;
+            cursor: pointer; border-radius: 999px; transition: all 0.2s;
+            border-bottom: 1px solid #e2e8f0;
         }
-        .feed-tab.active { color: #667eea; border-bottom-color: #667eea; }
-        .feed-tab:hover { color: #667eea; }
+        .feed-tab svg { width: 15px; height: 15px; flex-shrink: 0; }
+        .feed-tab.active { color: #fff; background: #0450a8; border-color: #0450a8; }
+        .feed-tab:hover:not(.active) { color: #0450a8; border-color: #0450a8; }
     </style>
 </head>
 <body class="youth-profile">
@@ -188,18 +225,8 @@
     <main class="profile-main">
         <div class="profile-container">
 
-            {{-- Back link --}}
-            <a href="{{ route('dashboard') }}" class="back-link">
-                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
-                Back to Dashboard
-            </a>
-
             {{-- PROFILE HEADER CARD --}}
-            <div class="profile-header-card">
-                <div class="profile-cover" style="position:relative;">
-                    <div class="cover-gradient"></div>
-                    <div class="brgy-cover-overlay"></div>
-                </div>
+            <div class="profile-header-card brgy-header-card">
                 <div class="profile-info-section">
                     <div class="profile-avatar-wrapper">
                         <div style="width:150px;height:150px;border-radius:50%;background:{{ $color }};border:5px solid white;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:900;color:#fff;box-shadow:0 4px 20px rgba(0,0,0,0.15);overflow:hidden;">
@@ -223,7 +250,7 @@
                         <div class="brgy-stat-row">
                             <div class="brgy-stat-item"><strong>{{ $post_count ?? 0 }}</strong><span>Posts</span></div>
                             <div class="brgy-stat-item"><strong>{{ $officer_count ?? 0 }}</strong><span>Officers</span></div>
-                            <div class="brgy-stat-item"><strong>{{ $term_label ?? 'ó' }}</strong><span>SK Term</span></div>
+                            <div class="brgy-stat-item"><strong>{{ $term_label ?? 'ù' }}</strong><span>SK Term</span></div>
                         </div>
                     </div>
                 </div>
@@ -268,10 +295,10 @@
 
                 </div>
 
-                {{-- RIGHT COLUMN ó FEED --}}
+                {{-- RIGHT COLUMN ù FEED --}}
                 <div class="profile-right-column">
                     <div class="info-card">
-                        <div class="card-header" style="border-bottom:none;padding-bottom:0;">
+                        <div class="card-header brgy-posts-header">
                             <h2>
                                 <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M2 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 002 2H4a2 2 0 01-2-2V5zm3 1h6v4H5V6zm6 6H5v2h6v-2z" clip-rule="evenodd"/><path d="M15 7h1a2 2 0 012 2v5.5a1.5 1.5 0 01-3 0V7z"/></svg>
                                 Posts from Barangay {{ $name }}
@@ -279,10 +306,22 @@
                         </div>
                         <div class="card-body" style="padding-top:0;">
                             <div class="feed-tab-bar" id="feedTabBar">
-                                <button class="feed-tab active" data-tab="all">All</button>
-                                <button class="feed-tab" data-tab="event">Events</button>
-                                <button class="feed-tab" data-tab="announcement">Announcements</button>
-                                <button class="feed-tab" data-tab="activity">Activities</button>
+                                <button type="button" class="feed-tab active" data-tab="all">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                                    All
+                                </button>
+                                <button type="button" class="feed-tab" data-tab="event">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                                    Events
+                                </button>
+                                <button type="button" class="feed-tab" data-tab="announcement">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11 13v8a2 2 0 004 0v-6"/></svg>
+                                    Announcements
+                                </button>
+                                <button type="button" class="feed-tab" data-tab="activity">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"/></svg>
+                                    Activities
+                                </button>
                             </div>
 
                             <div id="brgyFeed" style="display:flex;flex-direction:column;gap:16px;">

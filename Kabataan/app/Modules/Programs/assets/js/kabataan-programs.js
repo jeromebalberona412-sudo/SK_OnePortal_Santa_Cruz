@@ -364,7 +364,7 @@
 
         if (program.type === 'education' || program.type === 'sports') {
             const n = Number(program.schedule_count) || 0;
-            if (n === 0) return 'Barangay program';
+            if (n === 0) return '';
             if (n === 1) return '1 active schedule';
             return `${n} active schedules`;
         }
@@ -372,7 +372,7 @@
         if (program.survey?.can_respond) return 'Survey open';
         if (program.survey?.has_responded) return 'Survey submitted';
         if (program.has_survey || program.survey) return 'Survey available';
-        return 'Barangay program';
+        return '';
     }
 
     function renderSidebarItem(program) {
@@ -381,14 +381,17 @@
         const evalBtn = program.evaluation?.can_respond
             ? `<button type="button" class="program-eval-cta" data-eval-program="${program.id}" data-eval-id="${program.evaluation.id}">Evaluate</button>`
             : '';
+        const subtitle = programCountLabel(program);
+        const letter = String(program.letter || '').toUpperCase();
+        const title = letter ? `${letter}. ${program.title || ''}`.trim() : (program.title || '');
         return `
             <div class="program-category" data-category="${escapeHtml(program.category_key)}" data-letter="${escapeHtml(program.letter)}" style="cursor:pointer;">
                 <div class="category-icon ${iconClass}">
                     <svg viewBox="0 0 20 20" fill="currentColor">${svgPath}</svg>
                 </div>
                 <div class="category-content">
-                    <h3>${escapeHtml(program.title)}</h3>
-                    <p>${programCountLabel(program)}</p>
+                    <h3>${escapeHtml(title)}</h3>
+                    ${subtitle ? `<p>${escapeHtml(subtitle)}</p>` : ''}
                 </div>
                 ${evalBtn}
                 <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
@@ -406,7 +409,10 @@
 
         if (!containers.length) return;
 
-        const programs = programsData?.abyip_programs || [];
+        const allowedLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+        const programs = (programsData?.abyip_programs || []).filter((program) => {
+            return allowedLetters.includes(String(program.letter || '').toUpperCase());
+        });
         const html = programs.length
             ? programs.map(renderSidebarItem).join('')
             : '<p style="text-align:center;color:#64748b;padding:16px;font-size:14px;">No ABYIP programs uploaded for your barangay yet.</p>';

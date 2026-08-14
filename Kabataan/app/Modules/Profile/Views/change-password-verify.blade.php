@@ -14,10 +14,8 @@
         'app/Modules/Profile/assets/css/change-email.css',
         'app/Modules/Profile/assets/js/change-password-verify.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
-<body class="youth-login-page">
-    @include('dashboard::loading')
+<body class="youth-signin-page">
 
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
@@ -29,7 +27,7 @@
         </div>
     </div>
 
-    <main class="youth-login-container">
+    <main class="youth-signin-container">
         <div class="youth-branding-section">
             <div class="branding-content">
                 <div class="logo-wrapper">
@@ -40,15 +38,15 @@
             </div>
         </div>
 
-        <div class="youth-login-section">
-            <div class="youth-login-card">
+        <div class="youth-signin-section">
+            <div class="youth-signin-card">
                 <div id="cpVerifySection"
                      data-status-url="{{ route('change-password.verify.status', [], false) }}"
                      data-email="{{ $user->email }}">
 
                     <div class="card-header">
-                        <h2 class="card-title">Verify Password Change 🔐</h2>
-                        <p class="card-subtitle">Check your email and tap the confirmation link. This page will detect it automatically.</p>
+                        <h2 class="card-title">Verify Password Change</h2>
+                        <p class="card-helper-text">Check your email and tap the confirmation link. This page will detect it automatically.</p>
                     </div>
 
                     <div class="ce-verify-content">
@@ -129,6 +127,5 @@
     <script>
         window.cpResendCooldown = {{ (int) $resendCooldown }};
     </script>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

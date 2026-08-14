@@ -856,6 +856,24 @@
     const renderedPostIds = new Set();
     const postCache = new Map();
 
+    const FEED_REACTION_SOUND_URL = '/sounds/reactions_ux.mp3';
+    let feedReactionAudio = null;
+
+    function playFeedReactionSound() {
+        try {
+            if (!feedReactionAudio) {
+                feedReactionAudio = new Audio(FEED_REACTION_SOUND_URL);
+                feedReactionAudio.preload = 'auto';
+                feedReactionAudio.volume = 0.75;
+            }
+            feedReactionAudio.pause();
+            feedReactionAudio.currentTime = 0;
+            feedReactionAudio.play().catch(function () {});
+        } catch (e) {}
+    }
+
+    window.playFeedReactionSound = playFeedReactionSound;
+
     async function apiFeed(url, opts = {}) {
         const { headers: extraHeaders, ...rest } = opts;
         const r = await fetch(url, {
@@ -1021,7 +1039,6 @@
             const commentId = Number(wrap.dataset.commentId || 0);
             const isComment = wrap.dataset.target === 'comment';
             let hideTimer = null;
-            let showTimer = null;
             function apply(type) {
                 if (isComment) feedSetCommentReaction(postId, commentId, type);
                 else feedSetReaction(postId, type);
@@ -1029,12 +1046,11 @@
             wrap.addEventListener('mouseenter', function () {
                 if (isTouchDevice()) return;
                 clearTimeout(hideTimer);
-                showTimer = setTimeout(function () { wrap.classList.add('is-open'); }, 280);
+                wrap.classList.add('is-open');
             });
             wrap.addEventListener('mouseleave', function () {
                 if (isTouchDevice()) return;
-                clearTimeout(showTimer);
-                hideTimer = setTimeout(function () { wrap.classList.remove('is-open'); }, 320);
+                hideTimer = setTimeout(function () { wrap.classList.remove('is-open'); }, 80);
             });
             btn?.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -1269,47 +1285,89 @@
         if (actions) actions.insertAdjacentHTML('beforebegin', html);
     }
 
-    async function feedSetReaction(id, type) {
-        const data = await apiFeed(`/api/feed/${id}/react`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reaction_type: type || 'like' }),
-        }).catch(() => null);
-        if (!data) return;
-        const nextType = data.liked ? (data.reaction_type || 'like') : '';
-        const btn = document.getElementById(`feed-like-btn-${id}`);
-        if (btn) {
-            btn.classList.toggle('liked', Boolean(data.liked));
-            btn.dataset.type = nextType;
-            const icon = btn.querySelector('.reaction-icon');
-            if (icon) icon.innerHTML = (nextType && nextType !== 'like') ? REACTION_EMOJI[nextType] : LIKE_THUMB_SVG;
-            const el = document.getElementById(`feed-like-${id}`);
-            if (el) el.textContent = `${reactionLabel(nextType)}${data.count ? ` (${data.count})` : ''}`;
-            btn.closest('.reaction-wrap')?.querySelectorAll('.reaction-option').forEach(function (opt) {
-                opt.classList.toggle('is-active', Boolean(nextType) && opt.dataset.type === nextType);
-            });
-        }
-        if (data.reactions_summary) updateReactionsSummary(id, data.reactions_summary);
+    function resolveNextReaction(currentType, requestedType) {
+        const requested = requestedType || 'like';
+        const current = currentType || '';
+        if (current === requested) return { liked: false, type: '' };
+        return { liked: true, type: requested };
     }
 
-    async function feedSetCommentReaction(postId, commentId, type) {
-        const data = await apiFeed(`/api/feed/${postId}/comments/${commentId}/reactions`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reaction_type: type || 'like' }),
-        }).catch(() => null);
-        if (!data) return;
-        const wrap = document.querySelector(`.reaction-wrap[data-comment-id="${commentId}"]`);
+    function paintPostReaction(id, liked, nextType, count) {
+        const btn = document.getElementById('feed-like-btn-' + id);
+        if (!btn) return;
+        btn.classList.toggle('liked', Boolean(liked));
+        btn.dataset.type = nextType || '';
+        const icon = btn.querySelector('.reaction-icon');
+        if (icon) icon.innerHTML = (nextType && nextType !== 'like') ? REACTION_EMOJI[nextType] : LIKE_THUMB_SVG;
+        const el = document.getElementById('feed-like-' + id);
+        if (el) el.textContent = reactionLabel(nextType) + (count ? ' (' + count + ')' : '');
+        btn.closest('.reaction-wrap')?.querySelectorAll('.reaction-option').forEach(function (opt) {
+            opt.classList.toggle('is-active', Boolean(nextType) && opt.dataset.type === nextType);
+        });
+    }
+
+    function paintCommentReaction(commentId, liked, nextType) {
+        const wrap = document.querySelector('.reaction-wrap[data-comment-id="' + commentId + '"]');
         const btn = wrap?.querySelector('.comment-like-btn');
-        const nextType = data.liked ? (data.reaction_type || 'like') : '';
         if (btn) {
-            btn.classList.toggle('liked', Boolean(data.liked));
-            btn.dataset.type = nextType;
-            btn.textContent = reactionLabel(nextType);
+            btn.classList.toggle('liked', Boolean(liked));
+            btn.dataset.type = nextType || '';
+            btn.innerHTML = commentLikeInner(nextType);
         }
         wrap?.querySelectorAll('.reaction-option').forEach(function (opt) {
             opt.classList.toggle('is-active', Boolean(nextType) && opt.dataset.type === nextType);
         });
+    }
+
+    async function feedSetReaction(id, type) {
+        const btn = document.getElementById('feed-like-btn-' + id);
+        const current = btn?.dataset.type || '';
+        const next = resolveNextReaction(current, type);
+        const cached = postCache.get(Number(id));
+        let count = Number(cached?.likes || 0);
+        if (current && !next.liked) count = Math.max(0, count - 1);
+        else if (!current && next.liked) count += 1;
+        if (next.liked) playFeedReactionSound();
+        paintPostReaction(id, next.liked, next.type, count);
+        if (cached) {
+            cached.liked = next.liked;
+            cached.reaction_type = next.type || null;
+            cached.likes = count;
+        }
+        try {
+            const data = await apiFeed('/api/feed/' + id + '/react', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reaction_type: type || 'like' }),
+            });
+            const serverType = data.liked ? (data.reaction_type || 'like') : '';
+            paintPostReaction(id, data.liked, serverType, data.count);
+            if (data.reactions_summary) updateReactionsSummary(id, data.reactions_summary);
+            if (cached) {
+                cached.liked = data.liked;
+                cached.reaction_type = serverType || null;
+                cached.likes = data.count;
+                cached.reaction_counts = data.reaction_counts;
+            }
+        } catch (_) {}
+    }
+
+    async function feedSetCommentReaction(postId, commentId, type) {
+        const wrap = document.querySelector('.reaction-wrap[data-comment-id="' + commentId + '"]');
+        const btn = wrap?.querySelector('.comment-like-btn');
+        const current = btn?.dataset.type || '';
+        const next = resolveNextReaction(current, type);
+        if (next.liked) playFeedReactionSound();
+        paintCommentReaction(commentId, next.liked, next.type);
+        try {
+            const data = await apiFeed('/api/feed/' + postId + '/comments/' + commentId + '/reactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reaction_type: type || 'like' }),
+            });
+            const serverType = data.liked ? (data.reaction_type || 'like') : '';
+            paintCommentReaction(commentId, data.liked, serverType);
+        } catch (_) {}
     }
 
     let pendingCommentAction = null;
@@ -1446,6 +1504,66 @@
         }
     });
 
+    function findCachedComment(comments, commentId) {
+        const id = String(commentId);
+        for (const c of comments || []) {
+            if (String(c.id) === id) return c;
+            const nested = findCachedComment(c.replies || [], commentId);
+            if (nested) return nested;
+        }
+        return null;
+    }
+
+    function removeCachedComment(comments, commentId) {
+        const id = String(commentId);
+        const list = comments || [];
+        const index = list.findIndex(function (c) { return String(c.id) === id; });
+        if (index >= 0) {
+            list.splice(index, 1);
+            return true;
+        }
+        return list.some(function (c) { return removeCachedComment(c.replies || [], commentId); });
+    }
+
+    function refreshFeedCommentUi(postId) {
+        const cached = postCache.get(Number(postId));
+        if (!cached) return;
+        const total = countFeedComments(cached.comments || []);
+        const countEl = document.getElementById('feed-comment-count-' + postId);
+        if (countEl) {
+            countEl.dataset.count = String(total);
+            countEl.textContent = 'Comment (' + total + ')';
+        }
+        const preview = document.getElementById('comment-preview-' + postId);
+        if (preview) preview.outerHTML = buildCommentPreviewHtml(cached);
+        const list = document.getElementById('feed-comments-list-' + postId);
+        if (list) {
+            list.innerHTML = (cached.comments || []).map(function (c) {
+                return renderCommentItem(c, postId, 0);
+            }).join('');
+            bindFeedReactionControls(list);
+        }
+    }
+
+    function insertFeedComment(postId, comment) {
+        const cached = postCache.get(Number(postId));
+        if (!cached) return;
+        cached.comments = cached.comments || [];
+        if (comment.parent_id) {
+            const parent = findCachedComment(cached.comments, comment.parent_id);
+            if (parent) {
+                parent.replies = parent.replies || [];
+                parent.replies.push(comment);
+                parent.reply_count = parent.replies.length;
+            } else {
+                cached.comments.push(comment);
+            }
+        } else {
+            cached.comments.push(comment);
+        }
+        refreshFeedCommentUi(postId);
+    }
+
     async function feedSubmitComment(id, input) {
         const text = input.value.trim();
         if (!text) return;
@@ -1453,8 +1571,32 @@
             alert('Comments are limited to 500 characters.');
             return;
         }
+        if (input.dataset.sending === '1') return;
+        input.dataset.sending = '1';
+        const parentId = (window.feedReplyTarget && window.feedReplyTarget.postId === id)
+            ? window.feedReplyTarget.commentId
+            : null;
+        input.value = '';
+        input.placeholder = 'Write a comment...';
+        window.feedReplyTarget = null;
+
+        const tempId = 'tmp-' + Date.now();
+        const tempComment = {
+            id: tempId,
+            body: text,
+            author_name: (window.CommentPreviewConfig && window.CommentPreviewConfig.userDisplayName) || 'You',
+            author_avatar_url: FEED_USER_AVATAR,
+            time: 'Just now',
+            liked: false,
+            likes: 0,
+            owned: true,
+            replies: [],
+            parent_id: parentId,
+        };
+        insertFeedComment(id, tempComment);
+
         try {
-            const r = await fetch(`/api/feed/${id}/comment`, {
+            const r = await fetch('/api/feed/' + id + '/comment', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
@@ -1464,20 +1606,31 @@
                 },
                 body: JSON.stringify({
                     body: text,
-                    parent_id: (window.feedReplyTarget && window.feedReplyTarget.postId === id) ? window.feedReplyTarget.commentId : null,
+                    parent_id: parentId,
                 }),
             });
             const payload = await r.json();
             if (!r.ok) {
+                const cached = postCache.get(Number(id));
+                if (cached) removeCachedComment(cached.comments || [], tempId);
+                refreshFeedCommentUi(id);
                 alert(payload.message || 'Unable to post comment.');
+                input.value = text;
                 return;
             }
-            input.value = '';
-            window.feedReplyTarget = null;
-            input.placeholder = 'Write a comment...';
-            await loadFeed(true);
+            const cached = postCache.get(Number(id));
+            if (cached) {
+                removeCachedComment(cached.comments || [], tempId);
+                insertFeedComment(id, payload);
+            }
         } catch (_) {
+            const cached = postCache.get(Number(id));
+            if (cached) removeCachedComment(cached.comments || [], tempId);
+            refreshFeedCommentUi(id);
             alert('Unable to post comment. Please try again.');
+            input.value = text;
+        } finally {
+            input.dataset.sending = '0';
         }
     }
 

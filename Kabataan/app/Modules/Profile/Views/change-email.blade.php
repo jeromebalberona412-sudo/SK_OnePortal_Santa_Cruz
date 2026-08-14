@@ -14,12 +14,9 @@
         'app/Modules/Profile/assets/css/change-email.css',
         'app/Modules/Profile/assets/js/change-email.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
-<body class="youth-login-page">
-    @include('dashboard::loading')
+<body class="youth-signin-page">
 
-    <!-- Animated Background -->
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
         <div class="youth-gradient-overlay"></div>
@@ -30,7 +27,7 @@
         </div>
     </div>
 
-    <main class="youth-login-container">
+    <main class="youth-signin-container">
 
         <!-- Left Side — Logo & Branding -->
         <div class="youth-branding-section">
@@ -48,16 +45,14 @@
         </div>
 
         <!-- Right Side — Card -->
-        <div class="youth-login-section">
-            <div class="youth-login-card">
+        <div class="youth-signin-section">
+            <div class="youth-signin-card">
 
                 {{-- ── STEP 1: Change Email Form ─────────────────── --}}
                 <div id="ceStep1">
-                    <div class="card-header">
-                        <h2 class="card-title">
-                            Change Email ✉️
-                        </h2>
-                        <p class="card-subtitle">Enter your current email, new email address, and current password to request a change.</p>
+                    <div class="card-header ce-card-header">
+                        <h2 class="card-title">Change Email</h2>
+                        <p class="card-helper-text">Enter your current email, new email address, and current password to request a change.</p>
                     </div>
 
                     @if ($errors->any())
@@ -74,7 +69,7 @@
                     @endif
 
                     <!-- Form -->
-                    <form class="youth-login-form" id="ceForm" action="{{ route('change-email.request') }}" method="POST" novalidate>
+                    <form class="youth-signin-form" id="ceForm" action="{{ route('change-email.request') }}" method="POST" novalidate>
                         @csrf
 
                         {{-- Current Email --}}
@@ -178,6 +173,5 @@
 
     </main>
 
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

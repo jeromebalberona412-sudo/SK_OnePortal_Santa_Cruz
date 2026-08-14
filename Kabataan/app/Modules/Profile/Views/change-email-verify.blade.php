@@ -14,10 +14,8 @@
         'app/Modules/Profile/assets/css/change-email.css',
         'app/Modules/Profile/assets/js/change-email-verify.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
-<body class="youth-login-page">
-    @include('dashboard::loading')
+<body class="youth-signin-page">
 
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
@@ -29,7 +27,7 @@
         </div>
     </div>
 
-    <main class="youth-login-container">
+    <main class="youth-signin-container">
         <div class="youth-branding-section">
             <div class="branding-content">
                 <div class="logo-wrapper">
@@ -40,13 +38,13 @@
             </div>
         </div>
 
-        <div class="youth-login-section">
-            <div class="youth-login-card">
+        <div class="youth-signin-section">
+            <div class="youth-signin-card">
                 <div id="ceVerifySection"
                      data-status-url="{{ route('change-email.verify.status', [], false) }}">
                     <div class="card-header">
-                        <h2 class="card-title">Verify Email Change ✉️</h2>
-                        <p class="card-subtitle">We sent a confirmation link to your new email address.</p>
+                        <h2 class="card-title">Verify Email Change</h2>
+                        <p class="card-helper-text">We sent a confirmation link to your new email address.</p>
                     </div>
 
                     <div class="ce-verify-content">
@@ -138,6 +136,5 @@
         window.ceResendCooldown = {{ (int) $resendCooldown }};
         window.ceAwaitingPassword = {{ $awaitingPassword ? 'true' : 'false' }};
     </script>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>
