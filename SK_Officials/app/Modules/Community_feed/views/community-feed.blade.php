@@ -33,11 +33,14 @@
             {{-- SK Officials Info Card (with compose embedded) --}}
             <div class="sk-fed-card">
                 <div class="sk-fed-card-banner">
-                    <img src="{{ $barangayLogoUrl ?? asset('images/logo.png') }}" alt="SK Barangay {{ $name }} logo" class="sk-fed-card-logo">
+                    <a href="{{ route('community-feed.barangay', ['slug' => $slug]) }}" class="sk-fed-card-logo-link" aria-label="Open SK Barangay {{ $name }} profile">
+                        <img src="{{ $barangayLogoUrl ?? asset('images/logo.png') }}" alt="SK Barangay {{ $name }} logo" class="sk-fed-card-logo">
+                    </a>
                     <div class="sk-fed-card-info">
-                        <h2 class="sk-fed-card-name">SK Barangay {{ $name }}</h2>
-                        <p class="sk-fed-card-sub">SK Officials Portal ? Santa Cruz, Laguna</p>
-                        <a href="{{ route('community-feed.barangay', ['slug' => $slug]) }}" style="font-size:11px;color:rgba(255,255,255,0.85);font-weight:600;margin-top:4px;text-decoration:none;display:inline-block;">View Your Barangay Profile ?</a>
+                        <h2 class="sk-fed-card-name">
+                            <a href="{{ route('community-feed.barangay', ['slug' => $slug]) }}">SK Barangay {{ $name }}</a>
+                        </h2>
+                        <p class="sk-fed-card-sub">SK Officials Portal · Santa Cruz, Laguna</p>
                     </div>
                 </div>
                 {{-- Create Post button --}}
@@ -144,12 +147,12 @@
     <div class="modal-overlay" onclick="closeComposeModal()"></div>
     <div class="modal-container compose-modal-container" id="composeModalContainer">
         <div class="modal-header">
-            <h2 id="compose-modal-title">Create Post</h2>
+            <h2 id="compose-modal-title" class="compose-modal-title">Create Post</h2>
             <div class="compose-modal-window-actions">
                 <button type="button" id="composeFullscreenBtn" class="compose-window-btn" onclick="toggleComposeFullscreen()" title="Full screen" aria-label="Full screen">
                     <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M3 3h5v2H5v3H3V3zm9 0h5v5h-2V5h-3V3zM3 12h2v3h3v2H3v-5zm12 0h2v5h-5v-2h3v-3z"/></svg>
                 </button>
-                <button class="modal-close" onclick="closeComposeModal()" aria-label="Close"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
+                <button type="button" class="modal-close compose-window-btn" onclick="closeComposeModal()" aria-label="Close"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
             </div>
         </div>
         <div class="modal-body">
@@ -181,7 +184,7 @@
         </div>
         <div class="modal-footer-btns">
             <button class="btn-secondary" onclick="closeComposeModal()">Cancel</button>
-            <button class="btn-primary" id="compose-post-btn" onclick="submitPost()"><svg viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg> Post</button>
+            <button type="button" class="btn-primary" id="compose-post-btn" onclick="submitPost()">Post</button>
         </div>
     </div>
 </div>

@@ -57,9 +57,14 @@ body {
     border-bottom: 3px solid var(--sk-gold);
     padding: 20px 24px; display: flex; align-items: center; gap: 16px;
 }
+.sk-fed-card-logo-link { display: inline-flex; flex-shrink: 0; border-radius: 50%; line-height: 0; }
 .sk-fed-card-logo { width: 60px; height: 60px; border-radius: 50%; border: 3px solid rgba(245,197,24,0.5); object-fit: cover; flex-shrink: 0; }
+.sk-fed-card-logo-link:hover .sk-fed-card-logo,
+.sk-fed-card-logo-link:focus-visible .sk-fed-card-logo { border-color: var(--sk-gold); }
 .sk-fed-card-info { flex: 1; min-width: 0; }
 .sk-fed-card-name { font-size: 18px; font-weight: 700; color: var(--sk-gold); margin-bottom: 2px; }
+.sk-fed-card-name a { color: inherit; text-decoration: none; }
+.sk-fed-card-name a:hover { text-decoration: underline; }
 .sk-fed-card-sub { font-size: 12px; color: rgba(255,255,255,0.75); }
 
 /* Post Card */
@@ -462,6 +467,11 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
 .programs-sidebar {
     min-width: 0;
     align-self: start;
+    position: sticky;
+    top: 86px;
+    max-height: calc(100vh - 98px);
+    display: flex;
+    flex-direction: column;
 }
 .programs-sidebar::-webkit-scrollbar,
 .brgy-link-list::-webkit-scrollbar { width: 6px; }
@@ -473,6 +483,11 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
     border-radius: 16px;
     padding: 20px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-height: calc(100vh - 98px);
+    overflow: hidden;
 }
 .sidebar-title { font-size: 16px; font-weight: 700; color: #333; margin-bottom: 3px; flex-shrink: 0; }
 .sidebar-subtitle { font-size: 12px; color: #999; margin-bottom: 16px; flex-shrink: 0; }
@@ -509,6 +524,12 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
     display: flex;
     flex-direction: column;
     gap: 8px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    flex: 1;
+    min-height: 0;
+    padding-right: 4px;
+    -webkit-overflow-scrolling: touch;
 }
 .brgy-link-item {
     display: flex; align-items: center; gap: 10px; padding: 10px 12px;
@@ -862,24 +883,54 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
 .compose-modal.compose-maximized .modal-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
 .compose-modal.compose-maximized .compose-textarea { min-height: 40vh; flex: 1; }
 .compose-modal .modal-header {
-    background: linear-gradient(135deg, #2c2c3e, #3a3a4a);
-    border-bottom: 3px solid #f5c518;
-    padding: 16px 20px;
+    background: #fff;
+    border-bottom: 1px solid #e8ecf0;
+    padding: 8px 12px;
+    justify-content: flex-end;
 }
-.compose-modal .modal-header h2 { color: #fff; font-size: 17px; }
-.compose-modal-window-actions { display: flex; align-items: center; gap: 6px; }
-.compose-window-btn {
-    background: transparent;
-    border: 1px solid rgba(255,255,255,0.28);
-    border-radius: 8px;
-    width: 32px; height: 32px;
-    cursor: pointer; font-size: 14px; color: #fff;
-    display: inline-flex; align-items: center; justify-content: center;
+.compose-modal-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
-.compose-window-btn:hover { background: rgba(255,255,255,0.18); }
-.compose-modal .modal-close { background: rgba(255,255,255,0.15); }
-.compose-modal .modal-close svg { color: #fff; }
-.compose-modal .modal-close:hover { background: rgba(245,197,24,0.35); }
+.compose-modal-window-actions { display: flex; align-items: center; gap: 2px; }
+.compose-window-btn,
+.compose-modal .modal-close.compose-window-btn {
+    background: none;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    cursor: pointer;
+    font-size: 14px;
+    color: #2c2c3e;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.compose-window-btn:hover,
+.compose-modal .modal-close.compose-window-btn:hover {
+    background: none;
+    opacity: 0.7;
+}
+.compose-modal .modal-close.compose-window-btn svg { color: #2c2c3e; width: 16px; height: 16px; }
+.compose-modal .modal-close.compose-window-btn:hover svg { color: #2c2c3e; }
+#compose-post-btn {
+    background: var(--sk-dark);
+    color: #fff;
+}
+#compose-post-btn:hover {
+    background: #3a3a4a;
+    box-shadow: 0 6px 20px rgba(44, 44, 62, 0.28);
+}
 .compose-char-row { display: flex; justify-content: flex-end; margin-top: 6px; }
 .compose-char-count { font-size: 12px; color: #9ca3af; }
 .compose-char-count.over-limit { color: #ef4444; font-weight: 700; }
