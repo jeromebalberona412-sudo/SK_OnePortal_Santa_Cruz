@@ -2,7 +2,7 @@ import { normalizeCurrency, looksLikeYear } from './validation.js';
 import { mergeNumericParts, nearestBudgetColumn } from './budget-parser.js';
 import { startsWithActivityBullet } from './program-parser.js';
 
-const LETTER_X_MAX = 72;
+const LETTER_X_MAX = 110;
 const PPAS_X_MAX = 140;
 const DESC_X = [140, 218];
 const LETTER_HANG = 8;

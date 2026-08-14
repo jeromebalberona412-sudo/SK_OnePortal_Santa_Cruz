@@ -246,8 +246,6 @@ Route::middleware([
         Route::get('/{id}', [AbyipController::class, 'show'])->name('api.abyip.show');
         Route::post('/', [AbyipController::class, 'store'])->name('api.abyip.store');
         Route::post('/{id}/resubmit', [AbyipController::class, 'resubmit'])->name('api.abyip.resubmit');
-        Route::put('/{id}', [AbyipController::class, 'update'])->name('api.abyip.update');
-        Route::patch('/{id}', [AbyipController::class, 'update'])->name('api.abyip.patch');
         Route::delete('/{id}', [AbyipController::class, 'destroy'])->name('api.abyip.destroy');
     });
 

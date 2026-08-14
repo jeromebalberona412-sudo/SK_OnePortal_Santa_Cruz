@@ -29,8 +29,16 @@ function midpoint(left, right) {
     return (left + right) / 2;
 }
 
+function repairAbyipOcrText(text) {
+    return String(text || '')
+        .replace(/BARANG\s+AY/gi, 'BARANGAY')
+        .replace(/NEQUINT\s+O/gi, 'NEQUINTO')
+        .replace(/Counci(?!l)/gi, 'Council')
+        .replace(/(\d{1,3}(?:,\d{3})+),(\d{2})(?!\d)/g, '$1.$2');
+}
+
 function compact(text) {
-    return String(text || '').replace(/\s+/g, ' ').trim();
+    return repairAbyipOcrText(String(text || '').replace(/\s+/g, ' ')).trim();
 }
 
 function isRepeatedHeaderLine(line, pageNum) {
@@ -566,7 +574,7 @@ function extractDocumentMetadata(lines) {
         document.municipality = compact(municipalityMatch[1]);
     }
 
-    const barangayMatch = text.match(/BARANGAY\s+([A-Za-z\s]+?)(?:\s+SANGGUNIANG|\s+ANNUAL|$)/im);
+    const barangayMatch = text.match(/BARANG(?:AY|\s+AY)\s+([A-Za-z]+)/im);
     if (barangayMatch) {
         document.barangay_name = compact(barangayMatch[1]);
     }

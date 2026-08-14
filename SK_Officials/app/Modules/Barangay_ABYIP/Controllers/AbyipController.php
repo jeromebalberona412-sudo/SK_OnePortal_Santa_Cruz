@@ -88,45 +88,6 @@ class AbyipController extends Controller
         ], 201);
     }
 
-    public function update(Request $request, int $id): JsonResponse
-    {
-        $validated = $request->validate(array_merge($this->importPayloadRules(), [
-            'title' => ['sometimes', 'string', 'max:255'],
-            'document_html' => ['nullable', 'string'],
-            'edit_reason' => ['nullable', 'string', 'max:1000'],
-            'lines' => ['nullable', 'array'],
-            'lines.*.id' => ['required_with:lines', 'integer'],
-            'lines.*.code' => ['nullable', 'string', 'max:20'],
-            'lines.*.program_name' => ['nullable', 'string', 'max:255'],
-            'lines.*.category' => ['nullable', 'string', 'max:255'],
-            'lines.*.activity_name' => ['nullable', 'string', 'max:255'],
-            'lines.*.description' => ['nullable', 'string'],
-            'lines.*.expected_result' => ['nullable', 'string'],
-            'lines.*.performance_indicator' => ['nullable', 'string'],
-            'lines.*.implementation_start' => ['nullable', 'date'],
-            'lines.*.implementation_end' => ['nullable', 'date', 'after_or_equal:lines.*.implementation_start'],
-            'lines.*.person_responsible' => ['nullable', 'string', 'max:255'],
-            'lines.*.mooe' => ['nullable', 'numeric', 'min:0'],
-            'lines.*.co' => ['nullable', 'numeric', 'min:0'],
-            'lines.*.total' => ['nullable', 'numeric', 'min:0'],
-            'lines.*.progress_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
-        ]));
-
-        try {
-            $document = $this->abyipService->update($request->user(), $id, $validated);
-        } catch (ValidationException $exception) {
-            return response()->json([
-                'message' => collect($exception->errors())->flatten()->first(),
-                'errors' => $exception->errors(),
-            ], 422);
-        }
-
-        return response()->json([
-            'message' => 'ABYIP updated successfully.',
-            'data' => $document,
-        ]);
-    }
-
     public function destroy(Request $request, int $id): JsonResponse
     {
         try {

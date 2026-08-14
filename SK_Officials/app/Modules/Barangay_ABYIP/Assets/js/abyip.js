@@ -1,7 +1,7 @@
 import { extractPdfTextForPrograms } from './parser.js';
 import { parsePdfFile, buildSavePayload } from './import.js';
 import { bindBudgetEditors } from './editor.js';
-import { collectPreviewEdits, renderImportPreview } from './preview.js';
+import { renderImportPreview } from './preview.js';
 
 const DEFAULT_RECORD_TITLE = 'ABYIP CY 2026';
 
@@ -14,7 +14,6 @@ let pendingPdfExtractedText = null;
 let pendingIsImported = false;
 let pendingPdfUploadFile = null;
 let pendingExtractedPayload = null;
-let editingRecordId = null;
 
 let filterSearchText = '';
 let filterYear = '';
@@ -358,9 +357,6 @@ function renderRecordsTable() {
                 '<button type="button" class="btn-action-view" data-action="view" data-id="' +
                 record.id +
                 '">View</button>' +
-                '<button type="button" class="btn-action-view" data-action="edit" data-id="' +
-                record.id +
-                '">Edit</button>' +
                 (isRejected
                     ? '<button type="button" class="btn-action-resubmit" data-action="resubmit" data-id="' +
                       record.id +
@@ -505,179 +501,10 @@ function closeAbyipModal() {
     }
     document.body.style.overflow = '';
     resubmitRecordId = null;
-    editingRecordId = null;
     setMainModalFooterMode('edit');
 }
 
-function flattenDocumentToPreviewRows(documentData) {
-    const rows = [];
-    (documentData.programs || []).forEach((program) => {
-        const isYouthProgram = (program.row_type || '') === 'youth_program';
-        if (!isYouthProgram) {
-            rows.push({
-                id: program.id,
-                row_type: program.row_type || 'expenditure',
-                code: program.code,
-                category: program.category,
-                program_name: program.program_name,
-                activity_name: program.activity_name || program.program_name,
-                description: program.description,
-                expected_result: program.expected_result,
-                performance_indicator: program.performance_indicator,
-                implementation_start: program.implementation_start,
-                implementation_end: program.implementation_end,
-                person_responsible: program.person_responsible,
-                mooe: program.mooe,
-                co: program.co,
-                total: program.total,
-                page_number: program.page_number,
-                source_text: program.source_text,
-                validation_status: program.validation_status,
-                validation_message: program.validation_message,
-                manual_review_required: program.manual_review_required,
-                grouped_budget: false,
-                progress_percent: program.progress_percent,
-                accomplishment_status: program.accomplishment_status,
-                target_date: program.target_date,
-                completed_at: program.completed_at,
-                submitted_at: program.submitted_at,
-                approved_at: program.approved_at,
-                rejected_at: program.rejected_at,
-            });
-        }
-
-        (program.activities || []).forEach((activity) => {
-            const grouped = /^Included in/i.test(String(activity.validation_message || ''));
-            rows.push({
-                id: activity.id,
-                row_type: 'activity',
-                code: program.code,
-                category: activity.category || program.program_name,
-                program_name: activity.program_name || program.category || program.program_name,
-                activity_name: activity.activity_name,
-                description: activity.description,
-                expected_result: activity.expected_result,
-                performance_indicator: activity.performance_indicator,
-                implementation_start: activity.implementation_start,
-                implementation_end: activity.implementation_end,
-                person_responsible: activity.person_responsible,
-                mooe: grouped ? null : activity.mooe,
-                co: grouped ? null : activity.co,
-                total: grouped ? null : activity.total,
-                page_number: activity.page_number,
-                source_text: activity.source_text,
-                validation_status: activity.validation_status,
-                validation_message: activity.validation_message,
-                included_in: grouped ? activity.validation_message : null,
-                manual_review_required: activity.manual_review_required,
-                grouped_budget: grouped,
-                progress_percent: activity.progress_percent,
-                accomplishment_status: activity.accomplishment_status,
-                target_date: activity.target_date,
-                completed_at: activity.completed_at,
-                submitted_at: activity.submitted_at,
-                approved_at: activity.approved_at,
-                rejected_at: activity.rejected_at,
-            });
-        });
-    });
-
-    return rows;
-}
-
-async function openExtractedEditor(recordId) {
-    const modal = document.getElementById('abyipModal');
-    const titleEl = document.getElementById('abyipModalTitle');
-    const mount = document.getElementById('abyipModalContentMount');
-    if (!modal || !mount) {
-        return;
-    }
-
-    try {
-        const response = await abyipApiFetch('/api/abyip/' + recordId, { method: 'GET' });
-        const documentData = response.data || {};
-        editingRecordId = recordId;
-        abyipModalMode = 'edit';
-        pendingExtractedPayload = {
-            document: documentData,
-            rows: flattenDocumentToPreviewRows(documentData),
-            stats: {},
-        };
-
-        if (titleEl) {
-            titleEl.textContent = 'Edit ABYIP extracted data';
-        }
-        renderImportPreview(pendingExtractedPayload, mount);
-        setMainModalFooterMode('edit');
-        modal.classList.add('active');
-        modal.setAttribute('aria-hidden', 'false');
-        document.body.style.overflow = 'hidden';
-    } catch (error) {
-        showNotification(error.message || 'Unable to load ABYIP for editing.', 'error');
-    }
-}
-
-async function saveExtractedEdits() {
-    if (!editingRecordId || !pendingExtractedPayload) {
-        return;
-    }
-
-    const mount = document.getElementById('abyipModalContentMount');
-    const rows = collectPreviewEdits(mount, pendingExtractedPayload.rows || []);
-    if (rows.some((row) => row.manual_review_required)) {
-        const confirmed = window.confirm('Some budget rows do not reconcile (MOOE + CO = Total). Save anyway and keep them marked for review?');
-        if (!confirmed) {
-            return;
-        }
-    }
-
-    const saveBtn = document.getElementById('abyipModalSave');
-    if (saveBtn) {
-        saveBtn.disabled = true;
-    }
-
-    try {
-        await abyipApiFetch('/api/abyip/' + editingRecordId, {
-            method: 'PUT',
-            body: {
-                lines: rows.filter((row) => row.id).map((row) => ({
-                    id: row.id,
-                    code: row.code,
-                    program_name: row.program_name,
-                    category: row.category,
-                    activity_name: row.activity_name,
-                    description: row.description,
-                    expected_result: row.expected_result,
-                    performance_indicator: row.performance_indicator,
-                    implementation_start: row.implementation_start,
-                    implementation_end: row.implementation_end,
-                    person_responsible: row.person_responsible,
-                    mooe: row.mooe,
-                    co: row.co,
-                    total: row.total,
-                })),
-            },
-        });
-        editingRecordId = null;
-        pendingExtractedPayload = null;
-        closeAbyipModal();
-        await loadRecords();
-        renderRecordsTable();
-        showNotification('ABYIP updated successfully.', 'success');
-    } catch (error) {
-        showNotification(error.message || 'Failed to update ABYIP.', 'error');
-    } finally {
-        if (saveBtn) {
-            saveBtn.disabled = false;
-        }
-    }
-}
-
 async function saveAbyip() {
-    if (editingRecordId) {
-        return saveExtractedEdits();
-    }
-
     if (resubmitRecordId) {
         return saveResubmitAbyip();
     }
@@ -1941,7 +1768,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         const id = parseInt(btn.getAttribute('data-id'), 10);
         const action = btn.getAttribute('data-action');
         if (action === 'view') openAbyipModal('view', id);
-        else if (action === 'edit') openExtractedEditor(id);
         else if (action === 'resubmit') openResubmitFlow(id);
         else if (action === 'delete') {
             if (btn.disabled || btn.classList.contains('is-disabled')) return;

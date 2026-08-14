@@ -156,6 +156,10 @@ class AbyipPdfExtractionService
         }
 
         $replacements = [
+            '/BARANG\s+AY/i' => 'BARANGAY',
+            '/NEQUINT\s+O/i' => 'NEQUINTO',
+            '/Counci(?!l)/i' => 'Council',
+            '/(\d{1,3}(?:,\d{3})+),(\d{2})(?!\d)/' => '$1.$2',
             '/SKTreasurer/i' => 'SK Treasurer',
             '/SKChairman\/SKTreasurer/i' => 'SK Chairman/SK Treasurer',
             '/SKChairman/i' => 'SK Chairman',

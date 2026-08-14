@@ -172,72 +172,6 @@ class AbyipService
     }
 
     /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, mixed>
-     */
-    public function update(User $user, int $documentId, array $data): array
-    {
-        $document = $this->findDocumentModel($user, $documentId);
-
-        if (array_key_exists('tenant_id', $data) || array_key_exists('barangay_id', $data) || array_key_exists('created_by', $data)) {
-            throw ValidationException::withMessages([
-                'document' => ['Protected ownership fields cannot be changed.'],
-            ]);
-        }
-
-        $editableDocumentFields = [
-            'document_title',
-            'title',
-            'country',
-            'region',
-            'province',
-            'municipality',
-            'barangay_name',
-            'sk_council_name',
-            'barangay_estimated_budget',
-            'sk_fund_percentage',
-            'sk_fund_amount',
-            'total_budget',
-            'prepared_by',
-            'prepared_position',
-            'prepared_by_name',
-            'prepared_by_position',
-            'approved_by',
-            'approved_position',
-            'approved_by_name',
-            'approved_by_position',
-            'edit_reason',
-        ];
-
-        $documentUpdates = [];
-        foreach ($editableDocumentFields as $field) {
-            if (! array_key_exists($field, $data)) {
-                continue;
-            }
-
-            $documentUpdates[$field === 'title' ? 'document_title' : $field] = $data[$field];
-        }
-
-        $lines = $data['lines'] ?? $data['rows'] ?? null;
-
-        $document = DB::transaction(function () use ($user, $document, $documentUpdates, $lines, $data) {
-            if ($documentUpdates !== []) {
-                $documentUpdates['last_edited_by'] = $user->id;
-                $documentUpdates['last_edited_at'] = now();
-                $document->forceFill($documentUpdates)->save();
-            }
-
-            if (is_array($lines)) {
-                $this->updateDocumentLines($user, $document, $lines, (string) ($data['edit_reason'] ?? ''));
-            }
-
-            return $document;
-        });
-
-        return $this->formatDocument($document->fresh(['lines.children']));
-    }
-
-    /**
      * @return array<string, mixed>
      */
     protected function buildImportSummary(Abyip $document): array
@@ -971,6 +905,9 @@ class AbyipService
      */
     protected function parseHeaderMetadataFromText(string $text): array
     {
+        $text = preg_replace('/BARANG\s+AY/i', 'BARANGAY', $text) ?? $text;
+        $text = preg_replace('/NEQUINT\s+O/i', 'NEQUINTO', $text) ?? $text;
+        $text = preg_replace('/Counci(?!l)/i', 'Council', $text) ?? $text;
         $normalized = preg_replace('/\s+/u', ' ', $text) ?? $text;
         $compact = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $text) ?? $text);
 
@@ -1013,7 +950,7 @@ class AbyipService
             $metadata['municipality'] = 'Municipality of Santa Cruz';
         }
 
-        if (preg_match('/BARANGAY\s+([A-Za-z\s]+?)(?:\s+SANGGUNIANG|\s+ANNUAL|$)/i', $normalized, $match)) {
+        if (preg_match('/BARANG(?:AY|\s+AY)\s+([A-Za-z]+)/i', $normalized, $match)) {
             $metadata['barangay_name'] = 'BARANGAY '.strtoupper(trim($match[1]));
         } elseif (preg_match('/BARANGAY([A-Z]+)/', $compact, $match)) {
             $metadata['barangay_name'] = 'BARANGAY '.$match[1];
@@ -1144,7 +1081,7 @@ class AbyipService
             }
         }
 
-        if ($result['prepared_by'] === null && preg_match('/HON\.?\s*KARIM\s*Z\.?\s*NEQUINTO/i', $text, $match)) {
+        if ($result['prepared_by'] === null && preg_match('/HON\.?\s*KARIM\s*Z\.?\s*NEQUINT\s*O/i', $text, $match)) {
             $result['prepared_by'] = $this->formatHonoraryName($match[0]);
             $result['prepared_position'] = $result['prepared_position'] ?? 'SK Chairperson';
         }
@@ -1168,6 +1105,7 @@ class AbyipService
     protected function formatHonoraryName(string $name): string
     {
         $cleaned = trim(preg_replace('/\s+/u', ' ', $name) ?? $name);
+        $cleaned = preg_replace('/NEQUINT\s+O/i', 'NEQUINTO', $cleaned) ?? $cleaned;
         $cleaned = preg_replace('/^HON\.?\s*/i', '', $cleaned) ?? $cleaned;
 
         return 'HON. '.trim($cleaned);
@@ -3765,69 +3703,5 @@ class AbyipService
         }
 
         return $parsed;
-    }
-
-    /**
-     * @param  list<array<string, mixed>>  $lines
-     */
-    protected function updateDocumentLines(User $user, Abyip $document, array $lines, string $editReason): void
-    {
-        foreach ($lines as $lineData) {
-            $lineId = (int) ($lineData['id'] ?? 0);
-            if ($lineId <= 0) {
-                continue;
-            }
-
-            $line = Abyip::query()
-                ->where('id', $lineId)
-                ->where('document_id', $document->id)
-                ->where('barangay_id', $user->barangay_id)
-                ->where('row_type', '!=', Abyip::ROW_DOCUMENT)
-                ->first();
-
-            if ($line === null) {
-                continue;
-            }
-
-            $updates = [];
-            foreach ([
-                'code',
-                'program_name',
-                'category',
-                'activity_name',
-                'description',
-                'expected_result',
-                'performance_indicator',
-                'implementation_start',
-                'implementation_end',
-                'person_responsible',
-            ] as $field) {
-                if (array_key_exists($field, $lineData)) {
-                    $updates[$field] = $lineData[$field] ?: null;
-                }
-            }
-
-            if (isset($lineData['mooe']) || isset($lineData['co']) || isset($lineData['total'])) {
-                $budget = $this->budgetValidator->validate([
-                    'budget_mooe' => $lineData['mooe'] ?? $line->mooe,
-                    'budget_co' => $lineData['co'] ?? $line->co,
-                    'budget_total' => $lineData['total'] ?? $line->total,
-                ]);
-                $updates['mooe'] = $budget['mooe'];
-                $updates['co'] = $budget['co'];
-                $updates['total'] = $budget['total'];
-                $updates['validation_status'] = $budget['validation_status'];
-                $updates['validation_message'] = $budget['validation_message'];
-                $updates['manual_review_required'] = $budget['manual_review_required'];
-            }
-
-            $updates['last_edited_by'] = $user->id;
-            $updates['last_edited_at'] = now();
-            if ($editReason !== '') {
-                $updates['edit_reason'] = $editReason;
-            }
-
-            $line->forceFill($updates)->save();
-        }
     }
 }
