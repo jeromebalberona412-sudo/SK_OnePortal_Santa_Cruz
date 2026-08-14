@@ -18,6 +18,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Throwable;
@@ -235,30 +237,52 @@ class CommunityFeedPostController extends Controller
         $post = Announcement::query()->findOrFail($id);
         $validated = $request->validate([
             'reaction_type' => ['nullable', 'string', Rule::in(AnnouncementReaction::TYPES)],
+            'client_seq' => ['sometimes', 'integer', 'min:1'],
         ]);
         $type = $validated['reaction_type'] ?? 'like';
+        $seq = (int) ($validated['client_seq'] ?? 0);
+        $seqKey = "community-feed-reaction-seq:{$user->id}:post:{$id}";
+        $lock = Cache::lock("community-feed-reaction:{$user->id}:post:{$id}", 8);
 
-        $existing = AnnouncementReaction::query()
-            ->where('community_feed_id', $id)
-            ->where('user_id', $user->id)
-            ->where('user_type', 'sk_fed')
-            ->first();
+        $result = $lock->block(5, function () use ($id, $user, $type, $seq, $seqKey) {
+            return DB::transaction(function () use ($id, $user, $type, $seq, $seqKey) {
+                $existing = AnnouncementReaction::query()
+                    ->where('community_feed_id', $id)
+                    ->where('user_id', $user->id)
+                    ->where('user_type', 'sk_fed')
+                    ->lockForUpdate()
+                    ->first();
 
-        $userReaction = $type;
+                if ($this->isStaleReactionSeq($seqKey, $seq)) {
+                    return ['reaction' => $existing?->reaction_type, 'created' => false];
+                }
 
-        if ($existing && $existing->reaction_type === $type) {
-            $existing->delete();
-            $userReaction = null;
-        } elseif ($existing) {
-            $existing->update(['reaction_type' => $type]);
-        } else {
-            AnnouncementReaction::create([
-                'community_feed_id' => $id,
-                'user_id' => $user->id,
-                'user_type' => 'sk_fed',
-                'reaction_type' => $type,
-            ]);
+                if ($existing && $existing->reaction_type === $type) {
+                    $existing->delete();
 
+                    return ['reaction' => null, 'created' => false];
+                }
+
+                if ($existing) {
+                    $existing->update(['reaction_type' => $type]);
+
+                    return ['reaction' => $type, 'created' => false];
+                }
+
+                AnnouncementReaction::create([
+                    'community_feed_id' => $id,
+                    'user_id' => $user->id,
+                    'user_type' => 'sk_fed',
+                    'reaction_type' => $type,
+                ]);
+
+                return ['reaction' => $type, 'created' => true];
+            });
+        });
+
+        $userReaction = $result['reaction'];
+
+        if ($result['created']) {
             $postLabel = $this->notificationService->postLabel($post->title, $post->body);
             if ($post->is_federation_wide) {
                 $this->notificationService->notifyFederationPortalUsersExcept(
@@ -306,29 +330,48 @@ class CommunityFeedPostController extends Controller
 
         $validated = $request->validate([
             'reaction_type' => ['required', 'string', Rule::in(AnnouncementReaction::TYPES)],
+            'client_seq' => ['sometimes', 'integer', 'min:1'],
         ]);
         $type = $validated['reaction_type'];
+        $seq = (int) ($validated['client_seq'] ?? 0);
+        $seqKey = "community-feed-reaction-seq:{$user->id}:comment:{$comment->id}";
+        $lock = Cache::lock("community-feed-reaction:{$user->id}:comment:{$comment->id}", 8);
 
-        $existing = AnnouncementCommentReaction::query()
-            ->where('comment_id', $comment->id)
-            ->where('user_id', $user->id)
-            ->where('user_type', 'sk_fed')
-            ->first();
+        $userReaction = $lock->block(5, function () use ($comment, $user, $type, $seq, $seqKey) {
+            return DB::transaction(function () use ($comment, $user, $type, $seq, $seqKey) {
+                $existing = AnnouncementCommentReaction::query()
+                    ->where('comment_id', $comment->id)
+                    ->where('user_id', $user->id)
+                    ->where('user_type', 'sk_fed')
+                    ->lockForUpdate()
+                    ->first();
 
-        $userReaction = $type;
-        if ($existing && $existing->reaction_type === $type) {
-            $existing->delete();
-            $userReaction = null;
-        } elseif ($existing) {
-            $existing->update(['reaction_type' => $type]);
-        } else {
-            AnnouncementCommentReaction::create([
-                'comment_id' => $comment->id,
-                'user_id' => $user->id,
-                'user_type' => 'sk_fed',
-                'reaction_type' => $type,
-            ]);
-        }
+                if ($this->isStaleReactionSeq($seqKey, $seq)) {
+                    return $existing?->reaction_type;
+                }
+
+                if ($existing && $existing->reaction_type === $type) {
+                    $existing->delete();
+
+                    return null;
+                }
+
+                if ($existing) {
+                    $existing->update(['reaction_type' => $type]);
+
+                    return $type;
+                }
+
+                AnnouncementCommentReaction::create([
+                    'comment_id' => $comment->id,
+                    'user_id' => $user->id,
+                    'user_type' => 'sk_fed',
+                    'reaction_type' => $type,
+                ]);
+
+                return $type;
+            });
+        });
 
         $counts = $this->reactionCountsForComment($comment->id);
 
@@ -787,5 +830,21 @@ class CommunityFeedPostController extends Controller
         );
 
         return $match?->reaction_type ? (string) $match->reaction_type : ($match ? 'like' : null);
+    }
+
+    private function isStaleReactionSeq(string $cacheKey, int $seq): bool
+    {
+        if ($seq <= 0) {
+            return false;
+        }
+
+        $last = (int) Cache::get($cacheKey, 0);
+        if ($seq < $last) {
+            return true;
+        }
+
+        Cache::put($cacheKey, $seq, now()->addMinutes(10));
+
+        return false;
     }
 }

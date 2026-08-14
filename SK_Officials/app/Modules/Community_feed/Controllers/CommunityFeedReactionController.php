@@ -8,18 +8,21 @@ use App\Models\CommunityFeedCommentReaction;
 use App\Models\CommunityFeedReaction;
 use App\Modules\Community_feed\Services\CommunityFeedPresenter;
 use App\Services\SkFederationsNotificationDispatcher;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class CommunityFeedReactionController extends Controller
 {
     public function __construct(
         private readonly CommunityFeedPresenter $presenter,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request, int $id): JsonResponse
     {
@@ -49,44 +52,61 @@ class CommunityFeedReactionController extends Controller
         $user = Auth::user();
         $validated = $request->validate([
             'reaction_type' => ['required', 'string', Rule::in(CommunityFeedReaction::TYPES)],
+            'client_seq' => ['sometimes', 'integer', 'min:1'],
         ]);
 
         $post = CommunityFeed::query()->findOrFail($id);
         $type = $validated['reaction_type'];
+        $seq = (int) ($validated['client_seq'] ?? 0);
+        $seqKey = "community-feed-reaction-seq:{$user->id}:post:{$id}";
+        $lock = Cache::lock("community-feed-reaction:{$user->id}:post:{$id}", 8);
 
-        $existing = CommunityFeedReaction::query()
-            ->where('community_feed_id', $id)
-            ->where('user_id', $user->id)
-            ->where('user_type', 'sk_official')
-            ->first();
+        $result = $lock->block(5, function () use ($id, $user, $type, $seq, $seqKey) {
+            return DB::transaction(function () use ($id, $user, $type, $seq, $seqKey) {
+                $existing = CommunityFeedReaction::query()
+                    ->where('community_feed_id', $id)
+                    ->where('user_id', $user->id)
+                    ->where('user_type', 'sk_official')
+                    ->lockForUpdate()
+                    ->first();
 
-        if ($existing && $existing->reaction_type === $type) {
-            $existing->delete();
+                if ($this->isStaleReactionSeq($seqKey, $seq)) {
+                    return ['reaction' => $existing?->reaction_type, 'created' => false];
+                }
 
-            return $this->postReactionPayload($id, null);
+                if ($existing && $existing->reaction_type === $type) {
+                    $existing->delete();
+
+                    return ['reaction' => null, 'created' => false];
+                }
+
+                if ($existing) {
+                    $existing->update(['reaction_type' => $type]);
+
+                    return ['reaction' => $type, 'created' => false];
+                }
+
+                CommunityFeedReaction::query()->create([
+                    'community_feed_id' => $id,
+                    'user_id' => $user->id,
+                    'user_type' => 'sk_official',
+                    'reaction_type' => $type,
+                ]);
+
+                return ['reaction' => $type, 'created' => true];
+            });
+        });
+
+        if ($result['created'] && $post->is_federation_wide && (int) $post->user_id !== (int) $user->id) {
+            $dispatcher = app(SkFederationsNotificationDispatcher::class);
+            $dispatcher->notifyFederationPortalCommunityFeedLike(
+                (int) $user->id,
+                (string) $user->name,
+                $dispatcher->postLabel($post->title, $post->body),
+            );
         }
 
-        if ($existing) {
-            $existing->update(['reaction_type' => $type]);
-        } else {
-            CommunityFeedReaction::create([
-                'community_feed_id' => $id,
-                'user_id' => $user->id,
-                'user_type' => 'sk_official',
-                'reaction_type' => $type,
-            ]);
-
-            if ($post->is_federation_wide && (int) $post->user_id !== (int) $user->id) {
-                $dispatcher = app(SkFederationsNotificationDispatcher::class);
-                $dispatcher->notifyFederationPortalCommunityFeedLike(
-                    (int) $user->id,
-                    (string) $user->name,
-                    $dispatcher->postLabel($post->title, $post->body),
-                );
-            }
-        }
-
-        return $this->postReactionPayload($id, $type);
+        return $this->postReactionPayload($id, $result['reaction']);
     }
 
     public function destroy(int $id): JsonResponse
@@ -133,36 +153,69 @@ class CommunityFeedReactionController extends Controller
         $user = Auth::user();
         $validated = $request->validate([
             'reaction_type' => ['required', 'string', Rule::in(CommunityFeedReaction::TYPES)],
+            'client_seq' => ['sometimes', 'integer', 'min:1'],
         ]);
 
         CommunityFeed::query()->findOrFail($id);
         $comment = $this->commentOnPost($id, $commentId);
         $type = $validated['reaction_type'];
+        $seq = (int) ($validated['client_seq'] ?? 0);
+        $seqKey = "community-feed-reaction-seq:{$user->id}:comment:{$comment->id}";
+        $lock = Cache::lock("community-feed-reaction:{$user->id}:comment:{$comment->id}", 8);
 
-        $existing = CommunityFeedCommentReaction::query()
-            ->where('comment_id', $comment->id)
-            ->where('user_id', $user->id)
-            ->where('user_type', 'sk_official')
-            ->first();
+        $userReaction = $lock->block(5, function () use ($comment, $user, $type, $seq, $seqKey) {
+            return DB::transaction(function () use ($comment, $user, $type, $seq, $seqKey) {
+                $existing = CommunityFeedCommentReaction::query()
+                    ->where('comment_id', $comment->id)
+                    ->where('user_id', $user->id)
+                    ->where('user_type', 'sk_official')
+                    ->lockForUpdate()
+                    ->first();
 
-        if ($existing && $existing->reaction_type === $type) {
-            $existing->delete();
+                if ($this->isStaleReactionSeq($seqKey, $seq)) {
+                    return $existing?->reaction_type;
+                }
 
-            return $this->commentReactionPayload($comment->id, null);
+                if ($existing && $existing->reaction_type === $type) {
+                    $existing->delete();
+
+                    return null;
+                }
+
+                if ($existing) {
+                    $existing->update(['reaction_type' => $type]);
+
+                    return $type;
+                }
+
+                CommunityFeedCommentReaction::query()->create([
+                    'comment_id' => $comment->id,
+                    'user_id' => $user->id,
+                    'user_type' => 'sk_official',
+                    'reaction_type' => $type,
+                ]);
+
+                return $type;
+            });
+        });
+
+        return $this->commentReactionPayload($comment->id, $userReaction);
+    }
+
+    private function isStaleReactionSeq(string $cacheKey, int $seq): bool
+    {
+        if ($seq <= 0) {
+            return false;
         }
 
-        if ($existing) {
-            $existing->update(['reaction_type' => $type]);
-        } else {
-            CommunityFeedCommentReaction::create([
-                'comment_id' => $comment->id,
-                'user_id' => $user->id,
-                'user_type' => 'sk_official',
-                'reaction_type' => $type,
-            ]);
+        $last = (int) Cache::get($cacheKey, 0);
+        if ($seq < $last) {
+            return true;
         }
 
-        return $this->commentReactionPayload($comment->id, $type);
+        Cache::put($cacheKey, $seq, now()->addMinutes(10));
+
+        return false;
     }
 
     private function commentOnPost(int $feedId, int $commentId): CommunityFeedComment
@@ -220,7 +273,7 @@ class CommunityFeedReactionController extends Controller
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder  $countQuery
+     * @param  Builder  $countQuery
      */
     private function reactorsPayload($reactions, $countQuery, ?int $barangayId): JsonResponse
     {
@@ -239,7 +292,7 @@ class CommunityFeedReactionController extends Controller
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<string, mixed>  $grouped
+     * @param  Collection<string, mixed>  $grouped
      * @return array<string, int>
      */
     private function countsFromQuery($grouped): array

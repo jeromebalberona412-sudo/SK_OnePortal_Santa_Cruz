@@ -19,6 +19,10 @@ test('federation reaction types match the community feed contract', function () 
     expect(AnnouncementReaction::TYPES)->toBe(['like', 'love', 'haha', 'wow', 'sad', 'angry']);
 });
 
+test('community feed reaction sound file is published', function () {
+    expect(file_exists(dirname(__DIR__, 2).DIRECTORY_SEPARATOR.'public'.DIRECTORY_SEPARATOR.'sounds'.DIRECTORY_SEPARATOR.'reactions_ux.mp3'))->toBeTrue();
+});
+
 test('santa cruz barangay map includes all 26 barangays', function () {
     $map = (new BarangayMonitoringService)->slugToNameMap();
 

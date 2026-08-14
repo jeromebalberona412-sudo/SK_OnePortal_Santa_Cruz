@@ -16,11 +16,52 @@ let syncingUrl = false;
 
 const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 const cfg = () => window.CommentPreviewConfig || {};
+const REACTION_SOUND_URL = '/sounds/reactions_ux.mp3';
+let reactionAudio = null;
+
+function playReactionSound() {
+    if (typeof window.playFeedReactionSound === 'function') {
+        window.playFeedReactionSound();
+        return;
+    }
+    try {
+        if (!reactionAudio) {
+            reactionAudio = new Audio(REACTION_SOUND_URL);
+            reactionAudio.preload = 'auto';
+            reactionAudio.volume = 0.75;
+        }
+        reactionAudio.pause();
+        reactionAudio.currentTime = 0;
+        reactionAudio.play().catch(() => {});
+    } catch (e) {}
+}
 
 function escapeHtml(text) {
     return String(text ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;')
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function notifyPreview(message, type = 'success') {
+    if (typeof window.showFeedToast === 'function') {
+        window.showFeedToast(message, type);
+    }
+}
+
+const reactionRequestSeq = new Map();
+const reactionAbort = new Map();
+
+function beginReactionRequest(key) {
+    const seq = (reactionRequestSeq.get(key) || 0) + 1;
+    reactionRequestSeq.set(key, seq);
+    reactionAbort.get(key)?.abort();
+    const controller = new AbortController();
+    reactionAbort.set(key, controller);
+    return { seq, signal: controller.signal };
+}
+
+function isLatestReactionRequest(key, seq) {
+    return reactionRequestSeq.get(key) === seq;
 }
 
 async function apiFetch(url, options = {}) {
@@ -234,7 +275,6 @@ function bindReactionWrap(wrap) {
     const btn = wrap.querySelector('.cp-action, .cp-like-btn');
     const picker = wrap.querySelector('.cp-picker');
     let hideTimer = null;
-    let showTimer = null;
     let pressTimer = null;
     let didLongPress = false;
     const target = wrap.dataset.target;
@@ -252,22 +292,20 @@ function bindReactionWrap(wrap) {
     wrap.addEventListener('mouseenter', () => {
         if (isTouch()) return;
         clearTimeout(hideTimer);
-        showTimer = setTimeout(open, 280);
+        open();
     });
     wrap.addEventListener('mouseleave', () => {
         if (isTouch()) return;
-        clearTimeout(showTimer);
-        hideTimer = setTimeout(() => wrap.classList.remove('is-open'), 320);
+        hideTimer = setTimeout(() => wrap.classList.remove('is-open'), 80);
     });
     picker?.addEventListener('mouseenter', () => {
         if (isTouch()) return;
         clearTimeout(hideTimer);
-        clearTimeout(showTimer);
         wrap.classList.add('is-open');
     });
     picker?.addEventListener('mouseleave', () => {
         if (isTouch()) return;
-        hideTimer = setTimeout(() => wrap.classList.remove('is-open'), 320);
+        hideTimer = setTimeout(() => wrap.classList.remove('is-open'), 80);
     });
     btn?.addEventListener('click', (e) => {
         e.preventDefault();
@@ -278,7 +316,7 @@ function bindReactionWrap(wrap) {
     });
     btn?.addEventListener('touchstart', () => {
         didLongPress = false;
-        pressTimer = setTimeout(() => { didLongPress = true; open(); }, 420);
+        pressTimer = setTimeout(() => { didLongPress = true; open(); }, 180);
     }, { passive: true });
     ['touchend', 'touchcancel', 'touchmove'].forEach((ev) => btn?.addEventListener(ev, () => clearTimeout(pressTimer)));
     picker?.querySelectorAll('.cp-picker-opt').forEach((opt) => {
@@ -291,34 +329,110 @@ function bindReactionWrap(wrap) {
     });
 }
 
+function resolveNextReaction(currentType, requestedType) {
+    const requested = requestedType || 'like';
+    const current = currentType || '';
+    if (current === requested) return { liked: false, type: '' };
+    return { liked: true, type: requested };
+}
+
+function paintCpPostReaction(liked, type, count, counts) {
+    post.liked = liked;
+    post.reaction_type = type || null;
+    post.likes = count;
+    if (counts) post.reaction_counts = counts;
+    const btn = document.getElementById('cpLikeBtn');
+    if (btn) {
+        btn.classList.toggle('liked', Boolean(liked));
+        btn.dataset.type = type || '';
+        btn.innerHTML = likeInner(type);
+        btn.closest('.cp-reaction-wrap')?.querySelectorAll('.cp-picker-opt').forEach((opt) => {
+            opt.classList.toggle('is-active', Boolean(type) && opt.dataset.type === type);
+        });
+    }
+    const left = document.getElementById('cpViewPostReactions');
+    if (left) {
+        const faces = left.querySelector('.cp-faces');
+        if (faces) faces.innerHTML = facesHtml(post.reaction_counts);
+        const countSpan = left.querySelector('span:last-child');
+        if (countSpan) countSpan.textContent = count > 0 ? formatCount(count) : '';
+    }
+}
+
+function paintCpCommentReaction(commentId, liked, type, count, counts) {
+    updateCommentReaction(post.comments, commentId, {
+        reaction_type: type || null,
+        liked,
+        count,
+        reaction_counts: counts,
+    });
+    const wrap = document.querySelector(`.cp-reaction-wrap[data-comment-id="${commentId}"]`);
+    const btn = wrap?.querySelector('.cp-like-btn');
+    if (btn) {
+        btn.classList.toggle('liked', Boolean(liked));
+        btn.dataset.type = type || '';
+        btn.innerHTML = commentLikeInner(type);
+    }
+    wrap?.querySelectorAll('.cp-picker-opt').forEach((opt) => {
+        opt.classList.toggle('is-active', Boolean(type) && opt.dataset.type === type);
+    });
+}
+
 async function setPostReaction(type) {
+    const btn = document.getElementById('cpLikeBtn');
+    const current = btn?.dataset.type || post.reaction_type || '';
+    const next = resolveNextReaction(current, type);
+    let count = Number(post.likes || 0);
+    if (current && !next.liked) count = Math.max(0, count - 1);
+    else if (!current && next.liked) count += 1;
+    if (next.liked) playReactionSound();
+    paintCpPostReaction(next.liked, next.type, count, post.reaction_counts);
+    const key = `post:${post.id}`;
+    const { seq, signal } = beginReactionRequest(key);
     try {
         const data = await apiFetch(`/api/community-feed/${post.id}/reactions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reaction_type: type }),
+            body: JSON.stringify({ reaction_type: type, client_seq: seq }),
+            signal,
         });
-        post.reaction_type = data.reaction_type;
-        post.liked = data.liked;
-        post.likes = data.count;
-        post.reaction_counts = data.reaction_counts;
-        renderPost();
+        if (!isLatestReactionRequest(key, seq)) return;
+        paintCpPostReaction(data.liked, data.liked ? (data.reaction_type || 'like') : '', data.count, data.reaction_counts);
     } catch (err) {
-        alert(err?.message || 'Unable to react.');
+        if (err?.name === 'AbortError') return;
+        if (!isLatestReactionRequest(key, seq)) return;
+        notifyPreview('Unable to update your reaction. Please try again.', 'error');
     }
 }
 
 async function setCommentReaction(commentId, type) {
+    const wrap = document.querySelector(`.cp-reaction-wrap[data-comment-id="${commentId}"]`);
+    const btn = wrap?.querySelector('.cp-like-btn');
+    const current = btn?.dataset.type || '';
+    const next = resolveNextReaction(current, type);
+    if (next.liked) playReactionSound();
+    paintCpCommentReaction(commentId, next.liked, next.type, next.liked ? 1 : 0);
+    const key = `comment:${commentId}`;
+    const { seq, signal } = beginReactionRequest(key);
     try {
         const data = await apiFetch(`/api/community-feed/${post.id}/comments/${commentId}/reactions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reaction_type: type }),
+            body: JSON.stringify({ reaction_type: type, client_seq: seq }),
+            signal,
         });
-        updateCommentReaction(post.comments, commentId, data);
-        renderComments();
+        if (!isLatestReactionRequest(key, seq)) return;
+        paintCpCommentReaction(
+            commentId,
+            data.liked,
+            data.liked ? (data.reaction_type || 'like') : '',
+            data.count,
+            data.reaction_counts
+        );
     } catch (err) {
-        alert(err?.message || 'Unable to react.');
+        if (err?.name === 'AbortError') return;
+        if (!isLatestReactionRequest(key, seq)) return;
+        notifyPreview('Unable to update your reaction. Please try again.', 'error');
     }
 }
 
@@ -328,7 +442,7 @@ function updateCommentReaction(comments, id, data) {
             c.reaction_type = data.reaction_type;
             c.liked = data.liked;
             c.likes = data.count;
-            c.reaction_counts = data.reaction_counts;
+            if (data.reaction_counts) c.reaction_counts = data.reaction_counts;
         }
         updateCommentReaction(c.replies || [], id, data);
     });
@@ -337,6 +451,37 @@ function updateCommentReaction(comments, id, data) {
 async function submitComment(body, parentId = null) {
     if (sending || !body) return;
     sending = true;
+    const tempId = 'tmp-' + Date.now();
+    const optimistic = {
+        id: tempId,
+        body,
+        author_name: cfg().userDisplayName || 'You',
+        author_avatar_url: cfg().userAvatar || '',
+        time: 'Just now',
+        liked: false,
+        likes: 0,
+        owned: true,
+        replies: [],
+        parent_id: parentId || null,
+    };
+    if (parentId) {
+        const parent = findComment(post.comments, parentId);
+        if (parent) {
+            parent.replies = parent.replies || [];
+            parent.replies.push(optimistic);
+            parent.reply_count = parent.replies.length;
+        }
+    } else {
+        post.comments = post.comments || [];
+        post.comments.push(optimistic);
+    }
+    renderPost();
+    renderComments();
+    if (parentId) {
+        const box = document.getElementById(`cp-replies-${parentId}`);
+        if (box) box.hidden = false;
+    }
+    document.getElementById('cpScroll')?.scrollTo({ top: document.getElementById('cpScroll').scrollHeight });
     try {
         const payload = { body };
         if (parentId) payload.parent_id = parentId;
@@ -345,30 +490,43 @@ async function submitComment(body, parentId = null) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
-        if (findComment(post.comments, comment.id)) {
-            return;
-        }
-        const actualParentId = comment.parent_id || parentId;
-        if (actualParentId) {
-            const parent = findComment(post.comments, actualParentId);
-            if (parent) {
-                parent.replies = parent.replies || [];
-                parent.replies.push(comment);
-                parent.reply_count = parent.replies.length;
+        const removeTemp = (comments) => {
+            const idx = (comments || []).findIndex((c) => String(c.id) === String(tempId));
+            if (idx >= 0) comments.splice(idx, 1);
+            (comments || []).forEach((c) => removeTemp(c.replies || []));
+        };
+        removeTemp(post.comments);
+        if (!findComment(post.comments, comment.id)) {
+            const actualParentId = comment.parent_id || parentId;
+            if (actualParentId) {
+                const parent = findComment(post.comments, actualParentId);
+                if (parent) {
+                    parent.replies = parent.replies || [];
+                    parent.replies.push(comment);
+                    parent.reply_count = parent.replies.length;
+                }
+            } else {
+                post.comments = post.comments || [];
+                post.comments.push(comment);
             }
-        } else {
-            post.comments = post.comments || [];
-            post.comments.push(comment);
         }
         renderPost();
         renderComments();
-        if (actualParentId) {
-            const box = document.getElementById(`cp-replies-${actualParentId}`);
+        if (parentId) {
+            const box = document.getElementById(`cp-replies-${parentId}`);
             if (box) box.hidden = false;
         }
-        document.getElementById('cpScroll')?.scrollTo({ top: document.getElementById('cpScroll').scrollHeight, behavior: 'smooth' });
+        notifyPreview(parentId ? 'Reply added successfully.' : 'Comment added successfully.');
     } catch (err) {
-        alert(err?.message || 'Unable to post comment.');
+        const removeTemp = (comments) => {
+            const idx = (comments || []).findIndex((c) => String(c.id) === String(tempId));
+            if (idx >= 0) comments.splice(idx, 1);
+            (comments || []).forEach((c) => removeTemp(c.replies || []));
+        };
+        removeTemp(post.comments);
+        renderPost();
+        renderComments();
+        notifyPreview(parentId ? 'Unable to add your reply. Please try again.' : 'Unable to add your comment. Please try again.', 'error');
     } finally {
         sending = false;
     }

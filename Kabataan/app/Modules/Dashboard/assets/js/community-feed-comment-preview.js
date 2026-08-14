@@ -43,6 +43,28 @@ function escapeHtml(text) {
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+function notifyPreview(message, type = 'success') {
+    if (typeof window.showFeedToast === 'function') {
+        window.showFeedToast(message, type);
+    }
+}
+
+const reactionRequestSeq = new Map();
+const reactionAbort = new Map();
+
+function beginReactionRequest(key) {
+    const seq = (reactionRequestSeq.get(key) || 0) + 1;
+    reactionRequestSeq.set(key, seq);
+    reactionAbort.get(key)?.abort();
+    const controller = new AbortController();
+    reactionAbort.set(key, controller);
+    return { seq, signal: controller.signal };
+}
+
+function isLatestReactionRequest(key, seq) {
+    return reactionRequestSeq.get(key) === seq;
+}
+
 async function apiFetch(url, options = {}) {
     const res = await fetch(url, {
         ...options,
@@ -371,15 +393,22 @@ async function setPostReaction(type) {
     else if (!current && next.liked) count += 1;
     if (next.liked) playReactionSound();
     paintCpPostReaction(next.liked, next.type, count, post.reaction_counts);
+    const key = `post:${post.id}`;
+    const { seq, signal } = beginReactionRequest(key);
     try {
         const data = await apiFetch(`/api/feed/${post.id}/react`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reaction_type: type }),
+            body: JSON.stringify({ reaction_type: type, client_seq: seq }),
+            signal,
         });
+        if (!isLatestReactionRequest(key, seq)) return;
+        if (typeof data?.liked !== 'boolean') return;
         paintCpPostReaction(data.liked, data.liked ? (data.reaction_type || 'like') : '', data.count, data.reaction_counts);
     } catch (err) {
-        alert(err?.message || 'Unable to react.');
+        if (err?.name === 'AbortError') return;
+        if (!isLatestReactionRequest(key, seq)) return;
+        notifyPreview('Unable to update your reaction. Please try again.', 'error');
     }
 }
 
@@ -390,12 +419,17 @@ async function setCommentReaction(commentId, type) {
     const next = resolveNextReaction(current, type);
     if (next.liked) playReactionSound();
     paintCpCommentReaction(commentId, next.liked, next.type, next.liked ? 1 : 0);
+    const key = `comment:${commentId}`;
+    const { seq, signal } = beginReactionRequest(key);
     try {
         const data = await apiFetch(`/api/feed/${post.id}/comments/${commentId}/reactions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reaction_type: type }),
+            body: JSON.stringify({ reaction_type: type, client_seq: seq }),
+            signal,
         });
+        if (!isLatestReactionRequest(key, seq)) return;
+        if (typeof data?.liked !== 'boolean') return;
         paintCpCommentReaction(
             commentId,
             data.liked,
@@ -404,7 +438,9 @@ async function setCommentReaction(commentId, type) {
             data.reaction_counts
         );
     } catch (err) {
-        alert(err?.message || 'Unable to react.');
+        if (err?.name === 'AbortError') return;
+        if (!isLatestReactionRequest(key, seq)) return;
+        notifyPreview('Unable to update your reaction. Please try again.', 'error');
     }
 }
 
@@ -488,6 +524,7 @@ async function submitComment(body, parentId = null) {
             const box = document.getElementById(`cp-replies-${parentId}`);
             if (box) box.hidden = false;
         }
+        notifyPreview(parentId ? 'Reply added successfully.' : 'Comment added successfully.');
     } catch (err) {
         const removeTemp = (comments) => {
             const idx = (comments || []).findIndex((c) => String(c.id) === String(tempId));
@@ -497,7 +534,7 @@ async function submitComment(body, parentId = null) {
         removeTemp(post.comments);
         renderPost();
         renderComments();
-        alert(err?.message || 'Unable to post comment.');
+        notifyPreview(parentId ? 'Unable to add your reply. Please try again.' : 'Unable to add your comment. Please try again.', 'error');
     } finally {
         sending = false;
     }

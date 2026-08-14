@@ -35,10 +35,18 @@ function csrfToken() {
 }
 
 function apiFetch(url, options) {
+    options = options || {};
+    var extraHeaders = options.headers || {};
+    var rest = Object.assign({}, options);
+    delete rest.headers;
     return fetch(url, Object.assign({
-        headers: { 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        headers: Object.assign({
+            'X-CSRF-TOKEN': csrfToken(),
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        }, extraHeaders),
         credentials: 'same-origin',
-    }, options));
+    }, rest));
 }
 
 /* ── LOAD POSTS FROM API ── */
@@ -174,6 +182,111 @@ function reactionPickerHtml(activeType) {
 
 function reactionLabel(type) {
     return type ? (REACTION_LABEL[type] || 'Like') : 'Like';
+}
+
+function commentLikeInner(type) {
+    var label = reactionLabel(type);
+    if (type && type !== 'like') {
+        return '<span class="comment-react-emoji">' + (REACTION_EMOJI[type] || '') + '</span><span>' + escapeHtml(label) + '</span>';
+    }
+    return escapeHtml(label);
+}
+
+var FEED_REACTION_SOUND_URL = '/sounds/reactions_ux.mp3';
+var feedReactionAudio = null;
+
+function ensureFeedReactionAudio() {
+    if (!feedReactionAudio) {
+        feedReactionAudio = new Audio(FEED_REACTION_SOUND_URL);
+        feedReactionAudio.preload = 'auto';
+        feedReactionAudio.volume = 0.75;
+        try { feedReactionAudio.load(); } catch (e) {}
+    }
+    return feedReactionAudio;
+}
+
+function playFeedReactionSound() {
+    var audio = ensureFeedReactionAudio();
+    audio.muted = false;
+    audio.volume = 0.75;
+    try {
+        if (audio.readyState >= 2) {
+            try { audio.currentTime = 0; } catch (e) {}
+            var clone = audio.cloneNode(true);
+            clone.volume = 0.75;
+            clone.play().catch(function () {
+                audio.play().catch(function () {});
+            });
+            return;
+        }
+        audio.play().catch(function () {
+            var oneShot = new Audio(FEED_REACTION_SOUND_URL);
+            oneShot.volume = 0.75;
+            oneShot.play().catch(function () {});
+        });
+    } catch (e) {
+        try {
+            var fallback = new Audio(FEED_REACTION_SOUND_URL);
+            fallback.volume = 0.75;
+            fallback.play().catch(function () {});
+        } catch (err) {}
+    }
+}
+
+window.playFeedReactionSound = playFeedReactionSound;
+
+function resolveNextReaction(currentType, requestedType) {
+    var requested = requestedType || 'like';
+    var current = currentType || '';
+    if (current === requested) return { liked: false, type: '' };
+    return { liked: true, type: requested };
+}
+
+function bumpReactionCounts(counts, fromType, toType) {
+    var next = Object.assign({}, counts || {});
+    if (fromType && fromType !== toType) {
+        next[fromType] = Math.max(0, Number(next[fromType] || 0) - 1);
+    }
+    if (toType && fromType !== toType) {
+        next[toType] = Number(next[toType] || 0) + 1;
+    }
+    return next;
+}
+
+var reactionRequestSeq = new Map();
+var reactionAbort = new Map();
+
+function beginReactionRequest(key) {
+    var seq = (reactionRequestSeq.get(key) || 0) + 1;
+    reactionRequestSeq.set(key, seq);
+    var prev = reactionAbort.get(key);
+    if (prev) prev.abort();
+    var controller = new AbortController();
+    reactionAbort.set(key, controller);
+    return { seq: seq, signal: controller.signal };
+}
+
+function isLatestReactionRequest(key, seq) {
+    return reactionRequestSeq.get(key) === seq;
+}
+
+function notifyFeed(message, type) {
+    type = type || 'success';
+    if (typeof window.showFeedToast === 'function') {
+        window.showFeedToast(message, type);
+        return;
+    }
+    if (typeof showFeedToast === 'function') {
+        showFeedToast(message, type);
+    }
+}
+
+function isReplyComment(commentId) {
+    return Boolean(
+        document.querySelector('.comment-item.is-reply[data-comment-id="' + commentId + '"]')
+        || document.querySelector('.cp-comment.is-reply[data-comment-id="' + commentId + '"]')
+        || document.querySelector('.comment-item--reply[data-comment-id="' + commentId + '"]')
+    );
 }
 
 function countAllComments(comments) {
@@ -629,7 +742,6 @@ function buildPost(p) {
             + '</div></div>';
     }
 
-    var commentCount = countAllComments(p.comments || []);
     var statsHtml = buildStatsBar(p);
     var reactionType = p.reaction_type || (liked ? 'like' : '');
     var likeIcon = reactionType && reactionType !== 'like' ? REACTION_EMOJI[reactionType] : LIKE_THUMB_SVG;
@@ -650,12 +762,12 @@ function buildPost(p) {
         + '<div class="reaction-wrap" data-target="post" data-post-id="' + p.id + '">'
         + '<button type="button" class="action-btn reaction-btn' + (liked ? ' liked' : '') + '" data-type="' + escapeHtml(reactionType) + '" id="like-btn-' + p.id + '">'
         + '<span class="reaction-icon">' + likeIcon + '</span>'
-        + '<span id="like-count-' + p.id + '">' + escapeHtml(reactionLabel(reactionType)) + (p.likes ? ' (' + p.likes + ')' : '') + '</span></button>'
+        + '<span class="reaction-label" id="like-count-' + p.id + '">' + escapeHtml(reactionLabel(reactionType)) + '</span></button>'
         + reactionPickerHtml(reactionType)
         + '</div>'
-        + '<button class="action-btn comment-btn" onclick="openComments(' + p.id + ')">'
+        + '<button type="button" class="action-btn comment-btn" onclick="openComments(' + p.id + ')">'
         + '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>'
-        + '<span id="comment-count-' + p.id + '">Comment (' + commentCount + ')</span></button>'
+        + '<span id="comment-count-' + p.id + '">Comment</span></button>'
         + '</div>'
         + buildCommentPreviewHtml(p);
 }
@@ -672,7 +784,6 @@ function bindReactionWrap(wrap) {
     var btn = wrap.querySelector('.reaction-btn, .comment-like-btn');
     var picker = wrap.querySelector('.reaction-picker');
     var hideTimer = null;
-    var showTimer = null;
     var postId = Number(wrap.dataset.postId);
     var commentId = Number(wrap.dataset.commentId || 0);
     var isComment = wrap.dataset.target === 'comment';
@@ -685,12 +796,11 @@ function bindReactionWrap(wrap) {
     wrap.addEventListener('mouseenter', function () {
         if (isTouchDevice()) return;
         clearTimeout(hideTimer);
-        showTimer = setTimeout(function () { wrap.classList.add('is-open'); }, 280);
+        wrap.classList.add('is-open');
     });
     wrap.addEventListener('mouseleave', function () {
         if (isTouchDevice()) return;
-        clearTimeout(showTimer);
-        hideTimer = setTimeout(function () { wrap.classList.remove('is-open'); }, 320);
+        hideTimer = setTimeout(function () { wrap.classList.remove('is-open'); }, 80);
     });
     btn && btn.addEventListener('click', function (e) {
         e.preventDefault();
@@ -708,65 +818,137 @@ function bindReactionWrap(wrap) {
     });
 }
 
+function paintPostReaction(id, liked, nextType, count) {
+    var btn = document.getElementById('like-btn-' + id);
+    if (!btn) return;
+    btn.classList.toggle('liked', Boolean(liked));
+    btn.dataset.type = nextType || '';
+    var icon = btn.querySelector('.reaction-icon');
+    if (icon) icon.innerHTML = (nextType && nextType !== 'like') ? REACTION_EMOJI[nextType] : LIKE_THUMB_SVG;
+    var label = document.getElementById('like-count-' + id);
+    if (label) label.textContent = reactionLabel(nextType);
+    var wrap = btn.closest('.reaction-wrap');
+    wrap && wrap.querySelectorAll('.reaction-option').forEach(function (opt) {
+        opt.classList.toggle('is-active', Boolean(nextType) && opt.dataset.type === nextType);
+    });
+}
+
+function refreshPostStats(id) {
+    var p = posts.find(function (x) { return Number(x.id) === Number(id); }) || postCache.get(Number(id));
+    var card = document.querySelector('[data-post-id="' + id + '"]');
+    if (!p || !card) return;
+    var statsBar = card.querySelector('.post-stats-bar');
+    var newStats = buildStatsBar(p);
+    if (statsBar) {
+        if (newStats) statsBar.outerHTML = newStats;
+        else statsBar.remove();
+    } else if (newStats) {
+        var actions = card.querySelector('.post-actions');
+        if (actions) actions.insertAdjacentHTML('beforebegin', newStats);
+    }
+}
+
 function setReaction(id, type) {
+    var btn = document.getElementById('like-btn-' + id);
+    var current = btn ? (btn.dataset.type || '') : '';
+    var next = resolveNextReaction(current, type);
+    var p = posts.find(function (x) { return Number(x.id) === Number(id); }) || postCache.get(Number(id));
+    var count = Number((p && p.likes) || 0);
+    if (current && !next.liked) count = Math.max(0, count - 1);
+    else if (!current && next.liked) count += 1;
+    if (next.liked) playFeedReactionSound();
+    paintPostReaction(id, next.liked, next.type, count);
+    if (p) {
+        p.likes = count;
+        p.liked = next.liked;
+        p.reaction_type = next.type || '';
+        p.reaction_counts = bumpReactionCounts(p.reaction_counts || {}, current, next.type);
+    }
+    var cached = postCache.get(Number(id));
+    if (cached && cached !== p) {
+        cached.likes = count;
+        cached.liked = next.liked;
+        cached.reaction_type = next.type || '';
+        cached.reaction_counts = bumpReactionCounts(cached.reaction_counts || {}, current, next.type);
+    }
+    refreshPostStats(id);
+
+    var key = 'post:' + id;
+    var req = beginReactionRequest(key);
     apiFetch('/api/community-feed/' + id + '/react', {
         method: 'POST',
-        body: JSON.stringify({ reaction_type: type || 'like' }),
+        body: JSON.stringify({ reaction_type: type || 'like', client_seq: req.seq }),
+        signal: req.signal,
     })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-            var p = posts.find(function (x) { return x.id === id; });
-            if (p) {
-                p.likes = data.count;
-                p.liked = data.liked;
-                p.reaction_type = data.reaction_type || '';
-                p.reaction_counts = data.reaction_counts || p.reaction_counts;
-                if (data.reactions_summary) p.reactions_summary = data.reactions_summary;
+        .then(function (r) {
+            return r.json().then(function (data) { return { ok: r.ok, data: data }; });
+        })
+        .then(function (result) {
+            if (!isLatestReactionRequest(key, req.seq)) return;
+            if (!result.ok || typeof result.data.liked !== 'boolean') {
+                if (!result.ok) notifyFeed('Unable to update your reaction. Please try again.', 'error');
+                return;
             }
-            var card = document.querySelector('[data-post-id="' + id + '"]');
-            var btn = document.getElementById('like-btn-' + id);
-            var nextType = data.liked ? (data.reaction_type || 'like') : '';
-            if (btn) {
-                btn.classList.toggle('liked', Boolean(data.liked));
-                btn.dataset.type = nextType;
-                var icon = btn.querySelector('.reaction-icon');
-                if (icon) icon.innerHTML = (nextType && nextType !== 'like') ? REACTION_EMOJI[nextType] : LIKE_THUMB_SVG;
-                var label = document.getElementById('like-count-' + id);
-                if (label) label.textContent = reactionLabel(nextType) + (data.count ? ' (' + data.count + ')' : '');
-                var wrap = btn.closest('.reaction-wrap');
-                wrap && wrap.querySelectorAll('.reaction-option').forEach(function (opt) {
-                    opt.classList.toggle('is-active', Boolean(nextType) && opt.dataset.type === nextType);
-                });
+            var data = result.data;
+            var serverType = data.liked ? (data.reaction_type || 'like') : '';
+            paintPostReaction(id, data.liked, serverType, data.count);
+            var post = posts.find(function (x) { return Number(x.id) === Number(id); }) || postCache.get(Number(id));
+            if (post) {
+                post.likes = data.count;
+                post.liked = data.liked;
+                post.reaction_type = serverType;
+                post.reaction_counts = data.reaction_counts || post.reaction_counts;
+                if (data.reactions_summary) post.reactions_summary = data.reactions_summary;
             }
-            if (p && card) {
-                var statsBar = card.querySelector('.post-stats-bar');
-                var newStats = buildStatsBar(p);
-                if (statsBar) {
-                    if (newStats) statsBar.outerHTML = newStats;
-                    else statsBar.remove();
-                } else if (newStats) {
-                    var actions = card.querySelector('.post-actions');
-                    if (actions) actions.insertAdjacentHTML('beforebegin', newStats);
-                }
-            }
+            refreshPostStats(id);
+        })
+        .catch(function (err) {
+            if (err && err.name === 'AbortError') return;
+            if (!isLatestReactionRequest(key, req.seq)) return;
+            notifyFeed('Unable to update your reaction. Please try again.', 'error');
         });
 }
 
 function setCommentReaction(postId, commentId, type) {
+    var wrap = document.querySelector('.reaction-wrap[data-comment-id="' + commentId + '"]');
+    var btn = wrap && wrap.querySelector('.comment-like-btn');
+    var current = btn ? (btn.dataset.type || '') : '';
+    var next = resolveNextReaction(current, type);
+    if (next.liked) playFeedReactionSound();
+    if (btn) {
+        btn.classList.toggle('liked', Boolean(next.liked));
+        btn.dataset.type = next.type || '';
+        btn.innerHTML = commentLikeInner(next.type);
+        wrap.querySelectorAll('.reaction-option').forEach(function (opt) {
+            opt.classList.toggle('is-active', Boolean(next.type) && opt.dataset.type === next.type);
+        });
+    }
+
+    var key = 'comment:' + commentId;
+    var req = beginReactionRequest(key);
     apiFetch('/api/community-feed/' + postId + '/comments/' + commentId + '/reactions', {
         method: 'POST',
-        body: JSON.stringify({ reaction_type: type || 'like' }),
+        body: JSON.stringify({ reaction_type: type || 'like', client_seq: req.seq }),
+        signal: req.signal,
     })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-            var wrap = document.querySelector('.reaction-wrap[data-comment-id="' + commentId + '"]');
-            var btn = wrap && wrap.querySelector('.comment-like-btn');
+        .then(function (r) {
+            return r.json().then(function (data) { return { ok: r.ok, data: data }; });
+        })
+        .then(function (result) {
+            if (!isLatestReactionRequest(key, req.seq)) return;
+            if (!result.ok || typeof result.data.liked !== 'boolean') {
+                if (!result.ok) notifyFeed('Unable to update your reaction. Please try again.', 'error');
+                return;
+            }
+            var data = result.data;
+            var wrapEl = document.querySelector('.reaction-wrap[data-comment-id="' + commentId + '"]');
+            var btnEl = wrapEl && wrapEl.querySelector('.comment-like-btn');
             var nextType = data.liked ? (data.reaction_type || 'like') : '';
-            if (btn) {
-                btn.classList.toggle('liked', Boolean(data.liked));
-                btn.dataset.type = nextType;
-                btn.textContent = reactionLabel(nextType);
-                wrap.querySelectorAll('.reaction-option').forEach(function (opt) {
+            if (btnEl) {
+                btnEl.classList.toggle('liked', Boolean(data.liked));
+                btnEl.dataset.type = nextType;
+                btnEl.innerHTML = commentLikeInner(nextType);
+                wrapEl.querySelectorAll('.reaction-option').forEach(function (opt) {
                     opt.classList.toggle('is-active', Boolean(nextType) && opt.dataset.type === nextType);
                 });
             }
@@ -778,14 +960,19 @@ function setCommentReaction(postId, commentId, type) {
                     + '<span class="reaction-total">' + formatCount(count) + '</span>'
                     + '</button>'
                 : '';
-            var item = wrap && wrap.closest('.comment-item');
+            var item = wrapEl && wrapEl.closest('.comment-item');
             var badge = item && item.querySelector('.comment-react-badge');
             if (badge) {
                 if (badgeHtml) badge.outerHTML = badgeHtml;
                 else badge.remove();
-            } else if (badgeHtml && wrap) {
-                wrap.insertAdjacentHTML('afterend', badgeHtml);
+            } else if (badgeHtml && wrapEl) {
+                wrapEl.insertAdjacentHTML('afterend', badgeHtml);
             }
+        })
+        .catch(function (err) {
+            if (err && err.name === 'AbortError') return;
+            if (!isLatestReactionRequest(key, req.seq)) return;
+            notifyFeed('Unable to update your reaction. Please try again.', 'error');
         });
 }
 
@@ -818,10 +1005,10 @@ function openComments(id) {
                     window.openCommentPreview(data);
                     return;
                 }
-                alert('Unable to open comments for this post.');
+                notifyFeed('Unable to open comments for this post.', 'error');
             })
             .catch(function () {
-                alert('Unable to open comments for this post.');
+                notifyFeed('Unable to open comments for this post.', 'error');
             });
         return;
     }
@@ -869,18 +1056,90 @@ function submitCommentBtn(id, btn) {
     if (input) addComment(id, input);
 }
 
+function findCachedComment(comments, commentId) {
+    var id = String(commentId);
+    for (var i = 0; i < (comments || []).length; i++) {
+        if (String(comments[i].id) === id) return comments[i];
+        var nested = findCachedComment(comments[i].replies || [], commentId);
+        if (nested) return nested;
+    }
+    return null;
+}
+
+function removeCachedComment(comments, commentId) {
+    var id = String(commentId);
+    var list = comments || [];
+    for (var i = 0; i < list.length; i++) {
+        if (String(list[i].id) === id) {
+            list.splice(i, 1);
+            return true;
+        }
+    }
+    return list.some(function (c) { return removeCachedComment(c.replies || [], commentId); });
+}
+
+function insertCachedComment(p, comment, parentId) {
+    if (!p.comments) p.comments = [];
+    if (parentId) {
+        var parent = findCachedComment(p.comments, parentId);
+        if (parent) {
+            parent.replies = parent.replies || [];
+            parent.replies.push(comment);
+            parent.reply_count = parent.replies.length;
+            return;
+        }
+    }
+    p.comments.push(comment);
+}
+
+function refreshFeedCommentUi(id, p) {
+    commentSections.add(id);
+    expandedComments.add(id);
+    var section = document.getElementById('comments-' + id);
+    if (section) {
+        section.style.display = 'block';
+        refreshCommentsSection(p);
+    }
+    var countEl = document.getElementById('comment-count-' + id);
+    if (countEl) countEl.textContent = 'Comment';
+    var preview = document.getElementById('comment-preview-' + id);
+    if (preview) preview.outerHTML = buildCommentPreviewHtml(p);
+    refreshPostStats(id);
+}
+
 function addComment(id, input, parentId) {
     if (!input || input.dataset.sending === '1') return;
     var text = input.value.trim();
     if (!text) return;
     if (text.length > 500) {
-        alert('Comments are limited to 500 characters.');
+        notifyFeed('Comments are limited to 500 characters.', 'error');
         return;
     }
     input.dataset.sending = '1';
     input.value = '';
     var payload = { body: text };
     if (parentId) payload.parent_id = parentId;
+
+    var p = posts.find(function (x) { return Number(x.id) === Number(id); });
+    if (!p) p = postCache.get(Number(id));
+    var tempId = 'tmp-' + Date.now();
+    var tempComment = {
+        id: tempId,
+        body: text,
+        author_name: (window.CommentPreviewConfig && window.CommentPreviewConfig.userDisplayName) || 'You',
+        author_avatar_url: window.currentAvatar || FED_AVATAR,
+        time: 'Just now',
+        liked: false,
+        likes: 0,
+        owned: true,
+        replies: [],
+        parent_id: parentId || null,
+    };
+    if (p) {
+        insertCachedComment(p, tempComment, parentId);
+        postCache.set(Number(id), p);
+        refreshFeedCommentUi(id, p);
+    }
 
     apiFetch('/api/community-feed/' + id + '/comment', { method: 'POST', body: JSON.stringify(payload) })
         .then(function(r) {
@@ -892,49 +1151,23 @@ function addComment(id, input, parentId) {
             return r.json();
         })
         .then(function(c) {
-            var p = posts.find(function(x) { return x.id === id; });
-            if (p) {
-                if (!p.comments) p.comments = [];
-                if (parentId) {
-                    var nested = false;
-                    (function nest(list) {
-                        for (var i = 0; i < list.length; i++) {
-                            if (list[i].id === parentId) {
-                                list[i].replies = list[i].replies || [];
-                                list[i].replies.push(c);
-                                nested = true;
-                                return;
-                            }
-                            nest(list[i].replies || []);
-                        }
-                    })(p.comments);
-                    if (!nested) p.comments.push(c);
-                } else {
-                    p.comments.push(c);
-                }
-                commentSections.add(id);
-                expandedComments.add(id);
-                var section = document.getElementById('comments-' + id);
-                if (section) {
-                    section.style.display = 'block';
-                    refreshCommentsSection(p);
-                }
-                var countEl = document.getElementById('comment-count-' + id);
-                if (countEl) countEl.textContent = 'Comment (' + countAllComments(p.comments) + ')';
-                var card = document.querySelector('[data-post-id="' + id + '"]');
-                if (card) {
-                    var statsBar = card.querySelector('.post-stats-bar');
-                    var newStats = buildStatsBar(p);
-                    if (statsBar) statsBar.outerHTML = newStats;
-                    else if (newStats) {
-                        var actions = card.querySelector('.post-actions');
-                        if (actions) actions.insertAdjacentHTML('beforebegin', newStats);
-                    }
-                }
+            var post = posts.find(function (x) { return Number(x.id) === Number(id); }) || postCache.get(Number(id));
+            if (post) {
+                removeCachedComment(post.comments || [], tempId);
+                insertCachedComment(post, c, c.parent_id || parentId);
+                postCache.set(Number(id), post);
+                refreshFeedCommentUi(id, post);
             }
+            notifyFeed(parentId ? 'Reply added successfully.' : 'Comment added successfully.');
         })
         .catch(function(err) {
-            alert(err.message || 'Unable to post comment.');
+            var post = posts.find(function (x) { return Number(x.id) === Number(id); }) || postCache.get(Number(id));
+            if (post) {
+                removeCachedComment(post.comments || [], tempId);
+                refreshFeedCommentUi(id, post);
+            }
+            notifyFeed(parentId ? 'Unable to add your reply. Please try again.' : 'Unable to add your comment. Please try again.', 'error');
+            if (input) input.value = text;
         })
         .finally(function () {
             if (input) input.dataset.sending = '0';
@@ -950,7 +1183,7 @@ function commentBodyText(commentId) {
 }
 
 function editComment(postId, commentId) {
-    pendingCommentAction = { postId: Number(postId), commentId: Number(commentId) };
+    pendingCommentAction = { postId: Number(postId), commentId: Number(commentId), isReply: isReplyComment(commentId) };
     document.querySelectorAll('.comment-options-menu.open, .cp-options-menu.open, .post-options-menu.open').forEach(function (m) {
         m.classList.remove('open');
     });
@@ -975,6 +1208,7 @@ function confirmEditComment() {
     if (!pendingCommentAction) return;
     var postId = pendingCommentAction.postId;
     var commentId = pendingCommentAction.commentId;
+    var isReply = pendingCommentAction.isReply;
     var body = document.getElementById('editCommentBody')?.value.trim();
     if (!body) return;
     var btn = document.getElementById('confirmEditCommentBtn');
@@ -996,9 +1230,10 @@ function confirmEditComment() {
             if (previewEl) previewEl.textContent = updated.body;
             document.dispatchEvent(new CustomEvent('community-feed:comment-updated', { detail: updated }));
             closeEditCommentModal();
+            notifyFeed(isReply ? 'Reply updated successfully.' : 'Comment updated successfully.');
         })
-        .catch(function (err) {
-            alert(err.message || 'Unable to edit comment.');
+        .catch(function () {
+            notifyFeed(isReply ? 'Unable to update the reply. Please try again.' : 'Unable to update the comment. Please try again.', 'error');
         })
         .finally(function () {
             if (btn) btn.disabled = false;
@@ -1006,12 +1241,18 @@ function confirmEditComment() {
 }
 
 function deleteComment(postId, commentId) {
-    pendingCommentAction = { postId: Number(postId), commentId: Number(commentId) };
+    pendingCommentAction = { postId: Number(postId), commentId: Number(commentId), isReply: isReplyComment(commentId) };
     document.querySelectorAll('.comment-options-menu.open, .cp-options-menu.open, .post-options-menu.open').forEach(function (m) {
         m.classList.remove('open');
     });
     var modal = document.getElementById('deleteCommentModal');
     if (!modal) return;
+    var title = modal.querySelector('h2');
+    var body = modal.querySelector('.modal-body p');
+    if (title) title.textContent = pendingCommentAction.isReply ? 'Delete Reply' : 'Delete Comment';
+    if (body) body.textContent = pendingCommentAction.isReply
+        ? 'Are you sure you want to delete this reply?'
+        : 'Are you sure you want to delete this comment?';
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
@@ -1028,6 +1269,7 @@ function confirmDeleteComment() {
     if (!pendingCommentAction) return;
     var postId = pendingCommentAction.postId;
     var commentId = pendingCommentAction.commentId;
+    var isReply = pendingCommentAction.isReply;
     var btn = document.getElementById('confirmDeleteCommentBtn');
     if (btn) btn.disabled = true;
     apiFetch('/api/community-feed/' + postId + '/comments/' + commentId, { method: 'DELETE' })
@@ -1041,9 +1283,10 @@ function confirmDeleteComment() {
             document.querySelectorAll('[data-comment-id="' + commentId + '"]').forEach(function (el) { el.remove(); });
             document.dispatchEvent(new CustomEvent('community-feed:comment-deleted', { detail: { postId: postId, commentId: commentId } }));
             closeDeleteCommentModal();
+            notifyFeed(isReply ? 'Reply deleted successfully.' : 'Comment deleted successfully.');
         })
-        .catch(function (err) {
-            alert(err.message || 'Unable to delete comment.');
+        .catch(function () {
+            notifyFeed(isReply ? 'Unable to delete the reply. Please try again.' : 'Unable to delete the comment. Please try again.', 'error');
         })
         .finally(function () {
             if (btn) btn.disabled = false;
@@ -1058,6 +1301,9 @@ window.closeDeleteCommentModal = closeDeleteCommentModal;
 window.confirmDeleteComment = confirmDeleteComment;
 window.openComments = openComments;
 window.toggleComments = toggleComments;
+window.setReaction = setReaction;
+window.setCommentReaction = setCommentReaction;
+window.toggleLike = toggleLike;
 
 function setFeedFilter(btn, filter) {
     if (isLoading) return;
@@ -1094,14 +1340,23 @@ function togglePostOptions(id, e) {
 
 
 function deletePost(id) {
-    if (!confirm('Delete this post?')) return;
+    if (!confirm('Are you sure you want to delete this post?')) return;
     apiFetch('/api/community-feed/' + id, { method: 'DELETE' })
-        .then(function(r) { return r.json(); })
+        .then(function(r) {
+            return r.json().then(function (data) {
+                if (!r.ok) throw new Error(data.message || 'Unable to delete the post.');
+                return data;
+            });
+        })
         .then(function() {
             posts = posts.filter(function(x) { return x.id !== id; });
             var el = document.querySelector('[data-post-id="' + id + '"]');
             if (el) el.remove();
             document.querySelectorAll('.post-options-menu.open').forEach(function(m) { m.classList.remove('open'); });
+            notifyFeed('Post deleted successfully.');
+        })
+        .catch(function () {
+            notifyFeed('Unable to delete the post. Please try again.', 'error');
         });
 }
 
@@ -1143,8 +1398,8 @@ function totalSelectedImages() {
 
 function submitPost() {
     var content = document.getElementById('compose-content').value.trim();
-    if (!content) { alert('Please write something.'); return; }
-    if (content.length > 2000) { alert('Posts are limited to 2000 characters.'); return; }
+    if (!content) { notifyFeed('Please write something.', 'error'); return; }
+    if (content.length > 2000) { notifyFeed('Posts are limited to 2000 characters.', 'error'); return; }
 
     var type = document.getElementById('compose-type').value;
     var linkVal = document.getElementById('compose-link-input').value.trim();
@@ -1189,13 +1444,11 @@ function savePostForm(formData) {
         .then(function(saved) {
             if (!saved || !saved.id) throw new Error('Invalid response from server.');
             closeComposeModal();
-            if (typeof showFeedToast === 'function') {
-                showFeedToast(isEdit ? 'Post updated successfully.' : 'Post published successfully.', 'success');
-            }
+            notifyFeed(isEdit ? 'Post updated successfully.' : 'Post created successfully.');
             renderPosts(true);
         })
-        .catch(function(err) {
-            alert(err.message || 'Unable to save post.');
+        .catch(function() {
+            notifyFeed(isEdit ? 'Unable to update the post. Please try again.' : 'Unable to create the post. Please try again.', 'error');
         })
         .finally(function () {
             if (typeof window.hideLoading === 'function') window.hideLoading();
@@ -1359,6 +1612,8 @@ function toggleLinkInput() {
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', function() {
+    ensureFeedReactionAudio();
+    document.addEventListener('pointerdown', ensureFeedReactionAudio, { once: true, capture: true });
     renderPosts(true);
     document.getElementById('compose-content')?.addEventListener('input', updateCharCount);
     updateCharCount();

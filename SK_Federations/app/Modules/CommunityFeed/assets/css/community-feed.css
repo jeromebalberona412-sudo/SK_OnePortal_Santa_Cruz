@@ -260,10 +260,10 @@ body.sk-fed-feed .main-content,
 .comment-input-wrapper { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .comment-input-wrapper img,
 .comment-input-wrapper .comment-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: #f3f4f6; border: 1px solid #e5e7eb; }
-.action-btn { flex: 0 1 auto; padding: 8px 12px; }
+.action-btn { padding: 8px 10px; }
 @media (max-width: 768px) {
-    .post-actions { flex-direction: row; flex-wrap: wrap; }
-    .action-btn { font-size: 12px; padding: 6px 10px; }
+    .post-actions { grid-template-columns: 1fr 1fr; }
+    .action-btn { font-size: 13px; padding: 8px 8px; }
 }
 
 /* ── POST CONTENT ── */
@@ -329,8 +329,8 @@ body.sk-fed-feed .main-content,
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 6px 2px 10px;
-    min-height: 28px;
+    padding: 8px 2px 6px;
+    min-height: 24px;
     font-size: 13px;
     color: #65676b;
 }
@@ -344,18 +344,19 @@ body.sk-fed-feed .main-content,
     background: none;
     color: #65676b;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     font-family: inherit;
-    transition: color 0.2s;
+    transition: color 0.15s;
 }
 
 .post-stats-likes:hover { color: var(--fed-blue); }
 .post-stats-comments {
     border: none; background: none; color: #65676b; font-size: 13px;
     cursor: pointer; font-family: inherit; padding: 0; white-space: nowrap;
+    font-weight: 500;
 }
-.post-stats-comments:hover { text-decoration: underline; }
+.post-stats-comments:hover { color: var(--fed-blue); }
 .comment-react-badge {
     display: inline-flex; align-items: center; gap: 4px;
     border: none; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.12);
@@ -383,32 +384,35 @@ body.sk-fed-feed .main-content,
 }
 
 .post-actions {
-    display: flex;
-    gap: 8px;
-    padding-top: 14px;
-    border-top: 1px solid #e8ecf0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding-top: 6px;
+    margin-top: 2px;
+    border-top: 1px solid #eef1f5;
     align-items: center;
 }
 .action-btn {
-    flex: 0 1 auto;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 8px 12px;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
     background: none;
     border: none;
     border-radius: 8px;
-    color: #666;
+    color: #65676b;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.15s, color 0.15s;
     font-family: inherit;
 }
-.action-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
+.action-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+.action-btn .reaction-icon { display: inline-flex; width: 18px; height: 18px; align-items: center; justify-content: center; font-size: 16px; line-height: 1; }
 .action-btn:hover { background: #f5f7fa; color: var(--fed-blue); }
-.action-btn.liked { font-weight: 700; }
+.action-btn.liked { color: var(--fed-blue); font-weight: 700; }
 
 /* Likes modal */
 .cf-likes-modal {
@@ -881,7 +885,7 @@ body.sk-fed-feed .main-content,
     cursor: pointer;
 }
 
-.reaction-wrap { position: relative; z-index: 3; flex: 1; display: flex; }
+.reaction-wrap { position: relative; z-index: 3; display: flex; min-width: 0; }
 .reaction-wrap .action-btn { width: 100%; }
 .reaction-picker {
     position: absolute; left: 0; bottom: calc(100% - 2px);
@@ -1403,7 +1407,7 @@ body.sk-fed-feed .main-content,
     z-index: 4000; max-width: min(92vw, 420px); text-align: center;
 }
 .feed-toast.is-visible { opacity: 1; transform: translateX(-50%) translateY(0); }
-.feed-toast--error { background: #22c55e; }
+.feed-toast--error { background: #ef4444; color: #fff; }
 
 /* ── BARANGAY SK PROFILE PAGE ── */
 .bfp-wrap { padding: 8px 4px 24px; }

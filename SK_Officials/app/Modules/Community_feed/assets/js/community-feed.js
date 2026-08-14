@@ -55,6 +55,76 @@ const DEFAULT_LOGO = () => window.CommunityFeedConfig?.defaultLogo || '/images/l
 
 const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
+const FEED_REACTION_SOUND_URL = '/sounds/reactions_ux.mp3';
+let feedReactionAudio = null;
+
+function playFeedReactionSound() {
+    try {
+        if (!feedReactionAudio) {
+            feedReactionAudio = new Audio(FEED_REACTION_SOUND_URL);
+            feedReactionAudio.preload = 'auto';
+            feedReactionAudio.volume = 0.75;
+        }
+        feedReactionAudio.pause();
+        feedReactionAudio.currentTime = 0;
+        feedReactionAudio.play().catch(() => {});
+    } catch (e) {}
+}
+
+window.playFeedReactionSound = playFeedReactionSound;
+
+function resolveNextReaction(currentType, requestedType) {
+    const requested = requestedType || 'like';
+    const current = currentType || '';
+    if (current === requested) return { liked: false, type: '' };
+    return { liked: true, type: requested };
+}
+
+function bumpReactionCounts(counts, fromType, toType) {
+    const next = { ...(counts || {}) };
+    if (fromType && fromType !== toType) {
+        next[fromType] = Math.max(0, Number(next[fromType] || 0) - 1);
+    }
+    if (toType && fromType !== toType) {
+        next[toType] = Number(next[toType] || 0) + 1;
+    }
+    return next;
+}
+
+const reactionRequestSeq = new Map();
+const reactionAbort = new Map();
+
+function beginReactionRequest(key) {
+    const seq = (reactionRequestSeq.get(key) || 0) + 1;
+    reactionRequestSeq.set(key, seq);
+    reactionAbort.get(key)?.abort();
+    const controller = new AbortController();
+    reactionAbort.set(key, controller);
+    return { seq, signal: controller.signal };
+}
+
+function isLatestReactionRequest(key, seq) {
+    return reactionRequestSeq.get(key) === seq;
+}
+
+function notifyFeed(message, type = 'success') {
+    if (typeof window.showFeedToast === 'function') {
+        window.showFeedToast(message, type);
+        return;
+    }
+    const el = document.getElementById('feedToast');
+    if (!el) return;
+    el.textContent = message;
+    el.className = 'feed-toast feed-toast--' + type + ' is-visible';
+}
+
+function isReplyComment(commentId) {
+    return Boolean(
+        document.querySelector(`.comment-item.is-reply[data-comment-id="${commentId}"]`)
+        || document.querySelector(`.cp-comment.is-reply[data-comment-id="${commentId}"]`)
+    );
+}
+
 function escapeHtml(text) {
     return String(text ?? '')
         .replace(/&/g, '&amp;')
@@ -714,10 +784,9 @@ function bindReactionWrap(wrap) {
     const postId = Number(wrap.dataset.postId);
     const commentId = Number(wrap.dataset.commentId || 0);
     const isComment = wrap.dataset.target === 'comment';
-    const btn = wrap.querySelector('.reaction-btn');
+    const btn = wrap.querySelector('.reaction-btn, .comment-like-btn');
     const picker = wrap.querySelector('.reaction-picker');
     let hideTimer = null;
-    let showTimer = null;
     let pressTimer = null;
     let didLongPress = false;
 
@@ -735,26 +804,23 @@ function bindReactionWrap(wrap) {
 
     const scheduleHide = () => {
         clearTimeout(hideTimer);
-        hideTimer = setTimeout(() => wrap.classList.remove('is-open'), 320);
+        hideTimer = setTimeout(() => wrap.classList.remove('is-open'), 80);
     };
 
     wrap.addEventListener('mouseenter', () => {
         if (isTouchDevice()) return;
         clearTimeout(hideTimer);
-        clearTimeout(showTimer);
-        showTimer = setTimeout(openPicker, 280);
+        openPicker();
     });
 
     wrap.addEventListener('mouseleave', () => {
         if (isTouchDevice()) return;
-        clearTimeout(showTimer);
         scheduleHide();
     });
 
     picker?.addEventListener('mouseenter', () => {
         if (isTouchDevice()) return;
         clearTimeout(hideTimer);
-        clearTimeout(showTimer);
         wrap.classList.add('is-open');
     });
 
@@ -766,7 +832,6 @@ function bindReactionWrap(wrap) {
     btn?.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
-        clearTimeout(showTimer);
         if (didLongPress) {
             didLongPress = false;
             return;
@@ -785,7 +850,7 @@ function bindReactionWrap(wrap) {
         pressTimer = setTimeout(() => {
             didLongPress = true;
             openPicker();
-        }, 420);
+        }, 180);
     }, { passive: true });
 
     const cancelPress = () => clearTimeout(pressTimer);
@@ -809,30 +874,74 @@ async function toggleLike(id) {
 }
 
 async function setReaction(id, reactionType) {
+    const btn = document.getElementById(`reaction-btn-${id}`);
+    const current = btn?.dataset.type || '';
+    const next = resolveNextReaction(current, reactionType);
+    const summary = document.getElementById(`reaction-summary-${id}`);
+    let counts = {};
+    try { counts = JSON.parse(summary?.dataset.counts || '{}'); } catch (_) { counts = {}; }
+    let total = Number(summary?.dataset.reactions || 0);
+    if (current && !next.liked) total = Math.max(0, total - 1);
+    else if (!current && next.liked) total += 1;
+    counts = bumpReactionCounts(counts, current, next.type);
+    if (next.liked) playFeedReactionSound();
+    applyReactionState(id, {
+        reaction_type: next.type || null,
+        liked: next.liked,
+        count: total,
+        reaction_counts: counts,
+    });
+    closeAllReactionPickers();
+
+    const key = `post:${id}`;
+    const { seq, signal } = beginReactionRequest(key);
     try {
         const data = await apiFetch(`/api/community-feed/${id}/reactions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reaction_type: reactionType }),
+            body: JSON.stringify({ reaction_type: reactionType, client_seq: seq }),
+            signal,
         });
+        if (!isLatestReactionRequest(key, seq)) return;
+        if (typeof data?.liked !== 'boolean') return;
         applyReactionState(id, data);
-        closeAllReactionPickers();
     } catch (err) {
-        alert(err?.message || 'Unable to save reaction.');
+        if (err?.name === 'AbortError') return;
+        if (!isLatestReactionRequest(key, seq)) return;
+        notifyFeed('Unable to update your reaction. Please try again.', 'error');
     }
 }
 
 async function setCommentReaction(postId, commentId, reactionType) {
+    const wrap = document.querySelector(`.reaction-wrap[data-comment-id="${commentId}"]`);
+    const btn = wrap?.querySelector('.comment-like-btn');
+    const current = btn?.dataset.type || '';
+    const next = resolveNextReaction(current, reactionType);
+    if (next.liked) playFeedReactionSound();
+    applyCommentReactionState(commentId, {
+        reaction_type: next.type || '',
+        liked: next.liked,
+        count: next.liked ? 1 : 0,
+        reaction_counts: {},
+    });
+    closeAllReactionPickers();
+
+    const key = `comment:${commentId}`;
+    const { seq, signal } = beginReactionRequest(key);
     try {
         const data = await apiFetch(`/api/community-feed/${postId}/comments/${commentId}/reactions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reaction_type: reactionType }),
+            body: JSON.stringify({ reaction_type: reactionType, client_seq: seq }),
+            signal,
         });
+        if (!isLatestReactionRequest(key, seq)) return;
+        if (typeof data?.liked !== 'boolean') return;
         applyCommentReactionState(commentId, data);
-        closeAllReactionPickers();
     } catch (err) {
-        alert(err?.message || 'Unable to save reaction.');
+        if (err?.name === 'AbortError') return;
+        if (!isLatestReactionRequest(key, seq)) return;
+        notifyFeed('Unable to update your reaction. Please try again.', 'error');
     }
 }
 
@@ -989,7 +1098,7 @@ async function submitComment(id, input, parentId = null) {
     const text = input.value.trim();
     if (!text) return;
     if (text.length > 500) {
-        alert('Comments are limited to 500 characters.');
+        notifyFeed('Comments are limited to 500 characters.', 'error');
         return;
     }
 
@@ -998,18 +1107,21 @@ async function submitComment(id, input, parentId = null) {
     const sendBtn = input.parentElement?.querySelector('.send-comment-btn');
     if (sendBtn) sendBtn.disabled = true;
 
-    try {
-        const payload = { body: text };
-        if (parentId) payload.parent_id = parentId;
-        const comment = await apiFetch(`/api/community-feed/${id}/comments`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
-        if (document.getElementById(`comment-item-sent-${comment.id}`) || document.querySelector(`[data-comment-id="${comment.id}"]`)) {
-            return;
-        }
-        if (parentId) {
+    const tempId = 'tmp-' + Date.now();
+    const tempComment = {
+        id: tempId,
+        body: text,
+        author_name: window.CommunityFeedConfig?.userDisplayName || window.CommentPreviewConfig?.userDisplayName || 'You',
+        author_avatar_url: window.CommunityFeedConfig?.userAvatar || '',
+        time: 'Just now',
+        liked: false,
+        likes: 0,
+        owned: true,
+        replies: [],
+        parent_id: parentId,
+    };
+    const insertTemp = (comment, asReply) => {
+        if (asReply) {
             const parentEl = document.querySelector(`[data-comment-id="${parentId}"] .comment-body`)
                 || document.querySelector(`[data-comment-id="${parentId}"]`);
             let replies = parentEl?.querySelector(':scope > .comment-replies');
@@ -1020,31 +1132,42 @@ async function submitComment(id, input, parentId = null) {
             }
             replies?.insertAdjacentHTML('beforeend', buildCommentItem(comment, id, true));
             if (replies) replies.hidden = false;
-            const box = document.getElementById(`reply-box-${parentId}`);
-            if (box) box.style.display = 'none';
-            const viewBtn = document.getElementById(`view-replies-${parentId}`);
-            if (viewBtn) {
-                const nextCount = Number(viewBtn.dataset.count || 0) + 1;
-                viewBtn.dataset.count = String(nextCount);
-                viewBtn.classList.add('is-open');
-                viewBtn.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>Hide replies`;
-            }
         } else {
             const list = document.getElementById(`comments-list-${id}`);
             list?.insertAdjacentHTML('beforeend', buildCommentItem(comment, id));
             if (list) list.scrollTop = list.scrollHeight;
         }
-        const postCard = document.querySelector(`.post-card[data-post-id="${id}"]`);
-        if (postCard) bindReactionControls(postCard);
-        bumpCommentCount(id, 1);
-        refreshCommentPreview(id);
-        if (isCommentsOpen(id)) {
-            const preview = document.getElementById(`comment-preview-${id}`);
-            if (preview) preview.hidden = true;
+    };
+    insertTemp(tempComment, Boolean(parentId));
+    bumpCommentCount(id, 1);
+    refreshCommentPreview(id);
+
+    try {
+        const payload = { body: text };
+        if (parentId) payload.parent_id = parentId;
+        const comment = await apiFetch(`/api/community-feed/${id}/comments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        document.querySelector(`[data-comment-id="${tempId}"]`)?.remove();
+        if (!(document.getElementById(`comment-item-sent-${comment.id}`) || document.querySelector(`[data-comment-id="${comment.id}"]`))) {
+            insertTemp(comment, Boolean(parentId || comment.parent_id));
+            const postCard = document.querySelector(`.post-card[data-post-id="${id}"]`);
+            if (postCard) bindReactionControls(postCard);
+            refreshCommentPreview(id);
+            if (isCommentsOpen(id)) {
+                const preview = document.getElementById(`comment-preview-${id}`);
+                if (preview) preview.hidden = true;
+            }
         }
+        notifyFeed(parentId ? 'Reply added successfully.' : 'Comment added successfully.');
     } catch (err) {
+        document.querySelector(`[data-comment-id="${tempId}"]`)?.remove();
+        bumpCommentCount(id, -1);
+        refreshCommentPreview(id);
         input.value = text;
-        alert(err?.message || 'Unable to post comment.');
+        notifyFeed(parentId ? 'Unable to add your reply. Please try again.' : 'Unable to add your comment. Please try again.', 'error');
     } finally {
         input.dataset.sending = '';
         if (sendBtn) sendBtn.disabled = false;
@@ -1186,18 +1309,26 @@ async function confirmEditComment() {
         if (previewEl) previewEl.textContent = updated.body;
         document.dispatchEvent(new CustomEvent('community-feed:comment-updated', { detail: updated }));
         closeEditCommentModal();
+        notifyFeed(isReplyComment(commentId) ? 'Reply updated successfully.' : 'Comment updated successfully.');
     } catch (err) {
-        alert(err?.message || 'Unable to edit comment.');
+        notifyFeed(isReplyComment(commentId) ? 'Unable to update the reply. Please try again.' : 'Unable to update the comment. Please try again.', 'error');
     } finally {
         if (btn) btn.disabled = false;
     }
 }
 
 function deleteComment(postId, commentId) {
-    pendingCommentAction = { postId: Number(postId), commentId: Number(commentId) };
+    pendingCommentAction = { postId: Number(postId), commentId: Number(commentId), isReply: isReplyComment(commentId) };
     document.querySelectorAll('.comment-options-menu.open, .cp-options-menu.open, .post-options-menu.open').forEach((m) => m.classList.remove('open'));
     const modal = document.getElementById('deleteCommentModal');
     if (!modal) return;
+    const title = modal.querySelector('h2');
+    const body = modal.querySelector('.modal-body p');
+    const isReply = pendingCommentAction.isReply;
+    if (title) title.textContent = isReply ? 'Delete Reply' : 'Delete Comment';
+    if (body) body.textContent = isReply
+        ? 'Are you sure you want to delete this reply?'
+        : 'Are you sure you want to delete this comment?';
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
@@ -1212,7 +1343,7 @@ function closeDeleteCommentModal() {
 
 async function confirmDeleteComment() {
     if (!pendingCommentAction) return;
-    const { postId, commentId } = pendingCommentAction;
+    const { postId, commentId, isReply } = pendingCommentAction;
     const btn = document.getElementById('confirmDeleteCommentBtn');
     if (btn) btn.disabled = true;
     try {
@@ -1221,8 +1352,9 @@ async function confirmDeleteComment() {
         bumpCommentCount(postId, -1);
         document.dispatchEvent(new CustomEvent('community-feed:comment-deleted', { detail: { postId, commentId } }));
         closeDeleteCommentModal();
+        notifyFeed(isReply ? 'Reply deleted successfully.' : 'Comment deleted successfully.');
     } catch (err) {
-        alert(err?.message || 'Unable to delete comment.');
+        notifyFeed(isReply ? 'Unable to delete the reply. Please try again.' : 'Unable to delete the comment. Please try again.', 'error');
     } finally {
         if (btn) btn.disabled = false;
     }
@@ -1314,7 +1446,7 @@ async function editPost(id) {
         updateCharCount();
         document.getElementById('composeModal').classList.add('active');
     } catch (err) {
-        alert(err.message || 'Unable to load post for editing.');
+        notifyFeed('Unable to load the post for editing. Please try again.', 'error');
     }
 }
 
@@ -1345,8 +1477,9 @@ async function confirmArchivePost() {
         knownPostIds.delete(Number(id));
         document.querySelector(`.post-card[data-post-id="${id}"]`)?.remove();
         closeArchiveModal();
+        notifyFeed('Post deleted successfully.');
     } catch (err) {
-        alert(err.message || 'Failed to archive post.');
+        notifyFeed('Unable to delete the post. Please try again.', 'error');
     } finally {
         if (btn) {
             btn.disabled = false;
@@ -1372,9 +1505,9 @@ function setPostButtonLoading(loading) {
 async function submitPost() {
     const bodyEl = document.getElementById('compose-content');
     const body = bodyEl.value.trim();
-    if (!body) { alert('Please write something.'); return; }
+    if (!body) { notifyFeed('Please write something.', 'error'); return; }
     if (body.length > MAX_BODY_CHARS) {
-        alert(`Post text must be ${MAX_BODY_CHARS} characters or less.`);
+        notifyFeed(`Post text must be ${MAX_BODY_CHARS} characters or less.`, 'error');
         return;
     }
 
@@ -1410,6 +1543,7 @@ async function submitPost() {
                 bindPostImageClicks(card, updated);
                 bindReactionControls(card);
             }
+            notifyFeed('Post updated successfully.');
         } else {
             const fd = new FormData();
             fd.append('type', type);
@@ -1431,12 +1565,12 @@ async function submitPost() {
             knownPostIds.add(Number(created.id));
             upsertPost(created, 'prepend');
             if (typeof showFeedToast === 'function') {
-                showFeedToast('Post published successfully.', 'success');
+                showFeedToast('Post created successfully.', 'success');
             }
         }
         closeComposeModal();
     } catch (e) {
-        alert('Failed to save post. Please try again.\n' + (e.message || ''));
+        notifyFeed(editingPostId ? 'Unable to update the post. Please try again.' : 'Unable to create the post. Please try again.', 'error');
     } finally {
         setPostButtonLoading(false);
     }

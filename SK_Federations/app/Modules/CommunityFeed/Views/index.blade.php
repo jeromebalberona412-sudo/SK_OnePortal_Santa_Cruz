@@ -19,6 +19,7 @@
     @endphp
     <link rel="stylesheet" href="{{ url('/modules/community-feed/css/community-feed.css') }}?v={{ $communityFeedCssVersion }}">
     <link rel="stylesheet" href="{{ url('/modules/community-feed/css/community-feed-comment-preview.css') }}?v={{ $commentPreviewCssVersion }}">
+    <link rel="preload" href="{{ url('/sounds/reactions_ux.mp3') }}" as="audio">
 @endpush
 
 @section('content')
@@ -302,6 +303,7 @@
                 el.classList.remove('is-visible');
             }, 3200);
         }
+        window.showFeedToast = showFeedToast;
     </script>
     @php
         $communityFeedJsPath = app_path('Modules/CommunityFeed/assets/js/community-feed.js');
