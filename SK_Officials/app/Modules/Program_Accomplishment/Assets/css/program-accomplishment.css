@@ -2,8 +2,6 @@
 *::before,
 *::after {
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
 }
 
 body {
@@ -13,30 +11,31 @@ body {
 }
 
 .main-content {
-    margin-left: 280px;
+    margin-left: 260px;
     margin-top: 70px;
     min-height: calc(100vh - 70px);
-    transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-                width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 20px;
-    display: flex;
-    justify-content: center;
-    width: calc(100% - 280px);
-    box-sizing: border-box;
+    transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 20px 24px;
 }
 
-/* header.js toggles this class directly on .main-content when the
-   sidebar collapses to its 80px icon rail — match that exactly so the
-   page stretches, same as every other module. */
-.main-content.sidebar-collapsed {
-    margin-left: 80px;
-    width: calc(100% - 80px);
+@media (min-width: 769px) {
+    .main-content.sidebar-collapsed {
+        margin-left: 80px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        padding: 16px;
+    }
 }
 
 .page-container {
-    max-width: 1400px;
+    max-width: 100%;
     width: 100%;
     margin: 0 auto;
+    min-width: 0;
 }
 
 .program-accomplishment-page .page-content-section {
@@ -62,6 +61,7 @@ body {
     font-size: 28px;
     font-weight: 700;
     color: #111827;
+    margin: 0;
 }
 
 .page-subtitle {
@@ -70,77 +70,78 @@ body {
     margin-top: 4px;
 }
 
-/* Statistics Cards */
+/* Statistics Cards — four cards, one row */
 .module-stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 16px;
-    margin-bottom: 20px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+    width: 100%;
 }
 
 .stat-card {
     background: #ffffff;
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    border: 1px solid #e5e7eb;
-    transition: all 0.2s ease;
+    border-radius: 12px;
+    padding: 14px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 110px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.07);
+    border: 1.5px solid #e5e7eb;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
 }
+
+.stat-card-blue { border-color: #3B82F6; }
+.stat-card-green, .stat-card-teal { border-color: #22C55E; }
+.stat-card-yellow { border-color: #FACC15; }
 
 .stat-card-top {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 12px;
+    gap: 8px;
 }
 
 .stat-card-value {
-    font-size: 32px;
-    font-weight: 700;
+    font-size: 22px;
+    font-weight: 900;
     color: #111827;
-    line-height: 1;
+    line-height: 1.1;
+    flex: 1;
+    min-width: 0;
 }
 
 .stat-card-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
-.stat-icon-blue {
-    background: rgba(59, 130, 246, 0.1);
-    color: #3b82f6;
-}
+.stat-card-icon svg { width: 20px; height: 20px; }
 
-.stat-icon-green {
-    background: rgba(34, 197, 94, 0.1);
-    color: #22c55e;
-}
-
-.stat-icon-yellow {
-    background: rgba(245, 197, 24, 0.1);
-    color: #f4c20d;
-}
-
-.stat-icon-teal {
-    background: rgba(20, 184, 166, 0.1);
-    color: #14b8a6;
-}
+.stat-icon-blue { background: #dbeafe; color: #2563eb; }
+.stat-icon-green { background: #dcfce7; color: #16a34a; }
+.stat-icon-yellow { background: #fef9c3; color: #ca8a04; }
+.stat-icon-teal { background: #ccfbf1; color: #0d9488; }
 
 .stat-card-label {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    margin-top: 8px;
+    line-height: 1.3;
 }
 
 /* Filters Section */
@@ -267,63 +268,41 @@ body {
     border-radius: 16px;
     border: 1px solid #e5e7eb;
     box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
-    overflow: visible;
+    overflow: hidden;
+    max-width: 100%;
 }
 
 .table-wrapper {
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
-    border-radius: 16px;
-    /* Visible, on-brand scrollbar so it's obvious there are more columns
-       to the right instead of the table looking cut off/broken. */
-    scrollbar-width: thin;
-    scrollbar-color: rgba(244, 194, 13, 0.65) #e5e7eb;
+    max-width: 100%;
+    width: 100%;
 }
 
-.table-wrapper::-webkit-scrollbar {
-    height: 9px;
-}
-
-.table-wrapper::-webkit-scrollbar-track {
-    background: #e5e7eb;
-    border-radius: 10px;
-}
-
-.table-wrapper::-webkit-scrollbar-thumb {
-    background: rgba(244, 194, 13, 0.65);
-    border-radius: 10px;
-}
-
-.table-wrapper::-webkit-scrollbar-thumb:hover {
-    background: #f4c20d;
-}
+.table-wrapper::-webkit-scrollbar { height: 8px; }
+.table-wrapper::-webkit-scrollbar-track { background: #e5e7eb; }
+.table-wrapper::-webkit-scrollbar-thumb { background: rgba(244, 194, 13, 0.65); border-radius: 8px; }
 
 .pa-table {
     width: 100%;
-    min-width: 1240px;
+    min-width: 1080px;
     border-collapse: separate;
     border-spacing: 0;
     font-size: 13px;
-    table-layout: fixed;
 }
-
-/* Column widths — sized to their content so headers never wrap oddly
-   and the Actions column stays reachable via the sticky rule below. */
-.pa-table th:nth-child(1),  .pa-table td:nth-child(1)  { width: 220px; } /* Program Name */
-.pa-table th:nth-child(2),  .pa-table td:nth-child(2)  { width: 130px; } /* Program Type */
-.pa-table th:nth-child(3),  .pa-table td:nth-child(3)  { width: 140px; } /* Committee */
-.pa-table th:nth-child(4),  .pa-table td:nth-child(4)  { width: 115px; } /* Date Started */
-.pa-table th:nth-child(5),  .pa-table td:nth-child(5)  { width: 125px; } /* Date Completed */
-.pa-table th:nth-child(6),  .pa-table td:nth-child(6)  { width: 130px; } /* Budget Allocated */
-.pa-table th:nth-child(7),  .pa-table td:nth-child(7)  { width: 120px; } /* Created By */
-.pa-table th:nth-child(8),  .pa-table td:nth-child(8)  { width: 105px; } /* Status */
-.pa-table th:nth-child(9),  .pa-table td:nth-child(9)  { width: 130px; } /* Report Status */
 
 .pa-table td {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.pa-table td:nth-child(1) {
+    white-space: normal;
+    line-height: 1.35;
+    min-width: 160px;
+    max-width: 240px;
 }
 
 .pa-table thead {
@@ -539,7 +518,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 1000;
+    z-index: 1200;
     display: none;
 }
 
@@ -1332,80 +1311,47 @@ body {
 
 /* Responsive */
 
-/* Tablet / small desktop - sidebar is usually collapsed to icon rail here */
 @media (max-width: 1200px) {
-    .main-content {
-        padding: 18px;
-    }
-
-    .pa-table {
-        min-width: 1150px;
-    }
+    .main-content { padding: 18px; }
 }
 
 @media (max-width: 1024px) {
     .module-stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .pa-view-info-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Below this point the shared sidebar goes off-canvas (overlay), so the
-   main content should always take the full viewport width and center
-   its own contents rather than reserving space for the sidebar. */
-@media (max-width: 900px) {
-    .main-content {
-        margin-left: 0 !important;
-        width: 100% !important;
-        padding: 16px;
-    }
-
-    .page-header-section {
-        flex-direction: column;
-        align-items: flex-start;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 8px;
     }
+    .stat-card { padding: 10px 10px 8px; min-height: 92px; }
+    .stat-card-value { font-size: 18px; }
+    .stat-card-label { font-size: 11px; }
+    .stat-card-icon { width: 32px; height: 32px; }
+    .stat-card-icon svg { width: 16px; height: 16px; }
+    .pa-view-info-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {
-    .page-title {
-        font-size: 24px;
-    }
+    .page-title { font-size: 24px; }
 
     .module-stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
     }
 
-    .pa-form-grid {
-        grid-template-columns: 1fr;
-    }
+    .pa-form-grid { grid-template-columns: 1fr; }
 
     .pa-modal-container {
         width: 95%;
         max-height: 95vh;
     }
 
-    .table-action-bar {
-        justify-content: stretch;
-    }
-
-    .pa-search-inline {
-        max-width: 100%;
-        width: 100%;
-    }
+    .table-action-bar { justify-content: stretch; }
+    .pa-search-inline { max-width: 100%; width: 100%; }
 
     .filters-row {
         flex-direction: column;
         align-items: stretch;
     }
 
-    .filter-item {
-        min-width: 100%;
-    }
+    .filter-item { min-width: 100%; }
 
     .table-page-footer {
         flex-direction: column;
@@ -1413,29 +1359,22 @@ body {
         text-align: center;
     }
 
-    .page-content-section {
-        padding: 16px;
+    .page-content-section { padding: 16px; }
+    .page-header-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
     }
 }
 
 @media (max-width: 480px) {
-    .module-stats-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .stat-card-value {
-        font-size: 28px;
-    }
+    .stat-card-value { font-size: 16px; }
 
     .pa-modal-header,
     .pa-modal-body,
-    .pa-modal-footer {
-        padding: 16px;
-    }
+    .pa-modal-footer { padding: 16px; }
 
-    .pa-modal-title {
-        font-size: 18px;
-    }
+    .pa-modal-title { font-size: 18px; }
 
     .pa-gallery,
     .pa-image-preview,

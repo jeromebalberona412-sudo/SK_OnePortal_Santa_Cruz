@@ -434,6 +434,12 @@
 <div class="pa-toast-container" id="paToastContainer"></div>
 
 @vite('app/Modules/Program_Accomplishment/Assets/js/program-accomplishment.js')
+@vite([
+    'app/Modules/Layout/js/header.js',
+    'app/Modules/Layout/js/sidebar.js',
+    'app/Modules/Program_Accomplishment/Assets/js/program-accomplishment.js',
+])
+<script src="{{ url('/shared/js/loading.js') }}"></script>
 
 </body>
 </html>
