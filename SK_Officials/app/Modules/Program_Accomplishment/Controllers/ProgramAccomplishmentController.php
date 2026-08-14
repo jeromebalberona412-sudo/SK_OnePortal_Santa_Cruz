@@ -51,7 +51,7 @@ class ProgramAccomplishmentController extends Controller
                 ], 403);
             }
 
-            $programs = $this->accomplishmentService->getCompletedPrograms($user->barangay_id);
+            $programs = $this->accomplishmentService->getCompletedPrograms((int) $user->barangay_id, $user);
             $accomplishmentReports = $this->accomplishmentService->getAccomplishmentReports($user->barangay_id);
             $images = $this->accomplishmentService->getAllImages($user->barangay_id);
 
@@ -86,17 +86,28 @@ class ProgramAccomplishmentController extends Controller
         try {
             $data = $request->validate([
                 'program_id' => 'required|integer|exists:schedule_programs,id',
-                'title' => 'required|string|max:255',
+                'title' => 'nullable|string|max:255',
                 'description' => 'nullable|string',
                 'objectives' => 'nullable|string',
-                'implementation_summary' => 'required|string',
+                'implementation_summary' => 'nullable|string',
+                'actual_result' => 'nullable|string',
                 'lessons_learned' => 'nullable|string',
                 'recommendations' => 'nullable|string',
-                'participants_count' => 'required|integer|min:0',
-                'actual_expense' => 'required|numeric|min:0',
+                'participants_count' => 'nullable|integer|min:0',
+                'target_beneficiaries' => 'nullable|integer|min:0',
+                'actual_expense' => 'nullable|numeric|min:0',
+                'actual_implementation_date' => 'nullable|date',
+                'actual_completion_date' => 'nullable|date',
                 'remarks' => 'nullable|string',
+                'save_as' => 'nullable|in:draft,submitted',
                 'images' => 'nullable|array',
-                'images.*' => 'file|image|mimes:jpeg,jpg,png,webp|max:10240', // 10MB
+                'images.*' => 'file|image|mimes:jpeg,jpg,png,webp|max:10240',
+                'documents' => 'nullable|array',
+                'documents.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+                'document_visibility' => 'nullable|array',
+                'document_visibility.*' => 'in:internal,public',
+                'document_types' => 'nullable|array',
+                'document_types.*' => 'nullable|string|max:80',
             ]);
 
             $report = $this->accomplishmentService->createReport(
@@ -107,7 +118,7 @@ class ProgramAccomplishmentController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Accomplishment report created successfully.',
+                'message' => 'Accomplishment submitted successfully.',
                 'report' => $report,
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -166,15 +177,20 @@ class ProgramAccomplishmentController extends Controller
 
         try {
             $data = $request->validate([
-                'title' => 'sometimes|required|string|max:255',
+                'title' => 'sometimes|nullable|string|max:255',
                 'description' => 'nullable|string',
                 'objectives' => 'nullable|string',
-                'implementation_summary' => 'sometimes|required|string',
+                'implementation_summary' => 'sometimes|nullable|string',
+                'actual_result' => 'nullable|string',
                 'lessons_learned' => 'nullable|string',
                 'recommendations' => 'nullable|string',
-                'participants_count' => 'sometimes|required|integer|min:0',
-                'actual_expense' => 'sometimes|required|numeric|min:0',
+                'participants_count' => 'sometimes|nullable|integer|min:0',
+                'target_beneficiaries' => 'nullable|integer|min:0',
+                'actual_expense' => 'sometimes|nullable|numeric|min:0',
+                'actual_implementation_date' => 'nullable|date',
+                'actual_completion_date' => 'nullable|date',
                 'remarks' => 'nullable|string',
+                'save_as' => 'nullable|in:draft,submitted',
                 'new_images' => 'nullable|array',
                 'new_images.*' => 'file|image|mimes:jpeg,jpg,png,webp|max:10240',
                 'delete_images' => 'nullable|array',
@@ -183,6 +199,14 @@ class ProgramAccomplishmentController extends Controller
                 'update_images.*.id' => 'required|integer',
                 'update_images.*.caption' => 'nullable|string',
                 'update_images.*.sort_order' => 'sometimes|required|integer',
+                'documents' => 'nullable|array',
+                'documents.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+                'document_visibility' => 'nullable|array',
+                'document_visibility.*' => 'in:internal,public',
+                'document_types' => 'nullable|array',
+                'document_types.*' => 'nullable|string|max:80',
+                'delete_documents' => 'nullable|array',
+                'delete_documents.*' => 'integer',
             ]);
 
             $report = $this->accomplishmentService->updateReport(
@@ -240,5 +264,72 @@ class ProgramAccomplishmentController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function prepareFromCatalog(Request $request)
+    {
+        $user = Auth::user();
+
+        if (! $user || ! $user->barangay_id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $data = $request->validate([
+            'abyip_program_id' => 'required|integer',
+        ]);
+
+        try {
+            $prepared = $this->accomplishmentService->prepareFromCatalog(
+                (int) $user->barangay_id,
+                (int) $user->id,
+                (int) $data['abyip_program_id'],
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => $prepared,
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors(),
+                'message' => collect($e->errors())->flatten()->first(),
+            ], 422);
+        }
+    }
+
+    public function publish(int $id)
+    {
+        $user = Auth::user();
+
+        if (! $user || ! $user->barangay_id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $report = $this->accomplishmentService->publishReport($id, (int) $user->barangay_id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Accomplishment published to the public homepage.',
+                'report' => $report,
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors(),
+                'message' => collect($e->errors())->flatten()->first(),
+            ], 422);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Report not found.',
+            ], 404);
+        }
+    }
+
+    public function edit(int $id)
+    {
+        return redirect()->route('program-accomplishment.index', ['edit' => $id]);
     }
 }

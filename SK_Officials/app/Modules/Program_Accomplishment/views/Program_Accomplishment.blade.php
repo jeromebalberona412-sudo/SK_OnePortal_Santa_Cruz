@@ -208,29 +208,42 @@
                 <!-- Program Information Section -->
                 <div class="pa-form-section">
                     <h3 class="pa-section-title">Program Information</h3>
+                    <p class="pa-section-note">Loaded from the existing Program record. These fields cannot be edited here.</p>
                     <div class="pa-form-grid">
                         <div class="pa-form-group">
-                            <label class="pa-form-label">Program</label>
+                            <label class="pa-form-label">Program Name</label>
                             <input type="text" id="paProgram" class="pa-form-input" readonly>
                         </div>
                         <div class="pa-form-group">
-                            <label class="pa-form-label">Venue</label>
-                            <input type="text" id="paVenue" class="pa-form-input" readonly>
+                            <label class="pa-form-label">Category</label>
+                            <input type="text" id="paCategory" class="pa-form-input" readonly>
+                        </div>
+                        <div class="pa-form-group pa-form-group-full">
+                            <label class="pa-form-label">Description</label>
+                            <textarea id="paProgramDescription" class="pa-form-textarea" rows="2" readonly></textarea>
+                        </div>
+                        <div class="pa-form-group pa-form-group-full">
+                            <label class="pa-form-label">Expected Result</label>
+                            <textarea id="paExpectedResult" class="pa-form-textarea" rows="2" readonly></textarea>
+                        </div>
+                        <div class="pa-form-group pa-form-group-full">
+                            <label class="pa-form-label">Performance Indicator</label>
+                            <textarea id="paPerformanceIndicator" class="pa-form-textarea" rows="2" readonly></textarea>
                         </div>
                         <div class="pa-form-group">
                             <label class="pa-form-label">Person Responsible</label>
                             <input type="text" id="paPersonResponsible" class="pa-form-input" readonly>
                         </div>
                         <div class="pa-form-group">
-                            <label class="pa-form-label">Budget Allocated</label>
+                            <label class="pa-form-label">Approved / Planned Budget</label>
                             <input type="text" id="paBudgetAllocated" class="pa-form-input" readonly>
                         </div>
                         <div class="pa-form-group">
-                            <label class="pa-form-label">Date Started</label>
+                            <label class="pa-form-label">Implementation Start</label>
                             <input type="text" id="paDateStarted" class="pa-form-input" readonly>
                         </div>
                         <div class="pa-form-group">
-                            <label class="pa-form-label">Date Completed</label>
+                            <label class="pa-form-label">Implementation End</label>
                             <input type="text" id="paDateCompleted" class="pa-form-input" readonly>
                         </div>
                     </div>
@@ -238,42 +251,34 @@
 
                 <!-- Report Information Section -->
                 <div class="pa-form-section">
-                    <h3 class="pa-section-title">Report Information</h3>
+                    <h3 class="pa-section-title">Accomplishment</h3>
                     <div class="pa-form-grid">
                         <div class="pa-form-group pa-form-group-full">
-                            <label class="pa-form-label">Title <span class="pa-required">*</span></label>
-                            <input type="text" id="paTitle" class="pa-form-input" required>
-                        </div>
-                        <div class="pa-form-group pa-form-group-full">
-                            <label class="pa-form-label">Description</label>
-                            <textarea id="paDescription" class="pa-form-textarea" rows="3"></textarea>
-                        </div>
-                        <div class="pa-form-group pa-form-group-full">
-                            <label class="pa-form-label">Objectives</label>
-                            <textarea id="paObjectives" class="pa-form-textarea" rows="3"></textarea>
-                        </div>
-                        <div class="pa-form-group pa-form-group-full">
-                            <label class="pa-form-label">Implementation Summary <span class="pa-required">*</span></label>
+                            <label class="pa-form-label">Accomplishment Summary <span class="pa-required">*</span></label>
                             <textarea id="paImplementationSummary" class="pa-form-textarea" rows="4" required></textarea>
                         </div>
                         <div class="pa-form-group pa-form-group-full">
-                            <label class="pa-form-label">Lessons Learned</label>
-                            <textarea id="paLessonsLearned" class="pa-form-textarea" rows="3"></textarea>
-                        </div>
-                        <div class="pa-form-group pa-form-group-full">
-                            <label class="pa-form-label">Recommendations</label>
-                            <textarea id="paRecommendations" class="pa-form-textarea" rows="3"></textarea>
+                            <label class="pa-form-label">Actual Result</label>
+                            <textarea id="paActualResult" class="pa-form-textarea" rows="3"></textarea>
                         </div>
                         <div class="pa-form-group">
-                            <label class="pa-form-label">Participants Count <span class="pa-required">*</span></label>
-                            <input type="number" id="paParticipantsCount" class="pa-form-input" min="0" required>
+                            <label class="pa-form-label">Actual Implementation Date</label>
+                            <input type="date" id="paActualImplementationDate" class="pa-form-input">
                         </div>
                         <div class="pa-form-group">
-                            <label class="pa-form-label">Actual Expense <span class="pa-required">*</span></label>
-                            <input type="number" id="paActualExpense" class="pa-form-input" min="0" step="0.01" required>
+                            <label class="pa-form-label">Actual Completion Date</label>
+                            <input type="date" id="paActualCompletionDate" class="pa-form-input">
+                        </div>
+                        <div class="pa-form-group">
+                            <label class="pa-form-label">Target Beneficiaries</label>
+                            <input type="number" id="paTargetBeneficiaries" class="pa-form-input" min="0">
+                        </div>
+                        <div class="pa-form-group">
+                            <label class="pa-form-label">Actual Beneficiaries / Participants</label>
+                            <input type="number" id="paParticipantsCount" class="pa-form-input" min="0">
                         </div>
                         <div class="pa-form-group pa-form-group-full">
-                            <label class="pa-form-label">Remarks</label>
+                            <label class="pa-form-label">Internal remarks</label>
                             <textarea id="paRemarks" class="pa-form-textarea" rows="2"></textarea>
                         </div>
                     </div>
@@ -284,8 +289,12 @@
                     <h3 class="pa-section-title">Budget Summary</h3>
                     <div class="pa-budget-summary">
                         <div class="pa-budget-item">
-                            <span class="pa-budget-label">Budget Allocated:</span>
+                            <span class="pa-budget-label">Approved / Planned Budget:</span>
                             <span class="pa-budget-value" id="paBudgetAllocatedDisplay">₱0.00</span>
+                        </div>
+                        <div class="pa-form-group" style="margin: 12px 0;">
+                            <label class="pa-form-label" for="paActualExpense">Actual Expenditure</label>
+                            <input type="number" id="paActualExpense" class="pa-form-input" min="0" step="0.01">
                         </div>
                         <div class="pa-budget-item">
                             <span class="pa-budget-label">Actual Expense:</span>
@@ -330,11 +339,22 @@
                     <h3 class="pa-section-title">Existing Images</h3>
                     <div class="pa-existing-images" id="paExistingImages"></div>
                 </div>
+
+                <div class="pa-form-section">
+                    <h3 class="pa-section-title">Supporting Documents</h3>
+                    <p class="pa-section-note">Internal documents stay private. Only files marked Public can appear on the Kabataan homepage.</p>
+                    <input type="file" id="paDocumentInput" class="pa-form-input" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                    <div id="paDocumentPreview" class="pa-document-preview"></div>
+                    <div id="paExistingDocuments" class="pa-document-preview"></div>
+                </div>
             </form>
         </div>
         <div class="pa-modal-footer">
             <button type="button" class="pa-btn pa-btn-secondary" id="paCancelBtn">Cancel</button>
-            <button type="button" class="pa-btn pa-btn-primary" id="paSaveBtn">Save Report</button>
+            <button type="button" class="pa-btn pa-btn-primary" id="paSaveBtn">
+                <span class="pa-btn-label">Submit</span>
+                <span class="pa-btn-spinner" hidden aria-hidden="true"></span>
+            </button>
         </div>
     </div>
 </div>
@@ -359,6 +379,7 @@
         </div>
         <div class="pa-modal-footer">
             <button type="button" class="pa-btn pa-btn-secondary" id="paViewCloseBtn">Close</button>
+            <button type="button" class="pa-btn pa-btn-primary" id="paPublishBtn" hidden>Publish</button>
         </div>
     </div>
 </div>
@@ -433,7 +454,6 @@
 <!-- Toast Container -->
 <div class="pa-toast-container" id="paToastContainer"></div>
 
-@vite('app/Modules/Program_Accomplishment/Assets/js/program-accomplishment.js')
 @vite([
     'app/Modules/Layout/js/header.js',
     'app/Modules/Layout/js/sidebar.js',

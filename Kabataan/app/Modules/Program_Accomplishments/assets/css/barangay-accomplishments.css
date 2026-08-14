@@ -962,3 +962,71 @@ body.homepage-body .barangay-accomplishments-page.kabataan-page-section {
     background: #fdc020;
     color: #022a54;
 }
+
+.program-report-heading {
+    margin: 0 0 16px;
+    font-size: 1.25rem;
+    color: #022a54;
+}
+
+.program-report-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    min-width: 0;
+}
+
+.program-report-card-top {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.program-report-card-top h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #022a54;
+}
+
+.program-report-meta,
+.program-report-metrics,
+.program-report-summary {
+    margin: 8px 0 0;
+    color: #4b5563;
+    font-size: 0.92rem;
+    word-break: break-word;
+}
+
+.program-report-details {
+    margin-top: 12px;
+}
+
+.program-report-details summary {
+    cursor: pointer;
+    color: #0b63ce;
+    font-weight: 600;
+}
+
+.program-report-photos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.program-report-photos img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+@media (max-width: 414px) {
+    .program-report-card {
+        padding: 16px;
+    }
+}

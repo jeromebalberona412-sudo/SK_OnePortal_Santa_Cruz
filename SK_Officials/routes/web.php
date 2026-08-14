@@ -265,12 +265,16 @@ Route::middleware([
     Route::prefix('api/program-accomplishment')->group(function () {
         Route::get('/data', [ProgramAccomplishmentController::class, 'data'])
             ->name('api.program-accomplishment.data');
+        Route::post('/prepare-from-catalog', [ProgramAccomplishmentController::class, 'prepareFromCatalog'])
+            ->name('api.program-accomplishment.prepare');
         Route::get('/{id}', [ProgramAccomplishmentController::class, 'show'])
             ->name('api.program-accomplishment.show');
         Route::post('/', [ProgramAccomplishmentController::class, 'store'])
             ->name('api.program-accomplishment.store');
         Route::put('/{id}', [ProgramAccomplishmentController::class, 'update'])
             ->name('api.program-accomplishment.update');
+        Route::post('/{id}/publish', [ProgramAccomplishmentController::class, 'publish'])
+            ->name('api.program-accomplishment.publish');
         Route::delete('/{id}', [ProgramAccomplishmentController::class, 'destroy'])
             ->name('api.program-accomplishment.destroy');
     });

@@ -62,6 +62,42 @@ class CloudinaryService
         ];
     }
 
+    /**
+     * Upload into a specific Cloudinary asset folder without changing the default uploader.
+     *
+     * @return array{public_id: string, url: string, secure_url: string, display_name: string|null, version: int|null}
+     */
+    public function uploadToFolder(UploadedFile $file, string $folder, ?string $displayName = null): array
+    {
+        $this->ensureConfigured();
+
+        $name = $displayName ?: $file->getClientOriginalName();
+
+        $result = $this->cloudinary->uploadApi()->upload($file->getRealPath(), [
+            'folder' => $folder,
+            'type' => 'upload',
+            'overwrite' => false,
+            'use_filename' => false,
+            'unique_filename' => false,
+            'use_filename_as_display_name' => true,
+            'use_asset_folder_as_public_id_prefix' => false,
+            'resource_type' => 'image',
+            'display_name' => $name,
+        ]);
+
+        $version = isset($result['version']) ? (int) $result['version'] : null;
+        $publicId = (string) $result['public_id'];
+        $url = $this->deliverUrl($publicId, $version);
+
+        return [
+            'public_id' => $publicId,
+            'url' => $url,
+            'secure_url' => (string) ($result['secure_url'] ?? $url),
+            'display_name' => $name,
+            'version' => $version,
+        ];
+    }
+
     public function delete(string $publicId): void
     {
         $this->ensureConfigured();

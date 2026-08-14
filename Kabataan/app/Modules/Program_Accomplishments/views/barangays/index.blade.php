@@ -64,7 +64,7 @@
                                     {{ $barangay->accomplishments_exists ? 'Accomplishments available' : 'No Accomplishments uploaded' }}
                                 </span>
                             </div>
-                            <p class="accomplishments-card-copy">View budget summary and PPA line items for this barangay.</p>
+                            <p class="accomplishments-card-copy">View published program accomplishments for this barangay.</p>
                             <span class="accomplishments-card-link">View Accomplishments →</span>
                         </a>
                     @endforeach

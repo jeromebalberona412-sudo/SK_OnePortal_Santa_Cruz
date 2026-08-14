@@ -2,21 +2,39 @@
 
 namespace App\Modules\Programs\Controllers;
 
+use App\Modules\Program_Accomplishment\Services\ProgramAccomplishmentService;
 use App\Modules\Programs\Services\AbyipProgramCatalogService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
 class ProgramController extends Controller
 {
-    public function __construct(private readonly AbyipProgramCatalogService $catalogService) {}
+    public function __construct(
+        private readonly AbyipProgramCatalogService $catalogService,
+        private readonly ProgramAccomplishmentService $accomplishmentService,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
 
+        $payload = $this->catalogService->listForProgramsPage($user);
+
+        if ($user->barangay_id) {
+            try {
+                $payload['programs'] = $this->accomplishmentService->attachCatalogAccomplishmentMeta(
+                    $payload['programs'],
+                    (int) $user->barangay_id,
+                );
+            } catch (QueryException $e) {
+                // Tables may not exist until the accomplishment migrations are run.
+            }
+        }
+
         return response()->json([
-            'data' => $this->catalogService->listForProgramsPage($user),
+            'data' => $payload,
             'abyip_gate' => $this->catalogService->resolveAccessGate($user->barangay_id),
         ]);
     }

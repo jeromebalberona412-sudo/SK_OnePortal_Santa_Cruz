@@ -29,10 +29,12 @@
                     <h1>{{ $barangay->name }}</h1>
                     @if ($accomplishment)
                         <p class="accomplishments-detail-subtitle">Calendar Year {{ $accomplishment->year }}</p>
+                    @elseif ($programReports->isNotEmpty())
+                        <p class="accomplishments-detail-subtitle">Published program accomplishments</p>
                     @endif
                 </div>
 
-                @if ($accomplishment)
+                @if ($accomplishment || $programReports->isNotEmpty())
                     <button type="button" class="accomplishments-print-btn" onclick="window.print()">Print</button>
                 @endif
             </div>
@@ -46,7 +48,7 @@
                 </div>
             @endif
 
-            @if ($accomplishment === null)
+            @if ($accomplishment === null && $programReports->isEmpty())
                 <div class="no-doc accomplishments-empty-state">
                     <h2>No Accomplishments uploaded yet</h2>
                     <p>
@@ -54,7 +56,69 @@
                         Check back later or contact your barangay SK officials.
                     </p>
                 </div>
-            @else
+            @endif
+
+            @if ($programReports->isNotEmpty())
+                <section class="program-report-grid" aria-label="Published program accomplishments">
+                    <h2 class="program-report-heading">Program Accomplishments</h2>
+                    @foreach ($programReports as $report)
+                        <article class="program-report-card">
+                            <div class="program-report-card-top">
+                                <h3>{{ $report->program?->program_name ?? $report->title }}</h3>
+                                <span>{{ $report->program?->program_type ?: ($report->program?->committee ?: 'Program') }}</span>
+                            </div>
+                            <p class="program-report-meta">
+                                {{ $barangay->name }}
+                                · Completed
+                                {{ optional($report->actual_completion_date ?: $report->program?->end_date)->format('M d, Y') ?? '—' }}
+                            </p>
+                            @if ($report->implementation_summary)
+                                <p class="program-report-summary">{{ \Illuminate\Support\Str::limit($report->implementation_summary, 180) }}</p>
+                            @endif
+                            <p class="program-report-metrics">
+                                Beneficiaries: {{ $report->participants_count ?? '—' }}
+                                · Actual expenditure: ₱{{ number_format((float) $report->actual_expense, 2) }}
+                            </p>
+                            <details class="program-report-details">
+                                <summary>View Accomplishment</summary>
+                                <p>{{ $report->implementation_summary }}</p>
+                                @if ($report->actual_result)
+                                    <p><strong>Actual result:</strong> {{ $report->actual_result }}</p>
+                                @endif
+                                <p>Target beneficiaries: {{ $report->target_beneficiaries ?? '—' }} · Actual: {{ $report->participants_count ?? '—' }}</p>
+                                <p>Approved budget: ₱{{ number_format($report->plannedBudget(), 2) }}</p>
+                                <p>Actual expenditure: ₱{{ number_format((float) $report->actual_expense, 2) }}</p>
+                                <p>Remaining: ₱{{ number_format($report->remainingBudget(), 2) }}</p>
+                                @if ($report->images->isNotEmpty())
+                                    <div class="program-report-photos">
+                                        @foreach ($report->images as $image)
+                                            <img src="{{ $image->secure_url }}" alt="{{ $image->display_name ?: 'Program photo' }}" loading="lazy">
+                                        @endforeach
+                                    </div>
+                                @endif
+                                @php
+                                    $publicDocs = $report->documents->where('visibility', 'public');
+                                @endphp
+                                @if ($publicDocs->isNotEmpty())
+                                    <ul class="program-report-docs">
+                                        @foreach ($publicDocs as $document)
+                                            <li>
+                                                @if ($document->stored_path)
+                                                    <a href="{{ asset('storage/'.$document->stored_path) }}" target="_blank" rel="noopener">{{ $document->original_name }}</a>
+                                                @else
+                                                    {{ $document->original_name }}
+                                                @endif
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+                            </details>
+                        </article>
+                    @endforeach
+                </section>
+            @endif
+
+            @if ($accomplishment)
                 <div class="accomplishments-budget-cards">
                     <article class="accomplishments-budget-pill">
                         <span>Estimated Budget</span>

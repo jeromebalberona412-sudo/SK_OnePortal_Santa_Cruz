@@ -12,6 +12,7 @@ const PAState = {
     currentReportId: null,
     currentProgramId: null,
     uploadedImages: [],
+    uploadedDocuments: [],
     existingImages: [],
     lightboxImages: [],
     currentLightboxIndex: 0,
@@ -69,7 +70,7 @@ function showToast(message, type = 'success') {
 
 // Statistics Update
 function updateStatistics() {
-    const totalPrograms = PAState.programs.filter(p => p.status === 'Completed').length;
+    const totalPrograms = PAState.programs.filter(p => String(p.status || '').toLowerCase() === 'completed').length;
     const reportsCount = PAState.accomplishmentReports.length;
     const pendingReports = totalPrograms - reportsCount;
     const totalImages = PAState.images.length;
@@ -87,7 +88,7 @@ function renderTable() {
 
     // Apply filters
     let filtered = PAState.programs.filter(program => {
-        if (program.status !== 'Completed') return false;
+        if (String(program.status || '').toLowerCase() !== 'completed') return false;
 
         // Search filter
         if (PAState.filters.search) {
@@ -112,7 +113,9 @@ function renderTable() {
         }
 
         // Report status filter
-        const hasReport = PAState.accomplishmentReports.some(r => r.program_id === program.id);
+        const hasReport = PAState.accomplishmentReports.some(r =>
+            r.program_id === program.id || r.id === program.accomplishment_report_id
+        );
         if (PAState.filters.reportStatus === 'With Report' && !hasReport) return false;
         if (PAState.filters.reportStatus === 'Without Report' && hasReport) return false;
 
@@ -148,9 +151,12 @@ function renderTable() {
         `;
     } else {
         pageData.forEach(program => {
-            const report = PAState.accomplishmentReports.find(r => r.program_id === program.id);
+            const report = PAState.accomplishmentReports.find(r =>
+                r.program_id === program.id || r.id === program.accomplishment_report_id
+            );
             const hasReport = !!report;
             const row = document.createElement('tr');
+            const createId = program.id || program.abyip_program_id || '';
             
             row.innerHTML = `
                 <td><strong>${program.program_name}</strong></td>
@@ -158,7 +164,7 @@ function renderTable() {
                 <td>${program.committee || 'N/A'}</td>
                 <td>${formatDate(program.start_date)}</td>
                 <td>${formatDate(program.end_date)}</td>
-                <td>${formatCurrency(program.participation_quantity || 0)}</td>
+                <td>${formatCurrency(program.approved_budget || program.participation_quantity || 0)}</td>
                 <td>${program.creator || 'N/A'}</td>
                 <td>0</td>
                 <td><span class="pa-status-badge pa-status-completed">Completed</span></td>
@@ -198,7 +204,7 @@ function renderTable() {
                                 </svg>
                             </button>
                         ` : `
-                            <button type="button" class="pa-action-btn" data-action="create-report" data-id="${program.id}" title="Create Report" style="color: #22c55e;">
+                            <button type="button" class="pa-action-btn" data-action="create-report" data-id="${createId}" data-abyip-id="${program.abyip_program_id || ''}" title="Create Accomplishment" style="color: #22c55e;">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <line x1="12" y1="5" x2="12" y2="19"></line>
                                     <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -253,6 +259,7 @@ function closeModal(modalId) {
 function resetForm() {
     document.getElementById('paForm').reset();
     PAState.uploadedImages = [];
+    PAState.uploadedDocuments = [];
     PAState.existingImages = [];
     PAState.currentReportId = null;
     PAState.currentProgramId = null;
@@ -269,10 +276,18 @@ function resetForm() {
 
 function loadProgramIntoForm(program) {
     document.getElementById('paProgram').value = program.program_name || '';
-    document.getElementById('paVenue').value = program.program_type || '';
-    document.getElementById('paPersonResponsible').value = program.creator || '';
-    document.getElementById('paBudgetAllocated').value = formatCurrency(program.participation_quantity || 0);
-    document.getElementById('paBudgetAllocatedDisplay').textContent = formatCurrency(program.participation_quantity || 0);
+    const categoryEl = document.getElementById('paCategory');
+    if (categoryEl) categoryEl.value = program.category || program.program_type || '';
+    const descEl = document.getElementById('paProgramDescription');
+    if (descEl) descEl.value = program.description || '';
+    const expectedEl = document.getElementById('paExpectedResult');
+    if (expectedEl) expectedEl.value = program.expected_result || '';
+    const indicatorEl = document.getElementById('paPerformanceIndicator');
+    if (indicatorEl) indicatorEl.value = program.performance_indicator || '';
+    document.getElementById('paPersonResponsible').value = program.person_responsible || program.creator || '';
+    const budget = program.approved_budget || program.participation_quantity || 0;
+    document.getElementById('paBudgetAllocated').value = formatCurrency(budget);
+    document.getElementById('paBudgetAllocatedDisplay').textContent = formatCurrency(budget);
     document.getElementById('paDateStarted').value = formatDate(program.start_date);
     document.getElementById('paDateCompleted').value = formatDate(program.end_date);
     
@@ -280,12 +295,16 @@ function loadProgramIntoForm(program) {
 }
 
 function loadReportIntoForm(report) {
-    document.getElementById('paTitle').value = report.title || '';
-    document.getElementById('paDescription').value = report.description || '';
-    document.getElementById('paObjectives').value = report.objectives || '';
-    document.getElementById('paImplementationSummary').value = report.implementation_summary || '';
-    document.getElementById('paLessonsLearned').value = report.lessons_learned || '';
-    document.getElementById('paRecommendations').value = report.recommendations || '';
+    const summary = document.getElementById('paImplementationSummary');
+    if (summary) summary.value = report.implementation_summary || '';
+    const actualResult = document.getElementById('paActualResult');
+    if (actualResult) actualResult.value = report.actual_result || '';
+    const implDate = document.getElementById('paActualImplementationDate');
+    if (implDate) implDate.value = report.actual_implementation_date || '';
+    const completionDate = document.getElementById('paActualCompletionDate');
+    if (completionDate) completionDate.value = report.actual_completion_date || '';
+    const target = document.getElementById('paTargetBeneficiaries');
+    if (target) target.value = report.target_beneficiaries || '';
     document.getElementById('paParticipantsCount').value = report.participants_count || '';
     document.getElementById('paActualExpense').value = report.actual_expense || '';
     document.getElementById('paRemarks').value = report.remarks || '';
@@ -532,7 +551,7 @@ async function viewReport(reportId) {
             <div class="pa-budget-summary">
                 <div class="pa-budget-item">
                     <span class="pa-budget-label">Budget Allocated:</span>
-                    <span class="pa-budget-value">${formatCurrency(program?.participation_quantity || 0)}</span>
+                    <span class="pa-budget-value">${formatCurrency(report.approved_budget || program?.approved_budget || program?.participation_quantity || 0)}</span>
                 </div>
                 <div class="pa-budget-item">
                     <span class="pa-budget-label">Actual Expense:</span>
@@ -612,6 +631,13 @@ async function viewReport(reportId) {
     });
     
     document.getElementById('paViewModalTitle').textContent = report.title || 'Accomplishment Report';
+    const publishBtn = document.getElementById('paPublishBtn');
+    if (publishBtn) {
+        const canPublish = report.status === 'Submitted' || report.status === 'Unpublished';
+        publishBtn.hidden = !canPublish;
+        PAState.currentReportId = canPublish ? report.id : PAState.currentReportId;
+        if (canPublish) PAState.currentReportId = report.id;
+    }
     openModal('paViewModal');
 }
 
@@ -631,34 +657,20 @@ function showDeleteConfirm(reportId) {
 }
 
 // Form Validation
-function validateForm() {
-    const title = document.getElementById('paTitle').value.trim();
+function validateForm(requireComplete) {
     const implementationSummary = document.getElementById('paImplementationSummary').value.trim();
-    const participantsCount = document.getElementById('paParticipantsCount').value;
     const actualExpense = document.getElementById('paActualExpense').value;
     
     const validation = document.getElementById('paImageValidation');
     
-    if (!title) {
-        validation.textContent = 'Title is required';
+    if (requireComplete && !implementationSummary) {
+        validation.textContent = 'Accomplishment summary is required';
         validation.classList.add('show');
         return false;
     }
     
-    if (!implementationSummary) {
-        validation.textContent = 'Implementation summary is required';
-        validation.classList.add('show');
-        return false;
-    }
-    
-    if (!participantsCount || participantsCount < 0) {
-        validation.textContent = 'Valid participants count is required';
-        validation.classList.add('show');
-        return false;
-    }
-    
-    if (!actualExpense || actualExpense < 0) {
-        validation.textContent = 'Valid actual expense is required';
+    if (requireComplete && (actualExpense === '' || Number(actualExpense) < 0)) {
+        validation.textContent = 'Valid actual expenditure is required';
         validation.classList.add('show');
         return false;
     }
@@ -667,8 +679,8 @@ function validateForm() {
         return false;
     }
     
-    if (PAState.uploadedImages.length === 0 && PAState.existingImages.length === 0) {
-        validation.textContent = 'At least one proof image is required';
+    if (requireComplete && PAState.uploadedImages.length === 0 && PAState.existingImages.length === 0) {
+        validation.textContent = 'At least one proof image is required to submit';
         validation.classList.add('show');
         return false;
     }
@@ -681,6 +693,60 @@ function validateForm() {
     
     validation.classList.remove('show');
     return true;
+}
+
+async function openCreateForProgram(button) {
+    const abyipId = Number(button.dataset.abyipId || 0);
+    const scheduleId = Number(button.dataset.id || 0);
+    let program = PAState.programs.find((p) =>
+        (scheduleId && p.id === scheduleId) || (abyipId && p.abyip_program_id === abyipId)
+    );
+
+    if (!program) {
+        showToast('Program not found.', 'error');
+        return;
+    }
+
+    if (abyipId && !program.id) {
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            const response = await fetch('/api/program-accomplishment/prepare-from-catalog', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ abyip_program_id: abyipId }),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.message || result.error || 'Unable to prepare accomplishment.');
+            }
+            program = {
+                ...program,
+                id: result.data?.schedule_program_id || program.id,
+                accomplishment_report_id: result.data?.accomplishment_report_id || program.accomplishment_report_id,
+            };
+            const index = PAState.programs.findIndex((p) => p.abyip_program_id === abyipId);
+            if (index >= 0) {
+                PAState.programs[index] = program;
+            }
+            if (result.data?.accomplishment_report_id) {
+                showToast('An accomplishment already exists for this program.', 'error');
+                return;
+            }
+        } catch (error) {
+            showToast(error.message || 'Unable to create accomplishment.', 'error');
+            return;
+        }
+    }
+
+    resetForm();
+    loadProgramIntoForm(program);
+    document.getElementById('paModalTitle').textContent = 'Create Program Accomplishment';
+    openModal('paModal');
 }
 
 // Event Listeners
@@ -696,13 +762,7 @@ function initializeEventListeners() {
         switch (action) {
             case 'create-report':
                 PAState.currentMode = 'create';
-                const program = PAState.programs.find(p => p.id === id);
-                if (program) {
-                    resetForm();
-                    loadProgramIntoForm(program);
-                    document.getElementById('paModalTitle').textContent = 'Create Accomplishment Report';
-                    openModal('paModal');
-                }
+                openCreateForProgram(button);
                 break;
             case 'view-report':
                 viewReport(id);
@@ -756,7 +816,43 @@ function initializeEventListeners() {
     });
     
     // Form save
-    document.getElementById('paSaveBtn').addEventListener('click', saveReport);
+    document.getElementById('paSaveBtn').addEventListener('click', () => saveReport());
+    const publishBtn = document.getElementById('paPublishBtn');
+    if (publishBtn) {
+        publishBtn.addEventListener('click', publishCurrentReport);
+    }
+    const documentInput = document.getElementById('paDocumentInput');
+    if (documentInput) {
+        documentInput.addEventListener('change', (e) => {
+            PAState.uploadedDocuments = Array.from(e.target.files || []).map((file) => ({
+                file,
+                visibility: 'internal',
+                document_type: 'other',
+            }));
+            const preview = document.getElementById('paDocumentPreview');
+            if (preview) {
+                preview.innerHTML = PAState.uploadedDocuments.map((doc, index) => `
+                    <div class="pa-doc-row">
+                        <span>${doc.file.name}</span>
+                        <label>Visibility
+                            <select data-doc-index="${index}">
+                                <option value="internal">Internal</option>
+                                <option value="public">Public</option>
+                            </select>
+                        </label>
+                    </div>
+                `).join('');
+                preview.querySelectorAll('select').forEach((select) => {
+                    select.addEventListener('change', () => {
+                        const idx = Number(select.dataset.docIndex);
+                        if (PAState.uploadedDocuments[idx]) {
+                            PAState.uploadedDocuments[idx].visibility = select.value;
+                        }
+                    });
+                });
+            }
+        });
+    }
     
     // Delete confirm
     document.getElementById('paDeleteConfirmBtn').addEventListener('click', () => {
@@ -926,40 +1022,66 @@ async function fetchInitialData() {
 }
 
 async function saveReport() {
-    if (!validateForm()) {
+    if (PAState.saving) return;
+    if (!validateForm(true)) {
         return;
     }
     
+    PAState.saving = true;
     const formData = new FormData();
     formData.append('program_id', PAState.currentProgramId);
-    formData.append('title', document.getElementById('paTitle').value.trim());
-    formData.append('description', document.getElementById('paDescription').value.trim());
-    formData.append('objectives', document.getElementById('paObjectives').value.trim());
+    formData.append('title', document.getElementById('paProgram').value.trim());
     formData.append('implementation_summary', document.getElementById('paImplementationSummary').value.trim());
-    formData.append('lessons_learned', document.getElementById('paLessonsLearned').value.trim());
-    formData.append('recommendations', document.getElementById('paRecommendations').value.trim());
-    formData.append('participants_count', document.getElementById('paParticipantsCount').value);
-    formData.append('actual_expense', document.getElementById('paActualExpense').value);
+    formData.append('actual_result', document.getElementById('paActualResult')?.value.trim() || '');
+    formData.append('actual_implementation_date', document.getElementById('paActualImplementationDate')?.value || '');
+    formData.append('actual_completion_date', document.getElementById('paActualCompletionDate')?.value || '');
+    formData.append('target_beneficiaries', document.getElementById('paTargetBeneficiaries')?.value || '');
+    formData.append('participants_count', document.getElementById('paParticipantsCount').value || '0');
+    formData.append('actual_expense', document.getElementById('paActualExpense').value || '0');
     formData.append('remarks', document.getElementById('paRemarks').value.trim());
     
-    // Add images
     PAState.uploadedImages.forEach((img, index) => {
-        if (img.file && !img.uploaded) {
-            formData.append(`images[${index}]`, img.file);
+        if (img.file) {
+            const key = PAState.currentMode === 'create' ? `images[${index}]` : `new_images[${index}]`;
+            formData.append(key, img.file);
         }
+    });
+
+    PAState.uploadedDocuments.forEach((doc, index) => {
+        formData.append(`documents[${index}]`, doc.file);
+        formData.append(`document_visibility[${index}]`, doc.visibility || 'internal');
+        formData.append(`document_types[${index}]`, doc.document_type || 'other');
     });
     
     const url = PAState.currentMode === 'create' 
         ? '/api/program-accomplishment'
         : `/api/program-accomplishment/${PAState.currentReportId}`;
     
-    const method = PAState.currentMode === 'create' ? 'POST' : 'PUT';
+    if (PAState.currentMode !== 'create') {
+        formData.append('_method', 'PUT');
+    }
+
+    const saveBtn = document.getElementById('paSaveBtn');
+    const cancelBtn = document.getElementById('paCancelBtn');
+    const modal = document.querySelector('#paModal .pa-modal-container');
+    const label = saveBtn?.querySelector('.pa-btn-label');
+    const spinner = saveBtn?.querySelector('.pa-btn-spinner');
+    const previousLabel = label ? label.textContent : 'Submit';
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.classList.add('is-loading');
+    }
+    if (label) label.textContent = 'Submitting...';
+    if (spinner) spinner.hidden = false;
+    if (cancelBtn) cancelBtn.disabled = true;
+    if (modal) modal.classList.add('is-submitting');
     
     try {
         const response = await fetch(url, {
-            method: method,
+            method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
             },
             body: formData
         });
@@ -979,15 +1101,45 @@ async function saveReport() {
             return;
         }
         
-        showToast(result.message || 'Accomplishment report saved successfully!', 'success');
+        showToast(result.message || 'Accomplishment submitted successfully!', 'success');
         closeModal('paModal');
         resetForm();
-        
-        // Refresh data
         await fetchInitialData();
     } catch (error) {
         console.error('Error saving report:', error);
-        showToast(error.message || 'Failed to save report. Please try again.', 'error');
+        showToast(error.message || 'Failed to submit. Please try again.', 'error');
+    } finally {
+        PAState.saving = false;
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.classList.remove('is-loading');
+        }
+        if (label) label.textContent = previousLabel || 'Submit';
+        if (spinner) spinner.hidden = true;
+        if (cancelBtn) cancelBtn.disabled = false;
+        if (modal) modal.classList.remove('is-submitting');
+    }
+}
+
+async function publishCurrentReport() {
+    if (!PAState.currentReportId) return;
+    try {
+        const response = await fetch(`/api/program-accomplishment/${PAState.currentReportId}/publish`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+        });
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message || result.error || 'Failed to publish');
+        }
+        showToast(result.message || 'Published.', 'success');
+        closeModal('paViewModal');
+        await fetchInitialData();
+    } catch (error) {
+        showToast(error.message || 'Failed to publish.', 'error');
     }
 }
 
@@ -1037,9 +1189,34 @@ async function loadReportForView(reportId) {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    // Load initial data from server
-    fetchInitialData();
-    
-    // Initialize event listeners
+    fetchInitialData().then(() => {
+        const params = new URLSearchParams(window.location.search);
+        const programId = Number(params.get('program_id'));
+        const editId = Number(params.get('edit'));
+        if (programId) {
+            const program = PAState.programs.find((p) => p.id === programId);
+            const report = PAState.accomplishmentReports.find((r) => r.program_id === programId);
+            if (report) {
+                document.querySelector(`[data-action="view-report"][data-id="${report.id}"]`)?.click();
+            } else if (program) {
+                PAState.currentMode = 'create';
+                resetForm();
+                loadProgramIntoForm(program);
+                document.getElementById('paModalTitle').textContent = 'Create Program Accomplishment';
+                openModal('paModal');
+            }
+        } else if (editId) {
+            const report = PAState.accomplishmentReports.find((r) => r.id === editId);
+            if (report) {
+                PAState.currentMode = 'edit';
+                resetForm();
+                const program = PAState.programs.find((p) => p.id === report.program_id);
+                if (program) loadProgramIntoForm(program);
+                loadReportIntoForm(report);
+                document.getElementById('paModalTitle').textContent = 'Edit Program Accomplishment';
+                openModal('paModal');
+            }
+        }
+    });
     initializeEventListeners();
 });
