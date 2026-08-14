@@ -160,7 +160,9 @@ function renderPost() {
     const images = post.images?.length ? post.images : (post.image_url ? [post.image_url] : []);
     const mediaClass = images.length > 1 ? 'two' : 'one';
     const media = images.length
-        ? `<div class="cp-media ${mediaClass}">${images.slice(0, 2).map((src) => `<img src="${escapeHtml(src)}" alt="">`).join('')}</div>`
+        ? `<div class="cp-media ${mediaClass}">${images.map((src, index) =>
+            `<button type="button" class="cp-media-btn" data-index="${index}" aria-label="View photo ${index + 1}"><img src="${escapeHtml(src)}" alt=""></button>`
+        ).join('')}</div>`
         : '';
 
     document.getElementById('cpPost').innerHTML = `
@@ -197,6 +199,14 @@ function renderPost() {
     `;
 
     bindReactionWrap(document.querySelector('.cp-reaction-wrap'));
+    document.querySelectorAll('.cp-media-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const index = Number(btn.dataset.index || 0);
+            if (typeof window.openLightbox === 'function') {
+                window.openLightbox(images, index);
+            }
+        });
+    });
     document.getElementById('cpViewPostReactions')?.addEventListener('click', () => openViewer('post'));
     document.getElementById('cpFocusComments')?.addEventListener('click', () => {
         document.getElementById('cpComments')?.scrollIntoView({ block: 'nearest' });
@@ -601,7 +611,32 @@ async function openViewer(target, commentId = null) {
     const modal = document.getElementById('cpReactionViewer');
     const list = document.getElementById('cpViewerList');
     modal.hidden = false;
-    list.innerHTML = '<p class="cp-viewer-empty">Loading...</p>';
+    if (target === 'post' && post) {
+        viewerState = {
+            data: {
+                reactors: [],
+                reaction_counts: post.reaction_counts || {},
+                count: Number(post.likes || 0),
+            },
+            filter: 'all',
+        };
+        renderViewer('all');
+    } else {
+        const comment = findComment(post?.comments || [], commentId);
+        if (comment) {
+            viewerState = {
+                data: {
+                    reactors: [],
+                    reaction_counts: comment.reaction_counts || {},
+                    count: Number(comment.likes || 0),
+                },
+                filter: 'all',
+            };
+            renderViewer('all');
+        } else if (list) {
+            list.innerHTML = '';
+        }
+    }
     const url = target === 'comment'
         ? `/api/community-feed/${post.id}/comments/${commentId}/reactions`
         : `/api/community-feed/${post.id}/reactions`;
@@ -632,7 +667,7 @@ function renderViewer(filter) {
     const list = document.getElementById('cpViewerList');
     list.innerHTML = rows.length
         ? rows.map((r) => `<div class="cp-viewer-row"><img src="${escapeHtml(r.avatar_url)}" alt=""><span class="cp-viewer-name">${escapeHtml(r.name)}</span></div>`).join('')
-        : '<p class="cp-viewer-empty">No reactions yet.</p>';
+        : (Number(data.count || 0) > 0 ? '' : '<p class="cp-viewer-empty">No reactions yet.</p>');
 }
 
 function bindPage() {

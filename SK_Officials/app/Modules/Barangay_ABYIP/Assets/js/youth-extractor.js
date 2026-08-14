@@ -3,21 +3,56 @@ import { mergeNumericParts, nearestBudgetColumn } from './budget-parser.js';
 import { startsWithActivityBullet } from './program-parser.js';
 
 const LETTER_X_MAX = 110;
-const PPAS_X_MAX = 140;
-const DESC_X = [140, 218];
 const LETTER_HANG = 8;
-const EXPECTED_X = [218, 296];
-const PERF_X = [296, 360];
-const PERIOD_X = [360, 408];
-const BUDGET_X_MIN = 400;
-const BUDGET_X_MAX = 535;
-const PERSON_X_MIN = 535;
-const DEFAULT_CENTERS = { mooe: 421, co: 468, total: 504 };
 const BUDGET_Y_TOLERANCE = 9;
 const LINE_Y_TOLERANCE = 5.5;
 
 function compact(text) {
     return String(text || '').replace(/\s+/g, ' ').trim();
+}
+
+function layoutBounds(layout) {
+    const centers = { ...(layout?.centers || {}) };
+    const personMin = Number.isFinite(layout?.personMin)
+        ? layout.personMin
+        : (Number.isFinite(centers.person) ? centers.person : (Number.isFinite(centers.total) ? centers.total + 32 : 535));
+    const budgetMin = Number.isFinite(layout?.budgetMin)
+        ? layout.budgetMin
+        : (Number.isFinite(centers.mooe) ? centers.mooe - 40 : 400);
+    const budgetMax = Number.isFinite(layout?.budgetMax)
+        ? layout.budgetMax
+        : personMin;
+
+    if (!Number.isFinite(centers.mooe)) {
+        centers.mooe = budgetMin + ((budgetMax - budgetMin) * 0.22);
+    }
+    if (!Number.isFinite(centers.total)) {
+        centers.total = budgetMax - 10;
+    }
+    if (!Number.isFinite(centers.co)) {
+        centers.co = (centers.mooe + centers.total) / 2;
+    }
+    if (!Number.isFinite(centers.person)) {
+        centers.person = personMin;
+    }
+    const ppasMax = Number.isFinite(layout?.ppasMax) ? layout.ppasMax : 140;
+
+    return {
+        centers: {
+            mooe: centers.mooe,
+            co: centers.co,
+            total: centers.total,
+            person: centers.person || personMin,
+        },
+        ppasMax,
+        desc: layout?.desc || [140, 218],
+        expected: layout?.expected || [218, 296],
+        performance: layout?.performance || [296, 360],
+        period: layout?.period || [360, 408],
+        budgetMin,
+        budgetMax,
+        personMin,
+    };
 }
 
 function letterFromItem(item) {
@@ -91,27 +126,21 @@ function collectColumn(slice, range) {
         .trim();
 }
 
-function collectPeriod(slice) {
-    const text = compact(slice
-        .filter((item) => item.x >= PERIOD_X[0] && item.x < PERIOD_X[1])
+function collectPeriod(slice, periodRange) {
+    return compact(slice
+        .filter((item) => item.x >= periodRange[0] && item.x < periodRange[1])
         .sort((a, b) => b.y - a.y || a.x - b.x)
         .map((item) => item.text)
         .join(' '));
-
-    if (/January/i.test(text) && /December/i.test(text) && /2025/.test(text)) {
-        return 'January 01, 2025 to December 31, 2025';
-    }
-
-    return text;
 }
 
-function collectPerson(slice) {
+function collectPerson(slice, personMin) {
     const lines = [];
-    clusterByY(slice.filter((item) => item.x >= PERSON_X_MIN), LINE_Y_TOLERANCE).forEach((row) => {
+    clusterByY(slice.filter((item) => item.x >= personMin && !/^[\d,₱.\-—–]+$/.test(String(item.text || '').trim())), LINE_Y_TOLERANCE).forEach((row) => {
         const text = compact(row.parts.map((part) => part.text).join(' '))
             .replace(/Counci(?!l)/gi, 'Council')
             .replace(/\s*\/\s*/g, ' / ');
-        if (text && !lines.some((line) => line.toLowerCase() === text.toLowerCase())) {
+        if (text && !/^(Person|Responsible|MOOE|CO|Total)$/i.test(text) && !lines.some((line) => line.toLowerCase() === text.toLowerCase())) {
             lines.push(text);
         }
     });
@@ -119,10 +148,10 @@ function collectPerson(slice) {
     return compact(lines.join(' '));
 }
 
-function collectAmountTriples(slice, centers) {
+function collectAmountTriples(slice, bounds) {
     const budgetItems = slice.filter((item) => (
-        item.x >= BUDGET_X_MIN
-        && item.x < BUDGET_X_MAX
+        item.x >= bounds.budgetMin
+        && item.x < bounds.budgetMax
         && !looksLikeYear(item.text)
         && !/^(January|December|to)$/i.test(item.text)
     ));
@@ -132,7 +161,7 @@ function collectAmountTriples(slice, centers) {
         const assigned = { mooe: '', co: '', total: '' };
         mergeNumericParts(row.parts).forEach((part) => {
             const text = String(part.text || '').trim();
-            const column = nearestBudgetColumn(part.x, centers);
+            const column = nearestBudgetColumn(part.x, bounds.centers);
             if (!column) {
                 return;
             }
@@ -162,14 +191,6 @@ function collectAmountTriples(slice, centers) {
             assigned.co = '0.00';
         } else if (assigned.co && assigned.total && !assigned.mooe && assigned.co === assigned.total) {
             assigned.mooe = '0.00';
-        } else if (assigned.mooe && !assigned.total) {
-            assigned.total = assigned.mooe;
-            if (!assigned.co) {
-                assigned.co = '0.00';
-            }
-        } else if (assigned.total && !assigned.mooe && !assigned.co) {
-            assigned.mooe = assigned.total;
-            assigned.co = '0.00';
         }
 
         triples.push(assigned);
@@ -178,8 +199,8 @@ function collectAmountTriples(slice, centers) {
     return triples;
 }
 
-function parseLetterSlice(letter, slice, centers, parentProgram) {
-    const leftLines = clusterByY(slice.filter((item) => item.x < PPAS_X_MAX), LINE_Y_TOLERANCE);
+function parseLetterSlice(letter, slice, bounds, parentProgram) {
+    const leftLines = clusterByY(slice.filter((item) => item.x < bounds.ppasMax), LINE_Y_TOLERANCE);
     let programName = '';
     const activities = [];
 
@@ -218,11 +239,11 @@ function parseLetterSlice(letter, slice, centers, parentProgram) {
         programName = compact(`${programName} ${extra}`);
     });
 
-    const triples = collectAmountTriples(slice, centers);
+    const triples = collectAmountTriples(slice, bounds);
     const names = activities.length ? activities : (programName ? [programName] : []);
-    let description = collectColumn(slice, DESC_X);
-    let expected = collectColumn(slice, EXPECTED_X);
-    let performance = collectColumn(slice, PERF_X);
+    let description = collectColumn(slice, bounds.desc);
+    let expected = collectColumn(slice, bounds.expected);
+    let performance = collectColumn(slice, bounds.performance);
     if (!description && expected && !performance && !looksLikeOutcome(expected)) {
         description = expected;
         expected = '';
@@ -236,8 +257,8 @@ function parseLetterSlice(letter, slice, centers, parentProgram) {
         description,
         expected,
         performance,
-        period: collectPeriod(slice),
-        person: collectPerson(slice),
+        period: collectPeriod(slice, bounds.period),
+        person: collectPerson(slice, bounds.personMin),
         mooe: triples[0]?.mooe || '',
         co: triples[0]?.co || '',
         total: triples[0]?.total || '',
@@ -276,7 +297,7 @@ function findYouthStart(ordered) {
     return -1;
 }
 
-export function reconstructYouthBlocks(items, headerCenters, parentProgram) {
+export function reconstructYouthBlocks(items, layout, parentProgram) {
     const ordered = items
         .filter((item) => compact(item.text))
         .sort((a, b) => a.page - b.page || b.y - a.y || a.x - b.x);
@@ -286,8 +307,8 @@ export function reconstructYouthBlocks(items, headerCenters, parentProgram) {
         return [];
     }
 
-    const centers = headerCenters || DEFAULT_CENTERS;
-    const parent = parentProgram || 'SK YOUTH DEVELOPMENT AND EMPOWERMENT PROGRAMS';
+    const bounds = layoutBounds(layout);
+    const parent = parentProgram || compact(ordered[start]?.text) || 'SK YOUTH DEVELOPMENT AND EMPOWERMENT PROGRAMS';
     const letters = [];
     let endIndex = ordered.length;
 
@@ -316,7 +337,7 @@ export function reconstructYouthBlocks(items, headerCenters, parentProgram) {
             && !isPageNoise(item)
             && itemBelongsToLetter(item, entry, next)
         ));
-        return parseLetterSlice(entry.letter, slice, centers, parent);
+        return parseLetterSlice(entry.letter, slice, bounds, parent);
     }).filter((block) => block.letter && (block.ppas || block.programName));
 }
 

@@ -32,7 +32,6 @@ function midpoint(left, right) {
 function repairAbyipOcrText(text) {
     return String(text || '')
         .replace(/BARANG\s+AY/gi, 'BARANGAY')
-        .replace(/NEQUINT\s+O/gi, 'NEQUINTO')
         .replace(/Counci(?!l)/gi, 'Council')
         .replace(/(\d{1,3}(?:,\d{3})+),(\d{2})(?!\d)/g, '$1.$2');
 }
@@ -139,52 +138,51 @@ function normalizePersonLabel(value) {
         .replace(/\s*\/\s*/g, ' / ');
 }
 
-function extractPersonFromFullLine(fullLine) {
-    const source = compact(fullLine);
-    const patterns = [
-        /Sangguniang\s*Kabataan\s*Counci[l]?\s*\/\s*BADAC/i,
-        /Sangguniang\s*Kabataan\s*Counci[l]?\s*\/\s*ALS/i,
-        /SK\s*Chairman\s*\/\s*SK\s*Treasurer/i,
-        /Sangguniang\s*Kabataan\s*Counci[l]?/i,
-        /SK\s*Chairperson/i,
-        /SK\s*Chairman/i,
-        /SK\s*Treasurer/i,
-    ];
-
-    for (let i = 0; i < patterns.length; i += 1) {
-        const match = source.match(patterns[i]);
-        if (match) {
-            return normalizePersonLabel(match[0]);
-        }
+function looksLikePersonColumnNoise(text) {
+    const value = compact(text);
+    if (!value || value.length < 2) {
+        return true;
     }
 
-    return '';
+    if (/^[\d,₱.\-—–]+$/.test(value)) {
+        return true;
+    }
+
+    return /^(Code|PPAs?|Description|Expected|Performance|Indicator|Period|Budget|Person|Responsible|MOOE|CO|Total)$/i.test(value);
 }
 
 function extractPersonResponsibleValue(parts, width, startRatio) {
     const threshold = width * (startRatio !== undefined ? startRatio : 0.82);
-    const raw = parts
+    const raw = compact(parts
         .filter((part) => part.x >= threshold && !/^[\d,₱.\-—–]+$/.test(String(part.text || '').trim()))
         .map((part) => part.text)
-        .join(' ');
+        .join(' '));
 
-    return extractPersonFromFullLine(raw) || extractPersonFromFullLine(parts.map((part) => part.text).join(' '));
+    if (!raw || looksLikePersonColumnNoise(raw)) {
+        return '';
+    }
+
+    return normalizePersonLabel(raw);
 }
 
 function detectColumnBounds(pageRows) {
-    for (let i = 0; i < pageRows.length; i += 1) {
-        const { width, row } = pageRows[i];
-        const markers = {};
+    let markers = {};
+    let width = null;
 
-        row.parts.forEach((part) => {
+    for (let i = 0; i < pageRows.length; i += 1) {
+        const entry = pageRows[i];
+        width = entry.width;
+
+        entry.row.parts.forEach((part) => {
             const ratio = part.x / width;
             const text = compact(part.text).toLowerCase();
+            const collapsed = text.replace(/\s+/g, '');
 
-            if (text === 'mooe') {
+            if (collapsed === 'mooe') {
                 markers.mooe = ratio;
-            } else if (text === 'co') {
+            } else if (collapsed === 'co') {
                 markers.co = ratio;
-            } else if (text === 'total') {
+            } else if (collapsed === 'total') {
                 markers.total = ratio;
             } else if (text === 'description') {
                 markers.description = ratio;
@@ -194,7 +192,7 @@ function detectColumnBounds(pageRows) {
                 markers.performance = markers.performance === undefined ? ratio : Math.min(markers.performance, ratio);
             } else if (text.indexOf('period') !== -1 || text.indexOf('implementation') !== -1) {
                 markers.period = markers.period === undefined ? ratio : Math.min(markers.period, ratio);
-            } else if (text.indexOf('person') !== -1 || text.indexOf('responsible') !== -1) {
+            } else if (text.indexOf('person') !== -1 || collapsed === 'responsible') {
                 markers.person = markers.person === undefined ? ratio : Math.min(markers.person, ratio);
             } else if (/^ppas$/i.test(text) || text.indexOf('programs, projects') !== -1) {
                 markers.ppas = markers.ppas === undefined ? ratio : Math.min(markers.ppas, ratio);
@@ -206,7 +204,7 @@ function detectColumnBounds(pageRows) {
         }
 
         const co = markers.co !== undefined ? markers.co : markers.mooe + 0.04;
-        const person = markers.person !== undefined ? markers.person : 0.84;
+        const person = markers.person !== undefined ? markers.person : Math.min(0.92, markers.total + 0.08);
         const performance = markers.performance !== undefined ? markers.performance : 0.44;
         const period = markers.period !== undefined ? markers.period : 0.54;
         const expected = markers.expected !== undefined ? markers.expected : 0.38;
@@ -1104,6 +1102,7 @@ export async function extractPdfDocument(pdfDoc) {
 
     const columnBounds = detectColumnBounds(pageRows);
     lastHeaderCenters = detectBudgetHeaderCenters(pageRows)?.centers || null;
+    const pageWidth = pageRows[0]?.width || 612;
 
     pageRows.forEach((entry) => {
         const { width, page } = entry;
@@ -1149,7 +1148,7 @@ export async function extractPdfDocument(pdfDoc) {
             inExpenditureSection = true;
             inReceiptsSection = false;
             currentProgramName = '';
-            currentCategoryName = 'CURRENT OPERATING EXPENDITURES';
+            currentCategoryName = compact(fullLine.replace(/^[IVX]+\.\s*/i, '')) || compact(fullLine);
             lines.push(fullLine);
             return;
         }
@@ -1180,9 +1179,9 @@ export async function extractPdfDocument(pdfDoc) {
             return;
         }
 
-        if (/GENERAL ADMINISTRATION PROGRAM/i.test(fullLine) && !cols.mooe && !cols.total) {
+        if (isProgramHeading(fullLine, cols) && !cols.mooe && !cols.total) {
             budgetColumn = 'mooe';
-            currentProgramName = 'GENERAL ADMINISTRATION PROGRAM';
+            currentProgramName = compact(cols.ppas || fullLine);
             lines.push(buildStructuredTagRow('@ABYIP_CATEGORY@', {
                 TYPE: 'program',
                 NAME: currentProgramName,
@@ -1278,7 +1277,7 @@ export async function extractPdfDocument(pdfDoc) {
             return;
         }
 
-        if (!inYouthSection && (isProgramHeading(fullLine, cols) || /GENERAL ADMINISTRATION PROGRAM/i.test(fullLine))) {
+        if (!inYouthSection && isProgramHeading(fullLine, cols)) {
             const headingName = compact(cols.ppas || fullLine);
             if (headingName && headingName === currentProgramName) {
                 lines.push(fullLine);
@@ -1364,10 +1363,21 @@ export async function extractPdfDocument(pdfDoc) {
 
     flushGeneralBlock(generalBlock, lines);
 
+    const youthLayout = {
+        centers: lastHeaderCenters,
+        ppasMax: pageWidth * columnBounds.ppas[1],
+        desc: [pageWidth * columnBounds.description[0], pageWidth * columnBounds.description[1]],
+        expected: [pageWidth * columnBounds.expected[0], pageWidth * columnBounds.expected[1]],
+        performance: [pageWidth * columnBounds.performance[0], pageWidth * columnBounds.performance[1]],
+        period: [pageWidth * columnBounds.period[0], pageWidth * columnBounds.period[1]],
+        budgetMin: pageWidth * columnBounds.mooe[0],
+        budgetMax: pageWidth * columnBounds.total[1],
+        personMin: pageWidth * columnBounds.person[0],
+    };
     const youthParent = /YOUTH/i.test(currentProgramName)
         ? currentProgramName
-        : (youthProgramEmitted.__parent || 'SK YOUTH DEVELOPMENT AND EMPOWERMENT PROGRAMS');
-    reconstructYouthBlocks(allItems, lastHeaderCenters, youthParent).forEach((block) => {
+        : (youthProgramEmitted.__parent || currentProgramName || '');
+    reconstructYouthBlocks(allItems, youthLayout, youthParent).forEach((block) => {
         if (!youthProgramEmitted[block.letter]) {
             flushYouthBlock({
                 ...block,

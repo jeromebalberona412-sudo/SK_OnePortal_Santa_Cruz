@@ -1410,7 +1410,7 @@ function handleWordImport(event) {
 function normalizeImportedTableRows(tbody) {
     if (!tbody) return;
 
-    const categoryPattern = /\b[A-J]\.\s|Equitable Access to Quality Education|Environmental Protection|Disaster Risk Reduction|Youth Employment and Livelihood|^Health$|Anti-Drug and Peace and Order|Gender Sensitivity|Feeding Program for KK Members|Sports Development|Other Programs/i;
+    const categoryPattern = /\b[A-J]\.\s/;
 
     tbody.querySelectorAll('tr').forEach((row) => {
         const text = (row.textContent || '').trim();

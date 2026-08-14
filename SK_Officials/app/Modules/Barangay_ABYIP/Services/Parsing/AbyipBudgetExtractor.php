@@ -2,11 +2,15 @@
 
 namespace App\Modules\Barangay_ABYIP\Services\Parsing;
 
+use App\Modules\Barangay_ABYIP\Services\Category\ExpenditureClassifier;
 use App\Modules\Barangay_ABYIP\Services\Normalization\AbyipNumericNormalizer;
 
 class AbyipBudgetExtractor
 {
-    public function __construct(private readonly AbyipNumericNormalizer $normalizer) {}
+    public function __construct(
+        private readonly AbyipNumericNormalizer $normalizer,
+        private readonly ExpenditureClassifier $expenditureClassifier,
+    ) {}
 
     /**
      * @param  list<array<string, mixed>>  $items
@@ -83,37 +87,11 @@ class AbyipBudgetExtractor
     public function extractBudgetAndPersonFromLine(string $line, string $budgetColumn = 'mooe'): array
     {
         $line = trim(preg_replace('/\s+/u', ' ', $line) ?? $line);
-        $person = null;
-
-        // \s* (not \s+): PDF/OCR extraction sometimes drops the space
-        // between words (e.g. "SangguniangKabataan Council", "SKChairman/SK
-        // Treasurer"). Using \s+ here missed those variants even though
-        // extractPersonResponsibleFromValue() below already tolerated them -
-        // that inconsistency is why some rows lost their Person Responsible
-        // during line-based extraction.
-        $personPatterns = [
-            '/Sangguniang\s*Kabataan\s*Council\s*\/\s*BADAC/i',
-            '/Sangguniang\s*Kabataan\s*Council\s*\/\s*ALS/i',
-            '/SK\s*Chairman\s*\/\s*SK\s*Treasurer/i',
-            '/Sangguniang\s*Kabataan\s*Counci[l]?/i',
-            '/Sangguniang\s*Kabataan\s*Council/i',
-            '/SK\s*Treasurer/i',
-            '/SK\s*Chairman/i',
-            '/SK\s*Chairperson/i',
-        ];
-
-        foreach ($personPatterns as $pattern) {
-            if (preg_match($pattern, $line, $match)) {
-                $person = $this->extractPersonResponsibleFromValue($match[0]);
-                $line = trim(str_replace($match[0], '', $line));
-                break;
-            }
-        }
-
-        // parseInlineAmounts() already ignores page numbers, row numbers, and
-        // bare calendar years (see AbyipNumericNormalizer::looksLikeBareYear),
-        // since it only accepts decimal-formatted (xx.xx / xx,xx) tokens.
         $amounts = $this->normalizer->parseInlineAmounts($line);
+        $withoutAmounts = trim((preg_replace('/[\d,]+\.\d{2}/', ' ', $line) ?? $line));
+        $withoutAmounts = trim(preg_replace('/\s+/u', ' ', $withoutAmounts) ?? $withoutAmounts);
+        $person = $this->extractPersonResponsibleFromValue($withoutAmounts);
+
         $mooe = null;
         $co = null;
         $total = null;
@@ -127,6 +105,9 @@ class AbyipBudgetExtractor
                 $mooe = $amounts[0];
             }
             $total = $amounts[1];
+            if ($mooe !== null && $total !== null && $co === null && abs((float) $mooe - (float) $total) < 0.01) {
+                $co = '0.00';
+            }
         } elseif (count($amounts) === 1) {
             if ($budgetColumn === 'co') {
                 $co = $amounts[0];
@@ -188,24 +169,10 @@ class AbyipBudgetExtractor
             return null;
         }
 
-        $patterns = [
-            '/Sangguniang\s*Kabataan\s*Council\s*\/\s*BADAC/i',
-            '/Sangguniang\s*Kabataan\s*Council\s*\/\s*ALS/i',
-            '/SK\s*Chairman\s*\/\s*SK\s*Treasurer/i',
-            '/Sangguniang\s*Kabataan\s*Counci[l]?/i',
-            '/Sangguniang\s*Kabataan\s*Council/i',
-            '/SK\s*Treasurer/i',
-            '/SK\s*Chairman/i',
-            '/SK\s*Chairperson/i',
-        ];
+        $cleaned = trim((preg_replace('/[\d,]+\.\d{2}/', ' ', $value) ?? $value));
+        $cleaned = trim(preg_replace('/\s+/u', ' ', $cleaned) ?? $cleaned);
 
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $value, $match)) {
-                return $this->normalizePersonResponsible($match[0]);
-            }
-        }
-
-        return $this->sanitizePersonResponsible($value);
+        return $this->sanitizePersonResponsible($this->normalizePersonResponsible($cleaned));
     }
 
     /**
@@ -368,6 +335,18 @@ class AbyipBudgetExtractor
             }
 
             if ($this->lineLooksLikeNewPpaStart($line)) {
+                $pendingHasBudget = $pending !== null && (
+                    (float) $this->normalizer->numericAmount($pending['budget_mooe'] ?? 0) > 0
+                    || (float) $this->normalizer->numericAmount($pending['budget_co'] ?? 0) > 0
+                    || (float) $this->normalizer->numericAmount($pending['budget_total'] ?? 0) > 0
+                );
+
+                if ($pending !== null && ! $pendingHasBudget) {
+                    $pending['description'] = trim(((string) ($pending['description'] ?? '')).' '.$line);
+
+                    continue;
+                }
+
                 $this->flushPendingExpenditureRow($items, $pending);
                 $pending = [
                     'row_type' => 'data',
@@ -432,7 +411,9 @@ class AbyipBudgetExtractor
 
             return [
                 'budget_mooe' => $primaryField === 'budget_mooe' ? $amounts[0] : null,
-                'budget_co' => $primaryField === 'budget_co' ? $amounts[0] : null,
+                'budget_co' => $primaryField === 'budget_co' ? $amounts[0] : (
+                    $primaryField === 'budget_mooe' && abs((float) $amounts[0] - (float) $amounts[1]) < 0.01 ? '0.00' : null
+                ),
                 'budget_total' => $amounts[1],
                 'person_responsible' => $extracted['person_responsible'],
             ];
@@ -478,7 +459,7 @@ class AbyipBudgetExtractor
                 continue;
             }
 
-            if ($this->lineLooksLikePersonFragment($next) || $this->extractPersonResponsibleFromValue($next)) {
+            if ($this->lineLooksLikePersonFragment($next)) {
                 $parts[] = $next;
 
                 continue;
@@ -540,31 +521,25 @@ class AbyipBudgetExtractor
             return false;
         }
 
-        if ($this->lineLooksLikePersonFragment($line)) {
-            return false;
-        }
-
-        if (preg_match('/^([A-J])\.\s/i', $line)) {
-            return false;
-        }
-
-        if (mb_strlen($line) < 4) {
-            return false;
-        }
-
-        return (bool) preg_match(
-            '/^(Honoraria|Travel\s+Expenses|Training(?:\s+and\s+Seminar\s+Expenses)?|Laptop(?:\/Computer)?|Computer|Support|Feeding|Sports|Tree|Distribution|Barangay|Livelihood|Food|Medicines|Educational|Youth|Leadership|Seminar|Workshop|Program|Project|Activity|Expenses|MOOE|Capital\s+Outlay)\b/i',
-            $line
-        );
+        return $this->expenditureClassifier->looksLikeNewPpaStart($line);
     }
 
     public function lineLooksLikePersonFragment(string $line): bool
     {
-        return preg_match('/^(Sangguniang|Kabataan|Council|SK\s|SKTreasurer|SKChairman|Treasurer|Chairman|Chairperson|BADAC|ALS)/i', $line) === 1;
+        return $this->expenditureClassifier->looksLikePersonFragment($line);
     }
 
     private function mergePersonFragment(string $existing, string $fragment): ?string
     {
+        $fragment = trim($fragment);
+        if ($fragment === '') {
+            return $this->extractPersonResponsibleFromValue($existing);
+        }
+
+        if ($existing !== '' && str_contains(mb_strtolower($existing), mb_strtolower($fragment))) {
+            return $this->extractPersonResponsibleFromValue($existing);
+        }
+
         $merged = trim($existing.' '.$fragment);
 
         return $this->extractPersonResponsibleFromValue($merged) ?? ($merged !== '' ? $merged : null);
@@ -636,47 +611,20 @@ class AbyipBudgetExtractor
 
     protected function personResponsibleLooksInvalid(string $value): bool
     {
-        // Exact header/column label matches.
         if (preg_match('/^(Person\s*Responsible|MOOE|CO|Total|Code|PPAs|Description|Expected|Performance|Period)$/i', $value)) {
             return true;
         }
 
-        // Month names (date noise).
-        if (preg_match('/^(January|February|March|April|May|June|July|August|September|October|November|December)\b/i', $value)) {
+        if (preg_match('/\b(January|February|March|April|May|June|July|August|September|October|November|December)\b/i', $value)
+            && preg_match('/\d{4}/', $value) === 1) {
             return true;
         }
 
-        // Pure numeric values (can't be a person name).
         if (preg_match('/^\d[\d,.\s]*$/', $value)) {
             return true;
         }
 
-        // Section/program labels that aren't person names.
-        if (preg_match('/\b(Receipts|Expenditure|PROGRAM|Capital Outlay|Youth|Development|Empowerment)\b/i', $value)) {
-            return true;
-        }
-
-        // OCR noise patterns - strings that look like merged/partial words
-        // from the table headers or descriptions, not person names.
-        $noiseWords = [
-            'payment', 'professional', 'rendered', 'payroll', 'months?',
-            'charge', 'incurred', 'transport', 'services', 'nominally',
-            'without', 'given', 'january', 'december', 'movement',
-            'government', 'officers', 'employees', 'Calendaryear',
-            'Costsincurred', 'participat', 'Costs?', 'incurredfor',
-            'within', 'numberof', 'training', 'conduct', 'support',
-            'year', 'month', 'attend', 'participation',
-            'thatare', 'professionalservices', 'therendered',
-            'attendance', 'einandconductof', 'trainingconventions',
-            'seminars', 'workshops', 'Costincurredfor',
-        ];
-        foreach ($noiseWords as $word) {
-            if (preg_match('/\b'.$word.'\b/i', str_replace(['.', '/'], ' ', $value))) {
-                return true;
-            }
-        }
-
-        return mb_strlen($value) < 3;
+        return mb_strlen($value) < 2;
     }
 
     protected function normalizePersonResponsible(string $value): string

@@ -201,10 +201,7 @@ async function loadFeed(reset = true) {
         currentUserId = data.user_id;
         lastPage = data.last_page;
 
-        (data.data || []).forEach((p) => upsertPost(p, reset ? 'append' : 'append'));
-
-        const btn = document.getElementById('load-more-btn');
-        if (btn) btn.style.display = currentPage >= lastPage ? 'none' : 'inline-flex';
+        (data.data || []).forEach((p) => upsertPost(p, 'append'));
     } finally {
         feedLoading = false;
         setFilterTabsDisabled(false);
@@ -215,10 +212,29 @@ function postExistsInDom(postId) {
     return document.querySelector(`.post-card[data-post-id="${postId}"]`) !== null;
 }
 
+function mergeCachedPost(p) {
+    const id = Number(p.id);
+    if (!id) return;
+    const prev = postCache.get(id) || {};
+    postCache.set(id, { ...prev, ...p });
+}
+
+function syncExistingPost(p) {
+    const id = Number(p.id);
+    if (!id || !postExistsInDom(id)) return;
+    refreshEngageSummary(id, {
+        counts: p.reaction_counts || {},
+        total: Number(p.likes || 0),
+        comments: Number(p.comment_count ?? countComments(p.comments || [])),
+    });
+}
+
 function upsertPost(p, mode = 'append') {
     const id = Number(p.id);
-    if (id) postCache.set(id, p);
-    if (!id || knownPostIds.has(id) || postExistsInDom(id)) {
+    if (id) mergeCachedPost(p);
+    if (!id) return;
+    if (knownPostIds.has(id) || postExistsInDom(id)) {
+        syncExistingPost(p);
         return;
     }
 
@@ -246,15 +262,21 @@ async function pollFeedUpdates() {
     try {
         const params = new URLSearchParams({ page: 1, filter: currentFilter });
         const data = await apiFetch(`/api/community-feed?${params}`);
-        const fresh = (data.data || []).filter((p) => {
+        const items = data.data || [];
+        const fresh = [];
+        items.forEach((p) => {
             const id = Number(p.id);
-            return id && !knownPostIds.has(id) && !postExistsInDom(id);
+            if (id && (knownPostIds.has(id) || postExistsInDom(id))) {
+                upsertPost(p, 'append');
+                return;
+            }
+            if (id) fresh.push(p);
         });
+        fresh.slice().reverse().forEach((p) => upsertPost(p, 'prepend'));
 
         if (!fresh.length) return;
 
-        fresh.reverse().forEach((p) => {
-            upsertPost(p, 'prepend');
+        fresh.forEach((p) => {
             const el = document.querySelector(`.post-card[data-post-id="${p.id}"]`);
             if (el) el.classList.add('post-card-new');
         });
@@ -334,8 +356,54 @@ function buildImageGrid(images, postId) {
 }
 
 function loadMorePosts() {
+    if (feedLoading || currentPage >= lastPage) return;
     currentPage++;
     loadFeed(false);
+}
+
+let feedInfiniteObserver = null;
+function bindInfiniteScroll() {
+    const sentinel = document.getElementById('feedInfiniteSentinel');
+    if (!sentinel || feedInfiniteObserver) return;
+    feedInfiniteObserver = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) loadMorePosts();
+    }, { rootMargin: '480px 0px' });
+    feedInfiniteObserver.observe(sentinel);
+}
+
+function bindFilterBarScrollHide() {
+    const bar = document.querySelector('.feed-filter-bar');
+    if (!bar) return;
+
+    let lastY = window.scrollY || 0;
+    let ticking = false;
+
+    const apply = () => {
+        ticking = false;
+        const y = window.scrollY || 0;
+        const delta = y - lastY;
+        lastY = y;
+
+        if (y < 48) {
+            bar.classList.remove('is-hidden');
+            return;
+        }
+        if (delta > 6) {
+            bar.classList.add('is-hidden');
+            return;
+        }
+        if (delta < -2) {
+            bar.classList.remove('is-hidden');
+        }
+    };
+
+    window.addEventListener('scroll', () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(apply);
+    }, { passive: true });
+
+    bar.addEventListener('focusin', () => bar.classList.remove('is-hidden'));
 }
 
 function scrollFeedHome() {
@@ -344,6 +412,8 @@ function scrollFeedHome() {
 
 function setFeedFilter(btn, filter) {
     if (feedLoading) return;
+
+    document.querySelector('.feed-filter-bar')?.classList.remove('is-hidden');
 
     const goHome = filter === 'all';
     currentFilter = filter;
@@ -772,6 +842,14 @@ function applyReactionState(id, data) {
         counts: data.reaction_counts || {},
         total: data.count,
     });
+    const cached = postCache.get(Number(id));
+    if (cached) {
+        cached.likes = data.count;
+        cached.liked = Boolean(data.liked);
+        cached.reaction_type = data.reaction_type || null;
+        if (data.reaction_counts) cached.reaction_counts = data.reaction_counts;
+        postCache.set(Number(id), cached);
+    }
     document.querySelectorAll(`#reaction-picker-${id} .reaction-option`).forEach((option) => {
         option.classList.toggle('is-active', option.dataset.type === type);
     });
@@ -989,7 +1067,23 @@ async function openReactionViewer(target, postId, commentId = null) {
     const list = document.getElementById('reactionViewerList');
     const tabs = document.getElementById('reactionViewerTabs');
     if (tabs) tabs.innerHTML = '';
-    if (list) list.innerHTML = '<p class="reaction-viewer-empty">Loading...</p>';
+    const cached = postCache.get(Number(postId));
+    if (target === 'post' && cached) {
+        reactionViewerState = {
+            target,
+            postId,
+            commentId,
+            data: {
+                reactors: cached.reactors || [],
+                reaction_counts: cached.reaction_counts || {},
+                count: Number(cached.likes || 0),
+            },
+            filter: 'all',
+        };
+        renderReactionViewer('all');
+    } else if (list) {
+        list.innerHTML = '';
+    }
 
     const url = target === 'comment'
         ? `/api/community-feed/${postId}/comments/${commentId}/reactions`
@@ -1036,7 +1130,9 @@ function renderReactionViewer(filter = 'all') {
     const list = document.getElementById('reactionViewerList');
     if (!list) return;
     if (!reactors.length) {
-        list.innerHTML = '<p class="reaction-viewer-empty">No reactions yet.</p>';
+        list.innerHTML = Number(data.count || 0) > 0
+            ? ''
+            : '<p class="reaction-viewer-empty">No reactions yet.</p>';
         return;
     }
     list.innerHTML = reactors.map((row) => `
@@ -1703,6 +1799,8 @@ function toggleSidebar() {
 
 document.addEventListener('DOMContentLoaded', () => {
     bindFeedFilterTabs();
+    bindInfiniteScroll();
+    bindFilterBarScrollHide();
     loadFeed(true).then(() => startFeedPolling());
 
     let feedSearchTimer = null;
@@ -1822,7 +1920,7 @@ window.deletePost = deletePost;
 window.openArchiveModal = openArchiveModal;
 window.closeArchiveModal = closeArchiveModal;
 window.confirmArchivePost = confirmArchivePost;
-window.loadMorePosts = loadMorePosts;
+window.openLightbox = openLightbox;
 window.setFeedFilter = setFeedFilter;
 window.toggleNotifPopover = toggleNotifPopover;
 window.toggleProfileDropdown = toggleProfileDropdown;

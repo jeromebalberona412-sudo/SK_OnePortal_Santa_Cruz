@@ -5,13 +5,16 @@ namespace App\Modules\Barangay_ABYIP\Services;
 use App\Models\Abyip;
 use App\Models\OfficialProfile;
 use App\Models\User;
+use App\Modules\Barangay_ABYIP\Services\Category\ActivityClassifier;
+use App\Modules\Barangay_ABYIP\Services\Category\YouthProgramClassifier;
 use App\Modules\Barangay_ABYIP\Services\Normalization\AbyipNumericNormalizer;
 use App\Modules\Barangay_ABYIP\Services\Parsing\AbyipBudgetExtractor;
 use App\Modules\Barangay_ABYIP\Services\Parsing\AbyipBudgetValidator;
 use App\Modules\Barangay_ABYIP\Services\Persistence\AbyipLineWriter;
+use App\Modules\Barangay_ABYIP\Services\Rows\AbyipColumnMap;
+use App\Modules\Barangay_ABYIP\Services\Rows\AbyipPeriodParser;
 use App\Services\AbyipPdfExtractionService;
 use App\Services\SkFederationsNotificationDispatcher;
-use Carbon\Carbon;
 use DOMDocument;
 use DOMElement;
 use DOMNodeList;
@@ -29,6 +32,10 @@ class AbyipService
         private readonly AbyipBudgetExtractor $budgetExtractor,
         private readonly AbyipLineWriter $lineWriter,
         private readonly AbyipBudgetValidator $budgetValidator,
+        private readonly AbyipColumnMap $columnMap,
+        private readonly AbyipPeriodParser $periodParser,
+        private readonly ActivityClassifier $activityClassifier,
+        private readonly YouthProgramClassifier $youthProgramClassifier,
     ) {}
 
     /** @var list<string> */
@@ -906,7 +913,6 @@ class AbyipService
     protected function parseHeaderMetadataFromText(string $text): array
     {
         $text = preg_replace('/BARANG\s+AY/i', 'BARANGAY', $text) ?? $text;
-        $text = preg_replace('/NEQUINT\s+O/i', 'NEQUINTO', $text) ?? $text;
         $text = preg_replace('/Counci(?!l)/i', 'Council', $text) ?? $text;
         $normalized = preg_replace('/\s+/u', ' ', $text) ?? $text;
         $compact = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $text) ?? $text);
@@ -1081,13 +1087,13 @@ class AbyipService
             }
         }
 
-        if ($result['prepared_by'] === null && preg_match('/HON\.?\s*KARIM\s*Z\.?\s*NEQUINT\s*O/i', $text, $match)) {
+        if ($result['prepared_by'] === null && preg_match('/HON\.?\s+[A-Z][A-Za-z.\s]+/i', $text, $match)) {
             $result['prepared_by'] = $this->formatHonoraryName($match[0]);
             $result['prepared_position'] = $result['prepared_position'] ?? 'SK Chairperson';
         }
 
-        if ($result['approved_by'] === null && preg_match('/HON\.?\s*LAURA\s*P\.?\s*OBLIGACION/i', $text, $match)) {
-            $result['approved_by'] = $this->formatHonoraryName($match[0]);
+        if ($result['approved_by'] === null && preg_match_all('/HON\.?\s+[A-Z][A-Za-z.\s]+/i', $text, $matches) && count($matches[0]) > 1) {
+            $result['approved_by'] = $this->formatHonoraryName($matches[0][1]);
             $result['approved_position'] = $result['approved_position'] ?? 'Barangay Chairman';
         }
 
@@ -1105,7 +1111,6 @@ class AbyipService
     protected function formatHonoraryName(string $name): string
     {
         $cleaned = trim(preg_replace('/\s+/u', ' ', $name) ?? $name);
-        $cleaned = preg_replace('/NEQUINT\s+O/i', 'NEQUINTO', $cleaned) ?? $cleaned;
         $cleaned = preg_replace('/^HON\.?\s*/i', '', $cleaned) ?? $cleaned;
 
         return 'HON. '.trim($cleaned);
@@ -2288,35 +2293,7 @@ class AbyipService
 
     protected function normalizeActivityName(string $name): string
     {
-        $name = trim(preg_replace('/\s+/u', ' ', $name) ?? $name);
-        $name = preg_replace('/^[\x{2022}\x{25CF}\x{F0B7}\x{2013}\x{2023}\x{00B7}•\-]\s*/u', '', $name) ?? $name;
-        $name = preg_replace('/^[A-J]\.\s*/i', '', $name) ?? $name;
-
-        $replacements = [
-            'Support toALS' => 'Support to ALS',
-            'toALS' => 'to ALS',
-            'andRIC' => 'and RIC',
-            'andDaycare' => 'and Daycare',
-            'Clean–UpDrive' => 'Clean-Up Drive',
-            'Clean-UpDrive' => 'Clean-Up Drive',
-            'forLaborer' => 'for Laborer',
-            'TreePlanting' => 'Tree Planting',
-            'LivelihoodTraining' => 'Livelihood Training',
-            'Foodandother' => 'Food and other',
-            'Foodand othersupplies' => 'Food and other supplies',
-            'Medicines/ Medical' => 'Medicines/Medical Equipment',
-            'BarangayDay' => 'Barangay Day',
-            '(KK)GeneralAssembly' => '(KK) General Assembly',
-        ];
-
-        foreach ($replacements as $search => $replace) {
-            $name = str_ireplace($search, $replace, $name);
-        }
-
-        $name = preg_replace('/([a-z])([A-Z])/', '$1 $2', $name) ?? $name;
-        $name = preg_replace('/\s+/u', ' ', $name) ?? $name;
-
-        return trim($name);
+        return $this->activityClassifier->normalizeName($name);
     }
 
     /**
@@ -2465,7 +2442,7 @@ class AbyipService
 
     protected function isValidYouthProgramLetter(string $letter): bool
     {
-        return preg_match('/^[A-J]$/', strtoupper($letter)) === 1;
+        return $this->youthProgramClassifier->isValidLetter($letter);
     }
 
     protected function stripProgramLetterPrefix(string $label): string
@@ -2599,6 +2576,10 @@ class AbyipService
 
             $item = $this->parseTableRow($row);
             $label = trim((string) ($item['ppa_name'] ?? ''));
+
+            if (preg_match('/^(code|ppas?)$/i', $label)) {
+                continue;
+            }
 
             if (($item['row_type'] ?? '') === 'subsection' && stripos($label, 'SK YOUTH DEVELOPMENT') !== false) {
                 $inYouthSection = true;
@@ -3115,7 +3096,7 @@ class AbyipService
             }
         }
 
-        if (preg_match('/^(Honoraria|MOOE|Capital Outlay|Receipts)\b/i', $line)) {
+        if (preg_match('/^(.+)$/u', $line) && preg_match('/[A-Za-z]/', $line) && ! preg_match('/[\d,]+\.\d{2}/', $line)) {
             return [
                 'row_type' => 'data',
                 'ppa_name' => $line,
@@ -3127,11 +3108,7 @@ class AbyipService
 
     protected function extractYouthProgramLetter(string $text): ?string
     {
-        if (preg_match('/\b([A-J])\.\s/i', $text, $matches)) {
-            return strtoupper($matches[1]);
-        }
-
-        return null;
+        return $this->youthProgramClassifier->letterFromLabel($text);
     }
 
     protected function resolveYouthProgramName(?string $letter, string $text): ?string
@@ -3181,21 +3158,22 @@ class AbyipService
 
         $period = $this->joinMultilineCell($cells[5] ?? null);
         $periodDates = $this->parsePeriodDates($period);
+        $mapped = $this->columnMap->mapCells(array_map(fn ($cell) => $this->joinMultilineCell($cell), $cells));
 
         return [
             'row_type' => $rowType,
-            'code' => $this->cleanCellValue($cells[0] ?? null),
-            'ppa_name' => $this->joinMultilineCell($cells[1] ?? null),
-            'description' => $this->joinMultilineCell($cells[2] ?? null),
-            'expected_result' => $this->joinMultilineCell($cells[3] ?? null),
-            'performance_indicator' => $this->joinMultilineCell($cells[4] ?? null),
-            'period_of_implementation' => $period,
+            'code' => $this->cleanCellValue($mapped['code'] ?? null),
+            'ppa_name' => $mapped['ppa_name'] ?? null,
+            'description' => $mapped['description'] ?? null,
+            'expected_result' => $mapped['expected_result'] ?? null,
+            'performance_indicator' => $mapped['performance_indicator'] ?? null,
+            'period_of_implementation' => $mapped['period_of_implementation'] ?? $period,
             'period_start' => $periodDates['start'],
             'period_end' => $periodDates['end'],
-            'budget_mooe' => $this->joinMultilineCell($cells[6] ?? null),
-            'budget_co' => $this->joinMultilineCell($cells[7] ?? null),
-            'budget_total' => $this->joinMultilineCell($cells[8] ?? null),
-            'person_responsible' => $this->joinMultilineCell($cells[9] ?? null),
+            'budget_mooe' => $mapped['budget_mooe'] ?? null,
+            'budget_co' => $mapped['budget_co'] ?? null,
+            'budget_total' => $mapped['budget_total'] ?? null,
+            'person_responsible' => $mapped['person_responsible'] ?? null,
         ];
     }
 
@@ -3550,37 +3528,7 @@ class AbyipService
      */
     protected function parsePeriodDates(?string $period): array
     {
-        if ($period === null || trim($period) === '') {
-            return ['start' => null, 'end' => null];
-        }
-
-        $normalizedPeriod = preg_replace('/(?<=[A-Za-z])(?=\d)/', ' ', $period) ?? $period;
-        $normalizedPeriod = preg_replace('/(?<=\d)(?=[A-Za-z])/', ' ', $normalizedPeriod) ?? $normalizedPeriod;
-        $normalizedPeriod = preg_replace('/\s+to\s+/i', ' to ', $normalizedPeriod) ?? $normalizedPeriod;
-
-        if (preg_match('/([A-Za-z]+\s+\d{1,2},?\s+\d{4})\s*(?:to|-)\s*([A-Za-z]+\s+\d{1,2},?\s+\d{4})/i', $normalizedPeriod, $matches)) {
-            try {
-                return [
-                    'start' => Carbon::parse($matches[1])->toDateString(),
-                    'end' => Carbon::parse($matches[2])->toDateString(),
-                ];
-            } catch (\Throwable) {
-                return ['start' => null, 'end' => null];
-            }
-        }
-
-        if (preg_match('/([A-Za-z]+)\.?\s*(\d{1,2})\s*[-–—to]+\s*([A-Za-z]+)\.?\s*(\d{1,2}),?\s*(\d{4})/i', $normalizedPeriod, $matches)) {
-            try {
-                return [
-                    'start' => Carbon::parse($matches[1].' '.$matches[2].' '.$matches[5])->toDateString(),
-                    'end' => Carbon::parse($matches[3].' '.$matches[4].' '.$matches[5])->toDateString(),
-                ];
-            } catch (\Throwable) {
-                return ['start' => null, 'end' => null];
-            }
-        }
-
-        return ['start' => null, 'end' => null];
+        return $this->periodParser->parse($period);
     }
 
     /**

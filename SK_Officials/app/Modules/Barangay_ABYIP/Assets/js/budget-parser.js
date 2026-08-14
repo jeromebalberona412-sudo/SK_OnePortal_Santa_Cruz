@@ -61,14 +61,17 @@ export function detectBudgetHeaderCenters(pageRows) {
 
         entry.row.parts.forEach((part) => {
             const text = String(part.text || '').trim().toLowerCase();
+            const compact = text.replace(/\s+/g, '');
             const x = part.x + ((part.width || 0) / 2);
 
-            if (text === 'mooe') {
+            if (compact === 'mooe') {
                 found.mooe = x;
-            } else if (text === 'co') {
+            } else if (compact === 'co') {
                 found.co = x;
-            } else if (text === 'total') {
+            } else if (compact === 'total') {
                 found.total = x;
+            } else if (text.indexOf('person') !== -1 || compact === 'responsible') {
+                found.person = found.person === undefined ? x : Math.min(found.person, x);
             }
         });
 
@@ -81,6 +84,10 @@ export function detectBudgetHeaderCenters(pageRows) {
         if (pending.mooe !== undefined && pending.total !== undefined) {
             if (pending.co === undefined) {
                 pending.co = (pending.mooe + pending.total) / 2;
+            }
+
+            if (pending.person === undefined) {
+                pending.person = pending.total + 36;
             }
 
             return { width, centers: pending };
@@ -182,12 +189,6 @@ export function assignBudgetByPosition(parts, headerCenters, budgetColumn) {
         if (Math.abs(Number.parseFloat(assigned.co) - Number.parseFloat(assigned.total)) < 0.01) {
             assigned.mooe = '0.00';
         }
-    } else if (budgetColumn === 'co' && assigned.total && !assigned.co && !assigned.mooe) {
-        assigned.co = assigned.total;
-        assigned.mooe = '0.00';
-    } else if (budgetColumn === 'mooe' && assigned.total && !assigned.mooe && !assigned.co) {
-        assigned.mooe = assigned.total;
-        assigned.co = '0.00';
     }
 
     const validation = validateBudgetTriple(assigned.mooe, assigned.co, assigned.total);
