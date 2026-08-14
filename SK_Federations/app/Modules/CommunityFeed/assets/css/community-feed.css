@@ -363,7 +363,7 @@ body.sk-fed-feed .main-content,
     border-radius: 999px; padding: 2px 7px 2px 4px; margin-left: 4px;
     cursor: pointer; font-family: inherit;
 }
-.comment-react-badge .reaction-face { width: 14px; height: 14px; font-size: 9px; line-height: 14px; }
+.comment-react-badge .reaction-face { width: 16px; height: 16px; font-size: 14px; line-height: 1; }
 .comment-react-badge .reaction-total { font-size: 12px; font-weight: 600; }
 
 .post-like-badge {
@@ -1076,14 +1076,19 @@ body.sk-fed-feed .main-content,
 
 .reaction-faces { display: inline-flex; align-items: center; }
 .reaction-face {
-    width: 18px; height: 18px; font-size: 11px; line-height: 18px;
+    width: 20px; height: 20px; font-size: 16px; line-height: 1;
     display: inline-flex; align-items: center; justify-content: center;
-    border-radius: 50%; box-shadow: 0 0 0 2px #fff; margin-left: -4px;
+    border-radius: 50%; background: #fff;
+    box-shadow: 0 0 0 1.5px #fff; margin-left: -4px;
+    position: relative; overflow: visible;
 }
 .reaction-face:first-child { margin-left: 0; }
-.reaction-face--like { background: #1877f2; }
-.reaction-face--love { background: linear-gradient(135deg, #ff6b9d, #f33e58); }
-.reaction-face--haha, .reaction-face--wow, .reaction-face--sad, .reaction-face--angry { background: #f7b125; }
+.reaction-face--like,
+.reaction-face--love,
+.reaction-face--haha,
+.reaction-face--wow,
+.reaction-face--sad,
+.reaction-face--angry { background: #fff; }
 .reaction-total { color: #65676b; font-weight: 600; font-size: 14px; }
 
 .reaction-viewer {

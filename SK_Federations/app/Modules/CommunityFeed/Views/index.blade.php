@@ -19,7 +19,7 @@
     @endphp
     <link rel="stylesheet" href="{{ url('/modules/community-feed/css/community-feed.css') }}?v={{ $communityFeedCssVersion }}">
     <link rel="stylesheet" href="{{ url('/modules/community-feed/css/community-feed-comment-preview.css') }}?v={{ $commentPreviewCssVersion }}">
-    <link rel="preload" href="{{ url('/sounds/reactions_ux.mp3') }}" as="audio">
+    <link rel="preload" href="{{ url('/sounds/reactions_ux.mp3') }}" as="audio" type="audio/mpeg">
 @endpush
 
 @section('content')

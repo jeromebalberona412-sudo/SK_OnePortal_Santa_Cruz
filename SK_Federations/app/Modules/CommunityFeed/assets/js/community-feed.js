@@ -212,18 +212,15 @@ function playFeedReactionSound() {
     try {
         if (audio.readyState >= 2) {
             try { audio.currentTime = 0; } catch (e) {}
-            var clone = audio.cloneNode(true);
-            clone.volume = 0.75;
-            clone.play().catch(function () {
-                audio.play().catch(function () {});
-            });
-            return;
         }
-        audio.play().catch(function () {
-            var oneShot = new Audio(FEED_REACTION_SOUND_URL);
-            oneShot.volume = 0.75;
-            oneShot.play().catch(function () {});
-        });
+        var playPromise = audio.play();
+        if (playPromise && playPromise.catch) {
+            playPromise.catch(function () {
+                var oneShot = new Audio(FEED_REACTION_SOUND_URL);
+                oneShot.volume = 0.75;
+                oneShot.play().catch(function () {});
+            });
+        }
     } catch (e) {
         try {
             var fallback = new Audio(FEED_REACTION_SOUND_URL);
@@ -234,6 +231,7 @@ function playFeedReactionSound() {
 }
 
 window.playFeedReactionSound = playFeedReactionSound;
+ensureFeedReactionAudio();
 
 function resolveNextReaction(currentType, requestedType) {
     var requested = requestedType || 'like';

@@ -16,6 +16,7 @@
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/sk-archive-terms.css') }}">
+    <link rel="preload" href="{{ url('/sounds/reactions_ux.mp3') }}" as="audio" type="audio/mpeg">
 </head>
 <body>
 

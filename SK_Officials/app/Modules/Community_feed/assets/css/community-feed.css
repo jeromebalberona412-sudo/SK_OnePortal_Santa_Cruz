@@ -264,21 +264,22 @@ body {
 button.reaction-summary-left:hover { background: #f0f2f5; }
 .reaction-faces { display: inline-flex; align-items: center; }
 .reaction-face {
-    width: 18px; height: 18px; font-size: 11px; line-height: 18px;
+    width: 20px; height: 20px; font-size: 16px; line-height: 1;
     display: inline-flex; align-items: center; justify-content: center;
-    border-radius: 50%; box-shadow: 0 0 0 2px #fff;
-    margin-left: -4px; position: relative; overflow: hidden;
+    border-radius: 50%; background: #fff;
+    box-shadow: 0 0 0 1.5px #fff;
+    margin-left: -4px; position: relative; overflow: visible;
 }
 .reaction-face:first-child { margin-left: 0; z-index: 3; }
 .reaction-face:nth-child(2) { z-index: 2; }
 .reaction-face:nth-child(3) { z-index: 1; }
-.reaction-face svg { width: 11px; height: 11px; color: #fff; }
-.reaction-face--like { background: #1877f2; }
-.reaction-face--love { background: linear-gradient(135deg, #ff6b9d, #f33e58); }
+.reaction-face svg { width: 14px; height: 14px; }
+.reaction-face--like,
+.reaction-face--love,
 .reaction-face--haha,
 .reaction-face--wow,
 .reaction-face--sad,
-.reaction-face--angry { background: #f7b125; }
+.reaction-face--angry { background: #fff; }
 .reaction-total { color: #65676b; font-weight: 400; font-size: 15px; line-height: 1; }
 .reaction-summary-comments {
     border: none; background: none; color: #65676b; font-size: 15px;
@@ -413,7 +414,7 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
 }
 .comment-react-inline { position: static; box-shadow: none; }
 .comment-react-badge[hidden] { display: none; }
-.comment-react-badge .reaction-face { width: 16px; height: 16px; font-size: 10px; line-height: 16px; box-shadow: 0 0 0 1.5px #fff; }
+.comment-react-badge .reaction-face { width: 16px; height: 16px; font-size: 14px; line-height: 1; box-shadow: 0 0 0 1.5px #fff; }
 .comment-react-badge .reaction-face svg { width: 9px; height: 9px; }
 .comment-like-wrap { position: relative; display: inline-flex; align-items: center; z-index: 3; flex: 0 0 auto; height: 16px; }
 .comment-like-btn {

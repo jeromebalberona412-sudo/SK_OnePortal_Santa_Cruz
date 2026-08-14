@@ -20,14 +20,6 @@ const REACTION_LABEL = {
     angry: 'Angry',
 };
 const THUMBS_SVG = '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/></svg>';
-const REACTION_FACE_INNER = {
-    like: '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/></svg>',
-    love: '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/></svg>',
-    haha: '😂',
-    wow: '😮',
-    sad: '😢',
-    angry: '😡',
-};
 
 let currentFilter = 'all';
 let currentPage = 1;
@@ -58,20 +50,43 @@ const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.conte
 const FEED_REACTION_SOUND_URL = '/sounds/reactions_ux.mp3';
 let feedReactionAudio = null;
 
+function ensureFeedReactionAudio() {
+    if (!feedReactionAudio) {
+        feedReactionAudio = new Audio(FEED_REACTION_SOUND_URL);
+        feedReactionAudio.preload = 'auto';
+        feedReactionAudio.volume = 0.75;
+        try { feedReactionAudio.load(); } catch (e) {}
+    }
+    return feedReactionAudio;
+}
+
 function playFeedReactionSound() {
+    const audio = ensureFeedReactionAudio();
+    audio.muted = false;
+    audio.volume = 0.75;
     try {
-        if (!feedReactionAudio) {
-            feedReactionAudio = new Audio(FEED_REACTION_SOUND_URL);
-            feedReactionAudio.preload = 'auto';
-            feedReactionAudio.volume = 0.75;
+        if (audio.readyState >= 2) {
+            try { audio.currentTime = 0; } catch (e) {}
         }
-        feedReactionAudio.pause();
-        feedReactionAudio.currentTime = 0;
-        feedReactionAudio.play().catch(() => {});
-    } catch (e) {}
+        const playPromise = audio.play();
+        if (playPromise && playPromise.catch) {
+            playPromise.catch(() => {
+                const oneShot = new Audio(FEED_REACTION_SOUND_URL);
+                oneShot.volume = 0.75;
+                oneShot.play().catch(() => {});
+            });
+        }
+    } catch (e) {
+        try {
+            const fallback = new Audio(FEED_REACTION_SOUND_URL);
+            fallback.volume = 0.75;
+            fallback.play().catch(() => {});
+        } catch (err) {}
+    }
 }
 
 window.playFeedReactionSound = playFeedReactionSound;
+ensureFeedReactionAudio();
 
 function resolveNextReaction(currentType, requestedType) {
     const requested = requestedType || 'like';
@@ -618,7 +633,7 @@ function reactionPickerHtml(activeType, pickerId) {
 
 function reactionFacesHtml(counts) {
     return topReactionTypes(counts)
-        .map((type) => `<span class="reaction-face reaction-face--${type}" title="${escapeHtml(REACTION_LABEL[type] || type)}">${REACTION_FACE_INNER[type] || REACTION_EMOJI[type] || ''}</span>`)
+        .map((type) => `<span class="reaction-face reaction-face--${type}" title="${escapeHtml(REACTION_LABEL[type] || type)}">${REACTION_EMOJI[type] || ''}</span>`)
         .join('');
 }
 
@@ -684,11 +699,10 @@ function buildCommentItem(comment, postId, isReply = false) {
 }
 
 function topReactionTypes(counts) {
-    return Object.entries(counts || {})
-        .filter(([, n]) => Number(n) > 0)
-        .sort((a, b) => Number(b[1]) - Number(a[1]))
-        .slice(0, 3)
-        .map(([type]) => type);
+    return Object.keys(REACTION_EMOJI)
+        .filter((type) => Number((counts || {})[type] || 0) > 0)
+        .sort((a, b) => Number(counts[b] || 0) - Number(counts[a] || 0))
+        .slice(0, 3);
 }
 
 function formatCount(n) {

@@ -40,6 +40,7 @@
         'app/Modules/KKProfiling/assets/js/kk-profiling-update.js',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <link rel="preload" href="{{ url('/sounds/reactions_ux.mp3') }}" as="audio" type="audio/mpeg">
 </head>
 <body class="youth-dashboard">
     @include('dashboard::loading')
@@ -861,20 +862,43 @@
     const FEED_REACTION_SOUND_URL = '/sounds/reactions_ux.mp3';
     let feedReactionAudio = null;
 
+    function ensureFeedReactionAudio() {
+        if (!feedReactionAudio) {
+            feedReactionAudio = new Audio(FEED_REACTION_SOUND_URL);
+            feedReactionAudio.preload = 'auto';
+            feedReactionAudio.volume = 0.75;
+            try { feedReactionAudio.load(); } catch (e) {}
+        }
+        return feedReactionAudio;
+    }
+
     function playFeedReactionSound() {
+        const audio = ensureFeedReactionAudio();
+        audio.muted = false;
+        audio.volume = 0.75;
         try {
-            if (!feedReactionAudio) {
-                feedReactionAudio = new Audio(FEED_REACTION_SOUND_URL);
-                feedReactionAudio.preload = 'auto';
-                feedReactionAudio.volume = 0.75;
+            if (audio.readyState >= 2) {
+                try { audio.currentTime = 0; } catch (e) {}
             }
-            feedReactionAudio.pause();
-            feedReactionAudio.currentTime = 0;
-            feedReactionAudio.play().catch(function () {});
-        } catch (e) {}
+            const playPromise = audio.play();
+            if (playPromise && playPromise.catch) {
+                playPromise.catch(function () {
+                    const oneShot = new Audio(FEED_REACTION_SOUND_URL);
+                    oneShot.volume = 0.75;
+                    oneShot.play().catch(function () {});
+                });
+            }
+        } catch (e) {
+            try {
+                const fallback = new Audio(FEED_REACTION_SOUND_URL);
+                fallback.volume = 0.75;
+                fallback.play().catch(function () {});
+            } catch (err) {}
+        }
     }
 
     window.playFeedReactionSound = playFeedReactionSound;
+    ensureFeedReactionAudio();
 
     function showFeedToast(message, type) {
         const el = document.getElementById('feedToast');

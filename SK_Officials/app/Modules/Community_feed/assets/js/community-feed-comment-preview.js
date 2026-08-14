@@ -13,6 +13,7 @@ let sending = false;
 let viewerState = { data: null, filter: 'all' };
 let pageBound = false;
 let syncingUrl = false;
+let expandedReplies = new Set();
 
 const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 const cfg = () => window.CommentPreviewConfig || {};
@@ -29,10 +30,18 @@ function playReactionSound() {
             reactionAudio = new Audio(REACTION_SOUND_URL);
             reactionAudio.preload = 'auto';
             reactionAudio.volume = 0.75;
+            try { reactionAudio.load(); } catch (_) {}
         }
-        reactionAudio.pause();
-        reactionAudio.currentTime = 0;
-        reactionAudio.play().catch(() => {});
+        reactionAudio.muted = false;
+        reactionAudio.volume = 0.75;
+        if (reactionAudio.readyState >= 2) {
+            try { reactionAudio.currentTime = 0; } catch (_) {}
+        }
+        reactionAudio.play().catch(() => {
+            const oneShot = new Audio(REACTION_SOUND_URL);
+            oneShot.volume = 0.75;
+            oneShot.play().catch(() => {});
+        });
     } catch (e) {}
 }
 
@@ -97,22 +106,16 @@ function formatCount(n) {
 }
 
 function topTypes(counts) {
-    return Object.entries(counts || {})
-        .filter(([, n]) => Number(n) > 0)
-        .sort((a, b) => Number(b[1]) - Number(a[1]))
-        .slice(0, 3)
-        .map(([type]) => type);
+    return Object.keys(REACTION_EMOJI)
+        .filter((type) => Number((counts || {})[type] || 0) > 0)
+        .sort((a, b) => Number(counts[b] || 0) - Number(counts[a] || 0))
+        .slice(0, 3);
 }
 
 function facesHtml(counts) {
-    return topTypes(counts).map((type) => {
-        const inner = type === 'like'
-            ? '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/></svg>'
-            : type === 'love'
-                ? '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/></svg>'
-                : (REACTION_EMOJI[type] || '');
-        return `<span class="cp-face ${type}">${inner}</span>`;
-    }).join('');
+    return topTypes(counts).map((type) =>
+        `<span class="cp-face ${type}" title="${escapeHtml(REACTION_LABEL[type] || type)}">${REACTION_EMOJI[type] || ''}</span>`
+    ).join('');
 }
 
 function countComments(comments) {
@@ -178,11 +181,11 @@ function renderPost() {
     const type = post.reaction_type || '';
     document.getElementById('cpEngage').innerHTML = `
         <div class="cp-stats">
-            <button type="button" class="cp-stats-left" id="cpViewPostReactions">
+            <button type="button" class="cp-stats-left" id="cpViewPostReactions"${likes > 0 ? '' : ' hidden'}>
                 <span class="cp-faces">${facesHtml(post.reaction_counts)}</span>
-                <span>${likes > 0 ? formatCount(likes) : ''}</span>
+                <span class="cp-react-total">${likes > 0 ? formatCount(likes) : ''}</span>
             </button>
-            <span class="cp-stats-comments">${comments > 0 ? `${formatCount(comments)} comments` : ''}</span>
+            <button type="button" class="cp-stats-comments" id="cpFocusComments">${comments > 0 ? `${formatCount(comments)} comment${comments === 1 ? '' : 's'}` : ''}</button>
         </div>
         <div class="cp-actions">
             <div class="cp-reaction-wrap" data-target="post">
@@ -195,6 +198,9 @@ function renderPost() {
 
     bindReactionWrap(document.querySelector('.cp-reaction-wrap'));
     document.getElementById('cpViewPostReactions')?.addEventListener('click', () => openViewer('post'));
+    document.getElementById('cpFocusComments')?.addEventListener('click', () => {
+        document.getElementById('cpComments')?.scrollIntoView({ block: 'nearest' });
+    });
     document.getElementById('cpFocusComment')?.addEventListener('click', () => {
         document.getElementById('cpCommentInput')?.focus();
         document.getElementById('cpComposer')?.scrollIntoView({ block: 'end' });
@@ -217,7 +223,7 @@ function commentHtml(comment, isReply) {
     const likes = Number(comment.likes || 0);
     const type = comment.reaction_type || '';
     const badge = likes > 0
-        ? `<button type="button" class="cp-bubble-react" data-comment-id="${comment.id}">${facesHtml(comment.reaction_counts)} ${formatCount(likes)}</button>`
+        ? `<button type="button" class="cp-bubble-react" data-comment-id="${comment.id}">${facesHtml(comment.reaction_counts)}<span class="cp-react-total">${formatCount(likes)}</span></button>`
         : `<button type="button" class="cp-bubble-react" data-comment-id="${comment.id}" hidden></button>`;
     const options = comment.owned
         ? `<div class="cp-options">
@@ -228,8 +234,9 @@ function commentHtml(comment, isReply) {
             </div>
            </div>`
         : '';
+    const repliesOpen = !isReply && replies.length > 0 && expandedReplies.has(Number(comment.id));
     const viewReplies = replies.length && !isReply
-        ? `<button type="button" class="cp-view-replies" data-toggle-replies="${comment.id}" data-count="${replies.length}">${CHEVRON_SVG} View ${replies.length} ${replies.length === 1 ? 'reply' : 'replies'}</button>`
+        ? `<button type="button" class="cp-view-replies${repliesOpen ? ' is-open' : ''}" data-toggle-replies="${comment.id}" data-count="${replies.length}">${CHEVRON_SVG} ${repliesOpen ? 'Hide replies' : `View ${replies.length} ${replies.length === 1 ? 'reply' : 'replies'}`}</button>`
         : '';
 
     return `<div class="cp-comment${isReply ? ' is-reply' : ''}" data-comment-id="${comment.id}">
@@ -254,7 +261,7 @@ function commentHtml(comment, isReply) {
                 <input type="text" maxlength="500" placeholder="Write a reply..." data-reply-input="${comment.id}">
                 <button type="button" class="cp-send-btn" data-reply-send="${comment.id}">${SEND_SVG}</button>
             </div>
-            ${replies.length ? `<div class="cp-replies" id="cp-replies-${comment.id}" hidden>${replies.map((r) => commentHtml(r, true)).join('')}</div>` : ''}
+            ${replies.length ? `<div class="cp-replies" id="cp-replies-${comment.id}"${repliesOpen ? '' : ' hidden'}>${replies.map((r) => commentHtml(r, true)).join('')}</div>` : ''}
         </div>
     </div>`;
 }
@@ -336,6 +343,17 @@ function resolveNextReaction(currentType, requestedType) {
     return { liked: true, type: requested };
 }
 
+function bumpReactionCounts(counts, fromType, toType) {
+    const next = { ...(counts || {}) };
+    if (fromType && fromType !== toType) {
+        next[fromType] = Math.max(0, Number(next[fromType] || 0) - 1);
+    }
+    if (toType && fromType !== toType) {
+        next[toType] = Number(next[toType] || 0) + 1;
+    }
+    return next;
+}
+
 function paintCpPostReaction(liked, type, count, counts) {
     post.liked = liked;
     post.reaction_type = type || null;
@@ -352,9 +370,10 @@ function paintCpPostReaction(liked, type, count, counts) {
     }
     const left = document.getElementById('cpViewPostReactions');
     if (left) {
+        left.hidden = count <= 0;
         const faces = left.querySelector('.cp-faces');
         if (faces) faces.innerHTML = facesHtml(post.reaction_counts);
-        const countSpan = left.querySelector('span:last-child');
+        const countSpan = left.querySelector('.cp-react-total');
         if (countSpan) countSpan.textContent = count > 0 ? formatCount(count) : '';
     }
 }
@@ -376,6 +395,15 @@ function paintCpCommentReaction(commentId, liked, type, count, counts) {
     wrap?.querySelectorAll('.cp-picker-opt').forEach((opt) => {
         opt.classList.toggle('is-active', Boolean(type) && opt.dataset.type === type);
     });
+    const badge = document.querySelector(`.cp-bubble-react[data-comment-id="${commentId}"]`);
+    if (badge) {
+        if (count > 0) {
+            badge.hidden = false;
+            badge.innerHTML = `${facesHtml(counts || {})}<span class="cp-react-total">${formatCount(count)}</span>`;
+        } else {
+            badge.hidden = true;
+        }
+    }
 }
 
 async function setPostReaction(type) {
@@ -386,7 +414,7 @@ async function setPostReaction(type) {
     if (current && !next.liked) count = Math.max(0, count - 1);
     else if (!current && next.liked) count += 1;
     if (next.liked) playReactionSound();
-    paintCpPostReaction(next.liked, next.type, count, post.reaction_counts);
+    paintCpPostReaction(next.liked, next.type, count, bumpReactionCounts(post.reaction_counts || {}, current, next.type));
     const key = `post:${post.id}`;
     const { seq, signal } = beginReactionRequest(key);
     try {
@@ -408,10 +436,15 @@ async function setPostReaction(type) {
 async function setCommentReaction(commentId, type) {
     const wrap = document.querySelector(`.cp-reaction-wrap[data-comment-id="${commentId}"]`);
     const btn = wrap?.querySelector('.cp-like-btn');
-    const current = btn?.dataset.type || '';
+    const comment = findComment(post.comments, commentId);
+    const current = btn?.dataset.type || comment?.reaction_type || '';
     const next = resolveNextReaction(current, type);
+    let count = Number(comment?.likes || 0);
+    if (current && !next.liked) count = Math.max(0, count - 1);
+    else if (!current && next.liked) count += 1;
+    const nextCounts = bumpReactionCounts(comment?.reaction_counts || {}, current, next.type);
     if (next.liked) playReactionSound();
-    paintCpCommentReaction(commentId, next.liked, next.type, next.liked ? 1 : 0);
+    paintCpCommentReaction(commentId, next.liked, next.type, count, nextCounts);
     const key = `comment:${commentId}`;
     const { seq, signal } = beginReactionRequest(key);
     try {
@@ -448,6 +481,51 @@ function updateCommentReaction(comments, id, data) {
     });
 }
 
+function threadRootId(commentId) {
+    for (const c of post.comments || []) {
+        if (Number(c.id) === Number(commentId)) return Number(c.id);
+        if (findComment(c.replies || [], commentId)) return Number(c.id);
+    }
+    return Number(commentId);
+}
+
+function appendToThread(parentId, comment) {
+    const rootId = threadRootId(parentId);
+    const parent = findComment(post.comments, rootId);
+    if (!parent) return rootId;
+    parent.replies = parent.replies || [];
+    if (!parent.replies.some((r) => String(r.id) === String(comment.id))) {
+        parent.replies.push(comment);
+    }
+    parent.reply_count = parent.replies.length;
+    expandedReplies.add(rootId);
+    return rootId;
+}
+
+function keepInScroller(el) {
+    const scroller = document.getElementById('cpScroll');
+    if (!scroller || !el) return;
+    const scrollerRect = scroller.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    if (elRect.top < scrollerRect.top) {
+        scroller.scrollTop -= (scrollerRect.top - elRect.top) + 12;
+    } else if (elRect.bottom > scrollerRect.bottom) {
+        scroller.scrollTop += (elRect.bottom - scrollerRect.bottom) + 12;
+    }
+}
+
+function refreshPreview(focusId) {
+    const scroller = document.getElementById('cpScroll');
+    const top = scroller?.scrollTop || 0;
+    renderPost();
+    renderComments();
+    if (scroller) scroller.scrollTop = top;
+    if (!focusId) return;
+    requestAnimationFrame(() => {
+        keepInScroller(document.querySelector(`#cpComments [data-comment-id="${String(focusId)}"]`));
+    });
+}
+
 async function submitComment(body, parentId = null) {
     if (sending || !body) return;
     sending = true;
@@ -465,23 +543,12 @@ async function submitComment(body, parentId = null) {
         parent_id: parentId || null,
     };
     if (parentId) {
-        const parent = findComment(post.comments, parentId);
-        if (parent) {
-            parent.replies = parent.replies || [];
-            parent.replies.push(optimistic);
-            parent.reply_count = parent.replies.length;
-        }
+        appendToThread(parentId, optimistic);
     } else {
         post.comments = post.comments || [];
         post.comments.push(optimistic);
     }
-    renderPost();
-    renderComments();
-    if (parentId) {
-        const box = document.getElementById(`cp-replies-${parentId}`);
-        if (box) box.hidden = false;
-    }
-    document.getElementById('cpScroll')?.scrollTo({ top: document.getElementById('cpScroll').scrollHeight });
+    refreshPreview(tempId);
     try {
         const payload = { body };
         if (parentId) payload.parent_id = parentId;
@@ -499,23 +566,13 @@ async function submitComment(body, parentId = null) {
         if (!findComment(post.comments, comment.id)) {
             const actualParentId = comment.parent_id || parentId;
             if (actualParentId) {
-                const parent = findComment(post.comments, actualParentId);
-                if (parent) {
-                    parent.replies = parent.replies || [];
-                    parent.replies.push(comment);
-                    parent.reply_count = parent.replies.length;
-                }
+                appendToThread(actualParentId, comment);
             } else {
                 post.comments = post.comments || [];
                 post.comments.push(comment);
             }
         }
-        renderPost();
-        renderComments();
-        if (parentId) {
-            const box = document.getElementById(`cp-replies-${parentId}`);
-            if (box) box.hidden = false;
-        }
+        refreshPreview(comment.id);
         notifyPreview(parentId ? 'Reply added successfully.' : 'Comment added successfully.');
     } catch (err) {
         const removeTemp = (comments) => {
@@ -524,8 +581,7 @@ async function submitComment(body, parentId = null) {
             (comments || []).forEach((c) => removeTemp(c.replies || []));
         };
         removeTemp(post.comments);
-        renderPost();
-        renderComments();
+        refreshPreview(parentId ? threadRootId(parentId) : null);
         notifyPreview(parentId ? 'Unable to add your reply. Please try again.' : 'Unable to add your comment. Please try again.', 'error');
     } finally {
         sending = false;
@@ -618,20 +674,26 @@ function bindPage() {
     document.getElementById('cpComments')?.addEventListener('click', (e) => {
         const reply = e.target.closest('[data-reply]');
         if (reply) {
+            document.querySelectorAll('.cp-reply-box.open').forEach((box) => {
+                if (box.id !== `cp-reply-${reply.dataset.reply}`) box.classList.remove('open');
+            });
             const box = document.getElementById(`cp-reply-${reply.dataset.reply}`);
             if (box) {
                 box.classList.toggle('open');
                 box.querySelector('input')?.focus();
+                keepInScroller(box);
             }
             return;
         }
         const toggle = e.target.closest('[data-toggle-replies]');
         if (toggle) {
-            const id = toggle.dataset.toggleReplies;
+            const id = Number(toggle.dataset.toggleReplies);
             const el = document.getElementById(`cp-replies-${id}`);
             if (!el) return;
             const open = el.hidden;
             el.hidden = !open;
+            if (open) expandedReplies.add(id);
+            else expandedReplies.delete(id);
             toggle.classList.toggle('is-open', open);
             const n = Number(toggle.dataset.count || 0);
             toggle.innerHTML = `${CHEVRON_SVG} ${open ? 'Hide replies' : `View ${n} ${n === 1 ? 'reply' : 'replies'}`}`;
@@ -757,6 +819,9 @@ function syncCommentsUrl(id) {
 
 function openCommentPreview(nextPost, { skipUrl } = {}) {
     if (!nextPost) return;
+    if (!post || Number(post.id) !== Number(nextPost.id)) {
+        expandedReplies = new Set();
+    }
     post = nextPost;
     const shell = document.getElementById('commentPreviewShell');
     if (!shell) return;
