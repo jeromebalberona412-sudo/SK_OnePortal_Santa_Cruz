@@ -166,7 +166,9 @@ function renderPost() {
     const images = post.images?.length ? post.images : (post.image_url ? [post.image_url] : []);
     const mediaClass = images.length > 1 ? 'two' : 'one';
     const media = images.length
-        ? `<div class="cp-media ${mediaClass}">${images.slice(0, 2).map((src) => `<img src="${escapeHtml(src)}" alt="">`).join('')}</div>`
+        ? `<div class="cp-media ${mediaClass}">${images.map((src, index) =>
+            `<button type="button" class="cp-media-btn" data-index="${index}" aria-label="View photo ${index + 1}"><img src="${escapeHtml(src)}" alt=""></button>`
+        ).join('')}</div>`
         : '';
 
     document.getElementById('cpPost').innerHTML = `
@@ -203,6 +205,13 @@ function renderPost() {
     `;
 
     bindReactionWrap(document.querySelector('.cp-reaction-wrap'));
+    document.querySelectorAll('.cp-media-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            if (typeof window.openLightbox === 'function') {
+                window.openLightbox(images, Number(btn.dataset.index || 0));
+            }
+        });
+    });
     document.getElementById('cpViewPostReactions')?.addEventListener('click', () => openViewer('post'));
     document.getElementById('cpFocusComments')?.addEventListener('click', () => {
         document.getElementById('cpComments')?.scrollIntoView({ block: 'nearest' });
@@ -609,7 +618,32 @@ async function openViewer(target, commentId = null) {
     const modal = document.getElementById('cpReactionViewer');
     const list = document.getElementById('cpViewerList');
     modal.hidden = false;
-    list.innerHTML = '<p class="cp-viewer-empty">Loading...</p>';
+    if (target === 'post' && post) {
+        viewerState = {
+            data: {
+                reactors: post.reactions_summary?.reactors || [],
+                reaction_counts: post.reaction_counts || {},
+                count: Number(post.likes || 0),
+            },
+            filter: 'all',
+        };
+        renderViewer('all');
+    } else {
+        const comment = findComment(post?.comments || [], commentId);
+        if (comment) {
+            viewerState = {
+                data: {
+                    reactors: [],
+                    reaction_counts: comment.reaction_counts || {},
+                    count: Number(comment.likes || 0),
+                },
+                filter: 'all',
+            };
+            renderViewer('all');
+        } else if (list) {
+            list.innerHTML = '';
+        }
+    }
     const url = target === 'comment'
         ? `/api/feed/${post.id}/comments/${commentId}/reactions`
         : `/api/feed/${post.id}/likes`;
@@ -639,8 +673,8 @@ function renderViewer(filter) {
     const rows = (data.reactors || []).filter((r) => filter === 'all' || r.reaction_type === filter);
     const list = document.getElementById('cpViewerList');
     list.innerHTML = rows.length
-        ? rows.map((r) => `<div class="cp-viewer-row"><div class="cp-viewer-avatar-wrap"><img src="${escapeHtml(r.avatar_url)}" alt=""><span class="cp-viewer-emoji">${REACTION_EMOJI[r.reaction_type] || ''}</span></div><span class="cp-viewer-name">${escapeHtml(r.name)}</span></div>`).join('')
-        : '<p class="cp-viewer-empty">No reactions yet.</p>';
+        ? rows.map((r) => `<div class="cp-viewer-row"><div class="cp-viewer-avatar-wrap"><img src="${escapeHtml(r.avatar_url || '')}" alt=""><span class="cp-viewer-emoji">${REACTION_EMOJI[r.reaction_type] || ''}</span></div><span class="cp-viewer-name">${escapeHtml(r.name || 'Member')}</span></div>`).join('')
+        : (Number(data.count || 0) > 0 ? '' : '<p class="cp-viewer-empty">No reactions yet.</p>');
 }
 
 function bindPage() {
@@ -802,7 +836,7 @@ function commentsPath(id) {
     if (template && String(template).includes('__ID__')) {
         return String(template).replace('__ID__', String(id));
     }
-    return `/dashboard/${id}/comments`;
+    return `/dashboard/comments/${id}`;
 }
 
 function feedPath() {
@@ -862,7 +896,8 @@ window.closeCommentPreview = closeCommentPreview;
 
 window.addEventListener('popstate', () => {
     if (syncingUrl) return;
-    const match = window.location.pathname.match(/\/dashboard\/(\d+)\/comments\/?$/);
+    const match = window.location.pathname.match(/\/dashboard\/comments\/(\d+)\/?$/)
+        || window.location.pathname.match(/\/dashboard\/(\d+)\/comments\/?$/);
     if (match) {
         const id = Number(match[1]);
         if (post && Number(post.id) === id) {

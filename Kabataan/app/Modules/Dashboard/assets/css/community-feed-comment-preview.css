@@ -103,6 +103,10 @@
 .cp-media.one { grid-template-columns: 1fr; }
 .cp-media.two { grid-template-columns: 1fr 1fr; }
 .cp-media img { width: 100%; max-height: 360px; object-fit: cover; display: block; background: #000; }
+.cp-media-btn {
+    display: block; width: 100%; padding: 0; border: 0; background: #000; cursor: pointer;
+}
+.cp-media-btn:focus-visible { outline: 2px solid #1877f2; outline-offset: 2px; }
 
 .cp-stats {
     display: flex;
@@ -184,20 +188,13 @@
 .cp-action:hover { background: #f0f2f5; }
 .cp-action svg { width: 18px; height: 18px; }
 .cp-action.liked { font-weight: 700; }
-.cp-action.liked[data-type="like"],
-.cp-action[data-type="like"] { color: #1877f2; }
-.cp-action.liked[data-type="like"] svg,
-.cp-action[data-type="like"] svg { color: #1877f2; }
-.cp-action.liked[data-type="love"],
-.cp-action[data-type="love"] { color: #f33e58; }
+.cp-action.liked[data-type="like"] { color: #1877f2; }
+.cp-action.liked[data-type="like"] svg { color: #1877f2; }
+.cp-action.liked[data-type="love"] { color: #f33e58; }
 .cp-action.liked[data-type="haha"],
-.cp-action.liked[data-type="wow"],
-.cp-action[data-type="haha"],
-.cp-action[data-type="wow"] { color: #f7b125; }
+.cp-action.liked[data-type="wow"] { color: #f7b125; }
 .cp-action.liked[data-type="sad"],
-.cp-action.liked[data-type="angry"],
-.cp-action[data-type="sad"],
-.cp-action[data-type="angry"] { color: #e9710f; }
+.cp-action.liked[data-type="angry"] { color: #e9710f; }
 
 .cp-reaction-wrap {
     position: relative;

@@ -93,6 +93,7 @@
                         >
                     </div>
                 </div>
+                </div>
 
                 <div class="feed-filter-bar">
                     <button type="button" class="feed-tab feed-tab--icon active" data-feed-filter="all" aria-label="All">
@@ -126,15 +127,9 @@
                         <span class="feed-tab-text">Programs</span>
                     </button>
                 </div>
-                </div>
 
                 <div id="feed-posts"></div>
-
-                <div style="text-align:center;padding:8px 0 16px;">
-                    <button class="view-details-btn" id="load-more-btn" onclick="loadMorePosts()" style="display:none;">
-                        Load More
-                    </button>
-                </div>
+                <div id="feedInfiniteSentinel" class="feed-infinite-sentinel" aria-hidden="true"></div>
             </div>
 
             <!-- Right Sidebar - Barangay SK Profiles -->
@@ -826,11 +821,22 @@
 
     @include('dashboard::comment-preview')
 
+    <div id="reactionViewerModal" class="reaction-viewer" aria-hidden="true">
+        <div class="reaction-viewer-overlay" id="reactionViewerOverlay"></div>
+        <div class="reaction-viewer-panel" role="dialog" aria-label="People who reacted">
+            <div class="reaction-viewer-header">
+                <div class="reaction-viewer-tabs" id="reactionViewerTabs"></div>
+                <button type="button" class="reaction-viewer-close" id="reactionViewerClose" aria-label="Close">&times;</button>
+            </div>
+            <div class="reaction-viewer-list" id="reactionViewerList"></div>
+        </div>
+    </div>
+
     <script>
     window.CommunityFeedConfig = {
         userAvatar: @json($userAvatarUrl ?? ''),
         userDisplayName: @json($user->name ?? 'Kabataan'),
-        commentsPageUrl: @json(url('/dashboard/__ID__/comments')),
+        commentsPageUrl: @json(url('/dashboard/comments/__ID__')),
         feedPollMs: 10000,
     };
     window.CommentPreviewConfig = {
@@ -981,8 +987,6 @@
             if (reset && items.length === 0) {
                 container.innerHTML =
                     '<div class="post-card" style="text-align:center;color:#64748b;padding:32px;">No community feed posts yet. Posts from your barangay SK and SK Federation will appear here.</div>';
-                const btn = document.getElementById('load-more-btn');
-                if (btn) btn.style.display = 'none';
                 return;
             }
 
@@ -997,9 +1001,6 @@
                 container.appendChild(el);
                 bindFeedReactionControls(el);
             });
-
-            const btn = document.getElementById('load-more-btn');
-            if (btn) btn.style.display = feedPage >= feedLastPage ? 'none' : 'inline-flex';
         } catch (error) {
             console.error('Feed error:', error);
         } finally {
@@ -1015,13 +1016,82 @@
         loadFeed(false);
     }
 
+    let feedInfiniteObserver = null;
+    function bindInfiniteScroll() {
+        const sentinel = document.getElementById('feedInfiniteSentinel');
+        if (!sentinel || feedInfiniteObserver) return;
+        const root = document.querySelector('.feed-section');
+        const overflowY = root ? getComputedStyle(root).overflowY : '';
+        feedInfiniteObserver = new IntersectionObserver((entries) => {
+            if (entries.some((entry) => entry.isIntersecting)) loadMorePosts();
+        }, {
+            root: (overflowY === 'auto' || overflowY === 'scroll') ? root : null,
+            rootMargin: '480px 0px',
+        });
+        feedInfiniteObserver.observe(sentinel);
+    }
+    bindInfiniteScroll();
+
     function setFeedFilter(btn, filter) {
         if (feedFilter === filter && btn.classList.contains('active')) return;
+        document.querySelector('.feed-filter-bar')?.classList.remove('is-hidden');
         feedFilter = filter;
         document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
         btn.classList.add('active');
         loadFeed(true);
     }
+
+    function bindFilterBarScrollHide() {
+        const bar = document.querySelector('.feed-filter-bar');
+        const feedSection = document.querySelector('.feed-section');
+        if (!bar) return;
+
+        let lastY = 0;
+        let ticking = false;
+
+        const getY = () => {
+            if (feedSection) {
+                const overflowY = getComputedStyle(feedSection).overflowY;
+                if (overflowY === 'auto' || overflowY === 'scroll') {
+                    return feedSection.scrollTop;
+                }
+            }
+            return window.scrollY || 0;
+        };
+
+        lastY = getY();
+
+        const apply = () => {
+            ticking = false;
+            const y = getY();
+            const delta = y - lastY;
+            lastY = y;
+
+            if (y < 48) {
+                bar.classList.remove('is-hidden');
+                return;
+            }
+            if (delta > 6) {
+                bar.classList.add('is-hidden');
+                return;
+            }
+            if (delta < -2) {
+                bar.classList.remove('is-hidden');
+            }
+        };
+
+        const onScroll = () => {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(apply);
+        };
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        feedSection?.addEventListener('scroll', onScroll, { passive: true });
+        bar.addEventListener('focusin', () => bar.classList.remove('is-hidden'));
+    }
+
+    bindFilterBarScrollHide();
 
     document.querySelectorAll('.feed-tab[data-feed-filter]').forEach(btn => {
         btn.addEventListener('click', () => setFeedFilter(btn, btn.dataset.feedFilter || 'all'));
@@ -1046,19 +1116,33 @@
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=1a56db&color=fff&size=80`;
     }
 
+    function formatCount(n) {
+        const num = Number(n || 0);
+        if (num >= 1000000) return `${(num / 1000000).toFixed(num % 1000000 === 0 ? 0 : 1).replace(/\.0$/, '')}M`;
+        if (num >= 1000) return `${(num / 1000).toFixed(num % 1000 === 0 ? 0 : 1).replace(/\.0$/, '')}K`;
+        return String(num);
+    }
+
+    function reactionFacesHtml(counts) {
+        return Object.keys(REACTION_EMOJI)
+            .filter((type) => Number((counts || {})[type] || 0) > 0)
+            .sort((a, b) => Number(counts[b] || 0) - Number(counts[a] || 0))
+            .slice(0, 3)
+            .map((type) => `<span class="reaction-face">${REACTION_EMOJI[type] || ''}</span>`)
+            .join('');
+    }
+
     function renderReactionsSummary(post) {
-        const summary = post.reactions_summary;
-        if (!summary || !summary.count) return '';
-
-        const avatars = (summary.reactors || []).slice(0, 3).map((reactor, index) =>
-            `<img src="${feedEscape(feedAvatarUrl(reactor.avatar_url, reactor.name))}" alt="${feedEscape(reactor.name)}" class="feed-reactor-avatar" style="--stack:${index}">`
-        ).join('');
-
-        return `
-          <div class="feed-reactions-summary" id="feed-reactions-${post.id}">
-            <div class="feed-reactions-avatars">${avatars}</div>
-            <span class="feed-reactions-label">${feedEscape(summary.names_label)}</span>
-          </div>`;
+        const n = Number(post.likes || 0);
+        const c = Number(post.comment_count ?? countFeedComments(post.comments || []));
+        if (n <= 0 && c <= 0) return '';
+        const left = n > 0
+            ? `<button type="button" class="reaction-summary-left" onclick="openFeedReactionViewer(${Number(post.id)})"><span class="reaction-faces">${reactionFacesHtml(post.reaction_counts)}</span><span class="reaction-total">${formatCount(n)}</span></button>`
+            : '<div class="reaction-summary-left"></div>';
+        const right = c > 0
+            ? `<button type="button" class="reaction-summary-comments" onclick="openComments(${Number(post.id)})">${formatCount(c)} ${c === 1 ? 'comment' : 'comments'}</button>`
+            : '';
+        return `<div class="post-engage"><div class="reaction-summary" id="feed-reactions-${post.id}" data-reactions="${n}" data-comments="${c}">${left}${right}</div></div>`;
     }
 
     function feedImgTag(url, name, className) {
@@ -1310,13 +1394,13 @@
             <div class="reaction-wrap" data-target="post" data-post-id="${p.id}">
               <button type="button" class="action-btn reaction-btn${p.liked ? ' liked' : ''}" data-type="${feedEscape(p.reaction_type || (p.liked ? 'like' : ''))}" id="feed-like-btn-${p.id}">
                 <span class="reaction-icon">${(p.reaction_type && p.reaction_type !== 'like') ? REACTION_EMOJI[p.reaction_type] : LIKE_THUMB_SVG}</span>
-                <span id="feed-like-${p.id}">${feedEscape(reactionLabel(p.reaction_type))}${p.likes ? ` (${p.likes})` : ''}</span>
+                <span class="reaction-label">${feedEscape(reactionLabel(p.reaction_type))}</span>
               </button>
               ${reactionPickerHtml(p.reaction_type || (p.liked ? 'like' : ''))}
             </div>
             <button class="action-btn comment-btn" onclick="openComments(${p.id})">
               <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>
-              <span id="feed-comment-count-${p.id}" data-count="${commentTotal}">Comment (${commentTotal})</span>
+              <span>Comment</span>
             </button>
           </div>
           ${buildCommentPreviewHtml(p)}
@@ -1333,19 +1417,36 @@
           </div>`;
     }
 
-    function updateReactionsSummary(postId, summary) {
+    function bumpReactionCounts(counts, fromType, toType) {
+        const next = { ...(counts || {}) };
+        if (fromType && fromType !== toType) {
+            next[fromType] = Math.max(0, Number(next[fromType] || 0) - 1);
+        }
+        if (toType && fromType !== toType) {
+            next[toType] = Number(next[toType] || 0) + 1;
+        }
+        return next;
+    }
+
+    function updateReactionsSummary(postId, postLike) {
+        const cached = postCache.get(Number(postId)) || postLike || {};
+        const html = renderReactionsSummary({
+            id: postId,
+            likes: cached.likes,
+            reaction_counts: cached.reaction_counts,
+            comments: cached.comments,
+            comment_count: cached.comment_count,
+        });
         const existing = document.getElementById(`feed-reactions-${postId}`);
-        if (!summary || !summary.count) {
-            existing?.remove();
+        const wrap = existing?.closest('.post-engage') || existing;
+        if (!html) {
+            wrap?.remove();
             return;
         }
-
-        const html = renderReactionsSummary({ id: postId, reactions_summary: summary });
-        if (existing) {
-            existing.outerHTML = html;
+        if (wrap) {
+            wrap.outerHTML = html;
             return;
         }
-
         const card = document.querySelector(`[data-post-id="${postId}"]`);
         const actions = card?.querySelector('.post-actions');
         if (actions) actions.insertAdjacentHTML('beforebegin', html);
@@ -1365,8 +1466,8 @@
         btn.dataset.type = nextType || '';
         const icon = btn.querySelector('.reaction-icon');
         if (icon) icon.innerHTML = (nextType && nextType !== 'like') ? REACTION_EMOJI[nextType] : LIKE_THUMB_SVG;
-        const el = document.getElementById('feed-like-' + id);
-        if (el) el.textContent = reactionLabel(nextType) + (count ? ' (' + count + ')' : '');
+        const label = btn.querySelector('.reaction-label');
+        if (label) label.textContent = reactionLabel(nextType);
         btn.closest('.reaction-wrap')?.querySelectorAll('.reaction-option').forEach(function (opt) {
             opt.classList.toggle('is-active', Boolean(nextType) && opt.dataset.type === nextType);
         });
@@ -1385,6 +1486,82 @@
         });
     }
 
+    let reactionViewerState = { postId: null, data: null, filter: 'all' };
+
+    function renderFeedReactionViewer(filter) {
+        reactionViewerState.filter = filter;
+        const data = reactionViewerState.data || { reactors: [], reaction_counts: {}, count: 0 };
+        const counts = data.reaction_counts || {};
+        const tabs = document.getElementById('reactionViewerTabs');
+        if (tabs) {
+            const items = [['all', `All ${formatCount(data.count || 0)}`]].concat(
+                Object.keys(REACTION_EMOJI)
+                    .filter((type) => Number(counts[type] || 0) > 0)
+                    .map((type) => [type, `${REACTION_EMOJI[type]} ${formatCount(counts[type])}`])
+            );
+            tabs.innerHTML = items.map(([type, label]) =>
+                `<button type="button" class="reaction-viewer-tab${filter === type ? ' is-active' : ''}" data-type="${type}">${label}</button>`
+            ).join('');
+            tabs.querySelectorAll('.reaction-viewer-tab').forEach((tab) => {
+                tab.addEventListener('click', () => renderFeedReactionViewer(tab.dataset.type));
+            });
+        }
+        const reactors = (data.reactors || []).filter((row) => filter === 'all' || row.reaction_type === filter);
+        const list = document.getElementById('reactionViewerList');
+        if (!list) return;
+        if (!reactors.length) {
+            list.innerHTML = Number(data.count || 0) > 0 ? '' : '<p class="reaction-viewer-empty">No reactions yet.</p>';
+            return;
+        }
+        list.innerHTML = reactors.map((row) => `
+            <div class="reaction-viewer-row">
+                <div class="reaction-viewer-avatar-wrap">
+                    <img src="${feedEscape(feedAvatarUrl(row.avatar_url, row.name))}" alt="">
+                    <span class="reaction-viewer-emoji">${REACTION_EMOJI[row.reaction_type] || ''}</span>
+                </div>
+                <span class="reaction-viewer-name">${feedEscape(row.name || 'Member')}</span>
+            </div>
+        `).join('');
+    }
+
+    async function openFeedReactionViewer(postId) {
+        const modal = document.getElementById('reactionViewerModal');
+        if (!modal) return;
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        const cached = postCache.get(Number(postId));
+        if (cached) {
+            reactionViewerState = {
+                postId,
+                data: {
+                    reactors: cached.reactions_summary?.reactors || [],
+                    reaction_counts: cached.reaction_counts || {},
+                    count: Number(cached.likes || 0),
+                },
+                filter: 'all',
+            };
+            renderFeedReactionViewer('all');
+        }
+        try {
+            const data = await apiFeed('/api/feed/' + postId + '/likes');
+            reactionViewerState = { postId, data, filter: 'all' };
+            renderFeedReactionViewer('all');
+        } catch (_) {
+            const list = document.getElementById('reactionViewerList');
+            if (list && !list.innerHTML) list.innerHTML = '<p class="reaction-viewer-empty">Unable to load reactions.</p>';
+        }
+    }
+
+    function closeFeedReactionViewer() {
+        const modal = document.getElementById('reactionViewerModal');
+        if (!modal) return;
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+
+    document.getElementById('reactionViewerOverlay')?.addEventListener('click', closeFeedReactionViewer);
+    document.getElementById('reactionViewerClose')?.addEventListener('click', closeFeedReactionViewer);
+
     async function feedSetReaction(id, type) {
         const btn = document.getElementById('feed-like-btn-' + id);
         const current = btn?.dataset.type || '';
@@ -1399,6 +1576,8 @@
             cached.liked = next.liked;
             cached.reaction_type = next.type || null;
             cached.likes = count;
+            cached.reaction_counts = bumpReactionCounts(cached.reaction_counts || {}, current, next.type);
+            updateReactionsSummary(id);
         }
         const key = 'post:' + id;
         const { seq, signal } = beginReactionRequest(key);
@@ -1413,13 +1592,13 @@
             if (typeof data?.liked !== 'boolean') return;
             const serverType = data.liked ? (data.reaction_type || 'like') : '';
             paintPostReaction(id, data.liked, serverType, data.count);
-            if (data.reactions_summary) updateReactionsSummary(id, data.reactions_summary);
             if (cached) {
                 cached.liked = data.liked;
                 cached.reaction_type = serverType || null;
                 cached.likes = data.count;
                 cached.reaction_counts = data.reaction_counts;
             }
+            updateReactionsSummary(id);
         } catch (err) {
             if (err?.name === 'AbortError') return;
             if (!isLatestReactionRequest(key, seq)) return;
@@ -1573,7 +1752,7 @@
                 return;
             } catch (_) { /* fall through */ }
         }
-        window.location.assign('/dashboard/' + postId + '/comments');
+        window.location.assign('/dashboard/comments/' + postId);
     }
 
     function feedToggleComments(id) {
@@ -1588,6 +1767,8 @@
     window.closeEditCommentModal = closeEditCommentModal;
     window.closeDeleteCommentModal = closeDeleteCommentModal;
     window.openComments = openComments;
+    window.openFeedReactionViewer = openFeedReactionViewer;
+    window.closeFeedReactionViewer = closeFeedReactionViewer;
     window.toggleCommentOptions = toggleCommentOptions;
 
     document.addEventListener('click', function (e) {
@@ -1623,11 +1804,8 @@
         const cached = postCache.get(Number(postId));
         if (!cached) return;
         const total = countFeedComments(cached.comments || []);
-        const countEl = document.getElementById('feed-comment-count-' + postId);
-        if (countEl) {
-            countEl.dataset.count = String(total);
-            countEl.textContent = 'Comment (' + total + ')';
-        }
+        cached.comment_count = total;
+        updateReactionsSummary(postId);
         const preview = document.getElementById('comment-preview-' + postId);
         if (preview) preview.outerHTML = buildCommentPreviewHtml(cached);
         const list = document.getElementById('feed-comments-list-' + postId);
@@ -1757,6 +1935,7 @@
         renderLightboxImage();
         applyLightboxZoom();
     }
+    window.openLightbox = openLightbox;
 
     function closeLightbox() {
         const lb = document.getElementById('imageLightbox');

@@ -1156,7 +1156,7 @@ function commentsPageUrl(id) {
     if (template && String(template).includes('__ID__')) {
         return String(template).replace('__ID__', String(id));
     }
-    return `/community-feed/${id}/comments`;
+    return `/community-feed/comments/${id}`;
 }
 
 async function openComments(id) {

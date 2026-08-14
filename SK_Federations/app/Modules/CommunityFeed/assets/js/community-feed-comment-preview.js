@@ -166,7 +166,9 @@ function renderPost() {
     const images = post.images?.length ? post.images : (post.image_url ? [post.image_url] : []);
     const mediaClass = images.length > 1 ? 'two' : 'one';
     const media = images.length
-        ? `<div class="cp-media ${mediaClass}">${images.slice(0, 2).map((src) => `<img src="${escapeHtml(src)}" alt="">`).join('')}</div>`
+        ? `<div class="cp-media ${mediaClass}">${images.map((src, index) =>
+            `<button type="button" class="cp-media-btn" data-index="${index}" aria-label="View photo ${index + 1}"><img src="${escapeHtml(src)}" alt=""></button>`
+        ).join('')}</div>`
         : '';
 
     document.getElementById('cpPost').innerHTML = `
@@ -203,6 +205,13 @@ function renderPost() {
     `;
 
     bindReactionWrap(document.querySelector('.cp-reaction-wrap'));
+    document.querySelectorAll('.cp-media-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            if (typeof window.openLightbox === 'function') {
+                window.openLightbox(images, Number(btn.dataset.index || 0));
+            }
+        });
+    });
     document.getElementById('cpViewPostReactions')?.addEventListener('click', () => openViewer('post'));
     document.getElementById('cpFocusComments')?.addEventListener('click', () => {
         document.getElementById('cpComments')?.scrollIntoView({ block: 'nearest' });
@@ -609,7 +618,19 @@ async function openViewer(target, commentId = null) {
     const modal = document.getElementById('cpReactionViewer');
     const list = document.getElementById('cpViewerList');
     modal.hidden = false;
-    list.innerHTML = '<p class="cp-viewer-empty">Loading...</p>';
+    if (target === 'post' && post) {
+        viewerState = {
+            data: {
+                reactors: [],
+                reaction_counts: post.reaction_counts || {},
+                count: Number(post.likes || 0),
+            },
+            filter: 'all',
+        };
+        renderViewer('all');
+    } else if (list) {
+        list.innerHTML = '';
+    }
     const url = target === 'comment'
         ? `/api/community-feed/${post.id}/comments/${commentId}/reactions`
         : `/api/community-feed/${post.id}/likes`;
@@ -802,7 +823,7 @@ function commentsPath(id) {
     if (template && String(template).includes('__ID__')) {
         return String(template).replace('__ID__', String(id));
     }
-    return `/community-feed/${id}/comments`;
+    return `/community-feed/comments/${id}`;
 }
 
 function feedPath() {
@@ -862,7 +883,8 @@ window.closeCommentPreview = closeCommentPreview;
 
 window.addEventListener('popstate', () => {
     if (syncingUrl) return;
-    const match = window.location.pathname.match(/\/community-feed\/(\d+)\/comments\/?$/);
+    const match = window.location.pathname.match(/\/community-feed\/comments\/(\d+)\/?$/)
+        || window.location.pathname.match(/\/community-feed\/(\d+)\/comments\/?$/);
     if (match) {
         const id = Number(match[1]);
         if (post && Number(post.id) === id) {

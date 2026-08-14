@@ -983,7 +983,7 @@ function commentsPageUrl(id) {
     if (template && String(template).indexOf('__ID__') !== -1) {
         return String(template).replace('__ID__', String(id));
     }
-    return '/community-feed/' + id + '/comments';
+    return '/community-feed/comments/' + id;
 }
 
 function openComments(id) {
@@ -1305,6 +1305,8 @@ window.toggleLike = toggleLike;
 
 function setFeedFilter(btn, filter) {
     if (isLoading) return;
+    var bar = document.querySelector('.feed-filter-bar');
+    if (bar) bar.classList.remove('is-hidden');
     var goHome = filter === 'all';
     currentFilter = filter;
     document.querySelectorAll('.feed-tab').forEach(function(t) { t.classList.remove('active'); });
@@ -1608,9 +1610,47 @@ function toggleLinkInput() {
 
 /* ── Layout shell (sidebar, notifications, profile) provided by layout.js ── */
 
+function bindFilterBarScrollHide() {
+    var bar = document.querySelector('.feed-filter-bar');
+    if (!bar) return;
+
+    var lastY = window.scrollY || 0;
+    var ticking = false;
+
+    function apply() {
+        ticking = false;
+        var y = window.scrollY || 0;
+        var delta = y - lastY;
+        lastY = y;
+
+        if (y < 48) {
+            bar.classList.remove('is-hidden');
+            return;
+        }
+        if (delta > 6) {
+            bar.classList.add('is-hidden');
+            return;
+        }
+        if (delta < -2) {
+            bar.classList.remove('is-hidden');
+        }
+    }
+
+    window.addEventListener('scroll', function () {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(apply);
+    }, { passive: true });
+
+    bar.addEventListener('focusin', function () {
+        bar.classList.remove('is-hidden');
+    });
+}
+
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', function() {
     ensureFeedReactionAudio();
+    bindFilterBarScrollHide();
     document.addEventListener('pointerdown', ensureFeedReactionAudio, { once: true, capture: true });
     renderPosts(true);
     document.getElementById('compose-content')?.addEventListener('input', updateCharCount);

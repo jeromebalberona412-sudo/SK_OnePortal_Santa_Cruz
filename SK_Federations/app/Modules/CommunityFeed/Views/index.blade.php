@@ -52,7 +52,7 @@
                     </div>
                 </div>
 
-                {{-- Feed header + filter tabs (sticky while scrolling) --}}
+                {{-- Feed header --}}
                 <div class="feed-sticky-toolbar">
                 <div class="feed-header">
                     <div class="feed-header__intro">
@@ -65,8 +65,9 @@
                         <input type="search" id="feedSearchInput" class="feed-header__search-input" placeholder="Search posts, programs, announcements..." autocomplete="off" aria-label="Search community feed">
                     </div>
                 </div>
+                </div>
 
-                {{-- Filter Tabs --}}
+                {{-- Filter tabs: hide on scroll down, show on scroll up --}}
                 <div class="feed-filter-bar">
                     <button type="button" class="feed-tab feed-tab--icon active" data-filter="all" onclick="setFeedFilter(this,'all')" aria-label="All">
                         <span class="feed-tab-icon" aria-hidden="true">
@@ -98,7 +99,6 @@
                         </span>
                         <span class="feed-tab-text">Programs</span>
                     </button>
-                </div>
                 </div>
 
                 {{-- Feed Posts --}}
@@ -285,7 +285,7 @@
             userAvatar: @json($avatar ?? ''),
             userDisplayName: @json($user->name ?? 'SK Federation'),
             feedPollMs: 30000,
-            commentsPageUrl: @json(url('/community-feed/__ID__/comments')),
+            commentsPageUrl: @json(url('/community-feed/comments/__ID__')),
         };
         window.CommentPreviewConfig = {
             post: @json($commentPreviewPost ?? null),

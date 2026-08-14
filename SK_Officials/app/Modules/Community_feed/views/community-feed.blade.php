@@ -287,7 +287,7 @@ window.CommunityFeedConfig = {
     userDisplayName: @json($user->name ?? 'SK Official'),
     feedPollMs: 8000,
     profilePreview: @json($profilePreview ?? null),
-    commentsPageUrl: @json(url('/community-feed/__ID__/comments')),
+    commentsPageUrl: @json(url('/community-feed/comments/__ID__')),
 };
 window.CommentPreviewConfig = {
     post: @json($commentPreviewPost ?? null),

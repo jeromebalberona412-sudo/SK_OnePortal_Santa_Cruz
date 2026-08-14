@@ -829,7 +829,7 @@ function commentsPath(id) {
     if (template && String(template).includes('__ID__')) {
         return String(template).replace('__ID__', String(id));
     }
-    return `/community-feed/${id}/comments`;
+    return `/community-feed/comments/${id}`;
 }
 
 function feedPath() {
@@ -889,7 +889,8 @@ window.closeCommentPreview = closeCommentPreview;
 
 window.addEventListener('popstate', () => {
     if (syncingUrl) return;
-    const match = window.location.pathname.match(/\/community-feed\/(\d+)\/comments\/?$/);
+    const match = window.location.pathname.match(/\/community-feed\/comments\/(\d+)\/?$/)
+        || window.location.pathname.match(/\/community-feed\/(\d+)\/comments\/?$/);
     if (match) {
         const id = Number(match[1]);
         if (post && Number(post.id) === id) {

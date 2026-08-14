@@ -99,6 +99,9 @@
 .cp-media.one { grid-template-columns: 1fr; }
 .cp-media.two { grid-template-columns: 1fr 1fr; }
 .cp-media img { width: 100%; max-height: 360px; object-fit: cover; display: block; background: #000; }
+.cp-media-btn {
+    display: block; width: 100%; padding: 0; border: 0; background: #000; cursor: pointer;
+}
 
 .cp-stats {
     display: flex;

@@ -7,9 +7,12 @@ use Illuminate\Support\Facades\Route;
 // Dashboard routes with authentication
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/{id}/comments', [DashboardController::class, 'comments'])
+    Route::get('/dashboard/comments/{id}', [DashboardController::class, 'comments'])
         ->whereNumber('id')
         ->name('dashboard.comments');
+    Route::get('/dashboard/{id}/comments', function (int $id) {
+        return redirect('/dashboard/comments/'.$id);
+    })->whereNumber('id');
     Route::get('/barangay/{slug}', [DashboardController::class, 'barangay'])->name('barangay');
 
     Route::get('/api/feed', [AnnouncementFeedController::class, 'feed']);

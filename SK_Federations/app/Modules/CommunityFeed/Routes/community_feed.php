@@ -31,9 +31,12 @@ Route::middleware(['auth', 'verified', 'single.session', 'sk_fed.access', 'trust
     ->group(function () {
         // Views
         Route::get('/community-feed', [CommunityFeedController::class, 'index'])->name('community-feed');
-        Route::get('/community-feed/{id}/comments', [CommunityFeedController::class, 'comments'])
+        Route::get('/community-feed/comments/{id}', [CommunityFeedController::class, 'comments'])
             ->whereNumber('id')
             ->name('community-feed.comments');
+        Route::get('/community-feed/{id}/comments', function (int $id) {
+            return redirect('/community-feed/comments/'.$id);
+        })->whereNumber('id');
         Route::get('/sk-federation-profile', [CommunityFeedController::class, 'skFedProfile'])->name('sk-fed-profile');
         Route::post('/sk-federation-profile/post', [CommunityFeedController::class, 'createPost'])->name('sk-fed-profile.post');
         Route::get('/barangay-profile/{slug}', [CommunityFeedController::class, 'barangayProfile'])->name('skfed.barangay-profile');
