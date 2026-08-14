@@ -708,6 +708,22 @@ body {
     box-shadow: 0 6px 16px rgba(239, 68, 68, 0.45) !important;
 }
 
+.btn-approve-cancel {
+    background: #e5e7eb !important;
+    color: #111827 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    min-width: 80px !important;
+}
+
+.btn-approve-cancel:hover {
+    background: #d1d5db !important;
+}
+
 .btn-approve-confirm {
     background: #16a34a !important;
     color: #ffffff !important;

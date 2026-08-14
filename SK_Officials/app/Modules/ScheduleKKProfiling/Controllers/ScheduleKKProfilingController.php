@@ -40,8 +40,9 @@ class ScheduleKKProfilingController extends Controller
             $query->where('profiling_year', (int) $request->year);
         }
 
-        $schedules = $query->get(['id', 'profiling_year', 'date_start', 'date_expiry', 'link', 'status', 'created_at']);
+        $schedules = $query->get(['id', 'profiling_year', 'date_start', 'date_expiry', 'status', 'created_at']);
 
+        $currentYear = $this->resolveProfilingYear();
         $years = KKProfilingSchedule::where('barangay_id', $user->barangay_id)
             ->whereNotNull('profiling_year')
             ->select('profiling_year')
@@ -51,14 +52,19 @@ class ScheduleKKProfilingController extends Controller
             ->map(fn ($year) => (int) $year)
             ->values();
 
-        if ($years->isEmpty()) {
-            $years = collect([$this->resolveProfilingYear()]);
-        }
+        $yearOptions = collect([$currentYear, $currentYear - 1, $currentYear - 2])
+            ->merge($years)
+            ->unique()
+            ->sortDesc()
+            ->values();
 
         return response()->json([
             'data' => $schedules,
-            'years' => $years,
-            'expected_profiling_year' => $this->resolveProfilingYear(),
+            'years' => $yearOptions,
+            'expected_profiling_year' => $currentYear,
+            'has_current_year_schedule' => KKProfilingSchedule::where('barangay_id', $user->barangay_id)
+                ->where('profiling_year', $currentYear)
+                ->exists(),
         ]);
     }
 
@@ -69,7 +75,6 @@ class ScheduleKKProfilingController extends Controller
         $validated = $request->validate([
             'date_start' => 'required|date',
             'date_expiry' => 'required|date|after_or_equal:date_start',
-            'link' => 'nullable|url|max:300',
             'status' => 'required|in:'.implode(',', self::ALLOWED_STATUSES),
         ]);
 
@@ -83,7 +88,7 @@ class ScheduleKKProfilingController extends Controller
             'created_by' => $user->id,
             'date_start' => $validated['date_start'],
             'date_expiry' => $validated['date_expiry'],
-            'link' => $validated['link'] ?? null,
+            'link' => null,
             'status' => $validated['status'],
         ]);
 
@@ -107,7 +112,6 @@ class ScheduleKKProfilingController extends Controller
         $validated = $request->validate([
             'date_start' => 'required|date',
             'date_expiry' => 'required|date|after_or_equal:date_start',
-            'link' => 'nullable|url|max:300',
             'status' => 'required|in:'.implode(',', self::ALLOWED_STATUSES),
         ]);
 
@@ -186,7 +190,7 @@ class ScheduleKKProfilingController extends Controller
 
         if ($query->exists()) {
             throw ValidationException::withMessages([
-                'date_start' => "A KK Profiling schedule for profiling year {$profilingYear} already exists.",
+                'date_start' => "KK profiling this year is already created.",
             ]);
         }
     }

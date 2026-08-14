@@ -20,7 +20,6 @@ use App\Services\KkProfilingScheduleService;
 use App\Services\KkRegistrationDraftService;
 use App\Services\KkSurveyResponseService;
 use App\Services\RegistrationEvaluationService;
-use App\Services\RespondentNumberService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -886,12 +885,6 @@ class KKProfilingController extends Controller
         );
 
         try {
-            (new RespondentNumberService())->assignToRegistration($registration->fresh());
-        } catch (\Throwable $e) {
-            report($e);
-        }
-
-        try {
             (new KkSurveyResponseService())->syncFromRegistration($registration->fresh(), 'pending');
         } catch (\Throwable $e) {
             report($e);
@@ -1317,13 +1310,12 @@ class KKProfilingController extends Controller
         });
 
         $evaluator = new RegistrationEvaluationService();
-        $formData = $registration->form_data ?? [];
-        $autoApproved = $evaluator->evaluate($registration->fresh());
+        $evaluator->evaluate($registration->fresh());
 
         try {
             (new KkSurveyResponseService())->syncFromRegistration(
                 $registration->fresh(),
-                $autoApproved ? 'approved' : 'pending'
+                'pending'
             );
         } catch (\Throwable $e) {
             report($e);
@@ -1331,15 +1323,13 @@ class KKProfilingController extends Controller
 
         session()->forget('kabataan_registration_id');
 
-        $message = $autoApproved
-            ? 'Registration verified! Your ID address matches your barangay. You can log in now.'
-            : 'Registration completed! Please wait for verification/approval by SK Officials before logging in.';
+        $message = 'Registration completed! Please wait for verification/approval by SK Officials before logging in.';
 
         // Check if request is AJAX (from JavaScript fetch)
         if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
             return response()->json([
                 'success' => true,
-                'auto_approved' => $autoApproved,
+                'auto_approved' => false,
                 'message' => $message,
             ]);
         }

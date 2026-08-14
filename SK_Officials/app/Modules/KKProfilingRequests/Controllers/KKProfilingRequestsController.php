@@ -183,24 +183,19 @@ class KKProfilingRequestsController extends Controller
                 continue;
             }
 
-            $surveyPayload['supporting_documents'] = $this->supportingDocumentService->formatForApi($registration);
+            $linkedRegistration = $registrationId > 0
+                ? KabataanRegistration::find($registrationId)
+                : null;
+
+            $surveyPayload['supporting_documents'] = $linkedRegistration
+                ? $this->supportingDocumentService->formatForApi($linkedRegistration)
+                : [];
             $surveyPayload['id_verification'] = null;
 
             $data->push($surveyPayload);
         }
 
-        $all = KabataanRegistration::forBarangay($user->barangay_id)->get();
-
-        $stats = [
-            'active' => $all->filter(
-                fn (KabataanRegistration $r) => KabataanApprovedStatuses::isListedInKabataan($r)
-            )->count(),
-            'pending_verification' => $all->filter(
-                fn (KabataanRegistration $r) => KabataanApprovedStatuses::isPendingInKkProfiling($r)
-            )->count(),
-            'rejected' => $all->where('evaluation_status', 'Duplicate')->count() + $all->where('status', 'rejected')->count(),
-            'total' => $data->count(),
-        ];
+        $stats = KabataanApprovedStatuses::statsForBarangay((int) $user->barangay_id);
 
         return response()->json(['data' => $data, 'stats' => $stats]);
     }
@@ -233,8 +228,6 @@ class KKProfilingRequestsController extends Controller
             ]);
 
             DB::transaction(function () use ($registration, $user) {
-                app(RespondentNumberService::class)->ensureAssigned($registration);
-
                 $registration->update([
                     'status' => 'active',
                     'evaluation_status' => 'active',
@@ -299,12 +292,11 @@ class KKProfilingRequestsController extends Controller
         $user = Auth::user();
         $reasons = implode('; ', $request->reasons);
         $rejectedService = app(RejectedKkProfilingService::class);
-        $respondentService = app(RespondentNumberService::class);
         $surveyService = app(KkSurveyResponseService::class);
 
         $alreadyRejected = false;
 
-        DB::transaction(function () use ($user, $id, $reasons, $rejectedService, $respondentService, $surveyService, &$alreadyRejected) {
+        DB::transaction(function () use ($user, $id, $reasons, $rejectedService, $surveyService, &$alreadyRejected) {
             $registration = KabataanRegistration::forBarangay($user->barangay_id)
                 ->lockForUpdate()
                 ->findOrFail($id);
@@ -314,9 +306,6 @@ class KKProfilingRequestsController extends Controller
 
                 return;
             }
-
-            $respondentService->ensureAssigned($registration);
-            $registration = $registration->fresh();
 
             $previousRegistrationStatus = $registration->status;
             $previousEvaluationStatus = $registration->evaluation_status;
@@ -396,6 +385,6 @@ class KKProfilingRequestsController extends Controller
 
     private function emptyStats(): array
     {
-        return ['active' => 0, 'pending_verification' => 0, 'rejected' => 0, 'total' => 0];
+        return ['active' => 0, 'pending' => 0, 'pending_verification' => 0, 'rejected' => 0, 'total' => 0];
     }
 }

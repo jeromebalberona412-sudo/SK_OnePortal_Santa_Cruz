@@ -160,4 +160,37 @@ final class KabataanApprovedStatuses
 
         return $query->count();
     }
+
+    /**
+     * Live counts for KK Profiling Requests and Kabataan List stat cards.
+     *
+     * @return array{active: int, pending: int, pending_verification: int, rejected: int, total: int}
+     */
+    public static function statsForBarangay(int $barangayId): array
+    {
+        $approvedQuery = KabataanRegistration::forBarangay($barangayId);
+        self::applyKabataanListScope($approvedQuery);
+
+        $pendingQuery = KabataanRegistration::forBarangay($barangayId);
+        self::applyPendingProfilingScope($pendingQuery);
+
+        $rejected = KabataanRegistration::forBarangay($barangayId)
+            ->where(function (Builder $query) {
+                $query
+                    ->whereIn('status', self::rejectedRegistrationStatuses())
+                    ->orWhereIn('evaluation_status', self::rejectedEvaluationStatuses());
+            })
+            ->count();
+
+        $approved = $approvedQuery->count();
+        $pending = $pendingQuery->count();
+
+        return [
+            'active' => $approved,
+            'pending' => $pending,
+            'pending_verification' => $pending,
+            'rejected' => $rejected,
+            'total' => KabataanRegistration::forBarangay($barangayId)->count(),
+        ];
+    }
 }

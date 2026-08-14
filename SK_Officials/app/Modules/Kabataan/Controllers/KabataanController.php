@@ -170,18 +170,7 @@ class KabataanController extends Controller
             ];
         })->filter()->values();
 
-        $all = KabataanRegistration::forBarangay($user->barangay_id)->get();
-        $listedCountQuery = KabataanRegistration::forBarangay($user->barangay_id);
-        KabataanApprovedStatuses::applyKabataanListScope($listedCountQuery);
-
-        $stats = [
-            'active'   => $listedCountQuery->count(),
-            'pending'  => $all->whereIn('evaluation_status', KabataanApprovedStatuses::pendingEvaluationStatuses())
-                ->whereNotIn('status', ['rejected'])->count(),
-            'rejected' => $all->where('status', 'rejected')->count()
-                + $all->whereIn('evaluation_status', KabataanApprovedStatuses::rejectedEvaluationStatuses())->count(),
-            'total'    => $all->count(),
-        ];
+        $stats = KabataanApprovedStatuses::statsForBarangay((int) $user->barangay_id);
 
         return response()->json([
             'data' => $data,
@@ -528,6 +517,6 @@ class KabataanController extends Controller
 
     private function emptyStats(): array
     {
-        return ['active' => 0, 'pending' => 0, 'rejected' => 0, 'total' => 0];
+        return ['active' => 0, 'pending' => 0, 'pending_verification' => 0, 'rejected' => 0, 'total' => 0];
     }
 }

@@ -324,12 +324,6 @@ class KkRegistrationDraftService
                 'submitted_at' => now(),
             ]);
 
-            try {
-                (new RespondentNumberService)->assignToRegistration($registration->fresh());
-            } catch (\Throwable $e) {
-                report($e);
-            }
-
             $user = User::create([
                 'name' => $registration->full_name,
                 'email' => $email,
@@ -347,26 +341,22 @@ class KkRegistrationDraftService
             $registration->linkUser($user->id);
 
             $evaluator = new RegistrationEvaluationService;
-            $autoApproved = $evaluator->evaluate($registration->fresh());
+            $evaluator->evaluate($registration->fresh());
 
-            if (! $autoApproved) {
-                try {
-                    (new SkOfficialsNotificationDispatcher)->notifyKkProfilingSubmission(
-                        (int) $barangay->id,
-                        $registration->full_name,
-                    );
-                } catch (\Throwable $e) {
-                    report($e);
-                }
+            try {
+                (new SkOfficialsNotificationDispatcher)->notifyKkProfilingSubmission(
+                    (int) $barangay->id,
+                    $registration->full_name,
+                );
+            } catch (\Throwable $e) {
+                report($e);
             }
 
             try {
-                if (! $autoApproved) {
-                    (new KkSurveyResponseService)->syncFromRegistration(
-                        $registration->fresh(),
-                        'pending'
-                    );
-                }
+                (new KkSurveyResponseService)->syncFromRegistration(
+                    $registration->fresh(),
+                    'pending'
+                );
             } catch (\Throwable $e) {
                 report($e);
             }

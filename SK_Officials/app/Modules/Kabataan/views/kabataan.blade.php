@@ -16,6 +16,7 @@
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
+    @include('layout::partials.table-column-sort')
 </head>
 <body>
 
@@ -169,8 +170,27 @@
                                     <div class="column-hint">LN, FN, MN, Suffix</div>
                                 </th>
                                 <th>Email</th>
-                                <th>Age</th>
-                                <th>Sex</th>
+                                <th class="th-col-filter">
+                                    <div class="th-col-filter-stack">
+                                        <span>Age</span>
+                                        <select id="kabataanAgeHeaderFilter" class="th-inline-filter" aria-label="Filter by age">
+                                            <option value="">All</option>
+                                            <option value="Child Youth (15-17 yrs old)">15-17</option>
+                                            <option value="Core Youth (18-24 yrs old)">18-24</option>
+                                            <option value="Young Adult (15-30 yrs old)">15-30</option>
+                                        </select>
+                                    </div>
+                                </th>
+                                <th class="th-col-filter">
+                                    <div class="th-col-filter-stack">
+                                        <span>Sex</span>
+                                        <select id="kabataanSexHeaderFilter" class="th-inline-filter" aria-label="Filter by sex">
+                                            <option value="">All</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                        </select>
+                                    </div>
+                                </th>
                                 <th>Region</th>
                                 <th>Province</th>
                                 <th>City / Municipality</th>
@@ -1083,7 +1103,7 @@
     <div class="signature-pad-modal">
         <div class="signature-pad-header">
             <h3 class="signature-pad-title">?? Please Sign Here</h3>
-            <button type="button" class="signature-pad-close" id="signaturePadClose" aria-label="Close">×</button>
+            <button type="button" class="signature-pad-close" id="signaturePadClose" aria-label="Close">Ã—</button>
         </div>
         <div class="signature-pad-body">
             <div class="signature-canvas-container">

@@ -33,8 +33,10 @@
             </div>
             <div class="page-header-actions">
                 <div class="filter-item filter-item-inline skkp-year-filter-wrap">
-                    <label for="skkpYearFilter" class="abyip-sr-only">Profiling Year</label>
-                    <select id="skkpYearFilter" class="filter-select filter-select-inline skkp-year-filter" aria-label="Profiling Year"></select>
+                    <label for="skkpYearFilter" class="filter-label skkp-year-filter-label">Year</label>
+                    <select id="skkpYearFilter" class="filter-select filter-select-inline skkp-year-filter" aria-label="Profiling Year">
+                        <option value="{{ now()->year }}" selected>{{ now()->year }}</option>
+                    </select>
                 </div>
                 <div class="abyip-search-inline">
                     <label for="skkpSearch" class="abyip-sr-only">Search schedules</label>
@@ -61,7 +63,6 @@
                                 <th>Profiling Year</th>
                                 <th>Date Start</th>
                                 <th>Date Expiry</th>
-                                <th>Link</th>
                                 <th>Status</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
@@ -140,11 +141,6 @@
                     <span class="skkp-field-error" id="skkpDateExpiryError" style="display:none;font-size:11px;color:#ef4444;margin-top:3px;"></span>
                 </div>
                 <div class="modal-field modal-field-full">
-                    <label for="skkpFormLink">Link</label>
-                    <input type="url" id="skkpFormLink" class="skkp-input" placeholder="https://example.com/form" maxlength="300">
-                    <span class="skkp-field-error" id="skkpLinkError" style="display:none;font-size:11px;color:#ef4444;margin-top:3px;"></span>
-                </div>
-                <div class="modal-field">
                     <label for="skkpFormStatus">Status <span class="required">*</span></label>
                     <select id="skkpFormStatus" class="skkp-select" required>
                         <option value="Ongoing">Ongoing</option>
@@ -187,10 +183,6 @@
                 <div class="skkp-view-row">
                     <span class="skkp-view-label">Date Expiry</span>
                     <span class="skkp-view-value" id="skkpViewDateExpiry">—</span>
-                </div>
-                <div class="skkp-view-row">
-                    <span class="skkp-view-label">Link</span>
-                    <span class="skkp-view-value" id="skkpViewLink">—</span>
                 </div>
                 <div class="skkp-view-row">
                     <span class="skkp-view-label">Status</span>

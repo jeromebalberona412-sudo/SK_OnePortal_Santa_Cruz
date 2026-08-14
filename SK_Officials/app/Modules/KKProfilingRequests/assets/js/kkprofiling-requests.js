@@ -70,6 +70,8 @@ function initializeKKProfilingRequestsUI() {
     const approveModal = document.getElementById('kkApproveModal');
     const rejectModal = document.getElementById('kkRejectModal');
     const compareModal = null; // removed — Compare button is now a direct link
+    const ageHeaderFilter = document.getElementById('kkAgeHeaderFilter');
+    const sexHeaderFilter = document.getElementById('kkSexHeaderFilter');
 
     if (!tbody) return;
 
@@ -79,20 +81,6 @@ function initializeKKProfilingRequestsUI() {
 
     // Sample data loaded from JSON (storage/app/sample-data/kkprofiling-requests.json)
     const requests = [];
-
-    function sortRequestsAlphabetically() {
-        return requests.sort((a, b) => {
-            const lastNameA = (a.lastName || '').toLowerCase();
-            const lastNameB = (b.lastName || '').toLowerCase();
-            if (lastNameA < lastNameB) return -1;
-            if (lastNameA > lastNameB) return 1;
-            const firstNameA = (a.firstName || '').toLowerCase();
-            const firstNameB = (b.firstName || '').toLowerCase();
-            if (firstNameA < firstNameB) return -1;
-            if (firstNameA > firstNameB) return 1;
-            return 0;
-        });
-    }
 
     function formatDisplaySuffix(suffix, suffixOther) {
         if (!suffix) {
@@ -230,9 +218,32 @@ function initializeKKProfilingRequestsUI() {
     let activeRequestId = null;
     let currentPage = 1;
     let recordsPerPage = 10;
+    let tableSorter = null;
+
+    if (window.SkTableSort) {
+        tableSorter = SkTableSort.mount({
+            columnKeys: ['fullName', 'emailAddress', 'barangay', 'purokZone', 'registeredVoter'],
+            skipThClasses: ['th-checkbox', 'col-actions', 'th-col-filter'],
+            defaultColumn: 'fullName',
+            getSortValue: (row, column) => {
+                if (column === 'fullName') {
+                    return formatFullName(row);
+                }
+                return row[column] ?? '';
+            },
+            onSort: () => {
+                currentPage = 1;
+                renderTable();
+            },
+        });
+        const headerRow = tbody.closest('table')?.querySelector('thead tr');
+        if (headerRow) {
+            tableSorter.initHeaders(headerRow);
+        }
+    }
 
     function getFilteredRequests() {
-        return requests.filter((r) => {
+        const filtered = requests.filter((r) => {
             if (currentSearchQuery) {
                 const q = currentSearchQuery.toLowerCase();
                 const fullName = formatFullName(r).toLowerCase();
@@ -248,6 +259,8 @@ function initializeKKProfilingRequestsUI() {
             if (currentYouthAgeGroupFilter && r.youthAgeGroup !== currentYouthAgeGroupFilter) return false;
             return true;
         });
+
+        return tableSorter ? tableSorter.sortRows(filtered) : filtered;
     }
 
     function getTotalPages(count = getFilteredRequests().length) {
@@ -309,7 +322,7 @@ function initializeKKProfilingRequestsUI() {
             const tr = document.createElement('tr');
             tr.className = 'empty-state-row';
             const td = document.createElement('td');
-            td.colSpan = 9;
+            td.colSpan = 8;
             td.textContent = 'No KK Profiling requests found.';
             tr.appendChild(td);
             tbody.appendChild(tr);
@@ -357,7 +370,6 @@ function initializeKKProfilingRequestsUI() {
             }
 
             tr.innerHTML = `
-                <td class="kk-respondent-cell">${r.respondentNumber || '—'}</td>
                 <td class="kk-fullname-cell">
                     <span class="kk-fullname">${fullName}</span>
                     ${dupLinkBadge}
@@ -780,8 +792,38 @@ function initializeKKProfilingRequestsUI() {
     if (searchInput) { searchInput.addEventListener('input', () => { currentSearchQuery = searchInput.value.trim(); currentPage = 1; renderTable(); }); }
     if (barangayFilter) { barangayFilter.addEventListener('change', () => { currentBarangayFilter = barangayFilter.value; currentPage = 1; renderTable(); }); }
     if (voterFilter) { voterFilter.addEventListener('change', () => { currentVoterFilter = voterFilter.value; currentPage = 1; renderTable(); }); }
-    if (sexFilter) { sexFilter.addEventListener('change', () => { currentSexFilter = sexFilter.value; currentPage = 1; renderTable(); }); }
-    if (youthAgeGroupFilter) { youthAgeGroupFilter.addEventListener('change', () => { currentYouthAgeGroupFilter = youthAgeGroupFilter.value; currentPage = 1; renderTable(); }); }
+    if (sexFilter) {
+        sexFilter.addEventListener('change', () => {
+            currentSexFilter = sexFilter.value;
+            if (sexHeaderFilter) sexHeaderFilter.value = currentSexFilter;
+            currentPage = 1;
+            renderTable();
+        });
+    }
+    if (youthAgeGroupFilter) {
+        youthAgeGroupFilter.addEventListener('change', () => {
+            currentYouthAgeGroupFilter = youthAgeGroupFilter.value;
+            if (ageHeaderFilter) ageHeaderFilter.value = currentYouthAgeGroupFilter;
+            currentPage = 1;
+            renderTable();
+        });
+    }
+    if (ageHeaderFilter) {
+        ageHeaderFilter.addEventListener('change', () => {
+            currentYouthAgeGroupFilter = ageHeaderFilter.value;
+            if (youthAgeGroupFilter) youthAgeGroupFilter.value = currentYouthAgeGroupFilter;
+            currentPage = 1;
+            renderTable();
+        });
+    }
+    if (sexHeaderFilter) {
+        sexHeaderFilter.addEventListener('change', () => {
+            currentSexFilter = sexHeaderFilter.value;
+            if (sexFilter) sexFilter.value = currentSexFilter;
+            currentPage = 1;
+            renderTable();
+        });
+    }
 
     const prevBtn = document.getElementById('kkPrevBtn');
     const nextBtn = document.getElementById('kkNextBtn');
@@ -1008,19 +1050,6 @@ function initializeKKProfilingRequestsUI() {
         });
     }
 
-    function updateStatCards() {
-        const valid      = requests.filter(r => r.status === 'New Kabataan').length;
-        const duplicate  = requests.filter(r => r.status === 'Duplicate').length;
-        const wrong      = requests.filter(r => r.status === 'Wrong Credential').length;
-        const newApp     = requests.filter(r => r.status === 'New Applicant').length;
-        const total      = requests.length;
-        const el = (id) => document.getElementById(id);
-        if (el('kkStatApproved'))  el('kkStatApproved').textContent  = valid;
-        if (el('kkStatPending'))   el('kkStatPending').textContent   = duplicate + newApp;
-        if (el('kkStatRejected'))  el('kkStatRejected').textContent  = wrong;
-        if (el('kkStatTotal'))     el('kkStatTotal').textContent     = total;
-    }
-
     // Compare with Census button — now just a link, no JS needed
 
     // Load data from API then render
@@ -1033,7 +1062,12 @@ function initializeKKProfilingRequestsUI() {
         fetch(url.toString(), {
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
         })
-        .then(r => r.json())
+        .then(r => {
+            if (!r.ok) {
+                throw new Error(`HTTP ${r.status}`);
+            }
+            return r.json();
+        })
         .then(response => {
             requests.length = 0;
             (response.data || []).forEach((r, i) => {
@@ -1084,10 +1118,11 @@ function initializeKKProfilingRequestsUI() {
 
             const stats = response.stats || {};
             const el = (id) => document.getElementById(id);
-            if (el('kkStatApproved'))  el('kkStatApproved').textContent  = stats.active || 0;
-            if (el('kkStatPending'))   el('kkStatPending').textContent   = stats.pending_verification || 0;
-            if (el('kkStatRejected'))  el('kkStatRejected').textContent  = stats.rejected || 0;
-            if (el('kkStatTotal'))     el('kkStatTotal').textContent     = stats.total || 0;
+            const statValue = (value) => (value === undefined || value === null ? 0 : value);
+            if (el('kkStatApproved'))  el('kkStatApproved').textContent  = statValue(stats.active);
+            if (el('kkStatPending'))   el('kkStatPending').textContent   = statValue(stats.pending ?? stats.pending_verification);
+            if (el('kkStatRejected'))  el('kkStatRejected').textContent  = statValue(stats.rejected);
+            if (el('kkStatTotal'))     el('kkStatTotal').textContent     = statValue(stats.total);
 
             renderTable();
         })
@@ -1096,6 +1131,7 @@ function initializeKKProfilingRequestsUI() {
         });
     }
 
+    window.addEventListener('kk-profile-event', () => loadData());
     loadData();
 }
 

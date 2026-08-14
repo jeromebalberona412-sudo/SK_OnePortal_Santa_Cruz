@@ -42,6 +42,8 @@ function initializeKabataanUI() {
     const searchInput = document.getElementById('kabataanSearch');
     const genderFilter = document.getElementById('kabataanGenderFilter');
     const youthAgeGroupFilter = document.getElementById('kabataanYouthAgeGroupFilter');
+    const ageHeaderFilter = document.getElementById('kabataanAgeHeaderFilter');
+    const sexHeaderFilter = document.getElementById('kabataanSexHeaderFilter');
     const purokFilter = document.getElementById('kabataanPurokSitioFilter');
     const educationFilter = document.getElementById('kabataanEducationFilter');
     const tableActionsBar = document.getElementById('kabataanTableActions');
@@ -260,6 +262,49 @@ function initializeKabataanUI() {
         return '-';
     }
 
+    let tableSorter = null;
+    if (tbody && window.SkTableSort) {
+        tableSorter = SkTableSort.mount({
+            columnKeys: [
+                'respondentNumber',
+                'fullName',
+                'email',
+                'region',
+                'province',
+                'city',
+                'purokZone',
+                'educationalBackground',
+            ],
+            skipThClasses: ['th-checkbox', 'col-actions', 'th-col-filter'],
+            numericColumns: ['respondentNumber'],
+            defaultColumn: 'fullName',
+            getSortValue: (row, column) => {
+                if (column === 'fullName') {
+                    return fullNameFrom(row);
+                }
+                if (column === 'respondentNumber') {
+                    const digits = String(row.respondentNumber || '').replace(/\D/g, '');
+                    return digits || '0';
+                }
+                if (column === 'email') {
+                    return row.email || row.emailAddress || '';
+                }
+                if (column === 'educationalBackground') {
+                    return row.educationalBackground || row.highestEducation || '';
+                }
+                return row[column] ?? '';
+            },
+            onSort: () => {
+                currentPage = 1;
+                render();
+            },
+        });
+        const headerRow = tbody.closest('table')?.querySelector('thead tr');
+        if (headerRow) {
+            tableSorter.initHeaders(headerRow);
+        }
+    }
+
     const defaultRecord = () => ({
         respondentNumber: '',
         date: '',
@@ -325,7 +370,7 @@ function initializeKabataanUI() {
     const selectedIds = new Set();
 
     function getFilteredKabataan() {
-        return kabataan.filter((k) => {
+        const filtered = kabataan.filter((k) => {
             const q = currentQuery;
             const full = fullNameFrom(k).toLowerCase();
             const education = k.educationalBackground || k.highestEducation || '';
@@ -339,6 +384,8 @@ function initializeKabataanUI() {
             const matchEducation = !currentEducation || education === currentEducation;
             return matchSearch && matchGender && matchYouthAgeGroup && matchPurok && matchEducation;
         });
+
+        return tableSorter ? tableSorter.sortRows(filtered) : filtered;
     }
 
     function getTotalPages(count = getFilteredKabataan().length) {
@@ -909,6 +956,7 @@ function initializeKabataanUI() {
     if (genderFilter) {
         genderFilter.addEventListener('change', () => {
             currentGender = genderFilter.value;
+            if (sexHeaderFilter) sexHeaderFilter.value = currentGender;
             currentPage = 1;
             render();
         });
@@ -917,6 +965,25 @@ function initializeKabataanUI() {
     if (youthAgeGroupFilter) {
         youthAgeGroupFilter.addEventListener('change', () => {
             currentYouthAgeGroup = youthAgeGroupFilter.value;
+            if (ageHeaderFilter) ageHeaderFilter.value = currentYouthAgeGroup;
+            currentPage = 1;
+            render();
+        });
+    }
+
+    if (ageHeaderFilter) {
+        ageHeaderFilter.addEventListener('change', () => {
+            currentYouthAgeGroup = ageHeaderFilter.value;
+            if (youthAgeGroupFilter) youthAgeGroupFilter.value = currentYouthAgeGroup;
+            currentPage = 1;
+            render();
+        });
+    }
+
+    if (sexHeaderFilter) {
+        sexHeaderFilter.addEventListener('change', () => {
+            currentGender = sexHeaderFilter.value;
+            if (genderFilter) genderFilter.value = currentGender;
             currentPage = 1;
             render();
         });
@@ -1830,10 +1897,11 @@ function initializeKabataanUI() {
             }
 
             const el = id => document.getElementById(id);
-            if (el('kabStatApproved')) el('kabStatApproved').textContent = stats.active || 0;
-            if (el('kabStatPending'))  el('kabStatPending').textContent  = stats.pending || 0;
-            if (el('kabStatRejected')) el('kabStatRejected').textContent = stats.rejected || 0;
-            if (el('kabStatTotal'))    el('kabStatTotal').textContent    = stats.total || 0;
+            const statValue = (value) => (value === undefined || value === null ? 0 : value);
+            if (el('kabStatApproved')) el('kabStatApproved').textContent = statValue(stats.active);
+            if (el('kabStatPending'))  el('kabStatPending').textContent  = statValue(stats.pending ?? stats.pending_verification);
+            if (el('kabStatRejected')) el('kabStatRejected').textContent = statValue(stats.rejected);
+            if (el('kabStatTotal'))    el('kabStatTotal').textContent    = statValue(stats.total);
 
             const validIds = new Set(kabataan.map((k) => (k.id ? String(k.id) : '')).filter(Boolean));
             Array.from(selectedIds).forEach((id) => {
@@ -1848,6 +1916,7 @@ function initializeKabataanUI() {
         .catch(() => render());
     }
 
+    window.addEventListener('kk-profile-event', () => loadData());
     loadData();
 }
 

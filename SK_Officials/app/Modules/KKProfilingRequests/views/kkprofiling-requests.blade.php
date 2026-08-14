@@ -17,6 +17,7 @@
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
+    @include('layout::partials.table-column-sort')
 </head>
 <body>
 
@@ -131,14 +132,32 @@
                     <table class="kk-table">
                         <thead>
                             <tr>
-                                <th>Respondent #</th>
                                 <th>
                                     FULLNAME
                                     <div class="column-hint">LN, FN, MN, Suffix</div>
                                 </th>
                                 <th>Email</th>
-                                <th>Age</th>
-                                <th>Sex</th>
+                                <th class="th-col-filter">
+                                    <div class="th-col-filter-stack">
+                                        <span>Age</span>
+                                        <select id="kkAgeHeaderFilter" class="th-inline-filter" aria-label="Filter by age">
+                                            <option value="">All</option>
+                                            <option value="Child Youth (15-17 yrs old)">15-17</option>
+                                            <option value="Core Youth (18-24 yrs old)">18-24</option>
+                                            <option value="Young Adult (15-30 yrs old)">15-30</option>
+                                        </select>
+                                    </div>
+                                </th>
+                                <th class="th-col-filter">
+                                    <div class="th-col-filter-stack">
+                                        <span>Sex</span>
+                                        <select id="kkSexHeaderFilter" class="th-inline-filter" aria-label="Filter by sex">
+                                            <option value="">All</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                        </select>
+                                    </div>
+                                </th>
                                 <th>Barangay</th>
                                 <th>Purok/Zone</th>
                                 <th>Registered Voter</th>
@@ -221,6 +240,7 @@
             <p>Are you sure you want to approve this KK Profiling submission?</p>
         </div>
         <div class="modal-footer">
+            <button type="button" class="btn btn-approve-cancel" id="kkApproveCancelBtn" data-modal-close>Cancel</button>
             <button type="button" class="btn btn-approve-confirm" id="kkApproveConfirmBtn">Confirm Approve</button>
         </div>
     </div>
