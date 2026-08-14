@@ -341,15 +341,7 @@ html, body { height: 100%; }
 }
 
 .ce-sent-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: #f0fdf4;
-    border: 2px solid #22c55e;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 14px;
+    display: none;
 }
 
 .ce-sent-icon svg {

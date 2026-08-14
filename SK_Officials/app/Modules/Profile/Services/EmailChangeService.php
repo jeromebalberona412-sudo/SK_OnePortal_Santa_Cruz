@@ -3,10 +3,12 @@
 namespace App\Modules\Profile\Services;
 
 use App\Models\User;
+use App\Modules\Authentication\Services\AuthenticationService;
 use App\Modules\Profile\Notifications\EmailChangeVerificationNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -14,13 +16,18 @@ class EmailChangeService
 {
     private const TOKEN_TTL_MINUTES = 60;
 
-    private const SET_PASSWORD_TOKEN_TTL_HOURS = 2;
-
     private const RESEND_COOLDOWN_SECONDS = 60;
+
+    public function __construct(
+        private readonly AuthenticationService $authenticationService,
+    ) {
+    }
 
     public function hasPendingChange(User $user): bool
     {
-        return filled($user->pending_email) && filled($user->email_change_token);
+        return filled($user->pending_email)
+            && filled($user->email_change_token)
+            && blank($user->email_change_verified_at);
     }
 
     /**
@@ -113,10 +120,7 @@ class EmailChangeService
         ])->save();
     }
 
-    /**
-     * @return array{user: User, set_password_token: string}
-     */
-    public function confirm(int $userId, string $plainToken): array
+    public function confirm(int $userId, string $plainToken): User
     {
         $user = User::query()->find($userId);
 
@@ -138,42 +142,46 @@ class EmailChangeService
             ]);
         }
 
+        $this->applyConfirmedEmail($user);
+
+        return $user->fresh();
+    }
+
+    public function applyConfirmedEmail(User $user): void
+    {
         $newEmail = strtolower((string) $user->pending_email);
 
-        if (User::query()->whereRaw('LOWER(email) = ?', [$newEmail])->whereKeyNot($user->id)->exists()) {
+        if ($newEmail === '' || User::query()->whereRaw('LOWER(email) = ?', [$newEmail])->whereKeyNot($user->id)->exists()) {
             throw ValidationException::withMessages([
                 'email' => ['This email address is no longer available. Please start a new request.'],
             ]);
         }
 
-        $setPasswordToken = Str::random(64);
-
         $user->forceFill([
             'email' => $newEmail,
             'pending_email' => null,
+            'remember_token' => null,
+            'email_verified_at' => now(),
+            'email_change_token' => null,
+            'email_change_token_expires_at' => null,
             'email_change_verified_at' => now(),
             'email_change_last_sent_at' => null,
-            'email_verified_at' => now(),
-            'remember_token' => null,
-            'email_change_token' => hash('sha256', $setPasswordToken),
-            'email_change_token_expires_at' => now()->addHours(self::SET_PASSWORD_TOKEN_TTL_HOURS),
         ])->save();
 
-        User::query()
-            ->whereKey($user->id)
-            ->update(['must_change_password' => DB::raw("'true'::boolean")]);
+        if (Schema::hasColumn('users', 'must_change_password')) {
+            User::query()
+                ->whereKey($user->id)
+                ->update(['must_change_password' => DB::raw("'false'::boolean")]);
+        }
 
-        return [
-            'user' => $user->fresh(),
-            'set_password_token' => $setPasswordToken,
-        ];
+        $this->authenticationService->invalidateAllSessionsForUser($user->fresh() ?? $user);
     }
 
     public function hasPendingPasswordSet(User $user): bool
     {
-        return blank($user->pending_email)
+        return filled($user->pending_email)
             && filled($user->email_change_token)
-            && (bool) $user->must_change_password;
+            && filled($user->email_change_verified_at);
     }
 
     public function validateSetPasswordToken(int $userId, string $plainToken): User
@@ -182,37 +190,17 @@ class EmailChangeService
 
         if ($user === null || ! $this->hasPendingPasswordSet($user)) {
             throw ValidationException::withMessages([
-                'token' => ['This password setup link is invalid or has already been used.'],
+                'token' => ['This link is invalid or has already been used.'],
             ]);
         }
 
         if (! hash_equals((string) $user->email_change_token, hash('sha256', $plainToken))) {
             throw ValidationException::withMessages([
-                'token' => ['This password setup link is invalid.'],
-            ]);
-        }
-
-        if ($user->email_change_token_expires_at === null || $user->email_change_token_expires_at->isPast()) {
-            throw ValidationException::withMessages([
-                'token' => ['This password setup link has expired. Please sign in and contact support if you need help.'],
+                'token' => ['This link is invalid.'],
             ]);
         }
 
         return $user;
-    }
-
-    public function completePasswordSet(User $user, string $plainPassword): void
-    {
-        $user->forceFill([
-            'password' => Hash::make($plainPassword),
-            'remember_token' => null,
-            'email_change_token' => null,
-            'email_change_token_expires_at' => null,
-        ])->save();
-
-        User::query()
-            ->whereKey($user->id)
-            ->update(['must_change_password' => DB::raw("'false'::boolean")]);
     }
 
     public function resendCooldownRemaining(User $user): int

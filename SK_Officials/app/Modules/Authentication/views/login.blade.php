@@ -149,6 +149,11 @@
                     @csrf
 
                     {{-- Server-side alerts --}}
+                    @if (session('status'))
+                        <div class="sk-alert sk-alert-success">
+                            {{ session('status') }}
+                        </div>
+                    @endif
                     @if (session('access_denied'))
                         <div class="sk-alert sk-alert-error access-denied-alert">
                             <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">

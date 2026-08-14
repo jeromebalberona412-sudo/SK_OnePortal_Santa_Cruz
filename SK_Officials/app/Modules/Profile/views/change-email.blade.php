@@ -11,6 +11,7 @@
     <title>Change Email - SK Officials</title>
     @vite([
         'app/Modules/Authentication/assets/css/login.css',
+        'app/Modules/Profile/assets/css/change-password.css',
         'app/Modules/Profile/assets/js/change-email.js',
     ])
 </head>
@@ -158,12 +159,12 @@
                         </div>
 
                         <button type="submit" class="sk-submit-btn" id="ceSubmitBtn">
-                            <span>Send Verification Link</span>
+                            <span id="ceBtnText">Send Verification Link</span>
                         </button>
                     </form>
 
-                    <div class="sk-form-options">
-                        <a href="{{ route('profile') }}" class="sk-link">Back to Profile</a>
+                    <div class="sk-back-profile">
+                        <a href="{{ route('profile') }}" class="sk-link" data-no-loading>Back to Profile</a>
                     </div>
                 </div>
 

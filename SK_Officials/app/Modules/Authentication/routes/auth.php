@@ -35,7 +35,6 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware(['auth', 'sk_official.access'])->group(function () {
-    Route::get('/change-password', [AuthController::class, 'showChangePassword'])->name('password.change');
     Route::get('/change-password', [AuthController::class, 'showChangePassword'])->name('change-password');
     Route::post('/change-password', [AuthController::class, 'updatePassword'])->name('password.change.update');
     Route::get('/change-password/verify', [\App\Modules\Profile\Controllers\ProfileController::class, 'showChangePasswordVerify'])->name('change-password.verify');

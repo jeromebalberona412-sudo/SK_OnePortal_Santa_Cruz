@@ -186,7 +186,9 @@ document.addEventListener('DOMContentLoaded', () => {
             currentPath === '/register' || currentPath.endsWith('/register') ||
             currentPath.includes('forgot-password') ||
             currentPath.includes('password/reset') ||
-            currentPath.includes('reset-password')
+            currentPath.includes('reset-password') ||
+            currentPath.includes('change-password') ||
+            currentPath.includes('change-email')
         ) {
             return;
         }
@@ -196,6 +198,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const url = new URL(href, window.location.href);
                 if (url.origin !== window.location.origin) return;
             } catch (_) { return; }
+        }
+
+        if (href.includes('change-password') || href.includes('change-email') || href.includes('/profile')) {
+            return;
         }
 
         showLoading(MESSAGES.redirect);

@@ -81,6 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (submitBtn) submitBtn.disabled = true;
-        if (btnText) btnText.textContent = 'Sending…';
+        if (btnText) btnText.textContent = 'Sending email verification...';
     });
 });

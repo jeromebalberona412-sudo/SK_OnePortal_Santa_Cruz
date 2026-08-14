@@ -11,7 +11,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -79,9 +78,37 @@ class ProfileController extends Controller
             return redirect()->route('change-email');
         }
 
+        $request->session()->put('email_change_verify_active', true);
+
         return view('Profile::change-email-verify', [
             'user' => $user,
             'resendCooldown' => $this->emailChangeService->resendCooldownRemaining($user),
+        ]);
+    }
+
+    public function checkChangeEmailVerifyStatus(Request $request): JsonResponse
+    {
+        $user = $request->user()->fresh();
+
+        if ($this->emailChangeService->hasPendingChange($user)) {
+            return response()->json(['state' => 'pending']);
+        }
+
+        if ($request->session()->pull('email_change_verify_active')) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return response()->json([
+                'state' => 'confirmed',
+                'redirect' => route('login'),
+                'message' => 'Email changed successfully. Sign in with your new email and current password.',
+            ]);
+        }
+
+        return response()->json([
+            'state' => 'cancelled',
+            'redirect' => route('change-email'),
         ]);
     }
 
@@ -98,6 +125,7 @@ class ProfileController extends Controller
 
     public function cancelChangeEmail(Request $request): RedirectResponse
     {
+        $request->session()->forget('email_change_verify_active');
         $this->emailChangeService->cancel($request->user()->fresh());
 
         return redirect()
@@ -108,7 +136,7 @@ class ProfileController extends Controller
     public function confirmChangeEmail(Request $request, int $id, string $token): RedirectResponse
     {
         try {
-            $result = $this->emailChangeService->confirm($id, $token);
+            $this->emailChangeService->confirm($id, $token);
         } catch (ValidationException $exception) {
             return redirect()
                 ->route('login')
@@ -123,57 +151,41 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()
-            ->route('change-email.set-password', [
-                'id' => $result['user']->id,
-                'token' => $result['set_password_token'],
-            ])
-            ->with('status', 'Email changed to '.$result['user']->email.'. Set a new password to finish.');
+            ->route('login')
+            ->with('status', 'Email changed successfully. Sign in with your new email and current password.');
     }
 
-    public function showSetPasswordAfterEmailChange(Request $request, int $id, string $token): View|RedirectResponse
+    public function showSetPasswordAfterEmailChange(Request $request, int $id, string $token): RedirectResponse
     {
-        try {
-            $user = $this->emailChangeService->validateSetPasswordToken($id, $token);
-        } catch (ValidationException $exception) {
-            return redirect()
-                ->route('login')
-                ->withErrors($exception->errors());
-        }
-
-        return view('Profile::set-password', [
-            'user' => $user,
-            'token' => $token,
-        ]);
+        return $this->finishLegacyEmailChangeSetPassword($request, $id, $token);
     }
 
     public function updateSetPasswordAfterEmailChange(Request $request, int $id, string $token): RedirectResponse
     {
+        return $this->finishLegacyEmailChangeSetPassword($request, $id, $token);
+    }
+
+    protected function finishLegacyEmailChangeSetPassword(Request $request, int $id, string $token): RedirectResponse
+    {
         try {
             $user = $this->emailChangeService->validateSetPasswordToken($id, $token);
+            $this->emailChangeService->applyConfirmedEmail($user);
         } catch (ValidationException $exception) {
             return redirect()
                 ->route('login')
                 ->withErrors($exception->errors());
         }
 
-        $validated = $request->validate([
-            'password' => [
-                'required',
-                'string',
-                'confirmed',
-                'max:'.(int) config('sk_official_auth.password_reset.password.max_length', 64),
-                PasswordRule::min(8)
-                    ->mixedCase()
-                    ->numbers()
-                    ->symbols(),
-            ],
-        ]);
+        if (Auth::check()) {
+            Auth::logout();
+        }
 
-        $this->emailChangeService->completePasswordSet($user, (string) $validated['password']);
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect()
             ->route('login')
-            ->with('status', 'Password set successfully. Sign in with your new email and password.');
+            ->with('status', 'Email changed successfully. Sign in with your new email and current password.');
     }
 
     public function showChangePasswordVerify(Request $request): View|RedirectResponse
@@ -231,12 +243,31 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function resendChangePassword(Request $request): RedirectResponse
+    public function resendChangePassword(Request $request): JsonResponse|RedirectResponse
     {
         try {
             $this->passwordChangeService->resend($request->user()->fresh());
         } catch (ValidationException $exception) {
+            $message = collect($exception->errors())->flatten()->first()
+                ?: 'Unable to resend verification email. Please try again.';
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => $message,
+                    'cooldown' => $this->passwordChangeService->resendCooldownRemaining($request->user()->fresh()),
+                ], 422);
+            }
+
             return back()->withErrors($exception->errors());
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'ok' => true,
+                'message' => 'Verification email resent.',
+                'cooldown' => 60,
+            ]);
         }
 
         return back()->with('status', 'Verification email resent.');

@@ -495,6 +495,46 @@ class AuthenticationService
         ])->save();
     }
 
+    /**
+     * End every login session for this account (all devices).
+     */
+    public function invalidateAllSessionsForUser(User $user): void
+    {
+        $previousSessionId = (string) ($user->active_session_id ?? '');
+
+        $updates = [
+            'remember_token' => null,
+        ];
+
+        if ($this->hasColumn('users', 'active_session_id')) {
+            $updates['active_session_id'] = null;
+        }
+
+        if ($this->hasColumn('users', 'last_seen')) {
+            $updates['last_seen'] = null;
+        }
+
+        if ($this->hasColumn('users', 'online_status')) {
+            $updates['online_status'] = 'offline';
+        }
+
+        $user->forceFill($updates)->save();
+
+        if (! Schema::hasTable('sessions')) {
+            return;
+        }
+
+        try {
+            DB::table('sessions')->where('user_id', $user->getKey())->delete();
+
+            if ($previousSessionId !== '') {
+                DB::table('sessions')->where('id', $previousSessionId)->delete();
+            }
+        } catch (\Throwable) {
+            // Best effort — login cookies are still invalidated via remember_token.
+        }
+    }
+
     protected function invalidatePreviousSession(User $user): void
     {
         if (! $this->hasColumn('users', 'active_session_id')) {

@@ -1,5 +1,5 @@
 /**
- * SK Officials — Change Password (first login / profile)
+ * SK Officials — Change Password / Set Password
  */
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('change-password-form');
@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const confirmInput = document.getElementById('password_confirmation');
     const passwordRules = document.getElementById('passwordRules');
     const clientError = document.getElementById('password-client-error');
+    const matchMsg = document.getElementById('password-match-msg');
     const submitBtn = document.getElementById('cpSubmitBtn');
     const btnText = document.getElementById('cpBtnText');
 
@@ -23,29 +24,30 @@ document.addEventListener('DOMContentLoaded', function () {
             submitBtn.classList.add('is-loading');
         }
         if (btnText) {
-            btnText.textContent = 'Changing password...';
-        }
-        // Use overlay only — never disable form inputs (breaks CSRF _token → 419).
-        if (window.showLoading) {
-            window.showLoading('Changing password...');
+            btnText.textContent = form.dataset.loadingText || 'Changing password...';
         }
     }
 
     function validatePasswordStrength(password) {
-        const hasLowerCase = /[a-z]/.test(password);
-        const hasUpperCase = /[A-Z]/.test(password);
-        const hasNumber = /[0-9]/.test(password);
-        const hasSpecial = /[^A-Za-z0-9]/.test(password);
-        const hasMinLength = password.length >= minLength;
-
         return {
-            isValid: hasMinLength && hasLowerCase && hasUpperCase && hasNumber && hasSpecial,
-            hasLowerCase,
-            hasUpperCase,
-            hasNumber,
-            hasSpecial,
-            hasMinLength,
+            hasMinLength: password.length >= minLength,
+            hasLowerCase: /[a-z]/.test(password),
+            hasUpperCase: /[A-Z]/.test(password),
+            hasNumber: /[0-9]/.test(password),
+            hasSpecial: /[^A-Za-z0-9]/.test(password),
         };
+    }
+
+    function isStrong(state) {
+        return state.hasMinLength && state.hasLowerCase && state.hasUpperCase && state.hasNumber && state.hasSpecial;
+    }
+
+    function setRuleMark(node, ok) {
+        node.classList.toggle('ok', ok);
+        const mark = node.querySelector('.rule-mark');
+        if (mark) {
+            mark.textContent = ok ? '✓' : '✕';
+        }
     }
 
     function updatePasswordRules(password) {
@@ -65,13 +67,44 @@ document.addEventListener('DOMContentLoaded', function () {
         rules.forEach((rule) => {
             const node = document.getElementById(rule.id);
             if (node) {
-                node.classList.toggle('ok', rule.ok);
+                setRuleMark(node, password.length > 0 && rule.ok);
             }
         });
 
-        const showRules = password.length > 0 && !state.isValid;
-        passwordRules.classList.toggle('active', showRules);
-        passwordRules.hidden = !showRules;
+        const hideRules = password.length === 0 || isStrong(state);
+        passwordRules.hidden = hideRules;
+        passwordRules.classList.toggle('hidden-rules', hideRules);
+    }
+
+    function updateMatchMessage() {
+        if (!matchMsg || !confirmInput) {
+            return;
+        }
+
+        const password = passwordInput.value;
+        const confirm = confirmInput.value;
+
+        if (!confirm) {
+            matchMsg.hidden = true;
+            matchMsg.textContent = '';
+            matchMsg.classList.remove('is-error', 'is-ok');
+            confirmInput.classList.remove('is-invalid');
+            return;
+        }
+
+        if (password === confirm) {
+            matchMsg.hidden = true;
+            matchMsg.textContent = '';
+            matchMsg.classList.remove('is-error', 'is-ok');
+            confirmInput.classList.remove('is-invalid');
+            return;
+        }
+
+        matchMsg.hidden = false;
+        matchMsg.textContent = 'Passwords do not match.';
+        matchMsg.classList.add('is-error');
+        matchMsg.classList.remove('is-ok');
+        confirmInput.classList.add('is-invalid');
     }
 
     function showClientError(message) {
@@ -94,20 +127,25 @@ document.addEventListener('DOMContentLoaded', function () {
     passwordInput.addEventListener('input', function () {
         clearClientError();
         updatePasswordRules(this.value);
+        updateMatchMessage();
     });
 
     if (confirmInput) {
-        confirmInput.addEventListener('input', clearClientError);
+        confirmInput.addEventListener('input', function () {
+            clearClientError();
+            updateMatchMessage();
+        });
     }
 
     form.addEventListener('submit', function (e) {
         const strength = validatePasswordStrength(passwordInput.value);
         clearClientError();
+        updatePasswordRules(passwordInput.value);
+        updateMatchMessage();
 
-        if (!strength.isValid) {
+        if (!isStrong(strength)) {
             e.preventDefault();
             showClientError('Please meet all password requirements.');
-            updatePasswordRules(passwordInput.value);
             return;
         }
 
@@ -120,7 +158,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (confirmInput && passwordInput.value !== confirmInput.value) {
             e.preventDefault();
             showClientError('Passwords do not match.');
-            confirmInput.classList.add('is-invalid');
             confirmInput.focus();
             return;
         }

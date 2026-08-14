@@ -10,7 +10,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Set Password - SK Officials</title>
     @vite([
-        'app/Modules/Authentication/assets/css/forgot-password.css',
+        'app/Modules/Authentication/assets/css/login.css',
+        'app/Modules/Profile/assets/css/change-password.css',
         'app/Modules/Profile/assets/js/change-password.js',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -18,36 +19,38 @@
 <body class="sk-login-page">
     @include('loading')
 
-    <div class="sk-bg-wrapper">
-        <div class="sk-bg-image"></div>
-        <div class="sk-gradient-overlay"></div>
-        <div class="floating-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
-        </div>
-    </div>
-
     <main class="sk-login-container">
-
         <div class="sk-branding-section">
             <div class="branding-content">
-                <div class="logo-wrapper">
-                    <img src="{{ asset('images/logo.png') }}"
-                         alt="SK Officials Logo"
-                         class="sk-logo">
+                <div class="collab-logo-wrapper">
+                    <div class="logo-glow-wrapper logo-left">
+                        <img src="{{ asset('images/skoneportal_logo.webp') }}"
+                             alt="SK OnePortal Logo"
+                             class="collab-logo">
+                    </div>
+                    <div class="logo-glow-wrapper logo-right">
+                        <img src="{{ asset('images/logo.png') }}"
+                             alt="SK Officials Logo"
+                             class="collab-logo">
+                    </div>
                 </div>
                 <h1 class="sk-main-title">SK OnePortal</h1>
-                <p class="sk-tagline">SK Officials Portal – Santa Cruz, Laguna</p>
+                <p class="sk-tagline">SK Officials Portal - Santa Cruz, Laguna</p>
             </div>
         </div>
 
         <div class="sk-login-section">
             <div class="sk-login-card">
-
-                <div class="card-header">
-                    <h2 class="card-title">Set New Password 🔐</h2>
-                    <p class="card-subtitle">Your email was updated to <strong>{{ $user->email }}</strong>. Create a new password to finish.</p>
+                <div class="card-header" style="text-align:center;">
+                    <p class="card-subtitle"
+                       style="font-size:1.4rem;font-weight:800;color:#0f172a;letter-spacing:-0.02em;">
+                        Set New Password
+                    </p>
+                    <p class="card-subtitle">
+                        Create a new password to finish changing your email to
+                        <strong>{{ $user->pending_email ?: $user->email }}</strong>.
+                        Your email will update only after this password is saved.
+                    </p>
                 </div>
 
                 @if (session('status'))
@@ -72,15 +75,17 @@
                     </div>
                 @endif
 
-                <form action="{{ route('change-email.set-password.update', ['id' => $user->id, 'token' => $token]) }}" method="POST" class="sk-login-form" id="change-password-form" data-password-max-length="{{ (int) config('sk_official_auth.password_reset.password.max_length', 64) }}" novalidate>
+                <form action="{{ route('change-email.set-password.update', ['id' => $user->id, 'token' => $token]) }}" method="POST" class="sk-login-form" id="change-password-form" data-password-max-length="{{ (int) config('sk_official_auth.password_reset.password.max_length', 64) }}" data-loading-text="Setting password..." novalidate>
                     @csrf
 
                     <div class="sk-form-group">
-                        <label for="password" class="sk-label">New Password</label>
-                        <div class="password-wrapper">
-                            <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <label for="password" class="sk-label">
+                            <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
                             </svg>
+                            New Password
+                        </label>
+                        <div class="password-wrapper">
                             <input
                                 type="password"
                                 id="password"
@@ -92,24 +97,23 @@
                                 maxlength="{{ (int) config('sk_official_auth.password_reset.password.max_length', 64) }}"
                                 required
                             >
-                            <button type="button" class="pw-toggle-btn" data-target="password" aria-label="Show password" tabindex="-1">
-                                <svg class="pw-eye pw-eye-show" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                    <circle cx="12" cy="12" r="3"/>
+                            <button type="button" class="toggle-password" aria-label="Toggle password visibility" onclick="togglePassword('password')">
+                                <svg class="eye-icon eye-open" id="eyeOpen-password" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
                                 </svg>
-                                <svg class="pw-eye pw-eye-hide" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                                    <path d="M1 1l22 22"/>
+                                <svg class="eye-icon eye-closed" id="eyeClosed-password" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
                                 </svg>
                             </button>
                         </div>
-                        <ul class="password-rules" id="passwordRules" aria-live="polite" hidden>
-                            <li id="rule-length">At least 8 characters</li>
-                            <li id="rule-lowercase">At least one lowercase letter</li>
-                            <li id="rule-uppercase">At least one uppercase letter</li>
-                            <li id="rule-number">At least one number</li>
-                            <li id="rule-special">At least one special character</li>
+                        <ul class="password-rules hidden-rules" id="passwordRules" aria-live="polite">
+                            <li id="rule-length"><span class="rule-mark">✕</span> At least 8 characters</li>
+                            <li id="rule-lowercase"><span class="rule-mark">✕</span> At least one lowercase letter</li>
+                            <li id="rule-uppercase"><span class="rule-mark">✕</span> At least one uppercase letter</li>
+                            <li id="rule-number"><span class="rule-mark">✕</span> At least one number</li>
+                            <li id="rule-special"><span class="rule-mark">✕</span> At least one special character</li>
                         </ul>
                         @error('password')
                             <div class="sk-field-error">{{ $message }}</div>
@@ -118,11 +122,13 @@
                     </div>
 
                     <div class="sk-form-group">
-                        <label for="password_confirmation" class="sk-label">Confirm New Password</label>
-                        <div class="password-wrapper">
-                            <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <label for="password_confirmation" class="sk-label">
+                            <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
                             </svg>
+                            Confirm New Password
+                        </label>
+                        <div class="password-wrapper">
                             <input
                                 type="password"
                                 id="password_confirmation"
@@ -134,43 +140,51 @@
                                 maxlength="{{ (int) config('sk_official_auth.password_reset.password.max_length', 64) }}"
                                 required
                             >
-                            <button type="button" class="pw-toggle-btn" data-target="password_confirmation" aria-label="Show password" tabindex="-1">
-                                <svg class="pw-eye pw-eye-show" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                    <circle cx="12" cy="12" r="3"/>
+                            <button type="button" class="toggle-password" aria-label="Toggle password visibility" onclick="togglePassword('password_confirmation')">
+                                <svg class="eye-icon eye-open" id="eyeOpen-password_confirmation" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
                                 </svg>
-                                <svg class="pw-eye pw-eye-hide" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                                    <path d="M1 1l22 22"/>
+                                <svg class="eye-icon eye-closed" id="eyeClosed-password_confirmation" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
                                 </svg>
                             </button>
                         </div>
                         @error('password_confirmation')
                             <div class="sk-field-error">{{ $message }}</div>
                         @enderror
+                        <div class="sk-match-msg" id="password-match-msg" hidden></div>
                     </div>
 
-                    <button type="submit" class="sk-submit-btn">
-                        <span>Set Password</span>
-                        <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
-                        </svg>
+                    <button type="submit" class="sk-submit-btn" id="cpSubmitBtn">
+                        <span id="cpBtnText">Set Password</span>
                     </button>
                 </form>
 
-                <div class="youth-register-section">
-                    <p class="register-text">
-                        Already set your password?
-                        <a href="{{ route('login') }}" class="register-link">Sign In</a>
-                    </p>
+                <div class="sk-back-profile">
+                    <a href="{{ route('login') }}" class="sk-link">Sign In</a>
                 </div>
-
             </div>
         </div>
-
     </main>
 
+    <script>
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const eyeOpen = document.getElementById('eyeOpen-' + inputId);
+            const eyeClosed = document.getElementById('eyeClosed-' + inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeOpen.style.display = 'none';
+                eyeClosed.style.display = 'block';
+            } else {
+                input.type = 'password';
+                eyeOpen.style.display = 'block';
+                eyeClosed.style.display = 'none';
+            }
+        }
+    </script>
     <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

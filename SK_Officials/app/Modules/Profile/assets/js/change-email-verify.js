@@ -77,7 +77,53 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function pollEmailChangeStatus() {
+        const verifySection = document.getElementById('ceVerifySection');
+        const statusUrl = verifySection?.dataset.statusUrl || '';
+
+        if (!statusUrl) {
+            return;
+        }
+
+        fetch(statusUrl, {
+            method: 'GET',
+            headers: { Accept: 'application/json' },
+            credentials: 'same-origin',
+        }).then(function (response) {
+            if (response.status === 401 || response.status === 419) {
+                window.location.replace('/login');
+                return null;
+            }
+
+            if (!response.ok) {
+                setTimeout(pollEmailChangeStatus, 3000);
+                return null;
+            }
+
+            return response.json();
+        }).then(function (payload) {
+            if (!payload) {
+                return;
+            }
+
+            if (payload.state === 'pending') {
+                setTimeout(pollEmailChangeStatus, 3000);
+                return;
+            }
+
+            if (payload.state === 'cancelled') {
+                window.location.replace(payload.redirect || '/change-email');
+                return;
+            }
+
+            window.location.replace(payload.redirect || '/login');
+        }).catch(function () {
+            setTimeout(pollEmailChangeStatus, 5000);
+        });
+    }
+
     bootstrapTimer();
+    pollEmailChangeStatus();
 
     if (resendForm) {
         resendForm.addEventListener('submit', function () {

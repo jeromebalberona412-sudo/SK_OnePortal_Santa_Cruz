@@ -11,37 +11,11 @@
     <title>Change Password - SK Officials</title>
     @vite([
         'app/Modules/Authentication/assets/css/login.css',
+        'app/Modules/Profile/assets/css/change-password.css',
         'app/Modules/Profile/assets/js/change-password.js',
     ])
-    <style>
-        .password-rules {
-            list-style: none;
-            padding: 0;
-            margin: 0.5rem 0 0;
-            font-size: 0.85rem;
-            color: var(--sk-gray-600);
-        }
-        .password-rules li {
-            padding: 0.25rem 0;
-            padding-left: 1.5rem;
-            position: relative;
-        }
-        .password-rules li::before {
-            content: '○';
-            position: absolute;
-            left: 0;
-            color: var(--sk-gray-400);
-        }
-        .password-rules li.valid {
-            color: #15803d;
-        }
-        .password-rules li.valid::before {
-            content: '✓';
-            color: #15803d;
-        }
-    </style>
 </head>
-<body class="sk-login-page">
+<body class="sk-login-page sk-page-scroll">
 
     <main class="sk-login-container">
 
@@ -136,12 +110,12 @@
                                 </svg>
                             </button>
                         </div>
-                        <ul class="password-rules" id="passwordRules" aria-live="polite" hidden>
-                            <li id="rule-length">At least 8 characters</li>
-                            <li id="rule-lowercase">At least one lowercase letter</li>
-                            <li id="rule-uppercase">At least one uppercase letter</li>
-                            <li id="rule-number">At least one number</li>
-                            <li id="rule-special">At least one special character</li>
+                        <ul class="password-rules hidden-rules" id="passwordRules" aria-live="polite">
+                            <li id="rule-length"><span class="rule-mark">✕</span> At least 8 characters</li>
+                            <li id="rule-lowercase"><span class="rule-mark">✕</span> At least one lowercase letter</li>
+                            <li id="rule-uppercase"><span class="rule-mark">✕</span> At least one uppercase letter</li>
+                            <li id="rule-number"><span class="rule-mark">✕</span> At least one number</li>
+                            <li id="rule-special"><span class="rule-mark">✕</span> At least one special character</li>
                         </ul>
                         @error('password')
                             <div class="sk-field-error">{{ $message }}</div>
@@ -193,15 +167,16 @@
                         @error('password_confirmation')
                             <div class="sk-field-error">{{ $message }}</div>
                         @enderror
+                        <div class="sk-match-msg" id="password-match-msg" hidden></div>
                     </div>
 
                     <button type="submit" class="sk-submit-btn" id="cpSubmitBtn">
-                        <span>Change Password</span>
+                        <span id="cpBtnText">Change Password</span>
                     </button>
                 </form>
 
-                <div class="sk-form-options">
-                    <a href="{{ route('profile') }}" class="sk-link">Back to Profile</a>
+                <div class="sk-back-profile">
+                    <a href="{{ route('profile') }}" class="sk-link" data-no-loading>Back to Profile</a>
                 </div>
 
             </div>

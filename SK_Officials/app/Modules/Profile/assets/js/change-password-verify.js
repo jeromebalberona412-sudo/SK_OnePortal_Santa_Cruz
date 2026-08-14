@@ -1,163 +1,119 @@
 document.addEventListener('DOMContentLoaded', function () {
     const COOLDOWN_SECONDS = 60;
     const POLL_INTERVAL_MS = 3000;
+    const BTN_LABEL = 'Resend Verification';
 
     const verifySection = document.getElementById('cpVerifySection');
     const statusUrl = verifySection?.dataset.statusUrl || '';
-    const accountEmail = verifySection?.dataset.email || 'default';
-    const cooldownKey = `sk_password_change_resend_${accountEmail}`;
-
-    const timerElement = document.getElementById('cpTimer');
-    const timerCountElement = document.getElementById('cpTimerCount');
     const resendBtn = document.getElementById('cpResendBtn');
+    const resendBtnText = document.getElementById('cpResendBtnText');
     const resendForm = document.getElementById('cpResendForm');
-    const listeningBadge = document.getElementById('cpListeningBadge');
-    const statusTitle = document.getElementById('cpStatusTitle');
-    const statusSub = document.getElementById('cpStatusSub');
-    const statusBadge = document.getElementById('cpStatusBadge');
-    const infoBox = document.getElementById('cpInfoBox');
+    const feedback = document.getElementById('cpFeedback');
 
     let timerInterval = null;
+    let remainingSeconds = 0;
+    let resendInFlight = false;
     let confirmationHandled = false;
-    const serverCooldown = Number(window.cpResendCooldown || 0);
 
-    function showPageLoading(message) {
-        if (window.showLoading) {
-            window.showLoading(message);
+    function csrfToken() {
+        return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+            || resendForm?.querySelector('input[name="_token"]')?.value
+            || '';
+    }
+
+    function setFeedback(message, type) {
+        if (!feedback || !message) {
+            return;
+        }
+
+        feedback.hidden = false;
+        feedback.textContent = message;
+        feedback.classList.remove('sk-alert-success', 'sk-alert-error');
+        feedback.classList.add(type === 'error' ? 'sk-alert-error' : 'sk-alert-success');
+    }
+
+    function setButtonLabel(text) {
+        if (resendBtnText) {
+            resendBtnText.textContent = text;
+        } else if (resendBtn) {
+            resendBtn.textContent = text;
         }
     }
 
-    function clearResendCooldown() {
-        localStorage.removeItem(cooldownKey);
-    }
-
-    function setResendCooldownExpiry(seconds) {
-        const duration = Math.max(1, seconds || COOLDOWN_SECONDS);
-        localStorage.setItem(cooldownKey, String(Date.now() + duration * 1000));
-    }
-
-    function getRemainingSeconds() {
-        const expiry = Number.parseInt(localStorage.getItem(cooldownKey) || '0', 10);
-        if (expiry > Date.now()) {
-            return Math.max(0, Math.ceil((expiry - Date.now()) / 1000));
+    function setButtonLoading(isLoading) {
+        if (!resendBtn) {
+            return;
         }
 
-        if (serverCooldown > 0) {
-            return serverCooldown;
-        }
+        resendBtn.classList.toggle('is-loading', isLoading);
+        resendBtn.disabled = isLoading || remainingSeconds > 0 || resendInFlight;
 
-        return 0;
-    }
-
-    function formatCountdown(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${String(secs).padStart(2, '0')}`;
-    }
-
-    function updateTimerDisplay(seconds) {
-        if (timerCountElement) {
-            timerCountElement.textContent = formatCountdown(seconds);
+        if (isLoading) {
+            setButtonLabel('Sending resend verification...');
         }
     }
 
-    function timerExpired() {
-        if (timerElement) {
-            timerElement.style.display = 'none';
+    function clearCountdown() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
         }
-        if (resendBtn) {
+        remainingSeconds = 0;
+    }
+
+    function restoreResendButton() {
+        resendInFlight = false;
+        setButtonLoading(false);
+        if (remainingSeconds <= 0 && resendBtn) {
             resendBtn.disabled = false;
-            resendBtn.textContent = 'Resend Verification';
+            setButtonLabel(BTN_LABEL);
         }
-        clearResendCooldown();
     }
 
-    function startTimer(seconds) {
-        let remaining = seconds;
+    function tickCountdown() {
+        remainingSeconds -= 1;
 
-        if (remaining <= 0) {
-            timerExpired();
+        if (remainingSeconds <= 0) {
+            clearCountdown();
+            restoreResendButton();
             return;
         }
 
         if (resendBtn) {
             resendBtn.disabled = true;
-            resendBtn.textContent = 'Resend Verification';
         }
-        if (timerElement) {
-            timerElement.style.display = 'block';
-        }
-        updateTimerDisplay(remaining);
-
-        if (timerInterval) {
-            clearInterval(timerInterval);
-        }
-
-        timerInterval = setInterval(function () {
-            remaining = getRemainingSeconds();
-            if (remaining <= 0) {
-                clearInterval(timerInterval);
-                timerExpired();
-            } else {
-                updateTimerDisplay(remaining);
-            }
-        }, 1000);
+        setButtonLabel(`Resend available in ${remainingSeconds}s`);
     }
 
-    function bootstrapTimer() {
-        let remaining = getRemainingSeconds();
+    function startCountdown(seconds) {
+        clearCountdown();
+        remainingSeconds = Math.max(0, Number(seconds) || COOLDOWN_SECONDS);
 
-        if (remaining <= 0 && serverCooldown > 0) {
-            remaining = serverCooldown;
-            setResendCooldownExpiry(remaining);
+        if (remainingSeconds <= 0) {
+            restoreResendButton();
+            return;
         }
 
-        if (remaining > 0) {
-            if (!localStorage.getItem(cooldownKey)) {
-                setResendCooldownExpiry(remaining);
-            }
-            startTimer(remaining);
-        } else {
-            timerExpired();
+        if (resendBtn) {
+            resendBtn.disabled = true;
         }
+        resendBtn?.classList.remove('is-loading');
+        setButtonLabel(`Resend available in ${remainingSeconds}s`);
+
+        timerInterval = setInterval(tickCountdown, 1000);
     }
 
-    function markConfirmedUI(message) {
+    function markConfirmedUI() {
         confirmationHandled = true;
-
         if (verifySection) {
             verifySection.classList.add('is-confirmed');
-        }
-        if (listeningBadge) {
-            listeningBadge.classList.add('is-confirmed');
-            listeningBadge.innerHTML = '<span class="cp-listening-dot"></span> Password confirmed';
-        }
-        if (statusTitle) {
-            statusTitle.textContent = 'Password Confirmed!';
-        }
-        if (statusSub) {
-            statusSub.textContent = message || 'Signing you out so you can log in with your new password.';
-        }
-        if (statusBadge) {
-            statusBadge.textContent = 'Confirmed';
-            statusBadge.style.background = '#dcfce7';
-            statusBadge.style.color = '#166534';
-        }
-        if (infoBox) {
-            infoBox.textContent = message || 'Password change confirmed. Redirecting to login...';
         }
     }
 
     function redirectToLogin(message, redirectUrl) {
-        clearResendCooldown();
-        if (timerInterval) {
-            clearInterval(timerInterval);
-        }
-        markConfirmedUI(message);
-        showPageLoading('Signing out...');
-        setTimeout(function () {
-            window.location.replace(redirectUrl || '/login');
-        }, 900);
+        clearCountdown();
+        markConfirmedUI();
+        window.location.replace(redirectUrl || '/login');
     }
 
     async function checkConfirmationStatus() {
@@ -185,13 +141,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const payload = await response.json();
 
             if (payload.state === 'pending') {
-                if (payload.resend_cooldown > 0) {
-                    const localRemaining = getRemainingSeconds();
-                    if (localRemaining <= 0) {
-                        setResendCooldownExpiry(payload.resend_cooldown);
-                        startTimer(payload.resend_cooldown);
-                    }
-                }
                 setTimeout(checkConfirmationStatus, POLL_INTERVAL_MS);
                 return;
             }
@@ -205,7 +154,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             if (payload.state === 'cancelled') {
-                clearResendCooldown();
                 window.location.replace(payload.redirect || '/change-password');
             }
         } catch (error) {
@@ -213,27 +161,72 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    bootstrapTimer();
+    async function submitResend(event) {
+        event.preventDefault();
+
+        if (resendInFlight || remainingSeconds > 0 || !resendForm) {
+            return;
+        }
+
+        resendInFlight = true;
+        setButtonLoading(true);
+
+        try {
+            const response = await fetch(resendForm.action, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ _token: csrfToken() }),
+            });
+
+            let payload = {};
+            try {
+                payload = await response.json();
+            } catch (parseError) {
+                payload = {};
+            }
+
+            if (response.status === 419) {
+                setFeedback('Your session expired. Please refresh the page and try again.', 'error');
+                restoreResendButton();
+                return;
+            }
+
+            if (response.ok && payload.ok) {
+                setButtonLoading(false);
+                setFeedback(payload.message || 'Verification email resent.', 'success');
+                startCountdown(payload.cooldown || COOLDOWN_SECONDS);
+                resendInFlight = false;
+                return;
+            }
+
+            setFeedback(payload.message || 'Unable to resend verification email. Please try again.', 'error');
+            restoreResendButton();
+
+            if (Number(payload.cooldown) > 0) {
+                startCountdown(Number(payload.cooldown));
+            }
+        } catch (error) {
+            setFeedback('Unable to resend verification. Please check your connection and try again.', 'error');
+            restoreResendButton();
+        }
+    }
+
     checkConfirmationStatus();
 
     if (resendForm) {
-        resendForm.addEventListener('submit', function () {
-            if (resendBtn) {
-                resendBtn.disabled = true;
-                resendBtn.textContent = 'Sending…';
-            }
-            setResendCooldownExpiry(COOLDOWN_SECONDS);
-        });
+        resendForm.addEventListener('submit', submitResend);
     }
 
     const cancelForm = document.getElementById('cpCancelForm');
     if (cancelForm) {
         cancelForm.addEventListener('submit', function () {
-            clearResendCooldown();
-            if (timerInterval) {
-                clearInterval(timerInterval);
-            }
-            showPageLoading('Cancelling request...');
+            clearCountdown();
         });
     }
 });

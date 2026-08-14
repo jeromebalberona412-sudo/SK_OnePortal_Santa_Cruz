@@ -554,8 +554,7 @@ class AuthController extends Controller
         }
 
         return redirect()
-            ->route('change-password.verify')
-            ->with('status', 'Verification link sent to your email address.');
+            ->route('change-password.verify');
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Modules\Profile\Services;
 
 use App\Models\User;
+use App\Modules\Authentication\Services\AuthenticationService;
 use App\Modules\Profile\Notifications\PasswordChangeVerificationNotification;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,11 @@ class PasswordChangeService
     private const RESEND_COOLDOWN_SECONDS = 60;
 
     private const CONFIRMED_CACHE_TTL_MINUTES = 30;
+
+    public function __construct(
+        private readonly AuthenticationService $authenticationService,
+    ) {
+    }
 
     public function hasPendingChange(User $user): bool
     {
@@ -40,7 +46,7 @@ class PasswordChangeService
             'pending_password' => Hash::make($newPassword),
             'password_change_token' => hash('sha256', $plainToken),
             'password_change_token_expires_at' => now()->addMinutes(self::TOKEN_TTL_MINUTES),
-            'password_change_last_sent_at' => now(),
+            'password_change_last_sent_at' => null,
         ])->save();
 
         $user->notify(new PasswordChangeVerificationNotification($plainToken));
@@ -127,6 +133,8 @@ class PasswordChangeService
         }
 
         $this->markRecentlyConfirmed($user->id);
+
+        $this->authenticationService->invalidateAllSessionsForUser($user->fresh() ?? $user);
 
         return $user->fresh();
     }
