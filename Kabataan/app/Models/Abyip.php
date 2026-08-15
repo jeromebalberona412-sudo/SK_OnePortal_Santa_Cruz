@@ -25,6 +25,10 @@ class Abyip extends Model
 
     protected $table = 'abyip';
 
+    protected $hidden = [
+        'pdf_data',
+    ];
+
     protected $fillable = [
         'document_id',
         'tenant_id',

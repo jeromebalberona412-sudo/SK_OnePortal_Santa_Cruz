@@ -1018,10 +1018,11 @@ body.homepage-body.kabataan-homepage::after {
     color: #475569;
     text-decoration: none;
     font-weight: 600;
-    font-size: 0.95rem;
-    padding: 10px 14px;
+    font-size: 0.88rem;
+    padding: 8px 10px;
     border-radius: 999px;
     transition: color 0.18s ease, background-color 0.18s ease;
+    white-space: nowrap;
 }
 
 .kabataan-nav-link:hover,

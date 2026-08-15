@@ -117,9 +117,10 @@ document.addEventListener('DOMContentLoaded', () => {
         applyFilters();
     });
 
-    const isBarangayAccomplishmentsPage = window.location.pathname.includes('barangay-accomplishments');
+    const isBarangayListPage = window.location.pathname.includes('barangay-accomplishments')
+        || window.location.pathname.includes('barangay-abyip');
 
-    const trackedSections = isBarangayAccomplishmentsPage
+    const trackedSections = isBarangayListPage
         ? []
         : ['hero', 'about', 'faq', 'kabataanFooter']
             .map((id) => document.getElementById(id))
@@ -188,6 +189,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const initialSection = (() => {
+        if (window.location.pathname.includes('barangay-abyip')) {
+            return 'barangay-abyip';
+        }
+
         if (window.location.pathname.includes('barangay-accomplishments')) {
             return 'barangays';
         }

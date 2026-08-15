@@ -101,6 +101,10 @@ export default defineConfig({
                 'app/Modules/Program_Accomplishments/assets/js/barangay-accomplishments.js',
                 'app/Modules/Program_Accomplishments/assets/js/program-card-expand.js',
 
+                // Barangay ABYIP
+                'app/Modules/Baranggay_ABYIP/assets/css/baranggay_abyip.css',
+                'app/Modules/Baranggay_ABYIP/assets/js/baranggay_abyip.js',
+
                 // KK Profiling
                 'app/Modules/KKProfiling/assets/css/kkprofiling.css',
                 'app/Modules/KKProfiling/assets/js/kkprofiling.js',

@@ -11,4 +11,5 @@ return [
     App\Modules\Layout\Providers\LayoutServiceProvider::class,
     App\Modules\Notifications\Providers\NotificationsServiceProvider::class,
     App\Modules\Program_Accomplishments\Providers\ProgramAccomplishmentsServiceProvider::class,
+    App\Modules\Baranggay_ABYIP\Providers\Baranggay_ABYIPServiceProvider::class,
 ];
