@@ -8,6 +8,7 @@ use App\Models\Committee;
 use App\Models\User;
 use App\Modules\Committees\Services\CommitteeService;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 class AbyipProgramCatalogService
 {
@@ -37,6 +38,9 @@ class AbyipProgramCatalogService
     ];
 
     public function __construct(private readonly CommitteeService $committeeService) {}
+
+    /** @var array<int, Collection<int, Abyip>> */
+    private array $youthProgramsCache = [];
 
     public function getLatestAbyip(?int $barangayId): ?Abyip
     {
@@ -392,9 +396,11 @@ class AbyipProgramCatalogService
             return null;
         }
 
-        $program = $this->youthProgramsQuery($document->id)
-            ->where('code', strtoupper(trim($letter)))
-            ->first();
+        $normalized = strtoupper(trim($letter));
+        $program = $this->youthProgramsForDocument((int) $document->id)
+            ->first(function (Abyip $row) use ($normalized) {
+                return strtoupper(trim((string) ($row->program_letter ?? $row->code ?? ''))) === $normalized;
+            });
 
         if ($program === null) {
             return null;
@@ -410,6 +416,7 @@ class AbyipProgramCatalogService
             'id' => (int) $program->id,
             'program_name' => trim((string) $program->program_name),
             'letter' => strtoupper(trim((string) ($program->program_letter ?? $program->code ?? $letter))),
+            'total' => $this->resolveProgramTotal($program),
             'start_date' => $duration['start_date'],
             'end_date' => $duration['end_date'],
         ];
@@ -450,7 +457,8 @@ class AbyipProgramCatalogService
             'startDate' => $duration['startDate'],
             'endDate' => $duration['endDate'],
             'status' => $this->resolveProgramStatus($duration['startDate'], $duration['endDate']),
-            'letter' => $program->program_letter,
+            'letter' => strtoupper(trim((string) ($program->program_letter ?? $program->code ?? ''))),
+            'total' => $this->resolveProgramTotal($program),
             'sk_head' => $head,
             'sk_head_display' => $head ?? '',
         ];
@@ -511,6 +519,79 @@ class AbyipProgramCatalogService
         return $names->isNotEmpty()
             ? 'Activities: '.$names->join(', ')
             : 'No activities listed.';
+    }
+
+    public function resolveProgramTotal(Abyip $program): float
+    {
+        $total = (float) ($program->total ?? 0);
+        if ($total > 0) {
+            return $total;
+        }
+
+        if ($program->relationLoaded('children') && $program->children->isNotEmpty()) {
+            $childTotal = (float) $program->children->sum(fn (Abyip $child) => (float) ($child->total ?? 0));
+            if ($childTotal > 0) {
+                return $childTotal;
+            }
+        } elseif ($program->id) {
+            $childTotal = (float) Abyip::query()->where('parent_id', $program->id)->sum('total');
+            if ($childTotal > 0) {
+                return $childTotal;
+            }
+        }
+
+        return (float) ($program->total_budget ?? 0);
+    }
+
+    /**
+     * @return Collection<int, Abyip>
+     */
+    private function youthProgramsForDocument(int $documentId): Collection
+    {
+        if (! isset($this->youthProgramsCache[$documentId])) {
+            $this->youthProgramsCache[$documentId] = $this->youthProgramsQuery($documentId)->get();
+        }
+
+        return $this->youthProgramsCache[$documentId];
+    }
+
+    public function resolveProgramTotalForBarangay(?int $barangayId, ?string $letter = null, ?string $programName = null, ?int $abyipProgramId = null): float
+    {
+        $document = $this->getLatestApprovedAbyip($barangayId);
+        if ($document === null) {
+            return 0.0;
+        }
+
+        $programs = $this->youthProgramsForDocument((int) $document->id);
+
+        if ($abyipProgramId) {
+            $program = $programs->firstWhere('id', $abyipProgramId);
+            if ($program) {
+                return $this->resolveProgramTotal($program);
+            }
+        }
+
+        $normalizedLetter = strtoupper(trim((string) $letter));
+        if ($normalizedLetter !== '') {
+            $program = $programs->first(function (Abyip $row) use ($normalizedLetter) {
+                return strtoupper(trim((string) ($row->program_letter ?? $row->code ?? ''))) === $normalizedLetter;
+            });
+            if ($program) {
+                return $this->resolveProgramTotal($program);
+            }
+        }
+
+        $name = mb_strtolower(trim((string) $programName), 'UTF-8');
+        if ($name !== '') {
+            $program = $programs->first(
+                fn (Abyip $row) => mb_strtolower(trim((string) $row->program_name), 'UTF-8') === $name
+            );
+            if ($program) {
+                return $this->resolveProgramTotal($program);
+            }
+        }
+
+        return 0.0;
     }
 
     /**

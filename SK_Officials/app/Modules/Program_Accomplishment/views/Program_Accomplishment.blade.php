@@ -262,14 +262,6 @@
                             <textarea id="paActualResult" class="pa-form-textarea" rows="3"></textarea>
                         </div>
                         <div class="pa-form-group">
-                            <label class="pa-form-label">Actual Implementation Date</label>
-                            <input type="date" id="paActualImplementationDate" class="pa-form-input">
-                        </div>
-                        <div class="pa-form-group">
-                            <label class="pa-form-label">Actual Completion Date</label>
-                            <input type="date" id="paActualCompletionDate" class="pa-form-input">
-                        </div>
-                        <div class="pa-form-group">
                             <label class="pa-form-label">Target Beneficiaries</label>
                             <input type="number" id="paTargetBeneficiaries" class="pa-form-input" min="0">
                         </div>
@@ -342,10 +334,10 @@
 
                 <div class="pa-form-section">
                     <h3 class="pa-section-title">Supporting Documents</h3>
-                    <p class="pa-section-note">Internal documents stay private. Only files marked Public can appear on the Kabataan homepage.</p>
+                    <p class="pa-section-note">Uploaded files are public and can appear on the Kabataan homepage.</p>
                     <input type="file" id="paDocumentInput" class="pa-form-input" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-                    <div id="paDocumentPreview" class="pa-document-preview"></div>
                     <div id="paExistingDocuments" class="pa-document-preview"></div>
+                    <div id="paDocumentPreview" class="pa-document-preview"></div>
                 </div>
             </form>
         </div>
@@ -377,8 +369,7 @@
                 <!-- Dynamic view content -->
             </div>
         </div>
-        <div class="pa-modal-footer">
-            <button type="button" class="pa-btn pa-btn-secondary" id="paViewCloseBtn">Close</button>
+        <div class="pa-modal-footer" id="paViewModalFooter" hidden>
             <button type="button" class="pa-btn pa-btn-primary" id="paPublishBtn" hidden>Publish</button>
         </div>
     </div>
@@ -388,33 +379,20 @@
 <div class="pa-modal" id="paDeleteModal">
     <div class="pa-modal-overlay" id="paDeleteModalOverlay"></div>
     <div class="pa-modal-container pa-delete-modal-container">
-        <div class="pa-modal-header">
+        <div class="pa-delete-header">
             <h2 class="pa-modal-title">Delete Accomplishment Report</h2>
-            <button type="button" class="pa-modal-close" id="paDeleteModalClose">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
         </div>
-        <div class="pa-modal-body">
-            <div class="pa-delete-content">
-                <div class="pa-delete-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                        <line x1="12" y1="9" x2="12" y2="13"></line>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                    </svg>
-                </div>
-                <h3 class="pa-delete-title">Are you sure?</h3>
-                <p class="pa-delete-text">You are about to delete the accomplishment report for:</p>
-                <p class="pa-delete-program" id="paDeleteProgramTitle"></p>
-                <p class="pa-delete-warning">This action will also delete <span id="paDeleteImageCount">0</span> uploaded images. This cannot be undone.</p>
-            </div>
+        <div class="pa-delete-body">
+            <p class="pa-delete-text">You are about to delete the report for:</p>
+            <p class="pa-delete-program" id="paDeleteProgramTitle"></p>
+            <p class="pa-delete-warning">This will also delete <span id="paDeleteImageCount">0</span> uploaded images. This cannot be undone.</p>
+            <label class="pa-delete-confirm-label" for="paDeleteConfirmInput">Type Confirm to continue</label>
+            <input type="text" id="paDeleteConfirmInput" class="pa-delete-confirm-input" placeholder="Type Confirm to confirm" autocomplete="off" spellcheck="false">
+            <p class="pa-delete-confirm-hint" id="paDeleteConfirmHintError" hidden>Please type "Confirm" exactly.</p>
         </div>
-        <div class="pa-modal-footer">
+        <div class="pa-delete-footer">
             <button type="button" class="pa-btn pa-btn-secondary" id="paDeleteCancelBtn">Cancel</button>
-            <button type="button" class="pa-btn pa-btn-danger" id="paDeleteConfirmBtn">Delete Report</button>
+            <button type="button" class="pa-btn pa-btn-danger is-disabled" id="paDeleteConfirmBtn" disabled>Delete</button>
         </div>
     </div>
 </div>
@@ -457,6 +435,7 @@
 @vite([
     'app/Modules/Layout/js/header.js',
     'app/Modules/Layout/js/sidebar.js',
+    'app/Modules/Layout/js/table-row-actions-menu.js',
     'app/Modules/Program_Accomplishment/Assets/js/program-accomplishment.js',
 ])
 <script src="{{ url('/shared/js/loading.js') }}"></script>

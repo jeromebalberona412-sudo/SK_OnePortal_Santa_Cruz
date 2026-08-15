@@ -117,9 +117,13 @@ document.addEventListener('DOMContentLoaded', () => {
         applyFilters();
     });
 
-    const trackedSections = ['hero', 'about', 'faq', 'kabataanFooter']
-        .map((id) => document.getElementById(id))
-        .filter(Boolean);
+    const isBarangayAccomplishmentsPage = window.location.pathname.includes('barangay-accomplishments');
+
+    const trackedSections = isBarangayAccomplishmentsPage
+        ? []
+        : ['hero', 'about', 'faq', 'kabataanFooter']
+            .map((id) => document.getElementById(id))
+            .filter(Boolean);
 
     if ('IntersectionObserver' in window && trackedSections.length > 0) {
         const visibility = new Map();
@@ -184,6 +188,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const initialSection = (() => {
+        if (window.location.pathname.includes('barangay-accomplishments')) {
+            return 'barangays';
+        }
+
         const dataScroll = document.body.dataset.scrollTo;
         if (dataScroll && document.getElementById(dataScroll)) {
             return dataScroll;
@@ -191,7 +199,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'hero';
     })();
 
-    if (initialSection && initialSection !== 'hero') {
+    if (initialSection === 'barangays') {
+        setActiveLink('barangays');
+    } else if (initialSection && initialSection !== 'hero') {
         requestAnimationFrame(() => scrollToSection(initialSection));
         setActiveLink(initialSection === 'kabataanFooter' ? '' : initialSection);
     } else {

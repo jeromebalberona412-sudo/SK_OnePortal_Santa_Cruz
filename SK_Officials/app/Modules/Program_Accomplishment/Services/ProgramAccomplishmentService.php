@@ -45,7 +45,15 @@ class ProgramAccomplishmentService
             ->map(function (array $program) use ($barangayId, $abyipMeta) {
                 $letter = strtoupper(trim((string) ($program['letter'] ?? '')));
                 $meta = $abyipMeta[$letter] ?? [];
-                $approvedBudget = (float) ($meta['total'] ?? 0);
+                $approvedBudget = (float) ($program['total'] ?? 0);
+                if ($approvedBudget <= 0) {
+                    $approvedBudget = $this->catalogService->resolveProgramTotalForBarangay(
+                        $barangayId,
+                        $letter,
+                        (string) ($program['title'] ?? ''),
+                        isset($program['id']) ? (int) $program['id'] : null,
+                    );
+                }
 
                 return [
                     'id' => $program['schedule_program_id'] ?? null,
@@ -62,8 +70,9 @@ class ProgramAccomplishmentService
                     'end_date' => $program['endDate'] ?? $program['end_date'] ?? null,
                     'status' => 'Completed',
                     'barangay_id' => $barangayId,
-                    'participation_quantity' => $approvedBudget > 0 ? (int) round($approvedBudget) : 0,
+                    'participation_quantity' => $approvedBudget,
                     'approved_budget' => $approvedBudget,
+                    'total' => $approvedBudget,
                     'creator' => $program['sk_head_display'] ?? '',
                     'accomplishment_report_id' => $program['accomplishment_report_id'] ?? null,
                     'can_create_accomplishment' => (bool) ($program['can_create_accomplishment'] ?? false),
@@ -154,7 +163,7 @@ class ProgramAccomplishmentService
                 'committee' => $name,
                 'program_name' => $name,
                 'program_letter' => $letter !== '' ? $letter : null,
-                'participation_quantity' => (int) round((float) ($abyip->total ?? 0)),
+                'participation_quantity' => (int) round($this->catalogService->resolveProgramTotal($abyip)),
                 'start_date' => $duration['start_date'],
                 'end_date' => $duration['end_date'],
                 'status' => 'Completed',
@@ -296,7 +305,7 @@ class ProgramAccomplishmentService
             }
 
             if (isset($data['documents']) && is_array($data['documents'])) {
-                $this->storeDocuments($report, $data['documents'], $data['document_visibility'] ?? [], $data['document_types'] ?? []);
+                $this->storeDocuments($report, $data['documents'], $data['document_types'] ?? []);
             }
 
             return $this->formatReport($report->fresh(['program', 'barangay', 'creator', 'images', 'documents']));
@@ -365,7 +374,7 @@ class ProgramAccomplishmentService
             }
 
             if (isset($data['documents']) && is_array($data['documents'])) {
-                $this->storeDocuments($report, $data['documents'], $data['document_visibility'] ?? [], $data['document_types'] ?? []);
+                $this->storeDocuments($report, $data['documents'], $data['document_types'] ?? []);
             }
 
             if (isset($data['delete_documents']) && is_array($data['delete_documents'])) {
@@ -529,10 +538,9 @@ class ProgramAccomplishmentService
 
     /**
      * @param  array<int, UploadedFile>  $files
-     * @param  array<int, string>  $visibility
      * @param  array<int, string>  $types
      */
-    private function storeDocuments(ProgramAccomplishmentReport $report, array $files, array $visibility, array $types): void
+    private function storeDocuments(ProgramAccomplishmentReport $report, array $files, array $types): void
     {
         foreach ($files as $index => $file) {
             if (! $file instanceof UploadedFile) {
@@ -541,12 +549,7 @@ class ProgramAccomplishmentService
 
             $this->validateDocument($file);
 
-            $vis = ($visibility[$index] ?? ProgramAccomplishmentDocument::VISIBILITY_INTERNAL) === ProgramAccomplishmentDocument::VISIBILITY_PUBLIC
-                ? ProgramAccomplishmentDocument::VISIBILITY_PUBLIC
-                : ProgramAccomplishmentDocument::VISIBILITY_INTERNAL;
-
-            $disk = $vis === ProgramAccomplishmentDocument::VISIBILITY_PUBLIC ? 'public' : 'local';
-            $path = $file->store('program_accomplishment_docs/'.$report->id, $disk);
+            $path = $file->store('program_accomplishment_docs/'.$report->id, 'public');
 
             ProgramAccomplishmentDocument::create([
                 'accomplishment_report_id' => $report->id,
@@ -555,7 +558,7 @@ class ProgramAccomplishmentService
                 'mime_type' => $file->getMimeType(),
                 'file_size' => $file->getSize(),
                 'document_type' => $types[$index] ?? 'other',
-                'visibility' => $vis,
+                'visibility' => ProgramAccomplishmentDocument::VISIBILITY_PUBLIC,
             ]);
         }
     }
@@ -651,16 +654,26 @@ class ProgramAccomplishmentService
      */
     private function resolveApprovedBudget(ScheduleProgram $program, array $data, ?ProgramAccomplishmentReport $report = null): float
     {
-        if ($report?->approved_budget !== null) {
+        $fromAbyip = $this->catalogService->resolveProgramTotalForBarangay(
+            (int) $program->barangay_id,
+            (string) $program->program_letter,
+            (string) $program->program_name,
+        );
+
+        if ($fromAbyip > 0) {
+            return $fromAbyip;
+        }
+
+        if ($report?->approved_budget !== null && (float) $report->approved_budget > 0) {
             return (float) $report->approved_budget;
         }
 
         $abyipMeta = $this->abyipMetaByLetter((int) $program->barangay_id);
         $letter = strtoupper(trim((string) $program->program_letter));
-        $fromAbyip = (float) ($abyipMeta[$letter]['total'] ?? 0);
+        $fromMeta = (float) ($abyipMeta[$letter]['total'] ?? 0);
 
-        if ($fromAbyip > 0) {
-            return $fromAbyip;
+        if ($fromMeta > 0) {
+            return $fromMeta;
         }
 
         return (float) ($program->participation_quantity ?? 0);
@@ -702,6 +715,7 @@ class ProgramAccomplishmentService
                 $query->where('row_type', Abyip::ROW_YOUTH_PROGRAM)
                     ->orWhereIn('code', ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']);
             })
+            ->with('children')
             ->get()
             ->each(function (Abyip $row) use (&$meta) {
                 $letter = strtoupper(trim((string) ($row->program_letter ?? $row->code ?? '')));
@@ -714,7 +728,7 @@ class ProgramAccomplishmentService
                     'performance_indicator' => $row->performance_indicator,
                     'person_responsible' => $row->person_responsible,
                     'category' => $row->category ?: $row->program_name,
-                    'total' => (float) ($row->total ?? 0),
+                    'total' => $this->catalogService->resolveProgramTotal($row),
                     'objective' => $row->expected_result,
                 ];
             });
@@ -731,6 +745,13 @@ class ProgramAccomplishmentService
         $letter = strtoupper(trim((string) $program->program_letter));
         $meta = $abyipMeta[$letter] ?? [];
         $approvedBudget = (float) ($meta['total'] ?? 0);
+        if ($approvedBudget <= 0) {
+            $approvedBudget = $this->catalogService->resolveProgramTotalForBarangay(
+                (int) $program->barangay_id,
+                $letter,
+                (string) $program->program_name,
+            );
+        }
         if ($approvedBudget <= 0) {
             $approvedBudget = (float) ($program->participation_quantity ?? 0);
         }
@@ -750,8 +771,9 @@ class ProgramAccomplishmentService
             'status' => $program->status,
             'barangay_id' => $program->barangay_id,
             'barangay' => $program->barangay?->name,
-            'participation_quantity' => $program->participation_quantity,
+            'participation_quantity' => $approvedBudget,
             'approved_budget' => $approvedBudget,
+            'total' => $approvedBudget,
             'created_by' => $program->created_by,
             'creator' => $program->creator?->name,
             'created_at' => $program->created_at?->format('Y-m-d H:i:s'),
@@ -768,8 +790,16 @@ class ProgramAccomplishmentService
             ? $this->abyipMetaByLetter((int) $report->barangay_id)
             : [];
 
+        $programPayload = $report->program ? $this->formatProgram($report->program, $abyipMeta) : null;
+        $approvedBudget = (float) ($programPayload['approved_budget'] ?? 0);
+        if ($approvedBudget <= 0) {
+            $approvedBudget = $report->plannedBudget();
+        }
+        $actualExpense = (float) $report->actual_expense;
+
         return [
             'id' => $report->id,
+            'barangay_id' => $report->barangay_id,
             'program_id' => $report->program_id,
             'title' => $report->title,
             'description' => $report->description,
@@ -780,16 +810,16 @@ class ProgramAccomplishmentService
             'recommendations' => $report->recommendations,
             'participants_count' => $report->participants_count,
             'target_beneficiaries' => $report->target_beneficiaries,
-            'actual_expense' => (float) $report->actual_expense,
-            'approved_budget' => $report->plannedBudget(),
+            'actual_expense' => $actualExpense,
+            'approved_budget' => $approvedBudget,
             'actual_implementation_date' => $report->actual_implementation_date?->format('Y-m-d'),
             'actual_completion_date' => $report->actual_completion_date?->format('Y-m-d'),
             'remarks' => $report->remarks,
             'status' => $report->status,
             'rejection_reason' => $report->rejection_reason,
-            'remaining_budget' => $report->remaining_budget,
-            'budget_utilization_percent' => $report->budget_utilization_percent,
-            'program' => $report->program ? $this->formatProgram($report->program, $abyipMeta) : null,
+            'remaining_budget' => max(0, $approvedBudget - $actualExpense),
+            'budget_utilization_percent' => $approvedBudget > 0 ? ($actualExpense / $approvedBudget) * 100 : 0,
+            'program' => $programPayload,
             'creator' => $report->creator?->name,
             'images' => $report->images->map(fn ($image) => $this->formatImage($image))->values(),
             'documents' => $report->documents->map(fn ($doc) => $this->formatDocument($doc))->values(),
@@ -828,7 +858,7 @@ class ProgramAccomplishmentService
             'visibility' => $document->visibility,
             'file_size' => $document->file_size,
             'mime_type' => $document->mime_type,
-            'public_url' => $document->isPublic() ? asset('storage/'.$document->stored_path) : null,
+            'public_url' => $document->stored_path ? asset('storage/'.$document->stored_path) : null,
         ];
     }
 }

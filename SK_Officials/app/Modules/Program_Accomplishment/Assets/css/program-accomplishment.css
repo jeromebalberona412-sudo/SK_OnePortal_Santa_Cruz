@@ -284,9 +284,18 @@ body {
 .table-wrapper::-webkit-scrollbar-track { background: #e5e7eb; }
 .table-wrapper::-webkit-scrollbar-thumb { background: rgba(244, 194, 13, 0.65); border-radius: 8px; }
 
+.program-accomplishment-page .table-wrapper {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+}
+
+.program-accomplishment-page .table-card {
+    overflow: hidden;
+}
+
 .pa-table {
     width: 100%;
-    min-width: 1080px;
+    min-width: 980px;
     border-collapse: separate;
     border-spacing: 0;
     font-size: 13px;
@@ -354,17 +363,14 @@ body {
 .pa-table td.col-actions {
     border-right: none;
     text-align: center;
-    min-width: 110px;
-    width: 110px;
+    width: 64px;
+    min-width: 64px;
+    max-width: 64px;
     background: #fff;
     overflow: visible;
     white-space: nowrap;
-    /* Pin Actions to the right edge of the scroll area so it's never
-       hidden off-screen — this is what was making the table look broken. */
-    position: sticky;
-    right: 0;
-    z-index: 2;
-    box-shadow: -6px 0 8px -6px rgba(15, 23, 42, 0.18);
+    position: static;
+    box-shadow: none;
 }
 
 .pa-table thead th.col-actions {
@@ -566,8 +572,105 @@ body {
     max-width: 1000px;
 }
 
-.pa-delete-modal-container {
-    max-width: 450px;
+.pa-modal-container.pa-delete-modal-container {
+    max-width: 340px;
+    width: calc(100% - 2rem);
+    padding: 0;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.pa-delete-header {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    padding: 12px 16px;
+    text-align: center;
+}
+
+.pa-delete-header .pa-modal-title {
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.pa-delete-body {
+    padding: 16px 16px 10px;
+}
+
+.pa-delete-text {
+    margin: 0 0 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.pa-delete-program {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+    word-break: break-word;
+}
+
+.pa-delete-warning {
+    margin: 0 0 12px;
+    font-size: 12px;
+    color: #b91c1c;
+    line-height: 1.4;
+}
+
+.pa-delete-confirm-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.pa-delete-confirm-input {
+    width: 100%;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.pa-delete-confirm-input:focus {
+    outline: none;
+    border-color: #1A365D;
+    box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.12);
+}
+
+.pa-delete-confirm-hint {
+    margin: 8px 0 0;
+    font-size: 12px;
+    color: #b45309;
+}
+
+.pa-delete-footer {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px 16px;
+}
+
+.pa-delete-footer .pa-btn {
+    flex: 1;
+    justify-content: center;
+}
+
+.pa-btn-danger.is-disabled,
+#paDeleteConfirmBtn:disabled {
+    background: #cbd5e1;
+    color: #64748b;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.pa-btn-danger.is-enabled {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #ffffff;
 }
 
 .pa-modal-header {
@@ -831,6 +934,7 @@ body {
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
 }
 
 .pa-image-preview-item img {
@@ -850,6 +954,7 @@ body {
     color: #ffffff;
     border: none;
     cursor: pointer;
+    z-index: 2;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -939,6 +1044,31 @@ body {
 }
 
 .pa-existing-image-caption {
+    display: none;
+}
+
+.pa-existing-doc-row {
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
+}
+
+.pa-doc-visibility {
+    font-size: 12px;
+    font-weight: 700;
+    color: #0450a8;
+}
+
+.pa-existing-doc-remove {
+    border: 0;
+    background: transparent;
+    color: #dc2626;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.pa-existing-image-caption {
     position: absolute;
     bottom: 0;
     left: 0;
@@ -1015,51 +1145,9 @@ body {
     box-shadow: 0 8px 20px rgba(239, 68, 68, 0.45);
 }
 
-.pa-btn-danger:hover {
+.pa-btn-danger:hover:not(:disabled) {
     background: #dc2626;
     box-shadow: 0 12px 26px rgba(220, 38, 38, 0.55);
-}
-
-/* Delete Modal */
-.pa-delete-content {
-    text-align: center;
-    padding: 20px 0;
-}
-
-.pa-delete-icon {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto 16px;
-    color: #ef4444;
-}
-
-.pa-delete-title {
-    font-size: 20px;
-    font-weight: 600;
-    color: #111827;
-    margin-bottom: 12px;
-}
-
-.pa-delete-text {
-    font-size: 14px;
-    color: #6b7280;
-    margin-bottom: 8px;
-}
-
-.pa-delete-program {
-    font-size: 16px;
-    font-weight: 600;
-    color: #111827;
-    margin-bottom: 16px;
-    padding: 12px;
-    background: #f9fafb;
-    border-radius: 8px;
-}
-
-.pa-delete-warning {
-    font-size: 13px;
-    color: #ef4444;
-    font-weight: 500;
 }
 
 /* View Content */

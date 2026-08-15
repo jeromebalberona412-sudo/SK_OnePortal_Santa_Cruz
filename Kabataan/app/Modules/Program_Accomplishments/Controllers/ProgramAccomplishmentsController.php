@@ -4,6 +4,7 @@ namespace App\Modules\Program_Accomplishments\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Barangay;
+use App\Services\BarangayLogoUrlService;
 use App\Services\PublicBarangayAccomplishmentsService;
 use App\Services\PublicProgramAccomplishmentService;
 use Illuminate\Contracts\View\View;
@@ -16,6 +17,7 @@ class ProgramAccomplishmentsController extends Controller
     public function __construct(
         private readonly PublicBarangayAccomplishmentsService $accomplishmentsService,
         private readonly PublicProgramAccomplishmentService $programAccomplishmentService,
+        private readonly BarangayLogoUrlService $barangayLogoUrlService,
     ) {}
 
     public function index(): View
@@ -48,6 +50,11 @@ class ProgramAccomplishmentsController extends Controller
             $hasProgramReports = in_array((int) $barangay->id, $publishedBarangayIds, true);
             $barangay->setAttribute('program_reports_exists', $hasProgramReports);
             $barangay->setAttribute('accomplishments_exists', (bool) $barangay->accomplishments_exists || $hasProgramReports);
+            try {
+                $barangay->setAttribute('logo_url', $this->barangayLogoUrlService->resolve((int) $barangay->id));
+            } catch (Throwable $e) {
+                $barangay->setAttribute('logo_url', null);
+            }
         });
 
         return view('program_accomplishments::barangays.index', [
@@ -72,10 +79,18 @@ class ProgramAccomplishmentsController extends Controller
             Log::warning('Program accomplishment reports unavailable for barangay '.$barangay->id.': '.$e->getMessage());
         }
 
+        $logoUrl = null;
+        try {
+            $logoUrl = $this->barangayLogoUrlService->resolve((int) $barangay->id);
+        } catch (Throwable $e) {
+            $logoUrl = null;
+        }
+
         return view('program_accomplishments::barangays.show', [
             'barangay' => $barangay,
             'accomplishment' => $accomplishment,
             'programReports' => $programReports,
+            'logoUrl' => $logoUrl,
             'hideFooter' => true,
         ]);
     }

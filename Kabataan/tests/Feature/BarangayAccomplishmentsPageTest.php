@@ -20,7 +20,7 @@ it('renders an empty state when a barangay has no accomplishment document', func
     $response = $this->get(route('program_accomplishments.barangays.show', $barangay->slug));
 
     $response->assertOk();
-    $response->assertSee('No Accomplishments uploaded yet');
+    $response->assertSee('No Accomplishment uploaded yet');
 });
 
 it('returns 404 for unknown barangay slugs in accomplishments', function () {
@@ -41,5 +41,5 @@ it('renders accomplishment data when available', function () {
 
     $response->assertOk();
     $response->assertSee((string) $document->fiscal_year);
-    $response->assertDontSee('No Accomplishments uploaded yet');
+    $response->assertDontSee('No Accomplishment uploaded yet');
 });

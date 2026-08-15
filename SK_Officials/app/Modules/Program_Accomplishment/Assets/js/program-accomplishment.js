@@ -14,6 +14,9 @@ const PAState = {
     uploadedImages: [],
     uploadedDocuments: [],
     existingImages: [],
+    existingDocuments: [],
+    deletedImageIds: [],
+    deletedDocumentIds: [],
     lightboxImages: [],
     currentLightboxIndex: 0,
     filters: {
@@ -41,6 +44,40 @@ function formatDate(dateString) {
         month: 'short',
         day: 'numeric'
     });
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function programApprovedBudget(program, report) {
+    const values = [
+        program?.total,
+        program?.approved_budget,
+        report?.approved_budget,
+        program?.participation_quantity,
+    ];
+
+    for (const value of values) {
+        const amount = Number(value);
+        if (Number.isFinite(amount) && amount > 0) {
+            return amount;
+        }
+    }
+
+    return 0;
+}
+
+function remainingBudgetAmount(program, report, actualExpense) {
+    const approved = programApprovedBudget(program, report);
+    const spent = Number(actualExpense);
+    const expense = Number.isFinite(spent) ? spent : 0;
+
+    return Math.max(0, approved - expense);
 }
 
 function showToast(message, type = 'success') {
@@ -136,7 +173,7 @@ function renderTable() {
     if (pageData.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="11" class="pa-empty-state">
+                <td colspan="10" class="pa-empty-state">
                     <div class="pa-empty-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -164,9 +201,8 @@ function renderTable() {
                 <td>${program.committee || 'N/A'}</td>
                 <td>${formatDate(program.start_date)}</td>
                 <td>${formatDate(program.end_date)}</td>
-                <td>${formatCurrency(program.approved_budget || program.participation_quantity || 0)}</td>
+                <td>${formatCurrency(programApprovedBudget(program))}</td>
                 <td>${program.creator || 'N/A'}</td>
-                <td>0</td>
                 <td><span class="pa-status-badge pa-status-completed">Completed</span></td>
                 <td>
                     <span class="pa-status-badge ${hasReport ? 'pa-status-with-report' : 'pa-status-without-report'}">
@@ -174,43 +210,29 @@ function renderTable() {
                     </span>
                 </td>
                 <td class="col-actions">
-                    <div class="pa-actions">
-                        <button type="button" class="pa-action-btn view" data-action="view-program" data-id="${program.id}" title="View Program">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                        </button>
-                        ${hasReport ? `
-                            <button type="button" class="pa-action-btn view" data-action="view-report" data-id="${report.id}" title="View Report">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                                    <polyline points="10 9 9 9 8 9"></polyline>
-                                </svg>
-                            </button>
-                            <button type="button" class="pa-action-btn edit" data-action="edit-report" data-id="${report.id}" title="Edit Report">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                </svg>
-                            </button>
-                            <button type="button" class="pa-action-btn delete" data-action="delete-report" data-id="${report.id}" title="Delete Report">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                </svg>
-                            </button>
-                        ` : `
-                            <button type="button" class="pa-action-btn" data-action="create-report" data-id="${createId}" data-abyip-id="${program.abyip_program_id || ''}" title="Create Accomplishment" style="color: #22c55e;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                </svg>
-                            </button>
-                        `}
+                    <div class="row-actions-menu">
+                        <button type="button" class="row-actions-trigger" aria-label="Actions" aria-haspopup="true" aria-expanded="false">${window.ROW_ACTIONS_ELLIPSIS || '⋯'}</button>
+                        <div class="row-actions-dropdown" role="menu">
+                            ${hasReport ? `
+                                <button type="button" class="row-actions-item row-actions-item-view" data-action="view-report" data-id="${report.id}" role="menuitem">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    <span>View</span>
+                                </button>
+                                <button type="button" class="row-actions-item row-actions-item-edit" data-action="edit-report" data-id="${report.id}" role="menuitem">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    <span>Edit</span>
+                                </button>
+                                <button type="button" class="row-actions-item row-actions-item-danger" data-action="delete-report" data-id="${report.id}" role="menuitem">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                    <span>Delete</span>
+                                </button>
+                            ` : `
+                                <button type="button" class="row-actions-item row-actions-item-approve" data-action="create-report" data-id="${createId}" data-abyip-id="${program.abyip_program_id || ''}" role="menuitem">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                    <span>Create</span>
+                                </button>
+                            `}
+                        </div>
                     </div>
                 </td>
             `;
@@ -261,6 +283,9 @@ function resetForm() {
     PAState.uploadedImages = [];
     PAState.uploadedDocuments = [];
     PAState.existingImages = [];
+    PAState.existingDocuments = [];
+    PAState.deletedImageIds = [];
+    PAState.deletedDocumentIds = [];
     PAState.currentReportId = null;
     PAState.currentProgramId = null;
     
@@ -268,6 +293,10 @@ function resetForm() {
     document.getElementById('paUploadProgress').innerHTML = '';
     document.getElementById('paExistingImages').innerHTML = '';
     document.getElementById('paExistingImagesSection').style.display = 'none';
+    const existingDocs = document.getElementById('paExistingDocuments');
+    if (existingDocs) existingDocs.innerHTML = '';
+    const newDocs = document.getElementById('paDocumentPreview');
+    if (newDocs) newDocs.innerHTML = '';
     document.getElementById('paBudgetValidation').classList.remove('show');
     document.getElementById('paImageValidation').classList.remove('show');
     
@@ -285,7 +314,7 @@ function loadProgramIntoForm(program) {
     const indicatorEl = document.getElementById('paPerformanceIndicator');
     if (indicatorEl) indicatorEl.value = program.performance_indicator || '';
     document.getElementById('paPersonResponsible').value = program.person_responsible || program.creator || '';
-    const budget = program.approved_budget || program.participation_quantity || 0;
+    const budget = programApprovedBudget(program);
     document.getElementById('paBudgetAllocated').value = formatCurrency(budget);
     document.getElementById('paBudgetAllocatedDisplay').textContent = formatCurrency(budget);
     document.getElementById('paDateStarted').value = formatDate(program.start_date);
@@ -299,10 +328,6 @@ function loadReportIntoForm(report) {
     if (summary) summary.value = report.implementation_summary || '';
     const actualResult = document.getElementById('paActualResult');
     if (actualResult) actualResult.value = report.actual_result || '';
-    const implDate = document.getElementById('paActualImplementationDate');
-    if (implDate) implDate.value = report.actual_implementation_date || '';
-    const completionDate = document.getElementById('paActualCompletionDate');
-    if (completionDate) completionDate.value = report.actual_completion_date || '';
     const target = document.getElementById('paTargetBeneficiaries');
     if (target) target.value = report.target_beneficiaries || '';
     document.getElementById('paParticipantsCount').value = report.participants_count || '';
@@ -311,10 +336,13 @@ function loadReportIntoForm(report) {
     
     PAState.currentReportId = report.id;
     
-    // Load existing images
-    const reportImages = PAState.images.filter(img => img.accomplishment_report_id === report.id);
+    const reportImages = Array.isArray(report.images) && report.images.length
+        ? report.images
+        : PAState.images.filter((img) => img.accomplishment_report_id === report.id);
     PAState.existingImages = reportImages;
+    PAState.existingDocuments = Array.isArray(report.documents) ? report.documents : [];
     renderExistingImages();
+    renderExistingDocuments();
     
     updateBudgetSummary();
 }
@@ -323,6 +351,8 @@ function renderExistingImages() {
     const container = document.getElementById('paExistingImages');
     const section = document.getElementById('paExistingImagesSection');
     
+    if (!container || !section) return;
+
     if (PAState.existingImages.length === 0) {
         container.innerHTML = '';
         section.style.display = 'none';
@@ -332,10 +362,52 @@ function renderExistingImages() {
     section.style.display = 'block';
     container.innerHTML = PAState.existingImages.map((img, index) => `
         <div class="pa-existing-image-item" data-index="${index}" data-id="${img.id}">
-            <img src="${img.secure_url}" alt="${img.display_name || 'Image'}" loading="lazy">
-            <div class="pa-existing-image-caption">${img.display_name || `Image ${index + 1}`}</div>
+            <img src="${escapeHtml(img.secure_url || img.image_url)}" alt="Program photo" loading="lazy">
+            <button type="button" class="pa-image-preview-remove pa-existing-image-remove" data-index="${index}" aria-label="Remove image">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
         </div>
     `).join('');
+}
+
+function renderExistingDocuments() {
+    const container = document.getElementById('paExistingDocuments');
+    if (!container) return;
+
+    if (!PAState.existingDocuments.length) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = PAState.existingDocuments.map((doc, index) => `
+        <div class="pa-doc-row pa-existing-doc-row">
+            <span>${escapeHtml(doc.original_name || 'Document')}</span>
+            <button type="button" class="pa-existing-doc-remove" data-index="${index}">Remove</button>
+        </div>
+    `).join('');
+}
+
+function removeExistingImage(index) {
+    const image = PAState.existingImages[index];
+    if (!image) return;
+    if (image.id) {
+        PAState.deletedImageIds.push(image.id);
+    }
+    PAState.existingImages.splice(index, 1);
+    renderExistingImages();
+}
+
+function removeExistingDocument(index) {
+    const doc = PAState.existingDocuments[index];
+    if (!doc) return;
+    if (doc.id) {
+        PAState.deletedDocumentIds.push(doc.id);
+    }
+    PAState.existingDocuments.splice(index, 1);
+    renderExistingDocuments();
 }
 
 // Budget Calculation
@@ -346,7 +418,7 @@ function updateBudgetSummary() {
     // Parse budget allocated (remove currency formatting)
     const budgetAllocated = parseFloat(budgetAllocatedText.replace(/[^0-9.-]+/g, '')) || 0;
     
-    const remainingBudget = budgetAllocated - actualExpense;
+    const remainingBudget = Math.max(0, budgetAllocated - actualExpense);
     const utilization = budgetAllocated > 0 ? (actualExpense / budgetAllocated) * 100 : 0;
     
     document.getElementById('paActualExpenseDisplay').textContent = formatCurrency(actualExpense);
@@ -416,7 +488,7 @@ function renderImagePreview() {
     const container = document.getElementById('paImagePreview');
     container.innerHTML = PAState.uploadedImages.map((img, index) => `
         <div class="pa-image-preview-item" data-index="${index}">
-            <img src="${img.preview}" alt="${img.name}" loading="lazy">
+            <img src="${img.preview}" alt="Program photo" loading="lazy">
             <button type="button" class="pa-image-preview-remove" data-index="${index}" title="Remove">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -480,8 +552,10 @@ function updateLightboxImage() {
     const lightboxImage = document.getElementById('paLightboxImage');
     const lightboxCaption = document.getElementById('paLightboxCaption');
     
-    lightboxImage.src = image.secure_url || image.preview;
-    lightboxCaption.textContent = image.display_name || image.caption || `Image ${PAState.currentLightboxIndex + 1}`;
+    lightboxImage.src = image.secure_url || image.image_url || image.preview;
+    if (lightboxCaption) {
+        lightboxCaption.textContent = '';
+    }
 }
 
 function nextLightboxImage() {
@@ -502,8 +576,13 @@ function prevLightboxImage() {
 async function viewReport(reportId) {
     const report = await loadReportForView(reportId);
     if (!report) return;
-    
-    const program = report.program;
+
+    const listedProgram = PAState.programs.find((p) =>
+        p.id === report.program_id || p.accomplishment_report_id === report.id
+    );
+    const program = listedProgram
+        ? { ...(report.program || {}), ...listedProgram }
+        : (report.program || null);
     const reportImages = report.images || [];
     
     const content = document.getElementById('paViewContent');
@@ -529,7 +608,7 @@ async function viewReport(reportId) {
                 </div>
                 <div class="pa-view-info-item">
                     <span class="pa-view-info-label">Budget Allocated</span>
-                    <span class="pa-view-info-value">${formatCurrency(program?.participation_quantity || 0)}</span>
+                    <span class="pa-view-info-value">${formatCurrency(programApprovedBudget(program, report))}</span>
                 </div>
                 <div class="pa-view-info-item">
                     <span class="pa-view-info-label">Date Started</span>
@@ -551,7 +630,7 @@ async function viewReport(reportId) {
             <div class="pa-budget-summary">
                 <div class="pa-budget-item">
                     <span class="pa-budget-label">Budget Allocated:</span>
-                    <span class="pa-budget-value">${formatCurrency(report.approved_budget || program?.approved_budget || program?.participation_quantity || 0)}</span>
+                    <span class="pa-budget-value">${formatCurrency(programApprovedBudget(program, report))}</span>
                 </div>
                 <div class="pa-budget-item">
                     <span class="pa-budget-label">Actual Expense:</span>
@@ -559,7 +638,7 @@ async function viewReport(reportId) {
                 </div>
                 <div class="pa-budget-item pa-budget-item-highlight">
                     <span class="pa-budget-label">Remaining Budget:</span>
-                    <span class="pa-budget-value">${formatCurrency(report.remaining_budget || 0)}</span>
+                    <span class="pa-budget-value">${formatCurrency(remainingBudgetAmount(program, report, report.actual_expense))}</span>
                 </div>
                 <div class="pa-budget-item">
                     <span class="pa-budget-label">Budget Utilization:</span>
@@ -616,8 +695,7 @@ async function viewReport(reportId) {
                 <div class="pa-gallery">
                     ${reportImages.map((img, index) => `
                         <div class="pa-gallery-item" data-index="${index}">
-                            <img src="${img.secure_url}" alt="${img.display_name || 'Image'}" loading="lazy">
-                            <div class="pa-gallery-caption">${img.display_name || `Image ${index + 1}`}</div>
+                            <img src="${img.secure_url}" alt="Program photo" loading="lazy">
                         </div>
                     `).join('')}
                 </div>
@@ -637,6 +715,8 @@ async function viewReport(reportId) {
         publishBtn.hidden = !canPublish;
         PAState.currentReportId = canPublish ? report.id : PAState.currentReportId;
         if (canPublish) PAState.currentReportId = report.id;
+        const viewFooter = document.getElementById('paViewModalFooter');
+        if (viewFooter) viewFooter.hidden = !canPublish;
     }
     openModal('paViewModal');
 }
@@ -647,13 +727,46 @@ function showDeleteConfirm(reportId) {
     if (!report) return;
     
     const program = PAState.programs.find(p => p.id === report.program_id);
-    const reportImages = PAState.images.filter(img => img.accomplishment_report_id === reportId);
+    const programName = program?.program_name
+        || report.program?.program_name
+        || report.title
+        || 'this program';
+    const reportImages = Array.isArray(report.images) && report.images.length
+        ? report.images
+        : PAState.images.filter(img => img.accomplishment_report_id === reportId);
     
-    document.getElementById('paDeleteProgramTitle').textContent = program?.title || 'Unknown Program';
-    document.getElementById('paDeleteImageCount').textContent = reportImages.length;
+    document.getElementById('paDeleteProgramTitle').textContent = programName;
+    document.getElementById('paDeleteImageCount').textContent = String(reportImages.length);
+
+    const confirmInput = document.getElementById('paDeleteConfirmInput');
+    const confirmBtn = document.getElementById('paDeleteConfirmBtn');
+    const hintError = document.getElementById('paDeleteConfirmHintError');
+    if (confirmInput) confirmInput.value = '';
+    if (hintError) hintError.hidden = true;
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.classList.add('is-disabled');
+        confirmBtn.classList.remove('is-enabled');
+    }
     
     PAState.currentReportId = reportId;
     openModal('paDeleteModal');
+    confirmInput?.focus();
+}
+
+function syncPaDeleteConfirm() {
+    const confirmInput = document.getElementById('paDeleteConfirmInput');
+    const confirmBtn = document.getElementById('paDeleteConfirmBtn');
+    const hintError = document.getElementById('paDeleteConfirmHintError');
+    if (!confirmInput || !confirmBtn) return;
+
+    const matched = confirmInput.value === 'Confirm';
+    if (hintError) {
+        hintError.hidden = !(confirmInput.value.length > 0 && !matched);
+    }
+    confirmBtn.disabled = !matched;
+    confirmBtn.classList.toggle('is-disabled', !matched);
+    confirmBtn.classList.toggle('is-enabled', matched);
 }
 
 // Form Validation
@@ -753,8 +866,8 @@ async function openCreateForProgram(button) {
 function initializeEventListeners() {
     // Table actions
     document.getElementById('paTableBody').addEventListener('click', (e) => {
-        const button = e.target.closest('button');
-        if (!button) return;
+        const button = e.target.closest('[data-action]');
+        if (!button || button.classList.contains('row-actions-trigger')) return;
         
         const action = button.dataset.action;
         const id = parseInt(button.dataset.id);
@@ -772,7 +885,9 @@ function initializeEventListeners() {
                 const report = PAState.accomplishmentReports.find(r => r.id === id);
                 if (report) {
                     resetForm();
-                    const program = PAState.programs.find(p => p.id === report.program_id);
+                    const program = PAState.programs.find((p) => p.id === report.program_id)
+                        || PAState.programs.find((p) => p.accomplishment_report_id === report.id)
+                        || report.program;
                     if (program) {
                         loadProgramIntoForm(program);
                     }
@@ -794,9 +909,8 @@ function initializeEventListeners() {
     
     document.getElementById('paViewModalClose').addEventListener('click', () => closeModal('paViewModal'));
     document.getElementById('paViewModalOverlay').addEventListener('click', () => closeModal('paViewModal'));
-    document.getElementById('paViewCloseBtn').addEventListener('click', () => closeModal('paViewModal'));
     
-    document.getElementById('paDeleteModalClose').addEventListener('click', () => closeModal('paDeleteModal'));
+    document.getElementById('paDeleteModalClose')?.addEventListener('click', () => closeModal('paDeleteModal'));
     document.getElementById('paDeleteModalOverlay').addEventListener('click', () => closeModal('paDeleteModal'));
     document.getElementById('paDeleteCancelBtn').addEventListener('click', () => closeModal('paDeleteModal'));
     
@@ -826,40 +940,30 @@ function initializeEventListeners() {
         documentInput.addEventListener('change', (e) => {
             PAState.uploadedDocuments = Array.from(e.target.files || []).map((file) => ({
                 file,
-                visibility: 'internal',
                 document_type: 'other',
             }));
             const preview = document.getElementById('paDocumentPreview');
             if (preview) {
-                preview.innerHTML = PAState.uploadedDocuments.map((doc, index) => `
+                preview.innerHTML = PAState.uploadedDocuments.map((doc) => `
                     <div class="pa-doc-row">
-                        <span>${doc.file.name}</span>
-                        <label>Visibility
-                            <select data-doc-index="${index}">
-                                <option value="internal">Internal</option>
-                                <option value="public">Public</option>
-                            </select>
-                        </label>
+                        <span>${escapeHtml(doc.file.name)}</span>
                     </div>
                 `).join('');
-                preview.querySelectorAll('select').forEach((select) => {
-                    select.addEventListener('change', () => {
-                        const idx = Number(select.dataset.docIndex);
-                        if (PAState.uploadedDocuments[idx]) {
-                            PAState.uploadedDocuments[idx].visibility = select.value;
-                        }
-                    });
-                });
             }
         });
     }
     
     // Delete confirm
     document.getElementById('paDeleteConfirmBtn').addEventListener('click', () => {
+        const confirmInput = document.getElementById('paDeleteConfirmInput');
+        if ((confirmInput?.value || '') !== 'Confirm') {
+            return;
+        }
         if (PAState.currentReportId) {
             deleteReport(PAState.currentReportId);
         }
     });
+    document.getElementById('paDeleteConfirmInput')?.addEventListener('input', syncPaDeleteConfirm);
     
     // Image upload
     const uploadArea = document.getElementById('paUploadArea');
@@ -891,10 +995,48 @@ function initializeEventListeners() {
     document.getElementById('paImagePreview').addEventListener('click', (e) => {
         const button = e.target.closest('.pa-image-preview-remove');
         if (button) {
-            const index = parseInt(button.dataset.index);
+            e.stopPropagation();
+            const index = parseInt(button.dataset.index, 10);
             removeUploadedImage(index);
+            return;
+        }
+
+        const item = e.target.closest('.pa-image-preview-item');
+        if (item) {
+            const index = parseInt(item.dataset.index, 10);
+            const images = PAState.uploadedImages.map((img) => ({
+                secure_url: img.preview,
+            }));
+            openLightbox(images, index);
         }
     });
+
+    const existingImages = document.getElementById('paExistingImages');
+    if (existingImages) {
+        existingImages.addEventListener('click', (e) => {
+            const button = e.target.closest('.pa-existing-image-remove');
+            if (button) {
+                e.stopPropagation();
+                removeExistingImage(parseInt(button.dataset.index, 10));
+                return;
+            }
+
+            const item = e.target.closest('.pa-existing-image-item');
+            if (item) {
+                openLightbox(PAState.existingImages, parseInt(item.dataset.index, 10));
+            }
+        });
+    }
+
+    const existingDocs = document.getElementById('paExistingDocuments');
+    if (existingDocs) {
+        existingDocs.addEventListener('click', (e) => {
+            const button = e.target.closest('.pa-existing-doc-remove');
+            if (button) {
+                removeExistingDocument(parseInt(button.dataset.index, 10));
+            }
+        });
+    }
     
     // Budget calculation
     document.getElementById('paActualExpense').addEventListener('input', updateBudgetSummary);
@@ -1033,8 +1175,6 @@ async function saveReport() {
     formData.append('title', document.getElementById('paProgram').value.trim());
     formData.append('implementation_summary', document.getElementById('paImplementationSummary').value.trim());
     formData.append('actual_result', document.getElementById('paActualResult')?.value.trim() || '');
-    formData.append('actual_implementation_date', document.getElementById('paActualImplementationDate')?.value || '');
-    formData.append('actual_completion_date', document.getElementById('paActualCompletionDate')?.value || '');
     formData.append('target_beneficiaries', document.getElementById('paTargetBeneficiaries')?.value || '');
     formData.append('participants_count', document.getElementById('paParticipantsCount').value || '0');
     formData.append('actual_expense', document.getElementById('paActualExpense').value || '0');
@@ -1049,9 +1189,17 @@ async function saveReport() {
 
     PAState.uploadedDocuments.forEach((doc, index) => {
         formData.append(`documents[${index}]`, doc.file);
-        formData.append(`document_visibility[${index}]`, doc.visibility || 'internal');
         formData.append(`document_types[${index}]`, doc.document_type || 'other');
     });
+
+    if (PAState.currentMode !== 'create') {
+        PAState.deletedImageIds.forEach((id, index) => {
+            formData.append(`delete_images[${index}]`, id);
+        });
+        PAState.deletedDocumentIds.forEach((id, index) => {
+            formData.append(`delete_documents[${index}]`, id);
+        });
+    }
     
     const url = PAState.currentMode === 'create' 
         ? '/api/program-accomplishment'
@@ -1171,10 +1319,22 @@ async function deleteReport(reportId) {
 }
 
 async function loadReportForView(reportId) {
+    const local = PAState.accomplishmentReports.find((r) => r.id === reportId);
+    if (local) {
+        return local;
+    }
+
     try {
-        const response = await fetch(`/api/program-accomplishment/${reportId}`);
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const response = await fetch(`/api/program-accomplishment/${reportId}`, {
+            headers: {
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': csrf,
+            },
+            credentials: 'same-origin',
+        });
         if (!response.ok) throw new Error('Failed to load report');
-        
+
         const result = await response.json();
         if (result.success && result.report) {
             return result.report;
@@ -1219,4 +1379,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     initializeEventListeners();
+    if (typeof window.bindRowActionsTable === 'function') {
+        window.bindRowActionsTable(document.getElementById('paTableBody'));
+    }
 });

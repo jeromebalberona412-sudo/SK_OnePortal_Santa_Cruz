@@ -104,8 +104,6 @@ class ProgramAccomplishmentController extends Controller
                 'images.*' => 'file|image|mimes:jpeg,jpg,png,webp|max:10240',
                 'documents' => 'nullable|array',
                 'documents.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
-                'document_visibility' => 'nullable|array',
-                'document_visibility.*' => 'in:internal,public',
                 'document_types' => 'nullable|array',
                 'document_types.*' => 'nullable|string|max:80',
             ]);
@@ -144,9 +142,9 @@ class ProgramAccomplishmentController extends Controller
 
         try {
             $report = $this->accomplishmentService->getReportById($id);
+            $reportBarangayId = (int) ($report['barangay_id'] ?? $report['program']['barangay_id'] ?? 0);
 
-            // Verify the report belongs to the user's barangay
-            if ($report['barangay'] && $report['program'] && $report['program']['barangay_id'] !== $user->barangay_id) {
+            if ($reportBarangayId > 0 && $reportBarangayId !== (int) $user->barangay_id) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -201,8 +199,6 @@ class ProgramAccomplishmentController extends Controller
                 'update_images.*.sort_order' => 'sometimes|required|integer',
                 'documents' => 'nullable|array',
                 'documents.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
-                'document_visibility' => 'nullable|array',
-                'document_visibility.*' => 'in:internal,public',
                 'document_types' => 'nullable|array',
                 'document_types.*' => 'nullable|string|max:80',
                 'delete_documents' => 'nullable|array',
