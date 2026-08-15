@@ -797,10 +797,10 @@
 
             if (autoApproved) {
                 if (titleEl) {
-                    titleEl.textContent = 'Registration Verified!';
+                    titleEl.textContent = 'Registration Submitted Successfully';
                 }
                 if (messageEl) {
-                    messageEl.textContent = 'Your details match a previous KK profiling record for your barangay. Your account is approved — you can log in now.';
+                    messageEl.textContent = 'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.';
                 }
             } else {
                 if (titleEl) {
@@ -889,6 +889,8 @@
         { name: 'sk_voter', chk: 'sk_voterChk', hiddenId: 'kkpSkVoter' },
         { name: 'national_voter', chk: 'national_voterChk', hiddenId: 'kkpNationalVoter' },
         { name: 'kk_assembly', chk: 'kk_assemblyChk', hiddenId: 'kkpKkAssembly' },
+        { name: 'kk_times', chk: 'kk_timesChk', hiddenId: 'kkpKkTimes' },
+        { name: 'kk_reason', chk: 'kk_reasonChk', hiddenId: 'kkpKkReason' },
         { name: 'sk_voted', chk: 'sk_votedChk', hiddenId: 'kkpSkVoted' },
         { name: 'group_chat', chk: 'group_chatChk', hiddenId: 'kkpGroupChat' },
     ];
@@ -935,11 +937,33 @@
             }
         });
 
+        if (typeof window.syncAssemblyFollowUp === 'function') {
+            window.syncAssemblyFollowUp();
+        }
+
+        if (step1.kk_times) {
+            setCheckboxGroupValue('kk_timesChk', 'kkpKkTimes', step1.kk_times);
+        }
+        if (step1.kk_reason) {
+            setCheckboxGroupValue('kk_reasonChk', 'kkpKkReason', step1.kk_reason);
+        }
+
         if (step1.suffix) {
             const suffixSelect = document.getElementById('kkpSuffix');
             if (suffixSelect) {
-                suffixSelect.value = step1.suffix;
-                suffixSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                const options = Array.from(suffixSelect.options).map((option) => option.value);
+                let suffixValue = String(step1.suffix).trim();
+                if (!options.includes(suffixValue) && suffixValue && suffixValue.toLowerCase() !== 'none') {
+                    suffixSelect.value = 'Others';
+                    suffixSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                    const customSuffix = document.getElementById('kkpCustomSuffix');
+                    if (customSuffix) {
+                        customSuffix.value = suffixValue;
+                    }
+                } else {
+                    suffixSelect.value = suffixValue || 'None';
+                    suffixSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                }
             }
         }
 
@@ -1326,6 +1350,25 @@
         }
 
         try {
+            const assemblyHidden = document.getElementById('kkpKkAssembly');
+            const timesHidden = document.getElementById('kkpKkTimes');
+            const reasonHidden = document.getElementById('kkpKkReason');
+            const checkedAssembly = document.querySelector('input[name="kk_assemblyChk"]:checked');
+            const checkedTimes = document.querySelector('input[name="kk_timesChk"]:checked');
+            const checkedReason = document.querySelector('input[name="kk_reasonChk"]:checked');
+            if (assemblyHidden && checkedAssembly) {
+                assemblyHidden.disabled = false;
+                assemblyHidden.value = checkedAssembly.value;
+            }
+            if (timesHidden) {
+                timesHidden.disabled = false;
+                timesHidden.value = checkedTimes ? checkedTimes.value : (assemblyHidden?.value === 'Yes' ? timesHidden.value : '');
+            }
+            if (reasonHidden) {
+                reasonHidden.disabled = false;
+                reasonHidden.value = checkedReason ? checkedReason.value : (assemblyHidden?.value === 'No' ? reasonHidden.value : '');
+            }
+
             const formData = new FormData(form);
             formData.append('respondent_number', root.dataset.respondentNumber || '');
 

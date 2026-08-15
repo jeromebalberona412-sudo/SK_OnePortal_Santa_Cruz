@@ -31,14 +31,44 @@ class KabataanQuestionnairePrintPresenter
         };
 
         $isChecked = static function (string $field, string $option) use ($read): bool {
-            $stored = $read($field);
+            $keys = [$field];
+            if ($field === 'education') {
+                $keys[] = 'educational_background';
+            }
 
-            return strcasecmp(trim($stored), trim($option)) === 0;
+            $optionNorm = strtolower(trim($option));
+            $aliases = [
+                'there was no kk assembly' => ['there was no kk assembly meeting'],
+                'there was no kk assembly meeting' => ['there was no kk assembly'],
+                'not interested to attend' => ['not interested to attend'],
+                'high school level' => ['high school level'],
+                'high school grad' => ['high school grad'],
+            ];
+
+            foreach ($keys as $key) {
+                $stored = strtolower(trim($read($key)));
+                if ($stored === '') {
+                    continue;
+                }
+                if ($stored === $optionNorm) {
+                    return true;
+                }
+                foreach ($aliases[$optionNorm] ?? [] as $alias) {
+                    if ($stored === $alias) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         };
 
         $suffix = trim((string) ($registration->suffix ?? $read('suffix')));
+        $customSuffix = $read('custom_suffix') ?: $read('suffix_other');
         if ($suffix === '' || strcasecmp($suffix, 'none') === 0) {
             $suffix = '';
+        } elseif (strcasecmp($suffix, 'other') === 0 || strcasecmp($suffix, 'others') === 0) {
+            $suffix = $customSuffix;
         }
 
         $nameParts = array_filter([
@@ -71,7 +101,14 @@ class KabataanQuestionnairePrintPresenter
             'barangay' => $registration->barangay?->name ?? $read('barangay'),
             'purokZone' => $read('purok_zone'),
             'age' => $read('age'),
-            'birthday' => $read('birthday'),
+            'birthday' => (static function () use ($read) {
+                $value = $read('birthday');
+                if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $value, $m)) {
+                    return $m[2] . '/' . $m[3] . '/' . $m[1];
+                }
+
+                return $value;
+            })(),
             'email' => $read('email', (string) $registration->email),
             'contactNumber' => $read('contact_number', (string) ($registration->contact_number ?? '')),
             'facebook' => $read('facebook_profile_url') ?: $read('facebook'),

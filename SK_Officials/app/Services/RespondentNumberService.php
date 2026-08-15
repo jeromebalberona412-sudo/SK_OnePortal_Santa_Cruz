@@ -65,7 +65,7 @@ class RespondentNumberService
             return self::formatQueueNumber($sequence);
         }
 
-        return '—';
+        return 'Auto-generated';
     }
 
     public function ensureAssigned(KabataanRegistration $registration): string

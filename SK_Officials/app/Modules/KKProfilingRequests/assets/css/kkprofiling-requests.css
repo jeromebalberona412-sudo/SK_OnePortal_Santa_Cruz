@@ -2631,6 +2631,7 @@ body {
 
 .kk-view-modal-wide {
     max-width: 900px !important;
+    width: min(900px, 96vw) !important;
     max-height: 92vh !important;
 }
 

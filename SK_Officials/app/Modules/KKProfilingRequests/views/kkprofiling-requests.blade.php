@@ -13,6 +13,7 @@
         'app/Modules/Layout/css/table-row-actions-menu.css',
         'app/Modules/Kabataan/assets/css/kabataan.css',
         'app/Modules/KKProfilingRequests/assets/css/kkprofiling-requests.css',
+        'app/Modules/KKProfilingRequests/assets/css/kkp-paper-form.css',
         'app/Modules/KKProfilingRequests/assets/css/kk-questionnaire-view.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
@@ -207,7 +208,7 @@
         </div>
         <div class="modal-body kk-view-modal-body kk-qs-body">
             <div class="kk-qs-scroll-wrapper">
-                @include('KKProfilingRequests::partials.kk-survey-view-form', [
+                @include('KKProfilingRequests::partials.kk-profiling-view-questionnaire', [
                     'barangayLogoUrl' => $barangayLogoUrl ?? null,
                     'barangayName' => $barangayName ?? null,
                 ])

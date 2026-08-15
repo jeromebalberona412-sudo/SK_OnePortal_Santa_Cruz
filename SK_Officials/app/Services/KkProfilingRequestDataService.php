@@ -133,9 +133,17 @@ class KkProfilingRequestDataService
         }
 
         $formData = $registration->form_data ?? [];
-        $val = static fn (string $key) => is_array($formData[$key] ?? null)
-            ? ($formData[$key][0] ?? '—')
-            : ($formData[$key] ?? '—');
+        $val = static function (string $key) use ($formData) {
+            $raw = $formData[$key] ?? null;
+            if (is_array($raw)) {
+                $raw = $raw[0] ?? null;
+            }
+            if ($raw === null || $raw === '' || $raw === '—') {
+                return null;
+            }
+
+            return $raw;
+        };
 
         $payload = [
             'id' => $registration->id,
@@ -212,7 +220,7 @@ class KkProfilingRequestDataService
         $normalized = trim((string) ($suffix ?? ''));
 
         if ($normalized === '' || strcasecmp($normalized, 'none') === 0) {
-            return null;
+            return 'None';
         }
 
         if (in_array(strtolower($normalized), ['other', 'others'], true)) {

@@ -1,3 +1,5 @@
+import { populateKkProfilingView } from './kk-profiling-view-populate.js';
+
 function broadcastKkProfileEvent() {
     try {
         sessionStorage.setItem('kk-profile-event', JSON.stringify({ at: Date.now() }));
@@ -18,7 +20,7 @@ function formatRespondentDisplay(seq, fullNumber) {
         const n = parseInt(seq, 10);
         return Number.isNaN(n) ? '—' : String(n).padStart(4, '0');
     }
-    return '—';
+    return 'Auto-generated';
 }
 
 const HIDDEN_REGISTRATION_STATUSES = new Set([
@@ -84,18 +86,18 @@ function initializeKKProfilingRequestsUI() {
 
     function formatDisplaySuffix(suffix, suffixOther) {
         if (!suffix) {
-            return '';
+            return 'None';
         }
 
         const normalized = String(suffix).trim();
 
         if (!normalized || normalized.toLowerCase() === 'none') {
-            return '';
+            return 'None';
         }
 
         if (normalized.toLowerCase() === 'other' || normalized.toLowerCase() === 'others') {
             const other = String(suffixOther || '').trim();
-            return other || '';
+            return other || 'None';
         }
 
         return normalized;
@@ -197,17 +199,18 @@ function initializeKKProfilingRequestsUI() {
     }
 
     function formatFullName(r) {
-        const parts = [r.firstName, r.middleName].filter(Boolean);
-        const firstMiddle = parts.length ? parts.join(',') : '';
-        const last = r.lastName || '';
+        const last = String(r.lastName || '').trim();
+        const first = String(r.firstName || '').trim();
+        const middle = String(r.middleName || '').trim();
         const suffixPart = formatDisplaySuffix(r.suffix, r.suffixOther);
-        const suffix = suffixPart ? ',' + suffixPart : '';
+        const skipSuffix = !suffixPart || suffixPart.toLowerCase() === 'none';
+        const parts = [last, first, middle];
+        if (!skipSuffix) {
+            parts.push(suffixPart);
+        }
 
-        if (last && firstMiddle) return `${last},${firstMiddle}${suffix}`;
-        if (last) return `${last}${suffix}`;
-        if (firstMiddle) return `${firstMiddle}${suffix}`;
-
-        return '-';
+        const visible = parts.filter(Boolean);
+        return visible.length ? visible.join(', ') : '-';
     }
 
     let currentSearchQuery = '';
@@ -389,87 +392,7 @@ function initializeKKProfilingRequestsUI() {
     }
 
     function populateSurveyViewForm(request) {
-        const setVal = (id, val) => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = val ?? '';
-        };
-
-        setVal('vRespondentNumber', request.respondentNumber);
-        setVal('vDate', request.date);
-        setVal('vLastName', request.lastName);
-        setVal('vFirstName', request.firstName);
-        setVal('vMiddleName', request.middleName || '—');
-        const suffixEl = document.getElementById('vSuffix');
-        const suffixCol = suffixEl?.closest('.kkf-name-col');
-        const suffixDisplay = formatDisplaySuffix(request.suffix, request.suffixOther);
-        if (suffixEl) suffixEl.textContent = suffixDisplay || '—';
-        if (suffixCol) suffixCol.hidden = !suffixDisplay;
-        setVal('vRegion', request.region);
-        setVal('vProvince', request.province);
-        setVal('vCity', request.city);
-        setVal('vBarangay', request.barangay);
-        setVal('vPurokZone', request.purokZone);
-        setVal('vAge', request.age);
-        setVal('vDob', request.birthday);
-        setVal('vEmail', request.emailAddress);
-        setVal('vContact', request.contactNumber);
-        setVal('vFacebook', request.facebookAccount || '—');
-
-        const logoEl = document.getElementById('kkRequestBarangayLogo');
-        if (logoEl && request.barangayLogoUrl) {
-            logoEl.src = request.barangayLogoUrl;
-            logoEl.alt = `${request.barangay || 'Barangay'} SK Logo`;
-        }
-
-        const vSignatureImg = document.getElementById('vSignature');
-        const vSignatureOverlay = document.getElementById('vSignatureOverlay');
-        const vSignatureText = document.getElementById('vSignatureText');
-        const nameParts = [request.firstName, request.middleName, request.lastName, formatDisplaySuffix(request.suffix, request.suffixOther)].filter(Boolean);
-        const fullName = nameParts.join(' ');
-
-        if (request.signature && String(request.signature).startsWith('data:image')) {
-            if (vSignatureImg && vSignatureOverlay) {
-                vSignatureImg.src = request.signature;
-                vSignatureOverlay.style.display = 'flex';
-            }
-            if (vSignatureText) {
-                vSignatureText.textContent = fullName;
-                vSignatureText.style.display = 'block';
-            }
-        } else {
-            if (vSignatureOverlay) vSignatureOverlay.style.display = 'none';
-            if (vSignatureText) {
-                vSignatureText.textContent = fullName;
-                vSignatureText.style.display = 'block';
-            }
-        }
-
-        const viewChks = document.querySelectorAll('#kkViewModal .kkf-view-chk');
-        viewChks.forEach((chk) => {
-            const field = chk.dataset.viewField;
-            const fieldMap = {
-                vSex: request.sex,
-                vCivilStatus: request.civilStatus,
-                vYouthAgeGroup: request.youthAgeGroup,
-                vEducation: request.educationalBackground,
-                vYouthClassification: request.youthClassification,
-                vWorkStatus: request.workStatus,
-                vSKVoter: request.registeredSKVoter,
-                vVotingHistory: request.votingHistory,
-                vVotingFrequency: request.kkTimes || request.votingFrequency,
-                vNatVoter: request.registeredNationalVoter,
-                vKKAssembly: request.attendedKKAssembly,
-                vVotingReason: request.kkReason || request.votingReason,
-                vGroupChat: request.willingToJoinGroupChat,
-            };
-            const stored = fieldMap[field] || '';
-            if (field === 'vGroupChat') {
-                const gc = String(stored).trim();
-                chk.checked = gc !== '' && gc !== '—' && stored.trim().toLowerCase() === chk.value.trim().toLowerCase();
-                return;
-            }
-            chk.checked = stored.trim().toLowerCase() === chk.value.trim().toLowerCase();
-        });
+        populateKkProfilingView(request);
     }
 
     function renderActionMenuCell(requestId) {
@@ -613,16 +536,16 @@ function initializeKKProfilingRequestsUI() {
         };
 
         if (isEditable || isDuplicate) {
-            setField('vLastName', 'lastName', lastName || '—');
-            setField('vFirstName', 'firstName', firstName || '—');
-            setField('vMiddleName', 'middleName', middleName || '—');
-            setField('vSuffix', 'suffix', formatDisplaySuffix(suffix) || '—');
-            setField('vBarangay', 'barangay', barangay || '—');
-            setField('vPurokZone', 'purokZone', purokZone || '—');
-            setField('vAge', 'age', age || '—');
-            setField('vDob', 'birthday', birthday || '—');
-            setField('vEmail', 'emailAddress', emailAddress || '—');
-            setField('vContact', 'contactNumber', contactNumber || '—');
+            setField('kkViewLastName', 'lastName', lastName || '—');
+            setField('kkViewFirstName', 'firstName', firstName || '—');
+            setField('kkViewMiddleName', 'middleName', middleName || '—');
+            setField('kkViewSuffix', 'suffix', formatDisplaySuffix(suffix) || '—');
+            setField('kkViewBarangay', 'barangay', barangay || '—');
+            setField('kkViewPurokZone', 'purokZone', purokZone || '—');
+            setField('kkViewAge', 'age', age || '—');
+            setField('kkViewBirthday', 'birthday', birthday || '—');
+            setField('kkViewEmailAddress', 'emailAddress', emailAddress || '—');
+            setField('kkViewContactNumber', 'contactNumber', contactNumber || '—');
         }
 
         const mismatches = request.evaluationNotes?.mismatches || [];
@@ -630,10 +553,10 @@ function initializeKKProfilingRequestsUI() {
         mismatches.forEach(m => { mismatchMap[m.field] = m; });
 
         const fieldToElId = {
-            age: 'vAge',
-            birthday: 'vDob',
-            sex: 'vSex',
-            name: 'vLastName',
+            age: 'kkViewAge',
+            birthday: 'kkViewBirthday',
+            sex: 'kkViewSex_Male',
+            name: 'kkViewLastName',
         };
 
         // Remove old mismatch badges
@@ -663,7 +586,7 @@ function initializeKKProfilingRequestsUI() {
             // We'll show an inline error note below the civil status block
             let csErrEl = document.getElementById('kkViewCS_ErrorNote');
             if (!csErrEl) {
-                const csOptions = document.querySelector('#kkViewModal .kkf-demo-options-2col');
+                const csOptions = document.querySelector('#kkViewModal .kkp-demo-options-2col');
                 if (csOptions) {
                     csErrEl = document.createElement('div');
                     csErrEl.id = 'kkViewCS_ErrorNote';
@@ -725,8 +648,9 @@ function initializeKKProfilingRequestsUI() {
             banner.classList.add('is-warning');
             banner.textContent = notes || 'Some fields do not match census records.';
         } else if (status === 'Not Profiled') {
-            banner.classList.add('is-pending');
-            banner.textContent = notes || 'Pending review — not yet matched to KK profiling history.';
+            banner.hidden = true;
+            banner.textContent = '';
+            return;
         } else if (status === 'ID Verified' || status === 'Auto Approved') {
             banner.classList.add('is-success');
             banner.textContent = notes || 'Identity verification passed (name and barangay matched on uploaded ID).';

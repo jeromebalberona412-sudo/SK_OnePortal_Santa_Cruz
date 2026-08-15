@@ -137,12 +137,12 @@ export function populateKkProfilingView(request, options = {}) {
     };
 
     const formatDisplaySuffix = (value, suffixOther) => {
-        if (!value) return '';
+        if (!value) return 'None';
         const normalized = String(value).trim();
-        if (!normalized || normalized.toLowerCase() === 'none') return '';
+        if (!normalized || normalized.toLowerCase() === 'none') return 'None';
         if (normalized.toLowerCase() === 'other' || normalized.toLowerCase() === 'others') {
             const other = String(suffixOther || '').trim();
-            return other || '';
+            return other || 'None';
         }
         return normalized;
     };
@@ -151,8 +151,8 @@ export function populateKkProfilingView(request, options = {}) {
         const el = document.getElementById(elementId);
         const col = el?.closest('.kkp-name-col, .kkf-name-col');
         const display = formatDisplaySuffix(value, suffixOther);
-        if (el) el.textContent = display || '—';
-        if (col) col.hidden = !display;
+        if (el) el.textContent = display;
+        if (col) col.hidden = false;
     };
 
     const formatBirthdayDisplay = (value) => {
@@ -238,6 +238,26 @@ export function populateKkProfilingView(request, options = {}) {
     setCheck('kkViewKKTimes_34', kkTimes === '3-4 Times');
     setCheck('kkViewKKTimes_5', kkTimes === '5 and above');
 
+    const yesCell = document.getElementById('kkViewAssemblyYesCell');
+    const noCell = document.getElementById('kkViewAssemblyNoCell');
+    const arrowYes = document.querySelector('#kkViewAssemblyQuestion .kkp-assembly-arrow--yes');
+    const arrowNo = document.querySelector('#kkViewAssemblyQuestion .kkp-assembly-arrow--no');
+    [yesCell, noCell].forEach((cell) => {
+        if (!cell) return;
+        cell.classList.remove('kkp-assembly-followup--inactive');
+        cell.classList.remove('kkp-assembly-followup--active');
+    });
+    if (attendedKKAssembly === 'Yes') {
+        arrowYes?.classList.add('kkp-assembly-arrow--on');
+        arrowNo?.classList.remove('kkp-assembly-arrow--on');
+    } else if (attendedKKAssembly === 'No') {
+        arrowYes?.classList.remove('kkp-assembly-arrow--on');
+        arrowNo?.classList.add('kkp-assembly-arrow--on');
+    } else {
+        arrowYes?.classList.remove('kkp-assembly-arrow--on');
+        arrowNo?.classList.remove('kkp-assembly-arrow--on');
+    }
+
     const normalizedReason = (kkReason || '').trim();
     setCheck('kkViewVR_NoKK',
         normalizedReason === 'There was no KK Assembly Meeting'
@@ -246,7 +266,17 @@ export function populateKkProfilingView(request, options = {}) {
         normalizedReason === 'Not interested to Attend'
         || normalizedReason === 'Not Interested to Attend');
 
-    setVal('kkViewFacebookAccount', facebookAccount && facebookAccount !== '—' ? facebookAccount : '—');
+    const facebookEl = document.getElementById('kkViewFacebookAccount');
+    const facebookWrap = facebookEl?.closest('.kkp-footer-fb');
+    const facebookRaw = String(facebookAccount || '').trim();
+    const facebookValue = (facebookRaw && facebookRaw !== '—' && facebookRaw !== '-') ? facebookRaw : '';
+    if (facebookEl) {
+        facebookEl.textContent = facebookValue;
+        facebookEl.classList.toggle('kkp-uline-fb--empty', facebookValue === '');
+    }
+    if (facebookWrap) {
+        facebookWrap.classList.toggle('kkp-footer-fb--empty', facebookValue === '');
+    }
     const groupChatAnswer = (willingToJoinGroupChat || '').trim();
     setCheck('kkViewGC_Yes', groupChatAnswer === 'Yes');
     setCheck('kkViewGC_No', groupChatAnswer === 'No');
@@ -264,7 +294,9 @@ export function populateKkProfilingView(request, options = {}) {
         firstName,
         middleName ? middleName.charAt(0) + '.' : null,
         lastName,
-        suffix && formatDisplaySuffix(suffix) ? formatDisplaySuffix(suffix) : null,
+        suffix && formatDisplaySuffix(suffix) && formatDisplaySuffix(suffix) !== 'None'
+            ? formatDisplaySuffix(suffix)
+            : null,
     ].filter(Boolean);
     const printedName = nameParts.join(' ') || '—';
     if (sigNameEl) sigNameEl.textContent = printedName;
@@ -306,7 +338,7 @@ export function mapRegistrationToKkView(record) {
             if (record.respondent_display && !String(record.respondent_display).includes('-')) {
                 return record.respondent_display;
             }
-            return record.respondent_number || '—';
+            return record.respondent_display || record.respondent_number || 'Auto-generated';
         })(),
         date: record.submitted_at || '—',
         firstName: record.first_name,

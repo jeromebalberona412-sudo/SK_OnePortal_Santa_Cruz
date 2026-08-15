@@ -98,9 +98,17 @@ class KKProfilingRequestsController extends Controller
             $formData = $r->form_data ?? [];
 
             // Helper: extract value whether stored as string or array
-            $val = fn ($key) => is_array($formData[$key] ?? null)
-                ? ($formData[$key][0] ?? '—')
-                : ($formData[$key] ?? '—');
+            $val = function ($key) use ($formData) {
+                $raw = $formData[$key] ?? null;
+                if (is_array($raw)) {
+                    $raw = $raw[0] ?? null;
+                }
+                if ($raw === null || $raw === '' || $raw === '—') {
+                    return null;
+                }
+
+                return $raw;
+            };
 
             $idVerification = is_array($formData['id_verification'] ?? null)
                 ? $formData['id_verification']

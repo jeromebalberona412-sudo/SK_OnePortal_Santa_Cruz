@@ -2,10 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>KK Profiling Batch Print — {{ $profilingYear }}</title>
+    <title></title>
+    <style>
+        @page { margin: 0; }
+        html, body { margin: 0 !important; padding: 0 !important; }
+    </style>
     @vite([
+        'app/Modules/KKProfilingRequests/assets/css/kkp-paper-form.css',
         'app/Modules/KKProfilingRequests/assets/css/kk-questionnaire-view.css',
-        'app/Modules/Kabataan/assets/css/kabataan.css',
         'app/Modules/Kabataan/assets/css/kabataan-print-questionnaire.css',
     ])
 </head>

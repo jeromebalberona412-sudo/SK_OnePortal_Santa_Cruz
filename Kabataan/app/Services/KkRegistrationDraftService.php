@@ -694,8 +694,12 @@ class KkRegistrationDraftService
             return trim($step1['custom_suffix'] ?? '') ?: null;
         }
 
-        if ($suffix === null || $suffix === '' || strcasecmp((string) $suffix, 'none') === 0) {
-            return null;
+        if ($suffix === null || $suffix === '') {
+            return 'None';
+        }
+
+        if (strcasecmp((string) $suffix, 'none') === 0) {
+            return 'None';
         }
 
         return $suffix;

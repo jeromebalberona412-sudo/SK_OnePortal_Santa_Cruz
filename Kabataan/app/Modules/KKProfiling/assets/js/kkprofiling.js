@@ -1009,12 +1009,12 @@ function kkpValidateContact(value, touched) {
             }
         });
 
-        if (!enabled) {
-            const hidden = cell.querySelector('input[type="hidden"]');
-            if (hidden) {
+        const hidden = cell.querySelector('input[type="hidden"]');
+        if (hidden) {
+            hidden.disabled = false;
+            if (!enabled) {
                 hidden.value = '';
             }
-            cell.querySelectorAll('.kkp-demo-block-error').forEach((node) => node.remove());
         }
     }
 
@@ -1871,9 +1871,7 @@ function showEmailVerification(email) {
         }
 
         if (successMessageEl) {
-            successMessageEl.textContent = message || (autoApproved
-                ? 'Your details match a previous KK profiling record. You can log in now.'
-                : 'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.');
+            successMessageEl.textContent = message || 'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.';
         }
 
         if (loginBtn) {
@@ -1887,9 +1885,7 @@ function showEmailVerification(email) {
 
     if (document.body.dataset.registrationAlreadyComplete === '1') {
         showSuccessModal(
-            document.body.dataset.autoApproved === '1'
-                ? 'Your details match a previous KK profiling record. You can log in now.'
-                : 'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.',
+            'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.',
             document.body.dataset.autoApproved === '1',
         );
         return;
@@ -2080,9 +2076,7 @@ function showEmailVerification(email) {
 
             if (response.ok) {
                 showSuccessModal(
-                    data.auto_approved
-                        ? (data.message || 'Registration verified! Your details match a previous KK profiling record. You can log in now.')
-                        : (data.message || 'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.'),
+                    data.message || 'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.',
                     Boolean(data.auto_approved),
                 );
                 return;

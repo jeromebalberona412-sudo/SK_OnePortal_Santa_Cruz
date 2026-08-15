@@ -612,8 +612,14 @@ body {
     border-radius: 0;
 }
 
-.kabataan-modal-box {
-    transition: width 0.2s ease, height 0.2s ease, max-width 0.2s ease, max-height 0.2s ease, border-radius 0.2s ease;
+.modal-box.kabataan-modal-box {
+    max-width: 900px;
+    width: min(900px, 96vw);
+}
+
+#kabataanViewDetails .kk-view-evaluation-banner,
+#kabataanViewDetails .kk-view-rejection-wrap {
+    display: none !important;
 }
 
 .kabataan-modal-backdrop.modal-maximized .modal-body {

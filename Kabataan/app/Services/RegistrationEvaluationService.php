@@ -42,7 +42,7 @@ class RegistrationEvaluationService
 
         $message = $documents !== []
             ? 'Supporting documents uploaded. Awaiting SK Officials review.'
-            : 'Please wait for SK Officials to verify your account.';
+            : 'Awaiting SK Officials review.';
 
         $registration->update([
             'evaluation_status' => 'Not Profiled',

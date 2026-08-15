@@ -174,7 +174,7 @@ class KKProfilingController extends Controller
         }
         // ──────────────────────────────────────────────────────────────────
 
-        $respondentNumber = 'KK-' . now()->format('Ymd') . '-' . strtoupper(substr(md5(uniqid('', true)), 0, 6));
+        $respondentNumber = '';
 
         $draftService = app(KkRegistrationDraftService::class);
         $wizard = $draftService->resolveWizard();
@@ -565,9 +565,17 @@ class KKProfilingController extends Controller
             return;
         }
 
-        if ($suffix !== 'Others') {
-            $validated['custom_suffix'] = null;
+        if ($suffix === 'Others') {
+            $custom = trim((string) ($validated['custom_suffix'] ?? ''));
+            if ($custom !== '') {
+                $validated['suffix'] = $custom;
+            }
+            $validated['custom_suffix'] = $custom !== '' ? $custom : null;
+
+            return;
         }
+
+        $validated['custom_suffix'] = null;
     }
 
     /**
@@ -586,8 +594,12 @@ class KKProfilingController extends Controller
         $validated['national_voter'] = $request->input('national_voter');
         $validated['sk_voted'] = $request->input('sk_voted');
         $validated['kk_assembly'] = $request->input('kk_assembly');
-        $validated['kk_times'] = $request->input('kk_assembly') === 'Yes' ? $request->input('kk_times') : null;
-        $validated['kk_reason'] = $request->input('kk_assembly') === 'No' ? $request->input('kk_reason') : null;
+        $validated['kk_times'] = $request->input('kk_assembly') === 'Yes'
+            ? ($request->input('kk_times') ?: $request->input('kk_timesChk'))
+            : null;
+        $validated['kk_reason'] = $request->input('kk_assembly') === 'No'
+            ? ($request->input('kk_reason') ?: $request->input('kk_reasonChk'))
+            : null;
         $validated['facebook_profile_url'] = trim((string) $request->input('facebook_profile_url', '')) ?: null;
         $validated['group_chat'] = $request->input('group_chat');
         $validated['signature_name'] = $request->input('signature_name');
@@ -835,8 +847,12 @@ class KKProfilingController extends Controller
         $validated['national_voter'] = $request->input('national_voter');
         $validated['sk_voted'] = $request->input('sk_voted');
         $validated['kk_assembly'] = $request->input('kk_assembly');
-        $validated['kk_times'] = $request->input('kk_assembly') === 'Yes' ? $request->input('kk_times') : null;
-        $validated['kk_reason'] = $request->input('kk_assembly') === 'No' ? $request->input('kk_reason') : null;
+        $validated['kk_times'] = $request->input('kk_assembly') === 'Yes'
+            ? ($request->input('kk_times') ?: $request->input('kk_timesChk'))
+            : null;
+        $validated['kk_reason'] = $request->input('kk_assembly') === 'No'
+            ? ($request->input('kk_reason') ?: $request->input('kk_reasonChk'))
+            : null;
         $validated['facebook_profile_url'] = trim((string) $request->input('facebook_profile_url', '')) ?: null;
         $validated['group_chat'] = $request->input('group_chat');
 

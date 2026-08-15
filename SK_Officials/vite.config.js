@@ -62,11 +62,12 @@ export default defineConfig({
                 'app/Modules/Kabataan/assets/css/kabataan.css',
                 'app/Modules/Kabataan/assets/css/kabataan-print-questionnaire.css',
                 'app/Modules/Kabataan/assets/js/kabataan.js',
-                // Previous Kabataan module assets
-                'app/Modules/PreviousKabataan/assets/css/previous-kabataan.css',
-                'app/Modules/PreviousKabataan/assets/js/previous-kabataan.js',
+                // Previous Kabataan module assets (hidden — keep commented)
+                // 'app/Modules/PreviousKabataan/assets/css/previous-kabataan.css',
+                // 'app/Modules/PreviousKabataan/assets/js/previous-kabataan.js',
                 // KK Profiling Requests module assets
                 'app/Modules/KKProfilingRequests/assets/css/kkprofiling-requests.css',
+                'app/Modules/KKProfilingRequests/assets/css/kkp-paper-form.css',
                 'app/Modules/KKProfilingRequests/assets/css/kk-questionnaire-view.css',
                 'app/Modules/KKProfilingRequests/assets/js/kkprofiling-requests.js',
                 // Barangay ABYIP module assets

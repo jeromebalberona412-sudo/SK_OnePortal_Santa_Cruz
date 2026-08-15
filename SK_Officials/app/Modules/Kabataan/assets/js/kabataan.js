@@ -1,3 +1,5 @@
+import { populateKkProfilingView } from '../../../KKProfilingRequests/assets/js/kk-profiling-view-populate.js';
+
 function broadcastKkProfileEvent() {
     try {
         sessionStorage.setItem('kk-profile-event', JSON.stringify({ at: Date.now() }));
@@ -241,25 +243,17 @@ function initializeKabataanUI() {
     }
 
     function fullNameFrom(k) {
-        const parts = [k.firstName, k.middleName].filter(Boolean);
-        const firstMiddle = parts.length ? parts.join(' ') : '';
-        const last = k.lastName || '';
+        const last = String(k.lastName || '').trim();
+        const first = String(k.firstName || '').trim();
+        const middle = String(k.middleName || '').trim();
         const suffixPart = formatDisplaySuffix(k.suffix, k.suffixOther || k.suffix_other || k.custom_suffix);
-        const suffix = suffixPart ? ' ' + suffixPart : '';
-
-        if (last && firstMiddle) {
-            return `${last}, ${firstMiddle}${suffix}`;
+        const parts = [last, first, middle];
+        if (suffixPart) {
+            parts.push(suffixPart);
         }
 
-        if (last) {
-            return `${last}${suffix}`;
-        }
-
-        if (firstMiddle) {
-            return `${firstMiddle}${suffix}`;
-        }
-
-        return '-';
+        const visible = parts.filter(Boolean);
+        return visible.length ? visible.join(', ') : '-';
     }
 
     let tableSorter = null;
@@ -669,90 +663,14 @@ function initializeKabataanUI() {
     }
 
     function populateViewRows(k) {
-        // Populate text/span fields
-        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || ''; };
-        setVal('vRespondentNumber', k.respondentNumber);
-        setVal('vDate', k.date);
-        setVal('vLastName', k.lastName);
-        setVal('vFirstName', k.firstName);
-        setVal('vMiddleName', k.middleName);
-        setVal('vSuffix', formatDisplaySuffix(k.suffix, k.suffixOther || k.suffix_other || k.custom_suffix) || '—');
-        setVal('vRegion', k.region);
-        setVal('vProvince', k.province);
-        setVal('vCity', k.city);
-        setVal('vBarangay', k.barangay);
-        setVal('vPurokZone', k.purokZone);
-        setVal('vAge', k.age);
-        setVal('vDob', k.birthday || k.dob);
-        setVal('vEmail', k.emailAddress || k.email);
-        setVal('vContact', k.contactNumber);
-        setVal('vFacebook', k.facebookAccount);
-        
-        // Handle signature display - show image overlaid on name
-        const vSignatureImg = document.getElementById('vSignature');
-        const vSignatureOverlay = document.getElementById('vSignatureOverlay');
-        const vSignatureText = document.getElementById('vSignatureText');
-        
-        if (k.signature && k.signature.startsWith('data:image')) {
-            // It's a base64 image - display signature overlay on name
-            if (vSignatureImg && vSignatureOverlay) {
-                vSignatureImg.src = k.signature;
-                vSignatureOverlay.style.display = 'flex';
-            }
-            if (vSignatureText) {
-                // Get the full name from the record (FirstName MiddleName LastName Suffix)
-                const nameParts = [];
-                if (k.firstName) nameParts.push(k.firstName);
-                if (k.middleName) nameParts.push(k.middleName);
-                if (k.lastName) nameParts.push(k.lastName);
-                if (k.suffix && k.suffix !== 'None') nameParts.push(k.suffix);
-                
-                const fullName = nameParts.join(' ');
-                vSignatureText.textContent = fullName;
-                vSignatureText.style.display = 'block';
-            }
-        } else {
-            // No signature - just display name
-            if (vSignatureOverlay) {
-                vSignatureOverlay.style.display = 'none';
-            }
-            if (vSignatureText) {
-                // Get the full name from the record
-                const nameParts = [];
-                if (k.firstName) nameParts.push(k.firstName);
-                if (k.middleName) nameParts.push(k.middleName);
-                if (k.lastName) nameParts.push(k.lastName);
-                if (k.suffix && k.suffix !== 'None') nameParts.push(k.suffix);
-                
-                const fullName = nameParts.join(' ');
-                vSignatureText.textContent = fullName || '';
-                vSignatureText.style.display = 'block';
-            }
-        }
-
-        // Populate view checkboxes — tick the one matching the stored value
-        const viewChks = document.querySelectorAll('.kkf-view-chk');
-        viewChks.forEach(chk => {
-            const field = chk.dataset.viewField;
-            const fieldMap = {
-                vSex: k.sex,
-                vCivilStatus: k.civilStatus,
-                vYouthAgeGroup: k.youthAgeGroup,
-                vEducation: k.educationalBackground || k.highestEducation,
-                vYouthClassification: k.youthClassification,
-                vWorkStatus: k.workStatus,
-                vSKVoter: k.registeredSKVoter,
-                vVotingHistory: k.votingHistory,
-                vVotingFrequency: k.votingFrequency,
-                vNatVoter: k.registeredNationalVoter,
-                vKKAssembly: k.attendedKKAssembly,
-                vVotingReason: k.votingReason,
-                vGroupChat: k.willingToJoinGroupChat,
-            };
-            const stored = fieldMap[field] || '';
-            chk.checked = stored.trim().toLowerCase() === chk.value.trim().toLowerCase();
+        populateKkProfilingView({
+            ...k,
+            emailAddress: k.emailAddress || k.email,
+            contactNumber: k.contactNumber || k.contact,
+            educationalBackground: k.educationalBackground || k.highestEducation,
+            kkTimes: k.kkTimes || k.votingFrequency,
+            kkReason: k.kkReason || k.votingReason,
         });
-
         populateKabataanDocuments(k);
     }
 

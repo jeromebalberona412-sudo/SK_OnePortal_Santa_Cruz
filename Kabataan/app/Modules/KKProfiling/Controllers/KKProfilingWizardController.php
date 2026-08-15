@@ -845,9 +845,7 @@ class KKProfilingWizardController extends Controller
             'email' => $completed['email'],
             'auto_approved' => $autoApproved,
             'evaluation_status' => $registration?->evaluation_status ?? ($completed['evaluation_status'] ?? null),
-            'message' => $autoApproved
-                ? 'Registration verified! Your details match a previous KK profiling record. You can log in now.'
-                : 'Your registration has been submitted. Please wait for SK officials to verify your account.',
+            'message' => 'Your registration has been submitted. Please wait for SK officials to verify your account.',
         ]);
     }
 
@@ -879,9 +877,7 @@ class KKProfilingWizardController extends Controller
         return response()->json([
             'success' => true,
             'auto_approved' => $autoApproved,
-            'message' => $autoApproved
-                ? 'Registration verified! Your details match a previous KK profiling record. You can log in now.'
-                : 'Registration completed! Please wait for verification/approval by SK Officials before logging in.',
+            'message' => 'Registration completed! Please wait for verification/approval by SK Officials before logging in.',
         ]);
     }
 
@@ -983,6 +979,8 @@ class KKProfilingWizardController extends Controller
                     'custom_suffix' => ['Suffix must not exceed 5 characters.'],
                 ]);
             }
+
+            $validated['suffix'] = $customSuffix;
         }
 
         try {
@@ -1014,8 +1012,12 @@ class KKProfilingWizardController extends Controller
         $validated['national_voter'] = $request->input('national_voter');
         $validated['sk_voted'] = $request->input('sk_voted');
         $validated['kk_assembly'] = $request->input('kk_assembly');
-        $validated['kk_times'] = $request->input('kk_assembly') === 'Yes' ? $request->input('kk_times') : null;
-        $validated['kk_reason'] = $request->input('kk_assembly') === 'No' ? $request->input('kk_reason') : null;
+        $validated['kk_times'] = $request->input('kk_assembly') === 'Yes'
+            ? ($request->input('kk_times') ?: $request->input('kk_timesChk'))
+            : null;
+        $validated['kk_reason'] = $request->input('kk_assembly') === 'No'
+            ? ($request->input('kk_reason') ?: $request->input('kk_reasonChk'))
+            : null;
         $validated['facebook_profile_url'] = trim((string) $request->input('facebook_profile_url', '')) ?: null;
         $validated['group_chat'] = $request->input('group_chat');
         $validated['signature_name'] = $request->input('signature_name');

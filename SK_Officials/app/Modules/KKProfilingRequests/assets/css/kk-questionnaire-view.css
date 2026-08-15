@@ -77,26 +77,79 @@
 
 .kk-view-modal-body.kk-qs-body {
     padding: 0 !important;
-    background: #e8ecf0;
+    background: #ffffff;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #111111;
 }
 
 .kk-qs-scroll-wrapper {
     width: 100%;
     padding: 12px 16px 16px;
     box-sizing: border-box;
+    background: #ffffff;
 }
 
-.kk-view-paper {
-    background: #fff;
-    border: 1px solid #b0b8c1;
-    border-radius: 6px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10);
-    padding: 16px 20px 24px;
-    font-size: 12px;
-    color: #111;
-    max-width: 100%;
-    overflow-x: auto;
+.kk-view-paper.kkp-paper {
+    background: #ffffff !important;
+    color: #111111 !important;
+    padding: 16px 24px 24px !important;
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.kk-view-paper .kkp-personal-row {
+    display: grid !important;
+    grid-template-columns: minmax(160px, auto) minmax(180px, 1fr) minmax(210px, 1.2fr) !important;
+    align-items: center;
+    background: #ffffff;
+    overflow: visible;
+}
+
+.kk-view-paper .kkp-personal-center {
+    background: #ffffff;
+}
+
+.kk-view-paper .kkp-sex-block {
+    background: #ffffff;
+    flex-wrap: nowrap;
+}
+
+.kk-view-paper .kkp-sex-options {
+    background: #ffffff;
+}
+
+.kk-view-paper .kkp-voter-questions-wrap {
+    width: 100%;
+}
+
+.kk-view-paper .kkp-voter-questions-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px;
+}
+
+.kk-view-paper .kkp-demo-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+}
+
+.kk-view-paper .kkp-demo-block {
+    background: #ffffff;
+}
+
+.kk-view-paper .kkp-inline-pair {
+    padding-bottom: 0;
+    align-items: center;
+    background: #ffffff;
+}
+
+.kk-view-paper .kkp-age-dob-row {
+    background: #ffffff;
+}
+
+.kk-view-paper .kkp-demo-block-label {
+    color: #111111;
 }
 
 .kk-view-evaluation-banner {
@@ -146,16 +199,68 @@
     word-break: break-word;
 }
 
+.kk-view-paper .kkp-inline-pair .kkp-view-value,
+.kk-view-paper .kkp-age-select-box .kkp-view-value,
+.kk-view-paper .kkp-birthday-field .kkp-view-value {
+    display: inline-block;
+    width: auto;
+    min-width: 64px;
+}
+
+.kk-view-paper .kkp-inline-pair--email .kkp-view-value {
+    display: block;
+    width: 100%;
+}
+
+.kk-view-paper .kkp-footer-row {
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.kk-view-paper .kkp-footer-chat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.kk-view-paper .kkp-assembly-followup,
+.kk-view-paper .kkp-assembly-followup--inactive,
+.kk-view-paper .kkp-assembly-followup--active {
+    opacity: 1 !important;
+    outline: none;
+    pointer-events: none;
+}
+
 .kk-view-paper #kkViewLastName,
 .kk-view-paper #kkViewFirstName,
 .kk-view-paper #kkViewMiddleName {
     text-transform: uppercase;
 }
 
-.kk-view-paper .kkp-hdr-input.kkp-hdr-input-readonly {
+.kk-view-paper .kkp-footer-fb-field .kkp-view-value,
+.kk-view-paper .kkp-footer-fb .kkp-uline-fb {
+    display: block;
+    width: 100%;
+    min-width: 220px;
+    max-width: 50ch;
+    min-height: 18px;
+    border: none;
+    border-bottom: 1px solid #555 !important;
+    background: transparent;
+}
+
+.kk-view-paper .kkp-hdr-input.kkp-hdr-input-readonly,
+.kk-view-paper #kkViewRespondentNumber {
     display: inline-block;
-    min-width: 120px;
+    min-width: 92px;
+    width: auto;
     text-align: center;
+}
+
+.kk-view-paper .kkp-hdr-input-auto {
+    font-style: italic;
+    color: #64748b;
 }
 
 .kk-view-paper .kkp-view-chk {
@@ -242,6 +347,19 @@
 #kkViewAssemblyNoCell .kkp-sq-chk {
     margin-top: 1px;
     flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .kk-view-paper .kkp-personal-row {
+        display: grid !important;
+        grid-template-columns: minmax(140px, auto) minmax(160px, 1fr) minmax(180px, 1.2fr) !important;
+    }
+
+    .kk-view-paper .kkp-demo-grid,
+    .kk-view-paper .kkp-voter-questions-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+    }
 }
 
 @media (max-width: 640px) {

@@ -1,6 +1,5 @@
 @page {
-    size: Letter portrait;
-    margin: 0.35in;
+    margin: 0;
 }
 
 body.kk-print-body {
@@ -14,27 +13,34 @@ body.kk-print-body {
     width: 100%;
     margin: 0 auto;
     padding: 0;
+    box-sizing: border-box;
 }
 
 .kk-print-sheet {
     width: 100%;
-    max-width: 194mm;
-    margin: 0 auto;
+    max-width: none;
+    margin: 0;
+    padding: 0.7in 0.45in 0.35in;
+    box-sizing: border-box;
     page-break-after: always;
+    break-after: page;
 }
 
 .kk-print-sheet:last-child {
     page-break-after: auto;
+    break-after: auto;
 }
 
-.kk-print-questionnaire.kk-view-paper {
-    box-shadow: none;
-    border: none;
-    border-radius: 0;
-    padding: 0;
+.kk-print-questionnaire.kk-view-paper,
+.kk-print-questionnaire.kkp-paper {
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
     margin: 0;
     max-width: none;
     overflow: visible;
+    background: #fff;
 }
 
 .kk-print-questionnaire .kkp-form-main-title,
@@ -42,38 +48,39 @@ body.kk-print-body {
     color: #111;
 }
 
-/* ── Print header layout: everything stacked on the right ── */
+/* Title on the left, respondent/date + logo on the right */
 .kk-print-questionnaire .kkp-form-header {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    justify-content: flex-end;
-    gap: 10px;
+    justify-content: space-between;
+    gap: 12px;
     padding-bottom: 8px;
     margin-bottom: 12px;
 }
 
-/* title + respondent + date block */
 .kk-print-questionnaire .kkp-form-title-col {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: flex-start;
-    gap: 2px;
-    text-align: right;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    text-align: left;
+    flex: 1;
 }
 
 .kk-print-questionnaire .kkp-form-main-title {
     font-size: 13px;
     font-weight: 900;
-    text-align: right;
+    text-align: left;
     margin: 0;
+    align-self: flex-start;
 }
 
 .kk-print-questionnaire .kkp-form-header-fields {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: flex-start;
     gap: 2px;
     margin: 0;
 }
@@ -99,33 +106,169 @@ body.kk-print-body {
 }
 
 @media print {
+    @page {
+        margin: 0;
+    }
+
     body.kk-print-body {
         background: #fff;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        margin: 0;
+        padding: 0;
     }
 
     .kk-print-sheet {
         max-width: none;
-        padding: 0;
+        padding: 0.7in 0.45in 0.35in;
+        box-sizing: border-box;
+        page-break-after: always;
         page-break-inside: avoid;
         break-inside: avoid-page;
+        break-after: page;
     }
 
-    .kk-print-questionnaire.kk-view-paper {
+    .kk-print-sheet:last-child {
+        page-break-after: auto;
+        break-after: auto;
+    }
+
+    .kk-print-questionnaire.kk-view-paper,
+    .kk-print-questionnaire.kkp-paper {
+        font-size: 12px;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        outline: none !important;
+        width: 100%;
+        box-sizing: border-box;
+        background: #fff !important;
+        overflow: visible;
+    }
+
+    .kk-print-questionnaire .kkp-form-header {
+        margin-bottom: 6px;
+        padding-bottom: 4px;
+    }
+
+    .kk-print-questionnaire .kkp-form-logo img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .kk-print-questionnaire .kkp-demo-block {
+        min-width: 0;
+    }
+
+    .kk-print-questionnaire .kkp-demo-block-label {
+        min-width: 80px;
+        max-width: 80px;
+        width: 80px;
+        padding: 4px 5px;
         font-size: 10px;
-        zoom: 0.88;
+    }
+
+    .kk-print-questionnaire .kkp-demo-block-options {
+        min-width: 0;
+        padding: 4px 6px !important;
+        gap: 1px !important;
+    }
+
+    .kk-print-questionnaire .kkp-demo-two-col {
+        gap: 12px;
+    }
+
+    .kk-print-questionnaire .kkp-sq-chk {
+        width: 12px;
+        height: 12px;
+        margin: 0;
+        flex-shrink: 0;
+    }
+
+    .kk-print-questionnaire .kkp-assembly-why {
+        overflow: visible;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .kk-print-questionnaire .kkp-assembly-why .kkp-demo-block-label {
+        min-width: 72px;
+        max-width: 72px;
+        width: 72px;
+    }
+
+    .kk-print-questionnaire .kkp-assembly-why .kkp-demo-block-options {
+        overflow: visible;
+        min-width: 0;
+        flex: 1;
+        padding: 3px 4px !important;
+    }
+
+    .kk-print-questionnaire .kkp-assembly-why .kkp-chk-lbl {
+        white-space: normal !important;
+        flex-wrap: nowrap;
+        align-items: flex-start;
+        width: 100%;
+        max-width: 100%;
+        font-size: 9px !important;
+        line-height: 1.25;
+        gap: 4px;
+    }
+
+    .kk-print-questionnaire .kkp-assembly-why .kkp-chk-lbl span {
+        display: block;
+        flex: 1;
+        min-width: 0;
+        white-space: normal;
+        overflow: visible;
+        word-break: normal;
+        overflow-wrap: break-word;
+    }
+
+    .kk-print-questionnaire .kkp-assembly-why .kkp-sq-chk {
+        margin-top: 1px;
+    }
+
+    .kk-print-questionnaire .kkp-chk-lbl {
+        white-space: nowrap;
+        font-size: 11px;
+        line-height: 1.4;
+        gap: 4px;
+        padding: 1px 0;
+    }
+
+    .kk-view-evaluation-banner {
+        display: none !important;
+    }
+
+    .kk-print-questionnaire .kkp-personal-row {
+        display: grid !important;
+        grid-template-columns: minmax(120px, auto) minmax(140px, 1fr) minmax(160px, 1.2fr) !important;
+    }
+
+    .kk-print-questionnaire .kkp-demo-grid,
+    .kk-print-questionnaire .kkp-voter-questions-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        min-width: 0;
+    }
+
+    .kk-print-questionnaire .kkp-voter-questions-col {
+        min-width: 0;
+        overflow: visible;
     }
 
     .kk-print-questionnaire .kkf-notice-box,
     .kk-print-questionnaire .kkp-notice-box {
-        padding: 4px 8px;
-        margin: 3px 0 5px;
+        padding: 3px 6px;
+        margin: 2px 0 4px;
     }
 
     .kk-print-questionnaire .kkf-notice-body,
     .kk-print-questionnaire .kkp-notice-body {
-        line-height: 1.25;
-        margin-bottom: 3px;
-        font-size: 9px;
+        line-height: 1.2;
+        margin-bottom: 2px;
+        font-size: 8px;
     }
 
     .kk-print-questionnaire .kkf-notice-body br,
@@ -135,60 +278,70 @@ body.kk-print-body {
 
     .kk-print-questionnaire .kkf-section-title,
     .kk-print-questionnaire .kkp-section-heading {
-        margin: 4px 0 3px;
+        margin: 3px 0 2px;
         padding-bottom: 1px;
-        font-size: 10px;
+        font-size: 9px;
     }
 
     .kk-print-questionnaire .kkf-instruction,
-    .kk-print-questionnaire .kkp-instruction {
-        margin-bottom: 3px;
-        font-size: 9px;
+    .kk-print-questionnaire .kkp-instruction,
+    .kk-print-questionnaire .kkp-demo-instruction {
+        margin-bottom: 2px;
+        font-size: 8px;
     }
 
     .kk-print-questionnaire .kkf-name-row,
     .kk-print-questionnaire .kkf-loc-row,
     .kk-print-questionnaire .kkp-name-row,
     .kk-print-questionnaire .kkp-loc-row {
-        margin-bottom: 3px;
-        gap: 4px;
+        margin-bottom: 2px;
+        gap: 3px;
     }
 
     .kk-print-questionnaire .kkf-personal-row {
-        margin-bottom: 4px;
+        margin-bottom: 3px;
     }
 
     .kk-print-questionnaire .kkf-demo-grid,
     .kk-print-questionnaire .kkp-demo-grid {
-        gap: 5px;
-        margin-bottom: 4px;
+        gap: 4px;
+        margin-bottom: 2px;
     }
 
     .kk-print-questionnaire .kkf-demo-col {
-        gap: 3px;
+        gap: 5px;
     }
 
     .kk-print-questionnaire .kkf-demo-block-options,
     .kk-print-questionnaire .kkp-demo-block-options {
-        padding: 3px 6px;
+        padding: 4px 6px;
         gap: 1px;
     }
 
-    .kk-print-questionnaire .kkf-chk-lbl,
-    .kk-print-questionnaire .kkp-chk-lbl {
-        font-size: 9px;
-        line-height: 1.2;
+    .kk-print-questionnaire .kkf-chk-lbl {
+        font-size: 11px;
+        line-height: 1.4;
     }
 
-    .kk-print-questionnaire .kkf-footer-row {
-        margin-top: 4px;
-        margin-bottom: 2px;
+    .kk-print-questionnaire .kkf-footer-row,
+    .kk-print-questionnaire .kkp-footer-row {
+        margin-top: 10px;
+        padding-top: 6px;
+        margin-bottom: 4px;
+    }
+
+    .kk-print-questionnaire .kkp-thankyou {
+        margin-top: 6px;
+        margin-bottom: 4px;
+        font-size: 9px;
     }
 
     .kk-print-questionnaire .kkf-sig-section,
-    .kk-print-questionnaire .kkp-sig-section {
+    .kk-print-questionnaire .kkp-sig-section,
+    .kk-print-questionnaire .kkp-sig-section-left {
         margin-top: 6px;
         padding-top: 4px;
+        page-break-inside: avoid;
     }
 
     .kk-print-questionnaire .kkf-sig-overlay {
@@ -197,8 +350,8 @@ body.kk-print-body {
 
     .kk-print-questionnaire .kkf-voter-section,
     .kk-print-questionnaire .kkf-voter-row {
-        margin-top: 3px;
-        gap: 4px;
+        margin-top: 2px;
+        gap: 3px;
     }
 
     .kk-print-questionnaire .kkf-row-label,
@@ -206,26 +359,35 @@ body.kk-print-body {
         margin-bottom: 1px;
     }
 
-    /* Header: everything right-aligned */
+    /* Header: title left, fields + logo right */
     .kk-print-questionnaire .kkp-form-header {
         display: flex !important;
         flex-direction: row !important;
         align-items: flex-start !important;
-        justify-content: flex-end !important;
+        justify-content: space-between !important;
     }
 
     .kk-print-questionnaire .kkp-form-title-col {
         display: flex !important;
-        flex-direction: column !important;
-        align-items: flex-end !important;
-        text-align: right !important;
+        flex-direction: row !important;
+        align-items: flex-start !important;
+        justify-content: space-between !important;
+        text-align: left !important;
+        flex: 1;
+    }
+
+    .kk-print-questionnaire .kkp-form-main-title {
+        text-align: left !important;
+        align-self: flex-start !important;
     }
 
     .kk-print-questionnaire .kkp-form-header-fields {
         display: flex !important;
         flex-direction: column !important;
-        align-items: flex-end !important;
+        align-items: flex-start !important;
         justify-content: flex-start !important;
+        margin-left: auto !important;
+        margin-right: 8px !important;
     }
 
     .kk-print-questionnaire .kkp-form-logo {
