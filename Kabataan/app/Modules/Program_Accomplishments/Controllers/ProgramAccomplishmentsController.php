@@ -7,6 +7,7 @@ use App\Models\Barangay;
 use App\Services\BarangayLogoUrlService;
 use App\Services\PublicBarangayAccomplishmentsService;
 use App\Services\PublicProgramAccomplishmentService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Log;
@@ -86,12 +87,45 @@ class ProgramAccomplishmentsController extends Controller
             $logoUrl = null;
         }
 
+        $programCards = $programReports->map(
+            fn ($report) => $this->programAccomplishmentService->toPublicCard($report, (string) $barangay->name)
+        )->values();
+
+        $categoryCounts = $programCards
+            ->groupBy('category')
+            ->map->count()
+            ->sortKeys();
+
+        $years = $programCards->pluck('year')->unique()->sortDesc()->values();
+
+        $latestDate = $programReports
+            ->map(fn ($report) => $report->published_at ?: $report->actual_completion_date ?: $report->updated_at)
+            ->filter()
+            ->sortDesc()
+            ->first();
+
+        $stats = [
+            'total' => $programCards->count(),
+            'beneficiaries' => $programCards->sum('beneficiaries'),
+            'expenditure' => $programCards->sum('expenditure'),
+            'latest' => $latestDate?->format('F j, Y'),
+        ];
+
         return view('program_accomplishments::barangays.show', [
             'barangay' => $barangay,
             'accomplishment' => $accomplishment,
             'programReports' => $programReports,
+            'programCards' => $programCards,
+            'categoryCounts' => $categoryCounts,
+            'years' => $years,
+            'stats' => $stats,
             'logoUrl' => $logoUrl,
             'hideFooter' => true,
         ]);
+    }
+
+    public function report(Barangay $barangay, int $report): RedirectResponse
+    {
+        return redirect()->route('program_accomplishments.barangays.show', $barangay);
     }
 }

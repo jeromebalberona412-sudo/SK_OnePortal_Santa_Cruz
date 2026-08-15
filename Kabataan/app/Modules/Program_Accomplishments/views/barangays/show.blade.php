@@ -5,17 +5,20 @@
 @push('styles')
     @vite([
         'app/Modules/Program_Accomplishments/assets/css/barangay-accomplishments.css',
+        'app/Modules/Program_Accomplishments/assets/css/barangay-accomplishment-show.css',
+        'app/Modules/Program_Accomplishments/assets/css/program-card-expand.css',
     ])
 @endpush
 
 @push('scripts')
     @vite([
         'app/Modules/Program_Accomplishments/assets/js/barangay-accomplishments.js',
+        'app/Modules/Program_Accomplishments/assets/js/program-card-expand.js',
     ])
 @endpush
 
 @section('content')
-<div class="barangay-accomplishments-page kabataan-page-section barangay-accomplishments-offset">
+<div class="barangay-accomplishments-page kabataan-page-section barangay-accomplishments-offset ba-show">
     <section class="accomplishments-detail-hero">
         <div class="container accomplishments-shell">
             <a href="{{ route('program_accomplishments.barangays') }}" class="accomplishments-back-link">
@@ -25,20 +28,17 @@
                 Back to all barangays
             </a>
 
-            <div class="accomplishments-detail-header">
-                <div class="accomplishments-header-text">
-                    <p class="accomplishments-kicker">Barangay Accomplishments</p>
-                    <div class="accomplishments-detail-title-row">
-                        @if (!empty($logoUrl))
-                            <img src="{{ $logoUrl }}" alt="" class="accomplishments-detail-logo" loading="lazy">
-                        @endif
+            <div class="ba-profile">
+                @if (!empty($logoUrl))
+                    <img src="{{ $logoUrl }}" alt="" class="ba-profile-logo" loading="lazy">
+                @else
+                    <span class="ba-profile-logo ba-profile-logo-fallback" aria-hidden="true">{{ strtoupper(mb_substr($barangay->name, 0, 1)) }}</span>
+                @endif
+                <div class="ba-profile-copy">
+                    <div class="ba-profile-title-row">
                         <h1>{{ $barangay->name }}</h1>
                     </div>
-                    @if ($accomplishment)
-                        <p class="accomplishments-detail-subtitle">Calendar Year {{ $accomplishment->year }}</p>
-                    @elseif ($programReports->isNotEmpty())
-                        <p class="accomplishments-detail-subtitle">Published program accomplishments</p>
-                    @endif
+                    <p class="ba-profile-caption">Municipality of Santa Cruz, Laguna.</p>
                 </div>
             </div>
         </div>
@@ -55,7 +55,7 @@
                 </div>
             @endif
 
-            @if ($accomplishment === null && $programReports->isEmpty())
+            @if ($accomplishment === null && $programCards->isEmpty())
                 <div class="no-doc accomplishments-empty-state">
                     <h2>No Accomplishment uploaded yet</h2>
                     <p>
@@ -65,99 +65,198 @@
                 </div>
             @endif
 
-            @if ($programReports->isNotEmpty())
-                <section class="program-report-grid" aria-label="Published program accomplishments">
-                    <h2 class="program-report-heading">Program Accomplishments</h2>
-                    @foreach ($programReports as $report)
-                        @php
-                            $programName = $report->program?->program_name ?? $report->title;
-                            $completedDate = optional($report->actual_completion_date ?: $report->program?->end_date)->format('M d, Y');
-                            $photos = $report->images ?? collect();
-                            $docs = $report->documents ?? collect();
-                        @endphp
-                        <article class="program-report-card">
-                            <div class="program-report-card-top">
-                                <h3>{{ $programName }}</h3>
-                                <span class="program-report-status">Completed</span>
+            @if ($programCards->isNotEmpty())
+                <div class="ba-stats">
+                    <article class="ba-stat-card">
+                        <span class="ba-stat-icon ba-stat-icon-blue" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </span>
+                        <div>
+                            <h2>{{ $stats['total'] }}</h2>
+                            <p>Total Accomplishments</p>
+                            <small>{{ $stats['total'] }} Published Programs.</small>
+                        </div>
+                    </article>
+                    <article class="ba-stat-card">
+                        <span class="ba-stat-icon ba-stat-icon-green" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </span>
+                        <div>
+                            <h2>{{ number_format($stats['beneficiaries']) }}</h2>
+                            <p>Total Beneficiaries</p>
+                            <small>{{ number_format($stats['beneficiaries']) }} Across all programs.</small>
+                        </div>
+                    </article>
+                    <article class="ba-stat-card">
+                        <span class="ba-stat-icon ba-stat-icon-orange ba-peso-icon" aria-hidden="true">₱</span>
+                        <div>
+                            <h2>₱{{ number_format($stats['expenditure'], 2) }}</h2>
+                            <p>Total Expenditure</p>
+                            <small>₱ {{ number_format($stats['expenditure'], 2) }} Total actual expenditure.</small>
+                        </div>
+                    </article>
+                    <article class="ba-stat-card">
+                        <span class="ba-stat-icon ba-stat-icon-purple" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                        </span>
+                        <div>
+                            <h2>{{ $stats['latest'] ?: '—' }}</h2>
+                            <p>Latest Update</p>
+                            <small>Most recent accomplishment.</small>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="ba-layout">
+                    <div class="ba-main">
+                        <div class="ba-toolbar">
+                            <label class="ba-search" for="baProgramSearch">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                <input type="search" id="baProgramSearch" placeholder="Search accomplishments..." autocomplete="off" aria-label="Search accomplishments">
+                            </label>
+                            <div class="ba-toolbar-filters">
+                                <label class="visually-hidden" for="baCategoryFilter">Programs</label>
+                                <select id="baCategoryFilter" class="ba-select">
+                                    <option value="">All Programs</option>
+                                    @foreach ($categoryCounts as $category => $count)
+                                        <option value="{{ $category }}">{{ $category }}</option>
+                                    @endforeach
+                                </select>
+                                <label class="visually-hidden" for="baStatusFilter">Status</label>
+                                <select id="baStatusFilter" class="ba-select">
+                                    <option value="">All Status</option>
+                                    <option value="Completed">Completed</option>
+                                </select>
+                                <label class="visually-hidden" for="baYearFilter">Year</label>
+                                <select id="baYearFilter" class="ba-select">
+                                    <option value="">All Years</option>
+                                    @foreach ($years as $year)
+                                        <option value="{{ $year }}">{{ $year }}</option>
+                                    @endforeach
+                                </select>
+                                <label class="visually-hidden" for="baSortFilter">Sort</label>
+                                <select id="baSortFilter" class="ba-select">
+                                    <option value="latest">Sort by: Latest</option>
+                                    <option value="oldest">Sort by: Oldest</option>
+                                    <option value="name">Sort by: Name</option>
+                                </select>
+                                <div class="ba-view-toggle" role="group" aria-label="View mode">
+                                    <button type="button" class="ba-view-btn is-active" data-view="grid" aria-pressed="true" aria-label="Grid view">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                                    </button>
+                                    <button type="button" class="ba-view-btn" data-view="list" aria-pressed="false" aria-label="List view">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="5" width="18" height="3"/><rect x="3" y="10.5" width="18" height="3"/><rect x="3" y="16" width="18" height="3"/></svg>
+                                    </button>
+                                </div>
                             </div>
-                            <p class="program-report-meta">
-                                {{ $barangay->name }}
-                                @if ($completedDate)
-                                    · {{ $completedDate }}
-                                @endif
-                            </p>
-                            @if ($report->implementation_summary)
-                                <p class="program-report-summary">{{ $report->implementation_summary }}</p>
-                            @endif
+                        </div>
 
-                            <dl class="program-report-stats">
-                                <div>
-                                    <dt>Target beneficiaries</dt>
-                                    <dd>{{ $report->target_beneficiaries ?? '—' }}</dd>
-                                </div>
-                                <div>
-                                    <dt>Actual beneficiaries</dt>
-                                    <dd>{{ $report->participants_count ?? '—' }}</dd>
-                                </div>
-                                <div>
-                                    <dt>Approved budget</dt>
-                                    <dd>₱{{ number_format($report->plannedBudget(), 2) }}</dd>
-                                </div>
-                                <div>
-                                    <dt>Actual expenditure</dt>
-                                    <dd>₱{{ number_format((float) $report->actual_expense, 2) }}</dd>
-                                </div>
-                                <div>
-                                    <dt>Remaining</dt>
-                                    <dd>₱{{ number_format($report->remainingBudget(), 2) }}</dd>
-                                </div>
-                            </dl>
-
-                            @if ($report->actual_result)
-                                <div class="program-report-block">
-                                    <h4>Actual result</h4>
-                                    <p>{{ $report->actual_result }}</p>
-                                </div>
-                            @endif
-
-                            @if ($photos->isNotEmpty())
-                                <div class="program-report-block">
-                                    <h4>Photos</h4>
-                                    <div class="program-report-photos">
-                                        @foreach ($photos as $index => $image)
-                                            <button
-                                                type="button"
-                                                class="program-report-photo"
-                                                data-photo-src="{{ $image->secure_url ?: $image->image_url }}"
-                                                data-photo-alt="{{ $image->display_name ?: 'Program photo' }}"
-                                                aria-label="Preview {{ $image->display_name ?: 'photo' }}"
-                                            >
-                                                <img src="{{ $image->secure_url ?: $image->image_url }}" alt="{{ $image->display_name ?: 'Program photo' }}" loading="lazy">
-                                            </button>
-                                        @endforeach
+                        <div class="ba-program-grid" id="baProgramGrid">
+                            @foreach ($programCards as $card)
+                                <article
+                                    class="ba-program-card"
+                                    data-id="{{ $card['id'] }}"
+                                    data-title="{{ strtolower($card['title']) }}"
+                                    data-category="{{ $card['category'] }}"
+                                    data-status="{{ $card['status'] }}"
+                                    data-year="{{ $card['year'] }}"
+                                    data-sort-date="{{ $card['sort_date'] }}"
+                                >
+                                    <div class="ba-program-body">
+                                        <div class="ba-program-title-row">
+                                            <h3>{{ $card['title'] }}</h3>
+                                            <span class="ba-program-status ba-program-status-inline">{{ $card['status'] }}</span>
+                                        </div>
+                                        <p class="ba-program-meta">
+                                            {{ $card['date_label'] }}
+                                            · {{ $card['location'] }}
+                                            · {{ $card['duration'] }}
+                                        </p>
+                                        <div class="ba-program-metrics">
+                                            <span>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                                                <strong>{{ number_format($card['beneficiaries']) }}</strong>
+                                                Beneficiaries
+                                            </span>
+                                            <span>
+                                                <span class="ba-peso-inline" aria-hidden="true">₱</span>
+                                                <strong>₱{{ number_format($card['expenditure'], 2) }}</strong>
+                                                Actual Expenditure
+                                            </span>
+                                        </div>
+                                        <button type="button" class="ba-view-details" aria-expanded="false">
+                                            <span>View Details</span>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                                        </button>
                                     </div>
-                                </div>
-                            @endif
+                                    @include('program_accomplishments::barangays.partials.program-expand', ['card' => $card])
+                                </article>
+                            @endforeach
+                        </div>
 
-                            @if ($docs->isNotEmpty())
-                                <div class="program-report-block">
-                                    <h4>Supporting documents</h4>
-                                    <ul class="program-report-docs">
-                                        @foreach ($docs as $document)
-                                            <li>
-                                                @if ($document->visibility === 'public' && $document->stored_path)
-                                                    <a href="{{ asset('storage/'.$document->stored_path) }}" target="_blank" rel="noopener">{{ $document->original_name }}</a>
-                                                @else
-                                                    <span>{{ $document->original_name }}</span>
+                        <p class="ba-empty-filter" id="baEmptyFilter" hidden>No accomplishments match your filters.</p>
+                        <button type="button" class="ba-load-more" id="baLoadMore" hidden>
+                            Load More
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                    </div>
+
+                    <aside class="ba-sidebar">
+                        <section class="ba-side-card">
+                            <h2>Programs</h2>
+                            <ul class="ba-category-list">
+                                <li>
+                                    <button type="button" class="ba-category-item is-active" data-category="">
+                                        All
+                                        <span>{{ $programCards->count() }}</span>
+                                    </button>
+                                </li>
+                                @foreach ($categoryCounts as $category => $count)
+                                    <li>
+                                        <button type="button" class="ba-category-item" data-category="{{ $category }}">
+                                            {{ $category }}
+                                            <span>{{ $count }}</span>
+                                        </button>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </section>
+                        <section class="ba-side-card">
+                            <h2>Documents</h2>
+                            @php
+                                $sidebarDocuments = $programCards->flatMap(fn ($item) => $item['documents'] ?? [])->unique('url')->values();
+                            @endphp
+                            @if ($sidebarDocuments->isEmpty())
+                                <p>No public documents uploaded.</p>
+                            @else
+                                <ul class="ba-doc-list">
+                                    @foreach ($sidebarDocuments as $document)
+                                        <li>
+                                            <span class="ba-doc-type {{ ($document['type'] ?? '') === 'PDF' ? 'is-pdf' : '' }}">{{ $document['type'] ?? 'FILE' }}</span>
+                                            <span class="ba-doc-copy">
+                                                <strong>{{ $document['name'] }}</strong>
+                                                @if (($document['size'] ?? '') !== '')
+                                                    <small>{{ $document['size'] }}</small>
                                                 @endif
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </div>
+                                            </span>
+                                            <a href="{{ $document['url'] }}" class="ba-doc-download" download target="_blank" rel="noopener" aria-label="Download {{ $document['name'] }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
                             @endif
-                        </article>
-                    @endforeach
-                </section>
+                        </section>
+                        <section class="ba-side-card">
+                            <h2>About This Page</h2>
+                            <p>Published SK program accomplishments for {{ $barangay->name }}, including beneficiaries, expenditure, photos, and supporting documents.</p>
+                            <a href="{{ route('homepage') }}#programs" class="ba-side-link">
+                                Learn more about SK programs
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                            </a>
+                        </section>
+                    </aside>
+                </div>
             @endif
 
             @if ($accomplishment)
@@ -241,7 +340,8 @@
 
 <div class="program-photo-lightbox" id="programPhotoLightbox" hidden>
     <button type="button" class="program-photo-lightbox-close" id="programPhotoLightboxClose" aria-label="Close photo preview">×</button>
+    <button type="button" class="program-photo-lightbox-nav is-prev" id="programPhotoLightboxPrev" aria-label="Previous photo" hidden>‹</button>
     <img src="" alt="" id="programPhotoLightboxImage">
-    <p id="programPhotoLightboxCaption"></p>
+    <button type="button" class="program-photo-lightbox-nav is-next" id="programPhotoLightboxNext" aria-label="Next photo" hidden>›</button>
 </div>
 @endsection

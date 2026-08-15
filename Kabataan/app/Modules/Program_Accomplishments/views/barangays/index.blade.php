@@ -1,6 +1,6 @@
 @extends('program_accomplishments::layout')
 
-@section('title', 'Barangay Accomplishments — SK OnePortal Kabataan')
+@section('title', 'Accomplishment — SK OnePortal Kabataan')
 
 @push('styles')
     @vite([
@@ -20,9 +20,9 @@
         <div class="container accomplishments-shell">
             <div class="accomplishments-hero-row">
                 <div class="accomplishments-hero-copy">
-                    <h1>Barangay Accomplishments</h1>
+                    <h1>Accomplishment</h1>
                     <p class="accomplishments-hero-text">
-                        Browse Annual Barangay Accomplishments across all barangays in Santa Cruz, Laguna.
+                        Browse published accomplishments across all barangays in Santa Cruz, Laguna.
                     </p>
                 </div>
 

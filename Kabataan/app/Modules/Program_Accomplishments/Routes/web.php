@@ -9,5 +9,9 @@ Route::get('/barangay-accomplishments', [ProgramAccomplishmentsController::class
 Route::get('/barangay-accomplishments/{barangay:slug}', [ProgramAccomplishmentsController::class, 'show'])
     ->name('program_accomplishments.barangays.show');
 
+Route::get('/barangay-accomplishments/{barangay:slug}/{report}', [ProgramAccomplishmentsController::class, 'report'])
+    ->whereNumber('report')
+    ->name('program_accomplishments.barangays.report');
+
 Route::permanentRedirect('/accomplishments', '/barangay-accomplishments');
 Route::permanentRedirect('/accomplishments/{barangay:slug}', '/barangay-accomplishments/{barangay:slug}');

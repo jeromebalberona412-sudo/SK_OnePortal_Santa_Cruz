@@ -96,7 +96,10 @@ export default defineConfig({
 
                 // Program Accomplishments
                 'app/Modules/Program_Accomplishments/assets/css/barangay-accomplishments.css',
+                'app/Modules/Program_Accomplishments/assets/css/barangay-accomplishment-show.css',
+                'app/Modules/Program_Accomplishments/assets/css/program-card-expand.css',
                 'app/Modules/Program_Accomplishments/assets/js/barangay-accomplishments.js',
+                'app/Modules/Program_Accomplishments/assets/js/program-card-expand.js',
 
                 // KK Profiling
                 'app/Modules/KKProfiling/assets/css/kkprofiling.css',

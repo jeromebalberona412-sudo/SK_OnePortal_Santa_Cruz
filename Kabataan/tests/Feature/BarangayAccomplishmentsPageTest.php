@@ -7,7 +7,7 @@ it('renders the barangay accomplishments list page', function () {
     $response = $this->get(route('program_accomplishments.barangays'));
 
     $response->assertOk();
-    $response->assertSee('Barangay Accomplishments');
+    $response->assertSee('Accomplishment');
 });
 
 it('renders an empty state when a barangay has no accomplishment document', function () {

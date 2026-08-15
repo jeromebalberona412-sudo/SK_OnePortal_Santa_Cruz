@@ -36,47 +36,111 @@ document.addEventListener('DOMContentLoaded', () => {
         searchInput.addEventListener('input', filterCards);
     }
 
-    const lightbox = document.getElementById('programPhotoLightbox');
-    const lightboxImage = document.getElementById('programPhotoLightboxImage');
-    const lightboxCaption = document.getElementById('programPhotoLightboxCaption');
-    const lightboxClose = document.getElementById('programPhotoLightboxClose');
+    initBarangayProgramShowcase();
+});
 
-    const closeLightbox = () => {
-        if (!lightbox) return;
-        lightbox.hidden = true;
-        document.body.style.overflow = '';
-        if (lightboxImage) {
-            lightboxImage.src = '';
-            lightboxImage.alt = '';
+function initBarangayProgramShowcase() {
+    const grid = document.getElementById('baProgramGrid');
+    if (!grid) {
+        return;
+    }
+
+    const cards = Array.from(grid.querySelectorAll('.ba-program-card'));
+    const searchInput = document.getElementById('baProgramSearch');
+    const categoryFilter = document.getElementById('baCategoryFilter');
+    const statusFilter = document.getElementById('baStatusFilter');
+    const yearFilter = document.getElementById('baYearFilter');
+    const sortFilter = document.getElementById('baSortFilter');
+    const emptyFilter = document.getElementById('baEmptyFilter');
+    const loadMore = document.getElementById('baLoadMore');
+    const pageSize = 6;
+    let visibleLimit = pageSize;
+    let currentView = 'grid';
+
+    const matches = (card) => {
+        const query = (searchInput?.value || '').trim().toLowerCase();
+        const category = categoryFilter?.value || '';
+        const status = statusFilter?.value || '';
+        const year = yearFilter?.value || '';
+
+        return (!query || (card.dataset.title || '').includes(query))
+            && (!category || card.dataset.category === category)
+            && (!status || card.dataset.status === status)
+            && (!year || card.dataset.year === year);
+    };
+
+    const apply = () => {
+        const matched = cards.filter(matches);
+        const sortBy = sortFilter?.value || 'latest';
+
+        matched.sort((a, b) => {
+            if (sortBy === 'name') {
+                return (a.dataset.title || '').localeCompare(b.dataset.title || '');
+            }
+            const aDate = a.dataset.sortDate || '';
+            const bDate = b.dataset.sortDate || '';
+            return sortBy === 'oldest' ? aDate.localeCompare(bDate) : bDate.localeCompare(aDate);
+        });
+
+        matched.forEach((card) => grid.appendChild(card));
+
+        let shown = 0;
+        cards.forEach((card) => {
+            const isMatch = matched.includes(card);
+            const canShow = isMatch && shown < visibleLimit;
+            card.hidden = !canShow;
+            if (canShow) {
+                shown += 1;
+            }
+        });
+
+        if (emptyFilter) {
+            emptyFilter.hidden = matched.length > 0;
+        }
+        if (loadMore) {
+            loadMore.hidden = shown >= matched.length;
         }
     };
 
-    const openLightbox = (src, alt) => {
-        if (!lightbox || !lightboxImage || !src) return;
-        lightboxImage.src = src;
-        lightboxImage.alt = alt || 'Program photo';
-        if (lightboxCaption) {
-            lightboxCaption.textContent = alt || '';
-        }
-        lightbox.hidden = false;
-        document.body.style.overflow = 'hidden';
-    };
-
-    document.querySelectorAll('.program-report-photo').forEach((button) => {
-        button.addEventListener('click', () => {
-            openLightbox(button.dataset.photoSrc, button.dataset.photoAlt);
+    [searchInput, categoryFilter, statusFilter, yearFilter, sortFilter].forEach((el) => {
+        el?.addEventListener('input', () => {
+            visibleLimit = pageSize;
+            apply();
+        });
+        el?.addEventListener('change', () => {
+            visibleLimit = pageSize;
+            apply();
         });
     });
 
-    lightboxClose?.addEventListener('click', closeLightbox);
-    lightbox?.addEventListener('click', (event) => {
-        if (event.target === lightbox) {
-            closeLightbox();
-        }
+    document.querySelectorAll('.ba-category-item').forEach((button) => {
+        button.addEventListener('click', () => {
+            document.querySelectorAll('.ba-category-item').forEach((item) => item.classList.remove('is-active'));
+            button.classList.add('is-active');
+            if (categoryFilter) {
+                categoryFilter.value = button.dataset.category || '';
+            }
+            visibleLimit = pageSize;
+            apply();
+        });
     });
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && lightbox && !lightbox.hidden) {
-            closeLightbox();
-        }
+
+    document.querySelectorAll('.ba-view-btn').forEach((button) => {
+        button.addEventListener('click', () => {
+            currentView = button.dataset.view || 'grid';
+            document.querySelectorAll('.ba-view-btn').forEach((item) => {
+                const active = item === button;
+                item.classList.toggle('is-active', active);
+                item.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+            grid.classList.toggle('is-list', currentView === 'list');
+        });
     });
-});
+
+    loadMore?.addEventListener('click', () => {
+        visibleLimit += pageSize;
+        apply();
+    });
+
+    apply();
+}
