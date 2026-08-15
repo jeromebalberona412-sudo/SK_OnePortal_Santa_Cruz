@@ -29,47 +29,26 @@
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
-    overflow: hidden;
-    height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    min-height: 100vh;
+    height: auto;
 }
 
 html {
-    overflow: hidden;
-    height: 100%;
-    scroll-behavior: smooth;
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: auto;
 }
 
-@media (max-width: 1024px) {
-    body {
-        overflow-y: auto;
-        overflow-x: hidden;
-        height: auto;
-    }
-
-    html {
-        overflow-y: auto;
-        overflow-x: hidden;
-        height: auto;
-    }
-}
-
-/* Page */
 .sk-login-page {
     min-height: 100vh;
-    height: 100vh;
+    height: auto;
     display: flex;
     flex-direction: column;
     position: relative;
     background: linear-gradient(135deg, var(--sk-dark) 0%, var(--sk-dark-2) 50%, var(--sk-dark-3) 100%);
-    overflow: hidden;
-}
-
-@media (max-width: 1024px) {
-    .sk-login-page {
-        height: auto;
-        min-height: 100vh;
-        overflow-y: auto;
-    }
+    overflow: visible;
 }
 
 /* Background */
@@ -96,11 +75,11 @@ html {
     flex: 1;
     display: flex;
     min-height: 100vh;
-    height: 100vh;
+    height: auto;
     max-width: 1600px;
     margin: 0 auto;
     width: 100%;
-    overflow: hidden;
+    overflow: visible;
 }
 
 @media (max-width: 1024px) {
@@ -299,21 +278,7 @@ html {
     padding: 2rem;
     margin-left: auto;
     margin-right: 8rem;
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-.sk-login-section::-webkit-scrollbar {
-    width: 6px;
-}
-
-.sk-login-section::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.sk-login-section::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
+    overflow: visible;
 }
 
 .sk-login-card {
@@ -705,6 +670,21 @@ html {
     transform: none;
 }
 
+.sk-submit-btn.loading {
+    pointer-events: none;
+    opacity: 0.9;
+}
+
+.sk-submit-btn.loading::before {
+    display: none;
+}
+
+.sk-login-card input[readonly] {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background: #f1f5f9;
+}
+
 .btn-icon {
     width: 20px;
     height: 20px;
@@ -803,7 +783,7 @@ html {
     .sk-login-container {
         flex-direction: column;
         padding: 0;
-        overflow-y: auto;
+        overflow: visible;
         height: auto;
     }
 

@@ -218,16 +218,7 @@
 
         // Set lock BEFORE submit — prevents any re-entrant handler from firing
         isSubmitting = true;
-
-        // Show loading state on button
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.classList.add('loading');
-            var span = submitBtn.querySelector('span');
-            if (span) span.textContent = 'Signing in...';
-        }
-
-        // Native submit — does NOT dispatch a submit event, sends POST exactly once
+        setSigningIn();
         signInForm.submit();
     }
 
@@ -254,9 +245,27 @@
         setModalError('Verification expired. Please complete the challenge again.');
     }
 
-    // ─── Submit button helpers ────────────────────────────────────────────────
+    function lockAuthFields() {
+        if (emailInput) emailInput.readOnly = true;
+        if (passwordInput) passwordInput.readOnly = true;
+    }
+
+    function unlockAuthFields() {
+        if (emailInput) emailInput.readOnly = false;
+        if (passwordInput) passwordInput.readOnly = false;
+    }
+
+    function setSigningIn() {
+        lockAuthFields();
+        if (!submitBtn) return;
+        submitBtn.disabled = true;
+        submitBtn.classList.add('loading');
+        var span = submitBtn.querySelector('span');
+        if (span) span.textContent = 'Signing in...';
+    }
 
     function resetSubmitBtn() {
+        unlockAuthFields();
         if (!submitBtn) return;
         submitBtn.disabled = false;
         submitBtn.classList.remove('waiting-for-turnstile');
@@ -293,12 +302,7 @@
             e.preventDefault();
             e.stopPropagation();
             isSubmitting = true;
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.classList.add('loading');
-                var span = submitBtn.querySelector('span');
-                if (span) span.textContent = 'Signing in...';
-            }
+            setSigningIn();
             signInForm.submit();
             return;
         }
@@ -310,18 +314,14 @@
         // Turnstile disabled — submit directly
         if (!signInForm.dataset.turnstileEnabled) {
             isSubmitting = true;
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.classList.add('loading');
-                var span = submitBtn.querySelector('span');
-                if (span) span.textContent = 'Signing in...';
-            }
+            setSigningIn();
             signInForm.submit();
             return;
         }
 
         // Show Turnstile modal — submission happens in onTurnstileSuccess
         showTurnstileModal();
+        lockAuthFields();
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.classList.add('waiting-for-turnstile');

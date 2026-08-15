@@ -331,27 +331,25 @@
     --auth-legal-link-hover: #0f766e;
 }
 
-/* Kabataan signin — slightly compact card */
 .youth-signin-page .youth-signin-card {
-    padding: 2rem 2.5rem;
+    padding: 2.5rem 3rem;
 }
 
 .youth-signin-page .card-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 70px;
-    margin-bottom: 1.25rem;
+    display: block;
+    min-height: 0;
+    margin-bottom: 2rem;
     text-align: center;
 }
 
 .youth-signin-page .card-subtitle {
-    font-size: 1.1rem;
-    font-weight: 600;
+    font-size: 1.4rem;
+    font-weight: 800;
     text-align: center;
-    color: var(--youth-gray-700);
+    color: var(--youth-gray-900);
+    letter-spacing: -0.02em;
     margin: 0;
-    line-height: 1.5;
+    line-height: 1.2;
 }
 
 .youth-signin-page .youth-signin-form {

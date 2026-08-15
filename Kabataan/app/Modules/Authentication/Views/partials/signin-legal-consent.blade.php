@@ -8,7 +8,8 @@
             class="auth-legal-consent-radio"
         >
         <span class="auth-legal-consent-text">
-            I confirm that I am 15 to 30 years old and I agree to the
+            This portal is intended for users aged 15–30.<br>
+            By signing in, you agree to our
             <button type="button" class="auth-legal-link" data-open-legal-modal="termsLegalModal">Terms and Conditions</button>
             and
             <button type="button" class="auth-legal-link" data-open-legal-modal="privacyLegalModal">Privacy Policy</button>.

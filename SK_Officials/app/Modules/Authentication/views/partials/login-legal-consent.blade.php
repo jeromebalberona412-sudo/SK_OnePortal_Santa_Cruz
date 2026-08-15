@@ -8,7 +8,8 @@
             class="auth-legal-consent-radio"
         >
         <span class="auth-legal-consent-text">
-            I confirm that I am an authorized Sangguniang Kabataan (SK) Official and I agree to the
+            This portal is intended for authorized Sangguniang Kabataan Officials.<br>
+            By signing in, you agree to our
             <button type="button" class="auth-legal-link" data-open-legal-modal="termsLegalModal">Terms and Conditions</button>
             and
             <button type="button" class="auth-legal-link" data-open-legal-modal="privacyLegalModal">Privacy Policy</button>.

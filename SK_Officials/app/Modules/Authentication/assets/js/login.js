@@ -214,20 +214,11 @@
 
         // Update button UI
         if (submitBtn) {
-            submitBtn.disabled = true;
             submitBtn.classList.remove('waiting-for-turnstile');
-            submitBtn.querySelector('span').textContent = 'Logging In...';
         }
+        setSigningIn();
 
-        // Show the loading overlay
-        showLoadingOverlay();
-
-        // Set the guard BEFORE calling submit so any re-entrant event is blocked
         isSubmitting = true;
-
-        // Submit the form. This is a native call that bypasses all JS submit
-        // listeners — email, password, _token, remember, and cf-turnstile-response
-        // are all included in the POST body exactly once.
         loginForm.submit();
     }
 
@@ -244,33 +235,35 @@
         setModalError('Verification expired. Please complete the challenge again.');
     }
 
-    // ─── Loading overlay ──────────────────────────────────────────────────────
-
-    function showLoadingOverlay() {
-        var overlay = document.querySelector('.loading-overlay');
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.className = 'loading-overlay';
-            overlay.innerHTML =
-                '<div class="overlay-backdrop"></div>' +
-                '<div class="loading-content">' +
-                '<div class="main-spinner"></div>' +
-                '<p class="loading-text">Logging In...</p>' +
-                '</div>';
-            document.body.appendChild(overlay);
-        }
-        overlay.classList.add('active');
-        var container = document.querySelector('.sk-login-container');
-        if (container) container.classList.add('blurred');
-    }
-
     // ─── Submit button state helpers ──────────────────────────────────────────
 
+    function lockAuthFields() {
+        if (emailInput) emailInput.readOnly = true;
+        if (passwordInput) passwordInput.readOnly = true;
+    }
+
+    function unlockAuthFields() {
+        if (emailInput) emailInput.readOnly = false;
+        if (passwordInput) passwordInput.readOnly = false;
+    }
+
+    function setSigningIn() {
+        lockAuthFields();
+        if (!submitBtn) return;
+        submitBtn.disabled = true;
+        submitBtn.classList.add('loading');
+        var span = submitBtn.querySelector('span');
+        if (span) span.textContent = 'Logging in...';
+    }
+
     function resetSubmitBtn() {
+        unlockAuthFields();
         if (!submitBtn) return;
         submitBtn.disabled = false;
         submitBtn.classList.remove('waiting-for-turnstile');
-        submitBtn.querySelector('span').textContent = 'Login';
+        submitBtn.classList.remove('loading');
+        var span = submitBtn.querySelector('span');
+        if (span) span.textContent = 'Login';
     }
 
     // ─── Field edit: reset Turnstile if the modal is open ────────────────────
@@ -314,41 +307,35 @@
         //      re-triggered a submit (e.g. via auth-legal.js requestSubmit).
         //   b) We should not show the modal again.
         if (turnstileToken) {
-            e.preventDefault(); // Prevent the native submit racing loginForm.submit()
+            e.preventDefault();
             if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.querySelector('span').textContent = 'Logging In...';
+                submitBtn.classList.remove('waiting-for-turnstile');
             }
-            showLoadingOverlay();
+            setSigningIn();
             isSubmitting = true;
             loginForm.submit();
             return;
         }
 
-        // ── Always preventDefault from here — modal will drive submission ─────
         e.preventDefault();
 
-        // ── Validate fields ───────────────────────────────────────────────────
         if (!validateFields()) return;
 
-        // ── Turnstile disabled → submit directly ──────────────────────────────
         if (!loginForm.dataset.turnstileEnabled) {
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.querySelector('span').textContent = 'Logging In...';
-            }
-            showLoadingOverlay();
+            setSigningIn();
             isSubmitting = true;
             loginForm.submit();
             return;
         }
 
-        // ── Show Turnstile modal and wait for the challenge ───────────────────
         showTurnstileModal();
+        lockAuthFields();
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.classList.add('waiting-for-turnstile');
-            submitBtn.querySelector('span').textContent = 'Complete verification';
+            submitBtn.classList.add('loading');
+            var span = submitBtn.querySelector('span');
+            if (span) span.textContent = 'Logging in...';
         }
     }
 

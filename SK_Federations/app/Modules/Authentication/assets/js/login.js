@@ -220,12 +220,8 @@
         hideTurnstileModal(true);
 
         // Cloudflare checkbox completed — show feedback then submit
-        if (loginBtnText) loginBtnText.textContent = 'Signing In...';
-        if (loginBtn) loginBtn.disabled = true;
-        showLoadingOverlay();
-
+        setSigningIn();
         isSubmitting = true;
-        // Native submit — does NOT dispatch a submit event; sends POST exactly once
         loginForm.submit();
     }
 
@@ -242,30 +238,32 @@
         setModalError('Verification expired. Please complete the challenge again.');
     }
 
-    // ─── Loading overlay ──────────────────────────────────────────────────────
-
-    function showLoadingOverlay() {
-        var overlay = document.querySelector('.fed-loading-overlay');
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.className = 'fed-loading-overlay';
-            overlay.innerHTML =
-                '<div class="fed-overlay-backdrop"></div>' +
-                '<div class="fed-loading-content">' +
-                '<div class="fed-main-spinner"></div>' +
-                '<p class="fed-loading-text">Signing In...</p>' +
-                '</div>';
-            document.body.appendChild(overlay);
-        }
-        overlay.classList.add('active');
-    }
-
     // ─── Button helpers ───────────────────────────────────────────────────────
 
+    function lockAuthFields() {
+        if (emailInput) emailInput.readOnly = true;
+        if (passwordInput) passwordInput.readOnly = true;
+    }
+
+    function unlockAuthFields() {
+        if (emailInput) emailInput.readOnly = false;
+        if (passwordInput) passwordInput.readOnly = false;
+    }
+
+    function setSigningIn() {
+        lockAuthFields();
+        if (!loginBtn) return;
+        loginBtn.disabled = true;
+        loginBtn.classList.add('loading');
+        if (loginBtnText) loginBtnText.textContent = 'Logging in...';
+    }
+
     function resetLoginBtn() {
+        unlockAuthFields();
         if (!loginBtn) return;
         loginBtn.disabled = false;
         loginBtn.classList.remove('waiting-for-turnstile');
+        loginBtn.classList.remove('loading');
         if (loginBtnText) loginBtnText.textContent = 'Login';
     }
 
@@ -313,9 +311,7 @@
         if (turnstileToken) {
             e.preventDefault();
             e.stopPropagation();
-            if (loginBtnText) loginBtnText.textContent = 'Signing In...';
-            if (loginBtn) loginBtn.disabled = true;
-            showLoadingOverlay();
+            setSigningIn();
             isSubmitting = true;
             loginForm.submit();
             return;
@@ -325,22 +321,21 @@
 
         if (!validateFields()) return;
 
-        // Turnstile disabled — submit directly
         if (!loginForm.dataset.turnstileEnabled) {
-            if (loginBtnText) loginBtnText.textContent = 'Signing In...';
-            if (loginBtn) loginBtn.disabled = true;
-            showLoadingOverlay();
+            setSigningIn();
             isSubmitting = true;
             loginForm.submit();
             return;
         }
 
-        // Show Turnstile modal — submission happens inside onTurnstileSuccess
         showTurnstileModal();
+        lockAuthFields();
         if (loginBtn) {
             loginBtn.disabled = true;
             loginBtn.classList.add('waiting-for-turnstile');
+            loginBtn.classList.add('loading');
         }
+        if (loginBtnText) loginBtnText.textContent = 'Logging in...';
     }
 
     // ─── Modal close ─────────────────────────────────────────────────────────
@@ -446,22 +441,5 @@
     } else {
         init();
     }
-
-    // ─── Inject loading overlay styles ───────────────────────────────────────
-    (function injectStyles() {
-        if (document.getElementById('fed-login-styles')) return;
-        var style = document.createElement('style');
-        style.id  = 'fed-login-styles';
-        style.textContent = [
-            '.fed-loading-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .3s ease,visibility .3s ease}',
-            '.fed-loading-overlay.active{opacity:1;visibility:visible}',
-            '.fed-overlay-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(5px)}',
-            '.fed-loading-content{position:relative;z-index:10;text-align:center}',
-            '.fed-main-spinner{width:60px;height:60px;border:4px solid rgba(255,255,255,.3);border-top:4px solid #F7D31E;border-radius:50%;animation:fedSpin 1s linear infinite;margin:0 auto 20px}',
-            '.fed-loading-text{color:#fff;font-size:18px;font-weight:500;margin:0;text-shadow:0 2px 4px rgba(0,0,0,.5)}',
-            '@keyframes fedSpin{to{transform:rotate(360deg)}}',
-        ].join('');
-        document.head.appendChild(style);
-    }());
 
 }());
