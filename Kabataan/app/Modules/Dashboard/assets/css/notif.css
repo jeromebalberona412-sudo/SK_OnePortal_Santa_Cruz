@@ -285,8 +285,21 @@
 /* Responsive — Tablet (481px–768px) */
 @media (max-width: 768px) {
     .notif-popover {
-        width: 300px;
+        width: 280px;
         right: 0;
+        max-height: min(62vh, 380px);
+    }
+
+    .np-body {
+        max-height: min(46vh, 260px);
+    }
+
+    .np-header {
+        padding: 10px 12px;
+    }
+
+    .np-title {
+        font-size: 14px;
     }
 }
 
@@ -301,9 +314,18 @@
         top: 68px;
         right: 8px;
         left: auto;
-        width: calc(100vw - 16px);
-        max-width: 340px;
+        width: min(300px, calc(100vw - 24px));
+        max-width: 300px;
+        max-height: min(58vh, 360px);
         transform-origin: top right;
+    }
+
+    .np-body {
+        max-height: min(42vh, 240px);
+    }
+
+    .np-empty {
+        padding: 24px 16px 20px;
     }
 
     /* Arrow stays visible, JS sets --np-arrow-right to align with button */

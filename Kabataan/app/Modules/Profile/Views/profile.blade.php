@@ -28,6 +28,72 @@
         'app/Modules/Dashboard/assets/js/notif.js',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <style>
+        .kabataan-modal-backdrop {
+            padding: 32px 24px;
+            align-items: center;
+            justify-content: center;
+        }
+        .kabataan-modal-box {
+            width: min(880px, calc(100% - 48px));
+            max-width: 880px;
+            max-height: min(78vh, calc(100vh - 96px));
+            border-radius: 16px;
+        }
+        .kabataan-modal-backdrop .modal-toggle-btn,
+        .kabataan-modal-backdrop .modal-close {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+        .kabataan-modal-backdrop .modal-toggle-btn svg {
+            width: 16px;
+            height: 16px;
+            display: block;
+        }
+        .kabataan-modal-backdrop.modal-maximized {
+            padding: 0;
+            align-items: stretch;
+            justify-content: stretch;
+        }
+        .kabataan-modal-backdrop.modal-maximized .kabataan-modal-box,
+        .kabataan-modal-box.modal-maximized {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            max-width: none;
+            max-height: none;
+            border-radius: 0;
+        }
+        .kkp-profile-preview .kkp-personal-row {
+            overflow: visible;
+            grid-template-columns: auto minmax(0, 1fr) minmax(260px, 1.6fr);
+        }
+        .kkp-profile-preview .kkp-email-value {
+            display: block;
+            width: 100%;
+            text-align: left;
+            white-space: normal;
+            overflow: visible;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            line-height: 1.35;
+        }
+        @media (max-width: 768px) {
+            .kabataan-modal-backdrop:not(.modal-maximized) {
+                padding: 56px 14px 28px;
+            }
+            .kabataan-modal-backdrop:not(.modal-maximized) .kabataan-modal-box {
+                width: calc(100% - 8px);
+                max-height: 68vh;
+                border-radius: 14px;
+            }
+        }
+    </style>
     <script>
         function closeProfilePictureLockModal() {
             const modal = document.getElementById('profilePictureLockModal');
@@ -132,7 +198,7 @@
                                 </h2>
                                 @if($kabataanRegistration)
                                     <div class="kkp-preview-toolbar">
-                                        <button type="button" class="btn-primary kkp-preview-btn" onclick="openKkPreviewModal()">View Personal Information</button>
+                                        <button type="button" class="btn-primary kkp-preview-btn" onclick="openKkPreviewModal()" data-no-loading>View Personal Information</button>
                                     </div>
                                 @else
                                     <div class="empty-state kk-profile-empty-state">
@@ -237,7 +303,7 @@
                         </div>
                     </div>
 
-                    <div class="info-card account-settings-card">
+                    <div class="info-card account-settings-card" id="account-settings">
                         <div class="card-header">
                             <h2>
                                 <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -480,7 +546,10 @@
             <div class="modal-header">
                 <h2 class="modal-title">Supporting Documents</h2>
                 <div class="modal-window-controls">
-                    <button type="button" class="modal-toggle-btn" id="supportingDocsFullscreenBtn" aria-label="Maximize">?</button>
+                    <button type="button" class="modal-toggle-btn" id="supportingDocsFullscreenBtn" aria-label="Maximize">
+                        <svg class="modal-icon-maximize" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                        <svg class="modal-icon-restore" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+                    </button>
                     <button type="button" class="modal-close" onclick="closeSupportingDocsModal()" aria-label="Close">&times;</button>
                 </div>
             </div>
@@ -593,7 +662,10 @@
             <div class="modal-header">
                 <h2 class="modal-title">Personal Information</h2>
                 <div class="modal-window-controls">
-                    <button type="button" class="modal-toggle-btn" id="kkPreviewFullscreenBtn" data-modal-toggle aria-label="Maximize">?</button>
+                    <button type="button" class="modal-toggle-btn" id="kkPreviewFullscreenBtn" data-modal-toggle aria-label="Maximize">
+                        <svg class="modal-icon-maximize" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                        <svg class="modal-icon-restore" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+                    </button>
                     <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
                 </div>
             </div>
@@ -618,16 +690,21 @@
     <script>
     window.addEventListener('unload', function () {});
 
+    function setKabataanModalMaximized(backdrop, panel, toggleBtn, isMax) {
+        backdrop?.classList.toggle('modal-maximized', isMax);
+        panel?.classList.toggle('modal-maximized', isMax);
+        const maximizeIcon = toggleBtn?.querySelector('.modal-icon-maximize');
+        const restoreIcon = toggleBtn?.querySelector('.modal-icon-restore');
+        if (maximizeIcon) maximizeIcon.hidden = isMax;
+        if (restoreIcon) restoreIcon.hidden = !isMax;
+        toggleBtn?.setAttribute('aria-label', isMax ? 'Restore down' : 'Maximize');
+    }
+
     function resetKkPreviewModalState() {
         const backdrop = document.getElementById('kkPreviewModal');
         const panel = document.getElementById('kkPreviewModalPanel');
         const toggleBtn = document.getElementById('kkPreviewFullscreenBtn');
-        if (backdrop) backdrop.classList.remove('modal-maximized');
-        if (panel) panel.classList.remove('modal-maximized');
-        if (toggleBtn) {
-            toggleBtn.textContent = '?';
-            toggleBtn.setAttribute('aria-label', 'Maximize');
-        }
+        setKabataanModalMaximized(backdrop, panel, toggleBtn, false);
     }
 
     function openKkPreviewModal() {
@@ -652,12 +729,7 @@
         const backdrop = document.getElementById('supportingDocsModal');
         const panel = document.getElementById('supportingDocsModalPanel');
         const toggleBtn = document.getElementById('supportingDocsFullscreenBtn');
-        if (backdrop) backdrop.classList.remove('modal-maximized');
-        if (panel) panel.classList.remove('modal-maximized');
-        if (toggleBtn) {
-            toggleBtn.textContent = '?';
-            toggleBtn.setAttribute('aria-label', 'Maximize');
-        }
+        setKabataanModalMaximized(backdrop, panel, toggleBtn, false);
     }
 
     function openSupportingDocsModal() {
@@ -730,22 +802,14 @@
         const backdrop = document.getElementById('supportingDocsModal');
         const panel = document.getElementById('supportingDocsModalPanel');
         if (!backdrop || !panel) return;
-        const isMax = !backdrop.classList.contains('modal-maximized');
-        backdrop.classList.toggle('modal-maximized', isMax);
-        panel.classList.toggle('modal-maximized', isMax);
-        this.textContent = isMax ? '?' : '?';
-        this.setAttribute('aria-label', isMax ? 'Restore down' : 'Maximize');
+        setKabataanModalMaximized(backdrop, panel, this, !backdrop.classList.contains('modal-maximized'));
     });
 
     document.getElementById('kkPreviewFullscreenBtn')?.addEventListener('click', function () {
         const backdrop = document.getElementById('kkPreviewModal');
         const panel = document.getElementById('kkPreviewModalPanel');
         if (!backdrop || !panel) return;
-        const isMax = !backdrop.classList.contains('modal-maximized');
-        backdrop.classList.toggle('modal-maximized', isMax);
-        panel.classList.toggle('modal-maximized', isMax);
-        this.textContent = isMax ? '?' : '?';
-        this.setAttribute('aria-label', isMax ? 'Restore down' : 'Maximize');
+        setKabataanModalMaximized(backdrop, panel, this, !backdrop.classList.contains('modal-maximized'));
     });
 
     document.querySelectorAll('#kkPreviewModal [data-modal-close]').forEach(function (btn) {

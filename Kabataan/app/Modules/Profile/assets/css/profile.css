@@ -1578,15 +1578,15 @@ body.youth-profile {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 16px;
+    padding: 32px 24px;
 }
 
 .kabataan-modal-box {
     background: #fff;
     border-radius: 16px;
-    width: 100%;
-    max-width: 1000px;
-    max-height: 85vh;
+    width: min(880px, calc(100% - 48px));
+    max-width: 880px;
+    max-height: min(78vh, calc(100vh - 96px));
     overflow: hidden;
     box-shadow: 0 16px 40px rgba(15, 23, 42, 0.4);
     display: flex;
@@ -1618,21 +1618,31 @@ body.youth-profile {
 .kabataan-modal-backdrop .modal-close {
     background: none;
     border: none;
-    font-size: 18px;
+    font-size: 22px;
     font-weight: 700;
     cursor: pointer;
     color: #fff;
-    padding: 4px 8px;
+    padding: 0;
     line-height: 1;
-    width: auto;
-    height: auto;
-    border-radius: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.kabataan-modal-backdrop .modal-toggle-btn svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+    stroke: currentColor;
 }
 
 .kabataan-modal-backdrop .modal-toggle-btn:hover,
 .kabataan-modal-backdrop .modal-close:hover {
     opacity: 0.85;
-    background: none;
+    background: rgba(255, 255, 255, 0.16);
 }
 
 .kabataan-modal-backdrop .modal-close svg {
@@ -1658,9 +1668,11 @@ body.youth-profile {
     padding: 0;
 }
 
-.kabataan-modal-backdrop.modal-maximized .kabataan-modal-box {
-    width: 100%;
-    height: 100%;
+.kabataan-modal-backdrop.modal-maximized .kabataan-modal-box,
+.kabataan-modal-box.modal-maximized {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
     max-width: none;
     max-height: none;
     border-radius: 0;
@@ -2004,7 +2016,47 @@ body.youth-profile {
     color: #111827;
 }
 
+.kkp-profile-preview .kkp-personal-row {
+    overflow: visible;
+    grid-template-columns: auto minmax(0, 1fr) minmax(260px, 1.6fr);
+}
+
+.kkp-profile-preview .kkp-inline-pair--email {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    width: 100%;
+    min-width: 0;
+    padding-bottom: 4px;
+}
+
+.kkp-profile-preview .kkp-email-value {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: auto;
+    text-align: left;
+    white-space: normal;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.35;
+    padding-bottom: 2px;
+}
+
 @media (max-width: 768px) {
+    .kabataan-modal-backdrop:not(.modal-maximized) {
+        padding: 56px 14px 28px;
+        align-items: center;
+    }
+
+    .kabataan-modal-backdrop:not(.modal-maximized) .kabataan-modal-box {
+        width: calc(100% - 8px);
+        max-width: 100%;
+        max-height: 68vh;
+        border-radius: 14px;
+    }
+
     .kk-preview-modal-container .modal-body {
         overflow-x: auto;
         overflow-y: auto;
@@ -2018,7 +2070,7 @@ body.youth-profile {
     }
 
     .kk-preview-modal-container .kkp-personal-row {
-        grid-template-columns: minmax(100px, auto) minmax(0, 1fr) minmax(210px, 250px);
+        grid-template-columns: minmax(100px, auto) minmax(0, 1fr) minmax(280px, 1.4fr);
     }
 }
 
@@ -2668,6 +2720,14 @@ body.youth-profile {
 }
 
 /* Account Settings Section */
+.account-settings-card {
+    scroll-margin-top: calc(var(--kab-nav-h, 68px) + 16px);
+}
+
+.account-settings-card.is-highlighted {
+    box-shadow: 0 0 0 2px #93c5fd, 0 8px 24px rgba(4, 80, 168, 0.12);
+}
+
 .account-setting-item {
     display: flex;
     align-items: center;

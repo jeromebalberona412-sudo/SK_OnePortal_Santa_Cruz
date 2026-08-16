@@ -216,7 +216,13 @@ function mergeCachedPost(p) {
     const id = Number(p.id);
     if (!id) return;
     const prev = postCache.get(id) || {};
-    postCache.set(id, { ...prev, ...p });
+    const next = { ...prev, ...p };
+    if (p.comments_loaded === false && prev.comments_loaded) {
+        next.comments = prev.comments;
+        next.comments_loaded = true;
+        next.reactors = p.reactors || prev.reactors;
+    }
+    postCache.set(id, next);
 }
 
 function syncExistingPost(p) {
@@ -467,9 +473,7 @@ function buildPost(p) {
            </div>` : '';
 
     const comments = p.comments ?? [];
-    const commentsHtml = comments.map((c) => buildCommentItem(c, p.id)).join('');
     const totalComments = Number(p.comment_count ?? countComments(comments));
-    const featured = pickFeaturedComment(comments);
     const reactionType = p.reaction_type || '';
     const reactionIcon = reactionType
         ? `<span class="reaction-current">${escapeHtml(REACTION_EMOJI[reactionType] || '👍')}</span>`
@@ -515,17 +519,7 @@ function buildPost(p) {
         </button>
         </div>
       </div>
-      ${buildCommentPreviewHtml(featured, p.id, totalComments)}
-      <div class="comments-section" id="comments-${p.id}" style="display:none;">
-        <div class="comments-list" id="comments-list-${p.id}">${commentsHtml}</div>
-        <div class="comment-input-wrapper">
-          <img src="${escapeHtml(SK_AVATAR())}" alt="You" class="comment-avatar">
-          <input type="text" class="comment-input" placeholder="Write a comment..." maxlength="500" onkeydown="handleCommentKey(event, ${p.id}, this)">
-          <button type="button" class="send-comment-btn" onclick="submitComment(${p.id},this.previousElementSibling)">
-            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
-          </button>
-        </div>
-      </div>`;
+    `;
 }
 
 function bindPostImageClicks(postEl, post) {
@@ -1064,25 +1058,48 @@ async function openReactionViewer(target, postId, commentId = null) {
     if (!modal) return;
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
-    const list = document.getElementById('reactionViewerList');
-    const tabs = document.getElementById('reactionViewerTabs');
-    if (tabs) tabs.innerHTML = '';
+
     const cached = postCache.get(Number(postId));
-    if (target === 'post' && cached) {
-        reactionViewerState = {
-            target,
-            postId,
-            commentId,
-            data: {
-                reactors: cached.reactors || [],
-                reaction_counts: cached.reaction_counts || {},
-                count: Number(cached.likes || 0),
-            },
-            filter: 'all',
-        };
-        renderReactionViewer('all');
-    } else if (list) {
-        list.innerHTML = '';
+    const summary = document.getElementById(`reaction-summary-${postId}`);
+    let counts = cached?.reaction_counts || {};
+    if ((!counts || !Object.keys(counts).length) && summary?.dataset.counts) {
+        try { counts = JSON.parse(summary.dataset.counts || '{}'); } catch (_) { counts = {}; }
+    }
+    let reactors = [];
+    if (target === 'post') {
+        reactors = cached?.reactors || [];
+    } else if (commentId && cached?.comments) {
+        const found = (function find(list, id) {
+            for (const row of list || []) {
+                if (Number(row.id) === Number(id)) return row;
+                const nested = find(row.replies || [], id);
+                if (nested) return nested;
+            }
+            return null;
+        })(cached.comments, commentId);
+        if (found) {
+            reactors = found.reactors || [];
+            counts = found.reaction_counts || counts;
+        }
+    }
+
+    reactionViewerState = {
+        target,
+        postId,
+        commentId,
+        data: {
+            reactors,
+            reaction_counts: counts,
+            count: target === 'post'
+                ? Number(cached?.likes ?? summary?.dataset.reactions ?? 0)
+                : Number((reactors && reactors.length) || arraySum(counts)),
+        },
+        filter: 'all',
+    };
+    renderReactionViewer('all');
+
+    if (reactors.length) {
+        return;
     }
 
     const url = target === 'comment'
@@ -1091,11 +1108,24 @@ async function openReactionViewer(target, postId, commentId = null) {
 
     try {
         const data = await apiFetch(url);
-        reactionViewerState = { target, postId, commentId, data, filter: 'all' };
-        renderReactionViewer('all');
+        if (cached && target === 'post') {
+            cached.reactors = data.reactors || [];
+            cached.reaction_counts = data.reaction_counts || cached.reaction_counts;
+            cached.likes = data.count;
+            postCache.set(Number(postId), cached);
+        }
+        reactionViewerState = { target, postId, commentId, data, filter: reactionViewerState.filter || 'all' };
+        renderReactionViewer(reactionViewerState.filter || 'all');
     } catch (err) {
-        if (list) list.innerHTML = `<p class="reaction-viewer-empty">${escapeHtml(err?.message || 'Unable to load reactions.')}</p>`;
+        const list = document.getElementById('reactionViewerList');
+        if (list && !reactors.length) {
+            list.innerHTML = `<p class="reaction-viewer-empty">${escapeHtml(err?.message || 'Unable to load reactions.')}</p>`;
+        }
     }
+}
+
+function arraySum(counts) {
+    return Object.values(counts || {}).reduce((sum, n) => sum + Number(n || 0), 0);
 }
 
 function closeReactionViewer() {
@@ -1161,18 +1191,22 @@ function commentsPageUrl(id) {
 
 async function openComments(id) {
     const postId = Number(id);
+    let cached = postCache.get(postId);
+    const needsComments = !cached || cached.comments_loaded === false;
+
     if (typeof window.openCommentPreview === 'function') {
-        const cached = postCache.get(postId);
-        if (cached) {
+        if (needsComments) {
+            try {
+                const data = await apiFetch(`/api/community-feed/${postId}`);
+                data.comments_loaded = true;
+                postCache.set(postId, { ...(cached || {}), ...data });
+                cached = postCache.get(postId);
+            } catch (_) { /* fall through */ }
+        }
+        if (cached && typeof window.openCommentPreview === 'function') {
             window.openCommentPreview(cached);
             return;
         }
-        try {
-            const data = await apiFetch(`/api/community-feed/${postId}`);
-            postCache.set(postId, data);
-            window.openCommentPreview(data);
-            return;
-        } catch (_) { /* fall through to page URL */ }
     }
     window.location.assign(commentsPageUrl(postId));
 }
@@ -1285,66 +1319,8 @@ async function submitComment(id, input, parentId = null) {
     }
 }
 
-function refreshCommentPreview(postId) {
-    const list = document.getElementById(`comments-list-${postId}`);
-    const preview = document.getElementById(`comment-preview-${postId}`);
-    const countEl = document.getElementById(`comment-count-${postId}`);
-    if (!list || !preview) return;
-
-    const items = [...list.querySelectorAll('.comment-item')];
-    const total = Number(countEl?.dataset.count || items.length || 0);
-    if (!items.length || total <= 0) {
-        preview.innerHTML = '';
-        preview.hidden = true;
-        return;
-    }
-
-    let best = items[0];
-    let bestScore = -1;
-    items.forEach((item) => {
-        const count = Number(item.querySelector('.comment-react-badge .reaction-total')?.textContent || 0);
-        const id = Number(item.dataset.commentId || 0);
-        const score = count * 1e9 + id;
-        if (score >= bestScore) {
-            bestScore = score;
-            best = item;
-        }
-    });
-
-    const avatar = best.querySelector(':scope > .comment-avatar')?.getAttribute('src') || '';
-    const author = best.querySelector('.comment-author')?.textContent || '';
-    const text = best.querySelector('.comment-text')?.textContent || '';
-    const time = best.querySelector('.comment-time')?.textContent || '';
-    const likeType = best.querySelector('.comment-like-btn')?.dataset.type || '';
-    const replyCount = Number(best.querySelector('.fb-view-replies')?.dataset.count || 0);
-    const badgeEl = best.querySelector(':scope > .comment-body > .comment-react-badge');
-    const badgeHtml = badgeEl && !badgeEl.hidden
-        ? `<span class="comment-react-badge comment-react-inline">${badgeEl.innerHTML}</span>`
-        : '';
-    const more = total > 1 ? `<span class="comment-preview-more">View all ${total} comments</span>` : '';
-    const replies = replyCount > 0
-        ? `<span class="fb-view-replies"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>View ${replyCount} ${replyCount === 1 ? 'reply' : 'replies'}</span>`
-        : '';
-
-    preview.innerHTML = `${more}
-        <div class="fb-comment-row">
-            <img src="${escapeHtml(avatar)}" alt="" class="comment-avatar">
-            <div class="fb-comment-main">
-                <div class="fb-comment-head">
-                    <span class="comment-author">${escapeHtml(author)}</span>
-                    <span class="fb-comment-dot">·</span>
-                    <span class="comment-time">${escapeHtml(time)}</span>
-                </div>
-                <p class="comment-text">${escapeHtml(text)}</p>
-                ${badgeHtml}
-                <div class="comment-meta">
-                    <span class="comment-like-btn">${commentLikeInner(likeType)}</span>
-                    <span class="comment-action-btn">Reply</span>
-                    ${replies}
-                </div>
-            </div>
-        </div>`;
-    preview.hidden = isCommentsOpen(postId);
+function refreshCommentPreview() {
+    return;
 }
 
 function toggleReplies(commentId, event) {
@@ -1881,6 +1857,25 @@ document.addEventListener('DOMContentLoaded', () => {
     fab?.addEventListener('click', (e) => { e.stopPropagation(); sidebar?.classList.add('drawer-open'); backdrop?.classList.add('active'); document.body.style.overflow = 'hidden'; });
     backdrop?.addEventListener('click', closeDrawer);
     window.addEventListener('resize', () => { if (window.innerWidth > 1100) closeDrawer(); });
+    const syncKeyboardFab = () => {
+        const vv = window.visualViewport;
+        const open = Boolean(document.getElementById('commentPreviewShell')?.classList.contains('is-open'));
+        const keyboard = Boolean(vv && (window.innerHeight - vv.height) > 80);
+        document.body.classList.toggle('feed-keyboard', keyboard);
+        document.body.classList.toggle('feed-commenting', open || keyboard);
+        if (open || keyboard) closeDrawer();
+    };
+    window.visualViewport?.addEventListener('resize', syncKeyboardFab);
+    window.visualViewport?.addEventListener('scroll', syncKeyboardFab);
+    document.addEventListener('focusin', (event) => {
+        if (event.target?.closest?.('#cpComposer, .cp-reply-box, .comment-input-wrapper')) {
+            document.body.classList.add('feed-commenting');
+            closeDrawer();
+        }
+    });
+    document.addEventListener('focusout', () => {
+        requestAnimationFrame(syncKeyboardFab);
+    });
     const brgyList = document.getElementById('brgyLinkList');
     const profilesSidebar = document.getElementById('programsSidebar');
     profilesSidebar?.addEventListener('wheel', (event) => {

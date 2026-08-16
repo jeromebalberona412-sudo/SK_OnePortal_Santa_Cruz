@@ -7,12 +7,19 @@
         }
         return filled($value) ? $value : $fallback;
     };
-    $isChecked = function ($key, $expected) use ($kkData) {
+    $isChecked = function ($key, ...$expected) use ($kkData) {
         $value = $kkData[$key] ?? null;
-        if (is_array($value)) {
-            return in_array($expected, $value, true);
+        $haystack = is_array($value) ? $value : [$value];
+        $haystack = array_map(
+            static fn ($item) => strtolower(trim((string) $item)),
+            array_filter($haystack, static fn ($item) => $item !== null && $item !== '')
+        );
+        foreach ($expected as $item) {
+            if (in_array(strtolower(trim((string) $item)), $haystack, true)) {
+                return true;
+            }
         }
-        return (string) $value === (string) $expected;
+        return false;
     };
 @endphp
 
@@ -129,9 +136,9 @@
             </div>
         </div>
         <div class="kkp-personal-right">
-            <div class="kkp-inline-pair">
+            <div class="kkp-inline-pair kkp-inline-pair--email">
                 <label class="kkp-inline-label">E-mail address:</label>
-                <input type="text" class="kkp-uline kkp-uline-med" value="{{ $read('email', $kabataanRegistration->email ?? '') }}" readonly>
+                <span class="kkp-uline kkp-email-value">{{ $read('email', $kabataanRegistration->email ?? '') }}</span>
             </div>
             <div class="kkp-inline-pair">
                 <label class="kkp-inline-label">Contact #:</label>
@@ -222,15 +229,15 @@
                         <div class="kkp-demo-block-label">If Yes, How many times?</div>
                         <div class="kkp-demo-block-options">
                             @foreach (['1-2 Times', '3-4 Times', '5 and above'] as $item)
-                                <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('vote_frequency', $item) || $isChecked('kk_times', $item) ? 'checked' : '' }} disabled> {{ $item }}</label>
+                                <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('kk_times', $item) ? 'checked' : '' }} disabled> {{ $item }}</label>
                             @endforeach
                         </div>
                     </div>
                     <div class="kkp-demo-block">
-                        <div class="kkp-demo-block-label">If Yes/No details</div>
+                        <div class="kkp-demo-block-label">If No, Why?</div>
                         <div class="kkp-demo-block-options">
-                            <p class="kkp-preview-free-text">KK Times: {{ $read('kk_times', '-') }}</p>
-                            <p class="kkp-preview-free-text">Reason: {{ $read('kk_reason', '-') }}</p>
+                            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('kk_reason', 'There was no KK Assembly Meeting', 'There was no KK Assembly') ? 'checked' : '' }} disabled> There was no KK Assembly Meeting</label>
+                            <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" {{ $isChecked('kk_reason', 'Not interested to Attend', 'Not Interested to Attend') ? 'checked' : '' }} disabled> Not interested to Attend</label>
                         </div>
                     </div>
                 </div>

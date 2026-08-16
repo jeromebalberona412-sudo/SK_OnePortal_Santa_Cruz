@@ -6,6 +6,8 @@
             id="signinLegalConsent"
             value="1"
             class="auth-legal-consent-radio"
+            aria-required="true"
+            aria-describedby="legalConsentError"
         >
         <span class="auth-legal-consent-text">
             This portal is intended for users aged 15–30.<br>

@@ -33,10 +33,10 @@ body {
 }
 
 .kabataan-page .table-card {
-    background: #f9fafb;
-    border-radius: 16px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+    background: transparent;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
     overflow: hidden;
     max-width: 100%;
 }
@@ -251,11 +251,11 @@ body {
 }
 
 .page-content-section {
-    background: #ffffff;
-    border-radius: 18px;
-    padding: 22px;
-    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
-    border: 1px solid rgba(148, 163, 184, 0.45);
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    border: none;
 }
 
 .section-heading-row {
@@ -274,10 +274,10 @@ body {
 }
 
 .table-card {
-    background: #f9fafb;
-    border-radius: 16px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+    background: transparent;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
     overflow: visible;
 }
 
@@ -295,7 +295,7 @@ body {
 
 .kabataan-table {
     width: 100%;
-    min-width: 1320px;
+    min-width: 980px;
     border-collapse: separate;
     border-spacing: 0;
     font-size: 13px;
@@ -361,7 +361,7 @@ body {
     text-align: center;
     min-width: 72px;
     width: 72px;
-    background: #fff;
+    background: transparent;
     overflow: visible;
     white-space: nowrap;
 }
@@ -370,12 +370,9 @@ body {
     background: #2c2c3e;
 }
 
-.kabataan-table tbody tr:nth-child(even) td.col-actions {
-    background: #f9fafb;
-}
-
+.kabataan-table tbody tr:nth-child(even) td.col-actions,
 .kabataan-table tbody tr:hover td.col-actions {
-    background: #f3f4f6;
+    background: transparent;
 }
 
 .kabataan-table th:last-child,
@@ -394,6 +391,7 @@ body {
 
 .kabataan-table tbody tr {
     border-bottom: 1px solid #e5e7eb;
+    background: transparent;
 }
 
 .kabataan-fullname {
@@ -422,7 +420,7 @@ body {
 }
 
 .kabataan-table tbody tr:nth-child(even) {
-    background: #f9fafb;
+    background: transparent;
 }
 
 .kabataan-table tbody tr:hover {
@@ -1220,10 +1218,10 @@ body {
 
 .kabataan-delete-box {
     background: #ffffff;
-    border-radius: 16px;
+    border-radius: 12px;
     width: 100%;
-    max-width: 420px;
-    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.45);
+    max-width: 360px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.4);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -1237,120 +1235,150 @@ body {
 
 .kabataan-delete-header {
     background: #ef4444;
-    padding: 20px 24px 16px;
+    padding: 10px 12px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.kabataan-delete-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
 }
 
 .kabataan-delete-icon {
-    width: 24px;
-    height: 24px;
+    width: 16px;
+    height: 16px;
     color: #ffffff;
     flex-shrink: 0;
 }
 
 .kabataan-delete-title {
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 700;
     color: #ffffff;
     margin: 0;
 }
 
+.kabataan-delete-close {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 22px;
+    line-height: 1;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.kabataan-delete-close:hover,
+.kabataan-delete-close:focus-visible {
+    background: rgba(255, 255, 255, 0.18);
+    outline: none;
+}
+
 .kabataan-delete-body {
-    padding: 24px 24px 16px;
+    padding: 12px 14px 8px;
     text-align: center;
 }
 
 .kabataan-delete-message {
-    font-size: 14px;
+    font-size: 13px;
     color: #374151;
-    margin-bottom: 6px;
+    margin: 0 0 4px;
 }
 
 .kabataan-delete-name {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
     color: #111827;
-    margin-bottom: 12px;
+    margin: 0 0 6px;
     word-break: break-word;
 }
 
 .kabataan-delete-warning {
-    font-size: 13px;
+    font-size: 12px;
     color: #6b7280;
-    margin: 0 0 16px;
+    margin: 0 0 10px;
 }
 
 .kabataan-revoke-reasons {
     text-align: left;
-    margin: 0 0 18px;
-    padding: 14px;
+    margin: 0 0 10px;
+    padding: 8px 10px;
     border: 1px solid #e5e7eb;
-    border-radius: 10px;
+    border-radius: 8px;
     background: #f9fafb;
 }
 
 .kabataan-revoke-reasons-label {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     color: #374151;
-    margin: 0 0 10px;
+    margin: 0 0 6px;
 }
 
 .kabataan-revoke-reason-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
+    gap: 6px;
+    font-size: 13px;
     color: #111827;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     cursor: pointer;
 }
 
 .kabataan-revoke-other-wrap {
-    margin-top: 8px;
+    margin-top: 6px;
 }
 
 .kabataan-revoke-other-wrap label {
     display: block;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: #4b5563;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .kabataan-revoke-other-text {
     width: 100%;
-    min-height: 96px;
-    max-height: 96px;
+    min-height: 52px;
+    max-height: 52px;
     resize: none;
     border: 1px solid #d1d5db;
-    border-radius: 8px;
-    padding: 10px 12px;
-    font-size: 13px;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 12px;
     font-family: inherit;
     box-sizing: border-box;
 }
 
 .kabataan-revoke-other-count {
-    font-size: 11px;
+    font-size: 10px;
     color: #6b7280;
     text-align: right;
-    margin: 4px 0 0;
+    margin: 2px 0 0;
 }
 
 .kabataan-revoke-reason-error {
-    font-size: 12px;
+    font-size: 11px;
     color: #dc2626;
-    margin: 8px 0 0;
+    margin: 6px 0 0;
 }
 
 .kabataan-delete-footer {
-    padding: 16px 24px 20px;
+    padding: 8px 14px 12px;
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
+    gap: 8px;
     border-top: 1px solid #f3f4f6;
 }
 
@@ -1358,9 +1386,9 @@ body {
     background: #f3f4f6;
     color: #374151;
     border: 1px solid #d1d5db;
-    padding: 10px 20px;
-    border-radius: 10px;
-    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -1375,19 +1403,17 @@ body {
     background: #ef4444;
     color: #ffffff;
     border: none;
-    padding: 10px 24px;
-    border-radius: 10px;
-    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+    box-shadow: 0 3px 10px rgba(239, 68, 68, 0.35);
     transition: all 0.2s ease;
 }
 
 .kabataan-confirm-delete-btn:hover {
     background: #dc2626;
-    box-shadow: 0 6px 18px rgba(220, 38, 38, 0.5);
-    transform: translateY(-1px);
 }
 
 /* ── Professional Modal Form Improvements ── */
@@ -3818,8 +3844,8 @@ a.stat-card.stat-card-clickable {
 /* ── Delete type-to-confirm ── */
 .kabataan-delete-confirm-label {
     display: block;
-    margin: 14px 0 6px;
-    font-size: 12px;
+    margin: 8px 0 4px;
+    font-size: 11px;
     font-weight: 600;
     color: #334155;
     text-align: left;
@@ -3828,9 +3854,9 @@ a.stat-card.stat-card-clickable {
 .kabataan-delete-confirm-input {
     width: 100%;
     border: 1.5px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 0.55rem 0.7rem;
-    font-size: 14px;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 12px;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
     box-sizing: border-box;
 }
@@ -3924,7 +3950,8 @@ a.stat-card.stat-card-clickable {
 }
 
 .kabataan-documents-panel {
-    padding: 0.5rem 0 1rem;
+    padding: 16px 18px 20px;
+    min-height: 240px;
 }
 
 .kabataan-documents-empty {

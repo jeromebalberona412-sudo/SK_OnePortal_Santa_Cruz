@@ -41,6 +41,35 @@
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="preload" href="{{ url('/sounds/reactions_ux.mp3') }}" as="audio" type="audio/mpeg">
+    <style>
+        .post-card-new {
+            animation: feed-post-in 0.7s ease;
+            box-shadow: 0 0 0 2px rgba(26, 86, 219, 0.28);
+        }
+        @keyframes feed-post-in {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: none; }
+        }
+        .lightbox-nav {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.45);
+            border: 1px solid rgba(255,255,255,0.28);
+            z-index: 5;
+            pointer-events: auto;
+        }
+        @media (max-width: 768px) {
+            .lightbox-nav {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+                background: rgba(0,0,0,0.55);
+            }
+            .lightbox-prev { left: 8px; }
+            .lightbox-next { right: 8px; }
+        }
+    </style>
 </head>
 <body class="youth-dashboard">
     @include('dashboard::loading')
@@ -151,8 +180,15 @@
     <!-- Mobile Drawer -->
     <aside class="programs-sidebar" id="programsDrawerSidebar">
         <div class="sidebar-card">
-            <h2 class="sidebar-title">Programs in Your Barangay</h2>
-            <p class="sidebar-subtitle">Available programs in Barangay {{ $barangayName ?? ($user->barangay ?? '1') }}</p>
+            <div class="programs-drawer-head">
+                <div class="programs-drawer-head__text">
+                    <h2 class="sidebar-title">Programs in Your Barangay</h2>
+                    <p class="sidebar-subtitle">Available programs in Barangay {{ $barangayName ?? ($user->barangay ?? '1') }}</p>
+                </div>
+                <button type="button" class="programs-drawer-close" data-programs-drawer-close aria-label="Close programs">
+                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+            </div>
             
             <div class="program-categories" id="programCategoriesDrawerContainer">
                 <p style="text-align:center;color:#64748b;padding:16px;font-size:14px;">Loading programs…</p>
@@ -837,7 +873,7 @@
         userAvatar: @json($userAvatarUrl ?? ''),
         userDisplayName: @json($user->name ?? 'Kabataan'),
         commentsPageUrl: @json(url('/dashboard/comments/__ID__')),
-        feedPollMs: 10000,
+        feedPollMs: 5000,
     };
     window.CommentPreviewConfig = {
         post: @json($commentPreviewPost ?? null),
@@ -957,8 +993,57 @@
         return r.json();
     }
 
-    async function loadFeed(reset = true) {
-        if (feedLoading) return;
+    function mergeCachedPost(p) {
+        const id = Number(p.id);
+        if (!id) return null;
+        const prev = postCache.get(id) || {};
+        const next = Object.assign({}, prev, p);
+        if (p.comments_loaded === false && prev.comments_loaded) {
+            next.comments = prev.comments;
+            next.comments_loaded = true;
+        }
+        postCache.set(id, next);
+        return next;
+    }
+
+    function mountFeedPost(p, mode = 'append') {
+        const id = Number(p.id);
+        if (!id) return null;
+        mergeCachedPost(p);
+        const container = document.getElementById('feed-posts');
+        if (!container) return null;
+        const existing = container.querySelector(`.post-card[data-post-id="${id}"]`);
+        if (renderedPostIds.has(String(id)) || existing) {
+            const cached = postCache.get(id);
+            const summary = existing?.querySelector('.reaction-summary');
+            const prevLikes = Number(summary?.dataset.reactions || 0);
+            const prevComments = Number(summary?.dataset.comments || 0);
+            const nextLikes = Number(cached?.likes || 0);
+            const nextComments = Number(cached?.comment_count ?? countFeedComments(cached?.comments || []));
+            if (!summary || prevLikes !== nextLikes || prevComments !== nextComments) {
+                updateReactionsSummary(id, cached);
+            }
+            return existing;
+        }
+        renderedPostIds.add(String(id));
+        const emptyState = container.querySelector('.post-card:not([data-post-id])');
+        emptyState?.remove();
+        const el = document.createElement('article');
+        el.className = 'post-card';
+        el.dataset.postId = String(id);
+        el.innerHTML = buildFeedPost(p);
+        if (mode === 'prepend') {
+            container.prepend(el);
+        } else {
+            container.appendChild(el);
+        }
+        bindFeedReactionControls(el);
+        bindPostImageClicks(el);
+        return el;
+    }
+
+    async function loadFeed(reset = true, options = {}) {
+        if (feedLoading && !options.force) return;
         feedLoading = true;
 
         const requestToken = ++feedRequestToken;
@@ -990,17 +1075,7 @@
                 return;
             }
 
-            items.forEach(p => {
-                postCache.set(Number(p.id), p);
-                if (renderedPostIds.has(String(p.id))) return;
-                renderedPostIds.add(String(p.id));
-                const el = document.createElement('article');
-                el.className = 'post-card';
-                el.dataset.postId = p.id;
-                el.innerHTML = buildFeedPost(p);
-                container.appendChild(el);
-                bindFeedReactionControls(el);
-            });
+            items.forEach(p => mountFeedPost(p, 'append'));
         } catch (error) {
             console.error('Feed error:', error);
         } finally {
@@ -1033,30 +1108,36 @@
     bindInfiniteScroll();
 
     function setFeedFilter(btn, filter) {
-        if (feedFilter === filter && btn.classList.contains('active')) return;
+        if (filter === 'all') {
+            window.location.reload();
+            return;
+        }
         document.querySelector('.feed-filter-bar')?.classList.remove('is-hidden');
         feedFilter = filter;
         document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
         btn.classList.add('active');
-        loadFeed(true);
+        loadFeed(true, { force: true });
     }
 
     function bindFilterBarScrollHide() {
         const bar = document.querySelector('.feed-filter-bar');
-        const feedSection = document.querySelector('.feed-section');
         if (!bar) return;
 
+        const feedSection = document.querySelector('.feed-section');
         let lastY = 0;
         let ticking = false;
 
+        const nestedScroller = () => {
+            if (!feedSection) return null;
+            const overflowY = getComputedStyle(feedSection).overflowY;
+            if (overflowY !== 'auto' && overflowY !== 'scroll') return null;
+            if (feedSection.scrollHeight <= feedSection.clientHeight + 1) return null;
+            return feedSection;
+        };
+
         const getY = () => {
-            if (feedSection) {
-                const overflowY = getComputedStyle(feedSection).overflowY;
-                if (overflowY === 'auto' || overflowY === 'scroll') {
-                    return feedSection.scrollTop;
-                }
-            }
-            return window.scrollY || 0;
+            const nested = nestedScroller();
+            return nested ? nested.scrollTop : (window.scrollY || 0);
         };
 
         lastY = getY();
@@ -1189,6 +1270,8 @@
             const commentId = Number(wrap.dataset.commentId || 0);
             const isComment = wrap.dataset.target === 'comment';
             let hideTimer = null;
+            let pressTimer = null;
+            let didLongPress = false;
             function apply(type) {
                 if (isComment) feedSetCommentReaction(postId, commentId, type);
                 else feedSetReaction(postId, type);
@@ -1205,9 +1288,33 @@
             btn?.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
+                if (didLongPress) {
+                    didLongPress = false;
+                    return;
+                }
+                if (isTouchDevice() && wrap.classList.contains('is-open')) {
+                    wrap.classList.remove('is-open');
+                    return;
+                }
                 wrap.classList.remove('is-open');
                 apply(btn.dataset.type || 'like');
             });
+            btn?.addEventListener('touchstart', function () {
+                didLongPress = false;
+                clearTimeout(pressTimer);
+                pressTimer = setTimeout(function () {
+                    didLongPress = true;
+                    document.querySelectorAll('.reaction-wrap.is-open').forEach(function (other) {
+                        if (other !== wrap) other.classList.remove('is-open');
+                    });
+                    wrap.classList.add('is-open');
+                }, 180);
+            }, { passive: true });
+            const cancelPress = function () { clearTimeout(pressTimer); };
+            btn?.addEventListener('touchend', cancelPress);
+            btn?.addEventListener('touchcancel', cancelPress);
+            btn?.addEventListener('touchmove', cancelPress);
+            btn?.addEventListener('contextmenu', function (e) { e.preventDefault(); });
             picker?.querySelectorAll('.reaction-option').forEach(function (opt) {
                 opt.addEventListener('click', function (e) {
                     e.preventDefault();
@@ -1221,7 +1328,7 @@
 
     function commentLikeInner(type) {
         const label = type ? (REACTION_LABEL[type] || 'Like') : 'Like';
-        if (type && type !== 'like') {
+        if (type) {
             return `<span>${REACTION_EMOJI[type] || ''}</span><span>${feedEscape(label)}</span>`;
         }
         return `<span>${feedEscape(label)}</span>`;
@@ -1325,53 +1432,63 @@
              ${replies ? `<div class="comment-replies">${replies}</div>` : ''}`;
     }
 
+    function feedPostImages(p) {
+        const list = Array.isArray(p.images) && p.images.length
+            ? p.images
+            : (p.image_url ? [p.image_url] : []);
+        return [...new Set(list.filter(Boolean))];
+    }
+
+    function bindPostImageClicks(root) {
+        if (!root) return;
+        const grid = root.querySelector('[data-all-images]');
+        if (!grid || grid.dataset.imagesBound === '1') return;
+        grid.dataset.imagesBound = '1';
+        let images = [];
+        try {
+            images = JSON.parse(grid.getAttribute('data-all-images') || '[]');
+        } catch (_) {
+            images = [];
+        }
+        if (!images.length) return;
+        grid.querySelectorAll('[data-image-index]').forEach((el) => {
+            el.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openLightbox(images, parseInt(el.dataset.imageIndex, 10) || 0);
+            });
+        });
+    }
+
     function buildFeedPost(p) {
-        const avatar = feedAvatarUrl(p.author_avatar_url || p.barangay_logo_url, p.author_name);
-        
-        // Build image gallery HTML
+        const images = feedPostImages(p);
         let media = '';
-        if (p.images && p.images.length > 0) {
-            const imageCount = p.images.length;
-            if (imageCount === 1) {
-                // Single image - full width
-                media = `<div class="post-image"><img src="${feedEscape(p.images[0])}" loading="lazy" alt="" onerror="this.parentElement.style.display='none'" onclick="openImageModal('${feedEscape(p.images[0])}')"></div>`;
-            } else if (imageCount === 2) {
-                // Two images - side by side
-                media = `<div class="post-images-grid grid-2">
-                    ${p.images.map(img => `<img src="${feedEscape(img)}" loading="lazy" alt="" onerror="this.style.display='none'" onclick="openImageModal('${feedEscape(img)}')">`).join('')}
-                </div>`;
-            } else if (imageCount === 3) {
-                // Three images - one large, two small
-                media = `<div class="post-images-grid grid-3">
-                    ${p.images.map(img => `<img src="${feedEscape(img)}" loading="lazy" alt="" onerror="this.style.display='none'" onclick="openImageModal('${feedEscape(img)}')">`).join('')}
-                </div>`;
-            } else if (imageCount === 4) {
-                // Four images - 2x2 grid
-                media = `<div class="post-images-grid grid-4">
-                    ${p.images.map(img => `<img src="${feedEscape(img)}" loading="lazy" alt="" onerror="this.style.display='none'" onclick="openImageModal('${feedEscape(img)}')">`).join('')}
-                </div>`;
+        if (images.length) {
+            const encoded = feedEscape(JSON.stringify(images));
+            const imgTag = (src, index) =>
+                `<img src="${feedEscape(src)}" loading="lazy" alt="" data-image-index="${index}" onerror="this.style.display='none'">`;
+            if (images.length === 1) {
+                media = `<div class="post-image" data-all-images="${encoded}">${imgTag(images[0], 0)}</div>`;
+            } else if (images.length === 2) {
+                media = `<div class="post-images-grid grid-2" data-all-images="${encoded}">${images.map((img, i) => imgTag(img, i)).join('')}</div>`;
+            } else if (images.length === 3) {
+                media = `<div class="post-images-grid grid-3" data-all-images="${encoded}">${images.map((img, i) => imgTag(img, i)).join('')}</div>`;
+            } else if (images.length === 4) {
+                media = `<div class="post-images-grid grid-4" data-all-images="${encoded}">${images.map((img, i) => imgTag(img, i)).join('')}</div>`;
             } else {
-                // 5+ images - show first 4 with "+N more" overlay
-                const firstFour = p.images.slice(0, 4);
-                const remaining = imageCount - 4;
-                media = `<div class="post-images-grid grid-4">
-                    ${firstFour.slice(0, 3).map(img => `<img src="${feedEscape(img)}" loading="lazy" alt="" onerror="this.style.display='none'" onclick="openImageModal('${feedEscape(img)}')">`).join('')}
-                    <div class="image-more-overlay" onclick="openImageGallery(${p.id}, ${JSON.stringify(p.images).replace(/"/g, '&quot;')})">
-                        <img src="${feedEscape(firstFour[3])}" loading="lazy" alt="">
+                const remaining = images.length - 4;
+                media = `<div class="post-images-grid grid-4" data-all-images="${encoded}">
+                    ${images.slice(0, 3).map((img, i) => imgTag(img, i)).join('')}
+                    <div class="image-more-overlay" data-image-index="3">
+                        <img src="${feedEscape(images[3])}" loading="lazy" alt="">
                         <div class="more-overlay-text">+${remaining} more</div>
                     </div>
                 </div>`;
             }
-        } else if (p.image_url) {
-            // Legacy single image_url field
-            media = `<div class="post-image"><img src="${feedEscape(p.image_url)}" loading="lazy" alt="" onerror="this.parentElement.style.display='none'" onclick="openImageModal('${feedEscape(p.image_url)}')"></div>`;
         }
         
         const link   = p.link_url  ? `<a href="${feedEscape(p.link_url)}" target="_blank" rel="noopener" class="post-link-preview">${feedEscape(p.link_url)}</a>` : '';
-        const comments = (p.comments ?? []).map(function (c) { return renderCommentItem(c, p.id, 0); }).join('');
         const reactionsSummary = renderReactionsSummary(p);
-        const commentAvatar = feedEscape(feedAvatarUrl(FEED_USER_AVATAR, 'You'));
-        const commentTotal = countFeedComments(p.comments || []);
 
         return `
           <div class="post-header">
@@ -1393,7 +1510,7 @@
           <div class="post-actions">
             <div class="reaction-wrap" data-target="post" data-post-id="${p.id}">
               <button type="button" class="action-btn reaction-btn${p.liked ? ' liked' : ''}" data-type="${feedEscape(p.reaction_type || (p.liked ? 'like' : ''))}" id="feed-like-btn-${p.id}">
-                <span class="reaction-icon">${(p.reaction_type && p.reaction_type !== 'like') ? REACTION_EMOJI[p.reaction_type] : LIKE_THUMB_SVG}</span>
+                <span class="reaction-icon">${p.reaction_type ? `<span class="reaction-current">${REACTION_EMOJI[p.reaction_type]}</span>` : LIKE_THUMB_SVG}</span>
                 <span class="reaction-label">${feedEscape(reactionLabel(p.reaction_type))}</span>
               </button>
               ${reactionPickerHtml(p.reaction_type || (p.liked ? 'like' : ''))}
@@ -1403,17 +1520,6 @@
               <span>Comment</span>
             </button>
           </div>
-          ${buildCommentPreviewHtml(p)}
-          <div class="comments-section" id="feed-comments-${p.id}" style="display:none;">
-            <div class="comments-list" id="feed-comments-list-${p.id}">${comments}</div>
-            <div class="comment-input-wrapper">
-              ${feedImgTag(FEED_USER_AVATAR, 'You', '')}
-              <input type="text" class="comment-input" placeholder="Write a comment..." maxlength="500"
-                     onkeydown="if(event.key==='Enter')feedSubmitComment(${p.id},this)">
-              <button class="send-comment-btn" onclick="feedSubmitComment(${p.id},this.previousElementSibling)">
-                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
-              </button>
-            </div>
           </div>`;
     }
 
@@ -1465,7 +1571,7 @@
         btn.classList.toggle('liked', Boolean(liked));
         btn.dataset.type = nextType || '';
         const icon = btn.querySelector('.reaction-icon');
-        if (icon) icon.innerHTML = (nextType && nextType !== 'like') ? REACTION_EMOJI[nextType] : LIKE_THUMB_SVG;
+        if (icon) icon.innerHTML = nextType ? `<span class="reaction-current">${REACTION_EMOJI[nextType]}</span>` : LIKE_THUMB_SVG;
         const label = btn.querySelector('.reaction-label');
         if (label) label.textContent = reactionLabel(nextType);
         btn.closest('.reaction-wrap')?.querySelectorAll('.reaction-option').forEach(function (opt) {
@@ -1530,17 +1636,21 @@
         modal.classList.add('open');
         modal.setAttribute('aria-hidden', 'false');
         const cached = postCache.get(Number(postId));
+        const reactors = cached?.reactors || cached?.reactions_summary?.reactors || [];
         if (cached) {
             reactionViewerState = {
                 postId,
                 data: {
-                    reactors: cached.reactions_summary?.reactors || [],
+                    reactors,
                     reaction_counts: cached.reaction_counts || {},
                     count: Number(cached.likes || 0),
                 },
                 filter: 'all',
             };
             renderFeedReactionViewer('all');
+            if (reactors.length) {
+                return;
+            }
         }
         try {
             const data = await apiFeed('/api/feed/' + postId + '/likes');
@@ -1739,18 +1849,21 @@
 
     async function openComments(id) {
         const postId = Number(id);
+        let cached = postCache.get(postId);
+        const needsComments = !cached || cached.comments_loaded === false;
         if (typeof window.openCommentPreview === 'function') {
-            const cached = postCache.get(postId);
+            if (needsComments) {
+                try {
+                    const data = await apiFeed('/api/feed/' + postId);
+                    data.comments_loaded = true;
+                    postCache.set(postId, Object.assign({}, cached || {}, data));
+                    cached = postCache.get(postId);
+                } catch (_) { /* fall through */ }
+            }
             if (cached) {
                 window.openCommentPreview(cached);
                 return;
             }
-            try {
-                const data = await apiFeed('/api/feed/' + postId);
-                postCache.set(postId, data);
-                window.openCommentPreview(data);
-                return;
-            } catch (_) { /* fall through */ }
         }
         window.location.assign('/dashboard/comments/' + postId);
     }
@@ -1807,7 +1920,9 @@
         cached.comment_count = total;
         updateReactionsSummary(postId);
         const preview = document.getElementById('comment-preview-' + postId);
-        if (preview) preview.outerHTML = buildCommentPreviewHtml(cached);
+        if (preview) {
+            preview.remove();
+        }
         const list = document.getElementById('feed-comments-list-' + postId);
         if (list) {
             list.innerHTML = (cached.comments || []).map(function (c) {
@@ -1919,8 +2034,12 @@
         openLightbox([imageUrl], 0);
     };
 
-    window.openImageGallery = function(postId, images) {
-        openLightbox(images, 0);
+    window.openImageGallery = function(postIdOrImages, imagesOrIndex, startIndex) {
+        if (Array.isArray(postIdOrImages)) {
+            openLightbox(postIdOrImages, Number(imagesOrIndex) || 0);
+            return;
+        }
+        openLightbox(Array.isArray(imagesOrIndex) ? imagesOrIndex : [], Number(startIndex) || 0);
     };
 
     function openLightbox(images, startIndex = 0) {
@@ -2046,20 +2165,70 @@
         else if (e.key === '0') lightboxZoomReset();
     });
 
+    let feedPollInFlight = false;
+
+    async function pollFeedUpdates() {
+        if (document.hidden || feedLoading || feedPollInFlight) return;
+        if (document.querySelector('.comment-input:focus, .cp-composer-input:focus')) return;
+        if (document.getElementById('commentPreviewShell')?.classList.contains('is-open')) return;
+        if (document.getElementById('editCommentModal')?.classList.contains('active')) return;
+
+        const tokenAtStart = feedRequestToken;
+        feedPollInFlight = true;
+        try {
+            const params = new URLSearchParams({ page: 1, filter: feedFilter });
+            if (feedSearch) params.set('search', feedSearch);
+            const data = await apiFeed(`/api/feed?${params}`);
+            if (tokenAtStart !== feedRequestToken) return;
+            const items = data.data ?? [];
+            const fresh = [];
+            items.forEach((p) => {
+                const id = Number(p.id);
+                if (!id) return;
+                if (renderedPostIds.has(String(id)) || document.querySelector(`.post-card[data-post-id="${id}"]`)) {
+                    mountFeedPost(p, 'append');
+                    return;
+                }
+                fresh.push(p);
+            });
+            fresh.slice().reverse().forEach((p) => {
+                const el = mountFeedPost(p, 'prepend');
+                if (el) el.classList.add('post-card-new');
+            });
+            if (fresh.length) {
+                setTimeout(() => {
+                    document.querySelectorAll('.post-card-new').forEach((el) => el.classList.remove('post-card-new'));
+                }, 1200);
+            }
+        } catch (_) {
+            /* silent poll failure */
+        } finally {
+            feedPollInFlight = false;
+        }
+    }
+
     function startFeedPolling() {
-        if (feedPollTimer) clearInterval(feedPollTimer);
-        feedPollTimer = setInterval(function () {
-            if (document.hidden) return;
-            if (document.querySelector('.comment-input:focus, .cp-composer-input:focus')) return;
-            if (document.getElementById('commentPreviewShell')?.classList.contains('is-open')) return;
-            if (document.getElementById('editCommentModal')?.classList.contains('active')) return;
-            loadFeed(true);
-        }, Number(window.CommunityFeedConfig?.feedPollMs || 10000));
+        if (feedPollTimer) clearTimeout(feedPollTimer);
+        const delay = Number(window.CommunityFeedConfig?.feedPollMs || 5000);
+        const tick = async function () {
+            await pollFeedUpdates();
+            feedPollTimer = setTimeout(tick, delay);
+        };
+        feedPollTimer = setTimeout(tick, delay);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
         loadFeed(true);
         startFeedPolling();
+        document.querySelector('a.kabataan-header__icon-btn[aria-label="Home"]')?.addEventListener('click', function (e) {
+            try {
+                const dest = new URL(this.href, window.location.origin);
+                if (dest.pathname === window.location.pathname) {
+                    e.preventDefault();
+                    window.location.reload();
+                }
+            } catch (_) {}
+        });
     });
     window.feedStartReply = feedStartReply;
     window.feedToggleComments = feedToggleComments;

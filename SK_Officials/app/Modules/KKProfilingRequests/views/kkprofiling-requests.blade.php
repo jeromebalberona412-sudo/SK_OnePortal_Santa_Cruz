@@ -93,18 +93,12 @@
             </div>
             <div class="filters-row">
                 <div class="filter-item">
-                    <label for="kkBarangayFilter" class="filter-label">Purok / Sitio</label>
-                    <select id="kkBarangayFilter" class="filter-select">
+                    <label for="kkYouthAgeGroupFilter" class="filter-label">Age</label>
+                    <select id="kkYouthAgeGroupFilter" class="filter-select">
                         <option value="">All</option>
-                        @include('layout::partials.barangay-zone-options')
-                    </select>
-                </div>
-                <div class="filter-item">
-                    <label for="kkVoterFilter" class="filter-label">Voter</label>
-                    <select id="kkVoterFilter" class="filter-select">
-                        <option value="">All</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
+                        <option value="Child Youth (15-17 yrs old)">Child Youth (15-17 yrs old)</option>
+                        <option value="Core Youth (18-24 yrs old)">Core Youth (18-24 yrs old)</option>
+                        <option value="Young Adult (15-30 yrs old)">Young Adult (15-30 yrs old)</option>
                     </select>
                 </div>
                 <div class="filter-item">
@@ -116,12 +110,18 @@
                     </select>
                 </div>
                 <div class="filter-item">
-                    <label for="kkYouthAgeGroupFilter" class="filter-label">Youth Age Group</label>
-                    <select id="kkYouthAgeGroupFilter" class="filter-select">
+                    <label for="kkBarangayFilter" class="filter-label">Purok / Sitio</label>
+                    <select id="kkBarangayFilter" class="filter-select">
                         <option value="">All</option>
-                        <option value="Child Youth (15-17 yrs old)">Child Youth (15-17 yrs old)</option>
-                        <option value="Core Youth (18-24 yrs old)">Core Youth (18-24 yrs old)</option>
-                        <option value="Young Adult (15-30 yrs old)">Young Adult (15-30 yrs old)</option>
+                        @include('layout::partials.barangay-zone-options')
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label for="kkVoterFilter" class="filter-label">Registered Voter</label>
+                    <select id="kkVoterFilter" class="filter-select">
+                        <option value="">All</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
                     </select>
                 </div>
             </div>
@@ -138,30 +138,10 @@
                                     <div class="column-hint">LN, FN, MN, Suffix</div>
                                 </th>
                                 <th>Email</th>
-                                <th class="th-col-filter">
-                                    <div class="th-col-filter-stack">
-                                        <span>Age</span>
-                                        <select id="kkAgeHeaderFilter" class="th-inline-filter" aria-label="Filter by age">
-                                            <option value="">All</option>
-                                            <option value="Child Youth (15-17 yrs old)">15-17</option>
-                                            <option value="Core Youth (18-24 yrs old)">18-24</option>
-                                            <option value="Young Adult (15-30 yrs old)">15-30</option>
-                                        </select>
-                                    </div>
-                                </th>
-                                <th class="th-col-filter">
-                                    <div class="th-col-filter-stack">
-                                        <span>Sex</span>
-                                        <select id="kkSexHeaderFilter" class="th-inline-filter" aria-label="Filter by sex">
-                                            <option value="">All</option>
-                                            <option value="Male">Male</option>
-                                            <option value="Female">Female</option>
-                                        </select>
-                                    </div>
-                                </th>
-                                <th>Barangay</th>
-                                <th>Purok/Zone</th>
-                                <th>Registered Voter</th>
+                                <th class="sk-no-sort">Age</th>
+                                <th class="sk-no-sort">Sex</th>
+                                <th class="sk-no-sort">Purok / Sitio</th>
+                                <th class="sk-no-sort">Registered Voter</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
                         </thead>
@@ -219,12 +199,12 @@
 
 <!-- Supporting Documents Modal -->
 <div class="modal-backdrop kk-modal-backdrop" id="kkDocumentsModal" style="display:none;">
-    <div class="modal-box kk-modal-box kk-modal-animate kk-modal-no-border kk-view-modal-wide">
+    <div class="modal-box kk-modal-box kk-modal-animate kk-modal-no-border kk-docs-modal-box">
         <div class="modal-header">
             <h2 class="modal-title">Supporting Documents</h2>
             <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
         </div>
-        <div class="modal-body kk-view-modal-body">
+        <div class="modal-body kk-docs-modal-body">
             @include('KKProfilingRequests::partials.kk-profiling-view-documents')
         </div>
     </div>

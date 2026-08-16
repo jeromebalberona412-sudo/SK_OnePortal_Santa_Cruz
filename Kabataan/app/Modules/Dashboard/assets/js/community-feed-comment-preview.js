@@ -148,13 +148,13 @@ function pickerHtml(active) {
 
 function likeInner(type) {
     const label = type ? (REACTION_LABEL[type] || 'Like') : 'Like';
-    const icon = type && type !== 'like' ? `<span>${REACTION_EMOJI[type]}</span>` : THUMBS_SVG;
+    const icon = type ? `<span class="reaction-current">${REACTION_EMOJI[type] || ''}</span>` : THUMBS_SVG;
     return `${icon}<span>${escapeHtml(label)}</span>`;
 }
 
 function commentLikeInner(type) {
     const label = type ? (REACTION_LABEL[type] || 'Like') : 'Like';
-    if (type && type !== 'like') {
+    if (type) {
         return `<span class="comment-react-emoji">${REACTION_EMOJI[type] || ''}</span><span>${escapeHtml(label)}</span>`;
     }
     return `<span>${escapeHtml(label)}</span>`;
@@ -274,7 +274,7 @@ function commentHtml(comment, isReply) {
             ${viewReplies}
             <div class="cp-reply-box" id="cp-reply-${comment.id}">
                 <input type="text" maxlength="500" placeholder="Write a reply..." data-reply-input="${comment.id}">
-                <button type="button" class="cp-send-btn" data-reply-send="${comment.id}">${SEND_SVG}</button>
+                <button type="button" class="cp-send-btn" data-reply-send="${comment.id}" disabled aria-label="Send reply">${SEND_SVG}</button>
             </div>
             ${replies.length ? `<div class="cp-replies" id="cp-replies-${comment.id}"${repliesOpen ? '' : ' hidden'}>${replies.map((r) => commentHtml(r, true)).join('')}</div>` : ''}
         </div>
@@ -677,25 +677,48 @@ function renderViewer(filter) {
         : (Number(data.count || 0) > 0 ? '' : '<p class="cp-viewer-empty">No reactions yet.</p>');
 }
 
+function composerEls() {
+    const shell = document.getElementById('commentPreviewShell');
+    return {
+        input: shell?.querySelector('#cpCommentInput') || document.getElementById('cpCommentInput'),
+        send: shell?.querySelector('#cpSendBtn') || document.querySelector('#commentPreviewShell #cpSendBtn'),
+    };
+}
+
+function syncCommentSend() {
+    const { input, send } = composerEls();
+    if (!send) return;
+    send.disabled = !input?.value.trim();
+}
+
+function syncReplySend(field) {
+    if (!field) return;
+    const btn = field.closest('.cp-reply-box')?.querySelector('[data-reply-send]');
+    if (btn) btn.disabled = !field.value.trim();
+}
+
 function bindPage() {
-    const input = document.getElementById('cpCommentInput');
-    const send = document.getElementById('cpSendBtn');
-    const updateSend = () => { send.disabled = !input.value.trim(); };
-    input?.addEventListener('input', updateSend);
+    const { input, send } = composerEls();
+    ['input', 'keyup', 'change', 'compositionend'].forEach((evt) => {
+        input?.addEventListener(evt, syncCommentSend);
+    });
+    input?.addEventListener('paste', () => requestAnimationFrame(syncCommentSend));
+    syncCommentSend();
     input?.addEventListener('keydown', (e) => {
         if (e.key !== 'Enter' || e.repeat || e.isComposing) return;
         e.preventDefault();
         const text = input.value.trim();
         if (!text) return;
         input.value = '';
-        updateSend();
+        syncCommentSend();
         submitComment(text);
     });
     send?.addEventListener('click', () => {
-        const text = input.value.trim();
+        const field = composerEls().input;
+        const text = field?.value.trim();
         if (!text) return;
-        input.value = '';
-        updateSend();
+        field.value = '';
+        syncCommentSend();
         submitComment(text);
     });
 
@@ -722,7 +745,9 @@ function bindPage() {
             const box = document.getElementById(`cp-reply-${reply.dataset.reply}`);
             if (box) {
                 box.classList.toggle('open');
-                box.querySelector('input')?.focus();
+                const replyField = box.querySelector('[data-reply-input]');
+                syncReplySend(replyField);
+                replyField?.focus();
                 keepInScroller(box);
             }
             return;
@@ -769,22 +794,36 @@ function bindPage() {
         }
         const replySend = e.target.closest('[data-reply-send]');
         if (replySend) {
+            if (replySend.disabled) return;
             const id = replySend.dataset.replySend;
-            const field = document.querySelector(`[data-reply-input="${id}"]`);
+            const field = document.querySelector(`#commentPreviewShell [data-reply-input="${id}"]`);
             const text = field?.value.trim();
             if (!text) return;
             field.value = '';
+            syncReplySend(field);
             submitComment(text, Number(id));
         }
     });
 
+    ['input', 'keyup', 'change', 'compositionend'].forEach((evt) => {
+        document.getElementById('cpComments')?.addEventListener(evt, (e) => {
+            const field = e.target.closest('[data-reply-input]');
+            if (field) syncReplySend(field);
+        });
+    });
+    document.getElementById('cpComments')?.addEventListener('paste', (e) => {
+        const field = e.target.closest('[data-reply-input]');
+        if (field) requestAnimationFrame(() => syncReplySend(field));
+    });
+
     document.getElementById('cpComments')?.addEventListener('keydown', (e) => {
         const field = e.target.closest('[data-reply-input]');
-        if (!field || e.key !== 'Enter' || e.repeat) return;
+        if (!field || e.key !== 'Enter' || e.repeat || e.isComposing) return;
         e.preventDefault();
         const text = field.value.trim();
         if (!text) return;
         field.value = '';
+        syncReplySend(field);
         submitComment(text, Number(field.dataset.replyInput));
     });
 
@@ -876,6 +915,7 @@ function openCommentPreview(nextPost, { skipUrl } = {}) {
     }
     renderPost();
     renderComments();
+    syncCommentSend();
     document.getElementById('cpScroll')?.scrollTo({ top: 0 });
     if (!skipUrl) syncCommentsUrl(nextPost.id);
 }

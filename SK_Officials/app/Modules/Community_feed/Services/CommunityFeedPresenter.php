@@ -67,10 +67,18 @@ class CommunityFeedPresenter
             'liked'              => $userReaction !== null,
             'reaction_type'      => $userReaction,
             'reaction_counts'    => $reactionCounts,
+            'reactors'           => $post->relationLoaded('reactions')
+                ? $this->formatReactors($post->reactions, $post->barangay_id)
+                : [],
             'time'               => $post->created_at->diffForHumans(),
             'created_at'         => $post->created_at->toIso8601String(),
-            'comment_count'      => $comments->count(),
-            'comments'           => $this->formatCommentTree($comments, $userId, $userType, $post->barangay_id),
+            'comment_count'      => $post->relationLoaded('comments')
+                ? $comments->count()
+                : (int) ($post->comments_count ?? 0),
+            'comments_loaded'    => $post->relationLoaded('comments'),
+            'comments'           => $post->relationLoaded('comments')
+                ? $this->formatCommentTree($comments, $userId, $userType, $post->barangay_id)
+                : [],
         ];
     }
 
@@ -113,6 +121,9 @@ class CommunityFeedPresenter
             'liked'             => $userReaction !== null,
             'reaction_type'     => $userReaction,
             'reaction_counts'   => $reactionCounts,
+            'reactors'          => $comment->relationLoaded('reactions')
+                ? $this->formatReactors($comment->reactions, $barangayId)
+                : [],
             'reply_count'       => $comment->relationLoaded('replies') ? $comment->replies->count() : 0,
             'replies'           => $comment->relationLoaded('replies')
                 ? $comment->replies->map(fn ($reply) => $this->formatComment($reply, $userId, $userType, $barangayId))->values()->all()

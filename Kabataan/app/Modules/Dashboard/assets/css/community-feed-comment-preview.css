@@ -188,8 +188,6 @@
 .cp-action:hover { background: #f0f2f5; }
 .cp-action svg { width: 18px; height: 18px; }
 .cp-action.liked { font-weight: 700; }
-.cp-action.liked[data-type="like"] { color: #1877f2; }
-.cp-action.liked[data-type="like"] svg { color: #1877f2; }
 .cp-action.liked[data-type="love"] { color: #f33e58; }
 .cp-action.liked[data-type="haha"],
 .cp-action.liked[data-type="wow"] { color: #f7b125; }
@@ -303,7 +301,6 @@
 }
 .cp-like-btn svg { display: none; }
 .cp-meta-btn:hover, .cp-like-btn:hover { text-decoration: underline; }
-.cp-like-btn.liked[data-type="like"] { color: #1877f2; }
 .cp-like-btn.liked[data-type="love"] { color: #f33e58; }
 .cp-like-btn.liked[data-type="haha"],
 .cp-like-btn.liked[data-type="wow"] { color: #f7b125; }

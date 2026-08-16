@@ -88,7 +88,7 @@
             <div class="cp-input-area">
                 <form class="cp-form" id="cpForm" onsubmit="cpHandleSubmit(event)">
                     <input type="text" class="cp-input" id="cpInput" placeholder="Mag-type ng mensahe..." autocomplete="off" maxlength="300">
-                    <button type="submit" class="cp-send-btn" id="cpSendBtn" aria-label="Send">
+                    <button type="submit" class="cp-send-btn" id="skaiSendBtn" aria-label="Send">
                         <svg viewBox="0 0 20 20" fill="currentColor">
                             <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
                         </svg>

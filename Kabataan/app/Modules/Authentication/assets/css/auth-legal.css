@@ -352,8 +352,59 @@
     line-height: 1.2;
 }
 
-.youth-signin-page .youth-signin-form {
-    gap: 1rem;
+.youth-signin-card .auth-legal-consent-radio {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 0 0 2px #44a53e;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.youth-signin-card .auth-legal-consent-radio:checked {
+    background: #44a53e;
+    border-color: #ffffff;
+    box-shadow: 0 0 0 2px #44a53e, inset 0 0 0 2px #ffffff;
+}
+
+.youth-signin-card .auth-legal-consent-radio:focus-visible {
+    outline: 2px solid #44a53e;
+    outline-offset: 3px;
+}
+
+.youth-signin-form.auth-legal-consent-invalid .auth-legal-consent-radio {
+    box-shadow: 0 0 0 2px #ef4444;
+}
+
+.youth-signin-form.auth-legal-consent-invalid .auth-legal-consent-error {
+    display: block;
+}
+
+.youth-signin-card .auth-legal-modal-ack input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    margin-top: 4px;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.youth-signin-card .auth-legal-modal-ack input[type="checkbox"]:checked {
+    background: #44a53e;
+    border-color: #44a53e;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3.5 8.5 6.5 11.5 12.5 4.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 11px 11px;
 }
 
 .youth-signin-page .youth-alert {

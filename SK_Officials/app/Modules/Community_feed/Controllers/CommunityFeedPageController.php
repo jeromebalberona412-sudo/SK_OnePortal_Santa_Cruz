@@ -28,7 +28,7 @@ class CommunityFeedPageController extends Controller
         $user = $request->user();
         $post = CommunityFeed::query()
             ->active()
-            ->with(['barangay', 'comments.user', 'comments.reactions', 'user', 'images', 'reactions'])
+            ->with(['barangay', 'comments.user', 'comments.reactions.user', 'user', 'images', 'reactions.user'])
             ->withCount('reactions')
             ->where('id', $id)
             ->where(function ($query) use ($user) {

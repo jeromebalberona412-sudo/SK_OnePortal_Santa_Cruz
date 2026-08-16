@@ -614,25 +614,31 @@ async function openViewer(target, commentId = null) {
     if (target === 'post' && post) {
         viewerState = {
             data: {
-                reactors: [],
+                reactors: post.reactors || [],
                 reaction_counts: post.reaction_counts || {},
                 count: Number(post.likes || 0),
             },
             filter: 'all',
         };
         renderViewer('all');
+        if ((post.reactors || []).length) {
+            return;
+        }
     } else {
         const comment = findComment(post?.comments || [], commentId);
         if (comment) {
             viewerState = {
                 data: {
-                    reactors: [],
+                    reactors: comment.reactors || [],
                     reaction_counts: comment.reaction_counts || {},
                     count: Number(comment.likes || 0),
                 },
                 filter: 'all',
             };
             renderViewer('all');
+            if ((comment.reactors || []).length) {
+                return;
+            }
         } else if (list) {
             list.innerHTML = '';
         }
@@ -641,10 +647,18 @@ async function openViewer(target, commentId = null) {
         ? `/api/community-feed/${post.id}/comments/${commentId}/reactions`
         : `/api/community-feed/${post.id}/reactions`;
     try {
-        viewerState = { data: await apiFetch(url), filter: 'all' };
-        renderViewer('all');
+        const data = await apiFetch(url);
+        if (target === 'post' && post) {
+            post.reactors = data.reactors || [];
+            post.reaction_counts = data.reaction_counts || post.reaction_counts;
+            post.likes = data.count;
+        }
+        viewerState = { data, filter: viewerState.filter || 'all' };
+        renderViewer(viewerState.filter || 'all');
     } catch (err) {
-        list.innerHTML = `<p class="cp-viewer-empty">${escapeHtml(err?.message || 'Unable to load reactions.')}</p>`;
+        if (list && !(viewerState.data?.reactors || []).length) {
+            list.innerHTML = `<p class="cp-viewer-empty">${escapeHtml(err?.message || 'Unable to load reactions.')}</p>`;
+        }
     }
 }
 
@@ -862,6 +876,7 @@ function openCommentPreview(nextPost, { skipUrl } = {}) {
     if (!shell) return;
     shell.hidden = false;
     shell.classList.add('is-open');
+    document.body.classList.add('feed-commenting');
     document.body.style.overflow = 'hidden';
     if (!pageBound) {
         bindPage();
@@ -879,6 +894,7 @@ function closeCommentPreview({ skipUrl } = {}) {
         shell.hidden = true;
         shell.classList.remove('is-open');
     }
+    document.body.classList.remove('feed-commenting');
     document.getElementById('cpReactionViewer')?.setAttribute('hidden', '');
     document.body.style.overflow = '';
     if (!skipUrl) syncCommentsUrl(null);

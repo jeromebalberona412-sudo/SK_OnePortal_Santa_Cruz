@@ -36,8 +36,8 @@ class CommunityFeedController extends Controller
         $query = CommunityFeed::query()
             ->select('community_feeds.*')
             ->active()
-            ->with(['barangay', 'comments.user', 'comments.reactions', 'user', 'images', 'reactions'])
-            ->withCount('reactions')
+            ->with(['barangay', 'user', 'images', 'reactions.user'])
+            ->withCount(['reactions', 'comments'])
             ->where(function ($q) use ($user) {
                 $q->where('barangay_id', $user->barangay_id)
                   ->orWhereRaw('"is_federation_wide" = true');
@@ -103,7 +103,7 @@ class CommunityFeedController extends Controller
 
         return response()->json(
             $this->presenter->formatPost(
-                $post->fresh(['barangay', 'comments.user', 'comments.reactions', 'user', 'images', 'reactions']),
+                $post->fresh(['barangay', 'comments.user', 'comments.reactions.user', 'user', 'images', 'reactions.user']),
                 $user->id,
                 'sk_official'
             ),
@@ -116,7 +116,7 @@ class CommunityFeedController extends Controller
         $user = Auth::user();
         $post = CommunityFeed::query()
             ->active()
-            ->with(['barangay', 'comments.user', 'comments.reactions', 'user', 'images', 'reactions'])
+            ->with(['barangay', 'comments.user', 'comments.reactions.user', 'user', 'images', 'reactions.user'])
             ->withCount('reactions')
             ->where('id', $id)
             ->where(function ($query) use ($user) {
@@ -163,7 +163,7 @@ class CommunityFeedController extends Controller
         );
 
         return response()->json($this->presenter->formatPost(
-            $post->load(['barangay', 'comments.user', 'comments.reactions', 'images', 'reactions']),
+            $post->load(['barangay', 'comments.user', 'comments.reactions.user', 'images', 'reactions.user']),
             Auth::id(),
             'sk_official'
         ));

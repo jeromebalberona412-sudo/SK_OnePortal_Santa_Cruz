@@ -322,6 +322,11 @@
     overflow-y: hidden !important;
 }
 
+.kabataan-page .row-actions-trigger,
+.kkprofiling-page .row-actions-trigger {
+    background: transparent;
+}
+
 .kabataan-table tbody tr,
 .kk-table tbody tr {
     position: relative;

@@ -44,9 +44,8 @@ function initializeKabataanUI() {
     const searchInput = document.getElementById('kabataanSearch');
     const genderFilter = document.getElementById('kabataanGenderFilter');
     const youthAgeGroupFilter = document.getElementById('kabataanYouthAgeGroupFilter');
-    const ageHeaderFilter = document.getElementById('kabataanAgeHeaderFilter');
-    const sexHeaderFilter = document.getElementById('kabataanSexHeaderFilter');
     const purokFilter = document.getElementById('kabataanPurokSitioFilter');
+    const voterFilter = document.getElementById('kabataanVoterFilter');
     const educationFilter = document.getElementById('kabataanEducationFilter');
     const tableActionsBar = document.getElementById('kabataanTableActions');
 
@@ -259,32 +258,20 @@ function initializeKabataanUI() {
     let tableSorter = null;
     if (tbody && window.SkTableSort) {
         tableSorter = SkTableSort.mount({
-            columnKeys: [
-                'respondentNumber',
-                'fullName',
-                'email',
-                'region',
-                'province',
-                'city',
-                'purokZone',
-                'educationalBackground',
-            ],
-            skipThClasses: ['th-checkbox', 'col-actions', 'th-col-filter'],
+            columnKeys: ['respondentNumber', 'fullName', 'email'],
+            skipThClasses: ['th-checkbox', 'col-actions', 'sk-no-sort'],
             numericColumns: ['respondentNumber'],
+            plainSortColumns: ['respondentNumber'],
             defaultColumn: 'fullName',
             getSortValue: (row, column) => {
                 if (column === 'fullName') {
                     return fullNameFrom(row);
                 }
                 if (column === 'respondentNumber') {
-                    const digits = String(row.respondentNumber || '').replace(/\D/g, '');
-                    return digits || '0';
+                    return String(row.respondentNumber || '').replace(/\D/g, '') || '0';
                 }
                 if (column === 'email') {
                     return row.email || row.emailAddress || '';
-                }
-                if (column === 'educationalBackground') {
-                    return row.educationalBackground || row.highestEducation || '';
                 }
                 return row[column] ?? '';
             },
@@ -357,6 +344,7 @@ function initializeKabataanUI() {
     let currentGender = '';
     let currentYouthAgeGroup = '';
     let currentPurok = '';
+    let currentVoter = '';
     let currentEducation = '';
     let editingIndex = null;
     let currentPage = 1;
@@ -375,8 +363,9 @@ function initializeKabataanUI() {
             const matchGender = !currentGender || k.sex === currentGender;
             const matchYouthAgeGroup = !currentYouthAgeGroup || k.youthAgeGroup === currentYouthAgeGroup;
             const matchPurok = !currentPurok || k.purokZone === currentPurok;
+            const matchVoter = !currentVoter || (k.registeredSKVoter || k.sk_voter) === currentVoter;
             const matchEducation = !currentEducation || education === currentEducation;
-            return matchSearch && matchGender && matchYouthAgeGroup && matchPurok && matchEducation;
+            return matchSearch && matchGender && matchYouthAgeGroup && matchPurok && matchVoter && matchEducation;
         });
 
         return tableSorter ? tableSorter.sortRows(filtered) : filtered;
@@ -490,7 +479,7 @@ function initializeKabataanUI() {
             const tr = document.createElement('tr');
             tr.className = 'empty-state-row';
             const td = document.createElement('td');
-            td.colSpan = 12;
+            td.colSpan = 9;
             td.textContent = 'No kabataan match current filters.';
             tr.appendChild(td);
             tbody.appendChild(tr);
@@ -522,9 +511,6 @@ function initializeKabataanUI() {
                 <td class="kabataan-email-cell">${k.email || k.emailAddress || '—'}</td>
                 <td>${k.age || '-'}</td>
                 <td>${k.sex || '-'}</td>
-                <td>${k.region || '—'}</td>
-                <td>${k.province || '—'}</td>
-                <td>${k.city || '—'}</td>
                 <td>${k.purokZone || '-'}</td>
                 <td>${k.educationalBackground || k.highestEducation || '-'}</td>
                 <td class="col-actions">
@@ -626,6 +612,9 @@ function initializeKabataanUI() {
             title.textContent = docItem.label || docItem.type || 'Supporting Document';
             card.appendChild(title);
 
+            const sidesWrap = document.createElement('div');
+            sidesWrap.className = 'kk-view-document-sides';
+
             (docItem.sides || []).forEach((side) => {
                 if (!side?.url) {
                     return;
@@ -655,8 +644,10 @@ function initializeKabataanUI() {
                 link.textContent = 'Open full size';
                 sideWrap.appendChild(link);
 
-                card.appendChild(sideWrap);
+                sidesWrap.appendChild(sideWrap);
             });
+
+            card.appendChild(sidesWrap);
 
             grid.appendChild(card);
         });
@@ -874,7 +865,6 @@ function initializeKabataanUI() {
     if (genderFilter) {
         genderFilter.addEventListener('change', () => {
             currentGender = genderFilter.value;
-            if (sexHeaderFilter) sexHeaderFilter.value = currentGender;
             currentPage = 1;
             render();
         });
@@ -883,25 +873,6 @@ function initializeKabataanUI() {
     if (youthAgeGroupFilter) {
         youthAgeGroupFilter.addEventListener('change', () => {
             currentYouthAgeGroup = youthAgeGroupFilter.value;
-            if (ageHeaderFilter) ageHeaderFilter.value = currentYouthAgeGroup;
-            currentPage = 1;
-            render();
-        });
-    }
-
-    if (ageHeaderFilter) {
-        ageHeaderFilter.addEventListener('change', () => {
-            currentYouthAgeGroup = ageHeaderFilter.value;
-            if (youthAgeGroupFilter) youthAgeGroupFilter.value = currentYouthAgeGroup;
-            currentPage = 1;
-            render();
-        });
-    }
-
-    if (sexHeaderFilter) {
-        sexHeaderFilter.addEventListener('change', () => {
-            currentGender = sexHeaderFilter.value;
-            if (genderFilter) genderFilter.value = currentGender;
             currentPage = 1;
             render();
         });
@@ -910,6 +881,14 @@ function initializeKabataanUI() {
     if (purokFilter) {
         purokFilter.addEventListener('change', () => {
             currentPurok = purokFilter.value;
+            currentPage = 1;
+            render();
+        });
+    }
+
+    if (voterFilter) {
+        voterFilter.addEventListener('change', () => {
+            currentVoter = voterFilter.value;
             currentPage = 1;
             render();
         });
@@ -986,6 +965,7 @@ function initializeKabataanUI() {
     const revokeOtherCount = document.getElementById('kabataanRevokeOtherCount');
     const revokeReasonError = document.getElementById('kabataanRevokeReasonError');
     const deleteCancelBtn = document.getElementById('kabataanDeleteCancelBtn');
+    const deleteCloseBtn = document.getElementById('kabataanDeleteCloseBtn');
     let deleteMode = 'single';
     let pendingDeleteIndex = null;
     let pendingDeleteIds = [];
@@ -1181,6 +1161,14 @@ function initializeKabataanUI() {
     }
 
     if (deleteCancelBtn) deleteCancelBtn.addEventListener('click', closeDeleteConfirm);
+    if (deleteCloseBtn) deleteCloseBtn.addEventListener('click', closeDeleteConfirm);
+    if (deleteModal) {
+        deleteModal.addEventListener('click', (event) => {
+            if (event.target === deleteModal) {
+                closeDeleteConfirm();
+            }
+        });
+    }
 
     if (deleteConfirmBtn) {
         const deleteBtnDefaultHtml = deleteConfirmBtn.innerHTML;

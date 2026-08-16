@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     hideLoading();
 
     const loginForm = document.querySelector('form[action*="login"]:not([action*="logout"])');
-    if (loginForm) {
+    if (loginForm && loginForm.id !== 'signInForm') {
         loginForm.addEventListener('submit', (e) => {
             if (e.defaultPrevented) return;
 
@@ -162,19 +162,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentPath = window.location.pathname;
         if (
             currentPath === '/login' || currentPath.endsWith('/login') ||
+            currentPath === '/sign-in' || currentPath.endsWith('/sign-in') ||
             currentPath === '/register' || currentPath.endsWith('/register') ||
             currentPath.includes('forgot-password') || currentPath.includes('password/reset')
         ) {
             return;
         }
 
-        if (href.startsWith('http') || href.startsWith('//')) {
-            try {
-                const url = new URL(href, window.location.href);
-                if (url.origin !== window.location.origin) return;
-            } catch (_) {
-                return;
-            }
+        try {
+            const url = new URL(href, window.location.href);
+            if (url.origin !== window.location.origin) return;
+            if (url.pathname === window.location.pathname && url.search === window.location.search) return;
+        } catch (_) {
+            return;
         }
 
         showLoading(MESSAGES.redirect);

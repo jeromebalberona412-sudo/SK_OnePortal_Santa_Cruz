@@ -2,6 +2,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     initProfileAvatarChange();
     initProfileSupportingDocuments();
+    openAccountSettingsFromHash();
 
     // ── Toast Notification ──────────────────────────────────────────────────
     function showToast(message, type = 'info') {
@@ -150,6 +151,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }, index * 50);
     });
 });
+
+function openAccountSettingsFromHash() {
+    const card = document.getElementById('account-settings');
+    if (!card) return;
+
+    const openCard = () => {
+        card.classList.add('is-open', 'is-highlighted');
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    if (window.location.hash === '#account-settings') {
+        requestAnimationFrame(openCard);
+    }
+
+    window.addEventListener('hashchange', function () {
+        if (window.location.hash === '#account-settings') {
+            openCard();
+        }
+    });
+}
 
 function initProfileAvatarChange() {
     const wrapper = document.getElementById('profileAvatarWrapper');

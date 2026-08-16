@@ -259,9 +259,6 @@
         lockAuthFields();
         if (!submitBtn) return;
         submitBtn.disabled = true;
-        submitBtn.classList.add('loading');
-        var span = submitBtn.querySelector('span');
-        if (span) span.textContent = 'Signing in...';
     }
 
     function resetSubmitBtn() {
@@ -325,9 +322,6 @@
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.classList.add('waiting-for-turnstile');
-            submitBtn.classList.add('loading');
-            var span = submitBtn.querySelector('span');
-            if (span) span.textContent = 'Signing in...';
         }
     }
 

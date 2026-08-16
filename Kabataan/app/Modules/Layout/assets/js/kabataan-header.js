@@ -65,6 +65,9 @@
     }
 
     drawerBackdrop?.addEventListener('click', closeProgramsDrawer);
+    document.querySelectorAll('[data-programs-drawer-close]').forEach(function (btn) {
+        btn.addEventListener('click', closeProgramsDrawer);
+    });
 
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && drawerSidebar?.classList.contains('drawer-open')) {

@@ -112,6 +112,14 @@
                     </select>
                 </div>
                 <div class="filter-item">
+                    <label for="kabataanVoterFilter" class="filter-label">Registered Voter</label>
+                    <select id="kabataanVoterFilter" class="filter-select">
+                        <option value="">All</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+                <div class="filter-item">
                     <label for="kabataanYouthAgeGroupFilter" class="filter-label">Youth Age Group</label>
                     <select id="kabataanYouthAgeGroupFilter" class="filter-select">
                         <option value="">All</option>
@@ -171,32 +179,10 @@
                                     <div class="column-hint">LN, FN, MN, Suffix</div>
                                 </th>
                                 <th>Email</th>
-                                <th class="th-col-filter">
-                                    <div class="th-col-filter-stack">
-                                        <span>Age</span>
-                                        <select id="kabataanAgeHeaderFilter" class="th-inline-filter" aria-label="Filter by age">
-                                            <option value="">All</option>
-                                            <option value="Child Youth (15-17 yrs old)">15-17</option>
-                                            <option value="Core Youth (18-24 yrs old)">18-24</option>
-                                            <option value="Young Adult (15-30 yrs old)">15-30</option>
-                                        </select>
-                                    </div>
-                                </th>
-                                <th class="th-col-filter">
-                                    <div class="th-col-filter-stack">
-                                        <span>Sex</span>
-                                        <select id="kabataanSexHeaderFilter" class="th-inline-filter" aria-label="Filter by sex">
-                                            <option value="">All</option>
-                                            <option value="Male">Male</option>
-                                            <option value="Female">Female</option>
-                                        </select>
-                                    </div>
-                                </th>
-                                <th>Region</th>
-                                <th>Province</th>
-                                <th>City / Municipality</th>
-                                <th>Purok / Sitio</th>
-                                <th>Highest Education</th>
+                                <th class="sk-no-sort">Age</th>
+                                <th class="sk-no-sort">Sex</th>
+                                <th class="sk-no-sort">Purok / Sitio</th>
+                                <th class="sk-no-sort">Highest Education</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
                         </thead>
@@ -250,13 +236,13 @@
                 </div>
 
                 <div class="kabataan-view-tab-panel" id="kabataanViewTabDocuments" hidden>
-                    <div class="kabataan-documents-panel">
+                    <div class="kk-view-paper kk-view-documents-panel kabataan-documents-panel">
+                        <div class="kk-view-documents-title">Supporting Documents (ID)</div>
+                        <div class="kk-view-id-verification" id="kabViewIdVerification" hidden></div>
                         <div class="kk-view-documents-wrap" id="kabViewDocumentsWrap" style="display:none;">
-                            <div class="kk-view-documents-title">Supporting Documents (ID)</div>
-                            <div class="kk-view-id-verification" id="kabViewIdVerification" hidden></div>
                             <div class="kk-view-documents-grid" id="kabViewDocumentsGrid"></div>
                         </div>
-                        <p class="kabataan-documents-empty" id="kabViewDocumentsEmpty" hidden>No supporting documents were uploaded for this Kabataan record.</p>
+                        <p class="kk-view-documents-empty" id="kabViewDocumentsEmpty" hidden>No supporting documents were uploaded for this Kabataan record.</p>
                     </div>
                 </div>
             </div>
@@ -841,14 +827,17 @@
 <div class="modal-backdrop kabataan-delete-backdrop" id="kabataanDeleteModal" style="display:none;">
     <div class="kabataan-delete-box">
         <div class="kabataan-delete-header">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kabataan-delete-icon">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6l-1 14H6L5 6"></path>
-                <path d="M10 11v6"></path>
-                <path d="M14 11v6"></path>
-                <path d="M9 6V4h6v2"></path>
-            </svg>
-            <h2 class="kabataan-delete-title">Revoke Record</h2>
+            <div class="kabataan-delete-header-left">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kabataan-delete-icon">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6l-1 14H6L5 6"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M9 6V4h6v2"></path>
+                </svg>
+                <h2 class="kabataan-delete-title">Revoke Record</h2>
+            </div>
+            <button type="button" class="kabataan-delete-close" id="kabataanDeleteCloseBtn" aria-label="Close">&times;</button>
         </div>
         <div class="kabataan-delete-body">
             <p class="kabataan-delete-message" id="kabataanDeleteMessage">Are you sure you want to revoke</p>
@@ -867,7 +856,7 @@
                 </label>
                 <div class="kabataan-revoke-other-wrap" id="kabataanRevokeOtherWrap" hidden>
                     <label for="kabataanRevokeOtherText">Specify reason</label>
-                    <textarea id="kabataanRevokeOtherText" class="kabataan-revoke-other-text" maxlength="500" rows="4" placeholder="Enter revoke reason (max 500 characters)"></textarea>
+                    <textarea id="kabataanRevokeOtherText" class="kabataan-revoke-other-text" maxlength="500" rows="2" placeholder="Enter revoke reason (max 500 characters)"></textarea>
                     <p class="kabataan-revoke-other-count"><span id="kabataanRevokeOtherCount">0</span>/500</p>
                 </div>
                 <p class="kabataan-revoke-reason-error" id="kabataanRevokeReasonError" hidden>Please select a revoke reason.</p>

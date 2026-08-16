@@ -652,6 +652,11 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
     .programs-fab { display: flex; }
 }
 
+body.feed-commenting .programs-fab,
+body.feed-keyboard .programs-fab {
+    display: none !important;
+}
+
 @media (max-width: 1024px) {
     .main-content { margin-left: 260px; }
 }

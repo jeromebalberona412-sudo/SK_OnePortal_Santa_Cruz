@@ -72,8 +72,6 @@ function initializeKKProfilingRequestsUI() {
     const approveModal = document.getElementById('kkApproveModal');
     const rejectModal = document.getElementById('kkRejectModal');
     const compareModal = null; // removed — Compare button is now a direct link
-    const ageHeaderFilter = document.getElementById('kkAgeHeaderFilter');
-    const sexHeaderFilter = document.getElementById('kkSexHeaderFilter');
 
     if (!tbody) return;
 
@@ -162,6 +160,9 @@ function initializeKKProfilingRequestsUI() {
             title.textContent = docItem.label || docItem.type || 'Supporting Document';
             card.appendChild(title);
 
+            const sidesWrap = document.createElement('div');
+            sidesWrap.className = 'kk-view-document-sides';
+
             (docItem.sides || []).forEach((side) => {
                 if (!side?.url) {
                     return;
@@ -191,8 +192,10 @@ function initializeKKProfilingRequestsUI() {
                 link.textContent = 'Open full size';
                 sideWrap.appendChild(link);
 
-                card.appendChild(sideWrap);
+                sidesWrap.appendChild(sideWrap);
             });
+
+            card.appendChild(sidesWrap);
 
             grid.appendChild(card);
         });
@@ -225,8 +228,9 @@ function initializeKKProfilingRequestsUI() {
 
     if (window.SkTableSort) {
         tableSorter = SkTableSort.mount({
-            columnKeys: ['fullName', 'emailAddress', 'barangay', 'purokZone', 'registeredVoter'],
-            skipThClasses: ['th-checkbox', 'col-actions', 'th-col-filter'],
+            columnKeys: ['fullName', 'emailAddress'],
+            skipThClasses: ['th-checkbox', 'col-actions', 'sk-no-sort'],
+            numericColumns: ['age'],
             defaultColumn: 'fullName',
             getSortValue: (row, column) => {
                 if (column === 'fullName') {
@@ -325,7 +329,7 @@ function initializeKKProfilingRequestsUI() {
             const tr = document.createElement('tr');
             tr.className = 'empty-state-row';
             const td = document.createElement('td');
-            td.colSpan = 8;
+            td.colSpan = 7;
             td.textContent = 'No KK Profiling requests found.';
             tr.appendChild(td);
             tbody.appendChild(tr);
@@ -380,7 +384,6 @@ function initializeKKProfilingRequestsUI() {
                 <td class="kk-email-cell">${email}</td>
                 <td>${r.age}</td>
                 <td>${r.sex || '—'}</td>
-                <td>${r.barangay}</td>
                 <td>${purokZone}</td>
                 <td>${voterStatus}</td>
                 ${renderActionMenuCell(r.id)}
@@ -716,38 +719,8 @@ function initializeKKProfilingRequestsUI() {
     if (searchInput) { searchInput.addEventListener('input', () => { currentSearchQuery = searchInput.value.trim(); currentPage = 1; renderTable(); }); }
     if (barangayFilter) { barangayFilter.addEventListener('change', () => { currentBarangayFilter = barangayFilter.value; currentPage = 1; renderTable(); }); }
     if (voterFilter) { voterFilter.addEventListener('change', () => { currentVoterFilter = voterFilter.value; currentPage = 1; renderTable(); }); }
-    if (sexFilter) {
-        sexFilter.addEventListener('change', () => {
-            currentSexFilter = sexFilter.value;
-            if (sexHeaderFilter) sexHeaderFilter.value = currentSexFilter;
-            currentPage = 1;
-            renderTable();
-        });
-    }
-    if (youthAgeGroupFilter) {
-        youthAgeGroupFilter.addEventListener('change', () => {
-            currentYouthAgeGroupFilter = youthAgeGroupFilter.value;
-            if (ageHeaderFilter) ageHeaderFilter.value = currentYouthAgeGroupFilter;
-            currentPage = 1;
-            renderTable();
-        });
-    }
-    if (ageHeaderFilter) {
-        ageHeaderFilter.addEventListener('change', () => {
-            currentYouthAgeGroupFilter = ageHeaderFilter.value;
-            if (youthAgeGroupFilter) youthAgeGroupFilter.value = currentYouthAgeGroupFilter;
-            currentPage = 1;
-            renderTable();
-        });
-    }
-    if (sexHeaderFilter) {
-        sexHeaderFilter.addEventListener('change', () => {
-            currentSexFilter = sexHeaderFilter.value;
-            if (sexFilter) sexFilter.value = currentSexFilter;
-            currentPage = 1;
-            renderTable();
-        });
-    }
+    if (sexFilter) { sexFilter.addEventListener('change', () => { currentSexFilter = sexFilter.value; currentPage = 1; renderTable(); }); }
+    if (youthAgeGroupFilter) { youthAgeGroupFilter.addEventListener('change', () => { currentYouthAgeGroupFilter = youthAgeGroupFilter.value; currentPage = 1; renderTable(); }); }
 
     const prevBtn = document.getElementById('kkPrevBtn');
     const nextBtn = document.getElementById('kkNextBtn');

@@ -60,19 +60,40 @@
     overflow: visible;
 }
 
+.kk-docs-modal-box.kk-modal-box {
+    max-width: 720px !important;
+    width: min(720px, 96vw);
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.kk-docs-modal-body {
+    flex: 1 1 auto;
+    min-height: 280px;
+    overflow: auto;
+    padding: 0;
+    background: #f3f4f6;
+}
+
 .kk-view-documents-panel {
-    padding: 16px 20px 24px;
-    background: #f9fafb;
+    padding: 16px 18px 22px;
+    background: #ffffff;
+    margin: 12px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
 }
 
 .kk-view-documents-empty {
-    margin: 1rem 0 0;
-    padding: 1rem;
+    margin: 12px 0 0;
+    padding: 28px 16px;
     border-radius: 8px;
     background: #f8fafc;
+    border: 1px dashed #d1d5db;
     color: #64748b;
     text-align: center;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .kk-view-modal-body.kk-qs-body {
@@ -414,27 +435,36 @@
 
 .kk-view-documents-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
+    grid-template-columns: 1fr;
+    gap: 14px;
 }
 
 .kk-view-document-card {
     background: #fff;
     border: 1px solid #e5e7eb;
-    border-radius: 8px;
+    border-radius: 10px;
     overflow: hidden;
 }
 
 .kk-view-document-card-title {
-    font-size: 11px;
-    font-weight: 600;
-    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 10px 12px;
     border-bottom: 1px solid #f3f4f6;
-    color: #374151;
+    color: #111827;
+    background: #f9fafb;
+}
+
+.kk-view-document-sides {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 10px;
 }
 
 .kk-view-document-side {
-    padding: 8px;
+    padding: 0;
+    min-width: 0;
 }
 
 .kk-view-document-side-label {
@@ -443,24 +473,37 @@
     color: #6b7280;
     margin-bottom: 6px;
     text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 .kk-view-document-preview {
     display: block;
     width: 100%;
-    max-height: 220px;
+    height: 220px;
     object-fit: contain;
-    border-radius: 4px;
+    border-radius: 6px;
     background: #f3f4f6;
+    border: 1px solid #e5e7eb;
     cursor: zoom-in;
 }
 
 .kk-view-document-link {
     display: inline-block;
     margin-top: 6px;
-    font-size: 10px;
+    font-size: 11px;
+    font-weight: 600;
     color: #2563eb;
     text-decoration: none;
+}
+
+@media (max-width: 640px) {
+    .kk-view-document-sides {
+        grid-template-columns: 1fr;
+    }
+
+    .kk-view-document-preview {
+        height: 180px;
+    }
 }
 
 .kk-view-document-link:hover {

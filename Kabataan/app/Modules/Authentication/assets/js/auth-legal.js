@@ -247,6 +247,7 @@
             if (consent.checked && consentError) {
                 consentError.hidden = true;
             }
+            form.classList.toggle('auth-legal-consent-invalid', !consent.checked);
         });
 
         form.addEventListener('submit', (e) => {
@@ -257,6 +258,7 @@
 
             if (consent.checked) {
                 if (consentError) consentError.hidden = true;
+                form.classList.remove('auth-legal-consent-invalid');
                 return;
             }
 
@@ -266,8 +268,9 @@
 
             e.preventDefault();
             e.stopPropagation();
-            if (consentError) consentError.hidden = true;
-            openConsentPrompt();
+            if (consentError) consentError.hidden = false;
+            form.classList.add('auth-legal-consent-invalid');
+            consent.focus();
         }, true);
     }
 

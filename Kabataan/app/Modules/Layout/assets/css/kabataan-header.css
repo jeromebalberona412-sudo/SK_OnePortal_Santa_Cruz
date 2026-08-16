@@ -376,19 +376,12 @@ body.kabataan-has-view-only-banner {
 
 .kabataan-header__dropdown-icon--profile svg { stroke: #3b82f6; }
 
-.kabataan-header__dropdown-icon--email {
-    background: #fff7ed;
-    color: #ea580c;
+.kabataan-header__dropdown-icon--settings {
+    background: #f1f5f9;
+    color: #475569;
 }
 
-.kabataan-header__dropdown-icon--email svg { stroke: #ea580c; }
-
-.kabataan-header__dropdown-icon--password {
-    background: #f0fdf4;
-    color: #22c55e;
-}
-
-.kabataan-header__dropdown-icon--password svg { stroke: #22c55e; }
+.kabataan-header__dropdown-icon--settings svg { stroke: #475569; }
 
 .kabataan-header__dropdown-icon--logout {
     background: #fef2f2;
@@ -486,9 +479,45 @@ body.kabataan-has-view-only-banner {
         top: calc(var(--kab-nav-h) + 8px);
         right: 12px;
         left: auto;
-        min-width: 260px;
-        max-width: calc(100vw - 24px);
+        min-width: 196px;
+        max-width: min(220px, calc(100vw - 24px));
         z-index: 500;
+        border-radius: 12px;
+    }
+
+    .kabataan-header__dropdown-user-card {
+        padding: 10px 12px;
+        gap: 8px;
+    }
+
+    .kabataan-header__dropdown-avatar {
+        width: 32px;
+        height: 32px;
+    }
+
+    .kabataan-header__dropdown-name {
+        font-size: 12px;
+    }
+
+    .kabataan-header__dropdown-role {
+        font-size: 10px;
+    }
+
+    .kabataan-header__dropdown-link {
+        padding: 8px 12px;
+        font-size: 12px;
+        gap: 8px;
+    }
+
+    .kabataan-header__dropdown-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+    }
+
+    .kabataan-header__dropdown-icon svg {
+        width: 13px;
+        height: 13px;
     }
 }
 

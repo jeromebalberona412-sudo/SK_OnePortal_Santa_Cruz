@@ -327,21 +327,92 @@
 }
 
 @media (max-width: 720px) {
+    .kb-notif-page {
+        padding: 12px 12px 32px;
+    }
+
+    .kb-notif-page__back {
+        margin-bottom: 10px;
+        font-size: 0.8rem;
+    }
+
     .kb-notif-hero {
         flex-direction: column;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .kb-notif-hero h1 {
+        font-size: 1.25rem;
+        margin-bottom: 2px;
+    }
+
+    .kb-notif-hero p {
+        font-size: 0.8rem;
     }
 
     .kb-notif-page__mark-all {
         width: 100%;
         justify-content: center;
+        padding: 8px 12px;
+        font-size: 0.8rem;
     }
 
     .kb-notif-stats {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .kb-notif-stat {
+        padding: 10px 6px;
+        border-radius: 10px;
+    }
+
+    .kb-notif-stat__value {
+        font-size: 1.1rem;
+    }
+
+    .kb-notif-stat__label {
+        font-size: 0.65rem;
+    }
+
+    .kb-notif-panel {
+        border-radius: 12px;
+    }
+
+    .kb-notif-panel__toolbar {
+        padding: 10px 12px;
+    }
+
+    .kb-notif-filter {
+        padding: 6px 12px;
+        font-size: 0.78rem;
     }
 
     .kb-notif-item {
         grid-template-columns: auto 1fr;
+        padding: 10px 12px;
+        gap: 8px;
+    }
+
+    .kb-notif-item__icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+    }
+
+    .kb-notif-item__icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .kb-notif-item__title {
+        font-size: 0.84rem;
+    }
+
+    .kb-notif-item__text {
+        font-size: 0.78rem;
     }
 
     .kb-notif-item__chevron {

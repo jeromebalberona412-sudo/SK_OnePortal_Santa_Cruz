@@ -50,11 +50,9 @@ class AnnouncementFeedController extends Controller
             'barangay',
             'user',
             'images',
-            'comments.user',
-            'comments.reactions',
             'reactions.user',
         ])
-            ->withCount('reactions')
+            ->withCount(['reactions', 'comments'])
             ->active()
             ->where(function ($q) use ($barangayId) {
                 $q->where('barangay_id', $barangayId)
@@ -105,9 +103,9 @@ class AnnouncementFeedController extends Controller
             'barangay',
             'user',
             'images',
-            'comments.user',
-            'comments.reactions',
             'reactions.user',
+            'comments.user',
+            'comments.reactions.user',
         ])
             ->withCount('reactions')
             ->active()
@@ -406,6 +404,14 @@ class AnnouncementFeedController extends Controller
             ->all();
 
         $comments = $post->relationLoaded('comments') ? $post->comments : collect();
+        $reactionsSummary = $post->relationLoaded('reactions')
+            ? $this->formatReactionsSummary(
+                $post->reactions,
+                array_sum($reactionCounts),
+                $post->barangay_id,
+                $registrations,
+            )
+            : ['count' => 0, 'names_label' => '', 'reactors' => []];
 
         return [
             'id' => $post->id,
@@ -425,15 +431,16 @@ class AnnouncementFeedController extends Controller
             'liked' => $userReaction !== null,
             'reaction_type' => $userReaction,
             'reaction_counts' => $reactionCounts,
+            'reactors' => $reactionsSummary['reactors'],
             'time' => $post->created_at?->diffForHumans() ?? 'Just now',
-            'reactions_summary' => $this->formatReactionsSummary(
-                $post->reactions,
-                array_sum($reactionCounts),
-                $post->barangay_id,
-                $registrations,
-            ),
-            'comment_count' => $comments->count(),
-            'comments' => $this->formatCommentTree($comments, $userId),
+            'reactions_summary' => $reactionsSummary,
+            'comment_count' => $post->relationLoaded('comments')
+                ? $comments->count()
+                : (int) ($post->comments_count ?? 0),
+            'comments_loaded' => $post->relationLoaded('comments'),
+            'comments' => $post->relationLoaded('comments')
+                ? $this->formatCommentTree($comments, $userId)
+                : [],
         ];
     }
 
@@ -519,7 +526,7 @@ class AnnouncementFeedController extends Controller
         return [
             'count' => $count,
             'names_label' => $namesLabel,
-            'reactors' => $reactors->take(8)->all(),
+            'reactors' => $reactors->all(),
         ];
     }
 
