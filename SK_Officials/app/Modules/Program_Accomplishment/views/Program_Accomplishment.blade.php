@@ -202,111 +202,51 @@
             </button>
         </div>
         <div class="pa-modal-body">
-            <form id="paForm">
+            <form id="paForm" data-uploader-name="{{ auth()->user()->name ?? '' }}">
                 @csrf
-                
-                <!-- Program Information Section -->
+
                 <div class="pa-form-section">
-                    <h3 class="pa-section-title">Program Information</h3>
-                    <p class="pa-section-note">Loaded from the existing Program record. These fields cannot be edited here.</p>
+                    <h3 class="pa-section-title">Program Details</h3>
+                    <p class="pa-section-note">These details are loaded automatically from the completed program.</p>
                     <div class="pa-form-grid">
-                        <div class="pa-form-group">
+                        <div class="pa-form-group pa-form-group-full">
                             <label class="pa-form-label">Program Name</label>
                             <input type="text" id="paProgram" class="pa-form-input" readonly>
                         </div>
                         <div class="pa-form-group">
-                            <label class="pa-form-label">Category</label>
-                            <input type="text" id="paCategory" class="pa-form-input" readonly>
-                        </div>
-                        <div class="pa-form-group pa-form-group-full">
-                            <label class="pa-form-label">Description</label>
-                            <textarea id="paProgramDescription" class="pa-form-textarea" rows="2" readonly></textarea>
-                        </div>
-                        <div class="pa-form-group pa-form-group-full">
-                            <label class="pa-form-label">Expected Result</label>
-                            <textarea id="paExpectedResult" class="pa-form-textarea" rows="2" readonly></textarea>
-                        </div>
-                        <div class="pa-form-group pa-form-group-full">
-                            <label class="pa-form-label">Performance Indicator</label>
-                            <textarea id="paPerformanceIndicator" class="pa-form-textarea" rows="2" readonly></textarea>
-                        </div>
-                        <div class="pa-form-group">
-                            <label class="pa-form-label">Person Responsible</label>
-                            <input type="text" id="paPersonResponsible" class="pa-form-input" readonly>
-                        </div>
-                        <div class="pa-form-group">
-                            <label class="pa-form-label">Approved / Planned Budget</label>
-                            <input type="text" id="paBudgetAllocated" class="pa-form-input" readonly>
-                        </div>
-                        <div class="pa-form-group">
-                            <label class="pa-form-label">Implementation Start</label>
+                            <label class="pa-form-label">Date Started</label>
                             <input type="text" id="paDateStarted" class="pa-form-input" readonly>
                         </div>
                         <div class="pa-form-group">
-                            <label class="pa-form-label">Implementation End</label>
+                            <label class="pa-form-label">Date Completed</label>
                             <input type="text" id="paDateCompleted" class="pa-form-input" readonly>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Report Information Section -->
-                <div class="pa-form-section">
-                    <h3 class="pa-section-title">Accomplishment</h3>
-                    <div class="pa-form-grid">
-                        <div class="pa-form-group pa-form-group-full">
-                            <label class="pa-form-label">Accomplishment Summary <span class="pa-required">*</span></label>
-                            <textarea id="paImplementationSummary" class="pa-form-textarea" rows="4" required></textarea>
-                        </div>
-                        <div class="pa-form-group pa-form-group-full">
-                            <label class="pa-form-label">Actual Result</label>
-                            <textarea id="paActualResult" class="pa-form-textarea" rows="3"></textarea>
+                        <div class="pa-form-group">
+                            <label class="pa-form-label">Status</label>
+                            <input type="text" id="paProgramStatus" class="pa-form-input" readonly>
                         </div>
                         <div class="pa-form-group">
-                            <label class="pa-form-label">Target Beneficiaries</label>
-                            <input type="number" id="paTargetBeneficiaries" class="pa-form-input" min="0">
-                        </div>
-                        <div class="pa-form-group">
-                            <label class="pa-form-label">Actual Beneficiaries / Participants</label>
-                            <input type="number" id="paParticipantsCount" class="pa-form-input" min="0">
-                        </div>
-                        <div class="pa-form-group pa-form-group-full">
-                            <label class="pa-form-label">Internal remarks</label>
-                            <textarea id="paRemarks" class="pa-form-textarea" rows="2"></textarea>
+                            <label class="pa-form-label">Uploaded by</label>
+                            <input type="text" id="paUploadedBy" class="pa-form-input" readonly>
                         </div>
                     </div>
                 </div>
 
-                <!-- Budget Summary Section -->
                 <div class="pa-form-section">
-                    <h3 class="pa-section-title">Budget Summary</h3>
-                    <div class="pa-budget-summary">
-                        <div class="pa-budget-item">
-                            <span class="pa-budget-label">Approved / Planned Budget:</span>
-                            <span class="pa-budget-value" id="paBudgetAllocatedDisplay">₱0.00</span>
-                        </div>
-                        <div class="pa-form-group" style="margin: 12px 0;">
-                            <label class="pa-form-label" for="paActualExpense">Actual Expenditure</label>
-                            <input type="number" id="paActualExpense" class="pa-form-input" min="0" step="0.01">
-                        </div>
-                        <div class="pa-budget-item">
-                            <span class="pa-budget-label">Actual Expense:</span>
-                            <span class="pa-budget-value" id="paActualExpenseDisplay">₱0.00</span>
-                        </div>
-                        <div class="pa-budget-item pa-budget-item-highlight">
-                            <span class="pa-budget-label">Remaining Budget:</span>
-                            <span class="pa-budget-value" id="paRemainingBudget">₱0.00</span>
-                        </div>
-                        <div class="pa-budget-item">
-                            <span class="pa-budget-label">Budget Utilization:</span>
-                            <span class="pa-budget-value" id="paBudgetUtilization">0%</span>
-                        </div>
-                    </div>
-                    <div class="pa-budget-validation" id="paBudgetValidation"></div>
+                    <h3 class="pa-section-title">MS Word Report <span class="pa-required">*</span></h3>
+                    <p class="pa-section-note">Upload 1 Word file only (.doc or .docx), maximum 10MB.</p>
+                    <label class="pa-word-upload" for="paDocumentInput">
+                        <span class="pa-word-upload-title">Choose Word file</span>
+                        <span class="pa-word-upload-hint">.doc or .docx only</span>
+                    </label>
+                    <input type="file" id="paDocumentInput" class="pa-word-input" accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+                    <div id="paExistingDocuments" class="pa-document-preview"></div>
+                    <div id="paDocumentPreview" class="pa-document-preview"></div>
+                    <div class="pa-image-validation" id="paDocumentValidation"></div>
                 </div>
 
-                <!-- Image Upload Section -->
                 <div class="pa-form-section">
-                    <h3 class="pa-section-title">Proof Images <span class="pa-required">*</span></h3>
+                    <h3 class="pa-section-title">Proof Images</h3>
                     <div class="pa-image-upload">
                         <div class="pa-upload-area" id="paUploadArea">
                             <div class="pa-upload-content">
@@ -326,18 +266,9 @@
                     <div class="pa-image-validation" id="paImageValidation"></div>
                 </div>
 
-                <!-- Existing Images Section (for edit mode) -->
                 <div class="pa-form-section" id="paExistingImagesSection" style="display: none;">
                     <h3 class="pa-section-title">Existing Images</h3>
                     <div class="pa-existing-images" id="paExistingImages"></div>
-                </div>
-
-                <div class="pa-form-section">
-                    <h3 class="pa-section-title">Supporting Documents</h3>
-                    <p class="pa-section-note">Uploaded files are public and can appear on the Kabataan homepage.</p>
-                    <input type="file" id="paDocumentInput" class="pa-form-input" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-                    <div id="paExistingDocuments" class="pa-document-preview"></div>
-                    <div id="paDocumentPreview" class="pa-document-preview"></div>
                 </div>
             </form>
         </div>

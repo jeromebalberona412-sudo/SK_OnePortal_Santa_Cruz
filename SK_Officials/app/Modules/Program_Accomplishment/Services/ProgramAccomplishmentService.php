@@ -272,6 +272,7 @@ class ProgramAccomplishmentService
         $approvedBudget = $this->resolveApprovedBudget($program, $data);
         $actualExpense = (float) ($data['actual_expense'] ?? 0);
         $this->assertExpenseWithinBudget($actualExpense, $approvedBudget);
+        $this->assertWordDocumentPresent($data['documents'] ?? [], true);
 
         $status = ProgramAccomplishmentReport::STATUS_PUBLISHED;
 
@@ -292,8 +293,8 @@ class ProgramAccomplishmentService
                 'target_beneficiaries' => isset($data['target_beneficiaries']) ? (int) $data['target_beneficiaries'] : null,
                 'actual_expense' => $actualExpense,
                 'approved_budget' => $approvedBudget,
-                'actual_implementation_date' => $data['actual_implementation_date'] ?? null,
-                'actual_completion_date' => $data['actual_completion_date'] ?? null,
+                'actual_implementation_date' => $data['actual_implementation_date'] ?? $program->start_date,
+                'actual_completion_date' => $data['actual_completion_date'] ?? $program->end_date,
                 'remarks' => $data['remarks'] ?? null,
                 'status' => $status,
                 'submitted_at' => now(),
@@ -380,6 +381,9 @@ class ProgramAccomplishmentService
             if (isset($data['delete_documents']) && is_array($data['delete_documents'])) {
                 $this->deleteDocuments($report, $data['delete_documents']);
             }
+
+            $report->refresh();
+            $this->assertWordDocumentPresent($data['documents'] ?? [], false, $report);
 
             return $this->formatReport($report->fresh(['program', 'barangay', 'creator', 'images', 'documents']));
         });
@@ -542,11 +546,27 @@ class ProgramAccomplishmentService
      */
     private function storeDocuments(ProgramAccomplishmentReport $report, array $files, array $types): void
     {
+        $uploads = [];
         foreach ($files as $index => $file) {
-            if (! $file instanceof UploadedFile) {
-                continue;
+            if ($file instanceof UploadedFile) {
+                $uploads[] = ['file' => $file, 'type' => $types[$index] ?? 'report'];
             }
+        }
 
+        if (count($uploads) > 1) {
+            throw ValidationException::withMessages([
+                'documents' => ['Upload 1 MS Word file only (.doc or .docx).'],
+            ]);
+        }
+
+        if ($uploads === []) {
+            return;
+        }
+
+        $this->replaceExistingDocuments($report);
+
+        foreach ($uploads as $upload) {
+            $file = $upload['file'];
             $this->validateDocument($file);
 
             $path = $file->store('program_accomplishment_docs/'.$report->id, 'public');
@@ -557,10 +577,20 @@ class ProgramAccomplishmentService
                 'stored_path' => $path,
                 'mime_type' => $file->getMimeType(),
                 'file_size' => $file->getSize(),
-                'document_type' => $types[$index] ?? 'other',
+                'document_type' => $upload['type'] ?: 'report',
                 'visibility' => ProgramAccomplishmentDocument::VISIBILITY_PUBLIC,
             ]);
         }
+    }
+
+    private function replaceExistingDocuments(ProgramAccomplishmentReport $report): void
+    {
+        $existing = $report->documents()->get();
+        if ($existing->isEmpty()) {
+            return;
+        }
+
+        $this->deleteDocuments($report, $existing->pluck('id')->all());
     }
 
     /**
@@ -597,25 +627,59 @@ class ProgramAccomplishmentService
 
     private function validateDocument(UploadedFile $file): void
     {
-        $allowed = [
-            'application/pdf',
-            'image/jpeg',
-            'image/jpg',
-            'image/png',
+        $extension = strtolower((string) $file->getClientOriginalExtension());
+        $allowedExtensions = ['doc', 'docx'];
+        $allowedMimes = [
             'application/msword',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/octet-stream',
+            'application/zip',
+            'application/x-zip-compressed',
         ];
         $maxSize = 10 * 1024 * 1024;
+        $mime = (string) $file->getMimeType();
 
-        if (! in_array($file->getMimeType(), $allowed, true)) {
+        if (! in_array($extension, $allowedExtensions, true)) {
             throw ValidationException::withMessages([
-                'documents' => ['Invalid document type: '.$file->getClientOriginalName()],
+                'documents' => ['Please upload 1 MS Word file (.doc or .docx).'],
+            ]);
+        }
+
+        if ($mime !== '' && ! in_array($mime, $allowedMimes, true)) {
+            throw ValidationException::withMessages([
+                'documents' => ['Please upload 1 MS Word file (.doc or .docx).'],
             ]);
         }
 
         if ($file->getSize() > $maxSize) {
             throw ValidationException::withMessages([
                 'documents' => ['File too large: '.$file->getClientOriginalName().'. Maximum size is 10MB.'],
+            ]);
+        }
+    }
+
+    /**
+     * @param  array<int, mixed>  $uploaded
+     */
+    private function assertWordDocumentPresent(array $uploaded, bool $requiredOnCreate, ?ProgramAccomplishmentReport $report = null): void
+    {
+        $hasUpload = false;
+        foreach ($uploaded as $file) {
+            if ($file instanceof UploadedFile) {
+                $hasUpload = true;
+                break;
+            }
+        }
+
+        if ($requiredOnCreate && ! $hasUpload) {
+            throw ValidationException::withMessages([
+                'documents' => ['Please upload 1 MS Word report (.doc or .docx).'],
+            ]);
+        }
+
+        if ($report !== null && ! $hasUpload && $report->documents()->count() < 1) {
+            throw ValidationException::withMessages([
+                'documents' => ['Please keep or upload 1 MS Word report (.doc or .docx).'],
             ]);
         }
     }

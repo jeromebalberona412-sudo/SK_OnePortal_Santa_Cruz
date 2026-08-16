@@ -11,6 +11,7 @@ const PAState = {
     currentMode: 'create', // 'create' or 'edit'
     currentReportId: null,
     currentProgramId: null,
+    currentProgramDates: { start: '', end: '' },
     uploadedImages: [],
     uploadedDocuments: [],
     existingImages: [],
@@ -288,6 +289,7 @@ function resetForm() {
     PAState.deletedDocumentIds = [];
     PAState.currentReportId = null;
     PAState.currentProgramId = null;
+    PAState.currentProgramDates = { start: '', end: '' };
     
     document.getElementById('paImagePreview').innerHTML = '';
     document.getElementById('paUploadProgress').innerHTML = '';
@@ -297,45 +299,38 @@ function resetForm() {
     if (existingDocs) existingDocs.innerHTML = '';
     const newDocs = document.getElementById('paDocumentPreview');
     if (newDocs) newDocs.innerHTML = '';
-    document.getElementById('paBudgetValidation').classList.remove('show');
-    document.getElementById('paImageValidation').classList.remove('show');
-    
-    updateBudgetSummary();
+    document.getElementById('paImageValidation')?.classList.remove('show');
+    document.getElementById('paDocumentValidation')?.classList.remove('show');
+    const docInput = document.getElementById('paDocumentInput');
+    if (docInput) docInput.value = '';
 }
 
-function loadProgramIntoForm(program) {
-    document.getElementById('paProgram').value = program.program_name || '';
-    const categoryEl = document.getElementById('paCategory');
-    if (categoryEl) categoryEl.value = program.category || program.program_type || '';
-    const descEl = document.getElementById('paProgramDescription');
-    if (descEl) descEl.value = program.description || '';
-    const expectedEl = document.getElementById('paExpectedResult');
-    if (expectedEl) expectedEl.value = program.expected_result || '';
-    const indicatorEl = document.getElementById('paPerformanceIndicator');
-    if (indicatorEl) indicatorEl.value = program.performance_indicator || '';
-    document.getElementById('paPersonResponsible').value = program.person_responsible || program.creator || '';
-    const budget = programApprovedBudget(program);
-    document.getElementById('paBudgetAllocated').value = formatCurrency(budget);
-    document.getElementById('paBudgetAllocatedDisplay').textContent = formatCurrency(budget);
-    document.getElementById('paDateStarted').value = formatDate(program.start_date);
-    document.getElementById('paDateCompleted').value = formatDate(program.end_date);
-    
+function currentUploaderName() {
+    return document.getElementById('paForm')?.dataset.uploaderName || '';
+}
+
+function loadProgramIntoForm(program, report) {
+    const programName = document.getElementById('paProgram');
+    if (programName) programName.value = program.program_name || program.title || '';
+    const dateStarted = document.getElementById('paDateStarted');
+    if (dateStarted) dateStarted.value = formatDate(program.start_date);
+    const dateCompleted = document.getElementById('paDateCompleted');
+    if (dateCompleted) dateCompleted.value = formatDate(program.end_date);
+    const statusEl = document.getElementById('paProgramStatus');
+    if (statusEl) statusEl.value = program.status || 'Completed';
+    const uploadedBy = document.getElementById('paUploadedBy');
+    if (uploadedBy) {
+        uploadedBy.value = report?.creator || currentUploaderName() || program.creator || '';
+    }
     PAState.currentProgramId = program.id;
+    PAState.currentProgramDates = {
+        start: program.start_date || '',
+        end: program.end_date || '',
+    };
 }
 
 function loadReportIntoForm(report) {
-    const summary = document.getElementById('paImplementationSummary');
-    if (summary) summary.value = report.implementation_summary || '';
-    const actualResult = document.getElementById('paActualResult');
-    if (actualResult) actualResult.value = report.actual_result || '';
-    const target = document.getElementById('paTargetBeneficiaries');
-    if (target) target.value = report.target_beneficiaries || '';
-    document.getElementById('paParticipantsCount').value = report.participants_count || '';
-    document.getElementById('paActualExpense').value = report.actual_expense || '';
-    document.getElementById('paRemarks').value = report.remarks || '';
-    
     PAState.currentReportId = report.id;
-    
     const reportImages = Array.isArray(report.images) && report.images.length
         ? report.images
         : PAState.images.filter((img) => img.accomplishment_report_id === report.id);
@@ -343,8 +338,6 @@ function loadReportIntoForm(report) {
     PAState.existingDocuments = Array.isArray(report.documents) ? report.documents : [];
     renderExistingImages();
     renderExistingDocuments();
-    
-    updateBudgetSummary();
 }
 
 function renderExistingImages() {
@@ -410,10 +403,15 @@ function removeExistingDocument(index) {
     renderExistingDocuments();
 }
 
-// Budget Calculation
+// Budget Calculation (legacy fields may be absent)
 function updateBudgetSummary() {
-    const budgetAllocatedText = document.getElementById('paBudgetAllocated').value;
-    const actualExpense = parseFloat(document.getElementById('paActualExpense').value) || 0;
+    const budgetAllocatedEl = document.getElementById('paBudgetAllocated');
+    const actualExpenseEl = document.getElementById('paActualExpense');
+    if (!budgetAllocatedEl || !actualExpenseEl) {
+        return true;
+    }
+    const budgetAllocatedText = budgetAllocatedEl.value;
+    const actualExpense = parseFloat(actualExpenseEl.value) || 0;
     
     // Parse budget allocated (remove currency formatting)
     const budgetAllocated = parseFloat(budgetAllocatedText.replace(/[^0-9.-]+/g, '')) || 0;
@@ -444,15 +442,19 @@ function handleImageUpload(files) {
     const maxImages = 50;
     
     const validation = document.getElementById('paImageValidation');
-    validation.classList.remove('show');
-    
-    if (PAState.uploadedImages.length + files.length > maxImages) {
-        validation.textContent = `Maximum ${maxImages} images allowed`;
-        validation.classList.add('show');
+    if (validation) validation.classList.remove('show');
+
+    const incoming = Array.from(files || []);
+    const currentCount = PAState.uploadedImages.length + PAState.existingImages.length;
+    if (currentCount + incoming.length > maxImages) {
+        if (validation) {
+            validation.textContent = `Maximum ${maxImages} images allowed`;
+            validation.classList.add('show');
+        }
         return;
     }
     
-    Array.from(files).forEach(file => {
+    incoming.forEach(file => {
         if (!validTypes.includes(file.type)) {
             validation.textContent = `Invalid file type: ${file.name}. Only JPG, JPEG, PNG, and WEBP are allowed`;
             validation.classList.add('show');
@@ -585,106 +587,40 @@ async function viewReport(reportId) {
         : (report.program || null);
     const reportImages = report.images || [];
     
+    const documents = Array.isArray(report.documents) ? report.documents : [];
+    const wordDoc = documents[0] || null;
+    const wordLink = wordDoc?.public_url
+        ? `<a href="${escapeHtml(wordDoc.public_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(wordDoc.original_name || 'MS Word report')}</a>`
+        : 'No Word file uploaded';
+
     const content = document.getElementById('paViewContent');
     content.innerHTML = `
         <div class="pa-view-section">
-            <h3 class="pa-view-section-title">Program Information</h3>
+            <h3 class="pa-view-section-title">Program Details</h3>
             <div class="pa-view-info-grid">
-                <div class="pa-view-info-item">
-                    <span class="pa-view-info-label">Program</span>
-                    <span class="pa-view-info-value">${program?.program_name || 'N/A'}</span>
-                </div>
-                <div class="pa-view-info-item">
-                    <span class="pa-view-info-label">Barangay</span>
-                    <span class="pa-view-info-value">${program?.barangay || 'N/A'}</span>
-                </div>
-                <div class="pa-view-info-item">
-                    <span class="pa-view-info-label">Program Type</span>
-                    <span class="pa-view-info-value">${program?.program_type || 'N/A'}</span>
-                </div>
-                <div class="pa-view-info-item">
-                    <span class="pa-view-info-label">Committee</span>
-                    <span class="pa-view-info-value">${program?.committee || 'N/A'}</span>
-                </div>
-                <div class="pa-view-info-item">
-                    <span class="pa-view-info-label">Budget Allocated</span>
-                    <span class="pa-view-info-value">${formatCurrency(programApprovedBudget(program, report))}</span>
+                <div class="pa-view-info-item" style="grid-column: 1 / -1;">
+                    <span class="pa-view-info-label">Program Name</span>
+                    <span class="pa-view-info-value">${escapeHtml(program?.program_name || report.title || 'N/A')}</span>
                 </div>
                 <div class="pa-view-info-item">
                     <span class="pa-view-info-label">Date Started</span>
-                    <span class="pa-view-info-value">${formatDate(program?.start_date)}</span>
+                    <span class="pa-view-info-value">${formatDate(program?.start_date || report.actual_implementation_date)}</span>
                 </div>
                 <div class="pa-view-info-item">
                     <span class="pa-view-info-label">Date Completed</span>
-                    <span class="pa-view-info-value">${formatDate(program?.end_date)}</span>
+                    <span class="pa-view-info-value">${formatDate(program?.end_date || report.actual_completion_date)}</span>
                 </div>
                 <div class="pa-view-info-item">
                     <span class="pa-view-info-label">Status</span>
-                    <span class="pa-view-info-value">${program?.status || 'N/A'}</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="pa-view-section">
-            <h3 class="pa-view-section-title">Budget Summary</h3>
-            <div class="pa-budget-summary">
-                <div class="pa-budget-item">
-                    <span class="pa-budget-label">Budget Allocated:</span>
-                    <span class="pa-budget-value">${formatCurrency(programApprovedBudget(program, report))}</span>
-                </div>
-                <div class="pa-budget-item">
-                    <span class="pa-budget-label">Actual Expense:</span>
-                    <span class="pa-budget-value">${formatCurrency(report.actual_expense)}</span>
-                </div>
-                <div class="pa-budget-item pa-budget-item-highlight">
-                    <span class="pa-budget-label">Remaining Budget:</span>
-                    <span class="pa-budget-value">${formatCurrency(remainingBudgetAmount(program, report, report.actual_expense))}</span>
-                </div>
-                <div class="pa-budget-item">
-                    <span class="pa-budget-label">Budget Utilization:</span>
-                    <span class="pa-budget-value">${report.budget_utilization_percent?.toFixed(1) || 0}%</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="pa-view-section">
-            <h3 class="pa-view-section-title">Report Information</h3>
-            <div class="pa-view-info-grid">
-                <div class="pa-view-info-item" style="grid-column: 1 / -1;">
-                    <span class="pa-view-info-label">Title</span>
-                    <span class="pa-view-info-value">${report.title || 'N/A'}</span>
-                </div>
-                <div class="pa-view-info-item" style="grid-column: 1 / -1;">
-                    <span class="pa-view-info-label">Description</span>
-                    <span class="pa-view-text">${report.description || 'No description provided'}</span>
-                </div>
-                <div class="pa-view-info-item" style="grid-column: 1 / -1;">
-                    <span class="pa-view-info-label">Objectives</span>
-                    <span class="pa-view-text">${report.objectives || 'No objectives specified'}</span>
-                </div>
-                <div class="pa-view-info-item" style="grid-column: 1 / -1;">
-                    <span class="pa-view-info-label">Implementation Summary</span>
-                    <span class="pa-view-text">${report.implementation_summary || 'No implementation summary provided'}</span>
-                </div>
-                <div class="pa-view-info-item" style="grid-column: 1 / -1;">
-                    <span class="pa-view-info-label">Lessons Learned</span>
-                    <span class="pa-view-text">${report.lessons_learned || 'No lessons learned recorded'}</span>
-                </div>
-                <div class="pa-view-info-item" style="grid-column: 1 / -1;">
-                    <span class="pa-view-info-label">Recommendations</span>
-                    <span class="pa-view-text">${report.recommendations || 'No recommendations provided'}</span>
+                    <span class="pa-view-info-value">${escapeHtml(program?.status || 'Completed')}</span>
                 </div>
                 <div class="pa-view-info-item">
-                    <span class="pa-view-info-label">Participants Count</span>
-                    <span class="pa-view-info-value">${report.participants_count || 0}</span>
-                </div>
-                <div class="pa-view-info-item">
-                    <span class="pa-view-info-label">Actual Expense</span>
-                    <span class="pa-view-info-value">${formatCurrency(report.actual_expense)}</span>
+                    <span class="pa-view-info-label">Uploaded by</span>
+                    <span class="pa-view-info-value">${escapeHtml(report.creator || currentUploaderName() || 'N/A')}</span>
                 </div>
                 <div class="pa-view-info-item" style="grid-column: 1 / -1;">
-                    <span class="pa-view-info-label">Remarks</span>
-                    <span class="pa-view-text">${report.remarks || 'No remarks'}</span>
+                    <span class="pa-view-info-label">MS Word Report</span>
+                    <span class="pa-view-info-value">${wordLink}</span>
                 </div>
             </div>
         </div>
@@ -695,7 +631,7 @@ async function viewReport(reportId) {
                 <div class="pa-gallery">
                     ${reportImages.map((img, index) => `
                         <div class="pa-gallery-item" data-index="${index}">
-                            <img src="${img.secure_url}" alt="Program photo" loading="lazy">
+                            <img src="${escapeHtml(img.secure_url || img.image_url)}" alt="Program photo" loading="lazy">
                         </div>
                     `).join('')}
                 </div>
@@ -769,42 +705,81 @@ function syncPaDeleteConfirm() {
     confirmBtn.classList.toggle('is-enabled', matched);
 }
 
-// Form Validation
+function showDocValidation(message) {
+    const el = document.getElementById('paDocumentValidation');
+    if (!el) return;
+    if (!message) {
+        el.classList.remove('show');
+        el.textContent = '';
+        return;
+    }
+    el.textContent = message;
+    el.classList.add('show');
+}
+
+function isWordFile(file) {
+    const name = (file?.name || '').toLowerCase();
+    const type = file?.type || '';
+    return name.endsWith('.doc')
+        || name.endsWith('.docx')
+        || type === 'application/msword'
+        || type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+}
+
+function handleWordUpload(file) {
+    showDocValidation('');
+    const input = document.getElementById('paDocumentInput');
+    if (!file) {
+        PAState.uploadedDocuments = [];
+        const preview = document.getElementById('paDocumentPreview');
+        if (preview) preview.innerHTML = '';
+        return;
+    }
+    if (!isWordFile(file)) {
+        showDocValidation('Please upload 1 MS Word file (.doc or .docx).');
+        if (input) input.value = '';
+        PAState.uploadedDocuments = [];
+        return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+        showDocValidation('Word file is too large. Maximum size is 10MB.');
+        if (input) input.value = '';
+        PAState.uploadedDocuments = [];
+        return;
+    }
+
+    PAState.existingDocuments.forEach((doc) => {
+        if (doc?.id) PAState.deletedDocumentIds.push(doc.id);
+    });
+    PAState.existingDocuments = [];
+    renderExistingDocuments();
+
+    PAState.uploadedDocuments = [{ file, document_type: 'report' }];
+    const preview = document.getElementById('paDocumentPreview');
+    if (preview) {
+        preview.innerHTML = `<div class="pa-doc-row"><span>${escapeHtml(file.name)}</span></div>`;
+    }
+}
+
 function validateForm(requireComplete) {
-    const implementationSummary = document.getElementById('paImplementationSummary').value.trim();
-    const actualExpense = document.getElementById('paActualExpense').value;
-    
-    const validation = document.getElementById('paImageValidation');
-    
-    if (requireComplete && !implementationSummary) {
-        validation.textContent = 'Accomplishment summary is required';
-        validation.classList.add('show');
+    const imageValidation = document.getElementById('paImageValidation');
+    if (imageValidation) imageValidation.classList.remove('show');
+    showDocValidation('');
+
+    const hasWord = PAState.uploadedDocuments.length > 0 || PAState.existingDocuments.length > 0;
+    if (requireComplete && !hasWord) {
+        showDocValidation('Please upload 1 MS Word report (.doc or .docx).');
         return false;
     }
-    
-    if (requireComplete && (actualExpense === '' || Number(actualExpense) < 0)) {
-        validation.textContent = 'Valid actual expenditure is required';
-        validation.classList.add('show');
-        return false;
-    }
-    
-    if (!updateBudgetSummary()) {
-        return false;
-    }
-    
-    if (requireComplete && PAState.uploadedImages.length === 0 && PAState.existingImages.length === 0) {
-        validation.textContent = 'At least one proof image is required to submit';
-        validation.classList.add('show');
-        return false;
-    }
-    
+
     if (PAState.uploadedImages.length + PAState.existingImages.length > 50) {
-        validation.textContent = 'Maximum 50 images allowed';
-        validation.classList.add('show');
+        if (imageValidation) {
+            imageValidation.textContent = 'Maximum 50 images allowed';
+            imageValidation.classList.add('show');
+        }
         return false;
     }
-    
-    validation.classList.remove('show');
+
     return true;
 }
 
@@ -889,7 +864,7 @@ function initializeEventListeners() {
                         || PAState.programs.find((p) => p.accomplishment_report_id === report.id)
                         || report.program;
                     if (program) {
-                        loadProgramIntoForm(program);
+                        loadProgramIntoForm(program, report);
                     }
                     loadReportIntoForm(report);
                     document.getElementById('paModalTitle').textContent = 'Edit Accomplishment Report';
@@ -938,18 +913,7 @@ function initializeEventListeners() {
     const documentInput = document.getElementById('paDocumentInput');
     if (documentInput) {
         documentInput.addEventListener('change', (e) => {
-            PAState.uploadedDocuments = Array.from(e.target.files || []).map((file) => ({
-                file,
-                document_type: 'other',
-            }));
-            const preview = document.getElementById('paDocumentPreview');
-            if (preview) {
-                preview.innerHTML = PAState.uploadedDocuments.map((doc) => `
-                    <div class="pa-doc-row">
-                        <span>${escapeHtml(doc.file.name)}</span>
-                    </div>
-                `).join('');
-            }
+            handleWordUpload(e.target.files?.[0] || null);
         });
     }
     
@@ -1039,7 +1003,7 @@ function initializeEventListeners() {
     }
     
     // Budget calculation
-    document.getElementById('paActualExpense').addEventListener('input', updateBudgetSummary);
+    document.getElementById('paActualExpense')?.addEventListener('input', updateBudgetSummary);
     
     // Filters
     document.getElementById('paSearch').addEventListener('input', (e) => {
@@ -1173,12 +1137,14 @@ async function saveReport() {
     const formData = new FormData();
     formData.append('program_id', PAState.currentProgramId);
     formData.append('title', document.getElementById('paProgram').value.trim());
-    formData.append('implementation_summary', document.getElementById('paImplementationSummary').value.trim());
-    formData.append('actual_result', document.getElementById('paActualResult')?.value.trim() || '');
-    formData.append('target_beneficiaries', document.getElementById('paTargetBeneficiaries')?.value || '');
-    formData.append('participants_count', document.getElementById('paParticipantsCount').value || '0');
-    formData.append('actual_expense', document.getElementById('paActualExpense').value || '0');
-    formData.append('remarks', document.getElementById('paRemarks').value.trim());
+    const startDate = String(PAState.currentProgramDates.start || '').slice(0, 10);
+    const endDate = String(PAState.currentProgramDates.end || '').slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+        formData.append('actual_implementation_date', startDate);
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+        formData.append('actual_completion_date', endDate);
+    }
     
     PAState.uploadedImages.forEach((img, index) => {
         if (img.file) {
@@ -1189,7 +1155,7 @@ async function saveReport() {
 
     PAState.uploadedDocuments.forEach((doc, index) => {
         formData.append(`documents[${index}]`, doc.file);
-        formData.append(`document_types[${index}]`, doc.document_type || 'other');
+        formData.append(`document_types[${index}]`, doc.document_type || 'report');
     });
 
     if (PAState.currentMode !== 'create') {
@@ -1238,11 +1204,18 @@ async function saveReport() {
         
         if (!response.ok) {
             if (result.errors) {
-                // Display validation errors
-                const validation = document.getElementById('paImageValidation');
                 const errorMessages = Object.values(result.errors).flat();
-                validation.textContent = errorMessages.join(', ');
-                validation.classList.add('show');
+                const message = errorMessages.join(', ');
+                const isDocumentError = Object.keys(result.errors).some((key) => String(key).startsWith('documents'));
+                if (isDocumentError) {
+                    showDocValidation(message);
+                } else {
+                    const validation = document.getElementById('paImageValidation');
+                    if (validation) {
+                        validation.textContent = message;
+                        validation.classList.add('show');
+                    }
+                }
             } else {
                 throw new Error(result.error || 'Failed to save report');
             }
@@ -1371,7 +1344,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 PAState.currentMode = 'edit';
                 resetForm();
                 const program = PAState.programs.find((p) => p.id === report.program_id);
-                if (program) loadProgramIntoForm(program);
+                if (program) loadProgramIntoForm(program, report);
                 loadReportIntoForm(report);
                 document.getElementById('paModalTitle').textContent = 'Edit Program Accomplishment';
                 openModal('paModal');

@@ -105,6 +105,13 @@ function closeProfileDropdown() {
 }
 
 // ── Sidebar toggle ──────────────────────────────────────────────────────────
+function isDesktopNav() {
+    if (window.SidebarFunctions && typeof window.SidebarFunctions.isDesktopNav === 'function') {
+        return window.SidebarFunctions.isDesktopNav();
+    }
+    return window.matchMedia('(min-width: 769px)').matches;
+}
+
 function responsiveToggleSidebar() {
     const sidebar      = document.getElementById('mainSidebar');
     const toggle       = document.getElementById('sidebarToggle');
@@ -112,21 +119,25 @@ function responsiveToggleSidebar() {
 
     if (!sidebar || !toggle) return;
 
-    if (window.innerWidth <= 768) {
-        // Mobile: slide in/out
+    if (!isDesktopNav()) {
         const isOpen = sidebar.classList.contains('open');
+        if (window.SidebarFunctions && typeof window.SidebarFunctions.closeMobileSidebar === 'function' && isOpen) {
+            window.SidebarFunctions.closeMobileSidebar();
+            return;
+        }
         if (isOpen) {
             sidebar.classList.remove('open');
             toggle.classList.remove('active');
+            document.body.classList.remove('sidebar-open');
             if (overlay) overlay.classList.remove('show');
         } else {
             sidebar.classList.add('open');
             toggle.classList.add('active');
+            document.body.classList.add('sidebar-open');
             if (!overlay) overlay = createOverlay();
             overlay.classList.add('show');
         }
     } else {
-        // Desktop: collapse / expand permanently
         const isCollapsed = sidebar.classList.contains('collapsed');
         const mainContent = document.querySelector('.main-content');
 
@@ -144,13 +155,14 @@ function responsiveToggleSidebar() {
             toggle.classList.remove('active');
         }
         if (overlay) overlay.classList.remove('show');
+        document.body.classList.remove('sidebar-open');
     }
 }
 
 function syncToggleState() {
     const sidebar = document.getElementById('mainSidebar');
     const toggle  = document.getElementById('sidebarToggle');
-    if (!sidebar || !toggle || window.innerWidth <= 768) return;
+    if (!sidebar || !toggle || !isDesktopNav()) return;
 
     if (sidebar.classList.contains('collapsed')) {
         toggle.classList.remove('active');
@@ -167,6 +179,7 @@ function createOverlay() {
         const toggle  = document.getElementById('sidebarToggle');
         if (sidebar) sidebar.classList.remove('open');
         if (toggle)  toggle.classList.remove('active');
+        document.body.classList.remove('sidebar-open');
         overlay.classList.remove('show');
     });
     document.body.appendChild(overlay);
@@ -407,9 +420,10 @@ function handleLogout() {
 window.addEventListener('resize', function () {
     const sidebar  = document.getElementById('mainSidebar');
     const overlay  = document.querySelector('.sidebar-overlay');
-    if (window.innerWidth > 768) {
+    if (isDesktopNav()) {
         if (overlay)  overlay.classList.remove('show');
         if (sidebar)  sidebar.classList.remove('open');
+        document.body.classList.remove('sidebar-open');
         syncToggleState();
     }
 });

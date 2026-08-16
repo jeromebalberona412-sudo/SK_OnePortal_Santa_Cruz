@@ -1,7 +1,7 @@
 /* Fixed table pagination footer — aligns with sidebar width */
 :root {
-    --table-footer-sidebar-width: 260px;
-    --table-footer-sidebar-collapsed-width: 80px;
+    --table-footer-sidebar-width: var(--sk-sidebar-width, 260px);
+    --table-footer-sidebar-collapsed-width: var(--sk-sidebar-collapsed-width, 80px);
     --table-footer-height: 34px;
 }
 

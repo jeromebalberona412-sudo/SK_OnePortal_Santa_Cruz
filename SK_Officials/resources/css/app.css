@@ -1,12 +1,12 @@
 /* Main content margin adjustment for sidebar */
 @media (min-width: 769px) {
     .main-content {
-        margin-left: 80px;
+        margin-left: var(--sk-sidebar-collapsed-width, 80px);
         transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .main-content:not(.sidebar-collapsed) {
-        margin-left: 260px;
+        margin-left: var(--sk-sidebar-width, 260px);
     }
 }
 

@@ -111,6 +111,7 @@ class ProgramAccomplishmentReport extends Model
             self::STATUS_SUBMITTED,
             self::STATUS_UNPUBLISHED,
             self::STATUS_REJECTED,
+            self::STATUS_PUBLISHED,
         ], true);
     }
 
