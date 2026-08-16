@@ -40,10 +40,6 @@
     async function performLogout() {
         closeKabataanLogoutModal();
 
-        if (typeof showLoading === 'function') {
-            showLoading('Logging out');
-        }
-
         const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         const logoutUrl = logoutForm?.getAttribute('action') || '/logout';
 

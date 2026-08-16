@@ -62,3 +62,14 @@ it('parses a comma used as the decimal separator in pdf amounts', function () {
     expect($normalizer->parseAmount('20,000,00'))->toBe('20000.00')
         ->and($normalizer->parseAmount('28,398.93'))->toBe('28398.93');
 });
+
+it('collapses duplicated mooe and total amount stacks', function () {
+    $normalizer = new AbyipNumericNormalizer;
+
+    expect($normalizer->normalizeBudgetAmountList(
+        ['12000.00', '150000.00', '13000.00', '12000.00', '150000.00', '13000.00'],
+        3
+    ))->toBe(['12000.00', '150000.00', '13000.00'])
+        ->and($normalizer->normalizeBudgetAmountList(['60000.00', '60000.00'], 3))
+        ->toBe(['60000.00']);
+});

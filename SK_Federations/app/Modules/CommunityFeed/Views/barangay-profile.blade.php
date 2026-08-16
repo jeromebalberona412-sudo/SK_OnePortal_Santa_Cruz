@@ -10,13 +10,6 @@
     <link rel="stylesheet" href="{{ url('/modules/community-feed/css/community-feed.css') }}?v={{ $communityFeedCssVersion }}">
 @endpush
 
-@push('navbar-center')
-    <div class="navbar-search">
-            <i class="fas fa-search search-icon"></i>
-            <input type="text" placeholder="Search..." aria-label="Search">
-        </div>
-@endpush
-
 @section('content')
 <div class="bfp-wrap">
 
@@ -27,7 +20,6 @@
 
             {{-- HEADER CARD --}}
             <div class="bfp-header-card">
-                <div class="bfp-cover"></div>
                 <div class="bfp-info-row">
                     <div class="bfp-avatar-wrap">
                         <div class="bfp-avatar">
@@ -39,14 +31,8 @@
                         </div>
                     </div>
                     <div class="bfp-meta">
-                        <div class="bfp-badge"><i class="fas fa-check-circle" style="font-size:10px;"></i> Sangguniang Kabataan</div>
                         <h1 class="bfp-name">SK Barangay {{ $name }}</h1>
                         <p class="bfp-loc"><i class="fas fa-map-marker-alt" style="color:#213F99;margin-right:4px;"></i>Barangay {{ $name }}, Santa Cruz, Laguna</p>
-                        <div class="bfp-stats">
-                            <div class="bfp-stat"><strong>{{ count($posts) }}</strong><span>Posts</span></div>
-                            <div class="bfp-stat"><strong>{{ count($officials) }}</strong><span>Officers</span></div>
-                            <div class="bfp-stat"><strong>2023–2026</strong><span>SK Term</span></div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -74,27 +60,6 @@
                             No SK officials found for this barangay.
                         </div>
                         @endforelse
-                    </div>
-
-                    {{-- Barangay Info --}}
-                    <div class="bfp-card">
-                        <div class="bfp-card-title"><i class="fas fa-info-circle"></i> Barangay Information</div>
-                        @foreach([['Barangay',$name],['Municipality','Santa Cruz'],['Province','Laguna'],['Region','Region IV-A (CALABARZON)'],['SK Term','2023 – 2026'],['Total Officers',count($officials)]] as $row)
-                        <div class="bfp-contact-row">
-                            <div><p class="bfp-contact-label">{{ $row[0] }}</p><p class="bfp-contact-value">{{ $row[1] }}</p></div>
-                        </div>
-                        @endforeach
-                    </div>
-
-                    {{-- Contact --}}
-                    <div class="bfp-card">
-                        <div class="bfp-card-title"><i class="fas fa-phone"></i> Contact Information</div>
-                        @foreach([['fas fa-phone','Phone','[SK Contact Number]'],['fas fa-envelope','Email','[SK Email Address]'],['fas fa-map-marker-alt','Office Address','Barangay '.$name.' Hall, Santa Cruz, Laguna'],['fas fa-clock','Office Hours','Mon–Fri, 8:00 AM – 5:00 PM']] as $row)
-                        <div class="bfp-contact-row">
-                            <div class="bfp-contact-icon"><i class="{{ $row[0] }}"></i></div>
-                            <div><p class="bfp-contact-label">{{ $row[1] }}</p><p class="bfp-contact-value">{{ $row[2] }}</p></div>
-                        </div>
-                        @endforeach
                     </div>
 
                 </div>

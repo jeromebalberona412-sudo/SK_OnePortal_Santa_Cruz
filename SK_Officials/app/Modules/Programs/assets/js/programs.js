@@ -201,10 +201,6 @@ function initializeProgramsUI() {
                             <button type="button" class="program-action-btn edit-btn" data-action="edit" data-index="${sourceIndex}">
                                 Edit
                             </button>
-                            ${p.status === 'completed' && p.can_create_accomplishment ? `
-                            <button type="button" class="program-action-btn" data-action="create-accomplishment" data-index="${sourceIndex}">
-                                Create Accomplishment
-                            </button>` : ''}
                             ${p.status === 'completed' && p.accomplishment_report_id ? `
                             <button type="button" class="program-action-btn" data-action="view-accomplishment" data-index="${sourceIndex}">
                                 View Accomplishment
@@ -304,25 +300,6 @@ function initializeProgramsUI() {
                 resetModalMaximize(viewModal);
                 if (viewModal) viewModal.style.display = 'flex';
 
-            } else if (action === 'create-accomplishment') {
-                if (program.status !== 'completed') {
-                    showProgramToast('Accomplishments can only be created for completed programs.', 'error');
-                    return;
-                }
-                try {
-                    const prepared = await apiFetch('/api/program-accomplishment/prepare-from-catalog', {
-                        method: 'POST',
-                        body: { abyip_program_id: program.id },
-                    });
-                    const scheduleId = prepared.data?.schedule_program_id;
-                    if (prepared.data?.accomplishment_report_id) {
-                        window.location.href = `/program-accomplishment?edit=${prepared.data.accomplishment_report_id}`;
-                    } else if (scheduleId) {
-                        window.location.href = `/program-accomplishment?program_id=${scheduleId}`;
-                    }
-                } catch (error) {
-                    showProgramToast(error.message || 'Unable to create accomplishment.', 'error');
-                }
             } else if (action === 'view-accomplishment' && program.accomplishment_report_id) {
                 window.location.href = `/program-accomplishment?program_id=${program.schedule_program_id || ''}`;
             } else if (action === 'edit-accomplishment' && program.accomplishment_report_id) {

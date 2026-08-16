@@ -976,7 +976,8 @@ body.sk-fed-feed .main-content,
     padding: 12px; font-size: 14px; font-family: inherit;
     color: #333; resize: vertical; outline: none;
     transition: border-color 0.2s; box-sizing: border-box;
-    min-height: 120px; max-height: 50vh;
+    min-height: 120px; max-height: 220px;
+    flex: none;
 }
 .compose-textarea:focus { border-color: var(--fed-blue); }
 .compose-char-row { display: flex; justify-content: flex-end; margin-top: 6px; }
@@ -991,9 +992,32 @@ body.sk-fed-feed .main-content,
 .compose-preview-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .compose-preview-remove { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border: none; border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; cursor: pointer; font-size: 16px; line-height: 1; }
 .compose-modal-container { max-width: 560px; transition: all 0.25s ease; }
-.compose-modal.compose-maximized .compose-modal-container { max-width: min(960px, 96vw); width: 96vw; height: 92vh; display: flex; flex-direction: column; }
-.compose-modal.compose-maximized .modal-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
-.compose-modal.compose-maximized .compose-textarea { min-height: 40vh; flex: 1; }
+.compose-modal.compose-maximized {
+    align-items: stretch;
+    justify-content: stretch;
+}
+.compose-modal.compose-maximized .compose-modal-container {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    animation: none;
+}
+.compose-modal.compose-maximized .modal-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+.compose-modal.compose-maximized .compose-textarea {
+    min-height: 120px;
+    max-height: 220px;
+    flex: none;
+}
 .compose-modal .modal-header {
     background: var(--fed-grad);
     border-bottom: none;
@@ -1010,6 +1034,9 @@ body.sk-fed-feed .main-content,
     display: inline-flex; align-items: center; justify-content: center;
 }
 .compose-window-btn:hover { background: rgba(255,255,255,0.18); }
+.compose-win-icon-restore { display: none; }
+.compose-modal.compose-maximized .compose-win-icon-max { display: none; }
+.compose-modal.compose-maximized .compose-win-icon-restore { display: block; }
 .compose-modal .modal-close { background: rgba(255,255,255,0.15); }
 .compose-modal .modal-close svg { color: #fff; }
 .compose-modal .modal-close:hover { background: rgba(255,255,255,0.28); }
@@ -1426,9 +1453,8 @@ body.sk-fed-feed .main-content,
 /* ── BARANGAY SK PROFILE PAGE ── */
 .bfp-wrap { padding: 8px 4px 24px; }
 .bfp-header-card { background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(33,63,153,.10);margin-bottom:24px; }
-.bfp-cover { height:160px;background:linear-gradient(135deg,#213F99 0%,#4a6fd4 100%);position:relative;overflow:hidden;border-bottom:3px solid #213F99; }
-.bfp-info-row { padding:0 28px 22px;display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap; }
-.bfp-avatar-wrap { margin-top:-50px;flex-shrink:0; }
+.bfp-info-row { padding:22px 28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap; }
+.bfp-avatar-wrap { flex-shrink:0; }
 .bfp-avatar, .bfp-avatar-img {
     width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#213F99,#4a6fd4);
     border:4px solid #fff;display:flex;align-items:center;justify-content:center;
@@ -1482,7 +1508,7 @@ body.sk-fed-feed .main-content,
 .bfp-contact-label { font-size:11px;color:#94a3b8;margin:0; }
 .bfp-contact-value { font-size:13px;font-weight:600;color:#1e293b;margin:2px 0 0; }
 @media (max-width:1024px) { .bfp-grid { grid-template-columns:1fr; } }
-@media (max-width:640px) { .bfp-wrap{padding:8px 0 16px;} .bfp-info-row{padding:0 16px 18px;} }
+@media (max-width:640px) { .bfp-wrap{padding:8px 0 16px;} .bfp-info-row{padding:16px;} }
 
 @media (max-width: 768px) {
     .feed-header { flex-direction: column; align-items: stretch; }
@@ -1494,4 +1520,23 @@ body.sk-fed-feed .main-content,
     .post-media-grid.grid-3 { grid-template-rows: repeat(2, minmax(70px, 110px)); }
     .post-media-grid.grid-4,
     .post-media-grid.grid-4-plus { grid-template-rows: repeat(2, minmax(80px, 120px)); }
+    .compose-modal .modal-container {
+        width: min(100%, 96vw);
+        max-height: 90dvh;
+    }
+    .compose-modal.compose-maximized .compose-modal-container {
+        width: 100%;
+        height: 100%;
+        max-height: none;
+        border-radius: 0;
+    }
+}
+
+@media (hover: none), (pointer: coarse) {
+    .reaction-wrap.is-open { z-index: 20; }
+    .reaction-option {
+        width: 44px;
+        height: 44px;
+        font-size: 24px;
+    }
 }

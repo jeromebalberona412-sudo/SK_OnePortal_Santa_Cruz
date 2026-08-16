@@ -333,6 +333,15 @@ function bindReactionWrap(wrap) {
         e.preventDefault();
         e.stopPropagation();
         if (didLongPress) { didLongPress = false; return; }
+        if (isTouch()) {
+            if (!wrap.classList.contains('is-open')) {
+                open();
+                return;
+            }
+            wrap.classList.remove('is-open');
+            apply(btn.dataset.type || 'like');
+            return;
+        }
         wrap.classList.remove('is-open');
         apply(btn.dataset.type || 'like');
     });

@@ -645,13 +645,12 @@ class AbyipService
             );
         }
 
+        $youthFromBlocks = $this->parseYouthProgramBlocksFromText($extractedText);
         $youthFromLines = $this->buildYouthProgramsFromLineItems($lineItems);
-        if ($youthFromLines === []) {
-            $youthFromLines = $this->parseYouthProgramBlocksFromText($extractedText);
-        }
 
-        $parsed['sk_youth_development_and_empowerment_programs'] = $this->mergeYouthProgramLists(
+        $parsed['sk_youth_development_and_empowerment_programs'] = $this->selectYouthProgramSource(
             $youthStructured,
+            $youthFromBlocks,
             $youthFromLines
         );
 
@@ -693,6 +692,65 @@ class AbyipService
         ksort($merged);
 
         return array_values($merged);
+    }
+
+    /**
+     * Prefer the youth parse that actually recovered program names, activities,
+     * and budgets from the uploaded document. Do not merge sources by letter
+     * index — that is how activities and amounts get assigned to the wrong
+     * program.
+     *
+     * @param  list<array<string, mixed>>  $structured
+     * @param  list<array<string, mixed>>  $blocks
+     * @param  list<array<string, mixed>>  $lineItems
+     * @return list<array<string, mixed>>
+     */
+    protected function selectYouthProgramSource(array $structured, array $blocks, array $lineItems): array
+    {
+        $best = [];
+        $bestScore = -1;
+
+        foreach ([$structured, $blocks, $lineItems] as $candidate) {
+            $score = $this->scoreYouthPrograms($candidate);
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $best = $candidate;
+            }
+        }
+
+        return $best;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $programs
+     */
+    protected function scoreYouthPrograms(array $programs): int
+    {
+        $score = 0;
+
+        foreach ($programs as $program) {
+            $name = $this->stripProgramLetterPrefix((string) ($program['name'] ?? $program['label'] ?? ''));
+            if ($name !== '' && ! preg_match('/^[A-J]$/i', $name) && mb_strlen($name) > 3) {
+                $score += 10;
+            }
+
+            foreach ($program['activities'] ?? [] as $activity) {
+                $activityName = trim((string) ($activity['ppa_name'] ?? ''));
+                if ($activityName !== '') {
+                    $score += 5;
+                }
+
+                if (
+                    (float) $this->normalizer->numericAmount($activity['budget_mooe'] ?? 0) > 0
+                    || (float) $this->normalizer->numericAmount($activity['budget_co'] ?? 0) > 0
+                    || (float) $this->normalizer->numericAmount($activity['budget_total'] ?? 0) > 0
+                ) {
+                    $score += 3;
+                }
+            }
+        }
+
+        return $score;
     }
 
     /**
@@ -1339,51 +1397,63 @@ class AbyipService
                 continue;
             }
 
-            $grouped = (string) ($fields['GROUPED'] ?? '') === '1';
-            $activity = $this->buildYouthActivityRecord(
-                $ppas,
-                $shared,
-                $grouped ? null : ($fields['MOOE'] ?? null),
-                $grouped ? null : ($fields['CO'] ?? null),
-                $grouped ? null : ($fields['TOTAL'] ?? null),
-            );
-            $activity['source_text'] = $shared['source_text'];
-            $activity['page_number'] = $shared['page_number'];
-            $activity['implementation_start'] = $periodDates['start'];
-            $activity['implementation_end'] = $periodDates['end'];
-            $activity['program_name'] = $shared['program_name'];
-            $activity['category'] = $shared['category'];
-            $activity['activity_name'] = $activity['ppa_name'];
-            $activity['grouped_budget'] = $grouped;
-
-            if ($grouped) {
-                $ownerAmount = $fields['INCLUDED'] ?? null;
-                if ($ownerAmount === null || trim((string) $ownerAmount) === '') {
-                    foreach (array_reverse($programs[$letter]['activities']) as $previous) {
-                        if (! ($previous['grouped_budget'] ?? false)) {
-                            $ownerAmount = $previous['budget_mooe'] ?? $previous['budget_total'] ?? null;
-                            break;
-                        }
-                    }
-                }
-
-                $activity['budget_mooe'] = null;
-                $activity['budget_co'] = null;
-                $activity['budget_total'] = null;
-                $activity['validation_status'] = 'valid';
-                $activity['validation_message'] = $this->includedInNote($ownerAmount);
-                $activity['manual_review_required'] = false;
-            } else {
-                $budget = $this->budgetValidator->validate($activity);
-                $activity['validation_status'] = $budget['validation_status'];
-                $activity['validation_message'] = $budget['validation_message'];
-                $activity['manual_review_required'] = $budget['manual_review_required'];
+            $activityNames = $this->extractBulletActivitiesFromText($ppas);
+            if ($activityNames === []) {
+                $activityNames = [$this->normalizeActivityName($ppas)];
             }
 
-            $programs[$letter]['activities'][] = $activity;
-            $programs[$letter]['budget_mooe'] += (float) ($activity['budget_mooe'] ?? 0);
-            $programs[$letter]['budget_co'] += (float) ($activity['budget_co'] ?? 0);
-            $programs[$letter]['budget_total'] += (float) ($activity['budget_total'] ?? 0);
+            $grouped = (string) ($fields['GROUPED'] ?? '') === '1';
+            $mooe = $grouped ? null : ($fields['MOOE'] ?? null);
+            $co = $grouped ? null : ($fields['CO'] ?? null);
+            $total = $grouped ? null : ($fields['TOTAL'] ?? null);
+
+            foreach ($activityNames as $activityIndex => $activityName) {
+                $isGrouped = $grouped || $activityIndex > 0;
+                $activity = $this->buildYouthActivityRecord(
+                    $activityName,
+                    $shared,
+                    $isGrouped ? null : $mooe,
+                    $isGrouped ? null : $co,
+                    $isGrouped ? null : $total,
+                );
+                $activity['source_text'] = $shared['source_text'];
+                $activity['page_number'] = $shared['page_number'];
+                $activity['implementation_start'] = $periodDates['start'];
+                $activity['implementation_end'] = $periodDates['end'];
+                $activity['program_name'] = $shared['program_name'];
+                $activity['category'] = $shared['category'];
+                $activity['activity_name'] = $activity['ppa_name'];
+                $activity['grouped_budget'] = $isGrouped;
+
+                if ($isGrouped) {
+                    $ownerAmount = $fields['INCLUDED'] ?? $mooe ?? $total;
+                    if ($ownerAmount === null || trim((string) $ownerAmount) === '') {
+                        foreach (array_reverse($programs[$letter]['activities']) as $previous) {
+                            if (! ($previous['grouped_budget'] ?? false)) {
+                                $ownerAmount = $previous['budget_mooe'] ?? $previous['budget_total'] ?? null;
+                                break;
+                            }
+                        }
+                    }
+
+                    $activity['budget_mooe'] = null;
+                    $activity['budget_co'] = null;
+                    $activity['budget_total'] = null;
+                    $activity['validation_status'] = 'valid';
+                    $activity['validation_message'] = $this->includedInNote($ownerAmount);
+                    $activity['manual_review_required'] = false;
+                } else {
+                    $budget = $this->budgetValidator->validate($activity);
+                    $activity['validation_status'] = $budget['validation_status'];
+                    $activity['validation_message'] = $budget['validation_message'];
+                    $activity['manual_review_required'] = $budget['manual_review_required'];
+                }
+
+                $programs[$letter]['activities'][] = $activity;
+                $programs[$letter]['budget_mooe'] += (float) ($activity['budget_mooe'] ?? 0);
+                $programs[$letter]['budget_co'] += (float) ($activity['budget_co'] ?? 0);
+                $programs[$letter]['budget_total'] += (float) ($activity['budget_total'] ?? 0);
+            }
         }
 
         ksort($programs);
@@ -1608,21 +1678,20 @@ class AbyipService
 
             $amountLines = [];
             $sharedPerson = $program['_meta']['person_responsible'] ?? null;
+            $inThisProgram = false;
 
             foreach ($rawLines as $line) {
-                if ($letter !== '' && preg_match('/^'.$letter.'\.\s/i', $line)) {
-                    continue;
-                }
-
-                if ($letter !== '' && preg_match('/^[A-J]\.\s/i', $line) && ! preg_match('/^'.$letter.'\.\s/i', $line)) {
-                    if ($amountLines !== []) {
+                $headingLetter = $this->youthProgramClassifier->letterFromLabel($line);
+                if ($headingLetter !== null) {
+                    if ($amountLines !== [] && $inThisProgram) {
                         break;
                     }
+                    $inThisProgram = $headingLetter === $letter;
 
                     continue;
                 }
 
-                if ($letter !== '' && ! preg_match('/^[A-J]\.\s/i', $line) && $amountLines === [] && ! $this->budgetExtractor->lineContainsBudgetAmounts($line)) {
+                if (! $inThisProgram) {
                     continue;
                 }
 
@@ -1655,6 +1724,10 @@ class AbyipService
                     $allTotal[] = $extracted['budget_total'];
                 }
             }
+
+            $allMooe = $this->normalizeBudgetAmountList($allMooe, count($activities));
+            $allCo = $this->normalizeBudgetAmountList($allCo, count($activities));
+            $allTotal = $this->normalizeBudgetAmountList($allTotal, count($activities));
 
             $program['budget_mooe'] = 0;
             $program['budget_co'] = 0;
@@ -1829,7 +1902,7 @@ class AbyipService
         $current = [];
 
         foreach ($lines as $line) {
-            if (preg_match('/^([A-J])\.\s/iu', $line)) {
+            if ($this->youthProgramClassifier->isLetterHeading($line)) {
                 if ($current !== []) {
                     $blocks[] = $current;
                 }
@@ -1865,7 +1938,7 @@ class AbyipService
             return null;
         }
 
-        $program = $this->makeYouthProgramShell($letter);
+        $headerName = trim((string) ($headerMatch[2] ?? ''));
         $activityNames = [];
         $descriptionLines = [];
         $expectedLines = [];
@@ -1873,12 +1946,45 @@ class AbyipService
         $periodLines = [];
         $amountLines = [];
         $personLines = [];
-        $phase = 'activities';
+        $phase = 'header';
 
         foreach (array_slice($block, 1) as $line) {
-            if ($this->isBulletActivityLine($line) || $this->isLikelyActivityLine($line, $phase)) {
+            if ($this->youthProgramClassifier->isLetterHeading($line) || preg_match('/^[\-—–]$/u', $line)) {
+                continue;
+            }
+
+            if ($this->isBulletActivityLine($line)) {
                 $activityNames[] = $this->cleanBulletText($line);
                 $phase = 'activities';
+
+                continue;
+            }
+
+            if ($phase === 'header'
+                && ! $this->isPeriodLine($line)
+                && ! $this->isAmountOnlyLine($line)
+                && ! $this->looksLikeDescriptionLine($line)
+                && ! $this->looksLikeExpectedResultLine($line)
+                && ! $this->looksLikePerformanceIndicatorLine($line)
+                && ! $this->isPersonResponsibleLine($line)
+            ) {
+                $headerName = trim($headerName.' '.$line);
+
+                continue;
+            }
+
+            if ($phase === 'activities'
+                && $activityNames !== []
+                && ! $this->looksLikeDescriptionLine($line)
+                && ! $this->looksLikeExpectedResultLine($line)
+                && ! $this->looksLikePerformanceIndicatorLine($line)
+                && ! $this->isPeriodLine($line)
+                && ! $this->isAmountOnlyLine($line)
+                && ! $this->isPersonResponsibleLine($line)
+                && mb_strlen($line) <= 80
+            ) {
+                $last = array_key_last($activityNames);
+                $activityNames[$last] = trim($activityNames[$last].' '.$line);
 
                 continue;
             }
@@ -1897,15 +2003,23 @@ class AbyipService
                 continue;
             }
 
-            if ($this->isPersonResponsibleLine($line)) {
-                $personLines[] = $line;
-                $phase = 'person';
+            if ($phase === 'amounts' || $phase === 'person' || $this->isPersonResponsibleLine($line)) {
+                if (! $this->isAmountOnlyLine($line) && ! $this->isPeriodLine($line)) {
+                    $personLines[] = $line;
+                    $phase = 'person';
+                }
 
                 continue;
             }
 
-            if ($phase === 'activities' && $this->looksLikeDescriptionLine($line)) {
-                $phase = 'description';
+            if ($phase === 'header' || $phase === 'activities') {
+                if ($this->looksLikeDescriptionLine($line)) {
+                    $phase = 'description';
+                } elseif ($this->looksLikeExpectedResultLine($line)) {
+                    $phase = 'expected';
+                } elseif ($this->looksLikePerformanceIndicatorLine($line)) {
+                    $phase = 'performance';
+                }
             } elseif ($phase === 'description' && $this->looksLikeExpectedResultLine($line)) {
                 $phase = 'expected';
             } elseif (in_array($phase, ['description', 'expected'], true) && $this->looksLikePerformanceIndicatorLine($line)) {
@@ -1921,6 +2035,7 @@ class AbyipService
             };
         }
 
+        $program = $this->makeYouthProgramShell($letter, $headerName !== '' ? $headerName : null);
         $mooeAmounts = [];
         $coAmounts = [];
         $totalAmounts = [];
@@ -1947,10 +2062,21 @@ class AbyipService
             }
         }
 
-        $activityCount = max(1, count($activityNames));
+        if ($activityNames === []) {
+            $activityNames[] = $headerName !== '' ? $headerName : null;
+        }
+
+        $activityNames = array_values(array_filter(array_map(
+            fn (?string $name) => $name !== null ? $this->normalizeActivityName($name) : null,
+            $activityNames
+        )));
+
+        $activityCount = count($activityNames);
         $mooeAmounts = $this->normalizeBudgetAmountList($mooeAmounts, $activityCount);
         $coAmounts = $this->normalizeBudgetAmountList($coAmounts, $activityCount);
         $totalAmounts = $this->normalizeBudgetAmountList($totalAmounts, $activityCount);
+        $sharedBudgetCount = max(count($mooeAmounts), count($totalAmounts));
+        $sharedAllocation = $sharedBudgetCount === 1 && $activityCount > 1;
 
         $shared = [
             'description' => $this->joinTextLines($descriptionLines),
@@ -1959,31 +2085,49 @@ class AbyipService
             'period_of_implementation' => $this->joinTextLines($periodLines),
             'person_responsible' => $this->joinTextLines($personLines),
         ];
+        $periodDates = $this->parsePeriodDates($shared['period_of_implementation']);
+        $shared['implementation_start'] = $periodDates['start'];
+        $shared['implementation_end'] = $periodDates['end'];
 
-        if ($activityNames === []) {
-            $program['activities'][] = $this->buildYouthActivityRecord(
-                null,
+        $budgetMismatch = $sharedBudgetCount > 1 && $sharedBudgetCount !== $activityCount;
+
+        foreach ($activityNames as $index => $activityName) {
+            $hasOwnBudget = array_key_exists($index, $mooeAmounts) || array_key_exists($index, $totalAmounts);
+            $grouped = $sharedAllocation && $index > 0;
+            $activity = $this->buildYouthActivityRecord(
+                $activityName,
                 $shared,
-                $mooeAmounts[0] ?? null,
-                $coAmounts[0] ?? null,
-                $totalAmounts[0] ?? null,
+                $grouped ? null : ($mooeAmounts[$index] ?? null),
+                $grouped ? null : ($coAmounts[$index] ?? null),
+                $grouped ? null : ($totalAmounts[$index] ?? ($mooeAmounts[$index] ?? null)),
             );
-        } else {
-            foreach ($activityNames as $index => $activityName) {
-                $program['activities'][] = $this->buildYouthActivityRecord(
-                    $activityName,
-                    $shared,
-                    $mooeAmounts[$index] ?? ($mooeAmounts[0] ?? null),
-                    $coAmounts[$index] ?? ($coAmounts[0] ?? null),
-                    $totalAmounts[$index] ?? ($totalAmounts[0] ?? null),
-                );
-            }
-        }
+            $activity['activity_name'] = $activity['ppa_name'];
+            $activity['grouped_budget'] = $grouped;
 
-        foreach ($program['activities'] as $activity) {
+            if ($grouped) {
+                $activity['validation_status'] = 'valid';
+                $activity['validation_message'] = $this->includedInNote($mooeAmounts[0] ?? $totalAmounts[0] ?? null);
+                $activity['manual_review_required'] = false;
+            } else {
+                $budget = $this->budgetValidator->validate($activity);
+                $activity['validation_status'] = $budget['validation_status'];
+                $activity['validation_message'] = $budget['validation_message'];
+                $activity['manual_review_required'] = $budget['manual_review_required'] || ($budgetMismatch && $hasOwnBudget);
+                if ($budgetMismatch && $hasOwnBudget && $activity['validation_message'] === null) {
+                    $activity['validation_status'] = 'warning';
+                    $activity['validation_message'] = 'Budget row count does not match the number of activities in this program.';
+                }
+            }
+
+            $program['activities'][] = $activity;
             $program['budget_mooe'] += (float) ($activity['budget_mooe'] ?? 0);
             $program['budget_co'] += (float) ($activity['budget_co'] ?? 0);
             $program['budget_total'] += (float) ($activity['budget_total'] ?? 0);
+        }
+
+        $program['_meta'] = $shared;
+        if ($headerName === '' || preg_match('/^[A-J]$/i', $headerName)) {
+            $program['manual_review_required'] = true;
         }
 
         return $program;
@@ -2139,10 +2283,16 @@ class AbyipService
                 $shell['_meta'] = $program['_meta'] ?? [];
 
                 foreach ($existingActivities as $activity) {
+                    if (! empty($activity['grouped_budget'])) {
+                        $shell['activities'][] = $activity;
+                        continue;
+                    }
+
                     $budget = $this->budgetValidator->validate($activity);
                     $activity['validation_status'] = $budget['validation_status'];
-                    $activity['validation_message'] = $budget['validation_message'];
-                    $activity['manual_review_required'] = $budget['manual_review_required'];
+                    $activity['validation_message'] = $activity['validation_message'] ?? $budget['validation_message'];
+                    $activity['manual_review_required'] = $budget['manual_review_required']
+                        || (bool) ($activity['manual_review_required'] ?? false);
                     $shell['activities'][] = $activity;
                     $shell['budget_mooe'] += (float) ($activity['budget_mooe'] ?? 0);
                     $shell['budget_co'] += (float) ($activity['budget_co'] ?? 0);
@@ -2204,9 +2354,9 @@ class AbyipService
                 $shell['activities'][] = $this->buildYouthActivityRecord(
                     $activityName,
                     $sharedMeta,
-                    $mooeList[$index] ?? ($mooeList[0] ?? null),
-                    $coList[$index] ?? ($coList[0] ?? null),
-                    $totalList[$index] ?? ($totalList[0] ?? null),
+                    $mooeList[$index] ?? null,
+                    $coList[$index] ?? null,
+                    $totalList[$index] ?? null,
                 );
             }
 
@@ -2223,7 +2373,7 @@ class AbyipService
 
         ksort($finalized);
 
-        return array_values($finalized);
+        return $this->annotateYouthExtractionIssues(array_values($finalized));
     }
 
     /**
@@ -2243,6 +2393,55 @@ class AbyipService
         }
 
         return array_values(array_unique($normalized));
+    }
+
+    /**
+     * Flag incomplete or suspicious youth extractions for review instead of
+     * silently storing a guessed program/activity/budget relationship.
+     *
+     * @param  list<array<string, mixed>>  $programs
+     * @return list<array<string, mixed>>
+     */
+    protected function annotateYouthExtractionIssues(array $programs): array
+    {
+        foreach ($programs as &$program) {
+            $name = $this->stripProgramLetterPrefix((string) ($program['name'] ?? $program['label'] ?? ''));
+            $letter = strtoupper((string) ($program['letter'] ?? ''));
+            $seenNames = [];
+
+            if ($name === '' || strcasecmp($name, $letter) === 0) {
+                $program['manual_review_required'] = true;
+            }
+
+            foreach ($program['activities'] ?? [] as $index => $activity) {
+                $activityName = trim((string) ($activity['ppa_name'] ?? ''));
+                $key = mb_strtolower($activityName);
+                $needsReview = (bool) ($activity['manual_review_required'] ?? false);
+                $message = $activity['validation_message'] ?? null;
+
+                if ($activityName === '') {
+                    $needsReview = true;
+                    $message = $message ?: 'Activity is missing a name from the source document.';
+                } elseif (isset($seenNames[$key])) {
+                    $needsReview = true;
+                    $message = $message ?: 'Duplicate activity name in this program.';
+                } elseif (preg_match('/[•]/u', $activityName)) {
+                    $needsReview = true;
+                    $message = $message ?: 'Activity appears to contain more than one item from the source list.';
+                }
+
+                $seenNames[$key] = true;
+                $program['activities'][$index]['manual_review_required'] = $needsReview;
+                if ($needsReview) {
+                    $program['activities'][$index]['validation_status'] = $activity['validation_status'] ?? 'warning';
+                    $program['activities'][$index]['validation_message'] = $message;
+                    $program['manual_review_required'] = true;
+                }
+            }
+        }
+        unset($program);
+
+        return $programs;
     }
 
     /**
@@ -2328,7 +2527,7 @@ class AbyipService
         $text = str_replace(['<br>', '<br/>', '<br />'], "\n", $text);
         $activities = [];
 
-        if (preg_match_all('/[\x{2022}\x{25CF}\x{F0B7}\x{2013}\x{2023}\x{00B7}•]\s*([^•\x{2022}\x{25CF}\x{F0B7}]+)/u', $text, $matches)) {
+        if (preg_match_all('/[\x{2022}\x{25CF}\x{F0B7}\x{F0D6}\x{F0A7}\x{2013}\x{2023}\x{00B7}•►]\s*([^•\x{2022}\x{25CF}\x{F0B7}\x{F0D6}]+)/u', $text, $matches)) {
             foreach ($matches[1] as $fragment) {
                 $cleaned = $this->normalizeActivityName($fragment);
                 if ($cleaned !== '') {
@@ -2356,12 +2555,12 @@ class AbyipService
 
     protected function isBulletActivityLine(string $line): bool
     {
-        return preg_match('/^[\x{2022}\x{25CF}\x{F0B7}\x{2013}\x{2023}\x{00B7}•\-]\s*.+/u', $line) === 1;
+        return preg_match('/^[\x{2022}\x{25CF}\x{F0B7}\x{F0D6}\x{F0A7}\x{F0B8}\x{2013}\x{2023}\x{00B7}•►▪▫‣⁃]\s*.+/u', $line) === 1;
     }
 
     protected function cleanBulletText(string $line): string
     {
-        $cleaned = preg_replace('/^[\x{2022}\x{25CF}\x{F0B7}\x{2013}\x{2023}\x{00B7}•\-]\s*/u', '', $line) ?? $line;
+        $cleaned = preg_replace('/^[\x{2022}\x{25CF}\x{F0B7}\x{F0D6}\x{F0A7}\x{F0B8}\x{2013}\x{2023}\x{00B7}•►▪▫‣⁃\-]\s*/u', '', $line) ?? $line;
         $cleaned = preg_replace('/^[A-J]\.\s*/i', '', $cleaned) ?? $cleaned;
 
         return trim(preg_replace('/\s+/u', ' ', $cleaned) ?? $cleaned);
@@ -2429,8 +2628,16 @@ class AbyipService
     protected function joinTextLines(array $lines): ?string
     {
         $joined = trim(implode(' ', array_filter(array_map('trim', $lines))));
+        $joined = trim(preg_replace('/^[\-—–]\s*/u', '', $joined) ?? $joined);
+        $joined = trim(preg_replace('/\s+/u', ' ', $joined) ?? $joined);
 
-        return $joined !== '' ? $joined : null;
+        if ($joined === '') {
+            return null;
+        }
+
+        $deduped = preg_replace('/^(.*)\s+\1$/u', '$1', $joined) ?? $joined;
+
+        return trim($deduped) !== '' ? trim($deduped) : $joined;
     }
 
     protected function canonicalYouthProgramName(?string $letter, ?string $fallback = null): ?string
@@ -2811,7 +3018,6 @@ class AbyipService
         $currentSection = null;
         $currentYouthLetter = null;
         $currentYouthName = null;
-        $nextYouthLetterIndex = 0;
         $currentBudgetColumn = 'mooe';
 
         foreach ($lines as $line) {
@@ -2849,13 +3055,11 @@ class AbyipService
                 break;
             }
 
-            if (preg_match('/^([A-J])\.\s+(.+)$/iu', $line, $matches)) {
-                [$letter, $name] = $this->resolveYouthProgramIdentity(
-                    $matches[1].'. '.$matches[2],
-                    $nextYouthLetterIndex
-                );
+            if ($this->youthProgramClassifier->isLetterHeading($line)) {
+                $letter = $this->extractYouthProgramLetter($line);
+                $name = $this->stripProgramLetterPrefix($line);
                 $currentYouthLetter = $letter;
-                $currentYouthName = $name;
+                $currentYouthName = $name !== '' ? $name : $letter;
                 $lineItems[] = [
                     'row_type' => 'category',
                     'ppa_name' => $line,
@@ -2868,9 +3072,10 @@ class AbyipService
             }
 
             if ($inYouthSection && $this->looksLikeYouthCategoryLine($line)) {
-                [$letter, $name] = $this->resolveYouthProgramIdentity($line, $nextYouthLetterIndex);
+                $letter = $this->extractYouthProgramLetter($line);
+                $name = $this->stripProgramLetterPrefix($line);
                 $currentYouthLetter = $letter;
-                $currentYouthName = $name;
+                $currentYouthName = $name !== '' ? $name : $letter;
                 $lineItems[] = [
                     'row_type' => 'category',
                     'ppa_name' => $line,
@@ -2979,31 +3184,7 @@ class AbyipService
 
     protected function looksLikeYouthCategoryLine(string $line): bool
     {
-        if (preg_match('/^([A-J])\.\s/i', $line)) {
-            return true;
-        }
-
-        $known = [
-            'Equitable Access',
-            'Environmental Protection',
-            'Disaster Risk',
-            'Youth Employment',
-            'Health',
-            'Anti-Drug',
-            'Gender Sensitivity',
-            'Feeding Program',
-            'Sports Development',
-            'Other Programs',
-            'Receipts Program',
-        ];
-
-        foreach ($known as $fragment) {
-            if (stripos($line, $fragment) !== false && ! preg_match('/\d/', $line)) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->youthProgramClassifier->isLetterHeading($line);
     }
 
     /**

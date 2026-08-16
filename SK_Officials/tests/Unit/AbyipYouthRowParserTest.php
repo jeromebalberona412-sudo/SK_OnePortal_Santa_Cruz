@@ -144,3 +144,143 @@ it('keeps a receipts fund row without inventing budget amounts', function () {
         ->and($items[2]['budget_co'])->toBeNull()
         ->and($items[2]['budget_total'])->toBeNull();
 });
+
+it('joins wrapped pdf headings and bullet activities without inventing names', function () {
+    $service = app(AbyipService::class);
+    $method = new ReflectionMethod(AbyipService::class, 'parseYouthProgramBlocksFromText');
+    $method->setAccessible(true);
+
+    $text = <<<'TEXT'
+SK YOUTH DEVELOPMENT AND EMPOWERMENT PROGRAMS
+A. Equitable Access to
+Quality Education
+ Support to ALS and RIC
+ 150 Students for
+Educational Assistance
+ Support to Elementary
+and Daycare
+Provide school supplies to ALS Students
+Increased number of youth enrollee in schools
+Percentage increase in the number of youth enrollee
+January 01, 2026 to
+December 31, 2026
+12,000.00
+150,000.00
+13,000.00
+12,000.00
+150,000.00
+13,000.00
+Sangguniang
+Kabataan
+Council/ALS
+B. Environmental Protection
+ Clean – Up Drive
+ Payroll for Laborer
+ Tree Planting
+Honorarium is given for the proper pay
+January 01, 2026 to December 31, 2026
+60,000.00
+60,000.00
+Sangguniang Kabataan Council
+H. Feeding Program for KK
+Members
+Improve the the health and physique of the childrens.
+January 01, 2026 to December 31, 2026
+15,000.00
+15,000.00
+Sangguniang Kabataan Council
+J. Other Programs
+ Katipunan ng Kabataan (KK) General Assembly
+ BarangayDay Celebration
+ Youth Week
+Cost of expenditures to be used
+January 01, 2026 to December 31, 2026
+30,000.00
+17,547.67
+20,000.00
+30,000.00
+17,547.67
+20,000.00
+Sangguniang Kabataan Council
+TOTAL 1,419,946.60
+TEXT;
+
+    $programs = $method->invoke($service, $text);
+    $byLetter = [];
+    foreach ($programs as $program) {
+        $byLetter[$program['letter']] = $program;
+    }
+
+    expect($byLetter)->toHaveKeys(['A', 'B', 'H', 'J'])
+        ->and($byLetter['A']['name'])->toBe('A. Equitable Access to Quality Education')
+        ->and(array_column($byLetter['A']['activities'], 'ppa_name'))->toBe([
+            'Support to ALS and RIC',
+            '150 Students for Educational Assistance',
+            'Support to Elementary and Daycare',
+        ])
+        ->and($byLetter['A']['activities'][0]['budget_mooe'])->toBe('12000.00')
+        ->and($byLetter['A']['activities'][1]['budget_mooe'])->toBe('150000.00')
+        ->and($byLetter['A']['activities'][2]['budget_mooe'])->toBe('13000.00')
+        ->and($byLetter['B']['name'])->toBe('B. Environmental Protection')
+        ->and(array_column($byLetter['B']['activities'], 'ppa_name'))->toBe([
+            'Clean – Up Drive',
+            'Payroll for Laborer',
+            'Tree Planting',
+        ])
+        ->and($byLetter['B']['activities'][0]['budget_mooe'])->toBe('60000.00')
+        ->and($byLetter['B']['activities'][1]['grouped_budget'])->toBeTrue()
+        ->and($byLetter['B']['activities'][2]['grouped_budget'])->toBeTrue()
+        ->and($byLetter['H']['name'])->toBe('H. Feeding Program for KK Members')
+        ->and($byLetter['H']['activities'])->toHaveCount(1)
+        ->and($byLetter['H']['activities'][0]['ppa_name'])->toBe('Feeding Program for KK Members')
+        ->and($byLetter['H']['activities'][0]['budget_mooe'])->toBe('15000.00')
+        ->and($byLetter['J']['name'])->toBe('J. Other Programs')
+        ->and(array_column($byLetter['J']['activities'], 'ppa_name'))->toBe([
+            'Katipunan ng Kabataan (KK) General Assembly',
+            'Barangay Day Celebration',
+            'Youth Week',
+        ])
+        ->and($byLetter['J']['activities'][0]['budget_mooe'])->toBe('30000.00')
+        ->and($byLetter['J']['activities'][1]['budget_mooe'])->toBe('17547.67')
+        ->and($byLetter['J']['activities'][2]['budget_mooe'])->toBe('20000.00');
+});
+
+it('does not treat description fragments as youth program headings', function () {
+    $service = app(AbyipService::class);
+    $method = new ReflectionMethod(AbyipService::class, 'parseYouthProgramBlocksFromText');
+    $method->setAccessible(true);
+
+    $text = <<<'TEXT'
+SK YOUTH DEVELOPMENT AND EMPOWERMENT PROGRAMS
+E. Health
+ Medicines/ Medical
+Equipment
+Campaigning Materials for Anti-Drugs such as Leaflets
+January 01, 2026 to December 31, 2026
+30,000.00
+30,000.00
+Sangguniang Kabataan Council/BADAC
+F. Anti-Drug and Peace and
+Order
+ Orientation for Anti-Drug
+and Physical Abuse
+ Foods and
+Accommodations
+January 01, 2026 to December 31, 2026
+10,000.00
+10,000.00
+Sangguniang Kabataan Council
+TOTAL 1,419,946.60
+TEXT;
+
+    $programs = $method->invoke($service, $text);
+
+    expect($programs)->toHaveCount(2)
+        ->and($programs[0]['name'])->toBe('E. Health')
+        ->and($programs[0]['activities'][0]['ppa_name'])->toBe('Medicines/ Medical Equipment')
+        ->and($programs[1]['name'])->toBe('F. Anti-Drug and Peace and Order')
+        ->and(array_column($programs[1]['activities'], 'ppa_name'))->toBe([
+            'Orientation for Anti-Drug and Physical Abuse',
+            'Foods and Accommodations',
+        ]);
+});

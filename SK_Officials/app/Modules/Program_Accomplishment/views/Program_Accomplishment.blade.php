@@ -194,15 +194,19 @@
     <div class="pa-modal-container">
         <div class="pa-modal-header">
             <h2 class="pa-modal-title" id="paModalTitle">Create Accomplishment Report</h2>
-            <button type="button" class="pa-modal-close" id="paModalClose">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
+            <div class="pa-modal-header-actions">
+                <button type="button" class="pa-modal-toggle" data-pa-maximize aria-label="Fullscreen" title="Fullscreen">□</button>
+                <button type="button" class="pa-modal-toggle" data-pa-restore hidden aria-label="Restore down" title="Restore down">⧉</button>
+                <button type="button" class="pa-modal-close" id="paModalClose" aria-label="Close">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
         </div>
         <div class="pa-modal-body">
-            <form id="paForm" data-uploader-name="{{ auth()->user()->name ?? '' }}">
+            <form id="paForm">
                 @csrf
 
                 <div class="pa-form-section">
@@ -224,10 +228,6 @@
                         <div class="pa-form-group">
                             <label class="pa-form-label">Status</label>
                             <input type="text" id="paProgramStatus" class="pa-form-input" readonly>
-                        </div>
-                        <div class="pa-form-group">
-                            <label class="pa-form-label">Uploaded by</label>
-                            <input type="text" id="paUploadedBy" class="pa-form-input" readonly>
                         </div>
                     </div>
                 </div>
@@ -275,8 +275,8 @@
         <div class="pa-modal-footer">
             <button type="button" class="pa-btn pa-btn-secondary" id="paCancelBtn">Cancel</button>
             <button type="button" class="pa-btn pa-btn-primary" id="paSaveBtn">
-                <span class="pa-btn-label">Submit</span>
                 <span class="pa-btn-spinner" hidden aria-hidden="true"></span>
+                <span class="pa-btn-label">Submit</span>
             </button>
         </div>
     </div>
@@ -288,12 +288,16 @@
     <div class="pa-modal-container pa-view-modal-container">
         <div class="pa-modal-header">
             <h2 class="pa-modal-title" id="paViewModalTitle">Accomplishment Report</h2>
-            <button type="button" class="pa-modal-close" id="paViewModalClose">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
+            <div class="pa-modal-header-actions">
+                <button type="button" class="pa-modal-toggle" data-pa-maximize aria-label="Fullscreen" title="Fullscreen">□</button>
+                <button type="button" class="pa-modal-toggle" data-pa-restore hidden aria-label="Restore down" title="Restore down">⧉</button>
+                <button type="button" class="pa-modal-close" id="paViewModalClose" aria-label="Close">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
         </div>
         <div class="pa-modal-body pa-view-modal-body">
             <div class="pa-view-content" id="paViewContent">

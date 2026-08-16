@@ -6,11 +6,16 @@ class YouthProgramClassifier
 {
     public function letterFromLabel(string $label): ?string
     {
-        if (preg_match('/\b([A-J])\.\s/i', $label, $matches)) {
+        if (preg_match('/^\s*([A-J])\.(?:\s+|$|[A-Za-z])/i', trim($label), $matches)) {
             return strtoupper($matches[1]);
         }
 
         return null;
+    }
+
+    public function isLetterHeading(string $line): bool
+    {
+        return $this->letterFromLabel($line) !== null;
     }
 
     public function isValidLetter(string $letter): bool

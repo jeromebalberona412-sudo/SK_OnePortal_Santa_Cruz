@@ -205,6 +205,11 @@ class BatchAccountImportService
             $middleName = $middleName !== '' ? $middleName : null;
         }
 
+        $age = $this->intValue($row, ['age']);
+        if ($age === null && $dateOfBirth) {
+            $age = Carbon::parse($dateOfBirth)->age;
+        }
+
         $data = [
             'first_name' => $firstName,
             'middle_name' => $middleName,
@@ -213,7 +218,7 @@ class BatchAccountImportService
             'suffix_input' => $suffixRaw,
             'sex' => $sex,
             'date_of_birth' => $dateOfBirth,
-            'age' => $this->intValue($row, ['age']) ?: ($dateOfBirth ? Carbon::parse($dateOfBirth)->age : null),
+            'age' => $age,
             'contact_number' => $contactNumber,
             'email' => $email,
             'role' => $role,
@@ -589,25 +594,35 @@ class BatchAccountImportService
 
     private function parseDate(mixed $value): ?string
     {
+        $value = $this->unwrapCellValue($value);
+
         if ($value === null || $value === '') {
             return null;
         }
 
         if ($value instanceof \DateTimeInterface) {
-            return Carbon::instance($value)->toDateString();
+            return Carbon::parse($value)->toDateString();
         }
 
-        if (is_numeric($value)) {
+        if (is_numeric($value) && ! preg_match('/^\d{4}-\d{2}-\d{2}$/', trim((string) $value))) {
             $serial = (float) $value;
-
-            return Carbon::createFromDate(1899, 12, 30)->addDays((int) round($serial))->toDateString();
+            if ($serial >= 1 && $serial < 1000000) {
+                return Carbon::createFromDate(1899, 12, 30)->addDays((int) round($serial))->toDateString();
+            }
         }
 
         $stringValue = trim((string) $value);
+        if ($stringValue === '' || preg_match('/^m{1,2}\/d{1,2}\/y{2,4}$/i', $stringValue) === 1) {
+            return null;
+        }
 
-        foreach (['Y-m-d', 'm/d/Y', 'n/j/Y', 'd/m/Y', 'j/n/Y', 'm-d-Y', 'd-m-Y'] as $format) {
+        foreach (['Y-m-d', 'm/d/Y', 'n/j/Y', 'm/d/y', 'n/j/y', 'Y-m-d H:i:s', 'm-d-Y', 'n-j-Y'] as $format) {
             try {
-                return Carbon::createFromFormat($format, $stringValue)->toDateString();
+                $parsed = Carbon::createFromFormat($format, $stringValue);
+
+                if ($parsed !== false) {
+                    return $parsed->toDateString();
+                }
             } catch (\Throwable) {
                 // Try the next common spreadsheet format.
             }
@@ -620,6 +635,23 @@ class BatchAccountImportService
         }
     }
 
+    private function unwrapCellValue(mixed $value): mixed
+    {
+        if (is_array($value)) {
+            if (isset($value['text']) && is_string($value['text'])) {
+                return $value['text'];
+            }
+            if (isset($value['v'])) {
+                return $value['v'];
+            }
+            if (isset($value['hyperlink']) && is_string($value['hyperlink'])) {
+                return $value['hyperlink'];
+            }
+        }
+
+        return $value;
+    }
+
     /**
      * @param  array<string, mixed>  $row
      * @param  list<string>  $keys
@@ -627,8 +659,19 @@ class BatchAccountImportService
     private function rawValue(array $row, array $keys): mixed
     {
         foreach ($keys as $key) {
-            if (array_key_exists($key, $row) && $row[$key] !== null && trim((string) $row[$key]) !== '') {
-                return $row[$key];
+            if (! array_key_exists($key, $row) || $row[$key] === null) {
+                continue;
+            }
+
+            $value = $this->unwrapCellValue($row[$key]);
+            if ($value instanceof \DateTimeInterface) {
+                return $value;
+            }
+            if (is_numeric($value) && trim((string) $value) !== '') {
+                return $value;
+            }
+            if (trim((string) $value) !== '') {
+                return $value;
             }
         }
 
@@ -646,7 +689,12 @@ class BatchAccountImportService
                 continue;
             }
 
-            $value = trim((string) $row[$key]);
+            $value = $this->unwrapCellValue($row[$key]);
+            if ($value instanceof \DateTimeInterface) {
+                $value = Carbon::parse($value)->toDateString();
+            }
+
+            $value = trim((string) $value);
 
             if ($value !== '') {
                 return $value;
@@ -662,8 +710,16 @@ class BatchAccountImportService
      */
     private function intValue(array $row, array $keys): ?int
     {
-        $value = $this->stringValue($row, $keys);
+        $raw = $this->rawValue($row, $keys);
+        if ($raw === null || $raw === '') {
+            return null;
+        }
 
+        if (is_numeric($raw)) {
+            return (int) round((float) $raw);
+        }
+
+        $value = trim((string) $raw);
         if ($value === '' || ! is_numeric($value)) {
             return null;
         }

@@ -275,12 +275,10 @@ class AbyipNumericNormalizer
             fn (?string $amount) => $amount !== null
         ));
 
+        $amounts = $this->collapseDuplicatedAmountStack($amounts);
+
         if ($expectedCount <= 0) {
             return $amounts;
-        }
-
-        if (count($amounts) === $expectedCount * 2) {
-            return array_slice($amounts, 0, $expectedCount);
         }
 
         if (count($amounts) > $expectedCount) {
@@ -288,6 +286,27 @@ class AbyipNumericNormalizer
         }
 
         return $amounts;
+    }
+
+    /**
+     * ABYIP tables print MOOE and Total as two identical stacks. Keep one copy
+     * so later rows are not treated as extra activity budgets.
+     *
+     * @param  list<string>  $amounts
+     * @return list<string>
+     */
+    public function collapseDuplicatedAmountStack(array $amounts): array
+    {
+        $count = count($amounts);
+        if ($count < 2 || $count % 2 !== 0) {
+            return $amounts;
+        }
+
+        $half = intdiv($count, 2);
+        $first = array_slice($amounts, 0, $half);
+        $second = array_slice($amounts, $half);
+
+        return $first === $second ? $first : $amounts;
     }
 
     /**

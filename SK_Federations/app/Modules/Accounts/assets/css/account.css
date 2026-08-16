@@ -3474,18 +3474,25 @@ body.sidebar-collapsed .accounts-page-footer {
 }
 
 .batch-preview-wrap-editable {
-    max-height: 420px;
+    max-height: min(56vh, 520px);
     overflow: auto;
+}
+
+.batch-preview-table-editable {
+    table-layout: auto;
+    width: max-content;
+    min-width: 100%;
+    white-space: normal;
 }
 
 .batch-preview-table-editable th,
 .batch-preview-table-editable td {
-    vertical-align: top;
+    vertical-align: middle;
+    white-space: nowrap;
 }
 
 .batch-col-rownum,
 .batch-col-status {
-    white-space: nowrap;
     font-size: 0.78rem;
 }
 
@@ -3497,10 +3504,36 @@ body.sidebar-collapsed .accounts-page-footer {
 }
 
 .batch-col-status {
-    min-width: 180px;
-    max-width: 240px;
+    min-width: 280px;
+    max-width: 360px;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.35;
     font-size: 0.76rem;
     color: #b91c1c;
+}
+
+.batch-col-default .batch-cell-input,
+.batch-col-name .batch-cell-input {
+    min-width: 140px;
+}
+
+.batch-col-date .batch-cell-input {
+    min-width: 148px;
+}
+
+.batch-col-contact .batch-cell-input {
+    min-width: 160px;
+}
+
+.batch-col-location .batch-cell-input,
+.batch-col-position .batch-cell-input {
+    min-width: 150px;
+}
+
+.batch-col-email,
+.batch-col-email .batch-cell-input {
+    min-width: 280px;
 }
 
 .batch-row-status-ok {
@@ -3509,12 +3542,15 @@ body.sidebar-collapsed .accounts-page-footer {
 }
 
 .batch-cell-input {
+    display: block;
     width: 100%;
-    min-width: 88px;
+    min-width: 140px;
+    box-sizing: border-box;
     border: 1px solid #cbd5e1;
     border-radius: 6px;
-    padding: 0.35rem 0.45rem;
-    font-size: 0.78rem;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.82rem;
+    line-height: 1.3;
     color: #0f172a;
     background: #fff;
 }
@@ -3526,8 +3562,13 @@ body.sidebar-collapsed .accounts-page-footer {
 }
 
 .batch-cell-input-invalid {
+    min-width: 220px;
     border-color: #dc2626;
     background: #fff5f5;
+}
+
+.batch-col-email .batch-cell-input-invalid {
+    min-width: 280px;
 }
 
 .batch-preview-table-editable tr.batch-row-has-error td {
@@ -3604,8 +3645,13 @@ body.sidebar-collapsed .accounts-page-footer {
 #addFedBatchPane .batch-preview-wrap,
 #addOfficialBatchPane .batch-error-report .batch-preview-wrap,
 #addFedBatchPane .batch-error-report .batch-preview-wrap {
-    max-height: min(38vh, 320px);
+    max-height: min(56vh, 520px);
     overflow: auto;
+}
+
+#addOfficialBatchPane .batch-preview-wrap-editable,
+#addFedBatchPane .batch-preview-wrap-editable {
+    max-height: min(56vh, 520px);
 }
 
 .account-modal-footer {
@@ -3797,5 +3843,16 @@ body.sidebar-collapsed .accounts-page-footer {
         height: 100dvh !important;
         max-height: 100dvh !important;
         border-radius: 0;
+    }
+
+    .batch-col-email,
+    .batch-col-email .batch-cell-input,
+    .batch-col-email .batch-cell-input-invalid {
+        min-width: 240px;
+    }
+
+    .batch-col-status {
+        min-width: 220px;
+        max-width: 280px;
     }
 }

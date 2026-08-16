@@ -1,13 +1,50 @@
 <div class="ba-card-expand" hidden>
-    <div class="ba-expand-stats">
-        <div><span>Target</span><strong>{{ number_format($card['target_beneficiaries']) }}</strong></div>
-        <div><span>Actual</span><strong>{{ number_format($card['beneficiaries']) }}</strong></div>
-        <div><span>Budget</span><strong>₱{{ number_format($card['approved_budget'], 2) }}</strong></div>
-        <div><span>Spent</span><strong>₱{{ number_format($card['expenditure'], 2) }}</strong></div>
+    <div class="ba-expand-info">
+        <h4>Program Information</h4>
+        <dl class="ba-expand-info-grid">
+            <div>
+                <dt>Program Name</dt>
+                <dd>{{ $card['title'] ?: '—' }}</dd>
+            </div>
+            <div>
+                <dt>Date Started</dt>
+                <dd>{{ $card['start_label'] ?? '—' }}</dd>
+            </div>
+            <div>
+                <dt>Date Completed</dt>
+                <dd>{{ $card['end_label'] ?? '—' }}</dd>
+            </div>
+            <div>
+                <dt>Status</dt>
+                <dd>{{ $card['status'] }}</dd>
+            </div>
+            <div class="ba-expand-info-wide">
+                <dt>MS Word Report</dt>
+                <dd>
+                    @if (!empty($card['documents']))
+                        @foreach ($card['documents'] as $document)
+                            <a href="{{ $document['url'] }}" class="ba-word-file" download="{{ $document['name'] }}" rel="noopener noreferrer">
+                                <span class="ba-word-file-type">{{ $document['type'] ?? 'DOC' }}</span>
+                                <span class="ba-word-file-name">{{ $document['name'] }}</span>
+                                @if (($document['size'] ?? '') !== '')
+                                    <span class="ba-word-file-size">{{ $document['size'] }}</span>
+                                @endif
+                            </a>
+                        @endforeach
+                    @else
+                        No Word file uploaded
+                    @endif
+                </dd>
+            </div>
+        </dl>
     </div>
 
-    @if ($card['objectives'] || $card['summary'] || $card['actual_result'])
+    @if ($card['description'] || $card['objectives'] || $card['summary'] || $card['actual_result'])
         <div class="ba-expand-copy">
+            @if ($card['description'])
+                <h4>Program Description</h4>
+                <p>{{ $card['description'] }}</p>
+            @endif
             @if ($card['objectives'])
                 <h4>Program Objective</h4>
                 <p>{{ $card['objectives'] }}</p>
@@ -26,8 +63,6 @@
     <p class="ba-expand-facts">
         {{ $card['implementation_label'] ?: $card['date_label'] }}
         · {{ $card['location'] }}
-        · {{ $card['committee'] }}
-        · Remaining ₱{{ number_format($card['remaining'], 2) }}
     </p>
 
     @if (count($card['photos']) > 0)
@@ -48,7 +83,7 @@
                         data-gallery-index="{{ $index }}"
                         aria-label="Preview photo {{ $index + 1 }}"
                     >
-                        <img src="{{ $photo['src'] }}" alt="" loading="lazy">
+                        <img src="{{ $photo['src'] }}" alt="{{ $photo['caption'] ?? '' }}" loading="lazy">
                         @if ($index === 4 && $extraCount > 0)
                             <span class="ba-fb-more">+{{ $extraCount }}</span>
                         @endif

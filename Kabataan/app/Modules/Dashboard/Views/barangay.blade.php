@@ -424,9 +424,6 @@
         logoutBtn?.addEventListener('click', (e) => { e.preventDefault(); modal.classList.add('active'); });
         confirmBtn?.addEventListener('click', async () => {
             modal.classList.remove('active');
-            if (typeof showLoading === 'function') {
-                showLoading('Logging out');
-            }
             const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
             const logoutUrl = logoutForm?.getAttribute('action') || '/logout';
             try {

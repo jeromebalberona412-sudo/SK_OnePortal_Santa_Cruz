@@ -135,22 +135,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const registerForm = document.querySelector('form[action*="register"]');
     registerForm?.addEventListener('submit', () => showLoading(MESSAGES.register));
 
-    const logoutForm = document.querySelector('form[action*="logout"]');
-    if (logoutForm) {
-        const origSubmit = HTMLFormElement.prototype.submit;
-        logoutForm.submit = function () {
-            showLoading(MESSAGES.logout);
-            setTimeout(() => origSubmit.call(this), 80);
-        };
-
-        logoutForm.addEventListener('submit', () => {
-            const overlay = getOverlay();
-            if (!overlay?.classList.contains('gl-visible')) {
-                showLoading(MESSAGES.logout);
-            }
-        });
-    }
-
     document.addEventListener('click', (e) => {
         const anchor = e.target.closest('a[href]');
         if (!anchor) return;

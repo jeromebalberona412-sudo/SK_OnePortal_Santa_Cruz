@@ -88,14 +88,6 @@
                         </div>
                     </article>
                     <article class="ba-stat-card">
-                        <span class="ba-stat-icon ba-stat-icon-orange ba-peso-icon" aria-hidden="true">₱</span>
-                        <div>
-                            <h2>₱{{ number_format($stats['expenditure'], 2) }}</h2>
-                            <p>Total Expenditure</p>
-                            <small>₱ {{ number_format($stats['expenditure'], 2) }} Total actual expenditure.</small>
-                        </div>
-                    </article>
-                    <article class="ba-stat-card">
                         <span class="ba-stat-icon ba-stat-icon-purple" aria-hidden="true">
                             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                         </span>
@@ -162,10 +154,17 @@
                                     data-year="{{ $card['year'] }}"
                                     data-sort-date="{{ $card['sort_date'] }}"
                                 >
+                                    <div class="ba-program-cover">
+                                        @if (!empty($card['cover']))
+                                            <img src="{{ $card['cover'] }}" alt="" loading="lazy">
+                                        @else
+                                            <span class="ba-program-cover-fallback" aria-hidden="true"></span>
+                                        @endif
+                                        <span class="ba-program-status">{{ $card['status'] }}</span>
+                                    </div>
                                     <div class="ba-program-body">
                                         <div class="ba-program-title-row">
                                             <h3>{{ $card['title'] }}</h3>
-                                            <span class="ba-program-status ba-program-status-inline">{{ $card['status'] }}</span>
                                         </div>
                                         <p class="ba-program-meta">
                                             {{ $card['date_label'] }}
@@ -177,11 +176,6 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
                                                 <strong>{{ number_format($card['beneficiaries']) }}</strong>
                                                 Beneficiaries
-                                            </span>
-                                            <span>
-                                                <span class="ba-peso-inline" aria-hidden="true">₱</span>
-                                                <strong>₱{{ number_format($card['expenditure'], 2) }}</strong>
-                                                Actual Expenditure
                                             </span>
                                         </div>
                                         <button type="button" class="ba-view-details" aria-expanded="false">
@@ -224,7 +218,7 @@
                         <section class="ba-side-card">
                             <h2>Documents</h2>
                             @php
-                                $sidebarDocuments = $programCards->flatMap(fn ($item) => $item['documents'] ?? [])->unique('url')->values();
+                                $sidebarDocuments = $programCards->flatMap(fn ($item) => $item['documents'] ?? [])->unique('id')->values();
                             @endphp
                             @if ($sidebarDocuments->isEmpty())
                                 <p>No public documents uploaded.</p>
@@ -232,14 +226,18 @@
                                 <ul class="ba-doc-list">
                                     @foreach ($sidebarDocuments as $document)
                                         <li>
-                                            <span class="ba-doc-type {{ ($document['type'] ?? '') === 'PDF' ? 'is-pdf' : '' }}">{{ $document['type'] ?? 'FILE' }}</span>
+            @if (($document['type'] ?? '') === 'PDF')
+                                            <span class="ba-doc-type is-pdf">PDF</span>
+                                        @else
+                                            <span class="ba-doc-type is-word">{{ $document['type'] ?? 'DOC' }}</span>
+                                        @endif
                                             <span class="ba-doc-copy">
                                                 <strong>{{ $document['name'] }}</strong>
                                                 @if (($document['size'] ?? '') !== '')
                                                     <small>{{ $document['size'] }}</small>
                                                 @endif
                                             </span>
-                                            <a href="{{ $document['url'] }}" class="ba-doc-download" download target="_blank" rel="noopener" aria-label="Download {{ $document['name'] }}">
+                                            <a href="{{ $document['url'] }}" class="ba-doc-download" download="{{ $document['name'] }}" rel="noopener" aria-label="Download {{ $document['name'] }}">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                             </a>
                                         </li>
@@ -249,7 +247,7 @@
                         </section>
                         <section class="ba-side-card">
                             <h2>About This Page</h2>
-                            <p>Published SK program accomplishments for {{ $barangay->name }}, including beneficiaries, expenditure, photos, and supporting documents.</p>
+                            <p>Published SK program accomplishments for {{ $barangay->name }}, including beneficiaries, photos, and supporting documents.</p>
                             <a href="{{ route('homepage') }}#programs" class="ba-side-link">
                                 Learn more about SK programs
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>

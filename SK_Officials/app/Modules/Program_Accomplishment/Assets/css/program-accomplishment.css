@@ -557,6 +557,25 @@ body {
     animation: paModalSlideIn 0.3s ease;
 }
 
+.pa-modal.pa-modal-maximized {
+    align-items: stretch;
+    justify-content: stretch;
+}
+
+.pa-modal-container.pa-modal-maximized {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    animation: none;
+}
+
+.pa-modal-container.pa-modal-maximized .pa-modal-body {
+    flex: 1;
+    min-height: 0;
+}
+
 @keyframes paModalSlideIn {
     from {
         opacity: 0;
@@ -677,6 +696,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
     padding: 20px 24px;
     border-bottom: 1px solid #e5e7eb;
 }
@@ -685,10 +705,22 @@ body {
     font-size: 20px;
     font-weight: 600;
     color: #111827;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
+.pa-modal-header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.pa-modal-toggle,
 .pa-modal-close {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 36px;
@@ -701,9 +733,21 @@ body {
     transition: all 0.2s ease;
 }
 
+.pa-modal-toggle {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0;
+}
+
+.pa-modal-toggle:hover,
 .pa-modal-close:hover {
     background: #e5e7eb;
     color: #111827;
+}
+
+.pa-modal-toggle[hidden] {
+    display: none !important;
 }
 
 .pa-modal-body {
@@ -1131,6 +1175,7 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     padding: 10px 20px;
     border-radius: 10px;
     border: none;
@@ -1153,17 +1198,27 @@ body {
 }
 
 .pa-btn-spinner {
+    display: inline-block;
+    flex-shrink: 0;
     width: 16px;
     height: 16px;
-    margin-left: 8px;
     border: 2px solid rgba(255, 255, 255, 0.35);
     border-top-color: #ffffff;
     border-radius: 50%;
     animation: pa-spin 0.7s linear infinite;
 }
 
+.pa-btn-spinner[hidden] {
+    display: none !important;
+}
+
+.pa-btn.is-loading {
+    min-width: 148px;
+    pointer-events: none;
+}
+
 .pa-btn.is-loading .pa-btn-label {
-    opacity: 0.9;
+    opacity: 1;
 }
 
 @keyframes pa-spin {
@@ -1519,6 +1574,12 @@ body {
     .pa-modal-container {
         width: 95%;
         max-height: 95vh;
+    }
+
+    .pa-modal-container.pa-modal-maximized {
+        width: 100%;
+        height: 100%;
+        max-height: none;
     }
 
     .table-action-bar { justify-content: stretch; }

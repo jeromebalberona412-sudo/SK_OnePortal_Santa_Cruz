@@ -771,6 +771,12 @@ function buildPost(p) {
 }
 
 /* ── INTERACTIONS ── */
+function closeAllReactionPickers(exceptWrap) {
+    document.querySelectorAll('.reaction-wrap.is-open').forEach(function (wrap) {
+        if (wrap !== exceptWrap) wrap.classList.remove('is-open');
+    });
+}
+
 function bindReactionControls(root) {
     if (!root) return;
     root.querySelectorAll('.reaction-wrap').forEach(bindReactionWrap);
@@ -782,6 +788,8 @@ function bindReactionWrap(wrap) {
     var btn = wrap.querySelector('.reaction-btn, .comment-like-btn');
     var picker = wrap.querySelector('.reaction-picker');
     var hideTimer = null;
+    var pressTimer = null;
+    var didLongPress = false;
     var postId = Number(wrap.dataset.postId);
     var commentId = Number(wrap.dataset.commentId || 0);
     var isComment = wrap.dataset.target === 'comment';
@@ -791,21 +799,65 @@ function bindReactionWrap(wrap) {
         else setReaction(postId, type);
     }
 
+    function openPicker() {
+        closeAllReactionPickers(wrap);
+        document.querySelectorAll('.post-options-menu.open, .comment-options-menu.open').forEach(function (menu) {
+            menu.classList.remove('open');
+        });
+        clearTimeout(hideTimer);
+        wrap.classList.add('is-open');
+    }
+
     wrap.addEventListener('mouseenter', function () {
+        if (isTouchDevice()) return;
+        clearTimeout(hideTimer);
+        openPicker();
+    });
+    wrap.addEventListener('mouseleave', function () {
+        if (isTouchDevice()) return;
+        hideTimer = setTimeout(function () { wrap.classList.remove('is-open'); }, 80);
+    });
+    picker && picker.addEventListener('mouseenter', function () {
         if (isTouchDevice()) return;
         clearTimeout(hideTimer);
         wrap.classList.add('is-open');
     });
-    wrap.addEventListener('mouseleave', function () {
+    picker && picker.addEventListener('mouseleave', function () {
         if (isTouchDevice()) return;
         hideTimer = setTimeout(function () { wrap.classList.remove('is-open'); }, 80);
     });
     btn && btn.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
+        if (didLongPress) {
+            didLongPress = false;
+            return;
+        }
+        if (isTouchDevice()) {
+            if (!wrap.classList.contains('is-open')) {
+                openPicker();
+                return;
+            }
+            wrap.classList.remove('is-open');
+            apply(btn.dataset.type || 'like');
+            return;
+        }
         wrap.classList.remove('is-open');
         apply(btn.dataset.type || 'like');
     });
+    btn && btn.addEventListener('touchstart', function () {
+        didLongPress = false;
+        clearTimeout(pressTimer);
+        pressTimer = setTimeout(function () {
+            didLongPress = true;
+            openPicker();
+        }, 180);
+    }, { passive: true });
+    function cancelPress() { clearTimeout(pressTimer); }
+    btn && btn.addEventListener('touchend', cancelPress);
+    btn && btn.addEventListener('touchcancel', cancelPress);
+    btn && btn.addEventListener('touchmove', cancelPress);
+    btn && btn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
     picker && picker.querySelectorAll('.reaction-option').forEach(function (opt) {
         opt.addEventListener('click', function (e) {
             e.preventDefault();
@@ -1021,28 +1073,7 @@ function toggleComments(id) {
 }
 
 function buildCommentPreviewHtml(p) {
-    var comments = p.comments || [];
-    var total = countAllComments(comments);
-    var last = comments.length ? comments[comments.length - 1] : null;
-    if (!last || total <= 0) {
-        return '<div class="comment-preview" id="comment-preview-' + p.id + '" hidden role="button" tabindex="0" onclick="openComments(' + p.id + ')"></div>';
-    }
-    var more = total > 1 ? '<span class="comment-preview-more">View all ' + total + ' comments</span>' : '';
-    return '<div class="comment-preview" id="comment-preview-' + p.id + '" role="button" tabindex="0" onclick="openComments(' + p.id + ')">'
-        + more
-        + '<div class="fb-comment-row">'
-        + avatarImg(commentAvatarUrl(last), 'comment-avatar', '')
-        + '<div class="fb-comment-main">'
-        + '<div class="fb-comment-head">'
-        + '<span class="comment-author">' + escapeHtml(last.author_name) + '</span>'
-        + '<span class="fb-comment-dot">·</span>'
-        + '<span class="comment-time">' + escapeHtml(last.time || '') + '</span>'
-        + '</div>'
-        + '<p class="comment-text" id="comment-text-' + last.id + '">' + escapeHtml(last.body) + '</p>'
-        + '<div class="comment-meta">'
-        + '<span class="comment-like-btn">' + escapeHtml(reactionLabel(last.reaction_type)) + '</span>'
-        + '<span class="comment-action-btn">Reply</span>'
-        + '</div></div></div></div>';
+    return '<div class="comment-preview" id="comment-preview-' + p.id + '" hidden></div>';
 }
 
 function submitComment(e, id, input) {
@@ -1504,11 +1535,8 @@ function toggleComposeFullscreen() {
     modal.classList.toggle('compose-maximized');
     var isMax = modal.classList.contains('compose-maximized');
     if (btn) {
-        btn.title = isMax ? 'Restore down' : 'Full screen';
-        btn.setAttribute('aria-label', btn.title);
-        btn.innerHTML = isMax
-            ? '<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M7 7H3v4h2V9h2V7zm6 0v2h2v2h2V7h-4zM7 13H5v-2H3v4h4v-2zm6 2v-2h2v-2h2v4h-4v-2z"/></svg>'
-            : '<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M3 3h5v2H5v3H3V3zm9 0h5v5h-2V5h-3V3zM3 12h2v3h3v2H3v-5zm12 0h2v5h-5v-2h3v-3z"/></svg>';
+        btn.title = isMax ? 'Restore down (⧉)' : 'Fullscreen (□)';
+        btn.setAttribute('aria-label', isMax ? 'Restore down' : 'Fullscreen');
     }
 }
 
@@ -1679,6 +1707,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Close post option menus on outside click
     document.addEventListener('click', function(e) {
         document.querySelectorAll('.post-options-menu.open').forEach(function(m) { m.classList.remove('open'); });
+        if (!e.target.closest || !e.target.closest('.reaction-wrap')) {
+            closeAllReactionPickers();
+        }
     });
 
     document.addEventListener('keydown', function(e) {

@@ -52,16 +52,96 @@
     font-size: 0.75rem;
 }
 
-.ba-expand-stats strong,
 .ba-expand-copy h4,
-.ba-gallery h4 {
+.ba-gallery h4,
+.ba-expand-info h4 {
     color: #0f172a;
 }
 
 .ba-expand-copy h4,
-.ba-gallery h4 {
+.ba-gallery h4,
+.ba-expand-info h4 {
     margin: 12px 0 6px;
     font-size: 0.88rem;
+}
+
+.ba-expand-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0 0 8px;
+}
+
+.ba-expand-info-grid div {
+    min-width: 0;
+    padding: 10px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.ba-expand-info-wide {
+    grid-column: 1 / -1;
+}
+
+.ba-expand-info-grid dt {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.ba-expand-info-grid dd {
+    margin: 4px 0 0;
+    color: #0f172a;
+    font-size: 0.92rem;
+    font-weight: 600;
+    word-break: break-word;
+}
+
+.ba-word-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    margin-top: 6px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1d4ed8;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.ba-word-file:hover,
+.ba-word-file:focus-visible {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.ba-word-file-type {
+    flex-shrink: 0;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: #1d4ed8;
+    color: #fff;
+    font-size: 0.68rem;
+}
+
+.ba-word-file-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ba-word-file-size {
+    margin-left: auto;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 .ba-expand-copy p,
@@ -138,6 +218,11 @@
     color: #b91c1c;
 }
 
+.ba-doc-type.is-word {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
 .program-photo-lightbox {
     gap: 0;
 }
@@ -167,7 +252,8 @@
 }
 
 @media (max-width: 414px) {
-    .ba-expand-stats {
+    .ba-expand-stats,
+    .ba-expand-info-grid {
         grid-template-columns: 1fr;
     }
 

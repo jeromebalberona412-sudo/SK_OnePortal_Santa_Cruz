@@ -1803,6 +1803,16 @@ const BATCH_TEMPLATE_SAMPLE_ROW = [
 
 const BATCH_DATE_FIELD_KEYS = new Set(['date_of_birth', 'term_start', 'term_end']);
 
+function batchPreviewColumnClass(fieldKey) {
+    if (fieldKey === 'email') return 'batch-col-email';
+    if (fieldKey === 'contact_number') return 'batch-col-contact';
+    if (fieldKey === 'position') return 'batch-col-position';
+    if (BATCH_DATE_FIELD_KEYS.has(fieldKey)) return 'batch-col-date';
+    if (['first_name', 'middle_name', 'last_name'].includes(fieldKey)) return 'batch-col-name';
+    if (['region', 'province', 'municipality', 'barangay'].includes(fieldKey)) return 'batch-col-location';
+    return 'batch-col-default';
+}
+
 function normalizeBatchHeaderLabel(header) {
     return String(header || '')
         .trim()
@@ -2015,35 +2025,117 @@ const BATCH_REQUIRED_ROW_FIELDS = BATCH_ALL_REQUIRED_FIELDS;
 function batchExcelSerialToDateString(serial) {
     const utcDays = Math.floor(Number(serial) - 25569);
     const date = new Date(utcDays * 86400 * 1000);
-    return formatLocalDate(new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+    if (Number.isNaN(date.getTime())) return '';
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function jsDateToIsoDate(date) {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+    if (date.getUTCHours() === 0 && date.getUTCMinutes() === 0 && date.getUTCSeconds() === 0) {
+        const year = date.getUTCFullYear();
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(date.getUTCDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+    return formatLocalDate(date);
+}
+
+function unwrapExcelCellValue(value) {
+    if (value === null || value === undefined) return '';
+    if (value instanceof Date) return value;
+    if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'string') {
+        return value;
+    }
+    if (typeof value === 'object') {
+        if (typeof value.w === 'string' && value.w.trim() !== '') return value.w;
+        if (value.v !== undefined && value.v !== null && value.v !== '') return value.v;
+        if (typeof value.text === 'string') return value.text;
+        if (typeof value.hyperlink === 'string') return value.hyperlink;
+        if (Array.isArray(value.r)) {
+            return value.r.map((part) => part.t || '').join('');
+        }
+    }
+    return value;
+}
+
+function isEmptyExcelCell(value) {
+    const unwrapped = unwrapExcelCellValue(value);
+    if (unwrapped instanceof Date) return Number.isNaN(unwrapped.getTime());
+    if (typeof unwrapped === 'number') return !Number.isFinite(unwrapped);
+    return String(unwrapped ?? '').trim() === '';
 }
 
 function parseBatchUsDateString(value) {
-    const raw = String(value || '').trim();
-    const slashMatch = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(raw);
-    if (slashMatch) {
-        const month = slashMatch[1].padStart(2, '0');
-        const day = slashMatch[2].padStart(2, '0');
-        const year = slashMatch[3];
-        return `${year}-${month}-${day}`;
+    const unwrapped = unwrapExcelCellValue(value);
+    if (unwrapped === null || unwrapped === undefined || unwrapped === '') return '';
+    if (unwrapped instanceof Date) return jsDateToIsoDate(unwrapped);
+    if (typeof unwrapped === 'number' && Number.isFinite(unwrapped) && unwrapped >= 1 && unwrapped < 1000000) {
+        return batchExcelSerialToDateString(unwrapped);
     }
 
-    return raw;
+    const raw = String(unwrapped).trim();
+    if (!raw || /^m{1,2}\/d{1,2}\/y{2,4}$/i.test(raw)) return '';
+
+    const isoMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(raw);
+    if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+
+    const slashMatch = /^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/.exec(raw);
+    if (slashMatch) {
+        let year = slashMatch[3];
+        if (year.length === 2) {
+            year = Number(year) >= 70 ? `19${year}` : `20${year}`;
+        }
+        return `${year}-${slashMatch[1].padStart(2, '0')}-${slashMatch[2].padStart(2, '0')}`;
+    }
+
+    const dashMatch = /^(\d{1,2})-(\d{1,2})-(\d{4})$/.exec(raw);
+    if (dashMatch) {
+        return `${dashMatch[3]}-${dashMatch[1].padStart(2, '0')}-${dashMatch[2].padStart(2, '0')}`;
+    }
+
+    const parsed = new Date(raw);
+    if (!Number.isNaN(parsed.getTime())) return jsDateToIsoDate(parsed);
+
+    return '';
+}
+
+function formatIsoDateToUs(isoDate) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(isoDate || '').trim());
+    if (!match) return '';
+    return `${match[2]}/${match[3]}/${match[1]}`;
 }
 
 function normalizeBatchCellValue(fieldKey, value) {
-    if (value === null || value === undefined || value === '') return '';
-    if (value instanceof Date) return formatLocalDate(value);
-    if (typeof value === 'number' && BATCH_DATE_FIELD_KEYS.has(fieldKey)) {
-        return batchExcelSerialToDateString(value);
-    }
+    const unwrapped = unwrapExcelCellValue(value);
+    if (unwrapped === null || unwrapped === undefined || unwrapped === '') return '';
 
-    const stringValue = String(value).trim();
     if (BATCH_DATE_FIELD_KEYS.has(fieldKey)) {
-        return parseBatchUsDateString(stringValue);
+        return parseBatchUsDateString(unwrapped);
     }
 
-    return stringValue;
+    if (fieldKey === 'age') {
+        if (typeof unwrapped === 'number' && Number.isFinite(unwrapped)) {
+            return String(Math.round(unwrapped));
+        }
+        return String(unwrapped).trim();
+    }
+
+    if (fieldKey === 'email') {
+        return String(unwrapped).trim();
+    }
+
+    if (unwrapped instanceof Date) {
+        return jsDateToIsoDate(unwrapped);
+    }
+
+    if (typeof unwrapped === 'number' && Number.isFinite(unwrapped)) {
+        return String(unwrapped);
+    }
+
+    return String(unwrapped).trim();
 }
 
 function normalizeBatchAccountRow(row, role) {
@@ -2112,7 +2204,7 @@ function normalizeBatchAccountRow(row, role) {
         }
     }
 
-    if (normalized.date_of_birth) {
+    if ((normalized.age === undefined || String(normalized.age).trim() === '') && normalized.date_of_birth) {
         normalized.age = calculateAge(normalized.date_of_birth);
     }
 
@@ -2451,7 +2543,10 @@ function initBatchUploadPanel(prefix, role) {
 
     function isTemplateSampleDataRow(row) {
         const width = state.parsedHeaders.length || BATCH_TEMPLATE_HEADERS.length;
-        const padded = Array.from({ length: width }, (_, index) => String(row[index] ?? '').trim());
+        const padded = Array.from({ length: width }, (_, index) => {
+            const fieldKey = resolveBatchFieldKey((state.parsedHeaders.length ? state.parsedHeaders : BATCH_TEMPLATE_HEADERS)[index] || '');
+            return normalizeBatchCellValue(fieldKey, row[index]);
+        });
         const mapped = mapRowToAccount(state.parsedHeaders.length ? state.parsedHeaders : BATCH_TEMPLATE_HEADERS, padded);
         const hasOfficialData = Boolean(mapped.first_name || mapped.last_name || mapped.email || mapped.contact_number);
         if (hasOfficialData) {
@@ -2473,8 +2568,10 @@ function initBatchUploadPanel(prefix, role) {
 
     function ensureParsedRowWidth(row) {
         const width = state.parsedHeaders.length;
-        const next = Array.from({ length: width }, (_, index) => String(row[index] ?? '').trim());
-        return next;
+        return Array.from({ length: width }, (_, index) => {
+            const fieldKey = resolveBatchFieldKey(state.parsedHeaders[index] || '');
+            return normalizeBatchCellValue(fieldKey, row[index]);
+        });
     }
 
     function syncMappedAccountsFromParsedRows() {
@@ -2532,9 +2629,8 @@ function initBatchUploadPanel(prefix, role) {
         }
 
         state.parsedRows[rowIndex] = ensureParsedRowWidth(state.parsedRows[rowIndex]);
-        state.parsedRows[rowIndex][colIndex] = value;
-
         const fieldKey = resolveBatchFieldKey(state.parsedHeaders[colIndex] || '');
+        state.parsedRows[rowIndex][colIndex] = normalizeBatchCellValue(fieldKey, value);
         if (fieldKey === 'date_of_birth') {
             syncBatchAgeFromBirthdate(rowIndex);
         }
@@ -2627,7 +2723,10 @@ function initBatchUploadPanel(prefix, role) {
             return;
         }
 
-        const theadCells = headers.map((header) => '<th>' + escapeHtml(header) + '</th>').join('') + '<th class="batch-col-status">Status</th>';
+        const theadCells = headers.map((header) => {
+            const fieldKey = resolveBatchFieldKey(header);
+            return '<th class="' + batchPreviewColumnClass(fieldKey) + '">' + escapeHtml(header) + '</th>';
+        }).join('') + '<th class="batch-col-status">Status</th>';
         const tbodyRows = rows.map((row, rowIndex) => {
             const rowNumber = rowIndex + 1;
             const rowErrors = getBatchRowErrors(errors, rowNumber);
@@ -2637,14 +2736,18 @@ function initBatchUploadPanel(prefix, role) {
             const cells = headers.map((header, colIndex) => {
                 const fieldKey = resolveBatchFieldKey(header);
                 const rawValue = row[colIndex] ?? '';
-                const displayValue = fieldKey && BATCH_DATE_FIELD_KEYS.has(fieldKey)
-                    ? normalizeBatchCellValue(fieldKey, rawValue)
+                const isoDate = fieldKey && BATCH_DATE_FIELD_KEYS.has(fieldKey)
+                    ? parseBatchUsDateString(rawValue)
+                    : '';
+                const displayValue = isoDate
+                    ? formatIsoDateToUs(isoDate)
                     : String(rawValue ?? '').trim();
                 const invalidClass = invalidFields.has(fieldKey) ? ' batch-cell-input-invalid' : '';
-                const inputType = fieldKey && BATCH_DATE_FIELD_KEYS.has(fieldKey) ? 'date' : 'text';
-                const placeholder = fieldKey === 'term_start' || fieldKey === 'term_end' ? 'MM/DD/YYYY' : '';
+                const placeholder = fieldKey && BATCH_DATE_FIELD_KEYS.has(fieldKey) ? 'MM/DD/YYYY' : '';
+                const colClass = batchPreviewColumnClass(fieldKey);
+                const inputSize = fieldKey === 'email' ? Math.max(28, displayValue.length + 2) : Math.max(12, Math.min(displayValue.length + 2, 24));
 
-                return '<td><input type="' + inputType + '" class="batch-cell-input' + invalidClass + '" data-row-index="' + rowIndex + '" data-col-index="' + colIndex + '" data-field-key="' + escapeHtml(fieldKey || '') + '" value="' + escapeHtml(displayValue) + '" placeholder="' + escapeHtml(placeholder) + '" aria-label="' + escapeHtml(header) + ' row ' + rowNumber + '"></td>';
+                return '<td class="' + colClass + '"><input type="text" class="batch-cell-input' + invalidClass + '" data-row-index="' + rowIndex + '" data-col-index="' + colIndex + '" data-field-key="' + escapeHtml(fieldKey || '') + '" value="' + escapeHtml(displayValue) + '" placeholder="' + escapeHtml(placeholder) + '" size="' + inputSize + '" title="' + escapeHtml(displayValue) + '" aria-label="' + escapeHtml(header) + ' row ' + rowNumber + '"></td>';
             }).join('');
 
             const statusText = rowErrors.length > 0
@@ -2721,10 +2824,10 @@ function initBatchUploadPanel(prefix, role) {
         reader.onload = function (e) {
             try {
                 const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array', raw: false, cellDates: true });
+                const workbook = XLSX.read(data, { type: 'array', raw: true, cellDates: true });
                 const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                const allRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
-                const nonEmptyRows = allRows.filter((row) => row.some((cell) => String(cell).trim() !== ''));
+                const allRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true, defval: '', blankrows: false });
+                const nonEmptyRows = allRows.filter((row) => Array.isArray(row) && row.some((cell) => !isEmptyExcelCell(cell)));
 
                 if (nonEmptyRows.length < 2) {
                     state.parsedHeaders = [];
@@ -2736,7 +2839,7 @@ function initBatchUploadPanel(prefix, role) {
 
                 state.parsedHeaders = nonEmptyRows[0].map((header) => String(header).trim());
                 state.parsedRows = nonEmptyRows.slice(1)
-                    .filter((row) => row.some((cell) => String(cell).trim() !== ''))
+                    .filter((row) => Array.isArray(row) && row.some((cell) => !isEmptyExcelCell(cell)))
                     .map((row) => ensureParsedRowWidth(row))
                     .filter((row) => !isTemplateSampleDataRow(row));
                 updateBatchUploadLimitState(state.parsedRows.length);

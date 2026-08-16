@@ -265,6 +265,7 @@ function updatePagination(totalItems, totalPages) {
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
+        resetModalMaximize(modalId);
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
@@ -273,9 +274,39 @@ function openModal(modalId) {
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
+        resetModalMaximize(modalId);
         modal.classList.remove('active');
         document.body.style.overflow = '';
     }
+}
+
+function setModalMaximized(modalId, maximized) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    modal.classList.toggle('pa-modal-maximized', maximized);
+    const box = modal.querySelector('.pa-modal-container');
+    if (box) box.classList.toggle('pa-modal-maximized', maximized);
+    const maximizeBtn = modal.querySelector('[data-pa-maximize]');
+    const restoreBtn = modal.querySelector('[data-pa-restore]');
+    if (maximizeBtn) maximizeBtn.hidden = maximized;
+    if (restoreBtn) restoreBtn.hidden = !maximized;
+}
+
+function resetModalMaximize(modalId) {
+    setModalMaximized(modalId, false);
+}
+
+function wireModalMaximize(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    modal.querySelector('[data-pa-maximize]')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setModalMaximized(modalId, true);
+    });
+    modal.querySelector('[data-pa-restore]')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setModalMaximized(modalId, false);
+    });
 }
 
 // Form Management
@@ -305,10 +336,6 @@ function resetForm() {
     if (docInput) docInput.value = '';
 }
 
-function currentUploaderName() {
-    return document.getElementById('paForm')?.dataset.uploaderName || '';
-}
-
 function loadProgramIntoForm(program, report) {
     const programName = document.getElementById('paProgram');
     if (programName) programName.value = program.program_name || program.title || '';
@@ -318,10 +345,6 @@ function loadProgramIntoForm(program, report) {
     if (dateCompleted) dateCompleted.value = formatDate(program.end_date);
     const statusEl = document.getElementById('paProgramStatus');
     if (statusEl) statusEl.value = program.status || 'Completed';
-    const uploadedBy = document.getElementById('paUploadedBy');
-    if (uploadedBy) {
-        uploadedBy.value = report?.creator || currentUploaderName() || program.creator || '';
-    }
     PAState.currentProgramId = program.id;
     PAState.currentProgramDates = {
         start: program.start_date || '',
@@ -614,10 +637,6 @@ async function viewReport(reportId) {
                     <span class="pa-view-info-label">Status</span>
                     <span class="pa-view-info-value">${escapeHtml(program?.status || 'Completed')}</span>
                 </div>
-                <div class="pa-view-info-item">
-                    <span class="pa-view-info-label">Uploaded by</span>
-                    <span class="pa-view-info-value">${escapeHtml(report.creator || currentUploaderName() || 'N/A')}</span>
-                </div>
                 <div class="pa-view-info-item" style="grid-column: 1 / -1;">
                     <span class="pa-view-info-label">MS Word Report</span>
                     <span class="pa-view-info-value">${wordLink}</span>
@@ -884,6 +903,8 @@ function initializeEventListeners() {
     
     document.getElementById('paViewModalClose').addEventListener('click', () => closeModal('paViewModal'));
     document.getElementById('paViewModalOverlay').addEventListener('click', () => closeModal('paViewModal'));
+    wireModalMaximize('paModal');
+    wireModalMaximize('paViewModal');
     
     document.getElementById('paDeleteModalClose')?.addEventListener('click', () => closeModal('paDeleteModal'));
     document.getElementById('paDeleteModalOverlay').addEventListener('click', () => closeModal('paDeleteModal'));
@@ -1184,9 +1205,13 @@ async function saveReport() {
     if (saveBtn) {
         saveBtn.disabled = true;
         saveBtn.classList.add('is-loading');
+        saveBtn.setAttribute('aria-busy', 'true');
     }
     if (label) label.textContent = 'Submitting...';
-    if (spinner) spinner.hidden = false;
+    if (spinner) {
+        spinner.hidden = false;
+        spinner.removeAttribute('hidden');
+    }
     if (cancelBtn) cancelBtn.disabled = true;
     if (modal) modal.classList.add('is-submitting');
     
@@ -1234,6 +1259,7 @@ async function saveReport() {
         if (saveBtn) {
             saveBtn.disabled = false;
             saveBtn.classList.remove('is-loading');
+            saveBtn.removeAttribute('aria-busy');
         }
         if (label) label.textContent = previousLabel || 'Submit';
         if (spinner) spinner.hidden = true;

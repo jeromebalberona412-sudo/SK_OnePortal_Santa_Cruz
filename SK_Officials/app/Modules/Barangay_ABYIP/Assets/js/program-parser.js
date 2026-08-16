@@ -33,7 +33,7 @@ export function isCategoryHeading(fullLine, cols) {
         return true;
     }
 
-    return /^([A-J])\.\s+\S+/i.test(text) && !(cols && (cols.mooe || cols.co || cols.total) && compact(cols.description));
+    return /^([A-J])\.\s*\S+/i.test(text) && !(cols && (cols.mooe || cols.co || cols.total) && compact(cols.description));
 }
 
 export function looksLikeIncludedBudget(text) {
@@ -65,7 +65,7 @@ export function extractYouthLetter(ppas, fullLine) {
             continue;
         }
 
-        const match = source.match(/^([A-J])\.(?:\s+|$)/i);
+        const match = source.match(/^([A-J])\.(?:\s+|$|[A-Za-z])/i);
         if (match) {
             return match[1].toUpperCase();
         }
@@ -75,7 +75,7 @@ export function extractYouthLetter(ppas, fullLine) {
 }
 
 export function stripYouthLetter(text) {
-    return compact(String(text || '').replace(/^[A-J]\.\s+/i, ''));
+    return compact(String(text || '').replace(/^[A-J]\.\s*/i, ''));
 }
 
 export function isActivityRow(cols, context) {

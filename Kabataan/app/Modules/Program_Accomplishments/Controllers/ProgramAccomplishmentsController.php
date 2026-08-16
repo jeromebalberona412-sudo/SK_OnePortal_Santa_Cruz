@@ -11,6 +11,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 class ProgramAccomplishmentsController extends Controller
@@ -88,7 +90,11 @@ class ProgramAccomplishmentsController extends Controller
         }
 
         $programCards = $programReports->map(
-            fn ($report) => $this->programAccomplishmentService->toPublicCard($report, (string) $barangay->name)
+            fn ($report) => $this->programAccomplishmentService->toPublicCard(
+                $report,
+                (string) $barangay->name,
+                (string) $barangay->slug
+            )
         )->values();
 
         $categoryCounts = $programCards
@@ -127,5 +133,14 @@ class ProgramAccomplishmentsController extends Controller
     public function report(Barangay $barangay, int $report): RedirectResponse
     {
         return redirect()->route('program_accomplishments.barangays.show', $barangay);
+    }
+
+    public function downloadDocument(Barangay $barangay, int $document): BinaryFileResponse|StreamedResponse
+    {
+        $response = $this->programAccomplishmentService->downloadPublicDocument((int) $barangay->id, $document);
+
+        abort_unless($response !== null, 404);
+
+        return $response;
     }
 }
