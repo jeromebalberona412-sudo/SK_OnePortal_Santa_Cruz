@@ -1874,24 +1874,34 @@ function showEmailVerification(email) {
     const successModal = document.getElementById('kkpRegSuccessModal');
     const successMessageEl = document.getElementById('kkpRegSuccessMessage');
 
-    function showSuccessModal(message, autoApproved = false) {
+    function showSuccessModal(message, autoApproved = false, options = {}) {
         if (!successModal) return;
 
         const titleEl = document.getElementById('kkpRegSuccessTitle');
         const loginBtn = successModal.querySelector('.kkp-reg-success-modal-btn');
+        const isActivated = Boolean(options.activated);
 
         if (titleEl) {
-            titleEl.textContent = autoApproved
-                ? 'Registration Verified!'
-                : 'Registration Submitted Successfully';
+            if (isActivated) {
+                titleEl.textContent = 'Account Successfully Activated';
+            } else {
+                titleEl.textContent = autoApproved
+                    ? 'Registration Verified!'
+                    : 'Registration Submitted Successfully';
+            }
         }
 
         if (successMessageEl) {
-            successMessageEl.textContent = message || 'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.';
+            successMessageEl.textContent = message || (isActivated
+                ? 'Your email and password have been saved to your KK Profiling record. You can now sign in.'
+                : 'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.');
         }
 
         if (loginBtn) {
             loginBtn.textContent = 'Go to Sign in';
+            if (options.redirectUrl) {
+                loginBtn.setAttribute('href', options.redirectUrl);
+            }
         }
 
         successModal.hidden = false;
@@ -1920,7 +1930,10 @@ function showEmailVerification(email) {
     const submitBtn = document.getElementById('setpwSubmitBtn');
     const finalizeUrl = form.dataset.finalizeUrl || '';
     const isWizardToken = Boolean(form.dataset.wizardToken);
+    const isAccountInvite = form.dataset.accountInvite === '1';
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const originalBtnText = submitBtn?.querySelector('.setpw-btn-text')?.textContent?.trim()
+        || (isAccountInvite ? 'Activate Account' : 'Complete Registration');
 
     function syncPasswordEyeToggle(btn, input) {
         const isVisible = input.type === 'text';
@@ -1929,7 +1942,7 @@ function showEmailVerification(email) {
         btn.classList.toggle('pw-visible', isVisible);
     }
 
-    document.querySelectorAll('.kkp-setpw-toggle[data-target]').forEach((btn) => {
+    document.querySelectorAll('.kkp-setpw-toggle[data-target], .pw-toggle-btn[data-target]').forEach((btn) => {
         const target = document.getElementById(btn.dataset.target || '');
         if (!target) {
             return;
@@ -1966,7 +1979,9 @@ function showEmailVerification(email) {
         });
 
         const allPassed = Object.values(checks).every(Boolean);
-        rulesWrap.style.display = allPassed && value.length > 0 ? 'none' : 'block';
+        const showRules = value.length > 0 && !allPassed;
+        rulesWrap.hidden = !showRules;
+        rulesWrap.classList.toggle('is-visible', showRules);
 
         return checks;
     }
@@ -2053,8 +2068,10 @@ function showEmailVerification(email) {
 
         const btnText = submitBtn?.querySelector('.setpw-btn-text');
         if (submitBtn) submitBtn.disabled = true;
-        if (btnText) btnText.textContent = 'Completing registration...';
-        if (window.showLoading) window.showLoading('Creating your account...');
+        if (btnText) btnText.textContent = isAccountInvite ? 'Activating account...' : 'Completing registration...';
+        if (window.showLoading) {
+            window.showLoading(isAccountInvite ? 'Activating your account...' : 'Creating your account...');
+        }
 
         try {
             let response;
@@ -2092,13 +2109,21 @@ function showEmailVerification(email) {
 
             if (response.ok) {
                 showSuccessModal(
-                    data.message || 'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.',
+                    data.message || (isAccountInvite
+                        ? 'Your email and password have been saved to your KK Profiling record. You can now sign in.'
+                        : 'Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.'),
                     Boolean(data.auto_approved),
+                    {
+                        activated: isAccountInvite || Boolean(data.activated),
+                        redirectUrl: data.redirect_url || '',
+                    },
                 );
                 return;
             }
 
-            let errorMessage = data.message || 'Unable to complete registration. Please try again.';
+            let errorMessage = data.message || (isAccountInvite
+                ? 'Unable to activate this account. Please try again.'
+                : 'Unable to complete registration. Please try again.');
             if (data.errors) {
                 errorMessage = Object.values(data.errors).flat().join(' ');
             }
@@ -2106,10 +2131,16 @@ function showEmailVerification(email) {
             setFieldError(passwordInput, passwordError, errorMessage);
         } catch {
             if (window.hideLoading) window.hideLoading();
-            setFieldError(passwordInput, passwordError, 'Unable to complete registration. Please check your connection and try again.');
+            setFieldError(
+                passwordInput,
+                passwordError,
+                isAccountInvite
+                    ? 'Unable to activate this account. Please check your connection and try again.'
+                    : 'Unable to complete registration. Please check your connection and try again.',
+            );
         } finally {
             if (submitBtn) submitBtn.disabled = false;
-            if (btnText) btnText.textContent = 'Complete Registration';
+            if (btnText) btnText.textContent = originalBtnText;
         }
     });
 })();

@@ -5,14 +5,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Activation Link Unavailable - SK OnePortal</title>
-    @vite(['app/Modules/Authentication/assets/css/sign-in.css'])
+    @vite([
+        'app/Modules/Authentication/assets/css/sign-in.css',
+        'app/Modules/KKProfiling/assets/css/kkprofiling.css',
+    ])
 </head>
-<body class="youth-login-page">
-    <main class="youth-login-container" style="justify-content:center;padding:2rem;">
-        <div class="youth-login-card" style="max-width:28rem;">
-            <h1 class="card-title">Activation link unavailable</h1>
-            <p class="card-subtitle">{{ $message }}</p>
-            <a href="{{ route('sign-in') }}" class="youth-submit-btn" style="display:inline-flex;margin-top:1rem;text-decoration:none;">Go to Sign in</a>
+<body class="youth-signin-page kkp-setpw-page">
+    <div class="youth-bg-wrapper">
+        <div class="youth-bg-image"></div>
+        <div class="youth-gradient-overlay"></div>
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    </div>
+
+    <main class="youth-signin-container">
+        <div class="youth-branding-section">
+            <div class="branding-content">
+                <div class="logo-wrapper">
+                    <img
+                        src="/images/skoneportal_logo.webp"
+                        alt="SK OnePortal Logo"
+                        class="youth-logo"
+                    >
+                </div>
+                <h1 class="youth-main-title">SK OnePortal</h1>
+                <p class="youth-tagline">Official Youth Portal &ndash; Santa Cruz, Laguna</p>
+            </div>
+        </div>
+
+        <div class="youth-signin-section">
+            <div class="youth-signin-card kkp-setpw-card">
+                <div class="card-header">
+                    <p class="card-subtitle">Activation link unavailable</p>
+                    <p class="card-helper-text">{{ $message }}</p>
+                </div>
+
+                <a href="{{ route('sign-in') }}" class="youth-submit-btn kkp-setpw-signin-link">Go to Sign in</a>
+            </div>
         </div>
     </main>
 </body>

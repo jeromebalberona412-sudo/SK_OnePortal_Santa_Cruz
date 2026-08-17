@@ -848,6 +848,13 @@
     cursor: not-allowed;
 }
 
+.kk-profiling-edit-root #kkEditEmail {
+    pointer-events: auto;
+    cursor: text;
+    background: #fff;
+    color: #111;
+}
+
 .kk-view-modal-footer {
     display: flex;
     flex-direction: column;

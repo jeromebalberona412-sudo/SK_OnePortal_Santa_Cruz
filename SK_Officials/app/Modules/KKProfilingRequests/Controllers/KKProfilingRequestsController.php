@@ -263,7 +263,7 @@ class KKProfilingRequestsController extends Controller
 
         $message = 'KK Profiling record updated.';
         if ($result['invite_sent']) {
-            $message = 'KK Profiling updated and an account activation email was sent.';
+            $message = 'KK Profiling updated and an email was sent to the kabataan.';
         } elseif ($result['invite_error']) {
             $message = $result['invite_error'];
         }

@@ -8,6 +8,7 @@ use App\Modules\KKProfilingRequests\Notifications\KabataanAccountInviteNotificat
 use App\Services\KkSurveyResponseService;
 use App\Services\SkOfficialActivityService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
@@ -37,9 +38,9 @@ class KkProfilingOfficialUpdateService
         $newEmail = strtolower(trim((string) ($input['email'] ?? '')));
         $newEmail = $newEmail === '' ? null : $newEmail;
 
-        if ($registration->user_id && $previousEmail !== '' && $newEmail !== $previousEmail) {
+        if ($registration->user_id && $newEmail === null) {
             throw ValidationException::withMessages([
-                'email' => ['This kabataan already has an account. Email cannot be changed from this form.'],
+                'email' => ['This kabataan already has an account. Email cannot be removed.'],
             ]);
         }
 
@@ -48,17 +49,10 @@ class KkProfilingOfficialUpdateService
         $formData = is_array($registration->form_data) ? $registration->form_data : [];
         $formData = $this->mergeFormData($formData, $input, $registration);
 
-        $inviteSent = false;
-        $inviteError = null;
-        $unusedInvite = empty($formData['account_invite_used_at']);
-        $unsentInvite = ! empty($formData['account_invite_token_hash']) && empty($formData['account_invite_sent_at']);
-        $shouldInvite = $newEmail !== null
-            && ! $registration->user_id
-            && $unusedInvite
-            && ($newEmail !== $previousEmail || $unsentInvite);
+        $shouldInvite = $newEmail !== null;
         $plainToken = null;
 
-        $updated = DB::transaction(function () use ($registration, $input, $formData, $newEmail, $shouldInvite, &$plainToken) {
+        $updated = DB::transaction(function () use ($registration, $input, $formData, $newEmail, $previousEmail, $shouldInvite, &$plainToken) {
             if ($shouldInvite) {
                 $plainToken = bin2hex(random_bytes(32));
                 $formData['account_invite_token_hash'] = hash('sha256', $plainToken);
@@ -78,6 +72,15 @@ class KkProfilingOfficialUpdateService
                 'form_data' => $formData,
             ]);
 
+            if ($registration->user_id && $newEmail !== null && $newEmail !== $previousEmail) {
+                User::query()
+                    ->where('id', $registration->user_id)
+                    ->update([
+                        'email' => $newEmail,
+                        'email_verified_at' => now(),
+                    ]);
+            }
+
             $fresh = $registration->fresh();
             $this->surveyService->syncFromRegistration(
                 $fresh,
@@ -87,16 +90,19 @@ class KkProfilingOfficialUpdateService
             return $fresh;
         });
 
+        $inviteSent = false;
+        $inviteError = null;
+
         if (is_string($plainToken) && $plainToken !== '') {
-            try {
-                $this->sendInvite($updated, $plainToken);
+            $inviteError = $this->deliverMail(
+                $updated,
+                $this->activationUrl($updated, $plainToken),
+            );
+            if ($inviteError === null) {
                 $inviteSent = true;
                 $sentData = is_array($updated->form_data) ? $updated->form_data : [];
                 $sentData['account_invite_sent_at'] = now()->toIso8601String();
                 $updated->update(['form_data' => $sentData]);
-            } catch (\Throwable $e) {
-                report($e);
-                $inviteError = 'The profile was saved, but the activation email could not be sent. Please try saving again.';
             }
         }
 
@@ -118,20 +124,46 @@ class KkProfilingOfficialUpdateService
         ];
     }
 
-    private function sendInvite(KabataanRegistration $registration, string $plainToken): void
+    private function kabataanBaseUrl(): string
     {
         $base = rtrim((string) config('services.kabataan_app_url'), '/');
         if ($base === '') {
             throw new \RuntimeException('Kabataan app URL is not configured.');
         }
 
-        $url = $base.'/kkprofiling/account-invite/'.$registration->id.'/'.$plainToken;
+        return $base;
+    }
 
-        Notification::route('mail', $registration->email)
-            ->notify(new KabataanAccountInviteNotification(
-                $registration->full_name,
-                $url,
-            ));
+    private function activationUrl(KabataanRegistration $registration, string $plainToken): string
+    {
+        return $this->kabataanBaseUrl().'/kkprofiling/account-invite/'.$registration->id.'/'.$plainToken;
+    }
+
+    private function deliverMail(KabataanRegistration $registration, string $actionUrl): ?string
+    {
+        $email = strtolower(trim((string) $registration->email));
+        if ($email === '') {
+            return 'The profile was saved, but there is no email address to send to.';
+        }
+
+        try {
+            Notification::route('mail', $email)
+                ->notify(new KabataanAccountInviteNotification(
+                    $registration->full_name,
+                    $actionUrl,
+                ));
+
+            return null;
+        } catch (\Throwable $e) {
+            report($e);
+            Log::error('KK Profiling account email failed', [
+                'registration_id' => $registration->id,
+                'email' => $email,
+                'error' => $e->getMessage(),
+            ]);
+
+            return 'The profile was saved, but the email could not be sent. Please try saving again.';
+        }
     }
 
     private function assertEmailAvailable(?string $email, KabataanRegistration $registration): void

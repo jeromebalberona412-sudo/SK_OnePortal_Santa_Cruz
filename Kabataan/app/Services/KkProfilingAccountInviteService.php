@@ -55,12 +55,6 @@ class KkProfilingAccountInviteService
             ]);
         }
 
-        if ($registration->user_id) {
-            throw ValidationException::withMessages([
-                'token' => ['This KK Profiling record already has an account. You can sign in instead.'],
-            ]);
-        }
-
         $email = strtolower(trim((string) $registration->email));
 
         if ($email === '') {
@@ -86,33 +80,50 @@ class KkProfilingAccountInviteService
 
             $formData = is_array($registration->form_data) ? $registration->form_data : [];
 
-            if (! empty($formData[self::FORM_USED_KEY]) || $registration->user_id) {
+            if (! empty($formData[self::FORM_USED_KEY])) {
                 throw ValidationException::withMessages([
                     'token' => ['This activation link has already been used.'],
                 ]);
             }
 
+            $alreadyApproved = in_array($registration->evaluation_status, ['active', 'Auto Approved', 'ID Verified'], true);
+            $linkedUser = $registration->user_id
+                ? User::query()->where('id', $registration->user_id)->first()
+                : null;
             $existingUser = User::query()->where('email', $email)->first();
 
-            if ($existingUser) {
+            if ($existingUser && (! $linkedUser || (int) $existingUser->id !== (int) $linkedUser->id)) {
                 throw ValidationException::withMessages([
                     'email' => ['This email is already registered to another account.'],
                 ]);
             }
 
-            $alreadyApproved = in_array($registration->evaluation_status, ['active', 'Auto Approved', 'ID Verified'], true);
+            if ($linkedUser) {
+                $linkedUser->forceFill([
+                    'name' => $registration->full_name,
+                    'email' => $email,
+                    'password' => $password,
+                    'email_verified_at' => now(),
+                    'tenant_id' => $registration->tenant_id,
+                    'barangay_id' => $registration->barangay_id,
+                    'role' => User::ROLE_KABATAAN,
+                    'status' => $alreadyApproved ? User::STATUS_ACTIVE : User::STATUS_PENDING_APPROVAL,
+                ])->save();
+                $user = $linkedUser;
+            } else {
+                $user = User::create([
+                    'name' => $registration->full_name,
+                    'email' => $email,
+                    'password' => $password,
+                    'email_verified_at' => now(),
+                    'tenant_id' => $registration->tenant_id,
+                    'barangay_id' => $registration->barangay_id,
+                    'role' => User::ROLE_KABATAAN,
+                    'status' => $alreadyApproved ? User::STATUS_ACTIVE : User::STATUS_PENDING_APPROVAL,
+                ]);
+            }
 
-            $user = User::create([
-                'name' => $registration->full_name,
-                'email' => $email,
-                'password' => bcrypt($password),
-                'email_verified_at' => now(),
-                'tenant_id' => $registration->tenant_id,
-                'barangay_id' => $registration->barangay_id,
-                'role' => User::ROLE_KABATAAN,
-                'status' => $alreadyApproved ? User::STATUS_ACTIVE : User::STATUS_PENDING_APPROVAL,
-            ]);
-
+            $formData['email'] = $email;
             $formData[self::FORM_USED_KEY] = now()->toIso8601String();
             unset($formData[self::FORM_TOKEN_KEY], $formData[self::FORM_EXPIRES_KEY]);
 

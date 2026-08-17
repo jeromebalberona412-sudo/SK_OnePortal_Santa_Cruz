@@ -300,13 +300,10 @@ function populateKkEditForm(request) {
 
     const emailEl = getEditField('kkEditEmail');
     if (emailEl) {
-        emailEl.readOnly = Boolean(request.has_account);
-        emailEl.classList.toggle('kkp-readonly', Boolean(request.has_account));
-        if (request.has_account) {
-            emailEl.tabIndex = -1;
-        } else {
-            emailEl.removeAttribute('tabindex');
-        }
+        emailEl.readOnly = false;
+        emailEl.disabled = false;
+        emailEl.classList.remove('kkp-readonly');
+        emailEl.removeAttribute('tabindex');
     }
 
     setCheckboxGroupByHiddenId('kkEditSex', request.sex || '');

@@ -4,6 +4,7 @@ namespace App\Modules\KKProfiling\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Services\KkProfilingAccountInviteService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -33,7 +34,7 @@ class KKProfilingAccountInviteController extends Controller
         ]);
     }
 
-    public function activate(Request $request, int $registration, string $token): RedirectResponse|View
+    public function activate(Request $request, int $registration, string $token): RedirectResponse|JsonResponse|View
     {
         $request->validate([
             'password' => [
@@ -50,11 +51,21 @@ class KKProfilingAccountInviteController extends Controller
             'password.regex' => 'Password must include uppercase, lowercase, number, and special character.',
         ]);
 
+        $wantsJson = $request->expectsJson() || $request->ajax();
+
         try {
             $record = $this->inviteService->findValidRegistration($registration, $token);
             $this->inviteService->activate($record, $token, (string) $request->input('password'));
         } catch (ValidationException $e) {
             $message = collect($e->errors())->flatten()->first() ?: 'Unable to activate this account.';
+
+            if ($wantsJson) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                    'errors' => $e->errors(),
+                ], 422);
+            }
 
             if ($request->boolean('from_form') || $request->has('password')) {
                 return back()->withErrors(['password' => $message])->withInput();
@@ -65,8 +76,19 @@ class KKProfilingAccountInviteController extends Controller
             ]);
         }
 
+        $successMessage = 'Your account has been activated successfully. You can now sign in.';
+
+        if ($wantsJson) {
+            return response()->json([
+                'success' => true,
+                'activated' => true,
+                'redirect_url' => route('sign-in'),
+                'message' => $successMessage,
+            ]);
+        }
+
         return redirect()
             ->route('sign-in')
-            ->with('success', 'Your Kabataan account is ready. You can now sign in.');
+            ->with('success', $successMessage);
     }
 }

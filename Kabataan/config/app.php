@@ -56,6 +56,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Public URL for Email Links
+    |--------------------------------------------------------------------------
+    |
+    | Verification and password links in emails must use an address reachable
+    | from the recipient's device (phone, tablet, etc.). Set this to your
+    | deployed domain or LAN IP when APP_URL is only for local dev serving.
+    |
+    */
+
+    'public_url' => env('APP_PUBLIC_URL'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

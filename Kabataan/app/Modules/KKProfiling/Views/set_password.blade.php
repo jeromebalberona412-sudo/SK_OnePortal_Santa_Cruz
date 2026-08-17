@@ -13,7 +13,7 @@
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
-<body class="youth-login-page kkp-setpw-page" @if(!empty($registrationAlreadyComplete)) data-registration-already-complete="1" data-auto-approved="{{ !empty($registrationAutoApproved) ? '1' : '0' }}" @endif>
+<body class="youth-signin-page kkp-setpw-page" @if(!empty($registrationAlreadyComplete)) data-registration-already-complete="1" data-auto-approved="{{ !empty($registrationAutoApproved) ? '1' : '0' }}" @endif>
 
     @include('dashboard::loading')
 
@@ -27,7 +27,7 @@
         </div>
     </div>
 
-    <main class="youth-login-container">
+    <main class="youth-signin-container">
         <div class="youth-branding-section">
             <div class="branding-content">
                 <div class="logo-wrapper">
@@ -43,8 +43,8 @@
             </div>
         </div>
 
-        <div class="youth-login-section">
-            <div class="youth-login-card kkp-setpw-card">
+        <div class="youth-signin-section">
+            <div class="youth-signin-card kkp-setpw-card">
                 <div class="card-header">
                     <h2 class="card-title">Set Your Password</h2>
                     <p class="card-subtitle">
@@ -101,7 +101,7 @@
                                 </svg>
                             </button>
                         </div>
-                        <div class="pw-rules" id="pwRules">
+                        <div class="pw-rules" id="pwRules" hidden>
                             <div class="pw-rule" data-rule="len">At least 8 characters</div>
                             <div class="pw-rule" data-rule="lower">At least one lowercase letter</div>
                             <div class="pw-rule" data-rule="upper">At least one uppercase letter</div>

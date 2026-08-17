@@ -2,6 +2,7 @@
 
 namespace App\Modules\Profile\Notifications;
 
+use App\Support\MailUrl;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -18,10 +19,10 @@ class PasswordChangeVerificationNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $url = url(route('change-password.confirm', [
+        $url = MailUrl::route('change-password.confirm', [
             'id' => $notifiable->id,
             'token' => $this->plainToken,
-        ], false));
+        ]);
 
         return (new MailMessage)
             ->subject('Confirm Your Kabataan Password Change')

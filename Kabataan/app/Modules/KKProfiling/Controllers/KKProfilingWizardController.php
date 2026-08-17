@@ -7,6 +7,7 @@ use App\Models\Barangay;
 use App\Models\KabataanRegistration;
 use App\Models\User;
 use App\Notifications\KabataanSetPasswordEmail;
+use App\Support\MailUrl;
 use App\Rules\FacebookProfileUrl;
 use App\Services\BarangayZoneService;
 use App\Services\DuplicateKabataanRegistrationService;
@@ -943,7 +944,7 @@ class KKProfilingWizardController extends Controller
 
         $this->draftService->assertEmailAvailable($email, (int) $barangayRecord->id);
 
-        $setPasswordUrl = route('kkprofiling.wizard.set-password', [
+        $setPasswordUrl = MailUrl::route('kkprofiling.wizard.set-password', [
             'token' => $wizard['token'],
             'hash' => sha1($email),
         ]);

@@ -3,6 +3,7 @@
 namespace App\Modules\Profile\Notifications;
 
 use App\Models\User;
+use App\Support\MailUrl;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -20,10 +21,10 @@ class EmailChangeVerificationNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $url = url(route('change-email.confirm', [
+        $url = MailUrl::route('change-email.confirm', [
             'id' => $this->user->id,
             'token' => $this->plainToken,
-        ], false));
+        ]);
 
         return (new MailMessage)
             ->subject('Confirm Your New Kabataan Email')

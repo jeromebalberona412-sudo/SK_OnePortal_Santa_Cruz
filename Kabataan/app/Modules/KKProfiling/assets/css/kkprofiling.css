@@ -2324,7 +2324,27 @@ body.homepage-body.kkp-form-page {
 }
 
 .kkp-setpw-page .youth-main-title {
-    font-size: 3.5rem;
+    white-space: nowrap;
+}
+
+.kkp-setpw-page .youth-tagline {
+    white-space: nowrap;
+}
+
+.kkp-setpw-page .card-helper-text {
+    margin-top: 0.5rem;
+}
+
+.kkp-setpw-page a.kkp-setpw-signin-link {
+    color: #fff;
+    text-decoration: none;
+}
+
+.kkp-setpw-page a.kkp-setpw-signin-link:hover,
+.kkp-setpw-page a.kkp-setpw-signin-link:focus,
+.kkp-setpw-page a.kkp-setpw-signin-link:visited {
+    color: #fff;
+    text-decoration: none;
 }
 
 .kkp-setpw-branding-sub {
@@ -2334,20 +2354,13 @@ body.homepage-body.kkp-form-page {
     font-weight: 600;
 }
 
-.kkp-setpw-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 5px;
-    background: linear-gradient(90deg, #44a53e 0%, #fdc020 50%, #0450a8 100%);
-    border-radius: 28px 28px 0 0;
-}
-
 .kkp-setpw-card {
     position: relative;
     overflow: hidden;
+}
+
+.kkp-setpw-card::before {
+    display: none;
 }
 
 .kkp-setpw-email-badge {
@@ -2394,37 +2407,54 @@ body.homepage-body.kkp-form-page {
 }
 
 .kkp-setpw-page .pw-rules {
-    margin-top: 10px;
-    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 0.65rem;
+    padding: 0.7rem 0.8rem;
     border-radius: 10px;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    font-size: 12px;
+    font-size: 0.78rem;
+    line-height: 1.35;
     text-align: left;
+}
+
+.kkp-setpw-page .pw-rules[hidden] {
+    display: none !important;
 }
 
 .kkp-setpw-page .pw-rule {
     color: #64748b;
-    margin: 2px 0;
+    margin: 0;
     position: relative;
-    padding-left: 18px;
+    padding-left: 1.2rem;
+    font-weight: 500;
 }
 
 .kkp-setpw-page .pw-rule::before {
-    content: '○';
+    content: '';
     position: absolute;
     left: 0;
-    color: #94a3b8;
+    top: 0.28rem;
+    width: 0.7rem;
+    height: 0.7rem;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 50%;
+    background: #fff;
+    box-sizing: border-box;
 }
 
 .kkp-setpw-page .pw-rule.ok {
-    color: #16a34a;
+    color: #0450a8;
     font-weight: 600;
 }
 
 .kkp-setpw-page .pw-rule.ok::before {
-    content: '✓';
-    color: #16a34a;
+    content: '';
+    border-color: #0450a8;
+    background: #0450a8;
+    box-shadow: inset 0 0 0 1.5px #fff;
 }
 
 .kkp-setpw-field-error {
@@ -2458,7 +2488,7 @@ body.homepage-body.kkp-form-page {
 }
 
 .kkp-setpw-toggle:hover {
-    color: #44a53e;
+    color: #0450a8;
 }
 
 .kkp-setpw-toggle .pw-eye {
@@ -2466,15 +2496,9 @@ body.homepage-body.kkp-form-page {
     height: 20px;
 }
 
-@media (max-width: 1024px) {
-    .kkp-setpw-page .youth-main-title {
-        font-size: 2.75rem;
-    }
-}
-
 @media (max-width: 640px) {
-    .kkp-setpw-page .youth-main-title {
-        font-size: 2.25rem;
+    .kkp-setpw-page .youth-tagline {
+        white-space: normal;
     }
 }
 

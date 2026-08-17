@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\KabataanProfilingEmailChangeVerify;
 use App\Notifications\KabataanProfilingUpdatedEmail;
 use App\Notifications\KabataanVerifyEmail;
+use App\Support\MailUrl;
 use App\Rules\FacebookProfileUrl;
 use App\Services\BarangayLogoUrlService;
 use App\Services\BarangayZoneService;
@@ -503,7 +504,7 @@ class KKProfilingController extends Controller
             ], 429);
         }
 
-        $verificationUrl = URL::temporarySignedRoute(
+        $verificationUrl = MailUrl::temporarySignedRoute(
             'kkprofiling.verify-update',
             now()->addHours(24),
             [
@@ -1151,7 +1152,7 @@ class KKProfilingController extends Controller
 
     private function sendVerificationEmail(KabataanRegistration $registration): void
     {
-        $verificationUrl = URL::temporarySignedRoute(
+        $verificationUrl = MailUrl::temporarySignedRoute(
             'kkprofiling.verify',
             now()->addHours(24),
             [
