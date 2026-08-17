@@ -34,10 +34,6 @@
         'app/Modules/Dashboard/assets/js/chatbot.js',
         'app/Modules/Dashboard/assets/css/notif.css',
         'app/Modules/Dashboard/assets/js/notif.js',
-        'app/Modules/KKProfiling/assets/css/kkprofiling.css',
-        'app/Modules/KKProfiling/assets/css/kk-profiling-update.css',
-        'app/Modules/KKProfiling/assets/js/kkprofiling.js',
-        'app/Modules/KKProfiling/assets/js/kk-profiling-update.js',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="preload" href="{{ url('/sounds/reactions_ux.mp3') }}" as="audio" type="audio/mpeg">
@@ -2234,14 +2230,7 @@
     window.feedToggleComments = feedToggleComments;
     </script>
 
-    @if(!empty($kkProfilingUpdateRequired))
-        @include('kkprofiling::kk-profiling-update')
-    @endif
     <script>
-        window.__SHOW_KK_UPDATE_MODAL = @json($showKkUpdateModal ?? false);
-        window.__KK_PROFILING_UPDATE_REQUIRED = @json($kkProfilingUpdateRequired ?? false);
-        window.__KK_PROFILING_FORM_DATA = @json($kkProfilingFormData ?? []);
-        window.__KK_PROFILING_ORIGINAL_EMAIL = @json($kkProfilingOriginalEmail ?? '');
         window.__kabataanPrograms = @json($programsPayload ?? ['abyip_programs' => [], 'schedule_programs' => []]);
         const educationHistoryBtn = document.getElementById('educationHistoryBtn');
         const hasScholarshipHistory = Boolean(window.__kabataanPrograms?.has_scholarship_application_history)

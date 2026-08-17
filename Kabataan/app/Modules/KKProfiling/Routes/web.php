@@ -2,6 +2,7 @@
 
 use App\Modules\KKProfiling\Controllers\KKProfilingAccountInviteController;
 use App\Modules\KKProfiling\Controllers\KKProfilingController;
+use App\Modules\KKProfiling\Controllers\KkProfilingUpdateController;
 use App\Modules\KKProfiling\Controllers\KKProfilingWizardController;
 use Illuminate\Support\Facades\Route;
 
@@ -68,6 +69,7 @@ Route::post('/kkprofiling/signup/{barangay}/set-password', [KKProfilingControlle
     ->name('kkprofiling.store-password');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/kkprofiling/update', [KkProfilingUpdateController::class, 'show'])->name('kkprofiling.update.show');
     Route::put('/kkprofiling/update', [KKProfilingController::class, 'updateForUser'])->name('kkprofiling.update');
     Route::post('/api/kkprofiling/resend-update-verification', [KKProfilingController::class, 'resendUpdateEmailVerification'])
         ->name('kkprofiling.resend-update-verification');

@@ -13,9 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 
@@ -51,6 +49,7 @@ class AuthController extends Controller
                 if ($request->wantsJson()) {
                     return response()->json(['success' => false, 'message' => 'Please complete the security verification.'], 422);
                 }
+
                 return back()->withInput($request->only('email'))->with('sign_in_error', 'Please complete the security verification.');
             }
 
@@ -58,21 +57,22 @@ class AuthController extends Controller
                 if ($request->wantsJson()) {
                     return response()->json(['success' => false, 'message' => 'Security verification failed. Please try again.'], 422);
                 }
+
                 return back()->withInput($request->only('email'))->with('sign_in_error', 'Security verification failed. Please try again.');
             }
         }
 
         $credentials = $request->validate([
-            'email'    => ['required', 'email'],
+            'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
 
         // Select only the columns needed for auth — avoids loading large unused fields
         $user = User::select([
-                'id', 'email', 'password', 'role', 'status',
-                'name', 'barangay_id', 'tenant_id',
-                'last_login_at', 'last_login_ip',
-            ])
+            'id', 'email', 'password', 'role', 'status',
+            'name', 'barangay_id', 'tenant_id',
+            'last_login_at', 'last_login_ip',
+        ])
             ->where('email', $credentials['email'])
             ->first();
 
@@ -84,6 +84,7 @@ class AuthController extends Controller
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => KabataanAuthService::SIGNIN_DENIED_MESSAGE], 422);
             }
+
             return back()->withInput($request->only('email'))->with('sign_in_error', KabataanAuthService::SIGNIN_DENIED_MESSAGE);
         }
 
@@ -107,6 +108,7 @@ class AuthController extends Controller
                 if ($request->wantsJson()) {
                     return response()->json(['success' => false, 'message' => $msg], 422);
                 }
+
                 return back()->withInput($request->only('email'))->with('sign_in_error', $msg);
             }
         }
@@ -119,6 +121,7 @@ class AuthController extends Controller
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
+
             return back()->withInput($request->only('email'))->with('sign_in_error', $msg);
         }
 
@@ -127,6 +130,7 @@ class AuthController extends Controller
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
+
             return back()->withInput($request->only('email'))->with('sign_in_error', $msg);
         }
 
@@ -138,29 +142,27 @@ class AuthController extends Controller
         // Reuse the registration already loaded, or fetch it once now.
         // Defer the KkProfilingScheduleService check after session is set
         // so it doesn't block the redirect.
-        if ($registration === null) {
-            $registration = KabataanRegistration::select(['id', 'user_id', 'updated_at', 'evaluation_status'])
+        if ($registration === null || empty($registration->barangay_id)) {
+            $registration = KabataanRegistration::query()
                 ->where('user_id', $user->id)
                 ->latest('id')
                 ->first();
         }
 
         if ($registration && app(KkProfilingScheduleService::class)->requiresProfilingUpdate($registration)) {
-            $request->session()->flash('show_kk_profiling_update', true);
-            $request->session()->flash('kk_profiling_update_required', true);
             $request->session()->put('kk_profiling_update_required', true);
             $request->session()->put('kabataan_registration_id', $registration->id);
+            $redirectUrl = route('kkprofiling.update.show');
         } else {
             $request->session()->put('kk_profiling_update_required', false);
+            $redirectUrl = redirect()->intended(route('dashboard'))->getTargetUrl();
         }
-
-        $redirectUrl = redirect()->intended(route('dashboard'))->getTargetUrl();
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true, 'redirect' => $redirectUrl]);
         }
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->to($redirectUrl);
     }
 
     public function logout(Request $request)
@@ -202,10 +204,10 @@ class AuthController extends Controller
             $sentAt = now();
 
             $request->session()->put('kabataan_fp_verify', [
-                'email'               => (string) $request->email,
-                'sent_at'             => $sentAt->toIso8601String(),
+                'email' => (string) $request->email,
+                'sent_at' => $sentAt->toIso8601String(),
                 'resend_available_at' => $sentAt->copy()->addSeconds(60)->toIso8601String(),
-                'expires_at'          => $sentAt->copy()->addHours(2)->toIso8601String(),
+                'expires_at' => $sentAt->copy()->addHours(2)->toIso8601String(),
             ]);
 
             return redirect()->route('password.verify-email');
@@ -230,6 +232,7 @@ class AuthController extends Controller
         $expiresAt = Carbon::parse((string) ($state['expires_at'] ?? now()->toIso8601String()));
         if ($expiresAt->isPast()) {
             $request->session()->forget('kabataan_fp_verify');
+
             return redirect()->route('password.request')
                 ->withErrors(['email' => 'Your password reset session has expired. Please start again.']);
         }
@@ -237,8 +240,8 @@ class AuthController extends Controller
         $resendAvailableAt = Carbon::parse((string) ($state['resend_available_at'] ?? now()->toIso8601String()));
 
         return view('authentication::verify-email', [
-            'email'              => (string) $state['email'],
-            'resendAvailableAt'  => $resendAvailableAt->toIso8601String(),
+            'email' => (string) $state['email'],
+            'resendAvailableAt' => $resendAvailableAt->toIso8601String(),
             'resendCooldownSecs' => max(0, (int) now()->diffInSeconds($resendAvailableAt, false)),
         ]);
     }
@@ -249,7 +252,7 @@ class AuthController extends Controller
 
         if (! is_array($state) || empty($state['email'])) {
             return response()->json([
-                'ok'      => false,
+                'ok' => false,
                 'message' => 'No active password reset session. Please start again.',
             ], 404);
         }
@@ -257,22 +260,23 @@ class AuthController extends Controller
         $expiresAt = Carbon::parse((string) ($state['expires_at'] ?? now()->toIso8601String()));
         if ($expiresAt->isPast()) {
             $request->session()->forget('kabataan_fp_verify');
+
             return response()->json([
-                'ok'      => false,
+                'ok' => false,
                 'message' => 'Your password reset session has expired. Please start again.',
                 'expired' => true,
             ], 410);
         }
 
         $resendAvailableAt = Carbon::parse((string) ($state['resend_available_at'] ?? now()->toIso8601String()));
-        $remainingSecs     = (int) now()->diffInSeconds($resendAvailableAt, false);
+        $remainingSecs = (int) now()->diffInSeconds($resendAvailableAt, false);
 
         if ($remainingSecs > 0) {
             return response()->json([
-                'ok'                  => false,
-                'message'             => "Please wait {$remainingSecs} seconds before resending.",
+                'ok' => false,
+                'message' => "Please wait {$remainingSecs} seconds before resending.",
                 'resend_available_at' => $resendAvailableAt->toIso8601String(),
-                'cooldown_remaining'  => $remainingSecs,
+                'cooldown_remaining' => $remainingSecs,
             ], 429);
         }
 
@@ -280,7 +284,7 @@ class AuthController extends Controller
 
         if ($status !== Password::RESET_LINK_SENT) {
             return response()->json([
-                'ok'      => false,
+                'ok' => false,
                 'message' => __($status),
             ], 422);
         }
@@ -288,14 +292,14 @@ class AuthController extends Controller
         $newResendAvailableAt = now()->addSeconds(60);
 
         $state['resend_available_at'] = $newResendAvailableAt->toIso8601String();
-        $state['sent_at']             = now()->toIso8601String();
+        $state['sent_at'] = now()->toIso8601String();
         $request->session()->put('kabataan_fp_verify', $state);
 
         return response()->json([
-            'ok'                  => true,
-            'message'             => 'A new password reset link has been sent to your email.',
+            'ok' => true,
+            'message' => 'A new password reset link has been sent to your email.',
             'resend_available_at' => $newResendAvailableAt->toIso8601String(),
-            'cooldown_remaining'  => 60,
+            'cooldown_remaining' => 60,
         ]);
     }
 

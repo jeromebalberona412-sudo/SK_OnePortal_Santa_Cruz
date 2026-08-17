@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 class KKProfilingSchedule extends Model
 {
@@ -18,13 +19,31 @@ class KKProfilingSchedule extends Model
         'date_expiry',
         'link',
         'status',
+        'allow_existing_update',
     ];
 
     protected $casts = [
-        'date_start'  => 'date:Y-m-d',
+        'date_start' => 'date:Y-m-d',
         'date_expiry' => 'date:Y-m-d',
         'profiling_year' => 'integer',
+        'allow_existing_update' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $model) {
+            if ($model->getConnection()->getDriverName() !== 'pgsql') {
+                return;
+            }
+
+            if (! array_key_exists('allow_existing_update', $model->attributes)) {
+                return;
+            }
+
+            $bool = filter_var($model->attributes['allow_existing_update'], FILTER_VALIDATE_BOOLEAN);
+            $model->attributes['allow_existing_update'] = DB::raw($bool ? 'TRUE' : 'FALSE');
+        });
+    }
 
     public function barangay(): BelongsTo
     {
@@ -38,8 +57,9 @@ class KKProfilingSchedule extends Model
     public function scopeActive($query)
     {
         $today = now()->toDateString();
+
         return $query->whereIn('status', ['Upcoming', 'Ongoing'])
-                     ->where('date_start', '<=', $today)
-                     ->where('date_expiry', '>=', $today);
+            ->where('date_start', '<=', $today)
+            ->where('date_expiry', '>=', $today);
     }
 }

@@ -1,179 +1,154 @@
-/* KK Profiling yearly update modal (dashboard) */
-.kkpu-overlay {
+/* Locked full-page yearly KK Profiling update — no app navigation */
+.kkpu-page-body {
+    background: #f0f1f5;
+    min-height: 100vh;
+    padding-top: 0;
+}
+
+.kkpu-lock-bar {
     position: fixed;
-    inset: 0;
-    z-index: 1200;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    opacity: 0;
-    transition: opacity 0.28s ease;
-}
-
-.kkpu-overlay.is-mandatory {
-    pointer-events: auto;
-}
-
-.kkpu-overlay.is-mandatory .kkpu-modal {
-    box-shadow: 0 24px 64px rgba(2, 42, 84, 0.4);
-}
-
-body.kkpu-modal-open.is-mandatory-lock {
-    overflow: hidden;
-}
-
-.kkpu-overlay.is-open {
-    display: flex;
-    opacity: 1;
-}
-
-.kkpu-modal {
-    display: flex;
-    flex-direction: column;
-    width: min(1000px, 100%);
-    max-height: min(92vh, 900px);
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.4);
-    overflow: hidden;
-    transform: translateY(12px) scale(0.98);
-    transition: transform 0.28s ease, width 0.28s ease, height 0.28s ease, max-width 0.28s ease, max-height 0.28s ease, border-radius 0.28s ease;
-}
-
-.kkpu-overlay.is-open .kkpu-modal {
-    transform: translateY(0) scale(1);
-}
-
-.kkpu-overlay.modal-maximized {
-    align-items: stretch;
-    justify-content: stretch;
-    padding: 0;
-}
-
-.kkpu-overlay.modal-maximized .kkpu-modal {
-    width: 100%;
-    height: 100%;
-    max-width: none;
-    max-height: none;
-    border-radius: 0;
-    transform: none;
-}
-
-.kkpu-overlay .modal-header {
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 300;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 14px 18px;
-    background: linear-gradient(135deg, #1a56db 0%, #1e40af 100%);
-    color: #fff;
-    border-bottom: none;
-    flex-shrink: 0;
+    min-height: 56px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #011e3c 0%, #0450a8 60%, #1a6fd4 100%);
+    box-shadow: 0 2px 16px rgba(2, 42, 84, 0.35);
 }
 
-.kkpu-overlay .modal-title {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 700;
-    color: #fff;
-}
-
-.kkpu-overlay .modal-window-controls {
+.kkpu-lock-bar__brand {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 10px;
+    min-width: 0;
+}
+
+.kkpu-lock-bar__logo {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
     flex-shrink: 0;
 }
 
-.kkpu-overlay .modal-toggle-btn,
-.kkpu-overlay .modal-close {
-    background: none;
-    border: none;
-    font-size: 18px;
-    font-weight: 700;
-    cursor: pointer;
+.kkpu-lock-bar__title {
+    display: flex;
+    flex-direction: column;
     color: #fff;
-    padding: 4px 8px;
-    line-height: 1;
-    width: auto;
-    height: auto;
-    border-radius: 0;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.15;
+    min-width: 0;
 }
 
-.kkpu-overlay .modal-toggle-btn:hover,
-.kkpu-overlay .modal-close:hover {
+.kkpu-lock-bar__title small {
+    font-size: 11px;
+    font-weight: 500;
     opacity: 0.85;
-    background: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.kkpu-instruction {
-    padding: 14px 22px;
-    background: #fffbeb;
-    border-bottom: 1px solid #fde68a;
+.kkpu-lock-bar__logout {
     flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    min-height: 36px;
+    cursor: pointer;
 }
 
-.kkpu-instruction-text {
+.kkpu-lock-bar__logout:hover,
+.kkpu-lock-bar__logout:focus-visible {
+    background: rgba(255, 255, 255, 0.22);
+    outline: none;
+}
+
+.kkpu-page {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 72px 16px 48px;
+}
+
+.kkpu-page-header {
+    margin-bottom: 18px;
+}
+
+.kkpu-page-title {
+    margin: 0 0 8px;
+    font-size: 26px;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1.25;
+}
+
+.kkpu-page-subtitle {
     margin: 0;
-    font-size: 0.9rem;
-    line-height: 1.55;
-    color: #78350f;
-}
-
-.kkpu-modal-body {
-    flex: 1;
-    overflow: auto;
-    padding: 16px;
-    min-height: 0;
-    -webkit-overflow-scrolling: touch;
-}
-
-.kkpu-overlay.modal-maximized .kkpu-modal-body {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #4b5563;
+    max-width: 720px;
 }
 
 .kkpu-paper {
-    margin: 0 auto;
-    max-width: 100%;
+    margin-top: 8px;
 }
 
-.kkpu-modal-body .kkp-form-paper,
-.kkpu-modal-body .kkp-paper,
-.kkpu-modal-body .kkpu-paper {
-    min-width: 860px;
+.kkpu-page .kkp-alert {
+    margin-bottom: 16px;
 }
 
-body.kkpu-modal-open {
-    overflow: hidden;
+@media (max-width: 768px) {
+    .kkpu-page {
+        padding: 68px 12px 32px;
+    }
+
+    .kkpu-page-title {
+        font-size: 20px;
+    }
+
+    .kkpu-page-subtitle {
+        font-size: 13px;
+    }
 }
 
-@media (max-width: 640px) {
-    .kkpu-overlay:not(.modal-maximized) {
-        padding: 0;
+@media (max-width: 480px) {
+    .kkpu-lock-bar {
+        padding: 8px 10px;
+        gap: 8px;
     }
 
-    .kkpu-overlay:not(.modal-maximized) .kkpu-modal {
-        width: 100%;
-        max-height: 100%;
-        border-radius: 0;
-        height: 100%;
+    .kkpu-lock-bar__title small {
+        display: none;
     }
 
-    .kkpu-overlay .modal-header {
-        padding: 14px 16px;
+    .kkpu-lock-bar__logout {
+        padding: 8px 12px;
+        font-size: 12px;
     }
 
-    .kkpu-instruction {
-        padding: 12px 16px;
+    .kkpu-page {
+        padding: 64px 10px 28px;
+    }
+}
+
+@media (max-width: 320px) {
+    .kkpu-lock-bar__title {
+        font-size: 13px;
     }
 
-    .kkpu-modal-body {
-        padding: 10px;
+    .kkpu-lock-bar__logo {
+        width: 28px;
+        height: 28px;
     }
 }

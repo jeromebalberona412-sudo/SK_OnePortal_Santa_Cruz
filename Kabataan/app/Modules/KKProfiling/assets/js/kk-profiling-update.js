@@ -1,69 +1,25 @@
 /**
- * KK Profiling yearly update modal (dashboard)
+ * KK Profiling yearly update page
  */
 (function () {
     'use strict';
 
-    const modal = document.getElementById('kkProfilingUpdateModal');
-    if (!modal) return;
-
-    const panel = document.getElementById('kkpuModalPanel');
-    const closeBtn = document.getElementById('kkpuCloseBtn');
-    const fullscreenBtn = document.getElementById('kkpuFullscreenBtn');
-    const isMandatory = window.__KK_PROFILING_UPDATE_REQUIRED === true;
-    let isOpen = false;
-
-    function resetModalMaximized() {
-        modal.classList.remove('modal-maximized');
-        panel?.classList.remove('modal-maximized');
-        if (fullscreenBtn) {
-            fullscreenBtn.textContent = '□';
-            fullscreenBtn.setAttribute('aria-label', 'Maximize');
-        }
+    if (window.__KK_PROFILING_UPDATE_REQUIRED) {
+        history.pushState(null, '', location.href);
+        window.addEventListener('popstate', function () {
+            history.pushState(null, '', location.href);
+        });
     }
 
-    function openModal() {
-        if (isOpen) return;
-        isOpen = true;
-        modal.classList.add('is-open');
-        if (isMandatory) {
-            modal.classList.add('is-mandatory');
-        }
-        modal.setAttribute('aria-hidden', 'false');
-        document.body.classList.add('kkpu-modal-open');
-        if (isMandatory) {
-            document.body.classList.add('is-mandatory-lock');
-        }
-    }
-
-    function closeModal() {
-        if (isMandatory) return;
-        if (!isOpen) return;
-        isOpen = false;
-        modal.classList.remove('is-open');
-        modal.setAttribute('aria-hidden', 'true');
-        document.body.classList.remove('kkpu-modal-open');
-        resetModalMaximized();
-    }
-
-    function toggleFullscreen() {
-        if (!panel) return;
-        const isMax = !modal.classList.contains('modal-maximized');
-        modal.classList.toggle('modal-maximized', isMax);
-        panel.classList.toggle('modal-maximized', isMax);
-        if (fullscreenBtn) {
-            fullscreenBtn.textContent = isMax ? '⧉' : '□';
-            fullscreenBtn.setAttribute('aria-label', isMax ? 'Restore down' : 'Maximize');
-        }
-    }
-
-    function shouldAutoOpen() {
-        return window.__SHOW_KK_UPDATE_MODAL === true;
+    const form = document.getElementById('kkProfilingUpdateForm');
+    if (!form) {
+        return;
     }
 
     function setCheckboxGroupValue(chkName, hiddenId, value) {
-        const form = document.getElementById('kkProfilingUpdateForm');
-        if (!form || !value) return;
+        if (!value) {
+            return;
+        }
 
         const hidden = document.getElementById(hiddenId);
         if (hidden) {
@@ -81,12 +37,17 @@
     }
 
     function populateUpdateForm(data) {
-        const form = document.getElementById('kkProfilingUpdateForm');
-        if (!form || !data || typeof data !== 'object') return;
+        if (!data || typeof data !== 'object') {
+            return;
+        }
 
         Object.entries(data).forEach(([key, value]) => {
-            if (key === 'suffix' || key === 'email') return;
-            if (value === null || value === undefined || value === '') return;
+            if (key === 'suffix' || key === 'email') {
+                return;
+            }
+            if (value === null || value === undefined || value === '') {
+                return;
+            }
 
             const direct = form.querySelector(`[name="${key}"]`);
             if (direct && direct.type !== 'hidden' && direct.type !== 'checkbox' && direct.type !== 'radio') {
@@ -96,17 +57,10 @@
             }
         });
 
-        const checkboxFields = [
-            { name: 'sex', chk: 'sexChk', hiddenId: 'kkpSex' },
-        ];
-
-        checkboxFields.forEach(({ name, chk, hiddenId }) => {
-            const raw = data[name];
-            const value = Array.isArray(raw) ? raw[0] : raw;
-            if (value) {
-                setCheckboxGroupValue(chk, hiddenId, value);
-            }
-        });
+        const rawSex = Array.isArray(data.sex) ? data.sex[0] : data.sex;
+        if (rawSex) {
+            setCheckboxGroupValue('sexChk', 'kkpSex', rawSex);
+        }
 
         const suffixSelect = document.getElementById('kkpSuffix');
         if (suffixSelect) {
@@ -136,41 +90,11 @@
         }
     }
 
-    closeBtn?.addEventListener('click', () => closeModal());
-    fullscreenBtn?.addEventListener('click', toggleFullscreen);
-
-    if (!isMandatory) {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
-    }
-
-    document.addEventListener('keydown', (e) => {
-        if (!isOpen) return;
-        if (e.key === 'Escape') {
-            if (isMandatory) return;
-            if (modal.classList.contains('modal-maximized')) {
-                toggleFullscreen();
-            } else {
-                closeModal();
-            }
-        }
-    });
-
-    window.openKkProfilingUpdateModal = openModal;
-    window.closeKkProfilingUpdateModal = closeModal;
-
     document.addEventListener('DOMContentLoaded', () => {
         populateUpdateForm(window.__KK_PROFILING_FORM_DATA || {});
-
-        const updateForm = document.getElementById('kkProfilingUpdateForm');
-        updateForm?.addEventListener('submit', (event) => {
+        form.addEventListener('submit', (event) => {
             window.handleKkProfilingUpdateSubmit(event);
         });
-
-        if (shouldAutoOpen()) {
-            requestAnimationFrame(() => openModal());
-        }
     });
 })();
 
@@ -178,7 +102,9 @@ window.handleKkProfilingUpdateSubmit = async function (event) {
     event.preventDefault();
 
     const form = document.getElementById('kkProfilingUpdateForm');
-    if (!form) return false;
+    if (!form) {
+        return false;
+    }
 
     const submitBtn = document.getElementById('kkpSubmitBtn');
     const submitText = document.getElementById('kkpSubmitText');
@@ -249,11 +175,11 @@ window.handleKkProfilingUpdateSubmit = async function (event) {
             return false;
         }
 
-        setSubmitting(true, 'Update complete. Refreshing...');
+        setSubmitting(true, 'Update complete. Redirecting...');
         if (typeof window.showLoading === 'function') {
-            window.showLoading('Update complete. Refreshing...');
+            window.showLoading('Update complete. Redirecting...');
         }
-        window.location.reload();
+        window.location.href = data.redirect || window.__KK_PROFILING_UPDATE_REDIRECT || '/dashboard';
         return false;
     } catch (err) {
         resetSubmit();

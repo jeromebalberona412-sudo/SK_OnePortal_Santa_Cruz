@@ -9,18 +9,19 @@ use App\Models\User;
 use App\Notifications\KabataanProfilingEmailChangeVerify;
 use App\Notifications\KabataanProfilingUpdatedEmail;
 use App\Notifications\KabataanVerifyEmail;
-use App\Support\MailUrl;
 use App\Rules\FacebookProfileUrl;
 use App\Services\BarangayLogoUrlService;
 use App\Services\BarangayZoneService;
-use App\Services\IdVerificationService;
-use App\Services\KabataanPhotoService;
 use App\Services\KabataanNotificationService;
+use App\Services\KabataanPhotoService;
 use App\Services\KabataanProfilingHistoryService;
 use App\Services\KkProfilingScheduleService;
 use App\Services\KkRegistrationDraftService;
 use App\Services\KkSurveyResponseService;
 use App\Services\RegistrationEvaluationService;
+use App\Services\TurnstileService;
+use App\Support\MailUrl;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -35,6 +36,7 @@ class KKProfilingController extends Controller
         protected KabataanPhotoService $photoService,
         protected BarangayZoneService $barangayZoneService,
     ) {}
+
     /**
      * Display signup page with barangay selector
      */
@@ -76,8 +78,8 @@ class KKProfilingController extends Controller
         $map = [];
         foreach ($rows as $row) {
             $id = $row->barangay_id;
-            $p  = $priority[$row->status] ?? 99;
-            if (!isset($map[$id]) || $p < ($priority[$map[$id]->status] ?? 99)) {
+            $p = $priority[$row->status] ?? 99;
+            if (! isset($map[$id]) || $p < ($priority[$map[$id]->status] ?? 99)) {
                 $map[$id] = $row;
             }
         }
@@ -88,11 +90,11 @@ class KKProfilingController extends Controller
                 && $row->date_expiry >= $today;
 
             return [
-                'barangay_id'  => $row->barangay_id,
-                'status'       => $row->status,
-                'date_start'   => $row->date_start,
-                'date_expiry'  => $row->date_expiry,
-                'is_open'      => $isOpen,
+                'barangay_id' => $row->barangay_id,
+                'status' => $row->status,
+                'date_start' => $row->date_start,
+                'date_expiry' => $row->date_expiry,
+                'is_open' => $isOpen,
             ];
         }, $map));
 
@@ -111,35 +113,35 @@ class KKProfilingController extends Controller
 
         // Map display names — must match exact names in the barangays DB table
         $barangayMap = [
-            'alipit'          => 'Alipit',
-            'bagumbayan'      => 'Bagumbayan',
-            'poblacion-i'     => 'Poblacion I',
-            'poblacion-ii'    => 'Poblacion II',
-            'poblacion-iii'   => 'Poblacion III',
-            'poblacion-iv'    => 'Poblacion IV',
-            'poblacion-v'     => 'Poblacion V',
-            'bubukal'         => 'Bubukal',
-            'calios'          => 'Calios',
-            'duhat'           => 'Duhat',
-            'gatid'           => 'Gatid',
-            'jasaan'          => 'Jasaan',
-            'labuin'          => 'Labuin',
-            'malinao'         => 'Malinao',
-            'oogong'          => 'Oogong',
-            'pagsawitan'      => 'Pagsawitan',
-            'palasan'         => 'Palasan',
-            'patimbao'        => 'Patimbao',
-            'san-jose'        => 'San Jose',
-            'san-juan'        => 'San Juan',
+            'alipit' => 'Alipit',
+            'bagumbayan' => 'Bagumbayan',
+            'poblacion-i' => 'Poblacion I',
+            'poblacion-ii' => 'Poblacion II',
+            'poblacion-iii' => 'Poblacion III',
+            'poblacion-iv' => 'Poblacion IV',
+            'poblacion-v' => 'Poblacion V',
+            'bubukal' => 'Bubukal',
+            'calios' => 'Calios',
+            'duhat' => 'Duhat',
+            'gatid' => 'Gatid',
+            'jasaan' => 'Jasaan',
+            'labuin' => 'Labuin',
+            'malinao' => 'Malinao',
+            'oogong' => 'Oogong',
+            'pagsawitan' => 'Pagsawitan',
+            'palasan' => 'Palasan',
+            'patimbao' => 'Patimbao',
+            'san-jose' => 'San Jose',
+            'san-juan' => 'San Juan',
             'san-pablo-norte' => 'San Pablo Norte',
-            'san-pablo-sur'   => 'San Pablo Sur',
-            'santisima-cruz'  => 'Santisima Cruz',
+            'san-pablo-sur' => 'San Pablo Sur',
+            'santisima-cruz' => 'Santisima Cruz',
             'santo-angel-central' => 'Santo Angel Central',
-            'santo-angel-norte'   => 'Santo Angel Norte',
-            'santo-angel-sur'     => 'Santo Angel Sur',
+            'santo-angel-norte' => 'Santo Angel Norte',
+            'santo-angel-sur' => 'Santo Angel Sur',
         ];
 
-        if (!array_key_exists($slug, $barangayMap)) {
+        if (! array_key_exists($slug, $barangayMap)) {
             abort(404);
         }
 
@@ -149,7 +151,7 @@ class KKProfilingController extends Controller
         // Block access if the barangay has no active KK Profiling schedule.
         $barangayRecord = Barangay::where('name', $displayName)->first();
 
-        if (!$barangayRecord) {
+        if (! $barangayRecord) {
             abort(404);
         }
 
@@ -165,10 +167,10 @@ class KKProfilingController extends Controller
             ->where('barangay_id', $barangayRecord->id)
             ->exists();
 
-        if (!$hasActiveSchedule) {
+        if (! $hasActiveSchedule) {
             $message = $hasAnySchedule
-                ? 'KK Profiling sign-up for ' . $displayName . ' is not currently open. Please wait for the next schedule.'
-                : 'This barangay (' . $displayName . ') has no scheduled KK Profiling yet. Please contact your barangay SK officials for more information.';
+                ? 'KK Profiling sign-up for '.$displayName.' is not currently open. Please wait for the next schedule.'
+                : 'This barangay ('.$displayName.') has no scheduled KK Profiling yet. Please contact your barangay SK officials for more information.';
 
             return redirect()->route('kkprofiling.signup')
                 ->withErrors(['schedule' => $message]);
@@ -245,26 +247,26 @@ class KKProfilingController extends Controller
         }
 
         return view('kkprofiling::kkprofiling', [
-            'barangay'              => $displayName,
-            'slug'                  => $slug,
-            'respondentNumber'      => $respondentNumber,
-            'respondentDisplay'     => self::formatRespondentDisplay($respondentNumber),
-            'barangayLogoUrl'       => self::getBarangayLogoUrl($barangayRecord->id),
-            'barangayZones'         => $this->barangayZoneService->activeZonesForBarangay((int) $barangayRecord->id),
-            'wizardInitialStep'     => $wizardInitialStep,
-            'verificationSent'      => $verificationSent,
-            'registrationComplete'  => $registrationComplete,
-            'completedEmail'        => $completedEmail,
+            'barangay' => $displayName,
+            'slug' => $slug,
+            'respondentNumber' => $respondentNumber,
+            'respondentDisplay' => self::formatRespondentDisplay($respondentNumber),
+            'barangayLogoUrl' => self::getBarangayLogoUrl($barangayRecord->id),
+            'barangayZones' => $this->barangayZoneService->activeZonesForBarangay((int) $barangayRecord->id),
+            'wizardInitialStep' => $wizardInitialStep,
+            'verificationSent' => $verificationSent,
+            'registrationComplete' => $registrationComplete,
+            'completedEmail' => $completedEmail,
             'registrationAutoApproved' => $registrationAutoApproved,
-            'wizardDraftEmail'      => $wizardDraftEmail,
-            'turnstileEnabled'      => app(\App\Services\TurnstileService::class)->isEnabled(),
-            'turnstileSiteKey'      => app(\App\Services\TurnstileService::class)->getSiteKey(),
+            'wizardDraftEmail' => $wizardDraftEmail,
+            'turnstileEnabled' => app(TurnstileService::class)->isEnabled(),
+            'turnstileSiteKey' => app(TurnstileService::class)->getSiteKey(),
         ]);
     }
 
     public static function getBarangayLogoUrl(?int $barangayId): ?string
     {
-        return app(\App\Services\BarangayLogoUrlService::class)->resolve($barangayId);
+        return app(BarangayLogoUrlService::class)->resolve($barangayId);
     }
 
     /**
@@ -272,7 +274,7 @@ class KKProfilingController extends Controller
      */
     public static function formatRespondentDisplay(?string $respondentNumber): string
     {
-        if (!$respondentNumber) {
+        if (! $respondentNumber) {
             return '01';
         }
 
@@ -291,54 +293,54 @@ class KKProfilingController extends Controller
     public function updateForUser(Request $request)
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('sign-in');
         }
 
         $registration = KabataanRegistration::where('user_id', $user->id)->latest()->first();
-        if (!$registration) {
+        if (! $registration) {
             return redirect()->route('dashboard')
                 ->withErrors(['kk_profiling' => 'No KK Profiling record found for your account.']);
         }
 
         $validated = $request->validate([
-            'last_name'             => ['required', 'string', 'min:3', 'max:50', 'regex:/^[A-Za-z.\-]{3,50}$/'],
-            'first_name'            => ['required', 'string', 'min:3', 'max:50', 'regex:/^(?!\s)[A-Za-z.\-\s]+$/'],
-            'middle_name'           => ['nullable', 'string', 'max:50', 'regex:/^$|^[A-Za-z.\-]{3,50}$/'],
-            'suffix'                => ['required', 'string', 'in:None,Jr.,Sr.,I,II,III,IV,V,Others'],
-            'custom_suffix'         => ['nullable', 'required_if:suffix,Others', 'string', 'max:5', 'regex:/^(?!\s+$)[A-Za-z.\s]+$/'],
-            'purok_zone'            => $this->barangayZoneService->purokZoneRules((int) $registration->barangay_id),
-            'sex'                   => 'required|in:Male,Female',
-            'age'                   => 'required|integer|min:15|max:30',
-            'birthday'              => 'required|date|before_or_equal:today',
-            'email'                 => ['required', 'email', 'max:254', 'regex:/^[A-Za-z0-9._%+-]{6,30}@gmail\.com$/i'],
-            'contact_number'        => ['required', 'string', 'regex:/^09\d{9}$/'],
-            'civil_status'          => 'required|string',
-            'youth_classification'  => 'required|string',
-            'youth_age_group'       => 'required|string',
-            'work_status'           => 'required|string',
-            'education'             => 'required|string',
-            'sk_voter'              => 'required|string',
-            'national_voter'        => 'required|string',
-            'sk_voted'              => 'required|string',
-            'kk_assembly'           => 'required|string|in:Yes,No',
-            'kk_times'              => 'required_if:kk_assembly,Yes|nullable|string',
-            'kk_reason'             => 'required_if:kk_assembly,No|nullable|string',
-            'facebook_profile_url'  => [
+            'last_name' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[A-Za-z.\-]{3,50}$/'],
+            'first_name' => ['required', 'string', 'min:3', 'max:50', 'regex:/^(?!\s)[A-Za-z.\-\s]+$/'],
+            'middle_name' => ['nullable', 'string', 'max:50', 'regex:/^$|^[A-Za-z.\-]{3,50}$/'],
+            'suffix' => ['required', 'string', 'in:None,Jr.,Sr.,I,II,III,IV,V,Others'],
+            'custom_suffix' => ['nullable', 'required_if:suffix,Others', 'string', 'max:5', 'regex:/^(?!\s+$)[A-Za-z.\s]+$/'],
+            'purok_zone' => $this->barangayZoneService->purokZoneRules((int) $registration->barangay_id),
+            'sex' => 'required|in:Male,Female',
+            'age' => 'required|integer|min:15|max:30',
+            'birthday' => 'required|date|before_or_equal:today',
+            'email' => ['required', 'email', 'max:254', 'regex:/^[A-Za-z0-9._%+-]{6,30}@gmail\.com$/i'],
+            'contact_number' => ['required', 'string', 'regex:/^09\d{9}$/'],
+            'civil_status' => 'required|string',
+            'youth_classification' => 'required|string',
+            'youth_age_group' => 'required|string',
+            'work_status' => 'required|string',
+            'education' => 'required|string',
+            'sk_voter' => 'required|string',
+            'national_voter' => 'required|string',
+            'sk_voted' => 'required|string',
+            'kk_assembly' => 'required|string|in:Yes,No',
+            'kk_times' => 'required_if:kk_assembly,Yes|nullable|string',
+            'kk_reason' => 'required_if:kk_assembly,No|nullable|string',
+            'facebook_profile_url' => [
                 'nullable',
                 Rule::requiredIf(fn () => in_array((string) $request->input('group_chat'), ['Yes', 'No'], true)),
                 'string',
                 'min:3',
                 'max:50',
-                new FacebookProfileUrl(),
+                new FacebookProfileUrl,
             ],
-            'group_chat'            => [
+            'group_chat' => [
                 'nullable',
                 Rule::requiredIf(fn () => trim((string) $request->input('facebook_profile_url', '')) !== ''),
                 'string',
                 Rule::in(['Yes', 'No']),
             ],
-            'signature'             => 'required|string',
+            'signature' => 'required|string',
         ]);
 
         $this->normalizeProfilingSuffix($validated);
@@ -349,7 +351,7 @@ class KKProfilingController extends Controller
             $validRoman = in_array($compact, ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'], true);
             $validText = (bool) preg_match('/^[A-Za-z.]+$/', str_replace(' ', '', $customSuffix));
 
-            if (!$validRoman && !$validText) {
+            if (! $validRoman && ! $validText) {
                 return $this->updateErrorResponse($request, [
                     'custom_suffix' => 'Only text and valid Roman numeral suffixes are allowed.',
                 ]);
@@ -363,7 +365,7 @@ class KKProfilingController extends Controller
         }
 
         try {
-            $derivedAge = \Carbon\Carbon::parse($validated['birthday'])->age;
+            $derivedAge = Carbon::parse($validated['birthday'])->age;
             if ($derivedAge < 15 || $derivedAge > 30 || (int) $validated['age'] !== (int) $derivedAge) {
                 return $this->updateErrorResponse($request, [
                     'birthday' => 'Birthday and age must match and be within 15 to 30 years old.',
@@ -385,7 +387,7 @@ class KKProfilingController extends Controller
         }
 
         $existingForm = $registration->form_data ?? [];
-        if (!empty($existingForm['respondent_number'])) {
+        if (! empty($existingForm['respondent_number'])) {
             $validated['respondent_number'] = $existingForm['respondent_number'];
         } else {
             unset($validated['respondent_number']);
@@ -411,6 +413,7 @@ class KKProfilingController extends Controller
             'title' => 'Congratulations!',
             'message' => "You've successfully updated your KK Profiling for {$profilingYear}.",
         ]);
+        session()->put('kk_profiling_update_required', false);
 
         return $this->updateSuccessResponse($request, [
             'message' => 'Your KK Profiling information for '.$profilingYear.' has been updated successfully. A confirmation email has been sent to '.$originalEmail.'.',
@@ -629,14 +632,14 @@ class KKProfilingController extends Controller
 
         DB::transaction(function () use ($registration, $user, $validated, $existingForm, $email, $profilingYear, $scheduleId) {
             $registration->update([
-                'last_name'      => $validated['last_name'],
-                'first_name'     => $validated['first_name'],
-                'middle_name'    => $validated['middle_name'] ?? null,
-                'suffix'         => $validated['suffix'] ?? null,
-                'email'          => $email,
+                'last_name' => $validated['last_name'],
+                'first_name' => $validated['first_name'],
+                'middle_name' => $validated['middle_name'] ?? null,
+                'suffix' => $validated['suffix'] ?? null,
+                'email' => $email,
                 'contact_number' => $validated['contact_number'] ?? null,
-                'form_data'      => array_merge($existingForm, $validated),
-                'submitted_at'   => now(),
+                'form_data' => array_merge($existingForm, $validated),
+                'submitted_at' => now(),
             ]);
 
             if (strtolower((string) $user->email) !== $email) {
@@ -651,6 +654,10 @@ class KKProfilingController extends Controller
                 $registration,
                 $profilingYear,
                 $scheduleId,
+            );
+            app(KkProfilingScheduleService::class)->forgetCompletionCache(
+                (int) $registration->id,
+                $profilingYear,
             );
 
             app(KkSurveyResponseService::class)->syncFromRegistration($registration, 'approved');
@@ -687,7 +694,7 @@ class KKProfilingController extends Controller
     private function updateSuccessResponse(Request $request, array $payload)
     {
         if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
-            return response()->json(array_merge(['success' => true], $payload));
+            return response()->json(array_merge(['success' => true, 'redirect' => route('dashboard')], $payload));
         }
 
         return redirect()->route('dashboard')->with('success', $payload['message'] ?? 'Update complete.');
@@ -716,19 +723,19 @@ class KKProfilingController extends Controller
     {
         \Log::info('Form submission received', [
             'barangay' => $barangay,
-            'data' => $request->all()
+            'data' => $request->all(),
         ]);
 
         $slug = $this->normalizeSlug($barangay);
         $barangayName = $this->getBarangayName($slug);
 
-        if (!$barangayName) {
+        if (! $barangayName) {
             abort(404);
         }
 
         $barangayRecord = Barangay::where('name', $barangayName)->first();
 
-        if (!$barangayRecord) {
+        if (! $barangayRecord) {
             abort(404);
         }
 
@@ -744,52 +751,52 @@ class KKProfilingController extends Controller
             ->where('barangay_id', $barangayRecord->id)
             ->exists();
 
-        if (!$hasActiveSchedule) {
+        if (! $hasActiveSchedule) {
             $message = $hasAnySchedule
-                ? 'KK Profiling sign-up for ' . $barangayName . ' is not currently open. Please wait for the next schedule.'
-                : 'This barangay (' . $barangayName . ') has no scheduled KK Profiling yet. Please contact your barangay SK officials for more information.';
+                ? 'KK Profiling sign-up for '.$barangayName.' is not currently open. Please wait for the next schedule.'
+                : 'This barangay ('.$barangayName.') has no scheduled KK Profiling yet. Please contact your barangay SK officials for more information.';
 
             return $this->submitErrorResponse($request, ['schedule' => $message]);
         }
 
         $validated = $request->validate([
-            'last_name'             => ['required', 'string', 'min:3', 'max:50', 'regex:/^[A-Za-z.\-]{3,50}$/'],
-            'first_name'            => ['required', 'string', 'min:3', 'max:50', 'regex:/^(?!\s)[A-Za-z.\-\s]+$/'],
-            'middle_name'           => ['nullable', 'string', 'max:50', 'regex:/^$|^[A-Za-z.\-]{3,50}$/'],
-            'suffix'                => ['required', 'string', 'in:None,Jr.,Sr.,I,II,III,IV,V,Others'],
-            'custom_suffix'         => ['nullable', 'required_if:suffix,Others', 'string', 'max:5', 'regex:/^(?!\s+$)[A-Za-z.\s]+$/'],
-            'purok_zone'            => $this->barangayZoneService->purokZoneRules((int) $barangayRecord->id),
-            'sex'                   => 'required|in:Male,Female',
-            'age'                   => 'required|integer|min:15|max:30',
-            'birthday'              => 'required|date|before_or_equal:today',
-            'email'                 => ['required', 'email', 'max:254', 'regex:/^[A-Za-z0-9._%+-]{6,30}@gmail\.com$/i'],
-            'contact_number'        => ['required', 'string', 'regex:/^09\d{9}$/'],
-            'civil_status'          => 'required|string',
-            'youth_classification'  => 'required|string',
-            'youth_age_group'       => 'required|string',
-            'work_status'           => 'required|string',
-            'education'             => 'required|string',
-            'sk_voter'              => 'required|string',
-            'national_voter'        => 'required|string',
-            'sk_voted'              => 'required|string',
-            'kk_assembly'           => 'required|string|in:Yes,No',
-            'kk_times'              => 'required_if:kk_assembly,Yes|nullable|string',
-            'kk_reason'             => 'required_if:kk_assembly,No|nullable|string',
-            'facebook_profile_url'  => [
+            'last_name' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[A-Za-z.\-]{3,50}$/'],
+            'first_name' => ['required', 'string', 'min:3', 'max:50', 'regex:/^(?!\s)[A-Za-z.\-\s]+$/'],
+            'middle_name' => ['nullable', 'string', 'max:50', 'regex:/^$|^[A-Za-z.\-]{3,50}$/'],
+            'suffix' => ['required', 'string', 'in:None,Jr.,Sr.,I,II,III,IV,V,Others'],
+            'custom_suffix' => ['nullable', 'required_if:suffix,Others', 'string', 'max:5', 'regex:/^(?!\s+$)[A-Za-z.\s]+$/'],
+            'purok_zone' => $this->barangayZoneService->purokZoneRules((int) $barangayRecord->id),
+            'sex' => 'required|in:Male,Female',
+            'age' => 'required|integer|min:15|max:30',
+            'birthday' => 'required|date|before_or_equal:today',
+            'email' => ['required', 'email', 'max:254', 'regex:/^[A-Za-z0-9._%+-]{6,30}@gmail\.com$/i'],
+            'contact_number' => ['required', 'string', 'regex:/^09\d{9}$/'],
+            'civil_status' => 'required|string',
+            'youth_classification' => 'required|string',
+            'youth_age_group' => 'required|string',
+            'work_status' => 'required|string',
+            'education' => 'required|string',
+            'sk_voter' => 'required|string',
+            'national_voter' => 'required|string',
+            'sk_voted' => 'required|string',
+            'kk_assembly' => 'required|string|in:Yes,No',
+            'kk_times' => 'required_if:kk_assembly,Yes|nullable|string',
+            'kk_reason' => 'required_if:kk_assembly,No|nullable|string',
+            'facebook_profile_url' => [
                 'nullable',
                 Rule::requiredIf(fn () => in_array((string) $request->input('group_chat'), ['Yes', 'No'], true)),
                 'string',
                 'min:3',
                 'max:50',
-                new FacebookProfileUrl(),
+                new FacebookProfileUrl,
             ],
-            'group_chat'            => [
+            'group_chat' => [
                 'nullable',
                 Rule::requiredIf(fn () => trim((string) $request->input('facebook_profile_url', '')) !== ''),
                 'string',
                 Rule::in(['Yes', 'No']),
             ],
-            'signature'             => 'required|string',
+            'signature' => 'required|string',
         ]);
 
         if (($validated['suffix'] ?? null) === 'Others') {
@@ -798,7 +805,7 @@ class KKProfilingController extends Controller
             $validRoman = in_array($compact, ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'], true);
             $validText = (bool) preg_match('/^[A-Za-z.]+$/', str_replace(' ', '', $customSuffix));
 
-            if (!$validRoman && !$validText) {
+            if (! $validRoman && ! $validText) {
                 return $this->submitErrorResponse($request, [
                     'custom_suffix' => 'Only text and valid Roman numeral suffixes are allowed.',
                 ]);
@@ -819,7 +826,7 @@ class KKProfilingController extends Controller
 
         // Server-side age consistency from birthday (15-30 only)
         try {
-            $derivedAge = \Carbon\Carbon::parse($validated['birthday'])->age;
+            $derivedAge = Carbon::parse($validated['birthday'])->age;
             if ($derivedAge < 15 || $derivedAge > 30 || (int) $validated['age'] !== (int) $derivedAge) {
                 return $this->submitErrorResponse($request, [
                     'birthday' => 'Birthday and age must match and be within 15 to 30 years old.',
@@ -887,24 +894,24 @@ class KKProfilingController extends Controller
                 'barangay_id' => $barangayRecord->id,
             ],
             [
-                'tenant_id'         => $barangayRecord->tenant_id,
-                'last_name'         => $validated['last_name'],
-                'first_name'        => $validated['first_name'],
-                'middle_name'       => $validated['middle_name'] ?? null,
-                'suffix'            => $validated['suffix'] ?? null,
-                'contact_number'    => $validated['contact_number'] ?? null,
+                'tenant_id' => $barangayRecord->tenant_id,
+                'last_name' => $validated['last_name'],
+                'first_name' => $validated['first_name'],
+                'middle_name' => $validated['middle_name'] ?? null,
+                'suffix' => $validated['suffix'] ?? null,
+                'contact_number' => $validated['contact_number'] ?? null,
                 'profile_photo_path' => null,
-                'form_data'         => $validated,
-                'status'            => 'pending_verification',
+                'form_data' => $validated,
+                'status' => 'pending_verification',
                 'evaluation_status' => null,
-                'evaluation_notes'  => null,
-                'review_notes'      => null,
-                'submitted_at'      => now(),
+                'evaluation_notes' => null,
+                'review_notes' => null,
+                'submitted_at' => now(),
             ]
         );
 
         try {
-            (new KkSurveyResponseService())->syncFromRegistration($registration->fresh(), 'pending');
+            (new KkSurveyResponseService)->syncFromRegistration($registration->fresh(), 'pending');
         } catch (\Throwable $e) {
             report($e);
         }
@@ -915,7 +922,7 @@ class KKProfilingController extends Controller
         } catch (\Exception $e) {
             \Log::error('Failed to send verification email', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
         }
 
@@ -982,7 +989,7 @@ class KKProfilingController extends Controller
         $exists = $existingUser || $verifiedRegistration;
 
         return response()->json([
-            'exists'  => $exists,
+            'exists' => $exists,
             'message' => $exists ? 'This email already exists. Please use a different email address.' : null,
         ]);
     }
@@ -993,7 +1000,7 @@ class KKProfilingController extends Controller
     public function resendVerification(Request $request)
     {
         $request->validate([
-            'email'    => ['required', 'email'],
+            'email' => ['required', 'email'],
             'barangay' => ['nullable', 'string'],
         ]);
 
@@ -1012,7 +1019,7 @@ class KKProfilingController extends Controller
 
         $registration = $registration->latest()->first();
 
-        if (!$registration) {
+        if (! $registration) {
             return response()->json([
                 'success' => false,
                 'message' => 'No registration found for this email address.',
@@ -1055,7 +1062,7 @@ class KKProfilingController extends Controller
         $email = $request->query('email') ?? session('email');
         $barangay = $request->query('barangay') ?? session('barangay');
 
-        if (!$email) {
+        if (! $email) {
             return redirect()->route('kkprofiling.signup');
         }
 
@@ -1069,38 +1076,39 @@ class KKProfilingController extends Controller
     {
         $slug = strtolower(trim($barangay));
         $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
+
         return trim($slug, '-');
     }
 
     private function getBarangayName(string $slug): ?string
     {
         $barangayMap = [
-            'alipit'          => 'Alipit',
-            'bagumbayan'      => 'Bagumbayan',
-            'poblacion-i'     => 'Poblacion I',
-            'poblacion-ii'    => 'Poblacion II',
-            'poblacion-iii'   => 'Poblacion III',
-            'poblacion-iv'    => 'Poblacion IV',
-            'poblacion-v'     => 'Poblacion V',
-            'bubukal'         => 'Bubukal',
-            'calios'          => 'Calios',
-            'duhat'           => 'Duhat',
-            'gatid'           => 'Gatid',
-            'jasaan'          => 'Jasaan',
-            'labuin'          => 'Labuin',
-            'malinao'         => 'Malinao',
-            'oogong'          => 'Oogong',
-            'pagsawitan'      => 'Pagsawitan',
-            'palasan'         => 'Palasan',
-            'patimbao'        => 'Patimbao',
-            'san-jose'        => 'San Jose',
-            'san-juan'        => 'San Juan',
+            'alipit' => 'Alipit',
+            'bagumbayan' => 'Bagumbayan',
+            'poblacion-i' => 'Poblacion I',
+            'poblacion-ii' => 'Poblacion II',
+            'poblacion-iii' => 'Poblacion III',
+            'poblacion-iv' => 'Poblacion IV',
+            'poblacion-v' => 'Poblacion V',
+            'bubukal' => 'Bubukal',
+            'calios' => 'Calios',
+            'duhat' => 'Duhat',
+            'gatid' => 'Gatid',
+            'jasaan' => 'Jasaan',
+            'labuin' => 'Labuin',
+            'malinao' => 'Malinao',
+            'oogong' => 'Oogong',
+            'pagsawitan' => 'Pagsawitan',
+            'palasan' => 'Palasan',
+            'patimbao' => 'Patimbao',
+            'san-jose' => 'San Jose',
+            'san-juan' => 'San Juan',
             'san-pablo-norte' => 'San Pablo Norte',
-            'san-pablo-sur'   => 'San Pablo Sur',
-            'santisima-cruz'  => 'Santisima Cruz',
+            'san-pablo-sur' => 'San Pablo Sur',
+            'santisima-cruz' => 'Santisima Cruz',
             'santo-angel-central' => 'Santo Angel Central',
-            'santo-angel-norte'   => 'Santo Angel Norte',
-            'santo-angel-sur'     => 'Santo Angel Sur',
+            'santo-angel-norte' => 'Santo Angel Norte',
+            'santo-angel-sur' => 'Santo Angel Sur',
         ];
 
         return $barangayMap[$slug] ?? null;
@@ -1111,7 +1119,7 @@ class KKProfilingController extends Controller
      */
     public function verifyEmail(Request $request, int $id, string $hash)
     {
-        if (!URL::hasValidSignature($request)) {
+        if (! URL::hasValidSignature($request)) {
             return redirect()->route('kkprofiling.signup')->withErrors([
                 'verification' => 'The verification link is invalid or expired.',
             ]);
@@ -1119,7 +1127,7 @@ class KKProfilingController extends Controller
 
         $registration = KabataanRegistration::find($id);
 
-        if (!$registration || !hash_equals($hash, sha1($registration->email))) {
+        if (! $registration || ! hash_equals($hash, sha1($registration->email))) {
             return redirect()->route('kkprofiling.signup')->withErrors([
                 'verification' => 'The verification link is invalid.',
             ]);
@@ -1133,7 +1141,7 @@ class KKProfilingController extends Controller
         session(['kabataan_registration_id' => $registration->id]);
 
         return redirect()->route('kkprofiling.set-password', [
-            'barangay' => $this->getBarangaySlug($registration->barangay->name)
+            'barangay' => $this->getBarangaySlug($registration->barangay->name),
         ])->with('success', 'Email verified! Please set your password to complete registration.');
     }
 
@@ -1143,7 +1151,7 @@ class KKProfilingController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => collect($errors)->flatten()->first(),
-                'errors'  => collect($errors)->map(fn ($msg) => is_array($msg) ? $msg : [$msg])->all(),
+                'errors' => collect($errors)->map(fn ($msg) => is_array($msg) ? $msg : [$msg])->all(),
             ], 422);
         }
 
@@ -1156,14 +1164,14 @@ class KKProfilingController extends Controller
             'kkprofiling.verify',
             now()->addHours(24),
             [
-                'id'   => $registration->id,
+                'id' => $registration->id,
                 'hash' => sha1($registration->email),
             ]
         );
 
         \Log::info('Sending verification email', [
             'email' => $registration->email,
-            'url'   => $verificationUrl,
+            'url' => $verificationUrl,
         ]);
 
         Notification::route('mail', $registration->email)
@@ -1173,32 +1181,32 @@ class KKProfilingController extends Controller
     private function getBarangaySlug(string $name): string
     {
         $slugMap = [
-            'Alipit'              => 'alipit',
-            'Bagumbayan'          => 'bagumbayan',
-            'Poblacion I'         => 'poblacion-i',
-            'Poblacion II'        => 'poblacion-ii',
-            'Poblacion III'       => 'poblacion-iii',
-            'Poblacion IV'        => 'poblacion-iv',
-            'Poblacion V'         => 'poblacion-v',
-            'Bubukal'             => 'bubukal',
-            'Calios'              => 'calios',
-            'Duhat'               => 'duhat',
-            'Gatid'               => 'gatid',
-            'Jasaan'              => 'jasaan',
-            'Labuin'              => 'labuin',
-            'Malinao'             => 'malinao',
-            'Oogong'              => 'oogong',
-            'Pagsawitan'          => 'pagsawitan',
-            'Palasan'             => 'palasan',
-            'Patimbao'            => 'patimbao',
-            'San Jose'            => 'san-jose',
-            'San Juan'            => 'san-juan',
-            'San Pablo Norte'     => 'san-pablo-norte',
-            'San Pablo Sur'       => 'san-pablo-sur',
-            'Santisima Cruz'      => 'santisima-cruz',
+            'Alipit' => 'alipit',
+            'Bagumbayan' => 'bagumbayan',
+            'Poblacion I' => 'poblacion-i',
+            'Poblacion II' => 'poblacion-ii',
+            'Poblacion III' => 'poblacion-iii',
+            'Poblacion IV' => 'poblacion-iv',
+            'Poblacion V' => 'poblacion-v',
+            'Bubukal' => 'bubukal',
+            'Calios' => 'calios',
+            'Duhat' => 'duhat',
+            'Gatid' => 'gatid',
+            'Jasaan' => 'jasaan',
+            'Labuin' => 'labuin',
+            'Malinao' => 'malinao',
+            'Oogong' => 'oogong',
+            'Pagsawitan' => 'pagsawitan',
+            'Palasan' => 'palasan',
+            'Patimbao' => 'patimbao',
+            'San Jose' => 'san-jose',
+            'San Juan' => 'san-juan',
+            'San Pablo Norte' => 'san-pablo-norte',
+            'San Pablo Sur' => 'san-pablo-sur',
+            'Santisima Cruz' => 'santisima-cruz',
             'Santo Angel Central' => 'santo-angel-central',
-            'Santo Angel Norte'   => 'santo-angel-norte',
-            'Santo Angel Sur'     => 'santo-angel-sur',
+            'Santo Angel Norte' => 'santo-angel-norte',
+            'Santo Angel Sur' => 'santo-angel-sur',
         ];
 
         return $slugMap[$name] ?? strtolower(str_replace(' ', '-', $name));
@@ -1210,16 +1218,16 @@ class KKProfilingController extends Controller
     public function showSetPassword(string $barangay)
     {
         $registrationId = session('kabataan_registration_id');
-        
-        if (!$registrationId) {
+
+        if (! $registrationId) {
             return redirect()->route('kkprofiling.signup')->withErrors([
                 'password' => 'Please verify your email first.',
             ]);
         }
 
         $registration = KabataanRegistration::find($registrationId);
-        
-        if (!$registration || !in_array($registration->status, ['email_verified', 'password_set', 'active'], true)) {
+
+        if (! $registration || ! in_array($registration->status, ['email_verified', 'password_set', 'active'], true)) {
             return redirect()->route('kkprofiling.signup')->withErrors([
                 'password' => 'Invalid registration session.',
             ]);
@@ -1244,10 +1252,10 @@ class KKProfilingController extends Controller
         }
 
         return view('kkprofiling::set_password', [
-            'barangay'        => $registration->barangay->name,
-            'slug'            => $barangay,
-            'email'           => $registration->email,
-            'registration'    => $registration,
+            'barangay' => $registration->barangay->name,
+            'slug' => $barangay,
+            'email' => $registration->email,
+            'registration' => $registration,
             'barangayLogoUrl' => self::getBarangayLogoUrl($registration->barangay_id),
         ]);
     }
@@ -1275,16 +1283,16 @@ class KKProfilingController extends Controller
         ]);
 
         $registrationId = session('kabataan_registration_id');
-        
-        if (!$registrationId) {
+
+        if (! $registrationId) {
             return redirect()->route('kkprofiling.signup')->withErrors([
                 'password' => 'Session expired. Please verify your email again.',
             ]);
         }
 
         $registration = KabataanRegistration::find($registrationId);
-        
-        if (!$registration || $registration->status !== 'email_verified') {
+
+        if (! $registration || $registration->status !== 'email_verified') {
             return redirect()->route('kkprofiling.signup')->withErrors([
                 'password' => 'Invalid registration session.',
             ]);
@@ -1297,27 +1305,27 @@ class KKProfilingController extends Controller
             if ($existing) {
                 // Resubmission — update existing user
                 $existing->update([
-                    'name'               => $registration->full_name,
-                    'password'           => bcrypt($request->password),
-                    'email_verified_at'  => now(),
-                    'status'             => 'PENDING_APPROVAL',
-                    'tenant_id'          => $registration->tenant_id,
-                    'barangay_id'        => $registration->barangay_id,
-                    'profile_image_url'  => app(KabataanPhotoService::class)->publicUrl($registration->profile_photo_path),
+                    'name' => $registration->full_name,
+                    'password' => bcrypt($request->password),
+                    'email_verified_at' => now(),
+                    'status' => 'PENDING_APPROVAL',
+                    'tenant_id' => $registration->tenant_id,
+                    'barangay_id' => $registration->barangay_id,
+                    'profile_image_url' => app(KabataanPhotoService::class)->publicUrl($registration->profile_photo_path),
                     'profile_image_uploaded_at' => $registration->facial_verification_completed_at ?? now(),
                 ]);
                 $user = $existing;
             } else {
                 $user = User::create([
-                    'name'               => $registration->full_name,
-                    'email'              => $registration->email,
-                    'password'           => bcrypt($request->password),
-                    'email_verified_at'  => now(),
-                    'tenant_id'          => $registration->tenant_id,
-                    'barangay_id'        => $registration->barangay_id,
-                    'role'               => 'kabataan',
-                    'status'             => 'PENDING_APPROVAL',
-                    'profile_image_url'  => app(KabataanPhotoService::class)->publicUrl($registration->profile_photo_path),
+                    'name' => $registration->full_name,
+                    'email' => $registration->email,
+                    'password' => bcrypt($request->password),
+                    'email_verified_at' => now(),
+                    'tenant_id' => $registration->tenant_id,
+                    'barangay_id' => $registration->barangay_id,
+                    'role' => 'kabataan',
+                    'status' => 'PENDING_APPROVAL',
+                    'profile_image_url' => app(KabataanPhotoService::class)->publicUrl($registration->profile_photo_path),
                     'profile_image_uploaded_at' => $registration->facial_verification_completed_at ?? now(),
                 ]);
             }
@@ -1328,11 +1336,11 @@ class KKProfilingController extends Controller
             return $user;
         });
 
-        $evaluator = new RegistrationEvaluationService();
+        $evaluator = new RegistrationEvaluationService;
         $evaluator->evaluate($registration->fresh());
 
         try {
-            (new KkSurveyResponseService())->syncFromRegistration(
+            (new KkSurveyResponseService)->syncFromRegistration(
                 $registration->fresh(),
                 'pending'
             );

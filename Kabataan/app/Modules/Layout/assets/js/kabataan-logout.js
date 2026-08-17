@@ -4,7 +4,7 @@
 (function () {
     'use strict';
 
-    const logoutBtn = document.querySelector('.kabataan-header .logout-btn');
+    const logoutBtn = document.querySelector('.kabataan-header .logout-btn, .kkpu-lock-bar .logout-btn');
     const logoutForm = logoutBtn?.closest('form');
     const modal = document.getElementById('kabataanLogoutModal');
     const confirmBtn = document.getElementById('kabataanConfirmLogoutBtn');

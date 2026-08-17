@@ -36,6 +36,35 @@ function getExpectedProfilingYear() {
     return getCalendarYear();
 }
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+async function copyTextToClipboard(text) {
+    const value = String(text || '').trim();
+    if (!value) {
+        throw new Error('No link to copy.');
+    }
+    if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(value);
+        return;
+    }
+    const input = document.createElement('textarea');
+    input.value = value;
+    input.setAttribute('readonly', '');
+    input.style.position = 'fixed';
+    input.style.left = '-9999px';
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand('copy');
+    input.remove();
+}
+
 // ── CSRF helper ────────────────────────────────────────────────────────────
 function csrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
@@ -68,6 +97,8 @@ function initializeScheduleKKProfiling() {
     let expectedProfilingYear = getExpectedProfilingYear();
     let filterYear = getExpectedProfilingYear();
     let hasCurrentYearSchedule = false;
+    let hasExistingUpdateForYear = false;
+    let signupLink = window.__SKKP_SIGNUP_LINK || '';
     let activeId = null;
     let currentPage = 1;
     let recordsPerPage = 10;
@@ -98,6 +129,10 @@ function initializeScheduleKKProfiling() {
     const dateStartPickBtn = document.getElementById('skkpFormDateStartPick');
     const dateExpiryPickBtn = document.getElementById('skkpFormDateExpiryPick');
     const profilingYearInput = document.getElementById('skkpFormProfilingYear');
+    const signupLinkInput = document.getElementById('skkpFormSignupLink');
+    const formCopyLinkBtn = document.getElementById('skkpFormCopyLinkBtn');
+    const viewCopyLinkBtn = document.getElementById('skkpViewCopyLinkBtn');
+    const allowExistingUpdateInput = document.getElementById('skkpFormAllowExistingUpdate');
     const dateStartError = document.getElementById('skkpDateStartError');
     const dateExpiryError = document.getElementById('skkpDateExpiryError');
     const MAX_RANGE_DAYS = 366;
@@ -344,34 +379,45 @@ function initializeScheduleKKProfiling() {
         const current = expectedProfilingYear || getExpectedProfilingYear();
         const uniqueYears = new Set((years || []).map(Number).filter((year) => year > 2000));
         uniqueYears.add(current);
-        uniqueYears.add(filterYear);
+        if (filterYear) {
+            uniqueYears.add(Number(filterYear));
+        }
         uniqueYears.add(current - 1);
         uniqueYears.add(current - 2);
         const sorted = Array.from(uniqueYears).sort((a, b) => b - a);
-        const previous = yearFilter.value;
-        yearFilter.innerHTML = sorted
+        const selected = filterYear ? String(filterYear) : '';
+        yearFilter.innerHTML = `<option value="">All years</option>` + sorted
             .map((year) => `<option value="${year}">${year}</option>`)
             .join('');
-        yearFilter.value = String(filterYear);
-        if (yearFilter.value !== String(filterYear) && previous) {
-            yearFilter.value = previous;
+        yearFilter.value = selected;
+        if (yearFilter.value !== selected) {
+            yearFilter.value = String(current);
+            filterYear = current;
         }
     }
 
     // ── API ─────────────────────────────────────────────────────────────────
     async function loadData() {
         try {
-            const res = await apiFetch(`/api/schedule-kk-profiling/data?year=${filterYear}`);
-            schedules = res.data.map(s => ({
+            const yearQuery = filterYear ? `?year=${filterYear}` : '';
+            const res = await apiFetch(`/api/schedule-kk-profiling/data${yearQuery}`);
+            signupLink = res.signup_link || signupLink || '';
+            if (signupLinkInput && signupLink) {
+                signupLinkInput.value = signupLink;
+            }
+            schedules = (res.data || []).map(s => ({
                 id:            s.id,
                 profilingYear: s.profiling_year,
                 dateStart:     s.date_start,
                 dateExpiry:    s.date_expiry,
                 status:        s.status,
+                link:          s.link || signupLink,
+                allowExistingUpdate: Boolean(s.allow_existing_update),
             }));
-            availableYears = res.years || [filterYear];
+            availableYears = res.years || [expectedProfilingYear];
             expectedProfilingYear = Number(res.expected_profiling_year) || getExpectedProfilingYear();
             hasCurrentYearSchedule = Boolean(res.has_current_year_schedule);
+            hasExistingUpdateForYear = Boolean(res.has_existing_update_for_year);
             populateYearFilter(availableYears);
             renderTable();
             updateCreateBtnState();
@@ -449,7 +495,7 @@ function initializeScheduleKKProfiling() {
             const tr = document.createElement('tr');
             tr.className = 'empty-state-row';
             const td = document.createElement('td');
-            td.colSpan = 5;
+            td.colSpan = 6;
             td.textContent = 'No schedules found.';
             tr.appendChild(td);
             tbody.appendChild(tr);
@@ -457,11 +503,19 @@ function initializeScheduleKKProfiling() {
             page.forEach(s => {
                 const tr = document.createElement('tr');
                 const statusClass = s.status.toLowerCase().replace(/\s+/g, '-');
+                const link = s.link || signupLink || '';
+                const linkHtml = link
+                    ? `<div class="skkp-link-cell">
+                        <a class="skkp-link skkp-link-full" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link)}</a>
+                        <button type="button" class="skkp-copy-btn skkp-copy-btn-inline" data-action="copy-link" data-link="${escapeHtml(link)}">Copy</button>
+                       </div>`
+                    : '—';
                 tr.innerHTML = `
                     <td>${s.profilingYear || '—'}</td>
                     <td>${formatDate(s.dateStart)}</td>
                     <td>${formatDate(s.dateExpiry)}</td>
-                    <td><span class="skkp-status-badge ${statusClass}">${s.status}</span></td>
+                    <td>${linkHtml}</td>
+                    <td><span class="skkp-status-badge ${statusClass}">${escapeHtml(s.status)}</span></td>
                     <td>
                         <div class="skkp-actions">
                             <button class="skkp-btn skkp-btn-view" data-action="view" data-id="${s.id}">View</button>
@@ -562,6 +616,13 @@ function initializeScheduleKKProfiling() {
         if (dateExpiryNativeInput) dateExpiryNativeInput.value = '';
         setFormField('skkpFormStatus', 'Ongoing');
         setProfilingYearField(expectedProfilingYear);
+        if (signupLinkInput) {
+            signupLinkInput.value = signupLink || '';
+        }
+        if (allowExistingUpdateInput) {
+            allowExistingUpdateInput.checked = false;
+            allowExistingUpdateInput.disabled = hasExistingUpdateForYear;
+        }
         showFieldError(dateStartError, '');
         showFieldError(dateExpiryError, '');
         applyNativeDateBounds();
@@ -630,7 +691,12 @@ function initializeScheduleKKProfiling() {
                 return;
             }
 
-            const payload = { date_start: dateStart, date_expiry: dateExpiry, status };
+            const payload = {
+                date_start: dateStart,
+                date_expiry: dateExpiry,
+                status,
+                allow_existing_update: Boolean(allowExistingUpdateInput?.checked),
+            };
 
             try {
                 formSaveBtn.disabled = true;
@@ -660,6 +726,16 @@ function initializeScheduleKKProfiling() {
 
     // ── Table actions ───────────────────────────────────────────────────────
     tbody.addEventListener('click', e => {
+        const copyBtn = e.target.closest('button[data-action="copy-link"]');
+        if (copyBtn) {
+            copyTextToClipboard(copyBtn.getAttribute('data-link') || signupLink).then(() => {
+                showToast('Link copied. Share it with kabataan in your barangay.', 'success');
+            }).catch(() => {
+                showToast('Unable to copy the link.', 'error');
+            });
+            return;
+        }
+
         const btn = e.target.closest('button[data-action]');
         if (!btn) return;
 
@@ -698,6 +774,13 @@ function initializeScheduleKKProfiling() {
             syncNativeFromText(dateExpiryMdInput, dateExpiryNativeInput);
             setFormField('skkpFormStatus', sched.status);
             setProfilingYearField(sched.profilingYear || expectedProfilingYear);
+            if (signupLinkInput) {
+                signupLinkInput.value = sched.link || signupLink || '';
+            }
+            if (allowExistingUpdateInput) {
+                allowExistingUpdateInput.checked = Boolean(sched.allowExistingUpdate);
+                allowExistingUpdateInput.disabled = hasExistingUpdateForYear && !sched.allowExistingUpdate;
+            }
             updateStatusHint(sched.status);
             showFieldError(dateStartError, '');
             showFieldError(dateExpiryError, '');
@@ -715,13 +798,30 @@ function initializeScheduleKKProfiling() {
         const statusEl = document.getElementById('skkpViewStatus');
         if (statusEl) {
             const cls = s.status.toLowerCase().replace(/\s+/g, '-');
-            statusEl.innerHTML = `<span class="skkp-status-badge ${cls}">${s.status}</span>`;
+            statusEl.innerHTML = `<span class="skkp-status-badge ${cls}">${escapeHtml(s.status)}</span>`;
+        }
+        const linkEl = document.getElementById('skkpViewSignupLink');
+        const link = s.link || signupLink || '';
+        if (linkEl) {
+            if (link) {
+                linkEl.href = link;
+                linkEl.textContent = link;
+            } else {
+                linkEl.removeAttribute('href');
+                linkEl.textContent = '—';
+            }
+        }
+        const existingEl = document.getElementById('skkpViewExistingUpdate');
+        if (existingEl) {
+            existingEl.textContent = s.allowExistingUpdate
+                ? 'Existing kabataan can update their KK Profiling'
+                : 'New sign-ups only';
         }
     }
 
     if (yearFilter) {
         yearFilter.addEventListener('change', () => {
-            filterYear = parseInt(yearFilter.value, 10) || getExpectedProfilingYear();
+            filterYear = yearFilter.value ? parseInt(yearFilter.value, 10) : '';
             currentPage = 1;
             loadData();
         });
@@ -778,6 +878,21 @@ function initializeScheduleKKProfiling() {
     bindMdyInput(dateExpiryMdInput);
     bindDatePicker(dateStartMdInput, dateStartNativeInput, dateStartPickBtn);
     bindDatePicker(dateExpiryMdInput, dateExpiryNativeInput, dateExpiryPickBtn);
+
+    async function copySignupLink(sourceValue) {
+        try {
+            await copyTextToClipboard(sourceValue || signupLinkInput?.value || signupLink);
+            showToast('Link copied. Share it with kabataan in your barangay.', 'success');
+        } catch (error) {
+            showToast(error.message || 'Unable to copy the link.', 'error');
+        }
+    }
+
+    formCopyLinkBtn?.addEventListener('click', () => copySignupLink(signupLinkInput?.value));
+    viewCopyLinkBtn?.addEventListener('click', () => {
+        const linkEl = document.getElementById('skkpViewSignupLink');
+        copySignupLink(linkEl?.getAttribute('href') || linkEl?.textContent);
+    });
 
     // ── Boot ────────────────────────────────────────────────────────────────
     loadData();

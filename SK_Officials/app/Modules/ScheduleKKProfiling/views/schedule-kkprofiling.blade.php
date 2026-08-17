@@ -35,6 +35,7 @@
                 <div class="filter-item filter-item-inline skkp-year-filter-wrap">
                     <label for="skkpYearFilter" class="filter-label skkp-year-filter-label">Year</label>
                     <select id="skkpYearFilter" class="filter-select filter-select-inline skkp-year-filter" aria-label="Profiling Year">
+                        <option value="">All years</option>
                         <option value="{{ now()->year }}" selected>{{ now()->year }}</option>
                     </select>
                 </div>
@@ -63,6 +64,7 @@
                                 <th>Profiling Year</th>
                                 <th>Date Start</th>
                                 <th>Date Expiry</th>
+                                <th>KK Profiling Link</th>
                                 <th>Status</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
@@ -149,6 +151,26 @@
                     </select>
                     <div id="skkpStatusHint" class="skkp-status-hint"></div>
                 </div>
+                <div class="modal-field modal-field-full">
+                    <label for="skkpFormSignupLink">KK Profiling sign-up link</label>
+                    <div class="skkp-link-copy-row">
+                        <input type="text" id="skkpFormSignupLink" class="skkp-input skkp-input-readonly" readonly tabindex="-1" aria-readonly="true" value="{{ $signupLink ?? '' }}">
+                        <button type="button" class="skkp-copy-btn" id="skkpFormCopyLinkBtn" aria-label="Copy KK Profiling sign-up link">Copy link</button>
+                    </div>
+                    <span class="skkp-field-note">Copy this link to share KK Profiling sign-up with kabataan in {{ $barangayName ?? 'your barangay' }}.</span>
+                </div>
+                <div class="modal-field modal-field-full">
+                    <div class="skkp-update-toggle">
+                        <label class="skkp-toggle-switch" for="skkpFormAllowExistingUpdate">
+                            <input type="checkbox" id="skkpFormAllowExistingUpdate" class="skkp-toggle-input">
+                            <span class="skkp-toggle-slider" aria-hidden="true"></span>
+                        </label>
+                        <div class="skkp-update-toggle-copy">
+                            <label for="skkpFormAllowExistingUpdate" class="skkp-update-toggle-title">Update existing kabataan accounts</label>
+                            <p class="skkp-field-note">Turn this on so kabataan who already have an account can update their KK Profiling. This can be scheduled only once for this year.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="modal-footer">
@@ -188,11 +210,26 @@
                     <span class="skkp-view-label">Status</span>
                     <span class="skkp-view-value" id="skkpViewStatus">—</span>
                 </div>
+                <div class="skkp-view-row">
+                    <span class="skkp-view-label">KK Profiling Link</span>
+                    <span class="skkp-view-value skkp-view-link-wrap">
+                        <a class="skkp-link" id="skkpViewSignupLink" href="#" target="_blank" rel="noopener noreferrer">—</a>
+                        <button type="button" class="skkp-copy-btn skkp-copy-btn-inline" id="skkpViewCopyLinkBtn">Copy link</button>
+                    </span>
+                </div>
+                <div class="skkp-view-row">
+                    <span class="skkp-view-label">Existing accounts</span>
+                    <span class="skkp-view-value" id="skkpViewExistingUpdate">—</span>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<script>
+    window.__SKKP_SIGNUP_LINK = @json($signupLink ?? '');
+    window.__SKKP_BARANGAY_NAME = @json($barangayName ?? '');
+</script>
 @vite([
     'app/Modules/Layout/js/header.js',
     'app/Modules/Layout/js/sidebar.js',
