@@ -1,8 +1,18 @@
 <?php
 
+use App\Modules\KKProfiling\Controllers\KKProfilingAccountInviteController;
 use App\Modules\KKProfiling\Controllers\KKProfilingController;
 use App\Modules\KKProfiling\Controllers\KKProfilingWizardController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/kkprofiling/account-invite/{registration}/{token}', [KKProfilingAccountInviteController::class, 'show'])
+    ->whereNumber('registration')
+    ->where('token', '[A-Fa-f0-9]{64}')
+    ->name('kkprofiling.account-invite');
+Route::post('/kkprofiling/account-invite/{registration}/{token}', [KKProfilingAccountInviteController::class, 'activate'])
+    ->whereNumber('registration')
+    ->where('token', '[A-Fa-f0-9]{64}')
+    ->name('kkprofiling.account-invite.activate');
 
 Route::get('/kkprofiling/signup', [KKProfilingController::class, 'showSignup'])->name('kkprofiling.signup');
 Route::get('/api/kkprofiling/open-barangays', [KKProfilingController::class, 'openBarangays'])->name('kkprofiling.open-barangays');
@@ -33,6 +43,7 @@ Route::prefix('/api/kkprofiling/{barangay}/wizard')->group(function () {
         ->name('kkprofiling.wizard.document-preview');
     Route::get('/registration-complete', [KKProfilingWizardController::class, 'checkRegistrationComplete'])->name('kkprofiling.wizard.registration-complete');
     Route::post('/step-1', [KKProfilingWizardController::class, 'saveStep1'])->name('kkprofiling.wizard.step1');
+    Route::post('/submit-without-email', [KKProfilingWizardController::class, 'submitWithoutEmail'])->name('kkprofiling.wizard.submit-without-email');
     Route::post('/step-2', [KKProfilingWizardController::class, 'saveStep2'])->name('kkprofiling.wizard.step2');
     Route::post('/set-step', [KKProfilingWizardController::class, 'setStep'])->name('kkprofiling.wizard.set-step');
     Route::post('/send-verification', [KKProfilingWizardController::class, 'sendVerification'])->name('kkprofiling.wizard.send-verification');

@@ -272,9 +272,9 @@
 
                             <div class="kkp-inline-pair kkp-inline-pair--email">
 
-                                <label class="kkp-inline-label">E-mail address: <span class="kkp-required">*</span></label>
+                                <label class="kkp-inline-label" for="kkpEmail">E-mail address: <span class="kkp-optional-label">(Optional)</span></label>
 
-                                <input type="email" name="email" id="kkpEmail" class="kkp-uline kkp-uline-med kkp-email-input{{ !empty($emailReadonly) ? ' kkp-readonly' : '' }}" placeholder=" " maxlength="254" autocomplete="email" autocapitalize="none" spellcheck="false" required @if(!empty($emailReadonly)) readonly tabindex="-1" @endif>
+                                <input type="email" name="email" id="kkpEmail" class="kkp-uline kkp-uline-med kkp-email-input{{ !empty($emailReadonly) ? ' kkp-readonly' : '' }}" placeholder=" " maxlength="254" autocomplete="email" autocapitalize="none" spellcheck="false" @if(!empty($emailReadonly)) readonly tabindex="-1" required @endif>
 
                             </div>
 
@@ -346,7 +346,7 @@
 
                             <div class="kkp-demo-block">
 
-                                <div class="kkp-demo-block-label">Youth Age Group <span class="kkp-required">*</span> <span class="kkp-auto-field-note">(auto from Age)</span></div>
+                                <div class="kkp-demo-block-label">Youth Age Group <span class="kkp-required">*</span></div>
 
                                 <div class="kkp-demo-block-options kkp-youth-age-group-readonly">
 

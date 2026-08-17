@@ -9,6 +9,7 @@ use App\Services\BarangayZoneService;
 use App\Services\KabataanInAppNotificationService;
 use App\Services\KabataanProfilingHistoryService;
 use App\Services\KkSupportingDocumentService;
+use App\Services\KkProfilingOfficialUpdateService;
 use App\Services\KkProfilingRequestDataService;
 use App\Services\KkSurveyResponseService;
 use App\Services\RespondentNumberService;
@@ -26,6 +27,7 @@ class KabataanController extends Controller
         private readonly KkSupportingDocumentService $supportingDocumentService,
         private readonly KkProfilingRequestDataService $profilingDataService,
         private readonly KabataanProfilingHistoryService $profilingHistoryService,
+        private readonly KkProfilingOfficialUpdateService $officialUpdateService,
     ) {
     }
 
@@ -334,34 +336,71 @@ class KabataanController extends Controller
     public function update(Request $request, int $id)
     {
         $user = Auth::user();
+
+        if (! $user || ! $user->barangay_id) {
+            return response()->json(['success' => false, 'message' => 'Authentication error'], 401);
+        }
+
+        $year = (int) ($request->input('year') ?: $this->profilingHistoryService->currentProfilingYear());
+        if ($this->profilingHistoryService->isHistoricalYear($year)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Historical KK Profiling records cannot be edited.',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'last_name' => ['required', 'string', 'max:100'],
+            'first_name' => ['required', 'string', 'max:100'],
+            'middle_name' => ['nullable', 'string', 'max:100'],
+            'suffix' => ['nullable', 'string', 'max:20'],
+            'email' => ['nullable', 'email', 'max:254'],
+            'contact_number' => ['nullable', 'string', 'max:15'],
+            'age' => ['nullable', 'integer', 'min:15', 'max:30'],
+            'birthday' => ['nullable', 'string', 'max:20'],
+            'sex' => ['nullable', 'in:Male,Female'],
+            'purok_zone' => ['nullable', 'string', 'max:100'],
+            'civil_status' => ['nullable', 'string', 'max:50'],
+            'youth_classification' => ['nullable', 'string', 'max:80'],
+            'youth_age_group' => ['nullable', 'string', 'max:80'],
+            'work_status' => ['nullable', 'string', 'max:80'],
+            'education' => ['nullable', 'string', 'max:80'],
+            'sk_voter' => ['nullable', 'string', 'max:10'],
+            'national_voter' => ['nullable', 'string', 'max:10'],
+            'sk_voted' => ['nullable', 'string', 'max:10'],
+            'kk_assembly' => ['nullable', 'string', 'max:10'],
+            'kk_times' => ['nullable', 'string', 'max:40'],
+            'kk_reason' => ['nullable', 'string', 'max:120'],
+            'facebook' => ['nullable', 'string', 'max:50'],
+            'facebook_profile_url' => ['nullable', 'string', 'max:50'],
+            'group_chat' => ['nullable', 'string', 'max:10'],
+        ]);
+
         $registration = KabataanRegistration::forBarangay($user->barangay_id)->findOrFail($id);
 
-        $request->validate([
-            'last_name'  => 'required|string|max:100',
-            'first_name' => 'required|string|max:100',
+        try {
+            $result = $this->officialUpdateService->update($user, $registration, $validated);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => collect($e->errors())->flatten()->first(),
+                'errors' => $e->errors(),
+            ], 422);
+        }
+
+        $message = 'Kabataan record updated.';
+        if ($result['invite_sent']) {
+            $message = 'KK Profiling updated and an account activation email was sent.';
+        } elseif ($result['invite_error']) {
+            $message = $result['invite_error'];
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'invite_sent' => $result['invite_sent'],
+            'email' => $result['registration']->email,
         ]);
-
-        $barangay = DB::table('barangays')->where('id', $user->barangay_id)->first();
-        $formData = $this->buildFormDataFromRequest($request, $barangay, $registration->form_data ?? []);
-
-        $registration->update([
-            'last_name'      => $request->input('last_name'),
-            'first_name'     => $request->input('first_name'),
-            'middle_name'    => $request->input('middle_name'),
-            'suffix'         => $request->input('suffix'),
-            'email'          => $request->input('email'),
-            'contact_number' => $request->input('contact_number'),
-            'form_data'      => $formData,
-        ]);
-
-        $this->activityService->log(
-            $user,
-            'kabataan.update',
-            'Updated Kabataan record: '.$registration->full_name,
-            ['registration_id' => $registration->id]
-        );
-
-        return response()->json(['success' => true, 'message' => 'Kabataan record updated.']);
     }
 
     public function destroy(Request $request, int $id)

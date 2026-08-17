@@ -822,22 +822,24 @@
 }
 
 .kkp-wizard-complete-icon {
-    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+    background: linear-gradient(135deg, var(--kkp-brand) 0%, #003070 100%) !important;
 }
 
 .kkp-wizard-complete-card .kkp-wizard-go-login-btn {
-    background: linear-gradient(135deg, #44a53e 0%, #5cb854 100%);
+    background: linear-gradient(135deg, var(--kkp-brand) 0%, #0d5fc4 100%);
     color: #fff;
     border: none;
+    box-shadow: 0 8px 24px rgba(4, 80, 168, 0.25);
 }
 
 .kkp-wizard-complete-card .kkp-wizard-go-login-btn:hover {
     color: #fff;
-    opacity: 0.95;
+    background: linear-gradient(135deg, #033d7a 0%, var(--kkp-brand) 100%);
+    box-shadow: 0 12px 32px rgba(4, 80, 168, 0.35);
 }
 
 .kkp-email-verified-icon {
-    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+    background: linear-gradient(135deg, var(--kkp-brand) 0%, #003070 100%) !important;
 }
 
 .kkp-verify-status {
@@ -868,7 +870,7 @@
 }
 
 .kkp-verify-status--success .kkp-verify-status-dot {
-    background: #16a34a;
+    background: var(--kkp-brand);
     animation: none;
 }
 

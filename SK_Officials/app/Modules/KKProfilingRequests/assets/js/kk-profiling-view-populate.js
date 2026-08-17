@@ -2,6 +2,52 @@
  * Read-only KK profiling questionnaire view — shared by KK Requests, Rejected, Deleted modules.
  */
 
+export const STANDARD_SUFFIX_OPTIONS = ['None', 'Jr.', 'Sr.', 'I', 'II', 'III', 'IV', 'V'];
+
+export function getSuffixOther(request) {
+    if (!request) {
+        return '';
+    }
+    return request.suffixOther || request.suffix_other || request.custom_suffix || '';
+}
+
+export function formatDisplaySuffix(suffix, suffixOther) {
+    const other = String(suffixOther || '').trim();
+    const normalized = String(suffix || '').trim();
+
+    if ((!normalized || normalized.toLowerCase() === 'none') && !other) {
+        return 'None';
+    }
+    if (!normalized || normalized.toLowerCase() === 'none') {
+        return other || 'None';
+    }
+    if (normalized.toLowerCase() === 'other' || normalized.toLowerCase() === 'others') {
+        return other || 'None';
+    }
+    return normalized;
+}
+
+export function resolveSuffixForEdit(request) {
+    const suffixOther = String(getSuffixOther(request) || '').trim();
+    const rawSuffix = String(request.suffixRaw || request.suffix_raw || '').trim();
+    const displaySuffix = String(request.suffix || '').trim();
+    const source = rawSuffix || displaySuffix;
+
+    if (source.toLowerCase() === 'others' || source.toLowerCase() === 'other') {
+        return { select: 'Others', custom: suffixOther || displaySuffix };
+    }
+    if (STANDARD_SUFFIX_OPTIONS.includes(source)) {
+        return { select: source, custom: '' };
+    }
+    if (source && source.toLowerCase() !== 'none') {
+        return { select: 'Others', custom: source };
+    }
+    if (suffixOther) {
+        return { select: 'Others', custom: suffixOther };
+    }
+    return { select: 'None', custom: '' };
+}
+
 export function populateSupportingDocuments(request) {
     const wrap = document.getElementById('kkViewDocumentsWrap');
     const grid = document.getElementById('kkViewDocumentsGrid');
@@ -136,21 +182,12 @@ export function populateKkProfilingView(request, options = {}) {
         return candidates.some((candidate) => normalized === candidate.trim().toLowerCase());
     };
 
-    const formatDisplaySuffix = (value, suffixOther) => {
-        if (!value) return 'None';
-        const normalized = String(value).trim();
-        if (!normalized || normalized.toLowerCase() === 'none') return 'None';
-        if (normalized.toLowerCase() === 'other' || normalized.toLowerCase() === 'others') {
-            const other = String(suffixOther || '').trim();
-            return other || 'None';
-        }
-        return normalized;
-    };
+    const formatDisplaySuffixLocal = (value, suffixOther) => formatDisplaySuffix(value, suffixOther);
 
     const applySuffixDisplay = (elementId, value, suffixOther) => {
         const el = document.getElementById(elementId);
         const col = el?.closest('.kkp-name-col, .kkf-name-col');
-        const display = formatDisplaySuffix(value, suffixOther);
+        const display = formatDisplaySuffixLocal(value, suffixOther);
         if (el) el.textContent = display;
         if (col) col.hidden = false;
     };
@@ -162,12 +199,20 @@ export function populateKkProfilingView(request, options = {}) {
         return value;
     };
 
+    const formatMiddleNameDisplay = (value) => {
+        const normalized = String(value || '').trim();
+        if (!normalized || normalized === '—' || normalized.toLowerCase() === 'none') {
+            return 'None';
+        }
+        return normalized;
+    };
+
     setVal('kkViewRespondentNumber', respondentNumber);
     setVal('kkViewDate', date);
     setVal('kkViewLastName', lastName || '—');
     setVal('kkViewFirstName', firstName || '—');
-    setVal('kkViewMiddleName', middleName || '—');
-    applySuffixDisplay('kkViewSuffix', suffix, request.suffixOther || request.suffix_other || request.custom_suffix);
+    setVal('kkViewMiddleName', formatMiddleNameDisplay(middleName));
+    applySuffixDisplay('kkViewSuffix', suffix, getSuffixOther(request));
     setVal('kkViewRegion', region || '—');
     setVal('kkViewProvince', province || '—');
     setVal('kkViewCity', city || '—');
@@ -177,7 +222,7 @@ export function populateKkProfilingView(request, options = {}) {
     setCheck('kkViewSex_Female', sex === 'Female');
     setVal('kkViewAge', age || '—');
     setVal('kkViewBirthday', formatBirthdayDisplay(birthday) || '—');
-    setVal('kkViewEmailAddress', emailAddress || '—');
+    setVal('kkViewEmailAddress', emailAddress ? emailAddress : 'No email');
     setVal('kkViewContactNumber', contactNumber || '—');
 
     const csMap = {
@@ -290,13 +335,12 @@ export function populateKkProfilingView(request, options = {}) {
     const sigNameEl = document.getElementById('kkViewSignatureName');
     const sigPreview = document.getElementById('kkViewSignaturePreview');
     const sigOverlay = document.getElementById('kkViewSignatureOverlay');
+    const suffixDisplay = formatDisplaySuffix(suffix, getSuffixOther(request));
     const nameParts = [
         firstName,
         middleName ? middleName.charAt(0) + '.' : null,
         lastName,
-        suffix && formatDisplaySuffix(suffix) && formatDisplaySuffix(suffix) !== 'None'
-            ? formatDisplaySuffix(suffix)
-            : null,
+        suffixDisplay && suffixDisplay !== 'None' ? suffixDisplay : null,
     ].filter(Boolean);
     const printedName = nameParts.join(' ') || '—';
     if (sigNameEl) sigNameEl.textContent = printedName;
@@ -345,6 +389,8 @@ export function mapRegistrationToKkView(record) {
         middleName: record.middle_name,
         lastName: record.last_name,
         suffix: record.suffix || '',
+        suffixRaw: record.suffix_raw || record.suffix || '',
+        suffixOther: record.suffix_other || record.custom_suffix || '',
         age: record.age,
         birthday: record.birthday,
         sex: record.sex,

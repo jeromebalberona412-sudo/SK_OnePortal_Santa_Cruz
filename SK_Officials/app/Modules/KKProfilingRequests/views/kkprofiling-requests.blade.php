@@ -192,6 +192,16 @@
                     'barangayLogoUrl' => $barangayLogoUrl ?? null,
                     'barangayName' => $barangayName ?? null,
                 ])
+                @include('KKProfilingRequests::partials.kk-profiling-edit-form', [
+                    'barangayLogoUrl' => $barangayLogoUrl ?? null,
+                    'barangayName' => $barangayName ?? null,
+                ])
+            </div>
+        </div>
+        <div class="modal-footer kk-view-modal-footer" id="kkViewEditFooter" hidden>
+            <div class="kk-view-edit-actions">
+                <button type="button" class="btn btn-approve-cancel" id="kkViewEditCancelBtn">Cancel</button>
+                <button type="button" class="btn btn-approve-confirm" id="kkViewEditSaveBtn">Save Changes</button>
             </div>
         </div>
     </div>
@@ -267,6 +277,9 @@
     'app/Modules/Layout/js/table-row-actions-menu.js',
     'app/Modules/KKProfilingRequests/assets/js/kkprofiling-requests.js'
 ])
+<script>
+    window.KK_BARANGAY_ZONES = @json(($barangayZones ?? collect())->pluck('name')->values());
+</script>
 <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

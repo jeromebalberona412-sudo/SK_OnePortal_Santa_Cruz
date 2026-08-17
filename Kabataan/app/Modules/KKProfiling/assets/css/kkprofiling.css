@@ -1230,7 +1230,7 @@
     margin-left: auto;
     margin-right: auto;
     padding: 2px 2px;
-    background: #16a34a;
+    background: var(--brand);
     color: #fff;
     border: none;
     border-radius: 3px;
@@ -1249,7 +1249,7 @@
 }
 
 .kkp-sig-trigger-btn:hover {
-    background: #15803d;
+    background: #003070;
     transform: translateY(-1px);
 }
 
@@ -1485,9 +1485,9 @@
 }
 
 .kkp-sig-btn-save {
-    background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+    background: linear-gradient(135deg, var(--brand) 0%, #003070 100%);
     color: #fff;
-    border-color: #198754;
+    border-color: var(--brand);
 }
 
 .kkp-sig-btn-save:hover {
@@ -1536,12 +1536,12 @@
     width: 64px;
     height: 64px;
     margin: 0 auto 16px;
-    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    background: linear-gradient(135deg, var(--brand) 0%, #003070 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 16px rgba(22, 163, 74, 0.3);
+    box-shadow: 0 4px 16px rgba(4, 80, 168, 0.3);
 }
 
 .kkp-sig-confirm-icon svg {
@@ -1590,7 +1590,7 @@
 
 .kkp-sig-confirm-save {
     padding: 10px 22px;
-    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    background: linear-gradient(135deg, var(--brand) 0%, #003070 100%);
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -1601,7 +1601,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    box-shadow: 0 3px 10px rgba(22, 163, 74, 0.3);
+    box-shadow: 0 3px 10px rgba(4, 80, 168, 0.3);
     font-family: inherit;
 }
 
@@ -2143,12 +2143,12 @@ body.homepage-body.kkp-form-page {
     width: 88px;
     height: 88px;
     margin: 0 auto 24px;
-    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    background: linear-gradient(135deg, var(--brand) 0%, #003070 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 6px 20px rgba(22, 163, 74, 0.3);
+    box-shadow: 0 6px 20px rgba(4, 80, 168, 0.3);
 }
 
 .reg-success-icon svg {
@@ -2218,9 +2218,9 @@ body.homepage-body.kkp-form-page {
 .kkp-reg-success-modal {
     background: #fff;
     border-radius: 16px;
-    padding: 2.5rem 2rem;
+    padding: 2rem 1.75rem 1.75rem;
     text-align: center;
-    max-width: 440px;
+    max-width: 420px;
     width: 100%;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
     animation: kkpRegSuccessPopIn 0.25s ease-out;
@@ -2235,12 +2235,12 @@ body.homepage-body.kkp-form-page {
     width: 72px;
     height: 72px;
     margin: 0 auto 1.25rem;
-    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    background: linear-gradient(135deg, var(--brand) 0%, #0d5fc4 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 6px 20px rgba(22, 163, 74, 0.3);
+    box-shadow: 0 6px 20px rgba(4, 80, 168, 0.3);
 }
 
 .kkp-reg-success-modal-icon svg {
@@ -2250,12 +2250,14 @@ body.homepage-body.kkp-form-page {
 }
 
 .kkp-reg-success-modal-title {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     font-weight: 700;
     color: #0f172a;
     margin: 0 0 0.75rem;
+    line-height: 1.35;
 }
 
+.kkp-reg-success-message,
 .kkp-reg-success-modal-message {
     font-size: 0.95rem;
     color: #64748b;
@@ -2263,26 +2265,35 @@ body.homepage-body.kkp-form-page {
     margin: 0 0 1.5rem;
 }
 
+.kkp-reg-success-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.25rem;
+}
+
 .kkp-reg-success-modal-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 180px;
+    width: 100%;
+    max-width: 260px;
+    min-height: 48px;
     padding: 0.75rem 1.75rem;
     border-radius: 12px;
-    background: linear-gradient(135deg, #44a53e 0%, #5cb854 100%);
+    background: linear-gradient(135deg, var(--brand) 0%, #0d5fc4 100%);
     color: #fff;
     font-weight: 700;
     font-size: 1rem;
     text-decoration: none;
-    box-shadow: 0 8px 24px rgba(68, 165, 62, 0.25);
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 8px 24px rgba(4, 80, 168, 0.25);
+    transition: box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
 }
 
 .kkp-reg-success-modal-btn:hover {
     color: #fff;
+    background: linear-gradient(135deg, #033d7a 0%, var(--brand) 100%);
     transform: translateY(-1px);
-    box-shadow: 0 12px 32px rgba(68, 165, 62, 0.35);
+    box-shadow: 0 12px 32px rgba(4, 80, 168, 0.35);
 }
 
 .kkp-wizard-success-modal-open {

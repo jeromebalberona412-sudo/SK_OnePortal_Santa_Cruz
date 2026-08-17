@@ -318,7 +318,7 @@ html {
 .label-icon {
     width: 18px;
     height: 18px;
-    color: var(--youth-green);
+    color: var(--youth-blue);
 }
 
 .youth-input {
@@ -340,8 +340,8 @@ html {
 
 .youth-input:focus {
     outline: none;
-    border-color: var(--youth-green);
-    box-shadow: 0 0 0 4px rgba(68, 165, 62, 0.08);
+    border-color: var(--youth-blue);
+    box-shadow: 0 0 0 4px rgba(4, 80, 168, 0.08);
 }
 
 .youth-input::placeholder {
@@ -391,8 +391,8 @@ html {
     z-index: 2;
 }
 
-.pw-toggle-btn:hover  { color: var(--youth-green); }
-.pw-toggle-btn:focus-visible { outline: 2px solid var(--youth-green); outline-offset: 2px; }
+.pw-toggle-btn:hover  { color: var(--youth-blue); }
+.pw-toggle-btn:focus-visible { outline: 2px solid var(--youth-blue); outline-offset: 2px; }
 
 .pw-eye {
     width: 20px;
@@ -433,8 +433,8 @@ html {
 }
 
 .toggle-password:hover {
-    color: var(--youth-green);
-    background: rgba(68, 165, 62, 0.08);
+    color: var(--youth-blue);
+    background: rgba(4, 80, 168, 0.08);
 }
 
 .toggle-password:active {
@@ -475,7 +475,7 @@ html {
     width: 20px;
     height: 20px;
     cursor: pointer;
-    accent-color: var(--youth-green);
+    accent-color: var(--youth-blue);
     border-radius: 6px;
 }
 
@@ -508,7 +508,7 @@ html {
     font-size: 1rem;
     font-weight: 700;
     color: var(--youth-white);
-    background: linear-gradient(135deg, var(--youth-green) 0%, var(--youth-green-light) 100%);
+    background: linear-gradient(135deg, var(--youth-blue) 0%, var(--youth-blue-light) 100%);
     border: none;
     border-radius: 12px;
     cursor: pointer;
@@ -517,14 +517,14 @@ html {
     justify-content: center;
     gap: 0.75rem;
     transition: background var(--transition-base), box-shadow var(--transition-base);
-    box-shadow: 0 8px 24px rgba(68, 165, 62, 0.25);
+    box-shadow: 0 8px 24px rgba(4, 80, 168, 0.25);
     margin-top: 0.5rem;
     letter-spacing: 0.02em;
 }
 
 .youth-submit-btn:hover {
-    background: linear-gradient(135deg, var(--youth-green-dark) 0%, var(--youth-green) 100%);
-    box-shadow: 0 12px 32px rgba(68, 165, 62, 0.35);
+    background: linear-gradient(135deg, var(--youth-blue-dark) 0%, var(--youth-blue) 100%);
+    box-shadow: 0 12px 32px rgba(4, 80, 168, 0.35);
 }
 
 .youth-submit-btn:active {

@@ -85,6 +85,7 @@ class KkProfilingRequestDataService
                 $survey->suffix ?: ($payload['suffix'] ?? null),
                 $formData,
             ),
+            'suffix_raw' => $survey->suffix ?: ($payload['suffix_raw'] ?? null),
             'suffix_other' => $this->extractFormValue($formData, 'custom_suffix')
                 ?: $this->extractFormValue($formData, 'suffix_other'),
             'age' => $survey->age ?? ($payload['age'] ?? null),
@@ -157,6 +158,7 @@ class KkProfilingRequestDataService
             'first_name' => $registration->first_name,
             'middle_name' => $registration->middle_name ?: $this->extractFormValue($formData, 'middle_name'),
             'suffix' => $this->resolveDisplaySuffix($registration->suffix, $formData),
+            'suffix_raw' => $registration->suffix,
             'suffix_other' => $this->extractFormValue($formData, 'custom_suffix')
                 ?: $this->extractFormValue($formData, 'suffix_other'),
             'form_data' => $formData,
@@ -227,7 +229,7 @@ class KkProfilingRequestDataService
             $custom = $this->extractFormValue($formData, 'custom_suffix')
                 ?: $this->extractFormValue($formData, 'suffix_other');
 
-            return $custom ?: null;
+            return $custom ?: 'None';
         }
 
         return $normalized;

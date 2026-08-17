@@ -237,6 +237,7 @@ Route::middleware([
 
     Route::get('/kk-profiling-requests', [KKProfilingRequestsController::class, 'index'])->name('kk-profiling-requests');
     Route::get('/kk-profiling-requests/data', [KKProfilingRequestsController::class, 'data'])->name('kk-profiling-requests.data');
+    Route::put('/kk-profiling-requests/{id}', [KKProfilingRequestsController::class, 'update'])->name('kk-profiling-requests.update');
     Route::post('/kk-profiling-requests/{id}/approve', [KKProfilingRequestsController::class, 'approve'])->name('kk-profiling-requests.approve');
     Route::post('/kk-profiling-requests/{id}/reject', [KKProfilingRequestsController::class, 'reject'])->name('kk-profiling-requests.reject');
 

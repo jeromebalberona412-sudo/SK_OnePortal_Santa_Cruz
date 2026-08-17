@@ -16,6 +16,28 @@ class DuplicateKabataanRegistrationService
      */
     public function findApprovedDuplicate(int $barangayId, array $registrationFields, ?int $excludeRegistrationId = null): ?KabataanRegistration
     {
+        return $this->findMatchingIdentity($barangayId, $registrationFields, $excludeRegistrationId, true);
+    }
+
+    /**
+     * Any non-rejected KK Profiling record with the same identity (name + birthday + barangay).
+     *
+     * @param  array<string, mixed>  $registrationFields
+     */
+    public function findExistingIdentity(int $barangayId, array $registrationFields, ?int $excludeRegistrationId = null): ?KabataanRegistration
+    {
+        return $this->findMatchingIdentity($barangayId, $registrationFields, $excludeRegistrationId, false);
+    }
+
+    /**
+     * @param  array<string, mixed>  $registrationFields
+     */
+    private function findMatchingIdentity(
+        int $barangayId,
+        array $registrationFields,
+        ?int $excludeRegistrationId,
+        bool $approvedOnly
+    ): ?KabataanRegistration {
         $candidate = $this->identityFingerprint($barangayId, $registrationFields);
 
         if ($candidate === null) {
@@ -31,7 +53,7 @@ class DuplicateKabataanRegistrationService
         }
 
         foreach ($query->get() as $registration) {
-            if (! $this->isApprovedKabataan($registration)) {
+            if ($approvedOnly && ! $this->isApprovedKabataan($registration)) {
                 continue;
             }
 

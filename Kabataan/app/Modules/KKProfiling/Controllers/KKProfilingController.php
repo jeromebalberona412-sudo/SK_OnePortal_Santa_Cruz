@@ -256,6 +256,8 @@ class KKProfilingController extends Controller
             'completedEmail'        => $completedEmail,
             'registrationAutoApproved' => $registrationAutoApproved,
             'wizardDraftEmail'      => $wizardDraftEmail,
+            'turnstileEnabled'      => app(\App\Services\TurnstileService::class)->isEnabled(),
+            'turnstileSiteKey'      => app(\App\Services\TurnstileService::class)->getSiteKey(),
         ]);
     }
 

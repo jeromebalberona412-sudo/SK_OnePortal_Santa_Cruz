@@ -114,7 +114,7 @@
             </div>
             <div class="kkp-personal-right">
                 <div class="kkp-inline-pair kkp-inline-pair--email">
-                    <span class="kkp-inline-label">E-mail address:</span>
+                    <span class="kkp-inline-label">E-mail address: <span class="kkp-optional-label">(Optional)</span></span>
                     <span class="kkp-uline kkp-uline-med kkp-email-input kkp-view-value" id="kkViewEmailAddress"></span>
                 </div>
                 <div class="kkp-inline-pair">
@@ -149,7 +149,7 @@
                     </div>
                 </div>
                 <div class="kkp-demo-block">
-                    <div class="kkp-demo-block-label">Youth Age Group <span class="kkp-auto-field-note">(auto from Age)</span></div>
+                    <div class="kkp-demo-block-label">Youth Age Group</div>
                     <div class="kkp-demo-block-options kkp-youth-age-group-readonly">
                         <label class="kkp-chk-lbl kkp-chk-lbl--readonly kkp-view-chk"><input type="checkbox" class="kkp-sq-chk" id="kkViewYAG_Child" disabled> Child Youth (15-17 yrs old)</label>
                         <label class="kkp-chk-lbl kkp-chk-lbl--readonly kkp-view-chk"><input type="checkbox" class="kkp-sq-chk" id="kkViewYAG_Core" disabled> Core Youth (18-24 yrs old)</label>

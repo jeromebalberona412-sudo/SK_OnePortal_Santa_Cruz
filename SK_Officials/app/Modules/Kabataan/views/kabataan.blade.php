@@ -365,7 +365,7 @@
                         </div>
                         <div class="kkf-personal-right">
                             <div class="kkf-inline-pair">
-                                <label class="kkf-inline-label" for="kabataanEmail">E-mail address:</label>
+                                <label class="kkf-inline-label" for="kabataanEmail">E-mail address: (Optional)</label>
                                 <input type="email" id="kabataanEmail" class="kkf-uline kkf-uline-med" placeholder=" ">
                             </div>
                             <div class="kkf-inline-pair">

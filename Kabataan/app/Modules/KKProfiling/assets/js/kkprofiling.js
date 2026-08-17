@@ -199,7 +199,7 @@ function kkpFitEmailInputFont(el) {
 function kkpValidateEmail(value, touched) {
     const v = (value || '').trim().toLowerCase();
     if (!v) {
-        return touched ? 'E-mail address is required.' : null;
+        return null;
     }
     if (kkpHasAnySpace(v)) {
         return 'Email must not contain spaces.';
@@ -594,6 +594,16 @@ function kkpValidateContact(value, touched) {
         block?.querySelectorAll('.kkp-demo-block-error').forEach((node) => node.remove());
     }
 
+    function clearPersonalLeftError() {
+        document.querySelector('.kkp-personal-left')?.querySelectorAll('.kkp-section-error').forEach((node) => node.remove());
+    }
+
+    function clearSignatureError() {
+        document.querySelector('.kkp-sig-section-left')?.querySelectorAll('.kkp-field-error').forEach((node) => node.remove());
+    }
+
+    window.clearSignatureError = clearSignatureError;
+
     function bindRealtimeField(el, validateFn) {
         if (!el) {
             return;
@@ -638,6 +648,9 @@ function kkpValidateContact(value, touched) {
                 value = value.startsWith('9') ? `0${value}` : `09${value.replace(/^0+/, '')}`;
             }
             this.value = value.slice(0, 11);
+            if (/^09\d{9}$/.test(this.value.trim())) {
+                clearFieldError(this);
+            }
         });
     }
 
@@ -953,6 +966,9 @@ function kkpValidateContact(value, touched) {
             hidden.value = checkbox.checked ? checkbox.value : '';
             if (hidden.value) {
                 clearDemoBlockError(hiddenId);
+                if (hiddenId === 'kkpSex') {
+                    clearPersonalLeftError();
+                }
             }
         }
 
@@ -1875,7 +1891,7 @@ function showEmailVerification(email) {
         }
 
         if (loginBtn) {
-            loginBtn.textContent = 'Go to Login';
+            loginBtn.textContent = 'Go to Sign in';
         }
 
         successModal.hidden = false;
@@ -2238,6 +2254,8 @@ function showEmailVerification(email) {
         // Store in hidden input
         if (sigInput) sigInput.value = data;
 
+        clearSignatureError();
+
         // Show signature image overlaid on top of printed name
         if (sigPreview && sigOverlay) {
             sigPreview.src = data;
@@ -2327,7 +2345,8 @@ function showEmailVerification(email) {
         }
 
         const email = document.querySelector('input[name="email"]');
-        if (!email || !email.value.trim()) {
+        const emailLocked = document.getElementById('kkProfilingUpdateForm')?.dataset?.emailLocked === '1';
+        if (emailLocked && (!email || !email.value.trim())) {
             errors.push('- Email is required');
         }
 
@@ -2417,6 +2436,8 @@ function showEmailVerification(email) {
 
         sigInput.value = dataUrl;
 
+        clearSignatureError();
+
         if (sigPreview && sigOverlay) {
             sigPreview.src = dataUrl;
             sigOverlay.style.display = 'flex';
@@ -2436,6 +2457,7 @@ function showEmailVerification(email) {
     if (sigInput && sigInput.value && sigPreview && sigOverlay) {
         sigPreview.src = sigInput.value;
         sigOverlay.style.display = 'flex';
+        clearSignatureError();
         if (triggerBtn) {
             triggerBtn.disabled = true;
             triggerBtn.setAttribute('aria-disabled', 'true');

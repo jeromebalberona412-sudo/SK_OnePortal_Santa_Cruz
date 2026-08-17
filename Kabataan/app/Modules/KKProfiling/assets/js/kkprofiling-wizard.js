@@ -812,7 +812,7 @@
             }
 
             if (loginBtn) {
-                loginBtn.textContent = autoApproved ? 'Go to Login' : 'Go to Login';
+                loginBtn.textContent = 'Go to Sign in';
             }
 
             modal.hidden = false;
@@ -1213,7 +1213,11 @@
 
         if (nextLabelEl) {
             if (step === 1) {
-                nextLabelEl.textContent = 'Save & Continue';
+                if (typeof window.kkpSyncStep1Button === 'function') {
+                    window.kkpSyncStep1Button();
+                } else {
+                    nextLabelEl.textContent = 'Submit KK Profiling';
+                }
             } else if (step === 2) {
                 nextLabelEl.textContent = hasSelectedFiles ? 'Upload & Continue' : 'Skip & Continue';
             } else {
@@ -1371,6 +1375,12 @@
 
             const formData = new FormData(form);
             formData.append('respondent_number', root.dataset.respondentNumber || '');
+            const turnstileToken = typeof window.kkpConsumeTurnstileToken === 'function'
+                ? window.kkpConsumeTurnstileToken()
+                : '';
+            if (turnstileToken) {
+                formData.append('cf-turnstile-response', turnstileToken);
+            }
 
             await postFormData(`${apiBase}/step-1`, formData);
             await setStep(2);
@@ -1603,6 +1613,10 @@
 
     async function handleNext() {
         if (currentStep === 1) {
+            if (typeof window.kkpHandleStep1PrimaryAction === 'function') {
+                await window.kkpHandleStep1PrimaryAction({ saveStep1 });
+                return;
+            }
             await saveStep1();
             return;
         }

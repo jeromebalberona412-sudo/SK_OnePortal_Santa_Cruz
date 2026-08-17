@@ -124,7 +124,7 @@
                 </div>
             </div>
             <div class="kkp-demo-block">
-                <div class="kkp-demo-block-label">Youth Age Group <span class="kkp-auto-field-note">(auto from Age)</span></div>
+                <div class="kkp-demo-block-label">Youth Age Group</div>
                 <div class="kkp-demo-block-options">
                     @foreach (['Child Youth (15-17 yrs old)', 'Core Youth (18-24 yrs old)', 'Young Adult (25-30 yrs old)'] as $option)
                         <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" disabled @checked($on('youth_age_group', $option))> {{ $option }}</label>

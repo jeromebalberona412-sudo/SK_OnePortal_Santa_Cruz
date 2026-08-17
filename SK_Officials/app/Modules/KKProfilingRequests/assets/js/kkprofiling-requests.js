@@ -1,4 +1,5 @@
-import { populateKkProfilingView } from './kk-profiling-view-populate.js';
+import { populateKkProfilingView, formatDisplaySuffix, getSuffixOther } from './kk-profiling-view-populate.js';
+import { bindKkProfilingEdit, exitKkProfilingEditMode } from './kkprofiling-requests-edit.js';
 
 function broadcastKkProfileEvent() {
     try {
@@ -81,25 +82,6 @@ function initializeKKProfilingRequestsUI() {
 
     // Sample data loaded from JSON (storage/app/sample-data/kkprofiling-requests.json)
     const requests = [];
-
-    function formatDisplaySuffix(suffix, suffixOther) {
-        if (!suffix) {
-            return 'None';
-        }
-
-        const normalized = String(suffix).trim();
-
-        if (!normalized || normalized.toLowerCase() === 'none') {
-            return 'None';
-        }
-
-        if (normalized.toLowerCase() === 'other' || normalized.toLowerCase() === 'others') {
-            const other = String(suffixOther || '').trim();
-            return other || 'None';
-        }
-
-        return normalized;
-    }
 
     function populateSupportingDocumentsPanel(request) {
         const wrap = document.getElementById('kkViewDocumentsWrap');
@@ -204,16 +186,35 @@ function initializeKKProfilingRequestsUI() {
     function formatFullName(r) {
         const last = String(r.lastName || '').trim();
         const first = String(r.firstName || '').trim();
-        const middle = String(r.middleName || '').trim();
+        const middle = formatMiddleNameForTable(r.middleName);
         const suffixPart = formatDisplaySuffix(r.suffix, r.suffixOther);
         const skipSuffix = !suffixPart || suffixPart.toLowerCase() === 'none';
-        const parts = [last, first, middle];
+        const parts = [last, first];
+        if (middle) {
+            parts.push(middle);
+        }
         if (!skipSuffix) {
             parts.push(suffixPart);
         }
 
         const visible = parts.filter(Boolean);
         return visible.length ? visible.join(', ') : '-';
+    }
+
+    function formatMiddleNameForTable(value) {
+        const normalized = String(value || '').trim();
+        if (!normalized || normalized.toLowerCase() === 'none') {
+            return '';
+        }
+        return normalized;
+    }
+
+    function formatMiddleNameDisplay(value) {
+        const normalized = String(value || '').trim();
+        if (!normalized || normalized === '—' || normalized.toLowerCase() === 'none') {
+            return 'None';
+        }
+        return normalized;
     }
 
     let currentSearchQuery = '';
@@ -340,7 +341,7 @@ function initializeKKProfilingRequestsUI() {
         paginatedData.forEach((r) => {
             const tr = document.createElement('tr');
             const fullName = formatFullName(r);
-            const email = r.emailAddress || '—';
+            const email = r.emailAddress ? r.emailAddress : 'No email';
             const voterStatus = r.registeredVoter || 'No';
             const purokZone = r.purokZone || '—';
 
@@ -411,6 +412,10 @@ function initializeKKProfilingRequestsUI() {
                         <button type="button" class="row-actions-item row-actions-item-view" data-action="view" data-id="${requestId}" role="menuitem">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                             <span>View Details</span>
+                        </button>
+                        <button type="button" class="row-actions-item row-actions-item-edit" data-action="edit" data-id="${requestId}" role="menuitem">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                            <span>Edit</span>
                         </button>
                         <button type="button" class="row-actions-item row-actions-item-approve" data-action="approve" data-id="${requestId}" role="menuitem">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
@@ -541,8 +546,8 @@ function initializeKKProfilingRequestsUI() {
         if (isEditable || isDuplicate) {
             setField('kkViewLastName', 'lastName', lastName || '—');
             setField('kkViewFirstName', 'firstName', firstName || '—');
-            setField('kkViewMiddleName', 'middleName', middleName || '—');
-            setField('kkViewSuffix', 'suffix', formatDisplaySuffix(suffix) || '—');
+            setField('kkViewMiddleName', 'middleName', formatMiddleNameDisplay(middleName));
+            setField('kkViewSuffix', 'suffix', formatDisplaySuffix(suffix, getSuffixOther(request)) || '—');
             setField('kkViewBarangay', 'barangay', barangay || '—');
             setField('kkViewPurokZone', 'purokZone', purokZone || '—');
             setField('kkViewAge', 'age', age || '—');
@@ -784,6 +789,7 @@ function initializeKKProfilingRequestsUI() {
             request._fixedFields = new Set();
             const oldSaveRow = document.getElementById('kkInlineSaveRow');
             if (oldSaveRow) oldSaveRow.remove();
+            exitKkProfilingEditMode();
             populateViewModal(request);
             openModal(viewModal);
         } else if (action === 'documents') {
@@ -831,7 +837,10 @@ function initializeKKProfilingRequestsUI() {
             const target = e.target;
             if (target === modal || target.hasAttribute('data-modal-close')) {
                 closeModal(modal);
-                if (modal === viewModal) resetModalMaximize(viewModal);
+                if (modal === viewModal) {
+                    resetModalMaximize(viewModal);
+                    exitKkProfilingEditMode();
+                }
             }
         });
     });
@@ -977,11 +986,14 @@ function initializeKKProfilingRequestsUI() {
                     firstName: r.first_name,
                     middleName: r.middle_name,
                     suffix: r.suffix,
+                    suffixRaw: r.suffix_raw || r.suffix,
                     suffixOther: r.suffix_other || r.custom_suffix,
                     age: r.age,
                     birthday: r.birthday,
                     sex: r.sex,
                     emailAddress: r.email,
+                    has_email: Boolean(r.has_email ?? r.email),
+                    has_account: Boolean(r.has_account),
                     contactNumber: r.contact_number,
                     barangay: r.barangay,
                     purokZone: r.purok_zone,
@@ -1029,6 +1041,16 @@ function initializeKKProfilingRequestsUI() {
     }
 
     window.addEventListener('kk-profile-event', () => loadData());
+    bindKkProfilingEdit({
+        findRequestById,
+        populateView: populateViewModal,
+        openModal,
+        closeModal,
+        viewModal,
+        loadData,
+        showToast,
+        resetMaximize: resetModalMaximize,
+    });
     loadData();
 }
 

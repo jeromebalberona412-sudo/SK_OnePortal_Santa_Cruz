@@ -10,7 +10,9 @@ use App\Notifications\KabataanSetPasswordEmail;
 use App\Rules\FacebookProfileUrl;
 use App\Services\BarangayZoneService;
 use App\Services\DuplicateKabataanRegistrationService;
+use App\Services\KkProfilingDirectSubmitService;
 use App\Services\KkRegistrationDraftService;
+use App\Services\TurnstileService;
 use App\Services\PhilippineIdDetectionService;
 use App\Services\PhilippineIdPipelineService;
 use App\Services\RegistrationEvaluationService;
@@ -34,13 +36,29 @@ class KKProfilingWizardController extends Controller
         protected DuplicateKabataanRegistrationService $duplicateChecker,
         protected PhilippineIdDetectionService $philippineIdDetection,
         protected PhilippineIdPipelineService $philippineIdPipeline,
+        protected TurnstileService $turnstileService,
+        protected KkProfilingDirectSubmitService $directSubmitService,
     ) {}
 
     public function saveStep1(Request $request, string $barangay)
     {
+        $this->assertTurnstilePassed($request);
+
         $barangayRecord = $this->resolveBarangay($barangay);
-        $validated = $this->validateStep1($request, (int) $barangayRecord->id);
+        $validated = $this->validateStep1($request, (int) $barangayRecord->id, true);
+
+        if (trim((string) ($validated['email'] ?? '')) === '') {
+            throw ValidationException::withMessages([
+                'email' => ['Enter a Gmail address to continue to the next steps, or leave it blank and use Submit KK Profiling.'],
+            ]);
+        }
+
         $payload = $this->normalizeStep1Payload($request, $validated);
+
+        $this->draftService->assertEmailAvailable(
+            strtolower(trim((string) $validated['email'])),
+            (int) $barangayRecord->id
+        );
 
         $wizard = $this->draftService->createOrUpdateStep1(
             $barangayRecord,
@@ -53,6 +71,35 @@ class KKProfilingWizardController extends Controller
             'token' => $wizard['token'],
             'step' => 2,
             'message' => 'Step 1 saved. Continue to supporting documents.',
+            'email_verification_recommended' => true,
+        ]);
+    }
+
+    public function submitWithoutEmail(Request $request, string $barangay): JsonResponse
+    {
+        $this->assertTurnstilePassed($request);
+
+        $barangayRecord = $this->resolveBarangay($barangay);
+
+        $email = strtolower(trim((string) $request->input('email', '')));
+        if ($email !== '') {
+            throw ValidationException::withMessages([
+                'email' => ['Leave the email blank to submit without an account, or use Save & Continue if you entered an email.'],
+            ]);
+        }
+
+        $request->merge(['email' => null]);
+        $validated = $this->validateStep1($request, (int) $barangayRecord->id, false);
+        $payload = $this->normalizeStep1Payload($request, $validated);
+        $payload['email'] = null;
+
+        $this->directSubmitService->commit($barangayRecord, $payload);
+
+        return response()->json([
+            'success' => true,
+            'submitted_without_email' => true,
+            'message' => 'KK Profiling submitted successfully.',
+            'redirect' => route('kkprofiling.signup', ['clear' => 1]),
         ]);
     }
 
@@ -913,8 +960,30 @@ class KKProfilingWizardController extends Controller
         return $this->draftService->markVerificationSent($wizard);
     }
 
-    private function validateStep1(Request $request, int $barangayId): array
+    private function assertTurnstilePassed(Request $request): void
     {
+        if (! $this->turnstileService->isEnabled()) {
+            return;
+        }
+
+        $token = (string) $request->input('cf-turnstile-response', '');
+
+        if ($token === '' || ! $this->turnstileService->verify($token, $request->ip())) {
+            throw ValidationException::withMessages([
+                'cf-turnstile-response' => ['Please complete the security verification and try again.'],
+            ]);
+        }
+    }
+
+    private function validateStep1(Request $request, int $barangayId, bool $emailRequired = true): array
+    {
+        $email = strtolower(trim((string) $request->input('email', '')));
+        $request->merge(['email' => $email === '' ? null : $email]);
+
+        $emailRules = $emailRequired
+            ? ['required', 'email', 'max:254', 'regex:/^[A-Za-z0-9._%+-]{6,30}@gmail\.com$/i']
+            : ['nullable', 'email', 'max:254', 'regex:/^[A-Za-z0-9._%+-]{6,30}@gmail\.com$/i'];
+
         $validated = $request->validate([
             'last_name' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[A-Za-z.\-]{3,50}$/'],
             'first_name' => ['required', 'string', 'min:3', 'max:50', 'regex:/^(?!\s)[A-Za-z.\-\s]+$/'],
@@ -925,7 +994,7 @@ class KKProfilingWizardController extends Controller
             'sex' => 'required|in:Male,Female',
             'age' => 'required|integer|min:15|max:30',
             'birthday' => 'required|date|before_or_equal:today',
-            'email' => ['required', 'email', 'max:254', 'regex:/^[A-Za-z0-9._%+-]{6,30}@gmail\.com$/i'],
+            'email' => $emailRules,
             'contact_number' => ['required', 'string', 'regex:/^09\d{9}$/'],
             'civil_status' => 'required|string',
             'youth_classification' => 'required|string',

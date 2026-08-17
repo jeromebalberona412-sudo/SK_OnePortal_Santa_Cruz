@@ -10,10 +10,15 @@
         'app/Modules/Homepage/assets/css/homepage.css',
         'app/Modules/KKProfiling/assets/css/kkprofiling.css',
         'app/Modules/KKProfiling/assets/css/kkprofiling-wizard.css',
+        'app/Modules/KKProfiling/assets/css/kkprofiling-optional-email.css',
         'app/Modules/KKProfiling/assets/js/kkprofiling.js',
         'app/Modules/KKProfiling/assets/js/kkprofiling-wizard.js',
+        'app/Modules/KKProfiling/assets/js/kkprofiling-optional-email.js',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    @if(!empty($turnstileEnabled))
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+    @endif
 </head>
 <body class="homepage-body kkp-form-page kkp-wizard-mode @if($registrationComplete ?? false) kkp-wizard-registration-complete kkp-wizard-success-modal-open @endif">
 
@@ -55,6 +60,8 @@
                 data-verification-sent="{{ ($verificationSent ?? false) ? '1' : '0' }}"
                 data-registration-complete="{{ ($registrationComplete ?? false) ? '1' : '0' }}"
                 data-auto-approved="{{ ($registrationAutoApproved ?? false) ? '1' : '0' }}"
+                data-turnstile-enabled="{{ !empty($turnstileEnabled) ? '1' : '0' }}"
+                data-turnstile-sitekey="{{ $turnstileSiteKey ?? '' }}"
                 @if(!empty($completedEmail)) data-completed-email="{{ $completedEmail }}" @endif
                 @if(!empty($wizardDraftEmail)) data-draft-email="{{ $wizardDraftEmail }}" @endif
                 @if($errors->has('email')) data-email-error="{{ $errors->first('email') }}" @endif
@@ -106,7 +113,7 @@
                     </button>
                     <div class="kkp-wizard-nav-actions">
                         <button type="button" class="kkp-wizard-btn kkp-wizard-btn-primary" id="kkpWizardNextBtn">
-                            <span id="kkpWizardNextLabel">Save &amp; Continue</span>
+                            <span id="kkpWizardNextLabel">Submit KK Profiling</span>
                             <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
                         </button>
                     </div>
@@ -117,6 +124,8 @@
     </main>
 
     @include('kkprofiling::partials.kk-profiling-signature-modals')
+    @include('kkprofiling::partials.kk-profiling-no-email-modal')
+    @include('kkprofiling::partials.kk-profiling-turnstile-modal')
 
     <div class="kkp-reg-success-overlay" id="kkpRegSuccessModal" @if(empty($registrationComplete ?? false)) hidden @endif aria-hidden="{{ ($registrationComplete ?? false) ? 'false' : 'true' }}">
         <div class="kkp-reg-success-modal" role="dialog" aria-labelledby="kkpRegSuccessTitle" aria-modal="true">
@@ -136,7 +145,9 @@
                     Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.
                 @endif
             </p>
-            <a href="{{ route('sign-in') }}" class="kkp-reg-success-modal-btn">Go to Login</a>
+            <div class="kkp-reg-success-actions">
+                <a href="{{ route('sign-in') }}" class="kkp-reg-success-modal-btn" id="kkpRegSuccessLoginBtn">Go to Sign in</a>
+            </div>
         </div>
     </div>
 

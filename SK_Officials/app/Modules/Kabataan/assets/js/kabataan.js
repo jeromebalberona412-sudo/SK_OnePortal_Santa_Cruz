@@ -508,7 +508,7 @@ function initializeKabataanUI() {
                     <span class="kabataan-fullname">${full}</span>
                     ${formatApprovalBadge(k.evaluationStatus)}
                 </td>
-                <td class="kabataan-email-cell">${k.email || k.emailAddress || '—'}</td>
+                <td class="kabataan-email-cell">${k.email || k.emailAddress || 'No email'}</td>
                 <td>${k.age || '-'}</td>
                 <td>${k.sex || '-'}</td>
                 <td>${k.purokZone || '-'}</td>
@@ -521,6 +521,10 @@ function initializeKabataanUI() {
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                 <span>View</span>
                             </button>
+                            ${(!isHistoricalView && k.canModify !== false) ? `<button type="button" class="row-actions-item row-actions-item-edit" data-action="edit" data-index="${index}" role="menuitem">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                                <span>Edit</span>
+                            </button>` : ''}
                             <button type="button" class="row-actions-item row-actions-item-documents" data-action="documents" data-index="${index}" role="menuitem">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                                 <span>Documents</span>
@@ -940,6 +944,9 @@ function initializeKabataanUI() {
         const action = btn.dataset.action;
         const index = parseInt(btn.dataset.index, 10);
         if (action === 'view' && !Number.isNaN(index)) openModal(action, index);
+        if (action === 'edit' && !Number.isNaN(index) && !isHistoricalView && kabataan[index]?.canModify !== false) {
+            openModal(action, index);
+        }
         if (action === 'documents' && !Number.isNaN(index)) openModal('documents', index);
         if (action === 'print' && !Number.isNaN(index)) {
             const record = kabataan[index];
@@ -1346,8 +1353,9 @@ function initializeKabataanUI() {
                 broadcastKkProfileEvent();
                 closeModal();
                 loadData();
+                showKabataanToast(res.message || 'Kabataan record updated.', 'success');
             })
-            .catch(err => alert(err.message || 'Failed to save record.'))
+            .catch(err => showKabataanToast(err.message || 'Failed to save record.', 'error'))
             .finally(() => {
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Save';
@@ -1759,6 +1767,7 @@ function initializeKabataanUI() {
                     sex: r.sex,
                     birthday: r.birthday,
                     email: r.email,
+                    emailAddress: r.email,
                     contact: r.contact_number,
                     barangay: r.barangay,
                     region: r.region,

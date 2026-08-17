@@ -11,6 +11,10 @@
         <h1 class="verify-title">Check Your Email</h1>
         <p class="verify-message">We sent a set password link to:</p>
         <p class="verify-email" id="displayEmail">{{ $wizardDraftEmail ?? 'your-email@example.com' }}</p>
+        <p class="kkp-wizard-email-recommend" id="kkpEmailRecommendNote">
+            <strong>Email Verification Recommended.</strong>
+            Your email address has been saved. We highly recommend verifying your email now so you can access your account faster and avoid delays when using SK programs and services.
+        </p>
         <p class="verify-instruction">
             Open your inbox and click the <strong>Set Password</strong> link to continue your registration.
         </p>

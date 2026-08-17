@@ -153,7 +153,9 @@
             <p class="kkp-reg-success-message" id="kkpRegSuccessMessage">
                 Your account has been created successfully. Please wait for SK Officials to review and verify your registration before you can access the system.
             </p>
-            <a href="{{ route('sign-in') }}" class="kkp-reg-success-modal-btn">Go to Login</a>
+            <div class="kkp-reg-success-actions">
+                <a href="{{ route('sign-in') }}" class="kkp-reg-success-modal-btn">Go to Sign in</a>
+            </div>
         </div>
     </div>
 
