@@ -932,8 +932,12 @@
         });
 
         KKP_CHECKBOX_FIELDS.forEach(({ name, chk, hiddenId }) => {
-            if (step1[name]) {
-                setCheckboxGroupValue(chk, hiddenId, step1[name]);
+            const raw = Array.isArray(step1[name]) ? step1[name][0] : step1[name];
+            const value = name === 'group_chat'
+                ? (raw === 'Yes' || raw === 'No' ? raw : '')
+                : raw;
+            if (value) {
+                setCheckboxGroupValue(chk, hiddenId, value);
             }
         });
 

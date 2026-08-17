@@ -878,6 +878,18 @@ function kkpValidateContact(value, touched) {
         });
     });
 
+    (function sanitizeGroupChatAnswer() {
+        const hidden = document.getElementById('kkpGroupChat');
+        const answer = hidden ? String(hidden.value || '').trim() : '';
+        const valid = answer === 'Yes' || answer === 'No';
+        if (hidden && !valid) {
+            hidden.value = '';
+        }
+        document.querySelectorAll('input[name="group_chatChk"]').forEach((checkbox) => {
+            checkbox.checked = valid && checkbox.value === answer;
+        });
+    }());
+
     updateFooterFieldRequirements();
 
     bindRealtimeField(firstNameEl, kkpValidateFirstName);

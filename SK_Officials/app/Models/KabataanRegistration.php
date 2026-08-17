@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class KabataanRegistration extends Model
@@ -24,14 +25,14 @@ class KabataanRegistration extends Model
     ];
 
     protected $casts = [
-        'form_data'          => 'array',
-        'evaluation_notes'   => 'array',
-        'submitted_at'       => 'datetime',
-        'email_verified_at'  => 'datetime',
-        'password_set_at'    => 'datetime',
-        'reviewed_at'        => 'datetime',
-        'archived_at'        => 'datetime',
-        'deleted_at'         => 'datetime',
+        'form_data' => 'array',
+        'evaluation_notes' => 'array',
+        'submitted_at' => 'datetime',
+        'email_verified_at' => 'datetime',
+        'password_set_at' => 'datetime',
+        'reviewed_at' => 'datetime',
+        'archived_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     public function barangay(): BelongsTo
@@ -44,6 +45,11 @@ class KabataanRegistration extends Model
         return $this->belongsTo(User::class, 'reviewed_by_user_id');
     }
 
+    public function survey(): HasOne
+    {
+        return $this->hasOne(KkSurveyResponse::class, 'kabataan_registration_id');
+    }
+
     public function scopeForBarangay($query, int $barangayId)
     {
         return $query->where('barangay_id', $barangayId);
@@ -52,8 +58,11 @@ class KabataanRegistration extends Model
     public function getFullNameAttribute(): string
     {
         $parts = array_filter([$this->last_name, $this->first_name, $this->middle_name]);
-        $name = implode(', ', array_filter([$this->last_name, trim($this->first_name . ' ' . $this->middle_name)]));
-        if ($this->suffix) $name .= ', ' . $this->suffix;
+        $name = implode(', ', array_filter([$this->last_name, trim($this->first_name.' '.$this->middle_name)]));
+        if ($this->suffix) {
+            $name .= ', '.$this->suffix;
+        }
+
         return $name ?: '—';
     }
 }

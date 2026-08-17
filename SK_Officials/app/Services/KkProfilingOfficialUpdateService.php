@@ -5,8 +5,7 @@ namespace App\Services;
 use App\Models\KabataanRegistration;
 use App\Models\User;
 use App\Modules\KKProfilingRequests\Notifications\KabataanAccountInviteNotification;
-use App\Services\KkSurveyResponseService;
-use App\Services\SkOfficialActivityService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
@@ -225,7 +224,6 @@ class KkProfilingOfficialUpdateService
             'kk_times' => ($input['kk_assembly'] ?? null) === 'Yes' ? ($input['kk_times'] ?? null) : null,
             'kk_reason' => ($input['kk_assembly'] ?? null) === 'No' ? ($input['kk_reason'] ?? null) : null,
             'facebook_profile_url' => $input['facebook_profile_url'] ?? $input['facebook'] ?? null,
-            'group_chat' => $input['group_chat'] ?? null,
             'email' => strtolower(trim((string) ($input['email'] ?? ''))) ?: null,
             'last_name' => $input['last_name'] ?? null,
             'first_name' => $input['first_name'] ?? null,
@@ -234,6 +232,9 @@ class KkProfilingOfficialUpdateService
             'custom_suffix' => $input['custom_suffix'] ?? null,
             'contact_number' => $input['contact_number'] ?? null,
         ], fn ($value) => $value !== null && $value !== ''));
+
+        $groupChat = trim((string) ($input['group_chat'] ?? ''));
+        $merged['group_chat'] = in_array($groupChat, ['Yes', 'No'], true) ? $groupChat : null;
 
         $zones = $this->zoneService->activeZoneNames((int) $registration->barangay_id);
         if ($zones !== [] && ! empty($merged['purok_zone']) && ! in_array($merged['purok_zone'], $zones, true)) {
@@ -261,7 +262,7 @@ class KkProfilingOfficialUpdateService
         }
 
         try {
-            return \Carbon\Carbon::parse($value)->toDateString();
+            return Carbon::parse($value)->toDateString();
         } catch (\Throwable) {
             return $value;
         }

@@ -37,6 +37,11 @@ Route::get('/health', function () {
 })->name('health');
 
 use App\Http\Controllers\ArchiveTermController;
+use App\Modules\Archived_Youth_Records\Controllers\ArchivedYouthRecordsController;
+use App\Modules\Authentication\Controllers\AuthController;
+use App\Modules\Barangay_ABYIP\Controllers\AbyipController;
+use App\Modules\Calendar\Controllers\CalendarController;
+use App\Modules\Committees\Controllers\CommitteeController;
 use App\Modules\Community_feed\Controllers\ArchiveCommunityFeedController;
 use App\Modules\Community_feed\Controllers\BarangayProfileController;
 use App\Modules\Community_feed\Controllers\CommunityFeedCommentController;
@@ -44,11 +49,6 @@ use App\Modules\Community_feed\Controllers\CommunityFeedController;
 use App\Modules\Community_feed\Controllers\CommunityFeedImageController;
 use App\Modules\Community_feed\Controllers\CommunityFeedPageController;
 use App\Modules\Community_feed\Controllers\CommunityFeedReactionController;
-use App\Modules\Archived_Youth_Records\Controllers\ArchivedYouthRecordsController;
-use App\Modules\Authentication\Controllers\AuthController;
-use App\Modules\Barangay_ABYIP\Controllers\AbyipController;
-use App\Modules\Calendar\Controllers\CalendarController;
-use App\Modules\Committees\Controllers\CommitteeController;
 use App\Modules\Dashboard\Controllers\DashboardController;
 use App\Modules\Deleted_Kabataan\Controllers\DeletedKabataanController;
 use App\Modules\Kabataan\Controllers\KabataanController;
@@ -237,7 +237,9 @@ Route::middleware([
 
     Route::get('/kk-profiling-requests', [KKProfilingRequestsController::class, 'index'])->name('kk-profiling-requests');
     Route::get('/kk-profiling-requests/data', [KKProfilingRequestsController::class, 'data'])->name('kk-profiling-requests.data');
+    Route::get('/kk-profiling-requests/{id}', [KKProfilingRequestsController::class, 'show'])->name('kk-profiling-requests.show');
     Route::put('/kk-profiling-requests/{id}', [KKProfilingRequestsController::class, 'update'])->name('kk-profiling-requests.update');
+    Route::post('/kk-profiling-requests/bulk-approve', [KKProfilingRequestsController::class, 'bulkApprove'])->name('kk-profiling-requests.bulk-approve');
     Route::post('/kk-profiling-requests/{id}/approve', [KKProfilingRequestsController::class, 'approve'])->name('kk-profiling-requests.approve');
     Route::post('/kk-profiling-requests/{id}/reject', [KKProfilingRequestsController::class, 'reject'])->name('kk-profiling-requests.reject');
 

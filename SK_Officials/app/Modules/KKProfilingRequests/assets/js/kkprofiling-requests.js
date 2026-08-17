@@ -1,4 +1,4 @@
-import { populateKkProfilingView, formatDisplaySuffix, getSuffixOther } from './kk-profiling-view-populate.js';
+import { populateKkProfilingView, formatDisplaySuffix, getSuffixOther, normalizeYesNoAnswer } from './kk-profiling-view-populate.js';
 import { bindKkProfilingEdit, exitKkProfilingEditMode } from './kkprofiling-requests-edit.js';
 
 function broadcastKkProfileEvent() {
@@ -68,6 +68,12 @@ function initializeKKProfilingRequestsUI() {
     const voterFilter = document.getElementById('kkVoterFilter');
     const sexFilter = document.getElementById('kkSexFilter');
     const youthAgeGroupFilter = document.getElementById('kkYouthAgeGroupFilter');
+    const emailFilter = document.getElementById('kkEmailFilter');
+    const selectAllCheckbox = document.getElementById('kkSelectAll');
+    const tableActionsBar = document.getElementById('kkTableActions');
+    const bulkApproveBtn = document.getElementById('kkBulkApproveBtn');
+    const bulkApproveLabel = document.getElementById('kkBulkApproveLabel');
+    const approveModalText = document.getElementById('kkApproveModalText');
     const viewModal = document.getElementById('kkViewModal');
     const documentsModal = document.getElementById('kkDocumentsModal');
     const approveModal = document.getElementById('kkApproveModal');
@@ -99,7 +105,10 @@ function initializeKKProfilingRequestsUI() {
 
         if (!Array.isArray(documents) || documents.length === 0) {
             if (wrap) wrap.style.display = 'none';
-            if (emptyEl) emptyEl.hidden = false;
+            if (emptyEl) {
+                emptyEl.hidden = false;
+                emptyEl.textContent = 'No supporting documents were uploaded for this submission.';
+            }
             if (verificationEl) {
                 verificationEl.hidden = true;
                 verificationEl.textContent = '';
@@ -217,15 +226,120 @@ function initializeKKProfilingRequestsUI() {
         return normalized;
     }
 
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function mapApiRow(r) {
+        return {
+            id: r.id,
+            respondentNumber: formatRespondentDisplay(r.respondent_sequence, r.respondent_number),
+            respondentSequence: r.respondent_sequence,
+            date: r.submitted_at || '—',
+            lastName: r.last_name,
+            firstName: r.first_name,
+            middleName: r.middle_name,
+            suffix: r.suffix,
+            suffixRaw: r.suffix_raw || r.suffix,
+            suffixOther: r.suffix_other || r.custom_suffix,
+            age: r.age,
+            birthday: r.birthday,
+            sex: r.sex,
+            emailAddress: r.email,
+            has_email: Boolean(r.has_email ?? r.email),
+            has_account: Boolean(r.has_account),
+            contactNumber: r.contact_number,
+            contact: r.contact_number,
+            barangay: r.barangay,
+            purokZone: r.purok_zone,
+            purok: r.purok_zone,
+            registeredSKVoter: r.sk_voter,
+            registeredNationalVoter: r.national_voter,
+            registeredVoter: r.sk_voter,
+            civilStatus: r.civil_status,
+            youthClassification: r.youth_classification,
+            youthAgeGroup: r.youth_age_group,
+            workStatus: r.work_status,
+            educationalBackground: r.education,
+            votingHistory: r.sk_voted,
+            attendedKKAssembly: r.kk_assembly,
+            kkTimes: r.kk_times,
+            kkReason: r.kk_reason,
+            facebookAccount: r.facebook,
+            willingToJoinGroupChat: normalizeYesNoAnswer(r.group_chat),
+            signature: r.signature,
+            status: resolveEvaluationStatus(r.evaluation_status, r.status),
+            registrationStatus: r.status,
+            evaluationNotes: r.evaluation_notes,
+            rejectionReason: r.review_notes,
+            region: r.region || 'Region IV-A (CALABARZON)',
+            province: r.province || 'Laguna',
+            city: r.city || 'Santa Cruz',
+            barangayLogoUrl: r.barangay_logo_url || null,
+            supportingDocuments: r.supporting_documents || [],
+            idVerification: r.id_verification || null,
+            _detailLoaded: Boolean(r.signature || (Array.isArray(r.supporting_documents) && r.supporting_documents.length)),
+        };
+    }
+
+    function updateBulkToolbar() {
+        const count = selectedIds.size;
+        const hasSelection = count > 0;
+        if (tableActionsBar) {
+            tableActionsBar.hidden = !hasSelection;
+        }
+        if (bulkApproveBtn) {
+            bulkApproveBtn.hidden = !hasSelection;
+            bulkApproveBtn.disabled = !hasSelection;
+        }
+        if (bulkApproveLabel) {
+            bulkApproveLabel.textContent = count > 1 ? `Approve (${count})` : 'Approve';
+        }
+    }
+
+    function syncSelectAllCheckbox() {
+        if (!selectAllCheckbox) {
+            return;
+        }
+        const visibleCheckboxes = Array.from(tbody.querySelectorAll('.kk-row-checkbox'));
+        const visibleIds = visibleCheckboxes.map((checkbox) => checkbox.dataset.id).filter(Boolean);
+        selectAllCheckbox.checked = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id));
+        selectAllCheckbox.indeterminate = visibleIds.some((id) => selectedIds.has(id)) && !selectAllCheckbox.checked;
+    }
+
+    function showTableMessage(message) {
+        tbody.innerHTML = '';
+        const tr = document.createElement('tr');
+        tr.className = 'empty-state-row';
+        const td = document.createElement('td');
+        td.colSpan = 8;
+        td.textContent = message;
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        updatePaginationFooter(0);
+        updateBulkToolbar();
+        syncSelectAllCheckbox();
+    }
+
     let currentSearchQuery = '';
     let currentBarangayFilter = '';
     let currentVoterFilter = '';
     let currentSexFilter = '';
     let currentYouthAgeGroupFilter = '';
+    let currentEmailFilter = '';
     let activeRequestId = null;
+    let pendingApproveIds = [];
     let currentPage = 1;
     let recordsPerPage = 10;
     let tableSorter = null;
+    const selectedIds = new Set();
+    const detailInflight = new Map();
+    let listAbortController = null;
 
     if (window.SkTableSort) {
         tableSorter = SkTableSort.mount({
@@ -265,6 +379,8 @@ function initializeKKProfilingRequestsUI() {
             if (currentVoterFilter && r.registeredVoter !== currentVoterFilter) return false;
             if (currentSexFilter && r.sex !== currentSexFilter) return false;
             if (currentYouthAgeGroupFilter && r.youthAgeGroup !== currentYouthAgeGroupFilter) return false;
+            if (currentEmailFilter === 'email' && !r.has_email) return false;
+            if (currentEmailFilter === 'no-email' && r.has_email) return false;
             return true;
         });
 
@@ -327,23 +443,21 @@ function initializeKKProfilingRequestsUI() {
         const paginatedData = filtered.slice(startIndex, endIndex);
 
         if (paginatedData.length === 0) {
-            const tr = document.createElement('tr');
-            tr.className = 'empty-state-row';
-            const td = document.createElement('td');
-            td.colSpan = 7;
-            td.textContent = 'No KK Profiling requests found.';
-            tr.appendChild(td);
-            tbody.appendChild(tr);
-            updatePaginationFooter(0);
+            showTableMessage('No KK Profiling requests found.');
             return;
         }
 
         paginatedData.forEach((r) => {
             const tr = document.createElement('tr');
+            const recordId = r.id ? String(r.id) : '';
             const fullName = formatFullName(r);
             const email = r.emailAddress ? r.emailAddress : 'No email';
             const voterStatus = r.registeredVoter || 'No';
             const purokZone = r.purokZone || '—';
+
+            if (recordId) {
+                tr.dataset.recordId = recordId;
+            }
 
             // ── Duplicate linking: find the original record this duplicates ──
             let dupLinkBadge = '';
@@ -357,9 +471,9 @@ function initializeKKProfilingRequestsUI() {
                     const badgeLabel = linkedStatus === 'Duplicate'
                         ? `Linked Duplicate · ${refId}`
                         : `Duplicate (KK) · Same as ${refId}`;
-                    dupLinkBadge = `<div class="kk-dup-link-badge" title="Linked with ${refId}: ${linkedName}">
+                    dupLinkBadge = `<div class="kk-dup-link-badge" title="Linked with ${escapeHtml(refId)}: ${escapeHtml(linkedName)}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                        ${badgeLabel}
+                        ${escapeHtml(badgeLabel)}
                     </div>`;
                 }
             }
@@ -370,29 +484,34 @@ function initializeKKProfilingRequestsUI() {
                     (x.censusErrors || []).some(e => e.field === 'respondentNumber' && e.census === r.respondentNumber)
                 );
                 if (dupOfThis) {
-                    dupLinkBadge = `<div class="kk-dup-link-badge kk-dup-link-badge--original" title="Has duplicate submission: ${dupOfThis.respondentNumber}">
+                    dupLinkBadge = `<div class="kk-dup-link-badge kk-dup-link-badge--original" title="Has duplicate submission: ${escapeHtml(dupOfThis.respondentNumber)}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                        Duplicate (KK) · Duplicated by ${dupOfThis.respondentNumber}
+                        Duplicate (KK) · Duplicated by ${escapeHtml(dupOfThis.respondentNumber)}
                     </div>`;
                 }
             }
 
             tr.innerHTML = `
+                <td class="th-checkbox">
+                    ${recordId ? `<input type="checkbox" class="kabataan-checkbox kk-row-checkbox" data-id="${recordId}" aria-label="Select row" ${selectedIds.has(recordId) ? 'checked' : ''}>` : ''}
+                </td>
                 <td class="kk-fullname-cell">
-                    <span class="kk-fullname">${fullName}</span>
+                    <span class="kk-fullname">${escapeHtml(fullName)}</span>
                     ${dupLinkBadge}
                 </td>
-                <td class="kk-email-cell">${email}</td>
-                <td>${r.age}</td>
-                <td>${r.sex || '—'}</td>
-                <td>${purokZone}</td>
-                <td>${voterStatus}</td>
+                <td class="kk-email-cell">${escapeHtml(email)}</td>
+                <td>${escapeHtml(r.age ?? '—')}</td>
+                <td>${escapeHtml(r.sex || '—')}</td>
+                <td>${escapeHtml(purokZone)}</td>
+                <td>${escapeHtml(voterStatus)}</td>
                 ${renderActionMenuCell(r.id)}
             `;
             tbody.appendChild(tr);
         });
 
         updatePaginationFooter(filtered.length);
+        updateBulkToolbar();
+        syncSelectAllCheckbox();
     }
 
     function populateSurveyViewForm(request) {
@@ -437,6 +556,38 @@ function initializeKKProfilingRequestsUI() {
         [viewModal, documentsModal, approveModal, rejectModal].forEach((m) => {
             if (m) m.style.display = 'none';
         });
+    }
+
+    function isModalVisible(modalElement) {
+        return Boolean(modalElement && modalElement.style.display !== 'none' && modalElement.style.display !== '');
+    }
+
+    function showDocumentsLoading() {
+        const wrap = document.getElementById('kkViewDocumentsWrap');
+        const grid = document.getElementById('kkViewDocumentsGrid');
+        const verificationEl = document.getElementById('kkViewIdVerification');
+        const emptyEl = document.getElementById('kkViewDocumentsEmpty');
+        if (grid) {
+            grid.innerHTML = '';
+        }
+        if (wrap) {
+            wrap.style.display = 'none';
+        }
+        if (verificationEl) {
+            verificationEl.hidden = true;
+            verificationEl.textContent = '';
+        }
+        if (emptyEl) {
+            emptyEl.hidden = false;
+            emptyEl.textContent = 'Loading documents...';
+        }
+    }
+
+    function prefetchRequestDetail(request) {
+        if (!request?.id || request._detailLoaded) {
+            return;
+        }
+        ensureDetail(request).catch(() => {});
     }
 
     function findRequestById(id) {
@@ -726,6 +877,7 @@ function initializeKKProfilingRequestsUI() {
     if (voterFilter) { voterFilter.addEventListener('change', () => { currentVoterFilter = voterFilter.value; currentPage = 1; renderTable(); }); }
     if (sexFilter) { sexFilter.addEventListener('change', () => { currentSexFilter = sexFilter.value; currentPage = 1; renderTable(); }); }
     if (youthAgeGroupFilter) { youthAgeGroupFilter.addEventListener('change', () => { currentYouthAgeGroupFilter = youthAgeGroupFilter.value; currentPage = 1; renderTable(); }); }
+    if (emailFilter) { emailFilter.addEventListener('change', () => { currentEmailFilter = emailFilter.value; currentPage = 1; renderTable(); }); }
 
     const prevBtn = document.getElementById('kkPrevBtn');
     const nextBtn = document.getElementById('kkNextBtn');
@@ -775,6 +927,71 @@ function initializeKKProfilingRequestsUI() {
     // Wire toggle buttons after modals exist in DOM
     wireModalToggle(viewModal);
 
+    function setApproveModalText(count) {
+        if (!approveModalText) {
+            return;
+        }
+        if (count > 1) {
+            approveModalText.textContent = `Are you sure you want to approve ${count} KK Profiling submissions?`;
+            return;
+        }
+        approveModalText.textContent = 'Are you sure you want to approve this KK Profiling submission?';
+    }
+
+    function openApproveModal(ids) {
+        pendingApproveIds = ids.map((id) => parseInt(id, 10)).filter((id) => !Number.isNaN(id));
+        activeRequestId = pendingApproveIds.length === 1 ? pendingApproveIds[0] : null;
+        setApproveModalText(pendingApproveIds.length);
+        openModal(approveModal);
+    }
+
+    function ensureDetail(request) {
+        if (!request?.id) {
+            return Promise.reject(new Error('Missing record id'));
+        }
+        if (request._detailLoaded) {
+            return Promise.resolve(request);
+        }
+        const id = String(request.id);
+        if (detailInflight.has(id)) {
+            return detailInflight.get(id);
+        }
+
+        const promise = fetch(`/kk-profiling-requests/${request.id}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then((payload) => {
+                const mapped = mapApiRow(payload.data || payload);
+                Object.assign(request, mapped);
+                request._detailLoaded = true;
+                return request;
+            })
+            .finally(() => {
+                detailInflight.delete(id);
+            });
+
+        detailInflight.set(id, promise);
+        return promise;
+    }
+
+    tbody.addEventListener('pointerenter', (event) => {
+        const trigger = event.target.closest('.row-actions-trigger, .row-actions-dropdown');
+        if (!trigger || !tbody.contains(trigger)) {
+            return;
+        }
+        const row = trigger.closest('tr[data-record-id]');
+        if (!row) {
+            return;
+        }
+        prefetchRequestDetail(findRequestById(row.dataset.recordId));
+    }, true);
+
     tbody.addEventListener('click', (e) => {
         const btn = e.target.closest('button[data-action]');
         if (!btn) return;
@@ -792,11 +1009,23 @@ function initializeKKProfilingRequestsUI() {
             exitKkProfilingEditMode();
             populateViewModal(request);
             openModal(viewModal);
+            ensureDetail(request).then((detail) => {
+                if (String(activeRequestId) !== String(detail.id) || !isModalVisible(viewModal)) {
+                    return;
+                }
+                populateViewModal(detail);
+            }).catch(() => {});
         } else if (action === 'documents') {
-            populateSupportingDocumentsPanel(request);
+            showDocumentsLoading();
             openModal(documentsModal);
+            ensureDetail(request).then((detail) => {
+                if (String(activeRequestId) !== String(detail.id) || !isModalVisible(documentsModal)) {
+                    return;
+                }
+                populateSupportingDocumentsPanel(detail);
+            }).catch(() => showToast('Failed to load documents.', 'error'));
         } else if (action === 'approve') {
-            openModal(approveModal);
+            openApproveModal([request.id]);
         } else if (action === 'reject') {
             const checkboxes = rejectModal ? rejectModal.querySelectorAll('.kk-reject-reason:not(.kk-reject-other-checkbox)') : [];
             checkboxes.forEach((cb) => { cb.checked = false; });
@@ -809,6 +1038,54 @@ function initializeKKProfilingRequestsUI() {
             openModal(rejectModal);
         }
     });
+
+    tbody.addEventListener('change', (e) => {
+        const checkbox = e.target.closest('.kk-row-checkbox');
+        if (!checkbox) {
+            return;
+        }
+        const id = checkbox.dataset.id;
+        if (!id) {
+            return;
+        }
+        if (checkbox.checked) {
+            selectedIds.add(id);
+        } else {
+            selectedIds.delete(id);
+        }
+        updateBulkToolbar();
+        syncSelectAllCheckbox();
+    });
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', () => {
+            const visibleCheckboxes = Array.from(tbody.querySelectorAll('.kk-row-checkbox'));
+            visibleCheckboxes.forEach((checkbox) => {
+                const id = checkbox.dataset.id;
+                if (!id) {
+                    return;
+                }
+                if (selectAllCheckbox.checked) {
+                    selectedIds.add(id);
+                } else {
+                    selectedIds.delete(id);
+                }
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            updateBulkToolbar();
+            syncSelectAllCheckbox();
+        });
+    }
+
+    if (bulkApproveBtn) {
+        bulkApproveBtn.addEventListener('click', () => {
+            if (selectedIds.size === 0) {
+                showToast('Select at least one KK Profiling request to approve.', 'error');
+                return;
+            }
+            openApproveModal(Array.from(selectedIds));
+        });
+    }
 
     const otherCheckbox = document.getElementById('kkRejectOtherCheckbox');
     const otherWrap = document.getElementById('kkRejectOtherWrap');
@@ -850,8 +1127,7 @@ function initializeKKProfilingRequestsUI() {
         const approveBtnDefaultHtml = approveConfirmBtn.innerHTML;
 
         approveConfirmBtn.addEventListener('click', () => {
-            if (activeRequestId === null || approveConfirmBtn.disabled) {
-                closeModal(approveModal);
+            if (approveConfirmBtn.disabled) {
                 return;
             }
 
@@ -859,25 +1135,43 @@ function initializeKKProfilingRequestsUI() {
             approveConfirmBtn.innerHTML = '<span class="kk-approve-spinner"></span> Approving...';
 
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const ids = pendingApproveIds.length
+                ? pendingApproveIds
+                : (activeRequestId === null ? [] : [activeRequestId]);
 
-            fetch(`/kk-profiling-requests/${activeRequestId}/approve`, {
+            if (ids.length === 0) {
+                approveConfirmBtn.disabled = false;
+                approveConfirmBtn.innerHTML = approveBtnDefaultHtml;
+                closeModal(approveModal);
+                return;
+            }
+
+            const isBulk = ids.length > 1;
+            const url = isBulk ? '/kk-profiling-requests/bulk-approve' : `/kk-profiling-requests/${ids[0]}/approve`;
+            const body = isBulk ? JSON.stringify({ ids }) : undefined;
+
+            fetch(url, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken,
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                 },
+                body,
             })
             .then(r => r.json())
             .then(res => {
                 if (res.success) {
                     closeModal(approveModal);
                     closeModal(viewModal);
+                    ids.forEach((id) => selectedIds.delete(String(id)));
+                    pendingApproveIds = [];
                     const displayNo = res.respondent_display
                         || formatRespondentDisplay(res.respondent_sequence);
-                    const toastMsg = displayNo && displayNo !== '—'
-                        ? `KK Profiling approved! Respondent #${displayNo} assigned.`
-                        : (res.message || 'KK Profiling approved successfully.');
+                    let toastMsg = res.message || 'KK Profiling approved successfully.';
+                    if (!isBulk && displayNo && displayNo !== '—') {
+                        toastMsg = `KK Profiling approved! Respondent #${displayNo} assigned.`;
+                    }
                     showToast(toastMsg, 'success');
                     broadcastKkProfileEvent();
                     loadData();
@@ -959,14 +1253,16 @@ function initializeKKProfilingRequestsUI() {
     // Compare with Census button — now just a link, no JS needed
 
     // Load data from API then render
-    function loadData(params = {}) {
-        const url = new URL('/kk-profiling-requests/data', window.location.origin);
-        if (params.search) url.searchParams.set('search', params.search);
-        if (params.purok) url.searchParams.set('purok', params.purok);
-        if (params.voter) url.searchParams.set('voter', params.voter);
+    function loadData() {
+        if (listAbortController) {
+            listAbortController.abort();
+        }
+        listAbortController = new AbortController();
+        showTableMessage('Loading KK Profiling requests...');
 
-        fetch(url.toString(), {
-            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        fetch('/kk-profiling-requests/data', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            signal: listAbortController.signal,
         })
         .then(r => {
             if (!r.ok) {
@@ -976,53 +1272,15 @@ function initializeKKProfilingRequestsUI() {
         })
         .then(response => {
             requests.length = 0;
-            (response.data || []).forEach((r, i) => {
-                requests.push({
-                    id: r.id,
-                    respondentNumber: formatRespondentDisplay(r.respondent_sequence, r.respondent_number),
-                    respondentSequence: r.respondent_sequence,
-                    date: r.submitted_at || '—',
-                    lastName: r.last_name,
-                    firstName: r.first_name,
-                    middleName: r.middle_name,
-                    suffix: r.suffix,
-                    suffixRaw: r.suffix_raw || r.suffix,
-                    suffixOther: r.suffix_other || r.custom_suffix,
-                    age: r.age,
-                    birthday: r.birthday,
-                    sex: r.sex,
-                    emailAddress: r.email,
-                    has_email: Boolean(r.has_email ?? r.email),
-                    has_account: Boolean(r.has_account),
-                    contactNumber: r.contact_number,
-                    barangay: r.barangay,
-                    purokZone: r.purok_zone,
-                    registeredSKVoter: r.sk_voter,
-                    registeredNationalVoter: r.national_voter,
-                    registeredVoter: r.sk_voter,
-                    civilStatus: r.civil_status,
-                    youthClassification: r.youth_classification,
-                    youthAgeGroup: r.youth_age_group,
-                    workStatus: r.work_status,
-                    educationalBackground: r.education,
-                    votingHistory: r.sk_voted,
-                    attendedKKAssembly: r.kk_assembly,
-                    kkTimes: r.kk_times,
-                    kkReason: r.kk_reason,
-                    facebookAccount: r.facebook,
-                    willingToJoinGroupChat: r.group_chat,
-                    signature: r.signature,
-                    status: resolveEvaluationStatus(r.evaluation_status, r.status),
-                    registrationStatus: r.status,
-                    evaluationNotes: r.evaluation_notes,
-                    rejectionReason: r.review_notes,
-                    region: r.region || 'Region IV-A (CALABARZON)',
-                    province: r.province || 'Laguna',
-                    city: r.city || 'Santa Cruz',
-                    barangayLogoUrl: r.barangay_logo_url || null,
-                    supportingDocuments: r.supporting_documents || [],
-                    idVerification: r.id_verification || null,
-                });
+            (response.data || []).forEach((r) => {
+                requests.push(mapApiRow(r));
+            });
+
+            const validIds = new Set(requests.map((row) => (row.id ? String(row.id) : '')).filter(Boolean));
+            Array.from(selectedIds).forEach((id) => {
+                if (!validIds.has(id)) {
+                    selectedIds.delete(id);
+                }
             });
 
             const stats = response.stats || {};
@@ -1035,8 +1293,11 @@ function initializeKKProfilingRequestsUI() {
 
             renderTable();
         })
-        .catch(() => {
-            renderTable();
+        .catch((error) => {
+            if (error?.name === 'AbortError') {
+                return;
+            }
+            showTableMessage('Unable to load KK Profiling requests.');
         });
     }
 
@@ -1050,6 +1311,7 @@ function initializeKKProfilingRequestsUI() {
         loadData,
         showToast,
         resetMaximize: resetModalMaximize,
+        ensureDetail,
     });
     loadData();
 }

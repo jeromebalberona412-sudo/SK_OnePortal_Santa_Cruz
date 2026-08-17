@@ -120,6 +120,17 @@ function initializeKabataanUI() {
 
     function getField(id) { return document.getElementById(id); }
 
+    function normalizeYesNo(value) {
+        const raw = String(value ?? '').trim().toLowerCase();
+        if (raw === 'yes') {
+            return 'Yes';
+        }
+        if (raw === 'no') {
+            return 'No';
+        }
+        return '';
+    }
+
     function getFormData() {
         const o = {};
         const map = {
@@ -153,6 +164,7 @@ function initializeKabataanUI() {
         // Legacy compatibility aliases
         o.email = o.emailAddress;
         o.dob = o.birthday;
+        o.willingToJoinGroupChat = normalizeYesNo(o.willingToJoinGroupChat);
         return o;
     }
 
@@ -196,6 +208,34 @@ function initializeKabataanUI() {
             }
             el.value = val === null || val === undefined ? '' : String(val);
         });
+
+        syncCheckboxFromHidden('kabataanWillingToJoinGroupChat');
+        syncCheckboxFromHidden('kabataanSex', 'kabataanSexChk');
+        syncCheckboxFromHidden('kabataanCivilStatus');
+        syncCheckboxFromHidden('kabataanYouthClassification');
+        syncCheckboxFromHidden('kabataanYouthAgeGroup');
+        syncCheckboxFromHidden('kabataanWorkStatus');
+        syncCheckboxFromHidden('kabataanEducationalBackground');
+        syncCheckboxFromHidden('kabataanRegisteredSKVoter');
+        syncCheckboxFromHidden('kabataanRegisteredNationalVoter');
+        syncCheckboxFromHidden('kabataanVotingHistory');
+        syncCheckboxFromHidden('kabataanVotingFrequency');
+        syncCheckboxFromHidden('kabataanVotingReason');
+        syncCheckboxFromHidden('kabataanAttendedKKAssembly');
+    }
+
+    function syncCheckboxFromHidden(hiddenId, checkboxName = hiddenId) {
+        const hidden = getField(hiddenId);
+        if (!hidden) {
+            return;
+        }
+        const value = hiddenId === 'kabataanWillingToJoinGroupChat'
+            ? normalizeYesNo(hidden.value)
+            : String(hidden.value || '');
+        hidden.value = value;
+        document.querySelectorAll(`input[type="checkbox"][name="${checkboxName}"]`).forEach((checkbox) => {
+            checkbox.checked = value !== '' && checkbox.value === value;
+        });
     }
 
     function clearForm() {
@@ -217,7 +257,7 @@ function initializeKabataanUI() {
             votingReason: '',
             attendedKKAssembly: 'Yes',
             facebookAccount: '',
-            willingToJoinGroupChat: 'Yes',
+            willingToJoinGroupChat: '',
             signature: '',
         });
     }
@@ -305,7 +345,7 @@ function initializeKabataanUI() {
         votingReason: '',
         attendedKKAssembly: 'Yes',
         facebookAccount: '',
-        willingToJoinGroupChat: 'Yes',
+        willingToJoinGroupChat: '',
         signature: '',
         // Legacy aliases for compatibility
         email: '', dob: '', address: '', highestEducation: '',
@@ -665,6 +705,7 @@ function initializeKabataanUI() {
             educationalBackground: k.educationalBackground || k.highestEducation,
             kkTimes: k.kkTimes || k.votingFrequency,
             kkReason: k.kkReason || k.votingReason,
+            willingToJoinGroupChat: normalizeYesNo(k.willingToJoinGroupChat),
         });
         populateKabataanDocuments(k);
     }
@@ -1413,7 +1454,7 @@ function initializeKabataanUI() {
         const votingReason = get('votingreason') || get('ifnowhy') || '';
         const attendedKKAssembly = get('attendedkkassembly') || get('kkassembly') || 'Yes';
         const facebookAccount = get('facebook_profile_url') || get('facebook') || get('fbaccount') || '';
-        const willingToJoinGroupChat = get('willingtojoin') || get('groupchat') || 'Yes';
+        const willingToJoinGroupChat = get('willingtojoin') || get('groupchat') || '';
         const signature = get('signature') || '';
         return {
             ...defaultRecord(),
@@ -1427,7 +1468,7 @@ function initializeKabataanUI() {
             registeredSKVoter, registeredNationalVoter,
             votingHistory, votingFrequency, votingReason,
             attendedKKAssembly,
-            facebookAccount, willingToJoinGroupChat,
+            facebookAccount, willingToJoinGroupChat: normalizeYesNo(willingToJoinGroupChat),
             signature,
         };
     }
@@ -1787,7 +1828,7 @@ function initializeKabataanUI() {
                     attendedKKAssembly: r.kk_assembly,
                     kkReason: r.kk_reason,
                     facebookAccount: r.facebook,
-                    willingToJoinGroupChat: r.group_chat,
+                    willingToJoinGroupChat: normalizeYesNo(r.group_chat),
                     signature: r.signature,
                     date: r.submitted_at,
                     evaluationStatus: r.evaluation_status || '',

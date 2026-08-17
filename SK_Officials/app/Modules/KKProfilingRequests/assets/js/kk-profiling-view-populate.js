@@ -11,6 +11,17 @@ export function getSuffixOther(request) {
     return request.suffixOther || request.suffix_other || request.custom_suffix || '';
 }
 
+export function normalizeYesNoAnswer(value) {
+    const raw = String(value ?? '').trim().toLowerCase();
+    if (raw === 'yes') {
+        return 'Yes';
+    }
+    if (raw === 'no') {
+        return 'No';
+    }
+    return '';
+}
+
 export function formatDisplaySuffix(suffix, suffixOther) {
     const other = String(suffixOther || '').trim();
     const normalized = String(suffix || '').trim();
@@ -322,7 +333,7 @@ export function populateKkProfilingView(request, options = {}) {
     if (facebookWrap) {
         facebookWrap.classList.toggle('kkp-footer-fb--empty', facebookValue === '');
     }
-    const groupChatAnswer = (willingToJoinGroupChat || '').trim();
+    const groupChatAnswer = normalizeYesNoAnswer(willingToJoinGroupChat);
     setCheck('kkViewGC_Yes', groupChatAnswer === 'Yes');
     setCheck('kkViewGC_No', groupChatAnswer === 'No');
 
@@ -413,7 +424,7 @@ export function mapRegistrationToKkView(record) {
         kkTimes: record.kk_times,
         kkReason: record.kk_reason,
         facebookAccount: record.facebook,
-        willingToJoinGroupChat: record.group_chat,
+        willingToJoinGroupChat: normalizeYesNoAnswer(record.group_chat),
         signature: record.signature,
         barangayLogoUrl: record.barangay_logo_url,
         rejectionReason: record.rejection_reason,

@@ -124,8 +124,25 @@
                         <option value="No">No</option>
                     </select>
                 </div>
+                <div class="filter-item filter-item-email">
+                    <label for="kkEmailFilter" class="filter-label">Email</label>
+                    <select id="kkEmailFilter" class="filter-select">
+                        <option value="">All</option>
+                        <option value="email">Email</option>
+                        <option value="no-email">No email</option>
+                    </select>
+                </div>
             </div>
         </section>
+
+        <div class="table-external-actions kk-table-actions" id="kkTableActions" hidden>
+            <button type="button" class="btn-float-approve" id="kkBulkApproveBtn" hidden disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span id="kkBulkApproveLabel">Approve</span>
+            </button>
+        </div>
 
         <section class="page-content-section">
             <div class="table-card">
@@ -133,6 +150,9 @@
                     <table class="kk-table">
                         <thead>
                             <tr>
+                                <th class="th-checkbox">
+                                    <input type="checkbox" class="kabataan-checkbox kabataan-checkbox-header" id="kkSelectAll" aria-label="Select all visible rows">
+                                </th>
                                 <th>
                                     FULLNAME
                                     <div class="column-hint">LN, FN, MN, Suffix</div>
@@ -228,7 +248,7 @@
             <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
         </div>
         <div class="modal-body">
-            <p>Are you sure you want to approve this KK Profiling submission?</p>
+            <p id="kkApproveModalText">Are you sure you want to approve this KK Profiling submission?</p>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-approve-cancel" id="kkApproveCancelBtn" data-modal-close>Cancel</button>

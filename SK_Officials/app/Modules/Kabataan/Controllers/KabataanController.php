@@ -3,14 +3,15 @@
 namespace App\Modules\Kabataan\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\KabataanProfilingHistory;
 use App\Models\KabataanRegistration;
 use App\Services\BarangayLogoUrlService;
 use App\Services\BarangayZoneService;
 use App\Services\KabataanInAppNotificationService;
 use App\Services\KabataanProfilingHistoryService;
-use App\Services\KkSupportingDocumentService;
 use App\Services\KkProfilingOfficialUpdateService;
 use App\Services\KkProfilingRequestDataService;
+use App\Services\KkSupportingDocumentService;
 use App\Services\KkSurveyResponseService;
 use App\Services\RespondentNumberService;
 use App\Services\SkOfficialActivityService;
@@ -19,6 +20,7 @@ use App\Support\KabataanLocationResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class KabataanController extends Controller
 {
@@ -28,8 +30,7 @@ class KabataanController extends Controller
         private readonly KkProfilingRequestDataService $profilingDataService,
         private readonly KabataanProfilingHistoryService $profilingHistoryService,
         private readonly KkProfilingOfficialUpdateService $officialUpdateService,
-    ) {
-    }
+    ) {}
 
     public function index()
     {
@@ -46,9 +47,9 @@ class KabataanController extends Controller
         }
 
         return view('Kabataan::kabataan', [
-            'barangayName'    => $barangayName,
+            'barangayName' => $barangayName,
             'barangayLogoUrl' => $barangayLogoUrl,
-            'barangayZones'   => $user?->barangay_id
+            'barangayZones' => $user?->barangay_id
                 ? app(BarangayZoneService::class)->activeZonesForBarangay((int) $user->barangay_id)
                 : collect(),
         ]);
@@ -58,7 +59,7 @@ class KabataanController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user || !$user->barangay_id) {
+        if (! $user || ! $user->barangay_id) {
             return response()->json(['data' => [], 'stats' => $this->emptyStats(), 'years' => []]);
         }
 
@@ -84,12 +85,12 @@ class KabataanController extends Controller
                 $this->profilingDataService->approvedSurveysForBarangay($user->barangay_id)
             );
 
-        $val = fn($fd, $key) => is_array($fd[$key] ?? null)
+        $val = fn ($fd, $key) => is_array($fd[$key] ?? null)
             ? ($fd[$key][0] ?? '—')
             : ($fd[$key] ?? '—');
 
         $data = $records->map(function ($record) use ($val, $approvedSurveys, $selectedYear, $isHistorical) {
-            $registration = $record instanceof \App\Models\KabataanProfilingHistory
+            $registration = $record instanceof KabataanProfilingHistory
                 ? $record->registration
                 : $record;
 
@@ -97,7 +98,7 @@ class KabataanController extends Controller
                 return null;
             }
 
-            $fd = $record instanceof \App\Models\KabataanProfilingHistory
+            $fd = $record instanceof KabataanProfilingHistory
                 ? ($record->form_data ?? [])
                 : ($registration->form_data ?? []);
 
@@ -116,55 +117,55 @@ class KabataanController extends Controller
                 }
             }
 
-            $submittedAt = $record instanceof \App\Models\KabataanProfilingHistory
+            $submittedAt = $record instanceof KabataanProfilingHistory
                 ? $record->submitted_at
                 : $registration->submitted_at;
 
             return [
-                'id'             => $registration->id,
+                'id' => $registration->id,
                 'profiling_year' => $selectedYear,
-                'is_historical'  => $isHistorical,
-                'can_modify'     => ! $isHistorical,
-                'respondent_no'       => RespondentNumberService::displaySequence(
+                'is_historical' => $isHistorical,
+                'can_modify' => ! $isHistorical,
+                'respondent_no' => RespondentNumberService::displaySequence(
                     $registration->respondent_sequence,
                     $registration->respondent_number
                 ),
                 'respondent_sequence' => $registration->respondent_sequence,
-                'last_name'      => $record->last_name ?? $registration->last_name,
-                'first_name'     => $record->first_name ?? $registration->first_name,
-                'middle_name'    => $record->middle_name ?? $registration->middle_name,
-                'suffix'         => $record->suffix ?? $registration->suffix,
-                'full_name'      => trim(implode(' ', array_filter([
+                'last_name' => $record->last_name ?? $registration->last_name,
+                'first_name' => $record->first_name ?? $registration->first_name,
+                'middle_name' => $record->middle_name ?? $registration->middle_name,
+                'suffix' => $record->suffix ?? $registration->suffix,
+                'full_name' => trim(implode(' ', array_filter([
                     $record->last_name ?? $registration->last_name,
                     $record->first_name ?? $registration->first_name,
                     $record->middle_name ?? $registration->middle_name,
                 ]))),
-                'age'            => $val($fd, 'age'),
-                'sex'            => $val($fd, 'sex'),
-                'birthday'       => $val($fd, 'birthday'),
-                'email'          => $record->email ?? $registration->email,
+                'age' => $val($fd, 'age'),
+                'sex' => $val($fd, 'sex'),
+                'birthday' => $val($fd, 'birthday'),
+                'email' => $record->email ?? $registration->email,
                 'contact_number' => $record->contact_number ?? $registration->contact_number,
-                'barangay'       => $registration->barangay?->name ?? '—',
-                'region'         => $location['region'],
-                'province'       => $location['province'],
-                'city'           => $location['city'],
-                'purok_zone'     => $val($fd, 'purok_zone'),
-                'education'      => $val($fd, 'education'),
-                'civil_status'   => $val($fd, 'civil_status'),
+                'barangay' => $registration->barangay?->name ?? '—',
+                'region' => $location['region'],
+                'province' => $location['province'],
+                'city' => $location['city'],
+                'purok_zone' => $val($fd, 'purok_zone'),
+                'education' => $val($fd, 'education'),
+                'civil_status' => $val($fd, 'civil_status'),
                 'youth_classification' => $val($fd, 'youth_classification'),
-                'youth_age_group'      => $val($fd, 'youth_age_group'),
-                'work_status'    => $val($fd, 'work_status'),
-                'sk_voter'       => $val($fd, 'sk_voter'),
+                'youth_age_group' => $val($fd, 'youth_age_group'),
+                'work_status' => $val($fd, 'work_status'),
+                'sk_voter' => $val($fd, 'sk_voter'),
                 'national_voter' => $val($fd, 'national_voter'),
-                'sk_voted'       => $val($fd, 'sk_voted'),
-                'kk_times'       => $val($fd, 'kk_times'),
-                'kk_assembly'    => $val($fd, 'kk_assembly'),
-                'kk_reason'      => $val($fd, 'kk_reason'),
-                'facebook'       => $val($fd, 'facebook_profile_url') ?: $val($fd, 'facebook'),
-                'group_chat'     => $val($fd, 'group_chat'),
-                'signature'      => $fd['signature'] ?? null,
-                'submitted_at'   => $submittedAt?->format('m/d/Y'),
-                'reviewed_at'    => $registration->reviewed_at?->format('m/d/Y'),
+                'sk_voted' => $val($fd, 'sk_voted'),
+                'kk_times' => $val($fd, 'kk_times'),
+                'kk_assembly' => $val($fd, 'kk_assembly'),
+                'kk_reason' => $val($fd, 'kk_reason'),
+                'facebook' => $val($fd, 'facebook_profile_url') ?: $val($fd, 'facebook'),
+                'group_chat' => $this->profilingDataService->normalizeYesNoAnswer($val($fd, 'group_chat')),
+                'signature' => $fd['signature'] ?? null,
+                'submitted_at' => $submittedAt?->format('m/d/Y'),
+                'reviewed_at' => $registration->reviewed_at?->format('m/d/Y'),
                 'evaluation_status' => $registration->evaluation_status,
                 'supporting_documents' => $supportingDocuments,
                 'id_verification' => $idVerification,
@@ -193,7 +194,7 @@ class KabataanController extends Controller
         $year = (int) $request->query('year', $this->profilingHistoryService->currentProfilingYear());
         $registration = KabataanRegistration::forBarangay($user->barangay_id)->findOrFail($id);
 
-        $history = \App\Models\KabataanProfilingHistory::query()
+        $history = KabataanProfilingHistory::query()
             ->where('kabataan_registration_id', $registration->id)
             ->where('profiling_year', $year)
             ->first();
@@ -233,7 +234,7 @@ class KabataanController extends Controller
                 continue;
             }
 
-            $history = \App\Models\KabataanProfilingHistory::query()
+            $history = KabataanProfilingHistory::query()
                 ->where('kabataan_registration_id', $registration->id)
                 ->where('profiling_year', $year)
                 ->first();
@@ -279,38 +280,38 @@ class KabataanController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-        if (!$user || !$user->barangay_id) {
+        if (! $user || ! $user->barangay_id) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         }
 
         $request->validate([
-            'last_name'  => 'required|string|max:100',
+            'last_name' => 'required|string|max:100',
             'first_name' => 'required|string|max:100',
-            'email'      => 'nullable|email|max:150',
+            'email' => 'nullable|email|max:150',
         ]);
 
         $barangay = DB::table('barangays')->where('id', $user->barangay_id)->first();
-        if (!$barangay) {
+        if (! $barangay) {
             return response()->json(['success' => false, 'message' => 'Barangay not found.'], 422);
         }
 
         $formData = $this->buildFormDataFromRequest($request, $barangay);
 
         $registration = KabataanRegistration::create([
-            'tenant_id'         => $barangay->tenant_id,
-            'barangay_id'       => $user->barangay_id,
-            'last_name'         => $request->input('last_name'),
-            'first_name'        => $request->input('first_name'),
-            'middle_name'       => $request->input('middle_name'),
-            'suffix'            => $request->input('suffix'),
-            'email'             => $request->input('email'),
-            'contact_number'    => $request->input('contact_number'),
-            'form_data'         => $formData,
-            'status'            => 'active',
+            'tenant_id' => $barangay->tenant_id,
+            'barangay_id' => $user->barangay_id,
+            'last_name' => $request->input('last_name'),
+            'first_name' => $request->input('first_name'),
+            'middle_name' => $request->input('middle_name'),
+            'suffix' => $request->input('suffix'),
+            'email' => $request->input('email'),
+            'contact_number' => $request->input('contact_number'),
+            'form_data' => $formData,
+            'status' => 'active',
             'evaluation_status' => 'active',
-            'submitted_at'      => now(),
+            'submitted_at' => now(),
             'reviewed_by_user_id' => $user->id,
-            'reviewed_at'       => now(),
+            'reviewed_at' => now(),
         ]);
 
         $respondentNumber = app(RespondentNumberService::class)
@@ -326,8 +327,8 @@ class KabataanController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Kabataan record saved.',
-            'data'    => [
-                'id'                => $registration->id,
+            'data' => [
+                'id' => $registration->id,
                 'respondent_number' => $respondentNumber,
             ],
         ]);
@@ -380,7 +381,7 @@ class KabataanController extends Controller
 
         try {
             $result = $this->officialUpdateService->update($user, $registration, $validated);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => collect($e->errors())->flatten()->first(),
@@ -460,9 +461,9 @@ class KabataanController extends Controller
     public function bulkDestroy(Request $request)
     {
         $validated = $request->validate([
-            'ids'   => ['required', 'array', 'min:1'],
+            'ids' => ['required', 'array', 'min:1'],
             'ids.*' => ['integer'],
-            'year'  => ['nullable', 'integer'],
+            'year' => ['nullable', 'integer'],
             'revoke_reason' => ['required', 'string', 'max:500'],
         ]);
 
@@ -528,30 +529,33 @@ class KabataanController extends Controller
 
     private function buildFormDataFromRequest(Request $request, object $barangay, array $existing = []): array
     {
-        return array_merge($existing, array_filter([
-            'age'                  => $request->input('age'),
-            'sex'                  => $request->input('sex'),
-            'birthday'             => $request->input('birthday'),
-            'purok_zone'           => $request->input('purok_zone'),
-            'civil_status'         => $request->input('civil_status'),
+        $merged = array_merge($existing, array_filter([
+            'age' => $request->input('age'),
+            'sex' => $request->input('sex'),
+            'birthday' => $request->input('birthday'),
+            'purok_zone' => $request->input('purok_zone'),
+            'civil_status' => $request->input('civil_status'),
             'youth_classification' => $request->input('youth_classification'),
-            'youth_age_group'      => $request->input('youth_age_group'),
-            'work_status'          => $request->input('work_status'),
-            'education'            => $request->input('education'),
-            'sk_voter'             => $request->input('sk_voter'),
-            'national_voter'       => $request->input('national_voter'),
-            'sk_voted'             => $request->input('sk_voted'),
-            'kk_assembly'          => $request->input('kk_assembly'),
-            'kk_times'             => $request->input('kk_times'),
-            'kk_reason'            => $request->input('kk_reason'),
-            'facebook'             => $request->input('facebook'),
-            'group_chat'           => $request->input('group_chat'),
-            'signature'            => $request->input('signature'),
-            'region'               => $barangay->region ?? 'Region IV-A (CALABARZON)',
-            'province'             => $barangay->province ?? 'Laguna',
-            'city'                 => $barangay->municipality ?? 'Santa Cruz',
-            'barangay'             => $barangay->name,
-        ], fn($v) => $v !== null && $v !== ''));
+            'youth_age_group' => $request->input('youth_age_group'),
+            'work_status' => $request->input('work_status'),
+            'education' => $request->input('education'),
+            'sk_voter' => $request->input('sk_voter'),
+            'national_voter' => $request->input('national_voter'),
+            'sk_voted' => $request->input('sk_voted'),
+            'kk_assembly' => $request->input('kk_assembly'),
+            'kk_times' => $request->input('kk_times'),
+            'kk_reason' => $request->input('kk_reason'),
+            'facebook' => $request->input('facebook'),
+            'signature' => $request->input('signature'),
+            'region' => $barangay->region ?? 'Region IV-A (CALABARZON)',
+            'province' => $barangay->province ?? 'Laguna',
+            'city' => $barangay->municipality ?? 'Santa Cruz',
+            'barangay' => $barangay->name,
+        ], fn ($v) => $v !== null && $v !== ''));
+
+        $merged['group_chat'] = $this->profilingDataService->normalizeYesNoAnswer($request->input('group_chat'));
+
+        return $merged;
     }
 
     private function emptyStats(): array

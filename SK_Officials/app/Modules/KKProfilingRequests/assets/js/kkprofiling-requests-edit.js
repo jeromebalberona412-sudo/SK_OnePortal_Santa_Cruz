@@ -6,6 +6,7 @@ import {
     formatDisplaySuffix,
     getSuffixOther,
     resolveSuffixForEdit,
+    normalizeYesNoAnswer,
 } from './kk-profiling-view-populate.js';
 
 function kkEditSingleCheck(el, hiddenId) {
@@ -317,7 +318,7 @@ function populateKkEditForm(request) {
     setCheckboxGroupByHiddenId('kkEditAttendedKKAssembly', request.attendedKKAssembly || '');
     setCheckboxGroupByHiddenId('kkEditVotingFrequency', request.kkTimes || '');
     setCheckboxGroupByHiddenId('kkEditVotingReason', normalizeKkReason(request.kkReason));
-    setCheckboxGroupByHiddenId('kkEditWillingToJoinGroupChat', request.willingToJoinGroupChat || '');
+    setCheckboxGroupByHiddenId('kkEditWillingToJoinGroupChat', normalizeYesNoAnswer(request.willingToJoinGroupChat));
 
     const ageGroup = youthAgeGroupFromAge(request.age) || request.youthAgeGroup || '';
     setCheckboxGroupByHiddenId('kkEditYouthAgeGroup', ageGroup);
@@ -348,6 +349,10 @@ function showEditPanel(showEdit) {
     if (editRoot) {
         editRoot.hidden = !showEdit;
     }
+}
+
+export function hydrateKkProfilingEditHeavyFields(request) {
+    populateSignature(request);
 }
 
 export function enterKkProfilingEditMode(request) {
@@ -415,7 +420,7 @@ export function collectKkProfilingEditPayload() {
         kk_reason: assembly === 'No' ? (getEditField('kkEditVotingReason')?.value || '') : '',
         facebook: getEditField('kkEditFacebookAccount')?.value?.trim() || '',
         facebook_profile_url: getEditField('kkEditFacebookAccount')?.value?.trim() || '',
-        group_chat: getEditField('kkEditWillingToJoinGroupChat')?.value || '',
+        group_chat: normalizeYesNoAnswer(getEditField('kkEditWillingToJoinGroupChat')?.value),
     };
 
     return payload;
@@ -430,6 +435,7 @@ export function bindKkProfilingEdit({
     loadData,
     showToast,
     resetMaximize,
+    ensureDetail,
 }) {
     const tbody = document.getElementById('kkRequestsTableBody');
     const saveBtn = document.getElementById('kkViewEditSaveBtn');
@@ -447,6 +453,14 @@ export function bindKkProfilingEdit({
         populateView(request);
         enterKkProfilingEditMode(request);
         openModal(viewModal);
+        if (typeof ensureDetail === 'function') {
+            ensureDetail(request).then((detail) => {
+                if (String(editingId) !== String(detail.id)) {
+                    return;
+                }
+                hydrateKkProfilingEditHeavyFields(detail);
+            }).catch(() => {});
+        }
     }
 
     tbody?.addEventListener('click', (event) => {
