@@ -150,9 +150,9 @@ class BatchAccountImportService
         $firstName = mb_strtoupper($this->stringValue($row, ['first_name', 'first name']), 'UTF-8');
         $lastName = mb_strtoupper($this->stringValue($row, ['last_name', 'last name']), 'UTF-8');
         $positionRaw = mb_strtoupper($this->stringValue($row, ['position']), 'UTF-8');
-        $region = mb_strtoupper($this->stringValue($row, ['region']) ?: 'IV-A CALABARZON', 'UTF-8');
-        $province = mb_strtoupper($this->stringValue($row, ['province']) ?: 'Laguna', 'UTF-8');
-        $municipality = mb_strtoupper($this->stringValue($row, ['municipality']) ?: 'Santa Cruz', 'UTF-8');
+        $region = trim($this->stringValue($row, ['region']) ?: 'IV-A CALABARZON');
+        $province = trim($this->stringValue($row, ['province']) ?: 'Laguna');
+        $municipality = trim($this->stringValue($row, ['municipality']) ?: 'Santa Cruz');
         $barangayName = mb_strtoupper($this->stringValue($row, ['barangay', 'barangay_name', 'barangay name']), 'UTF-8');
 
         if ($role === User::ROLE_SK_OFFICIAL) {
@@ -195,7 +195,8 @@ class BatchAccountImportService
 
         $suffixRaw = $this->stringValue($row, ['suffix', 'suffix_input', 'suffix input']);
         $suffix = $this->normalizeSuffix($suffixRaw);
-        $sex = $this->normalizeSex($this->stringValue($row, ['sex']));
+        $rawSex = $this->stringValue($row, ['sex']);
+        $sex = $this->normalizeSex($rawSex);
         $contactNumber = $this->normalizeContactNumber($this->stringValue($row, ['contact_number', 'contact number']));
 
         $middleNameRaw = $this->stringValue($row, ['middle_name', 'middle name']);
@@ -206,9 +207,6 @@ class BatchAccountImportService
         }
 
         $age = $this->intValue($row, ['age']);
-        if ($age === null && $dateOfBirth) {
-            $age = Carbon::parse($dateOfBirth)->age;
-        }
 
         $data = [
             'first_name' => $firstName,
@@ -216,6 +214,7 @@ class BatchAccountImportService
             'last_name' => $lastName,
             'suffix' => $suffix,
             'suffix_input' => $suffixRaw,
+            'sex_input' => $rawSex,
             'sex' => $sex,
             'date_of_birth' => $dateOfBirth,
             'age' => $age,
@@ -291,8 +290,8 @@ class BatchAccountImportService
             $errors[] = 'Suffix is required.';
         }
 
-        if ($data['suffix'] !== null && mb_strlen((string) $data['suffix']) > 10) {
-            $errors[] = 'Suffix must not exceed 10 characters.';
+        if ($data['suffix'] !== null && mb_strlen((string) $data['suffix']) > 4) {
+            $errors[] = 'Suffix must not exceed 4 characters.';
         }
 
         if ($data['email'] === '' || ! filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
@@ -303,16 +302,16 @@ class BatchAccountImportService
             $errors[] = 'Email must be a @gmail.com address with 6–30 characters before @.';
         }
 
-        if ($strictDemographics && trim((string) ($data['region'] ?? '')) === '') {
-            $errors[] = 'Region is required.';
+        if ($strictDemographics && trim((string) ($data['region'] ?? '')) !== 'IV-A CALABARZON') {
+            $errors[] = 'Region must be IV-A CALABARZON.';
         }
 
-        if ($strictDemographics && trim((string) ($data['province'] ?? '')) === '') {
-            $errors[] = 'Province is required.';
+        if ($strictDemographics && trim((string) ($data['province'] ?? '')) !== 'Laguna') {
+            $errors[] = 'Province must be Laguna.';
         }
 
-        if ($strictDemographics && trim((string) ($data['municipality'] ?? '')) === '') {
-            $errors[] = 'Municipality is required.';
+        if ($strictDemographics && trim((string) ($data['municipality'] ?? '')) !== 'Santa Cruz') {
+            $errors[] = 'Municipality must be Santa Cruz.';
         }
 
         if ($data['position'] === null || $data['position'] === '') {
@@ -326,31 +325,18 @@ class BatchAccountImportService
         }
 
         if ($strictDemographics) {
-            if ($data['sex'] === null) {
-                $errors[] = 'Sex must be Male or Female.';
+            if ($data['sex'] === null || trim((string) ($data['sex_input'] ?? '')) !== $data['sex']) {
+                $errors[] = 'Sex must be exactly Male or Female.';
             }
 
             if ($data['date_of_birth'] === null) {
                 $errors[] = 'Birthdate is required.';
             } elseif (Carbon::parse($data['date_of_birth'])->isFuture()) {
                 $errors[] = 'Birthdate must be before today.';
-            } else {
-                $minBirth = Carbon::now()->subYears(24)->format('Y-m-d');
-                $maxBirth = Carbon::now()->subYears(18)->format('Y-m-d');
-                if ($data['date_of_birth'] < $minBirth || $data['date_of_birth'] > $maxBirth) {
-                    $errors[] = 'Birthdate must correspond to age 18–24.';
-                }
-
-                if ($data['age'] !== null) {
-                    $calculatedAge = Carbon::parse($data['date_of_birth'])->age;
-                    if ((int) $data['age'] !== $calculatedAge) {
-                        $errors[] = 'Age ('.$data['age'].') does not match birthdate (expected '.$calculatedAge.').';
-                    }
-                }
             }
 
-            if ($data['age'] === null || (int) $data['age'] < 18 || (int) $data['age'] > 24) {
-                $errors[] = 'Age must be between 18 and 24.';
+            if ($data['age'] === null || (int) $data['age'] < 15 || (int) $data['age'] > 30) {
+                $errors[] = 'Age must be between 15 and 30.';
             }
 
             if ($data['contact_number'] === '') {
@@ -527,6 +513,10 @@ class BatchAccountImportService
             'secretary' => 'Secretary',
             'treasurer' => 'Treasurer',
             'kagawad' => 'Kagawad',
+            'sk chairperson' => 'Chairperson',
+            'sk secretary' => 'Secretary',
+            'sk treasurer' => 'Treasurer',
+            'sk kagawad' => 'Kagawad',
             'councilor' => 'Councilor',
             'auditor' => 'Auditor',
             'pio' => 'PIO',
@@ -575,7 +565,7 @@ class BatchAccountImportService
             'iii' => 'III',
             'iv' => 'IV',
             'v' => 'V',
-            default => mb_strlen($normalized) <= 10 ? $normalized : null,
+            default => mb_strlen($normalized) <= 4 ? mb_strtoupper($normalized, 'UTF-8') : null,
         };
     }
 
@@ -585,11 +575,9 @@ class BatchAccountImportService
             return null;
         }
 
-        return match (Str::lower(trim($value))) {
-            'male', 'm' => 'Male',
-            'female', 'f' => 'Female',
-            default => in_array($value, ['Male', 'Female'], true) ? $value : null,
-        };
+        $trimmed = trim($value);
+
+        return in_array($trimmed, ['Male', 'Female'], true) ? $trimmed : null;
     }
 
     private function parseDate(mixed $value): ?string

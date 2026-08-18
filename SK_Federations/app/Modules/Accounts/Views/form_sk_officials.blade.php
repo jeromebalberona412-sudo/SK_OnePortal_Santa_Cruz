@@ -74,7 +74,7 @@
                             </div>
                             <div class="form-group-light" id="official_suffix_other_group" style="display:none;">
                                 <label class="form-label-light required">Other Suffix</label>
-                                <input type="text" name="suffix_other" id="official_suffix_other" class="form-input-light input-uppercase" maxlength="10" placeholder="OTHER" autocomplete="off" style="text-transform:uppercase;">
+                                <input type="text" name="suffix_other" id="official_suffix_other" class="form-input-light input-uppercase" maxlength="4" placeholder="OTHER" autocomplete="off" style="text-transform:uppercase;">
                                 <span class="form-error-light"></span>
                             </div>
                             <div class="form-group-light">
@@ -87,13 +87,13 @@
                                 <span class="form-error-light"></span>
                             </div>
                             <div class="form-group-light">
-                                <label class="form-label-light required">Birthdate</label>
+                                <label class="form-label-light required">Birthdate (MM/DD/YYYY)</label>
                                 <input type="date" name="date_of_birth" id="official_date_of_birth" class="form-input-light" required>
                                 <span class="form-error-light"></span>
                             </div>
                             <div class="form-group-light">
                                 <label class="form-label-light required">Age</label>
-                                <input type="number" name="age" id="official_age" class="form-input-light" min="18" max="24" readonly tabindex="-1">
+                                <input type="number" name="age" id="official_age" class="form-input-light" min="15" max="30" inputmode="numeric" required>
                                 <span class="form-error-light"></span>
                             </div>
                             <div class="form-group-light">
@@ -172,15 +172,15 @@
                         </h4>
                         <div class="form-grid">
                             <div class="form-group-light">
-                                <label class="form-label-light required">Term Start Date</label>
+                                <label class="form-label-light required">Term Start Date (MM/DD/YYYY)</label>
                                 <input type="date" name="term_start" id="official_term_start" class="form-input-light" required>
                                 <p class="form-hint-light">November 30, 12:00 noon (RA 11935). Use 2023-11-30 for the 2023 SK term — not December 1.</p>
                                 <span class="form-error-light"></span>
                             </div>
                             <div class="form-group-light">
-                                <label class="form-label-light required">Term End Date</label>
-                                <input type="date" name="term_end" id="official_term_end" class="form-input-light" required readonly tabindex="-1">
-                                <p class="form-hint-light">Exactly 3 years later on November 30 (2023–2026, 2026–2029, and so on).</p>
+                                <label class="form-label-light required">Term End Date (MM/DD/YYYY)</label>
+                                <input type="date" name="term_end" id="official_term_end" class="form-input-light" required>
+                                <p class="form-hint-light">Term end must be between 3 and 4 years after the term start date.</p>
                                 <span class="form-error-light"></span>
                             </div>
                         </div>
@@ -266,14 +266,20 @@
                         <div class="form-group-light">
                             <label for="edit_sk_officials_suffix" class="form-label-light">Suffix</label>
                             <select id="edit_sk_officials_suffix" name="suffix" class="form-input-light">
-                                <option value="">None</option>
+                                <option value="NONE">None</option>
                                 <option value="Jr.">Jr.</option>
                                 <option value="Sr.">Sr.</option>
                                 <option value="II">II</option>
                                 <option value="III">III</option>
                                 <option value="IV">IV</option>
                                 <option value="V">V</option>
+                                <option value="__other__">Other Suffix</option>
                             </select>
+                            <span class="form-error-light"></span>
+                        </div>
+                        <div class="form-group-light" id="edit_sk_officials_suffix_other_group" style="display:none;">
+                            <label for="edit_sk_officials_suffix_other" class="form-label-light required">Other Suffix</label>
+                            <input type="text" id="edit_sk_officials_suffix_other" name="suffix_other" class="form-input-light input-uppercase" maxlength="4" style="text-transform:uppercase;">
                             <span class="form-error-light"></span>
                         </div>
                         <div class="form-group-light">
@@ -292,17 +298,17 @@
                         </div>
                         <div class="form-group-light">
                             <label for="edit_sk_officials_contact_number" class="form-label-light required">Contact Number</label>
-                            <input type="text" id="edit_sk_officials_contact_number" name="contact_number" class="form-input-light" maxlength="20" placeholder="09XXXXXXXXX" required>
+                            <input type="text" id="edit_sk_officials_contact_number" name="contact_number" class="form-input-light" maxlength="11" placeholder="09XXXXXXXXX" required>
                             <span class="form-error-light"></span>
                         </div>
                         <div class="form-group-light">
-                            <label for="edit_sk_officials_date_of_birth" class="form-label-light required">Date of Birth</label>
-                            <input type="date" id="edit_sk_officials_date_of_birth" name="date_of_birth" class="form-input-light" required>
+                            <label for="edit_sk_officials_date_of_birth" class="form-label-light required">Birthdate (MM/DD/YYYY)</label>
+                            <input type="text" id="edit_sk_officials_date_of_birth" name="date_of_birth" class="form-input-light" placeholder="MM/DD/YYYY" inputmode="numeric" autocomplete="off" required>
                             <span class="form-error-light"></span>
                         </div>
                         <div class="form-group-light">
                             <label for="edit_sk_officials_age" class="form-label-light required">Age</label>
-                            <input type="number" id="edit_sk_officials_age" name="age" class="form-input-light" min="0" max="150" readonly>
+                            <input type="number" id="edit_sk_officials_age" name="age" class="form-input-light" min="15" max="30" inputmode="numeric" required>
                             <span class="form-error-light"></span>
                         </div>
                     </div>
@@ -342,15 +348,15 @@
                     <h4 class="section-title-light"><i class="fa-solid fa-calendar-check"></i> Term Information</h4>
                     <div class="form-grid">
                         <div class="form-group-light">
-                            <label for="edit_sk_officials_term_start" class="form-label-light required">Term Start</label>
-                            <input type="date" id="edit_sk_officials_term_start" name="term_start" class="form-input-light" required>
+                            <label for="edit_sk_officials_term_start" class="form-label-light required">Term Start Date (MM/DD/YYYY)</label>
+                            <input type="text" id="edit_sk_officials_term_start" name="term_start" class="form-input-light" placeholder="MM/DD/YYYY" inputmode="numeric" autocomplete="off" required>
                             <p class="form-hint-light">November 30, 12:00 noon (RA 11935). Use 2023-11-30 for the 2023 SK term — not December 1.</p>
                             <span class="form-error-light"></span>
                         </div>
                         <div class="form-group-light">
-                            <label for="edit_sk_officials_term_end" class="form-label-light required">Term End</label>
-                            <input type="date" id="edit_sk_officials_term_end" name="term_end" class="form-input-light" required readonly tabindex="-1">
-                            <p class="form-hint-light">Exactly 3 years later on November 30 (2023–2026, 2026–2029, and so on).</p>
+                            <label for="edit_sk_officials_term_end" class="form-label-light required">Term End Date (MM/DD/YYYY)</label>
+                            <input type="text" id="edit_sk_officials_term_end" name="term_end" class="form-input-light" placeholder="MM/DD/YYYY" inputmode="numeric" autocomplete="off" required>
+                            <p class="form-hint-light">Term end must be between 3 and 4 years after the term start date.</p>
                             <span class="form-error-light"></span>
                         </div>
                     </div>

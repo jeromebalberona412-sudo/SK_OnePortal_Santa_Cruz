@@ -374,7 +374,7 @@ class AccountService
                     'suffix' => $normalizedData['suffix'] ?? null,
                     'sex' => $normalizedData['sex'] ?? null,
                     'date_of_birth' => $normalizedData['date_of_birth'] ?? null,
-                    'age' => $this->deriveAge($normalizedData['date_of_birth'] ?? null),
+                    'age' => $this->resolveStoredAge($normalizedData),
                     'contact_number' => $normalizedData['contact_number'] ?? null,
                     'municipality' => 'Santa Cruz',
                     'province' => 'Laguna',
@@ -601,7 +601,7 @@ class AccountService
             'suffix' => $data['suffix'] ?? null,
             'sex' => $data['sex'] ?? null,
             'date_of_birth' => $data['date_of_birth'] ?? null,
-            'age' => $this->deriveAge($data['date_of_birth'] ?? null),
+            'age' => $this->resolveStoredAge($data),
             'contact_number' => $data['contact_number'] ?? null,
             'position' => $position,
             'federation_position' => $federationPosition,
@@ -862,5 +862,20 @@ class AccountService
         }
 
         return Carbon::parse($dateOfBirth)->age;
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    protected function resolveStoredAge(array $data): ?int
+    {
+        $rawAge = $data['age'] ?? null;
+        if (is_numeric($rawAge)) {
+            return (int) $rawAge;
+        }
+
+        $dateOfBirth = isset($data['date_of_birth']) ? (string) $data['date_of_birth'] : null;
+
+        return $this->deriveAge($dateOfBirth);
     }
 }

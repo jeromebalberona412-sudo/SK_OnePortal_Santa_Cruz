@@ -409,14 +409,9 @@ function getCurrentAccountType() {
 }
 
 function calculateAge(dateOfBirthValue) {
-    if (!dateOfBirthValue) return '';
-    const dob = parseLocalDateString(dateOfBirthValue);
-    if (!dob) return '';
-    const today = new Date();
-    let age = today.getFullYear() - dob.getFullYear();
-    const m = today.getMonth() - dob.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
-    return age >= 0 ? String(age) : '';
+    return window.AccountDateFieldUtils
+        ? window.AccountDateFieldUtils.calculateAge(dateOfBirthValue)
+        : '';
 }
 
 function attachDobAgeAutoFill(form, dobName, ageName) {
@@ -425,19 +420,14 @@ function attachDobAgeAutoFill(form, dobName, ageName) {
     const age = form.querySelector(`[name="${ageName}"]`);
     if (!dob || !age) return;
     const update = () => {
-        if (isSkOfficialsManualForm(form)) {
-            if (dob.value) {
-                age.value = calculateAge(dob.value);
-            } else {
-                age.value = '';
-            }
+        if (isSkOfficialsForm(form)) {
             return;
         }
         age.value = calculateAge(dob.value);
     };
     dob.addEventListener('change', update);
     dob.addEventListener('input', update);
-    if (!isSkOfficialsManualForm(form)) {
+    if (!isSkOfficialsForm(form)) {
         update();
     }
 }
@@ -495,15 +485,16 @@ function escapeHtml(value) {
 // ── Inline validation helpers (light-theme forms) ─────────────
 const ACCOUNT_TERM_YEARS = 4;
 const SK_OFFICIAL_TERM_YEARS = 3;
+const SK_OFFICIAL_TERM_MAX_YEARS = 4;
 const SK_OFFICIAL_FIRST_TERM_START = '2023-11-30';
 const SK_OFFICIAL_TERM_START_MESSAGE = 'Term start must be November 30 of an SK term year (2023, 2026, 2029, …) under RA 11935. December 1 is not the legal commencement.';
-const SK_OFFICIAL_TERM_END_MESSAGE = 'Term end must be November 30, exactly 3 years after term start (for example November 30, 2023 to November 30, 2026).';
+const SK_OFFICIAL_TERM_END_MESSAGE = 'Term end must be between 3 and 4 years after term start.';
 const SK_OFFICIAL_NAME_MIN = 3;
 const SK_OFFICIAL_NAME_MAX = 50;
 const SK_OFFICIAL_FIRST_NAME_REGEX = /^(?!\s)[A-Z.\-]+(?: [A-Z.\-]+)?$/;
-const SK_OFFICIAL_SUFFIX_OTHER_MAX = 10;
-const SK_OFFICIAL_AGE_MIN = 18;
-const SK_OFFICIAL_AGE_MAX = 24;
+const SK_OFFICIAL_SUFFIX_OTHER_MAX = 4;
+const SK_OFFICIAL_AGE_MIN = 15;
+const SK_OFFICIAL_AGE_MAX = 30;
 const SK_OFFICIAL_GMAIL_REGEX = /^[a-z0-9._%+-]{6,30}@gmail\.com$/i;
 const SK_OFFICIAL_MAX_MSG = 'Maximum of 50 characters reached';
 const BATCH_EMAIL_MAX = 254;
@@ -515,19 +506,33 @@ const MODAL_TITLE_MAXIMIZE = 'Maximize';
 const MODAL_TITLE_RESTORE = 'Restore Down';
 
 function formatLocalDate(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+    return window.AccountDateFieldUtils
+        ? window.AccountDateFieldUtils.formatLocalDate(date)
+        : '';
 }
 
 function parseLocalDateString(dateStr) {
-    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr || '');
-    if (!match) {
-        return null;
-    }
-    const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
-    return Number.isNaN(date.getTime()) ? null : date;
+    return window.AccountDateFieldUtils
+        ? window.AccountDateFieldUtils.parseLocalDateString(dateStr)
+        : null;
+}
+
+function normalizeDateInputValue(value) {
+    return window.AccountDateFieldUtils
+        ? window.AccountDateFieldUtils.normalizeDateInputValue(value)
+        : '';
+}
+
+function formatDateForTextInput(value) {
+    return window.AccountDateFieldUtils
+        ? window.AccountDateFieldUtils.formatDateForTextInput(value)
+        : '';
+}
+
+function isStrictUsDateFormat(value) {
+    return window.AccountDateFieldUtils
+        ? window.AccountDateFieldUtils.isStrictUsDateFormat(value)
+        : false;
 }
 
 function _showErr(input, msg) {
@@ -711,6 +716,7 @@ function toggleSkOfficialSuffixOther(form) {
 function toggleSuffixOtherField(form) {
     const suffixSelect = form.querySelector('[name="suffix"]');
     const otherGroup = form.querySelector('#official_suffix_other_group')
+        || form.querySelector('#edit_sk_officials_suffix_other_group')
         || form.querySelector('#fed_suffix_other_group')
         || form.querySelector('#edit_fed_suffix_other_group');
     const otherInput = form.querySelector('[name="suffix_other"]');
@@ -736,7 +742,7 @@ function setSuffixFieldValue(form, suffixValue) {
     if (!suffixSelect) return;
 
     const raw = String(suffixValue ?? '').trim();
-    const normalized = raw.toUpperCase() === 'NONE' ? '' : raw;
+    const normalized = raw.toUpperCase() === 'NONE' ? 'NONE' : raw;
 
     if (!normalized || STANDARD_SUFFIX_VALUES.includes(normalized)) {
         suffixSelect.value = normalized || '';
@@ -977,43 +983,61 @@ function getSkOfficialBirthdateBounds() {
 }
 
 function applySkOfficialDobConstraints(form) {
-    if (!isSkOfficialsManualForm(form)) return;
+    if (!isSkOfficialsForm(form)) return;
     const dob = form.querySelector('[name="date_of_birth"]');
     if (!dob) return;
-    const bounds = getSkOfficialBirthdateBounds();
-    dob.min = bounds.min;
-    dob.max = bounds.max;
+    dob.removeAttribute('min');
+    dob.max = formatLocalDate(new Date());
 }
 
 function _validateSkOfficialBirthdate(form) {
     const dob = form.querySelector('[name="date_of_birth"]');
-    const age = form.querySelector('[name="age"]');
     if (!dob) return true;
 
-    const val = dob.value;
-    if (!val) {
+    const rawValue = dob.value;
+    if (!rawValue) {
         _showErr(dob, 'Birthdate is required');
-        if (age) age.value = '';
         return false;
     }
 
-    const bounds = getSkOfficialBirthdateBounds();
-    if (val < bounds.min || val > bounds.max) {
-        _showErr(dob, `Birthdate must correspond to age ${SK_OFFICIAL_AGE_MIN}–${SK_OFFICIAL_AGE_MAX}`);
-        if (age) age.value = '';
+    if (dob.type === 'text' && !isStrictUsDateFormat(rawValue)) {
+        _showErr(dob, 'Birthdate must use MM/DD/YYYY format');
         return false;
     }
 
-    const computedAge = calculateAge(val);
-    if (age) age.value = computedAge;
-    const ageNum = parseInt(computedAge, 10);
-    if (Number.isNaN(ageNum) || ageNum < SK_OFFICIAL_AGE_MIN || ageNum > SK_OFFICIAL_AGE_MAX) {
-        _showErr(dob, `Age must be between ${SK_OFFICIAL_AGE_MIN} and ${SK_OFFICIAL_AGE_MAX}`);
+    const val = normalizeDateInputValue(rawValue);
+    if (!val) {
+        _showErr(dob, 'Birthdate must be a valid date in MM/DD/YYYY format');
+        return false;
+    }
+
+    const today = formatLocalDate(new Date());
+    if (val >= today) {
+        _showErr(dob, 'Birthdate must be before today');
         return false;
     }
 
     _markValid(dob);
-    if (age) _markValid(age);
+    return true;
+}
+
+function _validateSkOfficialAge(input) {
+    if (!input) return true;
+    const val = String(input.value || '').trim();
+    if (!val) {
+        _showErr(input, 'Age is required');
+        return false;
+    }
+    if (!/^\d{1,2}$/.test(val)) {
+        _showErr(input, 'Age must be a valid number');
+        return false;
+    }
+    const ageNum = parseInt(val, 10);
+    if (ageNum < SK_OFFICIAL_AGE_MIN || ageNum > SK_OFFICIAL_AGE_MAX) {
+        _showErr(input, `Age must be between ${SK_OFFICIAL_AGE_MIN} and ${SK_OFFICIAL_AGE_MAX}`);
+        return false;
+    }
+    _markValid(input);
     return true;
 }
 
@@ -1039,6 +1063,7 @@ function validateSkOfficialsManualForm(form) {
     const first = form.querySelector('[name="first_name"]');
     const middle = form.querySelector('[name="middle_name"]');
     const last = form.querySelector('[name="last_name"]');
+    const age = form.querySelector('[name="age"]');
     const email = form.querySelector('[name="email"]');
     const contact = form.querySelector('[name="contact_number"]');
 
@@ -1047,6 +1072,7 @@ function validateSkOfficialsManualForm(form) {
     if (!_validateSkOfficialLastName(last)) valid = false;
     if (!_validateSkOfficialSuffix(form)) valid = false;
     if (!_validateSkOfficialBirthdate(form)) valid = false;
+    if (age && !_validateSkOfficialAge(age)) valid = false;
     if (!_validateSkOfficialEmail(email)) valid = false;
     if (contact && !_validateContactNumber(contact)) valid = false;
     if (!validateTermRange(form)) valid = false;
@@ -1065,7 +1091,7 @@ function validateSkOfficialsManualForm(form) {
 }
 
 function wireSkOfficialsManualValidation(form) {
-    if (!isSkOfficialsManualForm(form)) return;
+    if (!isSkOfficialsForm(form)) return;
     if (form.dataset.skValidationWired === '1') return;
     form.dataset.skValidationWired = '1';
 
@@ -1130,6 +1156,12 @@ function wireSkOfficialsManualValidation(form) {
     if (contact) {
         contact.addEventListener('input', () => _validateContactNumber(contact));
         contact.addEventListener('blur', () => _validateContactNumber(contact));
+    }
+
+    const age = form.querySelector('[name="age"]');
+    if (age) {
+        age.addEventListener('input', () => _validateSkOfficialAge(age));
+        age.addEventListener('blur', () => _validateSkOfficialAge(age));
     }
 
     form.querySelectorAll('select[required]').forEach((select) => {
@@ -1207,23 +1239,37 @@ function validateTermRange(form) {
         return true;
     }
 
-    const start = startInput.value;
-    const end = endInput.value;
+    const rawStart = startInput.value;
+    const rawEnd = endInput.value;
+    const start = rawStart ? normalizeDateInputValue(rawStart) : '';
+    const end = rawEnd ? normalizeDateInputValue(rawEnd) : '';
     const termStartMin = getTermStartMinDate(form);
     const termStartMax = getTermStartMaxDate(form);
     const isOfficialsForm = isSkOfficialsForm(form);
 
     let termValid = true;
 
-    if (startInput.hasAttribute('required') && !start) {
+    if (startInput.hasAttribute('required') && !rawStart) {
         _showErr(startInput, 'Term start date is required');
+        termValid = false;
+    } else if (startInput.type === 'text' && rawStart && !isStrictUsDateFormat(rawStart)) {
+        _showErr(startInput, 'Term start date must use MM/DD/YYYY format');
+        termValid = false;
+    } else if (rawStart && !start) {
+        _showErr(startInput, 'Term start date must be a valid date in MM/DD/YYYY format');
         termValid = false;
     } else {
         _clearErr(startInput);
     }
 
-    if (endInput.hasAttribute('required') && !end) {
+    if (endInput.hasAttribute('required') && !rawEnd) {
         _showErr(endInput, 'Term end date is required');
+        termValid = false;
+    } else if (endInput.type === 'text' && rawEnd && !isStrictUsDateFormat(rawEnd)) {
+        _showErr(endInput, 'Term end date must use MM/DD/YYYY format');
+        termValid = false;
+    } else if (rawEnd && !end) {
+        _showErr(endInput, 'Term end date must be a valid date in MM/DD/YYYY format');
         termValid = false;
     } else if (termValid) {
         _clearErr(endInput);
@@ -1245,8 +1291,9 @@ function validateTermRange(form) {
     }
     if (start && end) {
         if (isOfficialsForm) {
-            const requiredEnd = skOfficialTermEndForStart(start);
-            if (end !== requiredEnd) {
+            const minEnd = skOfficialTermEndForStart(start);
+            const maxEnd = addYearsToDateString(start, SK_OFFICIAL_TERM_MAX_YEARS);
+            if (end < minEnd || end > maxEnd) {
                 _showErr(endInput, SK_OFFICIAL_TERM_END_MESSAGE);
                 return false;
             }
@@ -1320,6 +1367,12 @@ function applyContactNumberInput(input) {
     input.addEventListener('blur', () => _validateContactNumber(input));
 }
 
+function applyUsDateTextInput(input) {
+    if (window.AccountDateFieldUtils) {
+        window.AccountDateFieldUtils.applyUsDateTextInput(input);
+    }
+}
+
 function clampDateInputYear(input) {
     if (!input || input.type !== 'date') {
         return;
@@ -1374,41 +1427,58 @@ function applyTermDateConstraints(form) {
     startInput.max = getTermStartMaxDate(form);
 
     if (isOfficialsForm) {
-        endInput.readOnly = true;
-        endInput.tabIndex = -1;
         if (!startInput.value) {
-            startInput.value = currentSkOfficialTermStart();
+            startInput.value = form.id === 'editSkOfficialsForm'
+                ? formatDateForTextInput(currentSkOfficialTermStart())
+                : currentSkOfficialTermStart();
         } else {
-            startInput.value = snapToSkOfficialTermStart(startInput.value);
+            const normalizedStart = normalizeDateInputValue(startInput.value);
+            if (normalizedStart) {
+                const snappedStart = snapToSkOfficialTermStart(normalizedStart);
+                startInput.value = form.id === 'editSkOfficialsForm'
+                    ? formatDateForTextInput(snappedStart)
+                    : snappedStart;
+            }
         }
     }
 
     const alreadyWired = form.dataset.termConstraintsWired === '1';
+    const isEditOfficialsTextDates = form.id === 'editSkOfficialsForm';
 
     const syncEndConstraints = () => {
         if (isOfficialsForm) {
-            if (startInput.value) {
-                startInput.value = snapToSkOfficialTermStart(startInput.value);
+            const normalizedStart = normalizeDateInputValue(startInput.value);
+            if (normalizedStart) {
+                const snappedStart = snapToSkOfficialTermStart(normalizedStart);
+                startInput.value = form.id === 'editSkOfficialsForm'
+                    ? formatDateForTextInput(snappedStart)
+                    : snappedStart;
             } else if (form.id === 'addSkOfficialsForm') {
                 startInput.value = currentSkOfficialTermStart();
             }
         } else if (startInput.value && (startInput.value < startInput.min || startInput.value > startInput.max)) {
             startInput.value = '';
         }
-        const effectiveStart = startInput.value;
+        const effectiveStart = normalizeDateInputValue(startInput.value);
         if (effectiveStart) {
             if (isOfficialsForm) {
-                const exactEnd = skOfficialTermEndForStart(effectiveStart);
-                endInput.min = exactEnd;
-                endInput.max = exactEnd;
-                endInput.value = exactEnd;
+                const minEnd = skOfficialTermEndForStart(effectiveStart);
+                const maxEnd = addYearsToDateString(effectiveStart, SK_OFFICIAL_TERM_MAX_YEARS);
+                endInput.min = minEnd;
+                endInput.max = maxEnd;
+                const currentEnd = normalizeDateInputValue(endInput.value);
+                if (!currentEnd || currentEnd < minEnd || currentEnd > maxEnd) {
+                    endInput.value = form.id === 'editSkOfficialsForm'
+                        ? formatDateForTextInput(minEnd)
+                        : minEnd;
+                }
             } else {
                 const exactEnd = addYearsToDateString(effectiveStart, ACCOUNT_TERM_YEARS);
                 endInput.min = exactEnd;
                 endInput.max = exactEnd;
                 endInput.value = exactEnd;
             }
-        } else {
+        } else if (!isEditOfficialsTextDates) {
             endInput.value = '';
             endInput.removeAttribute('min');
             endInput.removeAttribute('max');
@@ -1420,7 +1490,9 @@ function applyTermDateConstraints(form) {
         clampDateInputYear(startInput);
         clampDateInputYear(endInput);
         startInput.addEventListener('change', syncEndConstraints);
-        startInput.addEventListener('input', syncEndConstraints);
+        if (!isEditOfficialsTextDates) {
+            startInput.addEventListener('input', syncEndConstraints);
+        }
         endInput.addEventListener('change', () => {
             if (isOfficialsForm) {
                 syncEndConstraints();
@@ -1428,11 +1500,13 @@ function applyTermDateConstraints(form) {
             }
             validateTermRange(form);
         });
-        endInput.addEventListener('input', () => {
-            if (isOfficialsForm) {
-                syncEndConstraints();
-            }
-        });
+        if (!isEditOfficialsTextDates) {
+            endInput.addEventListener('input', () => {
+                if (isOfficialsForm) {
+                    syncEndConstraints();
+                }
+            });
+        }
         endInput.addEventListener('blur', () => validateTermRange(form));
         form.dataset.termConstraintsWired = '1';
     }
@@ -1460,7 +1534,7 @@ function wireCreateAccountForm(form) {
         return;
     }
 
-    if (isSkOfficialsManualForm(form)) {
+    if (isSkOfficialsForm(form)) {
         wireSkOfficialsManualValidation(form);
     } else if (isSkFedManualForm(form)) {
         wireSkFedManualValidation(form);
@@ -1476,7 +1550,13 @@ function wireCreateAccountForm(form) {
     applySkFedDobConstraints(form);
     initCreateAccountFormDefaults(form);
 
-    if (!isSkOfficialsManualForm(form) && !isSkFedManualForm(form)) {
+    if (form.id === 'editSkOfficialsForm') {
+        ['date_of_birth', 'term_start', 'term_end'].forEach((name) => {
+            applyUsDateTextInput(form.querySelector(`[name="${name}"]`));
+        });
+    }
+
+    if (!isSkOfficialsForm(form) && !isSkFedManualForm(form)) {
         form.querySelectorAll('[required]').forEach((el) => {
             el.addEventListener('blur', () => _validateField(el));
         });
@@ -1836,7 +1916,7 @@ const BATCH_REQUIRED_HEADERS = BATCH_TEMPLATE_HEADERS.filter(
 const BATCH_MAX_ACCOUNTS = 260;
 const BATCH_OFFICIAL_LAST_NAME_REGEX = /^[A-Z.\-']+$/;
 const BATCH_OFFICIAL_MIDDLE_NAME_REGEX = /^[A-Z.\-']*$/;
-const BATCH_SK_OFFICIAL_POSITIONS = ['Chairperson', 'Secretary', 'Treasurer', 'Kagawad', 'Councilor', 'Auditor', 'PIO'];
+const BATCH_SK_OFFICIAL_POSITIONS = ['Chairperson', 'Secretary', 'Treasurer', 'Kagawad'];
 const BATCH_SK_FED_POSITIONS = ['President', 'Vice President', 'Secretary', 'Treasurer', 'PIO', 'Sergeant at Arms'];
 
 function normalizeBatchLookupKey(value) {
@@ -1941,6 +2021,50 @@ function resolveBatchBarangayName(rawBarangay) {
         || null;
 }
 
+function levenshteinDistance(a, b) {
+    const left = String(a || '');
+    const right = String(b || '');
+    const dp = Array.from({ length: left.length + 1 }, () => new Array(right.length + 1).fill(0));
+    for (let i = 0; i <= left.length; i++) dp[i][0] = i;
+    for (let j = 0; j <= right.length; j++) dp[0][j] = j;
+    for (let i = 1; i <= left.length; i++) {
+        for (let j = 1; j <= right.length; j++) {
+            const cost = left[i - 1] === right[j - 1] ? 0 : 1;
+            dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+        }
+    }
+    return dp[left.length][right.length];
+}
+
+function nearestSuggestion(value, options) {
+    const target = String(value || '').trim().toLowerCase();
+    if (!target || !Array.isArray(options) || options.length === 0) return null;
+    let best = null;
+    let bestScore = Number.POSITIVE_INFINITY;
+    options.forEach((option) => {
+        const score = levenshteinDistance(target, String(option).toLowerCase());
+        if (score < bestScore) {
+            bestScore = score;
+            best = option;
+        }
+    });
+    return bestScore <= 3 ? best : null;
+}
+
+function batchBarangaySuggestion(rawBarangay) {
+    const values = Array.from(new Set(Array.from(buildBatchBarangayLookup().values())));
+    return nearestSuggestion(rawBarangay, values);
+}
+
+function batchEmailSuggestion(rawEmail) {
+    const email = String(rawEmail || '').trim().toLowerCase();
+    if (!email || !email.includes('@')) return null;
+    const [localPart, domain] = email.split('@');
+    if (!localPart || !domain || domain === 'gmail.com') return null;
+    const suggestionDomain = nearestSuggestion(domain, ['gmail.com']);
+    return suggestionDomain ? `${localPart}@${suggestionDomain}` : null;
+}
+
 function normalizeBatchPosition(value, role) {
     const normalized = String(value || '').trim().toLowerCase().replace(/^(sk\s+|sangguniang kabataan\s+)/i, '');
     const aliases = {
@@ -1949,6 +2073,10 @@ function normalizeBatchPosition(value, role) {
         secretary: 'Secretary',
         treasurer: 'Treasurer',
         kagawad: 'Kagawad',
+        'sk chairperson': 'Chairperson',
+        'sk secretary': 'Secretary',
+        'sk treasurer': 'Treasurer',
+        'sk kagawad': 'Kagawad',
         councilor: 'Councilor',
         auditor: 'Auditor',
         pio: 'PIO',
@@ -1996,7 +2124,7 @@ function normalizeBatchSuffix(rawSuffix) {
         return { suffix_input: suffixInput, suffix: mapped };
     }
 
-    if (suffixInput.length <= 10) {
+    if (suffixInput.length <= SK_OFFICIAL_SUFFIX_OTHER_MAX) {
         return { suffix_input: suffixInput, suffix: suffixInput };
     }
 
@@ -2144,7 +2272,7 @@ function normalizeBatchAccountRow(row, role) {
         normalized[key] = normalizeBatchCellValue(key, row[key]);
     });
 
-    const upperFields = ['first_name', 'middle_name', 'last_name', 'suffix', 'sex', 'position', 'region', 'province', 'municipality', 'barangay'];
+    const upperFields = ['first_name', 'middle_name', 'last_name', 'suffix', 'position', 'barangay'];
     upperFields.forEach((field) => {
         if (normalized[field]) {
             normalized[field] = String(normalized[field]).trim().toUpperCase();
@@ -2187,9 +2315,8 @@ function normalizeBatchAccountRow(row, role) {
     }
 
     if (normalized.sex) {
-        const sex = String(normalized.sex).trim().toLowerCase();
-        if (sex === 'm' || sex === 'male') normalized.sex = 'Male';
-        if (sex === 'f' || sex === 'female') normalized.sex = 'Female';
+        const sex = String(normalized.sex).trim();
+        normalized.sex = ['Male', 'Female'].includes(sex) ? sex : sex;
     }
 
     if (normalized.position) {
@@ -2202,10 +2329,6 @@ function normalizeBatchAccountRow(row, role) {
         if (resolvedBarangay) {
             normalized.barangay = resolvedBarangay.toUpperCase();
         }
-    }
-
-    if ((normalized.age === undefined || String(normalized.age).trim() === '') && normalized.date_of_birth) {
-        normalized.age = calculateAge(normalized.date_of_birth);
     }
 
     return normalized;
@@ -2293,7 +2416,6 @@ function validateBatchAccountRow(row, rowNumber, role, seenEmails, seenFingerpri
     const errors = [];
     const isOfficial = role === 'sk_official';
     const rawSuffix = row.suffix ?? row.suffix_input ?? '';
-    const rawUploadedAge = row.age !== undefined && row.age !== '' ? parseInt(String(row.age).trim(), 10) : null;
     const rawBarangay = row.barangay ?? '';
     const rawPosition = row.position ?? '';
     const nameMax = getBatchNameMax(role);
@@ -2320,7 +2442,7 @@ function validateBatchAccountRow(row, rowNumber, role, seenEmails, seenFingerpri
             && !['none', 'n/a', 'na', '-'].includes(suffixLower)
             && String(rawSuffix).trim().length > 10
         ) {
-            errors.push({ row: rowNumber, field: 'suffix', error: 'Suffix must not exceed 10 characters.' });
+            errors.push({ row: rowNumber, field: 'suffix', error: 'Suffix must not exceed 4 characters.' });
         }
     }
 
@@ -2329,10 +2451,13 @@ function validateBatchAccountRow(row, rowNumber, role, seenEmails, seenFingerpri
     }
 
     if (String(rawBarangay).trim() !== '' && resolveBatchBarangayName(rawBarangay) === null) {
+        const suggestion = batchBarangaySuggestion(rawBarangay);
         errors.push({
             row: rowNumber,
             field: 'barangay',
-            error: `Barangay "${String(rawBarangay).trim()}" was not found.`,
+            error: suggestion
+                ? `Barangay "${String(rawBarangay).trim()}" was not found. Did you mean "${suggestion}"?`
+                : `Barangay "${String(rawBarangay).trim()}" was not found.`,
         });
     }
 
@@ -2370,7 +2495,14 @@ function validateBatchAccountRow(row, rowNumber, role, seenEmails, seenFingerpri
         if (String(data.email).length > BATCH_EMAIL_MAX) {
             errors.push({ row: rowNumber, field: 'email', error: `Email must not exceed ${BATCH_EMAIL_MAX} characters.` });
         } else if (isOfficial && !SK_OFFICIAL_GMAIL_REGEX.test(String(data.email).trim())) {
-            errors.push({ row: rowNumber, field: 'email', error: 'Email must be a @gmail.com address with 6–30 characters before @.' });
+            const suggestion = batchEmailSuggestion(data.email);
+            errors.push({
+                row: rowNumber,
+                field: 'email',
+                error: suggestion
+                    ? `Email must be a @gmail.com address with 6–30 characters before @. Suggested: ${suggestion}`
+                    : 'Email must be a @gmail.com address with 6–30 characters before @.',
+            });
         } else if (!isOfficial && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(data.email).trim())) {
             errors.push({ row: rowNumber, field: 'email', error: 'Invalid email format.' });
         }
@@ -2395,24 +2527,17 @@ function validateBatchAccountRow(row, rowNumber, role, seenEmails, seenFingerpri
     }
 
     if (data.sex && !['Male', 'Female'].includes(data.sex)) {
-        errors.push({ row: rowNumber, field: 'sex', error: 'Sex must be Male or Female.' });
+        errors.push({ row: rowNumber, field: 'sex', error: 'Sex must be exactly Male or Female. Suggested: Male or Female.' });
+    }
+
+    if (String(row.sex ?? '').trim() !== '' && !['Male', 'Female'].includes(String(row.sex).trim())) {
+        errors.push({ row: rowNumber, field: 'sex', error: 'Sex must be exactly Male or Female. Suggested: Male or Female.' });
     }
 
     if (data.date_of_birth) {
-        const bounds = getSkOfficialBirthdateBounds();
-        if (data.date_of_birth < bounds.min || data.date_of_birth > bounds.max) {
-            errors.push({ row: rowNumber, field: 'date_of_birth', error: `Birthdate must correspond to age ${SK_OFFICIAL_AGE_MIN}–${SK_OFFICIAL_AGE_MAX}.` });
-        }
-
-        if (isOfficial && rawUploadedAge !== null && !Number.isNaN(rawUploadedAge)) {
-            const calculatedAge = parseInt(calculateAge(data.date_of_birth), 10);
-            if (!Number.isNaN(calculatedAge) && rawUploadedAge !== calculatedAge) {
-                errors.push({
-                    row: rowNumber,
-                    field: 'age',
-                    error: `Age (${rawUploadedAge}) does not match birthdate (expected ${calculatedAge}).`,
-                });
-            }
+        const today = formatLocalDate(new Date());
+        if (data.date_of_birth >= today) {
+            errors.push({ row: rowNumber, field: 'date_of_birth', error: 'Birthdate must be before today.' });
         }
     }
 
@@ -2421,6 +2546,16 @@ function validateBatchAccountRow(row, rowNumber, role, seenEmails, seenFingerpri
         if (Number.isNaN(ageNum) || ageNum < SK_OFFICIAL_AGE_MIN || ageNum > SK_OFFICIAL_AGE_MAX) {
             errors.push({ row: rowNumber, field: 'age', error: `Age must be between ${SK_OFFICIAL_AGE_MIN} and ${SK_OFFICIAL_AGE_MAX}.` });
         }
+    }
+
+    if (String(data.region || '').trim() !== 'IV-A CALABARZON') {
+        errors.push({ row: rowNumber, field: 'region', error: 'Region must be IV-A CALABARZON. Suggested: IV-A CALABARZON.' });
+    }
+    if (String(data.province || '').trim() !== 'Laguna') {
+        errors.push({ row: rowNumber, field: 'province', error: 'Province must be Laguna. Suggested: Laguna.' });
+    }
+    if (String(data.municipality || '').trim() !== 'Santa Cruz') {
+        errors.push({ row: rowNumber, field: 'municipality', error: 'Municipality must be Santa Cruz. Suggested: Santa Cruz.' });
     }
 
     if (data.term_start) {
@@ -2439,8 +2574,9 @@ function validateBatchAccountRow(row, rowNumber, role, seenEmails, seenFingerpri
 
     if (data.term_start && data.term_end) {
         if (isOfficial) {
-            const requiredEnd = skOfficialTermEndForStart(data.term_start);
-            if (data.term_end !== requiredEnd) {
+            const minEnd = skOfficialTermEndForStart(data.term_start);
+            const maxEnd = addYearsToDateString(data.term_start, SK_OFFICIAL_TERM_MAX_YEARS);
+            if (data.term_end < minEnd || data.term_end > maxEnd) {
                 errors.push({ row: rowNumber, field: 'term_end', error: SK_OFFICIAL_TERM_END_MESSAGE });
             }
         } else {
@@ -3459,7 +3595,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            if (form.id === 'editSkOfficialsForm' && !validateTermRange(form)) {
+            if (form.id === 'editSkOfficialsForm' && !validateSkOfficialsManualForm(form)) {
                 const first = form.querySelector('.is-invalid');
                 if (first) first.focus();
                 return;
@@ -3468,6 +3604,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const formData = new FormData(form);
             const payload = {};
             for (const [k, v] of formData.entries()) { if (k !== '_token') payload[k] = v; }
+            if (form.id === 'editSkOfficialsForm') {
+                ['date_of_birth', 'term_start', 'term_end'].forEach((field) => {
+                    if (payload[field]) {
+                        payload[field] = normalizeDateInputValue(payload[field]) || payload[field];
+                    }
+                });
+            }
 
             showLoadingOverlay();
             fetch(`/accounts/${accountId}`, {
@@ -3509,6 +3652,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const fedEditForm = document.getElementById('editAccountForm');
     const officialsEditForm = document.getElementById('editSkOfficialsForm');
     if (officialsEditForm) {
+        wireCreateAccountForm(officialsEditForm);
         applyTermDateConstraints(officialsEditForm);
         applySkOfficialDobConstraints(officialsEditForm);
     }
@@ -3524,25 +3668,17 @@ document.addEventListener('DOMContentLoaded', function () {
     attachDobAgeAutoFill(officialsForm, 'date_of_birth', 'age');
     attachDobAgeAutoFill(officialsEditForm, 'date_of_birth', 'age');
 
-    // Edit SK Officials — age auto-calc from DOB
-    const editOfficialsDob = document.getElementById('edit_sk_officials_date_of_birth');
-    const editOfficialsAge = document.getElementById('edit_sk_officials_age');
-    if (editOfficialsDob && editOfficialsAge) {
-        editOfficialsDob.addEventListener('change', () => { editOfficialsAge.value = calculateAge(editOfficialsDob.value); });
-    }
-
     // ── Edit button click → populate form ────────────────────
     function populateEditForm(form, data) {
         if (!form) return;
         resetEditSkOfficialsFormState(form);
         form.dataset.accountId = data.accountId || '';
-        ['first_name', 'last_name', 'middle_name', 'sex', 'date_of_birth', 'age', 'contact_number', 'email', 'position', 'barangay_id', 'term_start', 'term_end', 'term_status'].forEach(n => setFormFieldValue(form, n, data[_camel(n)] ?? data[n] ?? ''));
+        ['first_name', 'last_name', 'middle_name', 'sex', 'age', 'contact_number', 'email', 'position', 'barangay_id', 'term_status'].forEach(n => setFormFieldValue(form, n, data[_camel(n)] ?? data[n] ?? ''));
+        ['date_of_birth', 'term_start', 'term_end'].forEach((name) => {
+            const value = data[_camel(name)] ?? data[name] ?? '';
+            setFormFieldValue(form, name, form.id === 'editSkOfficialsForm' ? formatDateForTextInput(value) : value);
+        });
         setSuffixFieldValue(form, data[_camel('suffix')] ?? data.suffix ?? data.suffix ?? '');
-        const dob = form.querySelector('[name="date_of_birth"]');
-        const age = form.querySelector('[name="age"]');
-        if (dob && age) {
-            age.value = calculateAge(dob.value);
-        }
         const statusField = form.querySelector('[name="status"]');
         if (statusField) statusField.value = 'ACTIVE';
         applySkOfficialDobConstraints(form);

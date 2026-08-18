@@ -70,7 +70,7 @@ class OfficialProfile extends Model
     {
         return $role === \App\Modules\Shared\Models\User::ROLE_SK_FED
             ? self::FEDERATION_POSITIONS
-            : array_merge(self::OFFICIAL_POSITIONS, ['Councilor', 'Auditor', 'PIO']);
+            : self::OFFICIAL_POSITIONS;
     }
 
     /**

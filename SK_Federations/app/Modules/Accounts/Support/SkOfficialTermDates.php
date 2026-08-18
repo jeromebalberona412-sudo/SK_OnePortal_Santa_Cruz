@@ -10,6 +10,7 @@ final class SkOfficialTermDates
     public const FIRST_START = '2023-11-30';
 
     public const TERM_YEARS = 3;
+    public const MAX_TERM_YEARS = 4;
 
     public const MONTH = 11;
 
@@ -76,7 +77,7 @@ final class SkOfficialTermDates
 
     public static function endRuleMessage(): string
     {
-        return 'Term end must be November 30, exactly 3 years after term start (for example November 30, 2023 to November 30, 2026).';
+        return 'Term end must be between 3 and 4 years after the term start date.';
     }
 
     /**
@@ -108,7 +109,10 @@ final class SkOfficialTermDates
             return [];
         }
 
-        if ($endDate !== self::termEndForStart($startDate)->toDateString()) {
+        $minimumEnd = self::termEndForStart($startDate)->toDateString();
+        $maximumEnd = Carbon::parse($startDate)->startOfDay()->addYears(self::MAX_TERM_YEARS)->toDateString();
+
+        if ($endDate < $minimumEnd || $endDate > $maximumEnd) {
             return ['term_end' => self::endRuleMessage()];
         }
 

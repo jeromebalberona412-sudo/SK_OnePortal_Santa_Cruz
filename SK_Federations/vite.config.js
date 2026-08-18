@@ -12,6 +12,7 @@ export default defineConfig({
                 'app/Modules/Barangay_ABYIP/Assets/js/barangay_abyip.js',
                 'app/Modules/Barangay_ABYIP/Assets/css/barangay_abyip.css',
                 'app/Modules/Accounts/assets/css/account.css',
+                'app/Modules/Accounts/assets/js/account-date-fields.js',
                 'app/Modules/Accounts/assets/js/account.js',
                 'app/Modules/AuditLog/assets/css/auditlogs.css',
                 'app/Modules/AuditLog/assets/js/auditlogs.js',

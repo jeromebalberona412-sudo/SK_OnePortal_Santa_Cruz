@@ -21,12 +21,14 @@ class StoreAccountRequest extends FormRequest
     {
         $suffix = $this->input('suffix');
 
-        if ($suffix === '__other__') {
+        if ($suffix === 'NONE' || $suffix === 'None') {
+            $this->merge(['suffix' => 'NONE']);
+        } elseif ($suffix === '__other__') {
             $other = trim((string) $this->input('suffix_other', ''));
             if ($other !== '') {
                 $this->merge(['suffix' => mb_strtoupper($other, 'UTF-8')]);
             }
-        } elseif ($suffix === '' || $suffix === 'None') {
+        } elseif ($suffix === '') {
             $this->merge(['suffix' => null]);
         }
 
@@ -53,6 +55,25 @@ class StoreAccountRequest extends FormRequest
             $this->merge(['contact_number' => substr($digits, 0, 11)]);
         }
 
+        foreach (['date_of_birth', 'term_start', 'term_end'] as $field) {
+            $value = trim((string) $this->input($field, ''));
+            if ($value === '') {
+                continue;
+            }
+
+            foreach (['m/d/Y', 'n/j/Y', 'm/d/y', 'n/j/y'] as $format) {
+                try {
+                    $parsed = Carbon::createFromFormat($format, $value);
+                    if ($parsed !== false) {
+                        $this->merge([$field => $parsed->format('Y-m-d')]);
+                        break;
+                    }
+                } catch (\Throwable) {
+                    // Try next accepted US date format.
+                }
+            }
+        }
+
         if (! $this->filled('status')) {
             $this->merge(['status' => User::STATUS_ACTIVE]);
         }
@@ -70,10 +91,8 @@ class StoreAccountRequest extends FormRequest
         $currentYear = Carbon::now()->year;
         $termStartMin = $isOfficial ? SkOfficialTermDates::FIRST_START : "{$currentYear}-01-01";
         $termStartMax = $isOfficial ? Carbon::now()->toDateString() : "{$currentYear}-12-31";
-        $ageMin = ($isOfficial || $isFederation) ? 18 : 15;
-        $ageMax = ($isOfficial || $isFederation) ? 24 : 30;
-        $minBirthdate = Carbon::now()->subYears($ageMax)->format('Y-m-d');
-        $maxBirthdate = Carbon::now()->subYears($ageMin)->format('Y-m-d');
+        $ageMin = 15;
+        $ageMax = 30;
 
         $nameRules = $isOfficial
             ? ['required', 'string', 'min:3', 'max:50', 'regex:/^(?!\s)[A-Z.\-]+(?: [A-Z.\-]+)?$/u']
@@ -84,7 +103,7 @@ class StoreAccountRequest extends FormRequest
             : ['nullable', 'string', 'max:100', 'regex:/^[A-Z\s\-\']*$/u'];
 
         $dateOfBirthRules = ($isOfficial || $isFederation)
-            ? ['required', 'date', 'after_or_equal:'.$minBirthdate, 'before_or_equal:'.$maxBirthdate]
+            ? ['required', 'date', 'before:today']
             : [$requiresDemographics ? 'required' : 'nullable', 'date', 'before:today'];
 
         $ageRules = ($isOfficial || $isFederation)
@@ -114,7 +133,7 @@ class StoreAccountRequest extends FormRequest
                 'nullable',
                 'string',
                 'min:1',
-                'max:10',
+                'max:4',
                 'regex:/^\S+$/u',
             ],
             'sex' => [$requiresDemographics ? 'required' : 'nullable', Rule::in(['Male', 'Female']), 'not_in:'],
@@ -133,6 +152,9 @@ class StoreAccountRequest extends FormRequest
                 User::STATUS_PENDING_APPROVAL,
                 User::STATUS_SUSPENDED,
             ]), 'not_in:'],
+            'region' => ['required', Rule::in(['IV-A CALABARZON'])],
+            'province' => ['required', Rule::in(['Laguna'])],
+            'municipality' => ['required', Rule::in(['Santa Cruz'])],
             'barangay_id' => ['required', 'integer', 'exists:barangays,id', 'not_in:'],
             'position' => ['required', Rule::in(OfficialProfile::positionsForRole((string) $this->input('role'))), 'not_in:'],
             'term_start' => ['required', 'date', 'after_or_equal:'.$termStartMin, 'before_or_equal:'.$termStartMax],
@@ -147,9 +169,9 @@ class StoreAccountRequest extends FormRequest
             if ($this->input('role') === User::ROLE_SK_OFFICIAL) {
                 $suffix = $this->input('suffix');
                 $allowedSuffixes = ['Jr.', 'Sr.', 'II', 'III', 'IV', 'V'];
-                if ($suffix !== null && $suffix !== '' && $suffix !== '__other__' && ! in_array($suffix, $allowedSuffixes, true)) {
-                    if (strlen((string) $suffix) < 1 || strlen((string) $suffix) > 10 || preg_match('/\s/u', (string) $suffix)) {
-                        $validator->errors()->add('suffix_other', 'Other suffix must be 1-10 characters with no spaces.');
+                if ($suffix !== null && $suffix !== '' && $suffix !== '__other__' && $suffix !== 'NONE' && ! in_array($suffix, $allowedSuffixes, true)) {
+                    if (strlen((string) $suffix) < 1 || strlen((string) $suffix) > 4 || preg_match('/\s/u', (string) $suffix)) {
+                        $validator->errors()->add('suffix_other', 'Other suffix must be 1-4 characters with no spaces.');
                     }
                 }
             }
@@ -204,12 +226,15 @@ class StoreAccountRequest extends FormRequest
             'middle_name.min' => 'Middle name must be at least 3 characters when provided.',
             'middle_name.max' => 'Middle name must not exceed 50 characters.',
             'email.regex' => 'Email must be a @gmail.com address with 6-30 characters before @.',
-            'date_of_birth.after_or_equal' => 'Age must be between 18 and 24 years old.',
-            'date_of_birth.before_or_equal' => 'Age must be between 18 and 24 years old.',
-            'age.min' => 'Age must be at least 18.',
-            'age.max' => 'Age must not exceed 24.',
+            'date_of_birth.before' => 'Birthdate must be before today.',
+            'age.min' => 'Age must be at least 15.',
+            'age.max' => 'Age must not exceed 30.',
             'suffix_other.regex' => 'Other suffix must not contain spaces.',
+            'suffix_other.max' => 'Other suffix must not exceed 4 characters.',
             'contact_number.regex' => 'Contact number must be 11 digits starting with 09.',
+            'region.in' => 'Region must be IV-A CALABARZON.',
+            'province.in' => 'Province must be Laguna.',
+            'municipality.in' => 'Municipality must be Santa Cruz.',
             'term_start.after_or_equal' => $this->input('role') === User::ROLE_SK_OFFICIAL
                 ? SkOfficialTermDates::startRuleMessage()
                 : 'Term start date must be within the current year.',
