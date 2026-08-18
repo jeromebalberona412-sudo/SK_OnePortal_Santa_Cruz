@@ -377,41 +377,6 @@ function bindInfiniteScroll() {
     feedInfiniteObserver.observe(sentinel);
 }
 
-function bindFilterBarScrollHide() {
-    const bar = document.querySelector('.feed-filter-bar');
-    if (!bar) return;
-
-    let lastY = window.scrollY || 0;
-    let ticking = false;
-
-    const apply = () => {
-        ticking = false;
-        const y = window.scrollY || 0;
-        const delta = y - lastY;
-        lastY = y;
-
-        if (y < 48) {
-            bar.classList.remove('is-hidden');
-            return;
-        }
-        if (delta > 6) {
-            bar.classList.add('is-hidden');
-            return;
-        }
-        if (delta < -2) {
-            bar.classList.remove('is-hidden');
-        }
-    };
-
-    window.addEventListener('scroll', () => {
-        if (ticking) return;
-        ticking = true;
-        requestAnimationFrame(apply);
-    }, { passive: true });
-
-    bar.addEventListener('focusin', () => bar.classList.remove('is-hidden'));
-}
-
 function scrollFeedHome() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1242,7 +1207,7 @@ async function submitComment(id, input, parentId = null) {
     const text = input.value.trim();
     if (!text) return;
     if (text.length > 500) {
-        notifyFeed('Comments are limited to 500 characters.', 'error');
+        notifyFeed('Comments and replies are limited to 500 characters.', 'error');
         return;
     }
 
@@ -1381,6 +1346,10 @@ async function confirmEditComment() {
     const { postId, commentId } = pendingCommentAction;
     const body = document.getElementById('editCommentBody')?.value.trim();
     if (!body) return;
+    if (body.length > 500) {
+        notifyFeed('Comments and replies are limited to 500 characters.', 'error');
+        return;
+    }
     const btn = document.getElementById('confirmEditCommentBtn');
     if (btn) btn.disabled = true;
     try {
@@ -1776,7 +1745,7 @@ function toggleSidebar() {
 document.addEventListener('DOMContentLoaded', () => {
     bindFeedFilterTabs();
     bindInfiniteScroll();
-    bindFilterBarScrollHide();
+    document.querySelector('.feed-filter-bar')?.classList.remove('is-hidden');
     loadFeed(true).then(() => startFeedPolling());
 
     let feedSearchTimer = null;

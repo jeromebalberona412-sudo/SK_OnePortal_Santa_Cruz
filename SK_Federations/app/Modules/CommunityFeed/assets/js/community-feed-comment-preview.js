@@ -16,6 +16,9 @@ let pageBound = false;
 let syncingUrl = false;
 let expandedReplies = new Set();
 
+const COMMENT_MAX_CHARS = 500;
+const COMMENT_LIMIT_MSG = 'Comments and replies are limited to 500 characters.';
+
 const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 const cfg = () => window.CommentPreviewConfig || {};
 const REACTION_SOUND_URL = '/sounds/reactions_ux.mp3';
@@ -554,6 +557,10 @@ function refreshPreview(focusId) {
 
 async function submitComment(body, parentId = null) {
     if (sending || !body) return;
+    if (body.length > COMMENT_MAX_CHARS) {
+        notifyPreview(COMMENT_LIMIT_MSG, 'error');
+        return;
+    }
     sending = true;
     const tempId = 'tmp-' + Date.now();
     const optimistic = {
@@ -683,6 +690,10 @@ function bindPage() {
         e.preventDefault();
         const text = input.value.trim();
         if (!text) return;
+        if (text.length > COMMENT_MAX_CHARS) {
+            notifyPreview(COMMENT_LIMIT_MSG, 'error');
+            return;
+        }
         input.value = '';
         updateSend();
         submitComment(text);
@@ -690,6 +701,10 @@ function bindPage() {
     send?.addEventListener('click', () => {
         const text = input.value.trim();
         if (!text) return;
+        if (text.length > COMMENT_MAX_CHARS) {
+            notifyPreview(COMMENT_LIMIT_MSG, 'error');
+            return;
+        }
         input.value = '';
         updateSend();
         submitComment(text);
@@ -769,6 +784,10 @@ function bindPage() {
             const field = document.querySelector(`[data-reply-input="${id}"]`);
             const text = field?.value.trim();
             if (!text) return;
+            if (text.length > COMMENT_MAX_CHARS) {
+                notifyPreview(COMMENT_LIMIT_MSG, 'error');
+                return;
+            }
             field.value = '';
             submitComment(text, Number(id));
         }
@@ -780,6 +799,10 @@ function bindPage() {
         e.preventDefault();
         const text = field.value.trim();
         if (!text) return;
+        if (text.length > COMMENT_MAX_CHARS) {
+            notifyPreview(COMMENT_LIMIT_MSG, 'error');
+            return;
+        }
         field.value = '';
         submitComment(text, Number(field.dataset.replyInput));
     });

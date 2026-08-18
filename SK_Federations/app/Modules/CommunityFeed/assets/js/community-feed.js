@@ -1141,7 +1141,7 @@ function addComment(id, input, parentId) {
     var text = input.value.trim();
     if (!text) return;
     if (text.length > 500) {
-        notifyFeed('Comments are limited to 500 characters.', 'error');
+        notifyFeed('Comments and replies are limited to 500 characters.', 'error');
         return;
     }
     input.dataset.sending = '1';
@@ -1240,6 +1240,10 @@ function confirmEditComment() {
     var isReply = pendingCommentAction.isReply;
     var body = document.getElementById('editCommentBody')?.value.trim();
     if (!body) return;
+    if (body.length > 500) {
+        notifyFeed('Comments and replies are limited to 500 characters.', 'error');
+        return;
+    }
     var btn = document.getElementById('confirmEditCommentBtn');
     if (btn) btn.disabled = true;
     apiFetch('/api/community-feed/' + postId + '/comments/' + commentId, {
@@ -1671,47 +1675,10 @@ function toggleLinkInput() {
 
 /* ── Layout shell (sidebar, notifications, profile) provided by layout.js ── */
 
-function bindFilterBarScrollHide() {
-    var bar = document.querySelector('.feed-filter-bar');
-    if (!bar) return;
-
-    var lastY = window.scrollY || 0;
-    var ticking = false;
-
-    function apply() {
-        ticking = false;
-        var y = window.scrollY || 0;
-        var delta = y - lastY;
-        lastY = y;
-
-        if (y < 48) {
-            bar.classList.remove('is-hidden');
-            return;
-        }
-        if (delta > 6) {
-            bar.classList.add('is-hidden');
-            return;
-        }
-        if (delta < -2) {
-            bar.classList.remove('is-hidden');
-        }
-    }
-
-    window.addEventListener('scroll', function () {
-        if (ticking) return;
-        ticking = true;
-        requestAnimationFrame(apply);
-    }, { passive: true });
-
-    bar.addEventListener('focusin', function () {
-        bar.classList.remove('is-hidden');
-    });
-}
-
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', function() {
     ensureFeedReactionAudio();
-    bindFilterBarScrollHide();
+    document.querySelector('.feed-filter-bar')?.classList.remove('is-hidden');
     document.addEventListener('pointerdown', ensureFeedReactionAudio, { once: true, capture: true });
     if (document.getElementById('feed-posts')) {
         renderPosts(true);

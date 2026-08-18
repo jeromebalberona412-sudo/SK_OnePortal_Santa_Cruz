@@ -222,9 +222,8 @@
                                 >
                                 <span class="checkbox-label">Remember me</span>
                             </label>
-                            <p class="youth-remember-warning">Only select this on a personal device. Do not use on shared or public computers.</p>
                         </div>
-                        <a href="{{ route('password.request') }}" class="youth-link" id="forgotBtn">Forgot password?</a>
+                        <a href="{{ route('password.request') }}" class="youth-link youth-forgot-link" id="forgotBtn">Forgot password</a>
                     </div>
 
                     @include('authentication::partials.signin-legal-consent')
@@ -278,6 +277,23 @@
     </main>
 
     @include('authentication::partials.legal-modals')
+
+    <div class="auth-legal-modal" id="rememberDeviceModal" hidden aria-hidden="true" role="dialog" aria-labelledby="rememberDeviceModalTitle" aria-modal="true">
+        <div class="auth-legal-modal-backdrop" data-remember-dismiss></div>
+        <div class="auth-legal-modal-dialog youth-remember-modal-dialog" role="document">
+            <header class="auth-legal-modal-header">
+                <h2 class="auth-legal-modal-title" id="rememberDeviceModalTitle">Remember this device?</h2>
+                <button type="button" class="auth-legal-modal-close" data-remember-dismiss aria-label="Close">&times;</button>
+            </header>
+            <div class="auth-legal-modal-body">
+                <p>Only select this on a personal device. Do not use on shared or public computers.</p>
+            </div>
+            <footer class="auth-legal-modal-footer youth-remember-modal-footer">
+                <button type="button" class="youth-remember-modal-cancel" data-remember-dismiss>Cancel</button>
+                <button type="button" class="auth-legal-modal-btn" id="rememberDeviceConfirm">Continue</button>
+            </footer>
+        </div>
+    </div>
 
     <script>
         // Password toggle — self-contained, no conflict with form submit handlers

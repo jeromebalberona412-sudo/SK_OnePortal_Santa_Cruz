@@ -212,16 +212,8 @@ body.sk-fed-feed .main-content,
     position: sticky;
     top: var(--navbar-height, 64px);
     z-index: 46;
-    transform: translateY(0);
+    transform: none;
     opacity: 1;
-    transition: transform 0.28s ease, opacity 0.22s ease, box-shadow 0.22s ease;
-    will-change: transform;
-}
-.feed-filter-bar.is-hidden {
-    transform: translateY(calc(-100% - 12px));
-    opacity: 0;
-    pointer-events: none;
-    box-shadow: none;
 }
 @media (prefers-reduced-motion: reduce) {
     .feed-filter-bar { transition: none; }

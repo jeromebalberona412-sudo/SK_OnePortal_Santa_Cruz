@@ -60,8 +60,18 @@
 
     <section class="baranggay-abyip-doc-section">
         <div class="container accomplishments-shell">
-            <div id="barangayAbyipStatus" class="baranggay-abyip-status" role="status">Opening ABYIP...</div>
-            <div id="barangayAbyipPages" class="baranggay-abyip-pages"></div>
+            <div class="baranggay-abyip-gate" id="barangayAbyipGate">
+                <p id="barangayAbyipStatus" class="baranggay-abyip-status" role="status">Choose a fiscal year, then open the ABYIP document.</p>
+                <div class="baranggay-abyip-actions">
+                    <button type="button" class="baranggay-abyip-view-btn" id="barangayAbyipViewBtn" disabled>
+                        View full ABYIP
+                    </button>
+                    <button type="button" class="baranggay-abyip-hide-btn" id="barangayAbyipHideBtn" hidden>
+                        Hide
+                    </button>
+                </div>
+            </div>
+            <div id="barangayAbyipPages" class="baranggay-abyip-pages" hidden></div>
         </div>
     </section>
 </div>

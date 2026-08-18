@@ -44,7 +44,7 @@ class AnnouncementFeedController extends Controller
                 'barangay',
                 'user',
                 'images',
-                'reactions.user',
+                'reactions',
             ])
                 ->withCount(['reactions', 'comments'])
                 ->active()
@@ -84,7 +84,7 @@ class AnnouncementFeedController extends Controller
             'barangay',
             'user',
             'images',
-            'reactions.user',
+            'reactions',
         ])
             ->withCount(['reactions', 'comments'])
             ->active()
@@ -462,7 +462,10 @@ class AnnouncementFeedController extends Controller
         );
         $authorName = $post->user?->name
             ?? ($post->is_federation_wide ? 'SK Federation' : ('SK Brgy. '.($post->barangay?->name ?? '')));
-        $registrations = $this->kabataanRegistrationsForPost($post);
+        $commentsLoaded = $post->relationLoaded('comments');
+        $registrations = $commentsLoaded
+            ? $this->kabataanRegistrationsForPost($post)
+            : collect();
 
         $imageRecords = $post->relationLoaded('images') ? $post->images : collect();
         $images = $imageRecords
@@ -471,15 +474,15 @@ class AnnouncementFeedController extends Controller
             ->values()
             ->all();
 
-        $comments = $post->relationLoaded('comments') ? $post->comments : collect();
-        $reactionsSummary = $post->relationLoaded('reactions')
+        $comments = $commentsLoaded ? $post->comments : collect();
+        $reactionsSummary = $commentsLoaded && $post->relationLoaded('reactions')
             ? $this->formatReactionsSummary(
                 $post->reactions,
                 array_sum($reactionCounts),
                 $post->barangay_id,
                 $registrations,
             )
-            : ['count' => 0, 'names_label' => '', 'reactors' => []];
+            : ['count' => array_sum($reactionCounts), 'names_label' => '', 'reactors' => []];
 
         return [
             'id' => $post->id,
@@ -744,14 +747,19 @@ class AnnouncementFeedController extends Controller
      */
     private function kabataanRegistrationsForPost(Announcement $post): Collection
     {
-        $userIds = $post->reactions
-            ->where('user_type', self::USER_TYPE)
-            ->pluck('user_id')
-            ->merge(
-                $post->comments
-                    ->where('user_type', self::USER_TYPE)
-                    ->pluck('user_id')
+        $userIds = collect();
+
+        if ($post->relationLoaded('reactions')) {
+            $userIds = $userIds->merge(
+                $post->reactions->where('user_type', self::USER_TYPE)->pluck('user_id')
             );
+        }
+
+        if ($post->relationLoaded('comments')) {
+            $userIds = $userIds->merge(
+                $post->comments->where('user_type', self::USER_TYPE)->pluck('user_id')
+            );
+        }
 
         return $this->kabataanRegistrationsForUserIds($userIds);
     }

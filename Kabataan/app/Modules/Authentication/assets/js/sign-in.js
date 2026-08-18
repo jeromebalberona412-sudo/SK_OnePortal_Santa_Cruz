@@ -331,6 +331,64 @@
         resetSubmitBtn();
     }
 
+    function bindRememberDeviceModal() {
+        var rememberInput = document.getElementById('remember');
+        var modal = document.getElementById('rememberDeviceModal');
+        var confirmBtn = document.getElementById('rememberDeviceConfirm');
+        if (!rememberInput || !modal) {
+            return;
+        }
+
+        var confirming = false;
+
+        function openModal() {
+            modal.hidden = false;
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+            (confirmBtn || modal.querySelector('.auth-legal-modal-btn'))?.focus();
+        }
+
+        function closeModal(keepChecked) {
+            modal.hidden = true;
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+            if (!keepChecked) {
+                rememberInput.checked = false;
+            }
+        }
+
+        rememberInput.addEventListener('click', function (e) {
+            if (confirming) {
+                return;
+            }
+
+            if (rememberInput.checked) {
+                e.preventDefault();
+                rememberInput.checked = false;
+                openModal();
+            }
+        });
+
+        confirmBtn?.addEventListener('click', function () {
+            confirming = true;
+            rememberInput.checked = true;
+            closeModal(true);
+            confirming = false;
+        });
+
+        modal.querySelectorAll('[data-remember-dismiss]').forEach(function (el) {
+            el.addEventListener('click', function () {
+                closeModal(false);
+            });
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !modal.hidden) {
+                closeModal(false);
+            }
+        });
+    }
+
     // ─── Input animations ─────────────────────────────────────────────────────
 
     function bindInputAnimations() {
@@ -407,6 +465,7 @@
 
         bindInputAnimations();
         bindAlertDismiss();
+        bindRememberDeviceModal();
 
         // Pre-render Turnstile widget now so it's ready before user clicks Sign In
         preRenderTurnstile();

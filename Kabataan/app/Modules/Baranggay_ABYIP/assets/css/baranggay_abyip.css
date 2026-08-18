@@ -53,10 +53,81 @@ body.homepage-body:has(.baranggay-abyip-page) {
     outline-offset: 2px;
 }
 
+body.homepage-body .barangay-accomplishments-page .kabataan-barangay-card:hover,
+body.homepage-body .baranggay-abyip-page .kabataan-barangay-card:hover {
+    transform: none;
+}
+
 .baranggay-abyip-status {
-    margin: 0 0 16px;
+    margin: 0;
     color: #475569;
     font-size: 0.98rem;
+}
+
+.baranggay-abyip-status[hidden] {
+    display: none;
+}
+
+.baranggay-abyip-gate {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 28px 24px;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    background: #ffffff;
+}
+
+.baranggay-abyip-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.baranggay-abyip-view-btn,
+.baranggay-abyip-hide-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.baranggay-abyip-view-btn {
+    border: none;
+    background: #0450a8;
+    color: #ffffff;
+}
+
+.baranggay-abyip-hide-btn {
+    border: 1px solid #0450a8;
+    background: #ffffff;
+    color: #0450a8;
+}
+
+.baranggay-abyip-hide-btn[hidden] {
+    display: none;
+}
+
+.baranggay-abyip-view-btn:hover:not(:disabled),
+.baranggay-abyip-view-btn:focus-visible:not(:disabled) {
+    background: #03408a;
+}
+
+.baranggay-abyip-hide-btn:hover,
+.baranggay-abyip-hide-btn:focus-visible {
+    background: #eff6ff;
+}
+
+.baranggay-abyip-view-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
 }
 
 .baranggay-abyip-doc-section {
@@ -69,7 +140,12 @@ body.homepage-body:has(.baranggay-abyip-page) {
     flex-direction: column;
     gap: 16px;
     width: 100%;
+    margin-top: 20px;
     background: #ffffff;
+}
+
+.baranggay-abyip-pages[hidden] {
+    display: none;
 }
 
 .baranggay-abyip-page-sheet {

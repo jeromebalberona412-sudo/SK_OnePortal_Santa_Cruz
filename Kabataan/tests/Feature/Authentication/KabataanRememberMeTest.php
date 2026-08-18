@@ -29,12 +29,14 @@ function kabataanResponseHasRememberCookie($response): bool
     return false;
 }
 
-it('shows the remember me checkbox and warning on the kabataan sign-in page', function () {
+it('shows the remember me checkbox on the kabataan sign-in page', function () {
     $this->get('/sign-in')
         ->assertOk()
         ->assertSee('Remember me')
         ->assertDontSee('Remember me on this device')
-        ->assertSee('Only select this on a personal device. Do not use on shared or public computers.');
+        ->assertSee('Forgot password')
+        ->assertDontSee('Forgot password?')
+        ->assertSee('Remember this device?');
 });
 
 it('signs in without remember me and does not set a remember cookie', function () {

@@ -464,10 +464,11 @@ html {
 
 .youth-form-options {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0.75rem;
     margin-top: 0.25rem;
+    flex-wrap: nowrap;
 }
 
 .youth-remember-block {
@@ -476,15 +477,40 @@ html {
     align-items: flex-start;
     gap: 0.35rem;
     min-width: 0;
-    flex: 1 1 auto;
+    flex: 0 1 auto;
 }
 
-.youth-remember-warning {
-    margin: 0;
-    font-size: 0.8rem;
-    line-height: 1.4;
-    color: var(--youth-gray-500, #6b7280);
-    max-width: 22rem;
+.youth-forgot-link {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.youth-remember-modal-dialog {
+    max-width: 420px;
+}
+
+.youth-remember-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.youth-remember-modal-cancel {
+    min-height: 42px;
+    padding: 0 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    background: #fff;
+    color: #374151;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.youth-remember-modal-cancel:hover,
+.youth-remember-modal-cancel:focus-visible {
+    background: #f8fafc;
+    border-color: #94a3b8;
 }
 
 .youth-checkbox {
@@ -747,13 +773,10 @@ a.youth-submit-btn:visited {
     .card-header { min-height: 0; margin-bottom: 1.5rem; }
     .card-subtitle { font-size: 1.3rem; }
     .youth-form-options {
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction: row;
+        align-items: center;
         gap: 0.75rem;
-    }
-
-    .youth-remember-warning {
-        max-width: 100%;
+        flex-wrap: nowrap;
     }
 }
 

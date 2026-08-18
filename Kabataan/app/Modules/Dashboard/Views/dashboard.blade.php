@@ -54,15 +54,28 @@
             z-index: 5;
             pointer-events: auto;
         }
-        @media (max-width: 768px) {
-            .lightbox-nav {
-                width: 40px;
-                height: 40px;
-                font-size: 20px;
-                background: rgba(0,0,0,0.55);
+        @media (min-width: 769px) {
+            .youth-dashboard .feed-sticky-toolbar {
+                overflow: visible;
             }
-            .lightbox-prev { left: 8px; }
-            .lightbox-next { right: 8px; }
+            .youth-dashboard .feed-filter-bar,
+            .youth-dashboard .feed-filter-bar.is-hidden {
+                display: flex !important;
+                transform: none !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                pointer-events: auto !important;
+            }
+        }
+        @media (max-width: 768px) {
+            .youth-dashboard .feed-sticky-toolbar {
+                overflow: hidden;
+            }
+            .youth-dashboard .feed-filter-bar.is-hidden {
+                transform: translateY(-110%);
+                opacity: 0;
+                pointer-events: none;
+            }
         }
     </style>
 </head>
@@ -96,7 +109,6 @@
                     </div>
                 @endif
                 
-                <div class="feed-sticky-toolbar">
                 <div class="feed-header">
                     <div class="feed-header__intro">
                         <h1>SK Community Feed</h1>
@@ -116,9 +128,9 @@
                         >
                     </div>
                 </div>
-                </div>
 
-                <div class="feed-filter-bar">
+                <div class="feed-sticky-toolbar">
+                <div class="feed-filter-bar" role="tablist" aria-label="Filter community feed">
                     <button type="button" class="feed-tab feed-tab--icon active" data-feed-filter="all" aria-label="All">
                         <span class="feed-tab-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -150,8 +162,11 @@
                         <span class="feed-tab-text">Programs</span>
                     </button>
                 </div>
+                </div>
 
-                <div id="feed-posts"></div>
+                <div id="feed-posts">
+                    <div class="post-card feed-loading-card">Loading community feed…</div>
+                </div>
                 <div id="feedInfiniteSentinel" class="feed-infinite-sentinel" aria-hidden="true"></div>
             </div>
 
@@ -1050,6 +1065,16 @@
             params.set('search', feedSearch);
         }
 
+        const container = document.getElementById('feed-posts');
+        if (!container) {
+            feedLoading = false;
+            return;
+        }
+        if (reset) {
+            renderedPostIds.clear();
+            container.innerHTML = '<div class="post-card feed-loading-card">Loading community feed…</div>';
+        }
+
         try {
             const data = await apiFeed(`/api/feed?${params}`);
             if (requestToken !== feedRequestToken) return;
@@ -1057,7 +1082,6 @@
 
             feedLastPage = data.last_page;
             const items = data.data ?? [];
-            const container = document.getElementById('feed-posts');
             if (reset) {
                 renderedPostIds.clear();
                 container.innerHTML = '';
@@ -1069,9 +1093,31 @@
                 return;
             }
 
-            items.forEach(p => mountFeedPost(p, 'append'));
+            const fragment = document.createDocumentFragment();
+            items.forEach((p) => {
+                const id = Number(p.id);
+                if (!id) return;
+                mergeCachedPost(p);
+                if (renderedPostIds.has(String(id)) || container.querySelector(`.post-card[data-post-id="${id}"]`)) {
+                    mountFeedPost(p, 'append');
+                    return;
+                }
+                renderedPostIds.add(String(id));
+                const el = document.createElement('article');
+                el.className = 'post-card';
+                el.dataset.postId = String(id);
+                el.innerHTML = buildFeedPost(p);
+                fragment.appendChild(el);
+                bindFeedReactionControls(el);
+                bindPostImageClicks(el);
+            });
+            container.appendChild(fragment);
         } catch (error) {
             console.error('Feed error:', error);
+            if (reset && requestToken === feedRequestToken) {
+                container.innerHTML =
+                    '<div class="post-card" style="text-align:center;color:#64748b;padding:32px;">Unable to load the community feed right now. Please try again.</div>';
+            }
         } finally {
             if (requestToken === feedRequestToken) {
                 feedLoading = false;
@@ -1101,44 +1147,33 @@
     }
     bindInfiniteScroll();
 
-    function setFeedFilter(btn, filter) {
-        if (filter === 'all') {
-            window.location.reload();
-            return;
-        }
-        document.querySelector('.feed-filter-bar')?.classList.remove('is-hidden');
-        feedFilter = filter;
-        document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
-        loadFeed(true, { force: true });
-    }
-
     function bindFilterBarScrollHide() {
         const bar = document.querySelector('.feed-filter-bar');
         if (!bar) return;
 
-        const feedSection = document.querySelector('.feed-section');
+        const mobileQuery = window.matchMedia('(max-width: 768px)');
         let lastY = 0;
         let ticking = false;
 
-        const nestedScroller = () => {
-            if (!feedSection) return null;
-            const overflowY = getComputedStyle(feedSection).overflowY;
-            if (overflowY !== 'auto' && overflowY !== 'scroll') return null;
-            if (feedSection.scrollHeight <= feedSection.clientHeight + 1) return null;
-            return feedSection;
-        };
+        function isMobileFeed() {
+            return mobileQuery.matches;
+        }
 
-        const getY = () => {
-            const nested = nestedScroller();
-            return nested ? nested.scrollTop : (window.scrollY || 0);
-        };
+        function currentY() {
+            return window.scrollY || document.documentElement.scrollTop || 0;
+        }
 
-        lastY = getY();
+        lastY = currentY();
 
-        const apply = () => {
+        function apply() {
             ticking = false;
-            const y = getY();
+
+            if (!isMobileFeed()) {
+                bar.classList.remove('is-hidden');
+                return;
+            }
+
+            const y = currentY();
             const delta = y - lastY;
             lastY = y;
 
@@ -1153,24 +1188,40 @@
             if (delta < -2) {
                 bar.classList.remove('is-hidden');
             }
-        };
+        }
 
-        const onScroll = () => {
+        function onScroll() {
+            if (!isMobileFeed()) return;
             if (ticking) return;
             ticking = true;
             requestAnimationFrame(apply);
-        };
+        }
 
         window.addEventListener('scroll', onScroll, { passive: true });
-        feedSection?.addEventListener('scroll', onScroll, { passive: true });
+        mobileQuery.addEventListener('change', function () {
+            lastY = currentY();
+            bar.classList.remove('is-hidden');
+        });
         bar.addEventListener('focusin', () => bar.classList.remove('is-hidden'));
     }
 
     bindFilterBarScrollHide();
 
+    function setFeedFilter(btn, filter) {
+        document.querySelector('.feed-filter-bar')?.classList.remove('is-hidden');
+        feedFilter = filter;
+        document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        loadFeed(true, { force: true });
+    }
+
+    document.querySelector('.feed-filter-bar')?.classList.remove('is-hidden');
+
     document.querySelectorAll('.feed-tab[data-feed-filter]').forEach(btn => {
         btn.addEventListener('click', () => setFeedFilter(btn, btn.dataset.feedFilter || 'all'));
     });
+
+    loadFeed(true);
 
     const feedSearchInput = document.getElementById('feedSearchInput');
     let feedSearchTimer = null;
@@ -1223,7 +1274,7 @@
     function feedImgTag(url, name, className) {
         const src = feedEscape(feedAvatarUrl(url, name));
         const fallback = feedEscape(feedAvatarUrl('', name));
-        return `<img src="${src}" alt="${feedEscape(name)}" class="${className || ''}" onerror="this.onerror=null;this.src='${fallback}'">`;
+        return `<img src="${src}" alt="" class="${className || ''}" onerror="this.onerror=null;this.src='${fallback}'">`;
     }
 
     function countFeedComments(comments) {
@@ -1513,7 +1564,6 @@
               <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>
               <span>Comment</span>
             </button>
-          </div>
           </div>`;
     }
 
@@ -1774,6 +1824,10 @@
         const isReply = pendingCommentAction.isReply;
         const body = document.getElementById('editCommentBody')?.value.trim();
         if (!body) return;
+        if (body.length > 500) {
+            notifyFeed('Comments and replies are limited to 500 characters.', 'error');
+            return;
+        }
         const btn = document.getElementById('confirmEditCommentBtn');
         if (btn) btn.disabled = true;
         try {
@@ -1974,7 +2028,7 @@
         const text = input.value.trim();
         if (!text) return;
         if (text.length > 500) {
-            notifyFeed('Comments are limited to 500 characters.', 'error');
+            notifyFeed('Comments and replies are limited to 500 characters.', 'error');
             return;
         }
         if (input.dataset.sending === '1') return;
@@ -2239,7 +2293,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        loadFeed(true);
         startFeedPolling();
         document.querySelector('a.kabataan-header__icon-btn[aria-label="Home"]')?.addEventListener('click', function (e) {
             try {

@@ -53,14 +53,18 @@ function initBarangayAbyipViewer() {
     const statusEl = document.getElementById('barangayAbyipStatus');
     const pagesEl = document.getElementById('barangayAbyipPages');
     const yearSelect = document.getElementById('barangayAbyipYear');
+    const viewBtn = document.getElementById('barangayAbyipViewBtn');
+    const hideBtn = document.getElementById('barangayAbyipHideBtn');
+    const gateEl = document.getElementById('barangayAbyipGate');
 
-    if (!documentsUrl || !statusEl || !pagesEl || !yearSelect) {
+    if (!documentsUrl || !statusEl || !pagesEl || !yearSelect || !viewBtn || !hideBtn || !gateEl) {
         return;
     }
 
     const documentsByYear = new Map();
     let renderToken = 0;
     let loadPromise = null;
+    let isViewing = false;
 
     const uniqueByYear = (items) => {
         items.forEach((item) => {
@@ -79,6 +83,7 @@ function initBarangayAbyipViewer() {
         if (years.length === 0) {
             yearSelect.innerHTML = '<option value="">No years available</option>';
             yearSelect.disabled = true;
+            viewBtn.disabled = true;
             return;
         }
 
@@ -91,12 +96,32 @@ function initBarangayAbyipViewer() {
 
         yearSelect.disabled = false;
         yearSelect.value = years[0];
+        viewBtn.disabled = false;
+    };
+
+    const showGate = () => {
+        gateEl.hidden = false;
+        pagesEl.hidden = true;
+        hideBtn.hidden = true;
+        pagesEl.innerHTML = '';
+        statusEl.hidden = false;
+        statusEl.textContent = documentsByYear.size === 0
+            ? 'No ABYIP uploaded yet for this barangay.'
+            : 'Choose a fiscal year, then open the ABYIP document.';
+    };
+
+    const showPages = () => {
+        statusEl.hidden = true;
+        pagesEl.hidden = false;
+        hideBtn.hidden = false;
     };
 
     const renderPdf = async (fileUrl) => {
         const token = ++renderToken;
+        pagesEl.hidden = true;
         statusEl.hidden = false;
         statusEl.textContent = 'Opening ABYIP...';
+        viewBtn.disabled = true;
         pagesEl.innerHTML = '';
 
         if (!window.pdfjsLib) {
@@ -112,7 +137,8 @@ function initBarangayAbyipViewer() {
             return;
         }
 
-        const width = Math.max(pagesEl.clientWidth || page.clientWidth || 800, 280);
+        const shellWidth = pagesEl.parentElement ? pagesEl.parentElement.clientWidth : 0;
+        const width = Math.max(shellWidth || page.clientWidth || 800, 280);
 
         for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
             const pdfPage = await pdf.getPage(pageNumber);
@@ -143,25 +169,48 @@ function initBarangayAbyipViewer() {
             pagesEl.appendChild(canvas);
         }
 
-        statusEl.hidden = true;
+        showPages();
+        viewBtn.disabled = false;
     };
 
     const openYear = (year) => {
         const item = documentsByYear.get(String(year));
         if (!item || !item.file_url) {
+            isViewing = false;
+            showGate();
             statusEl.hidden = false;
             statusEl.textContent = 'No ABYIP uploaded for that year.';
+            viewBtn.disabled = documentsByYear.size === 0;
             pagesEl.innerHTML = '';
             return;
         }
 
         renderPdf(item.file_url).catch(() => {
+            isViewing = false;
+            showGate();
             statusEl.hidden = false;
             statusEl.textContent = 'Unable to open the ABYIP document right now. Please try again.';
+            viewBtn.disabled = false;
         });
     };
 
+    viewBtn.addEventListener('click', () => {
+        isViewing = true;
+        openYear(yearSelect.value);
+    });
+
+    hideBtn.addEventListener('click', () => {
+        isViewing = false;
+        renderToken += 1;
+        showGate();
+        viewBtn.disabled = documentsByYear.size === 0;
+    });
+
     yearSelect.addEventListener('change', () => {
+        if (!isViewing) {
+            return;
+        }
+
         openYear(yearSelect.value);
     });
 
@@ -186,14 +235,16 @@ function initBarangayAbyipViewer() {
 
             if (documentsByYear.size === 0) {
                 statusEl.textContent = 'No ABYIP uploaded yet for this barangay.';
+                viewBtn.disabled = true;
                 return;
             }
 
-            openYear(yearSelect.value);
+            statusEl.textContent = 'Choose a fiscal year, then open the ABYIP document.';
         })
         .catch(() => {
             yearSelect.innerHTML = '<option value="">Unavailable</option>';
             yearSelect.disabled = true;
+            viewBtn.disabled = true;
             statusEl.textContent = 'Unable to open the ABYIP document right now. Please try again.';
         });
 }

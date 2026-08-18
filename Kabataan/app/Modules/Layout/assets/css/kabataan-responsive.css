@@ -29,7 +29,7 @@
 
 .feed-filter-bar {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 6px;
     margin-bottom: 16px;
     border-bottom: 2px solid var(--border);
@@ -179,8 +179,9 @@
     }
 
     .feed-tab {
-        flex-shrink: 0;
-        padding: 8px 12px;
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 8px 6px;
     }
 
     .filter-tabs {

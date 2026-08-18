@@ -403,11 +403,13 @@ body.youth-dashboard {
 }
 
 .feed-sticky-toolbar {
-    position: relative;
-    z-index: 1;
+    position: sticky;
+    top: 0;
+    z-index: 80;
     background: var(--bg);
-    padding: 0;
+    padding: 0 0 4px;
     margin: 0;
+    overflow: visible;
 }
 
 .comment-preview {
@@ -1942,6 +1944,7 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
 /* ── FEED FILTER TABS ── */
 .feed-filter-bar {
     display: flex;
+    flex-wrap: nowrap;
     gap: 6px;
     margin-bottom: 12px;
     border-bottom: 2px solid var(--border);
@@ -1949,22 +1952,34 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
     width: 100%;
     background: var(--bg);
     box-shadow: 0 8px 12px -8px rgba(15, 23, 42, 0.18);
-    position: sticky;
-    top: 0;
-    z-index: 80;
-    transform: translateY(0);
+    position: relative;
+    top: auto;
+    z-index: 1;
+    transform: none;
     opacity: 1;
-    transition: transform 0.28s ease, opacity 0.22s ease, box-shadow 0.22s ease;
-    will-change: transform;
+    overflow-x: auto;
+    scrollbar-width: none;
 }
+
+.feed-filter-bar::-webkit-scrollbar {
+    display: none;
+}
+
 .feed-filter-bar.is-hidden {
-    transform: translateY(calc(-100% - 12px));
-    opacity: 0;
-    pointer-events: none;
-    box-shadow: none;
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.feed-loading-card {
+    text-align: center;
+    color: #64748b;
+    padding: 32px 16px;
+    font-size: 14px;
+    font-weight: 600;
 }
 @media (max-width: 1200px) {
-    .feed-filter-bar { top: var(--nav-h); }
+    .feed-sticky-toolbar { top: var(--kab-nav-h, var(--nav-h, 68px)); }
 }
 @media (prefers-reduced-motion: reduce) {
     .feed-filter-bar { transition: none; }
@@ -2043,9 +2058,24 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
 }
 
 @media (max-width: 768px) {
+    .feed-sticky-toolbar {
+        top: var(--kab-nav-h, var(--nav-h, 68px));
+        overflow: hidden;
+    }
+
     .feed-filter-bar {
         overflow-x: auto;
+        flex-wrap: nowrap;
         scrollbar-width: none;
+        gap: 0;
+        transition: transform 0.22s ease, opacity 0.18s ease;
+    }
+
+    .feed-filter-bar.is-hidden {
+        transform: translateY(-110%);
+        opacity: 0;
+        pointer-events: none;
+        box-shadow: none;
     }
 
     .feed-filter-bar::-webkit-scrollbar {
@@ -2056,16 +2086,32 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
         padding: 8px 10px;
         font-size: 13px;
         white-space: nowrap;
+        flex: 1 1 0;
+        min-width: 0;
     }
 
     .feed-tab--icon {
-        padding: 10px 8px 12px;
-        min-width: 56px;
+        padding: 8px 4px 10px;
+        min-width: 0;
+        gap: 2px;
     }
 
     .feed-tab-text {
-        font-size: 11px;
+        font-size: 10px;
         display: block;
+        max-width: none;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .post-header {
+        align-items: center;
+    }
+
+    .post-author {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 }
 
