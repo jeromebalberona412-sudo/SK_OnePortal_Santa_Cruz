@@ -6,6 +6,7 @@ use App\Models\KabataanRegistration;
 use App\Modules\AuditLog\Contracts\AuditLogInterface;
 use App\Modules\KabataanMonitoring\Notifications\KabataanAccountInviteNotification;
 use App\Modules\Shared\Models\User;
+use App\Services\BarangayLogoUrlService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -18,8 +19,7 @@ class KkProfilingFederationUpdateService
     public function __construct(
         private readonly KabataanMonitoringService $monitoring,
         private readonly AuditLogInterface $auditLog,
-    ) {
-    }
+    ) {}
 
     /**
      * @param  array<string, mixed>  $input
@@ -55,7 +55,7 @@ class KkProfilingFederationUpdateService
             if ($shouldInvite) {
                 $plainToken = bin2hex(random_bytes(32));
                 $formData['account_invite_token_hash'] = hash('sha256', $plainToken);
-                $formData['account_invite_expires_at'] = now()->addHours(24)->toIso8601String();
+                $formData['account_invite_expires_at'] = now()->addMinutes($this->inviteExpireMinutes())->toIso8601String();
                 unset($formData['account_invite_used_at'], $formData['account_invite_sent_at']);
             }
 
@@ -166,7 +166,7 @@ class KkProfilingFederationUpdateService
     private function logoUrl(KabataanRegistration $record): ?string
     {
         return $record->barangay_id
-            ? app(\App\Services\BarangayLogoUrlService::class)->resolve((int) $record->barangay_id)
+            ? app(BarangayLogoUrlService::class)->resolve((int) $record->barangay_id)
             : null;
     }
 
@@ -315,6 +315,11 @@ class KkProfilingFederationUpdateService
         } catch (\Throwable) {
             return $value;
         }
+    }
+
+    private function inviteExpireMinutes(): int
+    {
+        return max(1, (int) config('services.account_activation_expire_minutes', 1440));
     }
 
     private function youthAgeGroupFromAge(int $age): string

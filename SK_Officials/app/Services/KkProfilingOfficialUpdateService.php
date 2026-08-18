@@ -55,7 +55,7 @@ class KkProfilingOfficialUpdateService
             if ($shouldInvite) {
                 $plainToken = bin2hex(random_bytes(32));
                 $formData['account_invite_token_hash'] = hash('sha256', $plainToken);
-                $formData['account_invite_expires_at'] = now()->addHours(24)->toIso8601String();
+                $formData['account_invite_expires_at'] = now()->addMinutes($this->inviteExpireMinutes())->toIso8601String();
                 unset($formData['account_invite_used_at'], $formData['account_invite_sent_at']);
             }
 
@@ -266,6 +266,11 @@ class KkProfilingOfficialUpdateService
         } catch (\Throwable) {
             return $value;
         }
+    }
+
+    private function inviteExpireMinutes(): int
+    {
+        return max(1, (int) config('services.account_activation_expire_minutes', 1440));
     }
 
     private function youthAgeGroupFromAge(int $age): string

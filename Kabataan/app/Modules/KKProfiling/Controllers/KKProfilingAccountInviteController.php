@@ -21,8 +21,11 @@ class KKProfilingAccountInviteController extends Controller
         try {
             $record = $this->inviteService->findValidRegistration($registration, $token);
         } catch (ValidationException $e) {
+            $message = collect($e->errors())->flatten()->first() ?: 'This activation link is invalid.';
+
             return view('kkprofiling::account-activate-error', [
-                'message' => collect($e->errors())->flatten()->first() ?: 'This activation link is invalid.',
+                'message' => $message,
+                'errorType' => $this->inviteService->errorTypeFromMessage((string) $message),
             ]);
         }
 
@@ -73,6 +76,7 @@ class KKProfilingAccountInviteController extends Controller
 
             return view('kkprofiling::account-activate-error', [
                 'message' => $message,
+                'errorType' => $this->inviteService->errorTypeFromMessage((string) $message),
             ]);
         }
 

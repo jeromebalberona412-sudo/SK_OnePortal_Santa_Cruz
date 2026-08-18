@@ -40,9 +40,9 @@ return [
 
     'cloudinary' => [
         'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
-        'api_key'    => env('CLOUDINARY_API_KEY'),
+        'api_key' => env('CLOUDINARY_API_KEY'),
         'api_secret' => env('CLOUDINARY_API_SECRET'),
-        'folder'     => env('CLOUDINARY_FOLDER', 'sk_oneportal/sk_fed_posts'),
+        'folder' => env('CLOUDINARY_FOLDER', 'sk_oneportal/sk_fed_posts'),
         'barangay_logos_folder' => env('CLOUDINARY_BARANGAY_LOGOS_FOLDER', 'sk_oneportal/barangay_logos'),
     ],
 
@@ -54,5 +54,6 @@ return [
     'sk_officials_app_url' => env('SK_OFFICIALS_APP_URL', env('APP_URL')),
     'sk_fed_app_url' => env('SK_FED_APP_URL', env('APP_URL')),
     'kabataan_app_url' => env('KABATAAN_APP_URL', 'http://localhost:8002'),
+    'account_activation_expire_minutes' => (int) env('ACCOUNT_ACTIVATION_EXPIRES_MINUTES', 60 * 24),
 
 ];

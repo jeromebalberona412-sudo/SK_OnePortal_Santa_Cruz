@@ -2,6 +2,7 @@
 
 namespace App\Modules\Authentication\Providers;
 
+use App\Modules\Authentication\Services\AccountActivationService;
 use App\Modules\Authentication\Services\AuthAuditLogService;
 use App\Modules\Authentication\Services\AuthenticationService;
 use App\Modules\Authentication\Services\DeviceFingerprintService;
@@ -17,8 +18,8 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 
 class AuthenticationServiceProvider extends ServiceProvider
 {
@@ -34,6 +35,7 @@ class AuthenticationServiceProvider extends ServiceProvider
         $this->app->singleton(SuspiciousLoginService::class);
         $this->app->singleton(AuthenticationService::class);
         $this->app->singleton(PasswordResetService::class);
+        $this->app->singleton(AccountActivationService::class);
         $this->app->singleton(TurnstileService::class);
     }
 
@@ -41,6 +43,7 @@ class AuthenticationServiceProvider extends ServiceProvider
     {
         $this->configureLoginRateLimiter();
         $this->configurePasswordResetRateLimiters();
+        $this->configureAccountActivationRateLimiters();
         $this->loadRoutes();
         $this->loadViewsFrom(__DIR__.'/../views', 'authentication');
         $this->loadMigrationsFrom(__DIR__.'/../Database/Migrations');
@@ -103,6 +106,34 @@ class AuthenticationServiceProvider extends ServiceProvider
         });
     }
 
+    protected function configureAccountActivationRateLimiters(): void
+    {
+        $ipLimitPerMinute = max(1, (int) config('sk_official_auth.account_activation.rate_limit.ip_per_minute', 5));
+        $emailLimitPerHour = max(1, (int) config('sk_official_auth.account_activation.rate_limit.email_per_hour', 3));
+        $formLimitPerMinute = max(1, (int) config('sk_official_auth.account_activation.rate_limit.form_per_minute', 20));
+
+        RateLimiter::for('sk-official-account-activation-ip', function (Request $request) use ($ipLimitPerMinute) {
+            return Limit::perMinute($ipLimitPerMinute)
+                ->by('sk-official-account-activation-ip:'.$request->ip())
+                ->response(fn (Request $request, array $headers) => $this->activationRateLimitedResponse($request, $headers, 'ip'));
+        });
+
+        RateLimiter::for('sk-official-account-activation-email', function (Request $request) use ($emailLimitPerHour) {
+            $normalizedEmail = Str::lower(trim((string) $request->input('email', '')));
+            $emailHash = $normalizedEmail === '' ? 'missing' : hash('sha256', $normalizedEmail);
+
+            return Limit::perHour($emailLimitPerHour)
+                ->by('sk-official-account-activation-email:'.$emailHash)
+                ->response(fn (Request $request, array $headers) => $this->activationRateLimitedResponse($request, $headers, 'email'));
+        });
+
+        RateLimiter::for('sk-official-account-activation-form', function (Request $request) use ($formLimitPerMinute) {
+            return Limit::perMinute($formLimitPerMinute)
+                ->by('sk-official-account-activation-form:'.$request->ip())
+                ->response(fn (Request $request, array $headers) => $this->activationRateLimitedResponse($request, $headers, 'form'));
+        });
+    }
+
     protected function rateLimitedResponse(Request $request, array $headers, string $scope)
     {
         app(AuthAuditLogService::class)->log(
@@ -126,6 +157,34 @@ class AuthenticationServiceProvider extends ServiceProvider
 
         return redirect()->back()
             ->withErrors(['email' => 'Too many password reset attempts. Please try again later.'])
+            ->setStatusCode(429)
+            ->withHeaders($headers);
+    }
+
+    protected function activationRateLimitedResponse(Request $request, array $headers, string $scope)
+    {
+        app(AuthAuditLogService::class)->log(
+            event: 'account_activation_requested',
+            user: null,
+            request: $request,
+            metadata: [
+                'reason' => 'rate_limited',
+                'scope' => $scope,
+            ],
+            outcome: AuthAuditLogService::OUTCOME_BLOCKED,
+            resourceType: 'account_activation',
+            resourceId: $request->ip(),
+        );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => AccountActivationService::THROTTLED_MESSAGE,
+            ], 429, $headers);
+        }
+
+        return redirect()->back()
+            ->withErrors(['email' => AccountActivationService::THROTTLED_MESSAGE])
+            ->withInput()
             ->setStatusCode(429)
             ->withHeaders($headers);
     }

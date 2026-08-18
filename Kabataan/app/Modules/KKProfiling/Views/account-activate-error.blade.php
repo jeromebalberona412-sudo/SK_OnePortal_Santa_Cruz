@@ -4,7 +4,7 @@
     @include('favicon')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activation Link Unavailable - SK OnePortal</title>
+    <title>{{ ($errorType ?? '') === 'expired' ? 'Activation Link Expired' : 'Activation Link Unavailable' }} - SK OnePortal</title>
     @vite([
         'app/Modules/Authentication/assets/css/sign-in.css',
         'app/Modules/KKProfiling/assets/css/kkprofiling.css',
@@ -39,11 +39,18 @@
         <div class="youth-signin-section">
             <div class="youth-signin-card kkp-setpw-card">
                 <div class="card-header">
-                    <p class="card-subtitle">Activation link unavailable</p>
-                    <p class="card-helper-text">{{ $message }}</p>
+                    <p class="card-subtitle">{{ ($errorType ?? '') === 'expired' ? 'Activation Link Expired' : 'Activation Link Unavailable' }}</p>
+                    <p class="card-helper-text">
+                        @if (($errorType ?? '') === 'expired')
+                            Your activation link is no longer valid. You can request a new activation link from the login page.
+                        @else
+                            {{ $message }}
+                        @endif
+                    </p>
                 </div>
 
-                <a href="{{ route('sign-in') }}" class="youth-submit-btn kkp-setpw-signin-link">Go to Sign in</a>
+                <a href="{{ route('account.activation.request') }}" class="youth-submit-btn kkp-setpw-signin-link">Activate Account</a>
+                <a href="{{ route('sign-in') }}" class="youth-homepage-btn">Back to Login</a>
             </div>
         </div>
     </main>

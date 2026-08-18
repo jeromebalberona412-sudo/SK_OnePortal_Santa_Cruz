@@ -2347,6 +2347,10 @@ body.homepage-body.kkp-form-page {
     text-decoration: none;
 }
 
+.kkp-setpw-page .youth-homepage-btn {
+    margin-top: 0.75rem;
+}
+
 .kkp-setpw-branding-sub {
     margin-top: 0.75rem;
     font-size: 1.1rem;

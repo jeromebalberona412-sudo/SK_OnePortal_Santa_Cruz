@@ -26,23 +26,6 @@
         <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
     @endif
 
-    <style>
-        .youth-main-title {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        @media (max-width: 1024px) {
-            .youth-main-title { font-size: 32px; }
-        }
-        @media (max-width: 768px) {
-            .youth-main-title { font-size: 28px; }
-        }
-        @media (max-width: 480px) {
-            .youth-main-title { font-size: 24px; }
-        }
-    </style>
 </head>
 <body class="youth-signin-page">
 
@@ -269,6 +252,12 @@
                     </button>
 
                 </form>
+
+                <div class="youth-login-secondary-actions">
+                    <a href="{{ route('account.activation.request') }}" class="youth-homepage-btn" id="verifyAccountBtn">
+                        Activate Account
+                    </a>
+                </div>
 
                 <!-- Registration Link -->
                 <div class="youth-register-section">

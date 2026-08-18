@@ -25,23 +25,6 @@
         <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
     @endif
 
-    <style>
-        .sk-main-title {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        @media (max-width: 1024px) {
-            .sk-main-title { font-size: 32px; }
-        }
-        @media (max-width: 768px) {
-            .sk-main-title { font-size: 28px; }
-        }
-        @media (max-width: 480px) {
-            .sk-main-title { font-size: 24px; }
-        }
-    </style>
 </head>
 <body class="sk-login-page">
 
@@ -298,6 +281,12 @@
                     </button>
 
                 </form>
+
+                <div class="sk-login-secondary-actions">
+                    <a href="{{ route('account.activation.request') }}" class="sk-secondary-btn" id="verifyAccountBtn" data-no-loading>
+                        Activate Account
+                    </a>
+                </div>
             </div>{{-- /.sk-login-card --}}
         </div>{{-- /.sk-login-section --}}
 

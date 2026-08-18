@@ -5,12 +5,13 @@ namespace App\Modules\Accounts\Services;
 use App\Modules\Accounts\Models\Barangay;
 use App\Modules\Accounts\Models\OfficialProfile;
 use App\Modules\Accounts\Models\OfficialTerm;
-use App\Modules\Archive_Management\Services\TermRecordsArchiveService;
 use App\Modules\Accounts\Notifications\AccountResetPasswordNotification;
+use App\Modules\Archive_Management\Services\TermRecordsArchiveService;
 use App\Modules\AuditLog\Contracts\AuditLogInterface;
 use App\Modules\Authentication\Services\BootstrapSkFedAdminService;
 use App\Modules\Shared\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -28,8 +29,7 @@ class AccountService
         private readonly ChairpersonFederationSyncService $chairpersonFederationSyncService,
         private readonly FederationRosterService $federationRosterService,
         private readonly SkOfficialRosterLimitsService $skOfficialRosterLimitsService,
-    ) {
-    }
+    ) {}
 
     /**
      * @param  list<array<string, mixed>>  $rows
@@ -97,7 +97,7 @@ class AccountService
                     'message' => $message,
                 ];
                 $validationErrors[] = ['row' => $rowNumber, 'error' => $message];
-            } catch (\Illuminate\Database\QueryException $exception) {
+            } catch (QueryException $exception) {
                 $message = str_contains(strtolower($exception->getMessage()), 'duplicate')
                     ? 'Email is already registered.'
                     : 'Database error while creating this account.';
@@ -540,7 +540,12 @@ class AccountService
 
         Notification::sendNow(
             $user,
-            new AccountResetPasswordNotification($token, $baseUrl, $label)
+            new AccountResetPasswordNotification(
+                $token,
+                $baseUrl,
+                $label,
+                ($role ?? $user->role) === User::ROLE_SK_OFFICIAL,
+            )
         );
 
         if ($resetMailTransport && method_exists(Mail::class, 'purgeSymfonyTransport')) {
@@ -865,7 +870,7 @@ class AccountService
     }
 
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     protected function resolveStoredAge(array $data): ?int
     {

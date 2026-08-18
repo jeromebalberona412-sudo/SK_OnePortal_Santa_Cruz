@@ -55,4 +55,6 @@ return [
 
     'kabataan_app_url' => env('KABATAAN_APP_URL', 'http://localhost:8002'),
 
+    'account_activation_expire_minutes' => (int) env('ACCOUNT_ACTIVATION_EXPIRES_MINUTES', 60 * 24),
+
 ];

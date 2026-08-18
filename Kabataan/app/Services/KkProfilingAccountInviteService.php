@@ -39,19 +39,19 @@ class KkProfilingAccountInviteService
 
         if ($storedHash === '' || ! hash_equals($storedHash, self::hashToken($plainToken))) {
             throw ValidationException::withMessages([
-                'token' => ['This activation link is invalid or has already been used.'],
+                'token' => ['This activation link is no longer valid.'],
             ]);
         }
 
         if ($usedAt) {
             throw ValidationException::withMessages([
-                'token' => ['This activation link has already been used. Please contact your SK Officials if you still need access.'],
+                'token' => ['This activation link is no longer valid.'],
             ]);
         }
 
         if ($expiresAt === '' || now()->greaterThan($expiresAt)) {
             throw ValidationException::withMessages([
-                'token' => ['This activation link has expired. Please contact your SK Officials to send a new one.'],
+                'token' => ['This activation link has expired.'],
             ]);
         }
 
@@ -144,5 +144,46 @@ class KkProfilingAccountInviteService
 
             return $user;
         });
+    }
+
+    public function tokenTtlMinutes(): int
+    {
+        return max(1, (int) config('kabataan_auth.account_activation.expire_minutes', self::TOKEN_TTL_HOURS * 60));
+    }
+
+    public function issueInviteToken(KabataanRegistration $registration): string
+    {
+        $plainToken = bin2hex(random_bytes(32));
+        $formData = is_array($registration->form_data) ? $registration->form_data : [];
+        $formData[self::FORM_TOKEN_KEY] = self::hashToken($plainToken);
+        $formData[self::FORM_EXPIRES_KEY] = now()->addMinutes($this->tokenTtlMinutes())->toIso8601String();
+        unset($formData[self::FORM_USED_KEY], $formData['account_invite_sent_at']);
+
+        $registration->update(['form_data' => $formData]);
+
+        return $plainToken;
+    }
+
+    public function markInviteSent(KabataanRegistration $registration): void
+    {
+        $formData = is_array($registration->form_data) ? $registration->form_data : [];
+        $formData['account_invite_sent_at'] = now()->toIso8601String();
+        $registration->update(['form_data' => $formData]);
+    }
+
+    public function activationUrl(KabataanRegistration $registration, string $plainToken): string
+    {
+        return url('/kkprofiling/account-invite/'.$registration->id.'/'.$plainToken);
+    }
+
+    public function errorTypeFromMessage(string $message): string
+    {
+        $normalized = strtolower($message);
+
+        if (str_contains($normalized, 'expired')) {
+            return 'expired';
+        }
+
+        return 'invalid';
     }
 }

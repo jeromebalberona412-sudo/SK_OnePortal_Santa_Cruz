@@ -1,23 +1,26 @@
 <?php
 
-namespace App\Modules\KKProfilingRequests\Notifications;
+namespace App\Modules\Authentication\Notifications;
 
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class KabataanAccountInviteNotification extends Notification
+class KabataanAccountActivationNotification extends Notification
 {
     public function __construct(
         public string $fullName,
         public string $activationUrl,
     ) {}
 
-    public function via($notifiable): array
+    /**
+     * @return array<int, string>
+     */
+    public function via(object $notifiable): array
     {
         return ['mail'];
     }
 
-    public function toMail($notifiable): MailMessage
+    public function toMail(object $notifiable): MailMessage
     {
         $name = trim($this->fullName) !== '' ? $this->fullName : 'Kabataan';
 
@@ -31,12 +34,12 @@ class KabataanAccountInviteNotification extends Notification
             ->line('Important: If the link expires, you do not need to ask your SK Officials to resend the activation email.')
             ->line('Simply go to the Kabataan login page and select: Activate Account')
             ->line('Enter the email address registered to your account and request a new activation link.')
-            ->line('If you did not expect this email, please contact your SK Officials.');
+            ->line('If you did not expect this email, you can ignore it.');
     }
 
     private function expiryLabel(): string
     {
-        $minutes = max(1, (int) config('services.account_activation_expire_minutes', 1440));
+        $minutes = max(1, (int) config('kabataan_auth.account_activation.expire_minutes', 1440));
 
         if ($minutes >= 1440) {
             $days = (int) round($minutes / 1440);

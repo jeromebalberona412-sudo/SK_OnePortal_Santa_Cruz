@@ -1,7 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Modules\Authentication\Controllers\AccountActivationController;
 use App\Modules\Authentication\Controllers\AuthController;
+use Illuminate\Support\Facades\Route;
 
 // Sign In routes (guest only)
 Route::middleware('guest')->group(function () {
@@ -11,11 +12,11 @@ Route::middleware('guest')->group(function () {
     // Backward-compat alias: any route('signin') reference redirects to /sign-in
     Route::get('/login', fn () => redirect()->route('sign-in'))->name('login');
 
-// Registration routes — direct users to KK Profiling signup
-     Route::get('/register', function () {
+    // Registration routes — direct users to KK Profiling signup
+    Route::get('/register', function () {
         return redirect()->route('kkprofiling.signup');
-     })->name('register');
-     Route::post('/register', function () {
+    })->name('register');
+    Route::post('/register', function () {
         return redirect()->route('kkprofiling.signup');
     });
 
@@ -32,6 +33,16 @@ Route::middleware('guest')->group(function () {
         ->name('password.reset');
     Route::post('/reset-password', [AuthController::class, 'resetPassword'])
         ->name('password.update');
+
+    Route::get('/verify-account', [AccountActivationController::class, 'showRequestForm'])
+        ->name('account.activation.request');
+    Route::post('/verify-account', [AccountActivationController::class, 'sendLink'])
+        ->middleware(['throttle:kabataan-account-activation-ip', 'throttle:kabataan-account-activation-email'])
+        ->name('account.activation.send');
+    Route::get('/verify-account/check-email', [AccountActivationController::class, 'showSent'])
+        ->name('account.activation.sent');
+    Route::get('/verify-account/already-active', [AccountActivationController::class, 'showAlreadyActive'])
+        ->name('account.activation.already-active');
 
     // Email Verification Routes (Prototype)
     Route::get('/email/verify', [AuthController::class, 'showEmailVerification'])

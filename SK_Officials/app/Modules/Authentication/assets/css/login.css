@@ -258,6 +258,7 @@ html {
     letter-spacing: -0.04em;
     line-height: 1;
     text-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
 }
 
 .sk-tagline {
@@ -267,6 +268,7 @@ html {
     line-height: 1.6;
     letter-spacing: 0.01em;
     text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
 }
 
 /* Right Login Card */
@@ -621,6 +623,7 @@ html {
 .sk-submit-btn {
     width: 100%;
     padding: 0.875rem 1.5rem;
+    min-height: 48px;
     font-size: 1rem;
     font-weight: 700;
     color: white;
@@ -805,7 +808,7 @@ html {
 
     .sk-tagline {
         font-size: 1.35rem;
-        max-width: 600px;
+        max-width: none;
     }
 
     .sk-login-section {
@@ -1005,7 +1008,7 @@ html {
     }
 
     .sk-login-card {
-        padding: 2rem 3rem;
+        padding: 2rem 1.5rem;
         border-radius: 20px;
     }
 
@@ -1305,6 +1308,51 @@ html {
     display: none; /* Suppress hover shimmer */
 }
 
+a.sk-submit-btn,
+a.sk-submit-btn:hover,
+a.sk-submit-btn:focus,
+a.sk-submit-btn:visited {
+    text-decoration: none;
+    color: #ffffff;
+}
+
+.sk-login-secondary-actions {
+    margin-top: 1rem;
+}
+
+.sk-secondary-btn {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    min-height: 48px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    background: #ffffff;
+    border: 2px solid #1a1a2e;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base);
+}
+
+.sk-secondary-btn:hover,
+.sk-secondary-btn:focus-visible {
+    background: #1a1a2e;
+    border-color: #1a1a2e;
+    color: #ffffff;
+}
+
+@media (max-width: 480px) {
+    .sk-secondary-btn {
+        padding: 1rem 1.5rem;
+        font-size: 0.95rem;
+    }
+}
+
 /* ── Responsive ─────────────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
     .turnstile-modal-card {
@@ -1321,6 +1369,13 @@ html {
 
     .turnstile-modal-footer {
         padding: 0.25rem 1.25rem 1rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .sk-main-title,
+    .sk-tagline {
+        white-space: normal;
     }
 }
 

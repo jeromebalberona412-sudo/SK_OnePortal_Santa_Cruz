@@ -4,6 +4,7 @@ namespace App\Modules\Authentication\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Modules\Authentication\Services\AccountActivationService;
 use App\Modules\Authentication\Services\AuthenticationService;
 use App\Modules\Authentication\Services\EmailVerificationDeviceService;
 use App\Modules\Authentication\Services\PasswordResetService;
@@ -16,8 +17,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
@@ -32,6 +31,7 @@ class AuthController extends Controller
         protected AuthenticationService $authenticationService,
         protected TenantContextService $tenantContextService,
         protected PasswordResetService $passwordResetService,
+        protected AccountActivationService $accountActivationService,
         protected PasswordChangeService $passwordChangeService,
         protected EmailVerificationDeviceService $emailVerificationDeviceService,
     ) {}
@@ -55,6 +55,7 @@ class AuthController extends Controller
             $user = Auth::user();
             if ($user->hasVerifiedEmail()) {
                 $this->clearVerificationSession($request);
+
                 return redirect()->intended(route('dashboard'));
             }
         }
@@ -373,6 +374,7 @@ class AuthController extends Controller
     protected function fpCooldownSessionKey(string $email): string
     {
         $normalized = Str::lower(trim($email));
+
         return 'fp_resend_until_'.sha1($normalized);
     }
 
@@ -387,11 +389,14 @@ class AuthController extends Controller
             $carbon = Carbon::parse($stored);
             if ($carbon->isPast()) {
                 $request->session()->forget($this->fpCooldownSessionKey($email));
+
                 return null;
             }
+
             return $carbon;
         } catch (\Throwable) {
             $request->session()->forget($this->fpCooldownSessionKey($email));
+
             return null;
         }
     }
@@ -400,6 +405,7 @@ class AuthController extends Controller
     {
         $until = now()->addSeconds(self::FP_RESEND_COOLDOWN_SECONDS);
         $request->session()->put($this->fpCooldownSessionKey($email), $until->toIso8601String());
+
         return $until;
     }
 
@@ -409,6 +415,7 @@ class AuthController extends Controller
         if ($available === null) {
             return 0;
         }
+
         return max(0, now()->diffInSeconds($available, false));
     }
 
@@ -416,7 +423,7 @@ class AuthController extends Controller
     {
         $email = session('forgot_password_email');
 
-        if (!$email) {
+        if (! $email) {
             return redirect()->route('password.request');
         }
 
@@ -480,6 +487,19 @@ class AuthController extends Controller
             ]);
         }
 
+        $inspection = $this->accountActivationService->inspectToken($email, $token);
+
+        if ($this->accountActivationService->isPendingOfficial($inspection['user'])
+            || in_array($inspection['status'], [
+                AccountActivationService::TOKEN_VALID,
+                AccountActivationService::TOKEN_EXPIRED,
+            ], true)) {
+            return redirect()->route('account.activation.show', [
+                'token' => $token,
+                'email' => $email,
+            ]);
+        }
+
         return view('authentication::reset-password', [
             'request' => $request,
         ]);
@@ -507,6 +527,18 @@ class AuthController extends Controller
                     ->symbols(),
             ],
         ]);
+
+        $pendingInspection = $this->accountActivationService->inspectToken(
+            Str::lower(trim((string) $validated['email'])),
+            (string) $validated['token'],
+        );
+
+        if ($this->accountActivationService->isPendingOfficial($pendingInspection['user'])) {
+            return redirect()->route('account.activation.show', [
+                'token' => $validated['token'],
+                'email' => $validated['email'],
+            ]);
+        }
 
         $this->passwordResetService->resetPassword($request, $validated);
 

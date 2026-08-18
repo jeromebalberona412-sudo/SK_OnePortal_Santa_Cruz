@@ -1,8 +1,9 @@
 /* Sign In legal consent + modals (Kabataan & SK Officials) */
 
 .auth-legal-consent-wrap {
-    margin-top: 0.25rem;
-    margin-bottom: 0.5rem;
+    position: relative;
+    margin-top: 0;
+    margin-bottom: 0.15rem;
 }
 
 .auth-legal-consent {
@@ -14,18 +15,22 @@
 }
 
 .auth-legal-consent-radio {
-    flex-shrink: 0;
-    width: 18px;
-    height: 18px;
-    margin-top: 2px;
-    accent-color: var(--auth-legal-accent, #44a53e);
-    cursor: pointer;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 .auth-legal-consent-text {
-    font-size: 0.8125rem;
-    line-height: 1.55;
+    font-size: 0.8rem;
+    line-height: 1.4;
     color: var(--auth-legal-text, #475569);
+    margin: 0;
 }
 
 .auth-legal-link {
@@ -46,7 +51,7 @@
 }
 
 .auth-legal-consent-error {
-    margin: 8px 0 0 28px;
+    margin: 6px 0 0;
     font-size: 0.8125rem;
     font-weight: 600;
     color: #ef4444;
@@ -353,32 +358,30 @@
 }
 
 .youth-signin-card .auth-legal-consent-radio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
     appearance: none;
     -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
-    margin-top: 2px;
-    border: 2px solid #ffffff;
-    border-radius: 50%;
-    background: #ffffff;
-    box-shadow: 0 0 0 2px #44a53e;
-    cursor: pointer;
-    flex-shrink: 0;
+    pointer-events: none;
 }
 
-.youth-signin-card .auth-legal-consent-radio:checked {
-    background: #44a53e;
-    border-color: #ffffff;
-    box-shadow: 0 0 0 2px #44a53e, inset 0 0 0 2px #ffffff;
-}
-
+.youth-signin-card .auth-legal-consent-radio:checked,
 .youth-signin-card .auth-legal-consent-radio:focus-visible {
-    outline: 2px solid #44a53e;
-    outline-offset: 3px;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    outline: none;
 }
 
 .youth-signin-form.auth-legal-consent-invalid .auth-legal-consent-radio {
-    box-shadow: 0 0 0 2px #ef4444;
+    box-shadow: none;
 }
 
 .youth-signin-form.auth-legal-consent-invalid .auth-legal-consent-error {

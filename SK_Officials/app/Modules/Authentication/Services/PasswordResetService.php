@@ -125,7 +125,7 @@ class PasswordResetService
         // for PostgreSQL to avoid datatype mismatch errors.
         try {
             if ($this->usersTableHasColumn('must_change_password')) {
-                \App\Models\User::query()
+                User::query()
                     ->whereKey($user->getKey())
                     ->update(['must_change_password' => DB::raw("'false'::boolean")]);
             }
@@ -173,6 +173,10 @@ class PasswordResetService
         }
 
         if ($this->usersTableHasColumn('tenant_id') && (int) ($user->tenant_id ?? 0) !== $tenantId) {
+            return false;
+        }
+
+        if ($this->usersTableHasColumn('status') && (string) $user->status !== User::STATUS_ACTIVE) {
             return false;
         }
 

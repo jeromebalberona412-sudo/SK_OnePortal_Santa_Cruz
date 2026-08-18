@@ -180,6 +180,7 @@ html {
     letter-spacing: -0.04em;
     line-height: 1;
     text-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
 }
 
 .youth-tagline {
@@ -189,6 +190,7 @@ html {
     line-height: 1.6;
     letter-spacing: 0.01em;
     text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
 }
 
 /* ============================================
@@ -213,7 +215,7 @@ html {
     background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(40px);
     border-radius: 28px;
-    padding: 2.5rem 3rem;
+    padding: 1.75rem 2.25rem;
     border: 1px solid rgba(255, 255, 255, 0.2);
     position: relative;
     overflow: hidden;
@@ -226,7 +228,7 @@ html {
 .card-header {
     display: block;
     min-height: 0;
-    margin-bottom: 2rem;
+    margin-bottom: 1.15rem;
     text-align: center;
 }
 
@@ -254,11 +256,11 @@ html {
 
 /* Small muted helper text below the title */
 .card-helper-text {
-    font-size: 0.85rem;
-    color: var(--youth-gray-500);
-    font-weight: 400;
-    margin: 0;
-    line-height: 1.5;
+    font-size: 0.9375rem;
+    color: var(--youth-gray-700);
+    font-weight: 500;
+    margin: 0.5rem 0 0;
+    line-height: 1.55;
 }
 
 /* ============================================
@@ -301,7 +303,7 @@ html {
 .youth-signin-form {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 0.9rem;
 }
 
 .youth-form-group {
@@ -510,6 +512,7 @@ html {
 .youth-submit-btn {
     width: 100%;
     padding: 0.875rem 1.5rem;
+    min-height: 48px;
     font-size: 1rem;
     font-weight: 700;
     color: var(--youth-white);
@@ -536,6 +539,14 @@ html {
     transform: none;
 }
 
+a.youth-submit-btn,
+a.youth-submit-btn:hover,
+a.youth-submit-btn:focus,
+a.youth-submit-btn:visited {
+    text-decoration: none;
+    color: #ffffff;
+}
+
 /* Button Loading State */
 .youth-submit-btn.loading {
     pointer-events: none;
@@ -556,11 +567,12 @@ html {
     width: 100%;
     margin-top: 12px;
     padding: 0.875rem 1.5rem;
-    font-size: 0.95rem;
-    font-weight: 600;
+    min-height: 48px;
+    font-size: 1rem;
+    font-weight: 700;
     color: var(--youth-blue);
     background: #fff;
-    border: 2px solid rgba(4, 80, 168, 0.25);
+    border: 2px solid var(--youth-blue);
     border-radius: 12px;
     cursor: pointer;
     display: flex;
@@ -568,7 +580,8 @@ html {
     justify-content: center;
     gap: 0.5rem;
     text-decoration: none;
-    transition: background var(--transition-base), border-color var(--transition-base);
+    letter-spacing: 0.02em;
+    transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base);
 }
 
 .youth-homepage-btn svg {
@@ -576,9 +589,19 @@ html {
     height: 18px;
 }
 
-.youth-homepage-btn:hover {
-    background: #f0f7ff;
+.youth-homepage-btn:hover,
+.youth-homepage-btn:focus-visible {
+    background: var(--youth-blue);
     border-color: var(--youth-blue);
+    color: #ffffff;
+}
+
+.youth-login-secondary-actions {
+    margin-top: 0.5rem;
+}
+
+.youth-login-secondary-actions .youth-homepage-btn {
+    margin-top: 0;
 }
 
 .btn-icon {
@@ -591,8 +614,8 @@ html {
    ============================================ */
 
 .youth-register-section {
-    margin-top: 2rem;
-    padding-top: 1.5rem;
+    margin-top: 1.15rem;
+    padding-top: 1rem;
     border-top: 1px solid var(--youth-gray-200);
     text-align: center;
 }
@@ -672,7 +695,7 @@ html {
         align-items: center;
     }
     .youth-main-title { font-size: 4rem; }
-    .youth-tagline { font-size: 1.35rem; max-width: 600px; }
+    .youth-tagline { font-size: 1.35rem; max-width: none; }
     .youth-signin-section,
     .youth-login-section {
         width: 100%;
@@ -1150,12 +1173,133 @@ html {
 }
 
 .fp-card-header .card-helper-text {
-    font-size: 0.875rem;
-    color: var(--youth-gray-500);
-    font-weight: 400;
+    font-size: 0.9375rem;
+    color: var(--youth-gray-700);
+    font-weight: 500;
     line-height: 1.55;
-    margin: 0;
-    max-width: 360px;
+    margin: 0.5rem 0 0;
+    max-width: none;
+}
+
+/* ============================================
+   Activate Account
+   ============================================ */
+
+.youth-signin-page.youth-activate-page,
+.youth-login-page.youth-activate-page {
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.youth-signin-page.youth-activate-page .youth-signin-container,
+.youth-login-page.youth-activate-page .youth-signin-container {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+}
+
+.activate-card-header .card-subtitle {
+    color: var(--youth-gray-900);
+}
+
+.activate-card-header .card-helper-text {
+    max-width: none;
+    color: var(--youth-gray-700);
+}
+
+.activate-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.activate-card-actions .youth-homepage-btn,
+.activate-card-actions .youth-submit-btn {
+    margin-top: 0;
+}
+
+.activate-no-email-teaser {
+    margin-top: 1.25rem;
+    padding: 0.9rem 1rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid var(--youth-blue);
+    border-radius: 12px;
+    text-align: left;
+}
+
+.activate-no-email-teaser p {
+    margin: 0 0 0.45rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--youth-gray-700);
+}
+
+.activate-no-email-teaser strong {
+    color: var(--youth-gray-900);
+}
+
+.activate-no-email-link {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--youth-blue);
+    text-decoration: underline;
+}
+
+.activate-no-email-link:hover,
+.activate-no-email-link:focus-visible {
+    color: var(--youth-blue-dark);
+}
+
+.activate-no-email-notice {
+    text-align: left;
+    color: var(--youth-gray-900);
+}
+
+.activate-no-email-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    color: var(--youth-gray-900);
+    margin: 0 0 0.75rem;
+}
+
+.activate-no-email-notice p {
+    margin: 0 0 0.75rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--youth-gray-700);
+    font-weight: 500;
+}
+
+.activate-no-email-tl {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--youth-gray-200);
+}
+
+.activate-no-email-tl p:last-child,
+.activate-no-email-notice > p:last-child {
+    margin-bottom: 0;
+}
+
+.activate-no-email-notice + .activate-card-actions {
+    margin-top: 1.5rem;
+}
+
+.youth-activate-page .youth-signin-section,
+.youth-activate-page .youth-signin-card {
+    overflow: visible;
+}
+
+@media (max-width: 380px) {
+    .youth-main-title,
+    .youth-tagline {
+        white-space: normal;
+    }
 }
 
 /* ============================================

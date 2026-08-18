@@ -202,7 +202,7 @@
 
         document.getElementById('legalConsentAgreeBtn')?.addEventListener('click', () => {
             const consent = document.getElementById('signinLegalConsent');
-            const form = document.getElementById('signinForm');
+            const form = document.getElementById('signInForm') || document.getElementById('signinForm');
             if (consent) {
                 consent.checked = true;
                 consent.dispatchEvent(new Event('change', { bubbles: true }));
@@ -231,10 +231,10 @@
     }
 
     function bindSigninConsent() {
-        const form = document.getElementById('signinForm');
+        const form = document.getElementById('signInForm') || document.getElementById('signinForm');
         const consent = document.getElementById('signinLegalConsent');
         const consentError = document.getElementById('legalConsentError');
-        const submitBtn = document.getElementById('signinBtn') || form?.querySelector('button[type="submit"]');
+        const submitBtn = document.getElementById('signInBtn') || document.getElementById('signinBtn') || form?.querySelector('button[type="submit"]');
 
         if (!form || !consent) return;
 
@@ -247,7 +247,7 @@
             if (consent.checked && consentError) {
                 consentError.hidden = true;
             }
-            form.classList.toggle('auth-legal-consent-invalid', !consent.checked);
+            form.classList.remove('auth-legal-consent-invalid');
         });
 
         form.addEventListener('submit', (e) => {
@@ -268,9 +268,9 @@
 
             e.preventDefault();
             e.stopPropagation();
-            if (consentError) consentError.hidden = false;
-            form.classList.add('auth-legal-consent-invalid');
-            consent.focus();
+            if (consentError) consentError.hidden = true;
+            form.classList.remove('auth-legal-consent-invalid');
+            openConsentPrompt();
         }, true);
     }
 
