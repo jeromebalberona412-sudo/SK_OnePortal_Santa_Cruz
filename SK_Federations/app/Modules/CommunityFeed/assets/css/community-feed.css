@@ -148,26 +148,47 @@ body.sk-fed-feed .main-content,
     margin-bottom: 12px;
     flex-wrap: wrap;
 }
-.feed-header__intro { flex: 1; min-width: 160px; padding-left: 20px; }
+.feed-header__intro { flex: 1; min-width: 0; padding-left: 4px; }
 .feed-header h1 { font-size: 22px; font-weight: 700; color: #1e293b; margin: 0; }
 .feed-header p { color: #64748b; font-size: 14px; margin: 0; }
 .feed-header__search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     position: relative;
     flex: 0 1 360px;
-    min-width: 220px;
+    min-width: 0;
     width: 100%;
     max-width: 420px;
     margin-left: auto;
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0 12px;
+    box-sizing: border-box;
 }
+.feed-header__search:focus-within { border-color: var(--fed-blue); }
 .feed-header__search-icon {
-    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-    width: 18px; height: 18px; color: #94a3b8; pointer-events: none;
+    position: static;
+    transform: none;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    color: #94a3b8;
+    pointer-events: none;
 }
 .feed-header__search-input {
-    width: 100%; padding: 10px 12px 10px 38px; border: 2px solid #e2e8f0;
-    border-radius: 10px; font-size: 14px; font-family: inherit; background: #fff;
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    padding: 10px 0;
+    border: none;
+    border-radius: 0;
+    font-size: 14px;
+    font-family: inherit;
+    background: transparent;
 }
-.feed-header__search-input:focus { outline: none; border-color: var(--fed-blue); }
+.feed-header__search-input:focus { outline: none; border-color: transparent; }
 
 .feed-sticky-toolbar {
     position: relative;
@@ -1282,22 +1303,63 @@ body.sk-fed-feed .main-content,
     .sk-fed-stat { padding: 0 8px; }
     .sk-fed-stat-val { font-size: 16px; }
 
-    /* Compose card */
-    .compose-actions { gap: 6px; }
-    .compose-action-btn { padding: 6px 10px; font-size: 12px; }
-    .compose-action-btn svg { width: 13px; height: 13px; }
+    /* Compose card — same 3-button row as desktop */
+    .compose-actions {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .compose-action-btn {
+        justify-content: center;
+        width: 100%;
+        min-width: 0;
+        padding: 8px 6px;
+        font-size: 12px;
+    }
+    .compose-action-btn svg { width: 14px; height: 14px; }
 
-    /* Filter tabs — scrollable row */
+    .feed-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    .feed-header__intro {
+        min-width: 0;
+        padding-left: 0;
+    }
+    .feed-header__search {
+        flex: none;
+        max-width: 100%;
+        width: 100%;
+        margin-left: 0;
+    }
+
+    /* Filter tabs — equal columns like desktop */
     .feed-filter-bar {
         flex-wrap: nowrap;
+        justify-content: stretch;
         overflow-x: auto;
-        padding: 8px 10px;
-        gap: 4px;
+        padding: 0;
+        gap: 0;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
     }
     .feed-filter-bar::-webkit-scrollbar { display: none; }
-    .feed-tab { white-space: nowrap; padding: 5px 12px; font-size: 12px; }
+    .feed-tab,
+    .feed-tab--icon {
+        flex: 1 1 0;
+        min-width: 0;
+        white-space: nowrap;
+        padding: 8px 4px 10px;
+        font-size: 12px;
+    }
+    .feed-tab-text {
+        display: block;
+        font-size: clamp(9px, 2.5vw, 12px);
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 
     /* Post content */
     .post-title { font-size: 15px; }
@@ -1348,6 +1410,8 @@ body.sk-fed-feed .main-content,
 
     .compose-row { gap: 8px; }
     .compose-trigger { font-size: 13px; padding: 9px 14px; }
+    .compose-actions { gap: 6px; }
+    .compose-action-btn { padding: 8px 4px; font-size: 11px; }
 
     .post-card { padding: 12px; border-radius: 12px; }
     .post-avatar { width: 34px; height: 34px; }
@@ -1796,7 +1860,7 @@ body.bfp-page .feed-filter-bar.bfp-filter-bar {
 
 @media (max-width: 768px) {
     .feed-header { flex-direction: column; align-items: stretch; }
-    .feed-header__search { max-width: none; margin-left: 0; }
+    .feed-header__search { max-width: 100%; width: 100%; margin-left: 0; }
     .post-media-grid.grid-1,
     .post-media-grid.grid-1 .post-media-tile,
     .post-media-grid.grid-1 .post-media-tile img { max-height: 280px; }

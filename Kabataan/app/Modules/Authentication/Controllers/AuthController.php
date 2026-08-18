@@ -5,8 +5,8 @@ namespace App\Modules\Authentication\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
 use App\Models\User;
+use App\Modules\Authentication\Services\TrustedDeviceService;
 use App\Services\KabataanAuthService;
-use App\Services\KkProfilingScheduleService;
 use App\Services\RegistrationEvaluationService;
 use App\Services\TurnstileService;
 use Illuminate\Http\JsonResponse;
@@ -22,6 +22,7 @@ class AuthController extends Controller
     public function __construct(
         private readonly KabataanAuthService $kabataanAuthService,
         private readonly TurnstileService $turnstileService,
+        private readonly TrustedDeviceService $trustedDeviceService,
     ) {}
 
     public function showSignin()
@@ -72,6 +73,7 @@ class AuthController extends Controller
             'id', 'email', 'password', 'role', 'status',
             'name', 'barangay_id', 'tenant_id',
             'last_login_at', 'last_login_ip',
+            'email_verified_at', 'remember_token',
         ])
             ->where('email', $credentials['email'])
             ->first();
@@ -135,28 +137,12 @@ class AuthController extends Controller
         }
 
         // ── Authenticate ────────────────────────────────────────────────────
-        Auth::login($user, $request->boolean('remember'));
+        $remember = $request->boolean('remember');
+
+        Auth::login($user, $remember);
         $request->session()->regenerate();
 
-        // ── KK Profiling schedule check ─────────────────────────────────────
-        // Reuse the registration already loaded, or fetch it once now.
-        // Defer the KkProfilingScheduleService check after session is set
-        // so it doesn't block the redirect.
-        if ($registration === null || empty($registration->barangay_id)) {
-            $registration = KabataanRegistration::query()
-                ->where('user_id', $user->id)
-                ->latest('id')
-                ->first();
-        }
-
-        if ($registration && app(KkProfilingScheduleService::class)->requiresProfilingUpdate($registration)) {
-            $request->session()->put('kk_profiling_update_required', true);
-            $request->session()->put('kabataan_registration_id', $registration->id);
-            $redirectUrl = route('kkprofiling.update.show');
-        } else {
-            $request->session()->put('kk_profiling_update_required', false);
-            $redirectUrl = redirect()->intended(route('dashboard'))->getTargetUrl();
-        }
+        $redirectUrl = redirect()->intended(route('dashboard'))->getTargetUrl();
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true, 'redirect' => $redirectUrl]);
@@ -167,16 +153,27 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        $user = $request->user();
+
+        if ($user instanceof User) {
+            $this->trustedDeviceService->revokeCurrentDevice($user, $request);
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('sign-in')
-            ->withHeaders([
-                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-                'Pragma' => 'no-cache',
-                'Expires' => 'Sat, 01 Jan 2000 00:00:00 GMT',
-            ]);
+        $headers = [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => 'Sat, 01 Jan 2000 00:00:00 GMT',
+        ];
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'redirect' => route('sign-in')], 200, $headers);
+        }
+
+        return redirect()->route('sign-in')->withHeaders($headers);
     }
 
     public function showForgotPassword()
@@ -334,7 +331,12 @@ class AuthController extends Controller
                     return;
                 }
 
-                $resetUser->forceFill(['password' => Hash::make($password)])->save();
+                $resetUser->forceFill([
+                    'password' => Hash::make($password),
+                    'remember_token' => null,
+                ])->save();
+
+                $this->trustedDeviceService->revokeAllForUser($resetUser);
             }
         );
 

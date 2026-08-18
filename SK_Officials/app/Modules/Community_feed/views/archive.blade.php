@@ -14,6 +14,7 @@
         'app/Modules/Community_feed/assets/css/community-feed-archive.css',
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
+    <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
 </head>
 <body>
 
@@ -22,7 +23,7 @@
 @include('layout::sidebar')
 
 <main class="main-content">
-    <div class="page-container archive-posts-page">
+    <div class="page-container archive-posts-page has-table-page-footer">
 
         <section class="page-header-section">
             <div class="page-header-left">
@@ -66,16 +67,27 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
 
-                <div class="pagination-container" id="archivePagination">
-                    <div class="pagination-info">
-                        <span id="archivePageInfo">No records found</span>
-                    </div>
-                    <div class="pagination-controls">
-                        <button type="button" class="pagination-btn" id="archivePrevBtn" disabled>Previous</button>
-                        <div class="pagination-numbers" id="archivePageNumbers"></div>
-                        <button type="button" class="pagination-btn" id="archiveNextBtn" disabled>Next</button>
-                    </div>
+            <div class="archive-page-footer table-page-footer pagination-footer" aria-label="Table pagination">
+                <div class="pagination-footer-nav">
+                    <button type="button" class="pagination-arrow" id="archivePrevBtn" disabled aria-label="Previous page">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <span class="pagination-page-label">Page</span>
+                    <input type="number" class="pagination-page-input" id="archivePageInput" value="1" min="1" aria-label="Current page">
+                    <span class="pagination-page-of">of <span id="archiveTotalPages">1</span></span>
+                    <button type="button" class="pagination-arrow" id="archiveNextBtn" disabled aria-label="Next page">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
+                </div>
+                <div class="pagination-footer-right">
+                    <select id="archiveRowsPerPageSelect" class="pagination-rows-select" aria-label="Rows per page">
+                        <option value="10">10 rows</option>
+                        <option value="50">50 rows</option>
+                        <option value="100">100 rows</option>
+                    </select>
+                    <span class="pagination-record-count" id="archivePaginationInfo">0 records</span>
                 </div>
             </div>
         </section>
@@ -137,6 +149,7 @@
     'app/Modules/Layout/js/header.js',
     'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Layout/js/table-row-actions-menu.js',
+    'app/Modules/Layout/js/table-page-footer.js',
     'app/Modules/Community_feed/assets/js/community-feed-archive.js',
 ])
 

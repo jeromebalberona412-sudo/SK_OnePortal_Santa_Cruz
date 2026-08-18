@@ -55,6 +55,11 @@ Route::middleware('guest')->group(function () {
         ->name('verification.verify');
 });
 
+Route::get('/remember-me/wait', fn () => redirect()->route('sign-in'));
+Route::get('/remember-me/wait-status', fn () => redirect()->route('sign-in'));
+Route::post('/remember-me/resend', fn () => redirect()->route('sign-in'));
+Route::get('/remember-me/confirm/{token}', fn () => redirect()->route('sign-in'));
+
 // Email verification status check (can be accessed by guest or auth)
 Route::get('/email/check-status', [AuthController::class, 'checkVerificationStatus'])
     ->name('verification.check');

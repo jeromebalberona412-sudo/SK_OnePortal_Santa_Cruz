@@ -3,6 +3,8 @@
 namespace App\Modules\Community_feed\Services;
 
 use App\Models\CommunityFeed;
+use App\Models\CommunityFeedComment;
+use App\Models\CommunityFeedCommentReaction;
 use App\Models\User;
 use App\Services\CloudinaryService;
 use App\Services\SkOfficialActivityService;
@@ -73,12 +75,7 @@ class CommunityFeedArchiveService
             $title = $post->title ?: 'Post #'.$post->id;
             $postId = $post->id;
 
-            $this->deleteCloudinaryAssets($post);
-
-            $post->images()->delete();
-            $post->comments()->delete();
-            $post->reactions()->delete();
-            $post->delete();
+            $this->deletePostWithRelations($post);
 
             $this->activityService->log(
                 $user,
@@ -91,24 +88,19 @@ class CommunityFeedArchiveService
 
     public function purgeExpired(): int
     {
-        $cutoff = now()->subDays(self::RETENTION_DAYS);
         $purged = 0;
 
         CommunityFeed::query()
             ->whereRaw('"is_archived" = true')
             ->whereNotNull('archived_at')
-            ->where('archived_at', '<=', $cutoff)
+            ->where('archived_at', '<=', $this->retentionCutoff())
             ->with('images')
             ->orderBy('id')
             ->chunkById(50, function ($posts) use (&$purged) {
                 foreach ($posts as $post) {
                     try {
                         DB::transaction(function () use ($post) {
-                            $this->deleteCloudinaryAssets($post);
-                            $post->images()->delete();
-                            $post->comments()->delete();
-                            $post->reactions()->delete();
-                            $post->delete();
+                            $this->deletePostWithRelations($post);
                         });
                         $purged++;
                     } catch (Throwable) {
@@ -120,15 +112,33 @@ class CommunityFeedArchiveService
         return $purged;
     }
 
+    public function retentionCutoff(): Carbon
+    {
+        return now()->subDays(self::RETENTION_DAYS);
+    }
+
+    public function applyRetentionFilter($query)
+    {
+        return $query
+            ->whereNotNull('archived_at')
+            ->where('archived_at', '>', $this->retentionCutoff());
+    }
+
     public function daysRemaining(?Carbon $archivedAt): int
     {
         if (! $archivedAt) {
             return self::RETENTION_DAYS;
         }
 
-        $elapsed = $archivedAt->diffInDays(now());
+        $expiresAt = $archivedAt->copy()->addDays(self::RETENTION_DAYS);
 
-        return max(0, self::RETENTION_DAYS - $elapsed);
+        if ($expiresAt->lte(now())) {
+            return 0;
+        }
+
+        $secondsLeft = $expiresAt->getTimestamp() - now()->getTimestamp();
+
+        return max(1, (int) ceil($secondsLeft / 86400));
     }
 
     public function daysRemainingTier(int $daysRemaining): string
@@ -155,6 +165,34 @@ class CommunityFeedArchiveService
         }
 
         return (int) $post->barangay_id === (int) $user->barangay_id;
+    }
+
+    private function deletePostWithRelations(CommunityFeed $post): void
+    {
+        $post->loadMissing('images');
+        $this->deleteCloudinaryAssets($post);
+        $post->images()->delete();
+        $post->reactions()->delete();
+
+        $commentIds = CommunityFeedComment::query()
+            ->where('community_feed_id', $post->id)
+            ->pluck('id');
+
+        if ($commentIds->isNotEmpty()) {
+            CommunityFeedCommentReaction::query()
+                ->whereIn('comment_id', $commentIds)
+                ->delete();
+
+            CommunityFeedComment::query()
+                ->whereIn('parent_id', $commentIds)
+                ->delete();
+
+            CommunityFeedComment::query()
+                ->whereIn('id', $commentIds)
+                ->delete();
+        }
+
+        $post->delete();
     }
 
     private function deleteCloudinaryAssets(CommunityFeed $post): void

@@ -12,11 +12,11 @@ use Illuminate\Support\Str;
 
 class TrustedDeviceService
 {
-    public const REMEMBER_COOKIE_NAME = 'sk_official_remember_device';
+    public const REMEMBER_COOKIE_NAME = 'kabataan_remember_device';
 
     protected function tableName(): string
     {
-        return 'sk_official_trusted_devices';
+        return 'kabataan_trusted_devices';
     }
 
     public function isTrusted(User $user, Request $request): bool
@@ -82,38 +82,12 @@ class TrustedDeviceService
             return;
         }
 
-        $expirationDays = $this->expirationDays();
-        $expiresAt = now()->addDays($expirationDays);
+        $expiresAt = now()->addDays($this->expirationDays());
         $fingerprint = app(DeviceFingerprintService::class)->fingerprint($request);
 
         $this->syncTrustedDeviceRecord($user, $request, $record, $fingerprint, $expiresAt);
 
         Cookie::queue($this->makeRememberCookie($user, $plainToken, $expiresAt));
-    }
-
-    public function trust(User $user, Request $request): void
-    {
-        if (! $this->hasTable()) {
-            return;
-        }
-
-        $fingerprint = app(DeviceFingerprintService::class)->fingerprint($request);
-        $expirationDays = $this->expirationDays();
-
-        DB::table($this->tableName())->updateOrInsert(
-            [
-                'user_id' => $user->getKey(),
-                'fingerprint' => $fingerprint,
-            ],
-            [
-                'user_agent' => (string) ($request->userAgent() ?? ''),
-                'ip_address' => (string) $request->ip(),
-                'expires_at' => now()->addDays($expirationDays),
-                'last_used_at' => now(),
-                'updated_at' => now(),
-                'created_at' => now(),
-            ]
-        );
     }
 
     public function revoke(User $user, Request $request): void
@@ -157,10 +131,7 @@ class TrustedDeviceService
 
     public function expirationDays(): int
     {
-        return max(1, (int) config(
-            'sk_official_auth.remember.lifetime_days',
-            config('sk_official_auth.trusted_device.expiration_days', 7)
-        ));
+        return max(1, (int) config('kabataan_auth.remember.lifetime_days', 7));
     }
 
     public function rememberLifetimeMinutes(): int
@@ -225,7 +196,6 @@ class TrustedDeviceService
         }
 
         $fingerprint = app(DeviceFingerprintService::class)->fingerprint($request);
-
         $this->syncTrustedDeviceRecord($user, $request, $record, $fingerprint);
 
         return true;
@@ -332,23 +302,6 @@ class TrustedDeviceService
         }
     }
 
-    protected function touchTrustedDevice(User $user, Request $request, ?string $fingerprint = null): void
-    {
-        $fingerprint ??= app(DeviceFingerprintService::class)->fingerprint($request);
-
-        $updates = [
-            'last_used_at' => now(),
-            'ip_address' => (string) $request->ip(),
-            'user_agent' => (string) ($request->userAgent() ?? ''),
-            'updated_at' => now(),
-        ];
-
-        DB::table($this->tableName())
-            ->where('user_id', $user->getKey())
-            ->where('fingerprint', $fingerprint)
-            ->update($updates);
-    }
-
     protected function makeRememberCookie(User $user, string $plainToken, $expiresAt)
     {
         $minutes = max(1, now()->diffInMinutes($expiresAt, false));
@@ -368,9 +321,8 @@ class TrustedDeviceService
 
     protected function hasColumn(string $column): bool
     {
-        // Cache per-column schema checks to avoid information_schema round-trips
-        // on every request that touches trusted device logic.
         $table = $this->tableName();
+
         return (bool) Cache::rememberForever("schema_col:{$table}.{$column}", function () use ($table, $column) {
             try {
                 return Schema::hasColumn($table, $column);
@@ -383,6 +335,7 @@ class TrustedDeviceService
     protected function hasTable(): bool
     {
         $table = $this->tableName();
+
         return (bool) Cache::rememberForever("schema_tbl:{$table}", function () use ($table) {
             try {
                 return Schema::hasTable($table);
@@ -392,4 +345,3 @@ class TrustedDeviceService
         });
     }
 }
-

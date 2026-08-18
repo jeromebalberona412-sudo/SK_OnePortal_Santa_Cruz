@@ -31,6 +31,14 @@ class AppServiceProvider extends ServiceProvider
         $this->loadModuleRoutes();
         $this->loadModuleViews();
         $this->shareLayoutUserContext();
+        $this->configureRememberDuration();
+    }
+
+    private function configureRememberDuration(): void
+    {
+        $lifetimeDays = max(1, (int) config('sk_official_auth.remember.lifetime_days', 7));
+
+        Auth::guard('web')->setRememberDuration($lifetimeDays * 24 * 60);
     }
 
     private function shareLayoutUserContext(): void

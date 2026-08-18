@@ -8,6 +8,8 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: #f0f1f5;
     min-height: 100vh;
+    overflow-x: hidden;
+    max-width: 100%;
 }
 
 .main-content {
@@ -16,6 +18,9 @@ body {
     min-height: calc(100vh - 70px);
     transition: margin-left 0.3s ease;
     padding: 20px;
+    width: calc(100% - 280px);
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .calendar-page-container {
@@ -590,6 +595,8 @@ body {
         margin-left: 0;
         margin-top: 60px;
         padding: 15px;
+        width: 100%;
+        max-width: 100%;
     }
 
     .calendar-header-section {

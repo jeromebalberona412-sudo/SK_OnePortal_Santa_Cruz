@@ -247,10 +247,17 @@ body {
 
 .spl-approved-table-card .spl-table-wrapper,
 .saf-page-wrap .spl-approved-table-card .spl-table-wrapper {
-    overflow: visible;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 
-.spl-table-wrapper { overflow: visible; }
+.spl-table-wrapper {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+}
 
 .spl-table {
     width: 100%;

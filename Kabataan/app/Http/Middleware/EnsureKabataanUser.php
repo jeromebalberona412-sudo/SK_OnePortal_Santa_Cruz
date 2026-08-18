@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use App\Services\KabataanAuthService;
 use App\Services\KabataanEligibilityService;
 use Closure;
@@ -38,6 +39,21 @@ class EnsureKabataanUser
             return redirect()
                 ->route('sign-in')
                 ->with('sign_in_error', KabataanAuthService::SIGNIN_DENIED_MESSAGE);
+        }
+
+        if (in_array((string) $user->status, [User::STATUS_INACTIVE, User::STATUS_REJECTED], true)) {
+            app(\App\Modules\Authentication\Services\TrustedDeviceService::class)->revokeAllForUser($user);
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            $message = $user->status === User::STATUS_INACTIVE
+                ? 'Your account has been deactivated. Please contact your SK officials.'
+                : 'Your KK Profiling registration has been rejected.';
+
+            return redirect()
+                ->route('sign-in')
+                ->with('sign_in_error', $message);
         }
         $logData['auth_check_ms'] = round((microtime(true) - $authCheckStart) * 1000, 2);
 

@@ -2256,13 +2256,6 @@
     </script>
 
     <script>
-        window.__kabataanPrograms = @json($programsPayload ?? ['abyip_programs' => [], 'schedule_programs' => []]);
-        const educationHistoryBtn = document.getElementById('educationHistoryBtn');
-        const hasScholarshipHistory = Boolean(window.__kabataanPrograms?.has_scholarship_application_history)
-            || (window.__kabataanPrograms?.schedule_programs || []).some((schedule) => schedule.has_applied);
-        if (educationHistoryBtn) {
-            educationHistoryBtn.hidden = !hasScholarshipHistory;
-        }
         document.getElementById('educationQuickGuideBtn')?.addEventListener('click', function () {
             if (!window.ScholarshipQuickGuidelines) {
                 return;

@@ -211,15 +211,19 @@
 
                     <!-- Remember Me & Forgot Password -->
                     <div class="youth-form-options">
-                        <label class="youth-checkbox">
-                            <input
-                                type="checkbox"
-                                id="remember"
-                                name="remember"
-                                {{ old('remember') ? 'checked' : '' }}
-                            >
-                            <span class="checkbox-label">Remember me</span>
-                        </label>
+                        <div class="youth-remember-block">
+                            <label class="youth-checkbox" for="remember">
+                                <input
+                                    type="checkbox"
+                                    id="remember"
+                                    name="remember"
+                                    value="1"
+                                    {{ old('remember') ? 'checked' : '' }}
+                                >
+                                <span class="checkbox-label">Remember me</span>
+                            </label>
+                            <p class="youth-remember-warning">Only select this on a personal device. Do not use on shared or public computers.</p>
+                        </div>
                         <a href="{{ route('password.request') }}" class="youth-link" id="forgotBtn">Forgot password?</a>
                     </div>
 

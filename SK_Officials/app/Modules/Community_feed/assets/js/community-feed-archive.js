@@ -1,8 +1,9 @@
 const cfg = window.ArchiveConfig || {};
-const ARCHIVE_PER_PAGE = 12;
 let currentPage = 1;
 let lastPage = 1;
 let totalRecords = 0;
+let recordsPerPage = 10;
+let tablePagination = null;
 let searchTimer = null;
 let pendingActionId = null;
 let archivePosts = [];
@@ -111,7 +112,11 @@ function renderActionMenuCell(postId) {
 }
 
 function renderRow(post) {
-    const days = post.days_remaining ?? 0;
+    const days = Number(post.days_remaining ?? 0);
+    if (days <= 0) {
+        return '';
+    }
+
     const daysClass = `archive-days-badge ${tierClass(post.days_tier)}`;
 
     return `
@@ -149,39 +154,24 @@ function renderTable(posts) {
 }
 
 function updatePagination() {
-    const wrap = document.getElementById('archivePagination');
-    const info = document.getElementById('archivePageInfo');
-    const prev = document.getElementById('archivePrevBtn');
-    const next = document.getElementById('archiveNextBtn');
-    const nums = document.getElementById('archivePageNumbers');
-
-    if (!wrap || !info || !prev || !next) return;
-
-    wrap.style.display = 'flex';
-
-    if (totalRecords === 0) {
-        info.textContent = 'No records found';
-        if (nums) nums.innerHTML = '';
-        prev.disabled = true;
-        next.disabled = true;
+    if (tablePagination) {
+        tablePagination.updateFooter();
         return;
     }
 
-    const start = (currentPage - 1) * ARCHIVE_PER_PAGE + 1;
-    const end = Math.min(currentPage * ARCHIVE_PER_PAGE, totalRecords);
-    info.textContent = `Showing ${start}–${end} of ${totalRecords} records`;
+    const info = document.getElementById('archivePaginationInfo');
+    const prev = document.getElementById('archivePrevBtn');
+    const next = document.getElementById('archiveNextBtn');
+    const pageInput = document.getElementById('archivePageInput');
+    const totalPages = document.getElementById('archiveTotalPages');
 
-    if (nums) {
-        nums.innerHTML = Array.from({ length: lastPage }, (_, i) => `
-            <button type="button" class="pagination-btn ${i + 1 === currentPage ? 'active' : ''}">${i + 1}</button>
-        `).join('');
-        nums.querySelectorAll('.pagination-btn').forEach((btn, i) => {
-            btn.addEventListener('click', () => loadArchive(i + 1));
-        });
+    if (info) {
+        info.textContent = `${totalRecords} record${totalRecords === 1 ? '' : 's'}`;
     }
-
-    prev.disabled = currentPage <= 1;
-    next.disabled = currentPage >= lastPage;
+    if (pageInput) pageInput.value = String(currentPage);
+    if (totalPages) totalPages.textContent = String(Math.max(1, lastPage));
+    if (prev) prev.disabled = currentPage <= 1;
+    if (next) next.disabled = currentPage >= lastPage || totalRecords === 0;
 }
 
 async function loadArchive(page = 1) {
@@ -193,14 +183,24 @@ async function loadArchive(page = 1) {
         tbody.innerHTML = '<tr class="archive-loading-row"><td colspan="8">Loading archived posts…</td></tr>';
     }
 
-    const params = new URLSearchParams({ page: String(page) });
+    const params = new URLSearchParams({
+        page: String(page),
+        per_page: String(recordsPerPage),
+    });
     if (search) params.set('search', search);
 
     try {
         const data = await apiFetch(`${cfg.dataUrl}?${params.toString()}`);
-        renderTable(data.data || []);
         lastPage = data.last_page || 1;
         totalRecords = data.total ?? 0;
+        currentPage = data.current_page || page;
+
+        if (currentPage > lastPage) {
+            await loadArchive(lastPage);
+            return;
+        }
+
+        renderTable(data.data || []);
         updatePagination();
     } catch (err) {
         if (tbody) {
@@ -396,14 +396,6 @@ function bindEvents() {
         searchTimer = setTimeout(() => loadArchive(1), 300);
     });
 
-    document.getElementById('archivePrevBtn')?.addEventListener('click', () => {
-        if (currentPage > 1) loadArchive(currentPage - 1);
-    });
-
-    document.getElementById('archiveNextBtn')?.addEventListener('click', () => {
-        if (currentPage < lastPage) loadArchive(currentPage + 1);
-    });
-
     document.getElementById('archiveTableBody')?.addEventListener('click', (e) => {
         const actionItem = e.target.closest('.row-actions-item');
         if (!actionItem) return;
@@ -467,5 +459,18 @@ function bindEvents() {
 
 document.addEventListener('DOMContentLoaded', () => {
     bindEvents();
+
+    if (typeof window.bindTablePageFooter === 'function') {
+        tablePagination = window.bindTablePageFooter({
+            prefix: 'archive',
+            getTotalRecords: () => totalRecords,
+            getCurrentPage: () => currentPage,
+            setCurrentPage: (page) => { currentPage = page; },
+            getRecordsPerPage: () => recordsPerPage,
+            setRecordsPerPage: (value) => { recordsPerPage = value; },
+            onPageChange: () => loadArchive(currentPage),
+        });
+    }
+
     loadArchive(1);
 });

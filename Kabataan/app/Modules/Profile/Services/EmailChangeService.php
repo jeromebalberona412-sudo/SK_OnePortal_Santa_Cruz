@@ -260,6 +260,9 @@ class EmailChangeService
             'email_change_last_sent_at' => null,
         ])->save();
 
+        app(\App\Modules\Authentication\Services\TrustedDeviceService::class)
+            ->revokeAllForUser($user);
+
         User::query()
             ->whereKey($user->id)
             ->update(['must_change_password' => DB::raw("'false'::boolean")]);

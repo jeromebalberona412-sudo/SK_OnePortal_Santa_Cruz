@@ -221,3 +221,5 @@
         </div>
     </div>
 </div>
+
+<link rel="stylesheet" href="{{ url('/shared/css/officials-responsive.css') }}?v={{ @filemtime(public_path('shared/css/officials-responsive.css')) ?: time() }}">

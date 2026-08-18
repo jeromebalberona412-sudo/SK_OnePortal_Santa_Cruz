@@ -584,6 +584,19 @@
     .km-hero { flex-direction: column; align-items: flex-start; min-height: auto; }
     .km-detail-grid, .km-metric-grid { grid-template-columns: 1fr; }
     .km-masterlist-header { flex-direction: column; }
+    .km-search-group {
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+    }
+    .km-filter-bar--detail .km-search-group {
+        width: auto;
+        max-width: none;
+        flex: 1 1 auto;
+    }
+    .km-search-input {
+        min-width: 0;
+    }
 }
 
 /* ── Masterlist top bar ── */
@@ -2100,37 +2113,71 @@ body.sidebar-collapsed .km-page-pagination {
         height: 56px;
     }
 
-    .km-filter-bar-top {
+    .km-filter-bar-top,
+    .km-filter-bar-actions {
+        display: contents;
+    }
+
+    .km-filter-bar--detail {
+        display: grid;
+        grid-template-columns: auto auto minmax(0, 1fr);
+        align-items: center;
+        column-gap: 6px;
+        row-gap: 8px;
         width: 100%;
     }
 
     .km-filter-dropdowns {
-        flex-wrap: wrap;
+        grid-column: 1 / -1;
+        flex-wrap: nowrap;
         width: 100%;
-        flex: 1 1 100%;
+        gap: 6px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .km-filter-dropdowns::-webkit-scrollbar {
+        display: none;
     }
 
     .km-filter-bar--detail .km-filter-dropdowns .km-select {
-        flex: 1 1 calc(50% - 4px);
-        min-width: calc(50% - 4px);
-        max-width: calc(50% - 4px);
-        width: calc(50% - 4px);
-    }
-
-    .km-filter-bar--detail .km-search-group--compact {
-        margin-left: 0;
-        width: 148px;
-    }
-
-    .km-filter-bar-actions {
-        justify-content: flex-end;
-        width: 100%;
+        flex: 1 1 0;
+        min-width: 0;
+        max-width: none;
+        width: auto;
+        height: 34px;
+        padding: 0 4px;
+        font-size: 11px;
     }
 
     .km-filter-bar--detail .km-export-btn,
     .km-filter-bar--detail .km-batch-print-btn {
-        flex: 0 0 auto;
+        grid-row: 2;
         width: auto;
+        height: 34px;
+        padding: 0 10px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .km-filter-bar--detail .km-export-btn--csv {
+        grid-column: 1;
+    }
+
+    .km-filter-bar--detail .km-batch-print-btn {
+        grid-column: 2;
+    }
+
+    .km-filter-bar--detail .km-search-group,
+    .km-filter-bar--detail .km-search-group--compact {
+        grid-column: 3;
+        grid-row: 2;
+        margin-left: 0;
+        width: auto;
+        min-width: 0;
+        max-width: none;
+        flex: none;
     }
 
     .km-barangay-detail-page .km-table-wrapper {
@@ -2159,12 +2206,15 @@ body.sidebar-collapsed .km-page-pagination {
     }
 
     .km-filter-bar--detail .km-search-group--compact {
-        width: 140px;
+        width: auto;
+        min-width: 0;
+        grid-column: 3;
+        grid-row: 2;
     }
 
     .km-export-btn,
     .km-batch-print-btn {
-        padding: 0 10px;
-        font-size: 12px;
+        padding: 0 8px;
+        font-size: 11px;
     }
 }

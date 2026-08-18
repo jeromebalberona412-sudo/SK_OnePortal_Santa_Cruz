@@ -251,10 +251,13 @@
 
                     {{-- Remember Me & Forgot Password --}}
                     <div class="sk-form-options">
-                        <label class="sk-checkbox">
-                            <input type="checkbox" id="remember" name="remember" value="1">
-                            <span class="checkbox-label">Remember me</span>
-                        </label>
+                        <div class="sk-remember-block">
+                            <label class="sk-checkbox" for="remember">
+                                <input type="checkbox" id="remember" name="remember" value="1" {{ old('remember') ? 'checked' : '' }}>
+                                <span class="checkbox-label">Remember me</span>
+                            </label>
+                            <p class="sk-remember-warning">Only select this on a personal device. Do not use on shared or public computers.</p>
+                        </div>
                         <button type="button" class="sk-link" id="forgotBtn">Forgot password?</button>
                     </div>
 

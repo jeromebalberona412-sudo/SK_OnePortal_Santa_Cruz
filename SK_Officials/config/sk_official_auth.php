@@ -4,9 +4,16 @@ return [
     'tenant_code' => env('SK_OFFICIAL_TENANT_CODE', 'santa_cruz'),
     'required_role' => env('SK_OFFICIAL_REQUIRED_ROLE', 'sk_official'),
 
+    'remember' => [
+        'lifetime_days' => (int) env('SK_OFFICIAL_REMEMBER_LIFETIME_DAYS', 7),
+    ],
+
     'trusted_device' => [
-        'expiration_days' => (int) env('SK_OFFICIAL_TRUSTED_DEVICE_EXPIRATION_DAYS', 30),
-        'enforce_every_request' => (bool) env('SK_OFFICIAL_ENFORCE_TRUSTED_DEVICE', true),
+        'expiration_days' => (int) env(
+            'SK_OFFICIAL_TRUSTED_DEVICE_EXPIRATION_DAYS',
+            env('SK_OFFICIAL_REMEMBER_LIFETIME_DAYS', 7)
+        ),
+        'enforce_every_request' => (bool) env('SK_OFFICIAL_ENFORCE_TRUSTED_DEVICE', false),
     ],
 
     'rate_limit' => [

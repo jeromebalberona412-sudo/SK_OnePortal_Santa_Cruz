@@ -517,26 +517,6 @@
         </div>
     </main>
 
-    {{-- Logout Modal --}}
-    <div id="logoutConfirmModal" class="program-modal">
-        <div class="modal-overlay"></div>
-        <div class="modal-container" style="max-width:420px;">
-            <div class="modal-header"><h2>Confirm Logout</h2>
-                <button class="modal-close" onclick="document.getElementById('logoutConfirmModal').classList.remove('active')">
-                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                </button>
-            </div>
-            <div class="modal-body" style="text-align:center;padding:32px 24px;">
-                <h3 style="font-size:18px;color:#333;margin-bottom:8px;">Are you sure you want to logout?</h3>
-                <p style="color:#999;font-size:14px;margin-bottom:28px;">You will be redirected to the login page.</p>
-                <div style="display:flex;gap:12px;justify-content:center;">
-                    <button class="btn-secondary" onclick="document.getElementById('logoutConfirmModal').classList.remove('active')" style="min-width:100px;">Cancel</button>
-                    <button class="btn-primary" id="confirmLogoutBtn" style="min-width:100px;background:linear-gradient(135deg,#f44336,#d32f2f);">Logout</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     @include('dashboard::comment-preview')
 
     <script>
@@ -563,35 +543,6 @@
         'app/Modules/Dashboard/assets/js/community-feed-comment-preview.js',
         'app/Modules/Dashboard/assets/js/barangay-profile.js',
     ])
-    <script>
-    (function () {
-        const logoutBtn  = document.querySelector('.logout-btn');
-        const logoutForm = logoutBtn?.closest('form');
-        const modal      = document.getElementById('logoutConfirmModal');
-        const confirmBtn = document.getElementById('confirmLogoutBtn');
-        logoutBtn?.addEventListener('click', (e) => { e.preventDefault(); modal.classList.add('active'); });
-        confirmBtn?.addEventListener('click', async () => {
-            modal.classList.remove('active');
-            const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-            const logoutUrl = logoutForm?.getAttribute('action') || '/logout';
-            try {
-                await fetch(logoutUrl, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': csrf,
-                        Accept: 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                    credentials: 'same-origin',
-                });
-            } catch (error) {
-                // Redirect to login even if the request fails
-            }
-            window.location.replace('/login');
-        });
-        modal?.querySelector('.modal-overlay')?.addEventListener('click', () => modal.classList.remove('active'));
-    })();
-    </script>
     <script>
     window.addEventListener('unload', function () {});
     window.addEventListener('pageshow', function (e) {

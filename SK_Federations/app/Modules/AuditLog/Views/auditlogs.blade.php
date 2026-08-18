@@ -21,31 +21,29 @@
     ];
 @endphp
 
-<div id="mainContent" class="auditlog-page container-fluid">
+<div id="mainContent" class="auditlog-page">
 <div id="auditLogApp" class="auditlog-container" data-audit-routes='@json($routes)' data-date-bounds='@json($filterOptions['date_bounds'] ?? ['min' => '', 'max' => ''])'>
     <div class="page-header-modern-with-button">
         <div class="page-header-top">
             <h1 class="page-title-modern">Audit Logs</h1>
             <p class="page-subtitle-modern">Centralized activity trail across Admin, Federation, Officials, and Kabataan portals</p>
         </div>
-        <div class="page-header-filters">
-            <form class="audit-filter-form" id="auditFilterForm" novalidate>
-                <div class="audit-filter-grid">
-                    <div class="search-container">
-                        <div class="search-input-wrap">
-                            <input type="search" id="auditSearch" class="search-input form-control" placeholder="Search email, action, entity, IP…" aria-label="Search audit logs">
-                            <button type="button" class="search-btn" id="auditSearchBtn" aria-label="Search">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="11" cy="11" r="8"></circle>
-                                    <path d="m21 21-4.35-4.35"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="filter-dropdown-container">
+    </div>
+
+    <section class="audit-stats-grid" aria-label="Audit statistics">
+        @foreach ($statCards as $card)
+            @include('dashboard::components.statcard', $card)
+        @endforeach
+    </section>
+
+    <div class="page-header-filters">
+        <form class="audit-filter-form" id="auditFilterForm" novalidate>
+            <div class="audit-filter-grid">
+                <div class="audit-filter-left">
+                    <div class="filter-dropdown-container audit-filter-date">
                         <input type="date" id="auditDateFrom" class="filter-dropdown audit-date-input" aria-label="Date from" @if(!empty($filterOptions['date_bounds']['min'])) min="{{ $filterOptions['date_bounds']['min'] }}" @endif @if(!empty($filterOptions['date_bounds']['max'])) max="{{ $filterOptions['date_bounds']['max'] }}" @endif>
                     </div>
-                    <div class="filter-dropdown-container">
+                    <div class="filter-dropdown-container audit-filter-date">
                         <input type="date" id="auditDateTo" class="filter-dropdown audit-date-input" aria-label="Date to" @if(!empty($filterOptions['date_bounds']['min'])) min="{{ $filterOptions['date_bounds']['min'] }}" @endif @if(!empty($filterOptions['date_bounds']['max'])) max="{{ $filterOptions['date_bounds']['max'] }}" @endif>
                     </div>
                     <div class="filter-dropdown-container">
@@ -73,15 +71,20 @@
                         </select>
                     </div>
                 </div>
-            </form>
-        </div>
+                <div class="search-container">
+                    <div class="search-input-wrap">
+                        <input type="search" id="auditSearch" class="search-input form-control" placeholder="Search email, action, entity, IP…" aria-label="Search audit logs">
+                        <button type="button" class="search-btn" id="auditSearchBtn" aria-label="Search">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
-
-    <section class="audit-stats-grid" aria-label="Audit statistics">
-        @foreach ($statCards as $card)
-            @include('dashboard::components.statcard', $card)
-        @endforeach
-    </section>
 
     <div class="audit-table-card" aria-label="Audit logs table">
         <div class="audit-table-wrap" id="auditTableWrap">

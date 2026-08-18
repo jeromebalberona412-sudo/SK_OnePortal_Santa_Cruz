@@ -1,8 +1,8 @@
 /* ── Deleted Posts Archive ── */
 
 .archive-posts-page {
-    padding: calc(var(--topbar-height, 64px) + 20px) 24px 24px;
-    min-height: 100vh;
+    padding: 0 8px 24px;
+    min-height: 0;
     background: #f1f4f8;
     color: #374151;
 }
@@ -10,7 +10,7 @@
 .page-header-section { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
 .page-title { font-size: 24px; font-weight: 800; color: #1e293b; margin: 0 0 6px; }
 .page-subtitle { color: #64748b; font-size: 14px; margin: 0; max-width: 720px; }
-.filter-input { min-width: 240px; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+.filter-input { min-width: 0; max-width: 100%; width: min(320px, 100%); padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
 .table-card { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
 .table-wrapper { overflow-x: auto; }
 .ap-archive-table { width: 100%; border-collapse: collapse; min-width: 720px; font-size: 13px; }

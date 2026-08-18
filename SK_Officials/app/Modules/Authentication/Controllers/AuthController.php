@@ -82,10 +82,7 @@ class AuthController extends Controller
             $user = User::query()->find((int) ($pending['user_id'] ?? 0))?->fresh();
 
             if ($user !== null) {
-                $this->authenticationService->completeEmailVerificationLogin($user, $request, $pending);
-                $this->clearVerificationSession($request, $pending);
-
-                return redirect()->intended(route('dashboard'));
+                return $this->afterEmailVerificationLogin($user, $request, $pending);
             }
         }
 
@@ -165,12 +162,11 @@ class AuthController extends Controller
             ]);
         }
 
-        $this->authenticationService->completeEmailVerificationLogin($user, $request, $pending);
-        $this->clearVerificationSession($request, $pending);
+        $redirect = $this->emailVerificationLoginUrl($user, $request, $pending);
 
         return response()->json([
             'state' => 'verified',
-            'redirect' => route('dashboard'),
+            'redirect' => $redirect,
         ]);
     }
 
@@ -246,19 +242,18 @@ class AuthController extends Controller
         }
 
         if ($this->canCompleteVerifiedLogin($pending, $user)) {
-            $this->authenticationService->completeEmailVerificationLogin($user, $request, $pending);
-            $this->clearVerificationSession($request, $pending);
+            $redirect = $this->emailVerificationLoginUrl($user, $request, $pending);
 
             if ($request->expectsJson()) {
                 return response()->json([
                     'ok' => true,
                     'state' => 'verified',
-                    'message' => 'Email is already verified. Redirecting to dashboard...',
-                    'redirect' => route('dashboard'),
+                    'message' => 'Email is already verified. Redirecting...',
+                    'redirect' => $redirect,
                 ]);
             }
 
-            return redirect()->intended(route('dashboard'));
+            return redirect()->to($redirect);
         }
 
         try {
@@ -345,10 +340,7 @@ class AuthController extends Controller
 
         $pending = $this->resolveVerificationPendingForUser($request, $user);
 
-        $this->authenticationService->completeEmailVerificationLogin($user, $request, $pending);
-        $this->clearVerificationSession($request, is_array($pending) ? $pending : null);
-
-        return redirect()->intended(route('dashboard'));
+        return $this->afterEmailVerificationLogin($user, $request, $pending);
     }
 
     public function logout(Request $request): RedirectResponse
@@ -364,6 +356,25 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login');
+    }
+
+    /**
+     * @param  array<string, mixed>  $pending
+     */
+    protected function afterEmailVerificationLogin(User $user, Request $request, array $pending): RedirectResponse
+    {
+        return redirect()->to($this->emailVerificationLoginUrl($user, $request, $pending));
+    }
+
+    /**
+     * @param  array<string, mixed>  $pending
+     */
+    protected function emailVerificationLoginUrl(User $user, Request $request, array $pending): string
+    {
+        $this->authenticationService->completeEmailVerificationLogin($user, $request, $pending);
+        $this->clearVerificationSession($request, $pending);
+
+        return route('dashboard');
     }
 
     public function showForgotPassword(): View

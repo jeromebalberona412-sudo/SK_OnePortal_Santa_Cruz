@@ -1248,6 +1248,16 @@
         });
     }
 
+    function syncEducationHistoryButton() {
+        const educationHistoryBtn = document.getElementById('educationHistoryBtn');
+        if (!educationHistoryBtn) {
+            return;
+        }
+        const hasHistory = Boolean(programsData?.has_scholarship_application_history)
+            || (programsData?.schedule_programs || []).some((schedule) => schedule.has_applied);
+        educationHistoryBtn.hidden = !hasHistory;
+    }
+
     async function init() {
         registerProgramModalHelpers();
         initProgramModalChrome();
@@ -1261,6 +1271,7 @@
 
         renderSidebars();
         enableSurveyApplyButtons();
+        syncEducationHistoryButton();
 
         const educationProgram = (programsData?.abyip_programs || []).find((program) => program.type === 'education');
         if (educationProgram) {

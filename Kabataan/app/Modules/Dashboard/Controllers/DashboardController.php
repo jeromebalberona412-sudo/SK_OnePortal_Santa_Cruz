@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\KabataanRegistration;
 use App\Modules\Dashboard\Services\BarangaySkProfileService;
 use App\Modules\Profile\Services\ProfileImageService;
-use App\Modules\Programs\Services\KabataanProgramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -15,7 +14,6 @@ use Illuminate\View\View;
 class DashboardController extends Controller
 {
     public function __construct(
-        private readonly KabataanProgramService $programService,
         private readonly BarangaySkProfileService $barangaySkProfileService,
     ) {}
 
@@ -38,14 +36,11 @@ class DashboardController extends Controller
         $tenantId = (int) ($user->tenant_id ?? $registration?->barangay?->tenant_id ?? 0);
         $barangayProfiles = $this->barangaySkProfileService->listForTenant($tenantId);
 
-        $programsPayload = $this->programService->getDashboardPayload($user);
-
         $viewData = [
             'user' => $user,
             'userAvatarUrl' => app(ProfileImageService::class)->resolveDisplayUrl($user),
             'barangayName' => $barangayName,
             'barangayProfiles' => $barangayProfiles,
-            'programsPayload' => $programsPayload,
             'commentPreviewPost' => null,
         ];
 

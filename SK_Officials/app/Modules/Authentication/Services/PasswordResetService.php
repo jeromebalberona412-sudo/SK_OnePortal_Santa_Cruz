@@ -22,6 +22,7 @@ class PasswordResetService
     public function __construct(
         protected TenantContextService $tenantContextService,
         protected AuthAuditLogService $auditLogService,
+        protected TrustedDeviceService $trustedDeviceService,
     ) {}
 
     public function sendResetLink(Request $request, string $email): void
@@ -249,6 +250,8 @@ class PasswordResetService
 
     protected function invalidateUserSessions(User $user): void
     {
+        $this->trustedDeviceService->revokeAllForUser($user);
+
         if (! Schema::hasTable('sessions') || ! $this->tableHasColumn('sessions', 'user_id')) {
             return;
         }

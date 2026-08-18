@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\User;
 use App\Modules\Authentication\Services\AuthenticationService;
+use App\Modules\Authentication\Services\TrustedDeviceService;
 use App\Modules\Authentication\Services\TurnstileService;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
@@ -124,6 +125,8 @@ class FortifyServiceProvider extends ServiceProvider
         Event::listen(Logout::class, function (Logout $event): void {
             if ($event->user instanceof User && request()->hasSession()) {
                 app(AuthenticationService::class)->clearSessionOwnershipOnLogout($event->user, request());
+                app(TrustedDeviceService::class)
+                    ->revokeCurrentDevice($event->user, request());
             }
         });
     }

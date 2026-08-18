@@ -7,8 +7,8 @@
 }
 
 .deleted-sk-off-page {
-    padding: calc(var(--topbar-height, 64px) + 20px) 24px 24px;
-    min-height: 100vh;
+    padding: 0 8px 24px;
+    min-height: 0;
     background: #f1f4f8;
     color: #374151;
 }
@@ -828,7 +828,8 @@ body.dso-modal-open {
     .dso-page-header {
         flex-direction: row;
         align-items: center;
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
+        gap: 10px;
     }
 
     .dso-page-title {

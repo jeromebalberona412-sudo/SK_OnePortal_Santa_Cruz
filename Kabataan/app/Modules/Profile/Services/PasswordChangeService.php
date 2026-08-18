@@ -128,6 +128,9 @@ class PasswordChangeService
 
         $this->markRecentlyConfirmed($user->id);
 
+        app(\App\Modules\Authentication\Services\TrustedDeviceService::class)
+            ->revokeAllForUser($user);
+
         return $user->fresh();
     }
 

@@ -37,5 +37,8 @@ class AppServiceProvider extends ServiceProvider
                 'unreadNotificationCount' => $notificationService->unreadCountForUser($user),
             ]);
         });
+
+        $lifetimeDays = max(1, (int) config('kabataan_auth.remember.lifetime_days', 7));
+        Auth::guard('web')->setRememberDuration($lifetimeDays * 24 * 60);
     }
 }

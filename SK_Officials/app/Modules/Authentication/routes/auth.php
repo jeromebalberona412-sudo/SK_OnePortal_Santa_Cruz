@@ -19,6 +19,11 @@ Route::get('/email/verify-link/{id}/{hash}', [AuthController::class, 'verifyEmai
     ->name('sk_official.verification.verify');
 Route::get('/email/verified-success', [AuthController::class, 'showVerificationSuccess'])->name('sk_official.verification.success');
 
+Route::redirect('/remember-me/wait', '/login');
+Route::redirect('/remember-me/wait-status', '/login');
+Route::redirect('/remember-me/resend', '/login');
+Route::get('/remember-me/confirm/{token}', fn () => redirect()->route('login'));
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::get('/email/verify/notice', [AuthController::class, 'showVerifyNotice'])->name('sk_official.verification.notice');

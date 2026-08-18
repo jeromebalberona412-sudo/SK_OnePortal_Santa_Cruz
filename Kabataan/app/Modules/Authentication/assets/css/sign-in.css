@@ -464,10 +464,27 @@ html {
 
 .youth-form-options {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
     margin-top: 0.25rem;
+}
+
+.youth-remember-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.youth-remember-warning {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: var(--youth-gray-500, #6b7280);
+    max-width: 22rem;
 }
 
 .youth-checkbox {
@@ -729,7 +746,15 @@ a.youth-submit-btn:visited {
     .youth-signin-card { padding: 1.75rem 2rem; border-radius: 24px; }
     .card-header { min-height: 0; margin-bottom: 1.5rem; }
     .card-subtitle { font-size: 1.3rem; }
-    .youth-form-options { flex-direction: row; align-items: center; gap: 0.5rem; }
+    .youth-form-options {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .youth-remember-warning {
+        max-width: 100%;
+    }
 }
 
 @media (max-width: 480px) {

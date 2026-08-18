@@ -125,10 +125,9 @@ class AuthenticationService
             return null;
         }
 
-        $rememberDevice = $request->boolean('remember');
-        $isTrustedDevice = $this->trustedDeviceService->isTrusted($user, $request);
+        $remember = $request->boolean('remember');
 
-        // Only require email verification if email has NEVER been verified
+        // Account email verification is independent of Remember Me.
         if (! $user->hasVerifiedEmail()) {
             $this->startEmailVerificationWait(
                 user: $user,
@@ -136,23 +135,13 @@ class AuthenticationService
                 request: $request,
                 reason: 'email_unverified',
                 message: 'A verification email has been sent. Complete verification to continue.',
-                rememberDevice: $rememberDevice,
+                rememberDevice: $remember,
             );
 
             return null;
         }
 
-        // Skip device verification for already-verified users
-        // The user has verified their email at least once, so trust them
-        // Device verification disabled to prevent verified users from being asked again
-
         $this->resolveActiveSessionConflict($user, $request);
-
-        if ($isTrustedDevice) {
-            $this->trustedDeviceService->refreshRememberCookieIfPresent($user, $request);
-        } elseif ($rememberDevice) {
-            $this->trustedDeviceService->rememberDevice($user, $request);
-        }
 
         $this->loginSecurityService->recordAttempt($user, $email, true, $request);
         $this->loginSecurityService->clearAfterSuccess($user);
@@ -162,28 +151,27 @@ class AuthenticationService
             event: 'login_success',
             user: $user,
             request: $request,
-            metadata: [],
+            metadata: [
+                'remember' => $remember,
+            ],
             outcome: AuthAuditLogService::OUTCOME_SUCCESS,
             resourceType: 'auth',
             resourceId: $user->getKey(),
         );
 
-        // Don't claim session here - let Fortify complete authentication first
-        // Session will be claimed by middleware after successful login
-
         return $user;
     }
 
     /**
-     * Complete login after email verification is confirmed.
+     * Complete login after account email verification.
      *
      * @param  array<string, mixed>  $pending
      */
-    public function completeEmailVerificationLogin(User $user, Request $request, array $pending): void
+    public function completeEmailVerificationLogin(User $user, Request $request, array $pending): string
     {
-        $rememberDevice = ! empty($pending['remember_device']);
+        $remember = ! empty($pending['remember_device']);
 
-        Auth::login($user, $rememberDevice);
+        Auth::login($user, $remember);
 
         $this->loginSecurityService->recordAttempt($user, (string) $user->email, true, $request);
         $this->loginSecurityService->clearAfterSuccess($user);
@@ -191,32 +179,20 @@ class AuthenticationService
 
         $this->claimCurrentSession($user, $request);
 
-        try {
-            $this->trustedDeviceService->trust($user, $request);
-
-            if ($rememberDevice) {
-                $this->trustedDeviceService->rememberDevice(
-                    $user,
-                    $request,
-                    (string) ($pending['fingerprint'] ?? ''),
-                );
-            }
-        } catch (\Throwable $exception) {
-            report($exception);
-        }
-
         $this->auditLogService->log(
             event: 'login_success',
             user: $user,
             request: $request,
             metadata: [
                 'via' => 'email_verification',
-                'remember_device' => ! empty($pending['remember_device']),
+                'remember' => $remember,
             ],
             outcome: AuthAuditLogService::OUTCOME_SUCCESS,
             resourceType: 'auth',
             resourceId: $user->getKey(),
         );
+
+        return 'dashboard';
     }
 
     /**
@@ -519,6 +495,8 @@ class AuthenticationService
         }
 
         $user->forceFill($updates)->save();
+
+        $this->trustedDeviceService->revokeAllForUser($user);
 
         if (! Schema::hasTable('sessions')) {
             return;

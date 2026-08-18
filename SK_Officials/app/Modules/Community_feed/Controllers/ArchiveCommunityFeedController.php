@@ -22,6 +22,8 @@ class ArchiveCommunityFeedController extends Controller
 
     public function index(): View
     {
+        $this->archiveService->purgeExpired();
+
         return view('Community_feed::archive');
     }
 
@@ -29,12 +31,14 @@ class ArchiveCommunityFeedController extends Controller
     {
         $user = Auth::user();
         $this->ensureAuthorized($user);
+        $this->archiveService->purgeExpired();
 
         $query = CommunityFeed::query()
             ->archived()
             ->with(['user', 'barangay', 'images'])
             ->orderByDesc('archived_at');
 
+        $this->archiveService->applyRetentionFilter($query);
         $this->scopeBarangay($query, $user);
 
         if ($search = trim((string) $request->query('search', ''))) {
@@ -44,17 +48,24 @@ class ArchiveCommunityFeedController extends Controller
             });
         }
 
-        $posts = $query->paginate(12);
+        $perPage = (int) $request->query('per_page', 10);
+        if (! in_array($perPage, [10, 50, 100], true)) {
+            $perPage = 10;
+        }
 
-        $items = collect($posts->items())->map(fn (CommunityFeed $post) => $this->formatArchivedPost($post));
+        $posts = $query->paginate($perPage);
+
+        $items = collect($posts->items())
+            ->map(fn (CommunityFeed $post) => $this->formatArchivedPost($post))
+            ->values();
 
         $allArchived = CommunityFeed::query()->archived();
+        $this->archiveService->applyRetentionFilter($allArchived);
         $this->scopeBarangay($allArchived, $user);
 
         $stats = [
             'total' => (clone $allArchived)->count(),
             'expiring_soon' => (clone $allArchived)
-                ->whereNotNull('archived_at')
                 ->where('archived_at', '<=', now()->subDays(CommunityFeedArchiveService::RETENTION_DAYS - 7))
                 ->count(),
         ];
@@ -72,6 +83,7 @@ class ArchiveCommunityFeedController extends Controller
     {
         $user = Auth::user();
         $this->ensureAuthorized($user);
+        $this->archiveService->purgeExpired();
 
         $post = $this->findArchivedPost($id, $user);
         $post->load(['user', 'barangay', 'images']);
@@ -140,6 +152,7 @@ class ArchiveCommunityFeedController extends Controller
     private function findArchivedPost(int $id, User $user): CommunityFeed
     {
         $query = CommunityFeed::query()->archived()->where('id', $id);
+        $this->archiveService->applyRetentionFilter($query);
         $this->scopeBarangay($query, $user);
 
         return $query->firstOrFail();
@@ -181,9 +194,7 @@ class ArchiveCommunityFeedController extends Controller
             'archived_ago'     => $post->archived_at?->diffForHumans() ?? '—',
             'days_remaining'   => $daysRemaining,
             'days_tier'        => $tier,
-            'auto_delete_label'=> $daysRemaining === 0
-                ? 'Auto delete today'
-                : 'Auto delete in '.$daysRemaining.' day'.($daysRemaining === 1 ? '' : 's'),
+            'auto_delete_label'=> 'Auto delete in '.$daysRemaining.' day'.($daysRemaining === 1 ? '' : 's'),
             'image_count'      => count($images),
             'images'           => $images,
             'thumbnail_url'    => $images[0] ?? null,

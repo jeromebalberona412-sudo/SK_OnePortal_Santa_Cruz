@@ -8,6 +8,7 @@
     const logoutForm = logoutBtn?.closest('form');
     const modal = document.getElementById('kabataanLogoutModal');
     const confirmBtn = document.getElementById('kabataanConfirmLogoutBtn');
+    let isLoggingOut = false;
 
     window.closeKabataanLogoutModal = function () {
         if (modal) {
@@ -23,41 +24,25 @@
         }
     };
 
-    function getLoginUrl() {
-        const signInLink = document.querySelector('a[href*="/sign-in"]');
-        if (signInLink?.href) {
-            try {
-                const url = new URL(signInLink.href, window.location.origin);
-                return url.pathname;
-            } catch (error) {
-                // fall through
-            }
+    function performLogout() {
+        if (isLoggingOut) {
+            return;
+        }
+        isLoggingOut = true;
+
+        if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Logging out…';
         }
 
-        return '/sign-in';
-    }
-
-    async function performLogout() {
         closeKabataanLogoutModal();
 
-        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        const logoutUrl = logoutForm?.getAttribute('action') || '/logout';
-
-        try {
-            await fetch(logoutUrl, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrf,
-                    Accept: 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                credentials: 'same-origin',
-            });
-        } catch (error) {
-            // Redirect to login even if the request fails
+        if (logoutForm) {
+            logoutForm.submit();
+            return;
         }
 
-        window.location.replace(getLoginUrl());
+        window.location.replace('/sign-in');
     }
 
     if (logoutBtn && logoutForm) {

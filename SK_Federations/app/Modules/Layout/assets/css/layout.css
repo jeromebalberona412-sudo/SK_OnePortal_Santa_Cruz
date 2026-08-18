@@ -485,6 +485,9 @@ body.profile-page .account-settings-panel:not([hidden]) {
 @media (max-width: 768px) {
     body.profile-page .main-content {
         padding: 16px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
 
     body.profile-page .official-details {

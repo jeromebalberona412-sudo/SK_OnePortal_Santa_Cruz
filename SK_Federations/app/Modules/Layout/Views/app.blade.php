@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="{{ url('/modules/dashboard/css/dashboard.css') }}?v={{ $dashboardCssVersion }}">
     <link rel="stylesheet" href="{{ url('/modules/layout/css/layout.css') }}?v={{ $layoutCssVersion }}">
     @stack('styles')
+    <link rel="stylesheet" href="{{ url('/shared/css/federations-responsive.css') }}?v={{ @filemtime(public_path('shared/css/federations-responsive.css')) ?: time() }}">
 </head>
 <body @stack('body-attributes') @if(!empty($turnoverModal['show']) && !empty($turnoverModal['portal_locked'])) class="turnover-portal-locked" @endif>
     @include('layout::anti-back')

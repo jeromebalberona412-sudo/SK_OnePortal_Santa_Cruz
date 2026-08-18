@@ -6,13 +6,17 @@
     width: 100%;
 }
 
-/* Prevent nested scrollbars that block dropdown menus (requires double tap to open). */
+/* Table bodies scroll sideways on mobile. Action menus use position:fixed. */
 .saf-table-wrap,
 .schol-table-wrap,
 .sports-table-wrap,
 .spl-table-wrapper,
+.sl-table-wrapper,
 .table-wrapper {
-    overflow: visible !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
 }
 
 .saf-forms-table-card:has(.row-actions-menu),
@@ -317,7 +321,8 @@
 }
 
 .kabataan-page .table-wrapper,
-.kkprofiling-page .table-wrapper {
+.kkprofiling-page .table-wrapper,
+.archive-posts-page .table-wrapper {
     overflow-x: auto !important;
     overflow-y: hidden !important;
 }

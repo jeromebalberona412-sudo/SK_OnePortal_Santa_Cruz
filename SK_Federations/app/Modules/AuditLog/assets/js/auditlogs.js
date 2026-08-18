@@ -101,13 +101,13 @@ document.addEventListener('DOMContentLoaded', function () {
         els.tableBody.innerHTML = rows.map(function (row, index) {
             return `
                 <tr>
-                    <td class="cell-primary">${escapeHtml(row.created_date)}</td>
-                    <td>${escapeHtml(row.created_time)}</td>
-                    <td class="audit-cell-email">${escapeHtml(row.user_email || '-')}</td>
-                    <td>${escapeHtml(row.role)}</td>
-                    <td>${escapeHtml(row.event_type)}</td>
-                    <td>${escapeHtml(row.ip_address)}</td>
-                    <td>
+                    <td class="cell-primary" data-label="Date">${escapeHtml(row.created_date)}</td>
+                    <td data-label="Time">${escapeHtml(row.created_time)}</td>
+                    <td class="audit-cell-email" data-label="Email">${escapeHtml(row.user_email || '-')}</td>
+                    <td data-label="Role">${escapeHtml(row.role)}</td>
+                    <td data-label="Event Type">${escapeHtml(row.event_type)}</td>
+                    <td data-label="IP Address">${escapeHtml(row.ip_address)}</td>
+                    <td data-label="View" class="audit-col-actions">
                         <button type="button" class="audit-details-btn" data-row-index="${index}">View</button>
                     </td>
                 </tr>

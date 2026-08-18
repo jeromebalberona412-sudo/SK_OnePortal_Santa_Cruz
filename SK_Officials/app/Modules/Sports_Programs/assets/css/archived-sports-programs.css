@@ -204,6 +204,17 @@ body {
     margin-bottom: 0;
 }
 
+.asp-page-wrap .table-wrapper,
+.asp-page-wrap .saf-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+}
+
+.asp-table {
+    min-width: 720px;
+}
+
 .asp-table td:first-child {
     text-align: left;
 }

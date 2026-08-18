@@ -29,6 +29,11 @@ class EnsureSkOfficialAccess
             $freshUser = $user->fresh();
 
             if ($freshUser === null || ! $freshUser->isActiveOfficial()) {
+                if ($freshUser !== null) {
+                    app(\App\Modules\Authentication\Services\TrustedDeviceService::class)
+                        ->revokeAllForUser($freshUser);
+                }
+
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();

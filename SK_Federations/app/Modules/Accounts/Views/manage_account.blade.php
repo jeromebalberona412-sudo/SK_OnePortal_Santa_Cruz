@@ -10,7 +10,7 @@
         : 'Assign federation positions to SK Chairpersons from each barangay';
     $addLabel = $isOfficials ? 'Add SK Official' : 'Add Federation Member';
     $positionFilterLabel = $isOfficials ? 'Position' : 'Federation Position';
-    $tableColspan = $isOfficials ? 9 : 6;
+    $tableColspan = $isOfficials ? 8 : 6;
     $accountCssVersion = @filemtime(app_path('Modules/Accounts/assets/css/account.css')) ?: time();
     $accountJsVersion = @filemtime(app_path('Modules/Accounts/assets/js/account.js')) ?: time();
     $batchTemplateType = $isOfficials ? 'officials' : 'federation';
@@ -133,7 +133,6 @@
                             @if($isOfficials)
                                 <th class="th-term">Term Start</th>
                                 <th class="th-term">Term End</th>
-                                <th class="th-status">Status</th>
                             @else
                                 <th class="th-federation-position">Federation Position</th>
                             @endif
@@ -209,17 +208,6 @@
                                 @if($isOfficials)
                                     <td class="td-term">{{ $term?->term_start?->format('m/d/Y') ?? '—' }}</td>
                                     <td class="td-term">{{ $term?->term_end?->format('m/d/Y') ?? '—' }}</td>
-                                    <td class="td-status">
-                                        @php
-                                            $statusValue = (string) ($account->status ?? '');
-                                            $statusLabel = $statusValue !== '' ? ucwords(str_replace('_', ' ', strtolower($statusValue))) : '—';
-                                        @endphp
-                                        @if($statusValue !== '')
-                                            <span class="status-badge {{ strtolower($statusValue) }}">{{ $statusLabel }}</span>
-                                        @else
-                                            {{ $statusLabel }}
-                                        @endif
-                                    </td>
                                 @else
                                     <td class="td-federation-position">
                                         @if($federationPosition)

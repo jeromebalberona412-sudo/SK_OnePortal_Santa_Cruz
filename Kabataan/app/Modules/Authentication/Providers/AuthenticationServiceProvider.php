@@ -2,9 +2,14 @@
 
 namespace App\Modules\Authentication\Providers;
 
+use App\Models\User;
 use App\Modules\Authentication\Services\AccountActivationRecoveryService;
+use App\Modules\Authentication\Services\DeviceFingerprintService;
+use App\Modules\Authentication\Services\TrustedDeviceService;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -15,6 +20,8 @@ class AuthenticationServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(AccountActivationRecoveryService::class);
+        $this->app->singleton(DeviceFingerprintService::class);
+        $this->app->singleton(TrustedDeviceService::class);
     }
 
     public function boot(): void
@@ -22,6 +29,13 @@ class AuthenticationServiceProvider extends ServiceProvider
         $this->configureAccountActivationRateLimiters();
         $this->loadRoutes();
         $this->loadViewsFrom(__DIR__.'/../Views', 'authentication');
+        $this->loadMigrationsFrom(__DIR__.'/../Database/Migrations');
+
+        Event::listen(Logout::class, function (Logout $event): void {
+            if ($event->user instanceof User && request()->hasSession()) {
+                app(TrustedDeviceService::class)->revokeCurrentDevice($event->user, request());
+            }
+        });
     }
 
     protected function loadRoutes(): void

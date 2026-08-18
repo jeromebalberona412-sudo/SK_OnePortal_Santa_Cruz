@@ -39,4 +39,8 @@ return [
             'email_per_hour' => (int) env('ACCOUNT_ACTIVATION_EMAIL_PER_HOUR', 3),
         ],
     ],
+
+    'remember' => [
+        'lifetime_days' => (int) env('KABATAAN_REMEMBER_LIFETIME_DAYS', 7),
+    ],
 ];
