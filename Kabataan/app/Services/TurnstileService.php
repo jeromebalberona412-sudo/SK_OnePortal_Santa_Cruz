@@ -40,6 +40,30 @@ class TurnstileService
     }
 
     /**
+     * Return an error message when the request fails Turnstile, or null when it may proceed.
+     */
+    public function requestFailed(?\Illuminate\Http\Request $request = null): ?string
+    {
+        $request ??= request();
+
+        if (! $this->isEnabled()) {
+            return null;
+        }
+
+        $token = (string) $request->input('cf-turnstile-response', '');
+
+        if (trim($token) === '') {
+            return 'Please complete the security verification.';
+        }
+
+        if (! $this->verify($token, $request->ip())) {
+            return 'Security verification failed. Please try again.';
+        }
+
+        return null;
+    }
+
+    /**
      * Verify a Turnstile token with Cloudflare's API.
      *
      * @param  string  $token  The cf-turnstile-response token from the frontend.

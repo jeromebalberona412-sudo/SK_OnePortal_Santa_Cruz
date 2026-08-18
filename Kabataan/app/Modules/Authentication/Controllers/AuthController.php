@@ -183,6 +183,12 @@ class AuthController extends Controller
 
     public function sendResetLink(Request $request)
     {
+        if ($fail = $this->turnstileService->requestFailed($request)) {
+            return back()
+                ->withInput($request->only('email'))
+                ->with('forgot_password_error', $fail);
+        }
+
         $request->validate([
             'email' => ['required', 'email'],
         ]);
@@ -245,6 +251,13 @@ class AuthController extends Controller
 
     public function resendForgotPasswordEmail(Request $request): JsonResponse
     {
+        if ($fail = $this->turnstileService->requestFailed($request)) {
+            return response()->json([
+                'ok' => false,
+                'message' => $fail,
+            ], 422);
+        }
+
         $state = $request->session()->get('kabataan_fp_verify');
 
         if (! is_array($state) || empty($state['email'])) {
@@ -310,6 +323,10 @@ class AuthController extends Controller
 
     public function resetPassword(Request $request)
     {
+        if ($fail = $this->turnstileService->requestFailed($request)) {
+            return back()->withErrors(['email' => $fail])->withInput($request->except('password', 'password_confirmation'));
+        }
+
         $request->validate([
             'token' => ['required'],
             'email' => ['required', 'email'],
@@ -370,6 +387,10 @@ class AuthController extends Controller
 
     public function resendVerificationEmail(Request $request)
     {
+        if ($fail = $this->turnstileService->requestFailed($request)) {
+            return response()->json(['success' => false, 'message' => $fail], 422);
+        }
+
         return response()->json(['success' => true]);
     }
 

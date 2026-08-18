@@ -12,10 +12,14 @@
     @vite([
         'app/Modules/Authentication/assets/css/sign-in.css',
         'app/Modules/Authentication/assets/css/youth-fp-verify-email.css',
+        'app/Modules/Authentication/assets/js/turnstile-gate.js',
         'app/Modules/Authentication/assets/js/youth-fp-verify-email.js',
     ])
 </head>
 <body class="youth-signin-page">
+    @include('authentication::partials.turnstile-gate', [
+        'turnstileSubtitle' => 'Complete the security check to resend the reset link.',
+    ])
 
     <script>
         (function () {

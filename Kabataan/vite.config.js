@@ -16,6 +16,7 @@ export default defineConfig({
                 'app/Modules/Authentication/assets/js/sign-in.js',
                 'app/Modules/Authentication/assets/js/auth-legal.js',
                 'app/Modules/Authentication/assets/js/youth-fp-verify-email.js',
+                'app/Modules/Authentication/assets/js/turnstile-gate.js',
                 'app/Modules/Authentication/assets/css/youth-register.css',
                 'app/Modules/Authentication/assets/js/youth-register.js',
                 'app/Modules/Authentication/assets/css/youth-email-verification.css',

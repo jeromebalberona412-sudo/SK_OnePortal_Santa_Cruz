@@ -11,9 +11,13 @@
     <title>Check Your Email - SK OnePortal</title>
     @vite([
         'app/Modules/Authentication/assets/css/sign-in.css',
+        'app/Modules/Authentication/assets/js/turnstile-gate.js',
     ])
 </head>
 <body class="youth-signin-page youth-activate-page">
+    @include('authentication::partials.turnstile-gate', [
+        'turnstileSubtitle' => 'Complete the security check to resend the activation email.',
+    ])
 
     <main class="youth-signin-container">
         <div class="youth-branding-section">
@@ -98,9 +102,24 @@
                     e.preventDefault();
                     return;
                 }
+                e.preventDefault();
                 btn.disabled = true;
                 btn.classList.add('loading');
                 label.textContent = 'Sending...';
+
+                var gate = window.KabataanTurnstileGate;
+                if (!gate || !gate.challenge) {
+                    form.submit();
+                    return;
+                }
+                gate.challenge().then(function (token) {
+                    gate.injectToken(form, token);
+                    form.submit();
+                }).catch(function () {
+                    btn.disabled = false;
+                    btn.classList.remove('loading');
+                    label.textContent = 'Resend activation email';
+                });
             });
         }());
     </script>

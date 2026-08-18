@@ -4,6 +4,7 @@ namespace App\Modules\Authentication\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Authentication\Services\AccountActivationRecoveryService;
+use App\Services\TurnstileService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -13,6 +14,7 @@ class AccountActivationController extends Controller
 {
     public function __construct(
         protected AccountActivationRecoveryService $accountActivationRecoveryService,
+        protected TurnstileService $turnstileService,
     ) {}
 
     public function showRequestForm(): View
@@ -22,6 +24,12 @@ class AccountActivationController extends Controller
 
     public function sendLink(Request $request): RedirectResponse
     {
+        if ($fail = $this->turnstileService->requestFailed($request)) {
+            return back()
+                ->withInput()
+                ->with('verify_account_error', $fail);
+        }
+
         $validated = $request->validate([
             'email' => ['required', 'string', 'email', 'max:150'],
         ]);

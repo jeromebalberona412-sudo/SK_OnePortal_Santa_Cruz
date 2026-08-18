@@ -1821,6 +1821,13 @@ function showEmailVerification(email) {
             btn.disabled = true;
 
             try {
+                let turnstileToken = '';
+                if (typeof window.kkpChallengeTurnstile === 'function') {
+                    turnstileToken = await window.kkpChallengeTurnstile();
+                } else if (window.KabataanTurnstileGate?.challenge) {
+                    turnstileToken = await window.KabataanTurnstileGate.challenge();
+                }
+
                 const response = await fetch('/api/kkprofiling/resend-verification', {
                     method: 'POST',
                     credentials: 'same-origin',
@@ -1830,7 +1837,11 @@ function showEmailVerification(email) {
                         'X-CSRF-TOKEN': csrfToken,
                         'X-Requested-With': 'XMLHttpRequest',
                     },
-                    body: JSON.stringify({ email: email, barangay: barangay }),
+                    body: JSON.stringify({
+                        email: email,
+                        barangay: barangay,
+                        'cf-turnstile-response': turnstileToken,
+                    }),
                 });
 
                 const data = await response.json();
@@ -2064,6 +2075,15 @@ function showEmailVerification(email) {
         if (btnText) btnText.textContent = isAccountInvite ? 'Activating account...' : 'Completing registration...';
 
         try {
+            let turnstileToken = '';
+            if (window.KabataanTurnstileGate?.challenge) {
+                try {
+                    turnstileToken = await window.KabataanTurnstileGate.challenge();
+                } catch {
+                    return;
+                }
+            }
+
             let response;
 
             if (isWizardToken && finalizeUrl) {
@@ -2078,9 +2098,13 @@ function showEmailVerification(email) {
                     body: JSON.stringify({
                         password,
                         password_confirmation: confirmation,
+                        'cf-turnstile-response': turnstileToken,
                     }),
                 });
             } else {
+                if (window.KabataanTurnstileGate?.injectToken) {
+                    window.KabataanTurnstileGate.injectToken(form, turnstileToken);
+                }
                 const formData = new FormData(form);
                 response = await fetch(form.action, {
                     method: 'POST',

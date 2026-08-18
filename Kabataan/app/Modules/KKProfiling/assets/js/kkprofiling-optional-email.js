@@ -235,6 +235,24 @@
         }
     }
 
+    window.kkpChallengeTurnstile = function () {
+        return new Promise((resolve, reject) => {
+            requestTurnstileThen((token) => {
+                resolve(token || '');
+            });
+            const fail = () => {
+                if (pendingAction) {
+                    pendingAction = null;
+                    hideOverlay(turnstileModal);
+                    resetTurnstile();
+                    reject(new Error('Verification cancelled.'));
+                }
+            };
+            document.getElementById('kkpTurnstileCancelBtn')?.addEventListener('click', fail, { once: true });
+            document.getElementById('kkpTurnstileBackdrop')?.addEventListener('click', fail, { once: true });
+        });
+    };
+
     function setBusy(busy) {
         isSubmitting = busy;
         if (nextBtn) {

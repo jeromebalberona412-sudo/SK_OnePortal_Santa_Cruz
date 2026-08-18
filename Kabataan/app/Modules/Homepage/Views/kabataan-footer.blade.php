@@ -10,7 +10,7 @@
                     </span>
                 </a>
                 <p class="kabataan-footer-desc">
-                    The official youth portal for Santa Cruz, Laguna — helping KK members discover SK programs, follow barangay updates, and participate in local governance.
+                    The official youth portal for KK members in Santa Cruz, Laguna.
                 </p>
                 <div class="kabataan-footer-social" aria-label="Social media links">
                     <a href="https://www.facebook.com/profile.php?id=61589713555110" class="kabataan-footer-social-link" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
@@ -20,25 +20,17 @@
             </div>
 
             <div class="col-6 col-md-3 col-lg-2 kabataan-footer-col">
-                <h3 class="kabataan-footer-heading">Quick Links</h3>
+                <h3 class="kabataan-footer-heading">Pages</h3>
                 <ul class="kabataan-footer-links">
                     <li><a href="{{ route('homepage') }}">Home</a></li>
                     <li><a href="{{ route('homepage') }}#about">About</a></li>
+                    <li><a href="{{ route('baranggay_abyip.index') }}">Barangay ABYIP</a></li>
+                    <li><a href="{{ route('program_accomplishments.barangays') }}">Accomplishments</a></li>
                     <li><a href="{{ route('homepage') }}#faq">FAQs</a></li>
-                    <li><a href="{{ route('homepage') }}#kabataanFooter">Contact</a></li>
                 </ul>
             </div>
 
-            <div class="col-6 col-md-3 col-lg-2 kabataan-footer-col">
-                <h3 class="kabataan-footer-heading">Services</h3>
-                <ul class="kabataan-footer-links">
-                    <li><a href="{{ route('homepage') }}#about">Program Discovery</a></li>
-                    <li><a href="{{ route('register') }}">Youth Registration</a></li>
-                    <li><a href="{{ route('homepage') }}#faq">Help &amp; Support</a></li>
-                </ul>
-            </div>
-
-            <div class="col-12 col-md-6 col-lg-4 kabataan-footer-col">
+            <div class="col-12 col-md-6 col-lg-6 kabataan-footer-col">
                 <h3 class="kabataan-footer-heading">Contact</h3>
                 <ul class="kabataan-footer-contact-list">
                     <li>

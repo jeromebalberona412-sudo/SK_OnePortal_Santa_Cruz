@@ -22,7 +22,7 @@
     white-space: nowrap;
 }
 
-@media (max-width: 991.98px) {
+@media (max-width: 1199.98px) {
     .homepage-body .kabataan-nav-links {
         display: none;
     }
@@ -46,7 +46,7 @@
     }
 }
 
-@media (min-width: 992px) {
+@media (min-width: 1200px) {
     .homepage-body .kabataan-drawer {
         display: none !important;
     }
@@ -78,6 +78,12 @@
 
     .homepage-body .kabataan-hero-facts dd {
         font-size: 0.7rem;
+        overflow-wrap: anywhere;
+    }
+
+    .homepage-body .kabataan-kk-panel,
+    .homepage-body .kabataan-explore-grid {
+        grid-template-columns: 1fr;
     }
 
     .homepage-body .about-hero {
@@ -114,6 +120,12 @@
         min-height: 32px;
         padding: 0 10px;
         font-size: 0.68rem;
+    }
+}
+
+@media (max-width: 414px) {
+    .homepage-body .kabataan-nav-actions .kabataan-nav-auth-btn {
+        display: none;
     }
 }
 

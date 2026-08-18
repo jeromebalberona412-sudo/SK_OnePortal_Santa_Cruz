@@ -35,6 +35,7 @@ class KKProfilingController extends Controller
     public function __construct(
         protected KabataanPhotoService $photoService,
         protected BarangayZoneService $barangayZoneService,
+        protected TurnstileService $turnstileService,
     ) {}
 
     /**
@@ -999,6 +1000,13 @@ class KKProfilingController extends Controller
      */
     public function resendVerification(Request $request)
     {
+        if ($fail = $this->turnstileService->requestFailed($request)) {
+            return response()->json([
+                'success' => false,
+                'message' => $fail,
+            ], 422);
+        }
+
         $request->validate([
             'email' => ['required', 'email'],
             'barangay' => ['nullable', 'string'],

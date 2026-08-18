@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fallbackFaqs = [
         {
-            question: 'What is SKonePortal?',
-            answer: 'SKonePortal is the official digital platform of the Municipality of Santa Cruz that connects the Kabataan, Sangguniang Kabataan (SK) Officials, SK Federation, and the Local Youth Development Office (LYDO). It provides online access to youth programs, scholarship applications, events, announcements, surveys, profiling, and other SK-related services in one centralized system.',
+            question: 'What is SK OnePortal?',
+            answer: 'SK OnePortal is the official digital platform of the Municipality of Santa Cruz that connects Kabataan, Sangguniang Kabataan (SK) Officials, SK Federation, and the Local Youth Development Office (LYDO). It provides online access to youth programs, scholarship applications, events, announcements, surveys, profiling, and other SK-related services in one centralized system.',
         },
         {
             question: 'How do I create an account?',
@@ -21,12 +21,16 @@ document.addEventListener('DOMContentLoaded', () => {
             answer: 'Click the Sign In button, enter your registered email address and password, then click Login. If you forget your password, use the Forgot Password option to receive a reset link by email.',
         },
         {
-            question: 'What services can I access through SKonePortal?',
+            question: 'What is KK Profiling?',
+            answer: 'KK Profiling is the official youth profile form for Katipunan ng Kabataan members aged 15–30 in Santa Cruz. After you create a Kabataan account, complete KK Profiling so your barangay SK has an accurate youth record. Approved profile details can also be used when you apply for programs such as scholarships.',
+        },
+        {
+            question: 'What services can I access through SK OnePortal?',
             answer: 'Registered users can complete the KK Profiling Form, apply for scholarship programs, join events and activities, receive announcements, answer surveys, submit required documents, track application status, and access other youth-related services offered by the Municipality of Santa Cruz.',
         },
         {
-            question: 'Who can use SKonePortal?',
-            answer: 'SKonePortal is intended for Kabataan residing in the Municipality of Santa Cruz, SK Officials, SK Federation members, the Local Youth Development Office (LYDO), and other authorized municipal personnel, depending on their assigned roles and permissions.',
+            question: 'Who can use SK OnePortal?',
+            answer: 'SK OnePortal is intended for Kabataan residing in the Municipality of Santa Cruz, SK Officials, SK Federation members, the Local Youth Development Office (LYDO), and other authorized municipal personnel, depending on their assigned roles and permissions.',
         },
     ];
 

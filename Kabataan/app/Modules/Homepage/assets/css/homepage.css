@@ -983,7 +983,8 @@ body.homepage-body.kabataan-homepage::after {
     width: 48px;
     height: 48px;
     border-radius: 16px;
-    object-fit: cover;
+    object-fit: contain;
+    padding: 4px;
     box-shadow: 0 10px 24px rgba(4, 80, 168, 0.18);
     background: #fff;
 }
@@ -1188,8 +1189,13 @@ body.homepage-body.kabataan-homepage::after {
     align-items: center;
 }
 
+.kabataan-hero-copy,
+.kabataan-hero-visual {
+    min-width: 0;
+}
+
 .kabataan-hero-copy {
-    padding: 28px 0;
+    padding: 8px 0;
 }
 
 .kabataan-eyebrow {
@@ -1236,8 +1242,8 @@ body.homepage-body.kabataan-homepage::after {
 .kabataan-hero-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 14px;
-    margin-top: 28px;
+    gap: 12px;
+    margin-top: 22px;
 }
 
 .kabataan-button {
@@ -1311,35 +1317,29 @@ body.homepage-body.kabataan-homepage::after {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
-    padding: 28px 26px 24px;
-    border-radius: 28px;
-    background: rgba(255, 255, 255, 0.92);
+    padding: 24px 22px 20px;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.94);
     border: 1px solid rgba(148, 163, 184, 0.18);
-    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+    box-shadow: 0 20px 48px rgba(15, 23, 42, 0.10);
 }
 
 .kabataan-hero-logo {
-    width: 72px;
-    height: 72px;
-    border-radius: 20px;
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
     object-fit: contain;
+    padding: 6px;
     background: #fff;
     box-shadow: 0 10px 24px rgba(4, 80, 168, 0.16);
 }
 
-.kabataan-hero-panel h2 {
-    margin: 4px 0 0;
-    font-family: 'Poppins', 'Inter', sans-serif;
-    font-size: 1.35rem;
-    letter-spacing: -0.03em;
-    color: #081225;
-}
-
-.kabataan-hero-panel > p {
+.kabataan-hero-panel-lead {
     margin: 0;
-    color: #475569;
-    line-height: 1.65;
+    color: #334155;
+    line-height: 1.6;
     font-size: 0.98rem;
+    font-weight: 600;
 }
 
 .kabataan-hero-points {
@@ -1447,7 +1447,7 @@ body.homepage-body.kabataan-homepage::after {
 }
 
 .kabataan-section {
-    padding: 78px 0;
+    padding: 56px 0;
 }
 
 .kabataan-section-alt {
@@ -1460,12 +1460,24 @@ body.homepage-body.kabataan-homepage::after {
 }
 
 .kabataan-section-heading h2 {
-    margin: 14px 0 10px;
+    margin: 12px 0 8px;
     font-family: 'Poppins', 'Inter', sans-serif;
-    font-size: clamp(2rem, 3vw, 3.1rem);
-    line-height: 1.05;
-    letter-spacing: -0.05em;
+    font-size: clamp(1.7rem, 3vw, 2.4rem);
+    line-height: 1.12;
+    letter-spacing: -0.04em;
     color: #081225;
+}
+
+.kabataan-section-heading--center {
+    text-align: center;
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.kabataan-section-heading--center p {
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .kabataan-section-heading-row {
@@ -1598,6 +1610,108 @@ body.homepage-body.kabataan-homepage::after {
     font-size: 0.9rem;
     font-weight: 800;
     color: #0450a8;
+}
+
+.kabataan-explore-card.kabataan-explore-card--static {
+    cursor: default;
+}
+
+.kabataan-explore-card.kabataan-explore-card--static:hover,
+.kabataan-explore-card.kabataan-explore-card--static:focus-visible {
+    border-color: rgba(148, 163, 184, 0.16);
+    box-shadow: 0 18px 34px rgba(15, 23, 42, 0.06);
+}
+
+.kabataan-kk-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 22px;
+    align-items: stretch;
+    margin-bottom: 36px;
+    padding: 28px 26px;
+    border-radius: 24px;
+    background: #fff;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    box-shadow: 0 18px 34px rgba(15, 23, 42, 0.06);
+}
+
+.kabataan-kk-panel-copy h3 {
+    margin: 12px 0 10px;
+    font-family: 'Poppins', 'Inter', sans-serif;
+    font-size: clamp(1.25rem, 2.2vw, 1.55rem);
+    letter-spacing: -0.03em;
+    color: #081225;
+}
+
+.kabataan-kk-panel-copy p {
+    margin: 0;
+    color: #475569;
+    line-height: 1.65;
+    font-size: 0.98rem;
+}
+
+.kabataan-kk-points {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 12px;
+}
+
+.kabataan-kk-points li {
+    margin: 0;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: #f8fafc;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.kabataan-kk-points strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #081225;
+    font-size: 0.95rem;
+}
+
+.kabataan-kk-points span {
+    display: block;
+    color: #475569;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.kabataan-about-subhead {
+    margin: 0 0 16px;
+    font-family: 'Poppins', 'Inter', sans-serif;
+    font-size: 1.15rem;
+    color: #081225;
+    text-align: center;
+}
+
+.kabataan-about-join {
+    margin-bottom: 28px;
+}
+
+.kabataan-trust-list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.kabataan-trust-list li {
+    margin: 0;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: #f8fafc;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    color: #334155;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.45;
+    text-align: center;
 }
 
 .kabataan-program-grid,
@@ -1985,7 +2099,8 @@ body.homepage-body.kabataan-homepage::after {
     width: 42px;
     height: 42px;
     border-radius: 14px;
-    object-fit: cover;
+    object-fit: contain;
+    padding: 4px;
     background: #fff;
 }
 
@@ -2015,9 +2130,18 @@ body.homepage-body.kabataan-homepage::after {
     .kabataan-explore-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .kabataan-trust-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .kabataan-kk-panel {
+        grid-template-columns: 1fr;
+        padding: 22px 20px;
+    }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1199.98px) {
     .kabataan-nav-links {
         display: none;
     }
@@ -2026,6 +2150,9 @@ body.homepage-body.kabataan-homepage::after {
         display: inline-flex;
         margin-left: 0;
     }
+}
+
+@media (max-width: 900px) {
 
     .kabataan-hero {
         padding-top: 96px;
@@ -2060,7 +2187,8 @@ body.homepage-body.kabataan-homepage::after {
     .kabataan-faq-grid,
     .kabataan-contact-grid-cards,
     .kabataan-value-grid,
-    .kabataan-explore-grid {
+    .kabataan-explore-grid,
+    .kabataan-kk-panel {
         grid-template-columns: 1fr;
     }
 
@@ -2105,6 +2233,10 @@ body.homepage-body.kabataan-homepage::after {
     }
 
     .kabataan-hero-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .kabataan-trust-list {
         grid-template-columns: 1fr;
     }
 

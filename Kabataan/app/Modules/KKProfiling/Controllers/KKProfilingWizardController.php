@@ -315,6 +315,8 @@ class KKProfilingWizardController extends Controller
 
     public function sendVerification(Request $request, string $barangay)
     {
+        $this->assertTurnstilePassed($request);
+
         $barangayRecord = $this->resolveBarangay($barangay);
         $wizard = $this->draftService->resolveWizard();
 

@@ -4,6 +4,7 @@ namespace App\Modules\KKProfiling\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Services\KkProfilingAccountInviteService;
+use App\Services\TurnstileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ class KKProfilingAccountInviteController extends Controller
 {
     public function __construct(
         private readonly KkProfilingAccountInviteService $inviteService,
+        private readonly TurnstileService $turnstileService,
     ) {}
 
     public function show(int $registration, string $token): View
@@ -39,6 +41,19 @@ class KKProfilingAccountInviteController extends Controller
 
     public function activate(Request $request, int $registration, string $token): RedirectResponse|JsonResponse|View
     {
+        $wantsJson = $request->expectsJson() || $request->ajax();
+
+        if ($fail = $this->turnstileService->requestFailed($request)) {
+            if ($wantsJson) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $fail,
+                ], 422);
+            }
+
+            return back()->withErrors(['password' => $fail])->withInput();
+        }
+
         $request->validate([
             'password' => [
                 'required',

@@ -9,10 +9,19 @@
     @vite([
         'app/Modules/Authentication/assets/css/sign-in.css',
         'app/Modules/Authentication/assets/css/youth-email-verification.css',
+        'app/Modules/Authentication/assets/js/turnstile-gate.js',
         'app/Modules/Authentication/assets/js/youth-email-verification.js',
     ])
 </head>
 <body class="youth-signin-page">
+    @include('authentication::partials.turnstile-gate', [
+        'turnstileSubtitle' => 'Complete the security check to resend the verification email.',
+    ])
+    <div id="email-verify-data"
+         data-resend-url="{{ route('verification.resend', [], false) }}"
+         data-email="{{ $email ?? '' }}"
+         hidden
+         aria-hidden="true"></div>
     <!-- Animated Background (same as signin page) -->
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>

@@ -197,6 +197,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return 'barangays';
         }
 
+        const hashId = window.location.hash.replace('#', '');
+        if (hashId && document.getElementById(hashId)) {
+            return hashId;
+        }
+
         const dataScroll = document.body.dataset.scrollTo;
         if (dataScroll && document.getElementById(dataScroll)) {
             return dataScroll;

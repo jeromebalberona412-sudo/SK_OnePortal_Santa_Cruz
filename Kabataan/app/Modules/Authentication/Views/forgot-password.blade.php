@@ -12,9 +12,13 @@
     @vite([
         'app/Modules/Authentication/assets/css/sign-in.css',
         'app/Modules/Authentication/assets/css/auth-legal.css',
+        'app/Modules/Authentication/assets/js/turnstile-gate.js',
     ])
 </head>
 <body class="youth-signin-page">
+    @include('authentication::partials.turnstile-gate', [
+        'turnstileSubtitle' => 'Complete the security check to send a reset link.',
+    ])
 
     <main class="youth-signin-container">
 
@@ -208,7 +212,17 @@
                     }
 
                     setBtn(true, 'Sending...', true);
-                    form.submit();
+                    var gate = window.KabataanTurnstileGate;
+                    if (!gate || !gate.challenge) {
+                        form.submit();
+                        return;
+                    }
+                    gate.challenge().then(function (token) {
+                        gate.injectToken(form, token);
+                        form.submit();
+                    }).catch(function () {
+                        setBtn(false, 'Send Reset Link', false);
+                    });
                 });
             }
         }());

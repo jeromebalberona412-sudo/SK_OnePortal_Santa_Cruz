@@ -8,10 +8,13 @@
     <title>Reset Password - SK OnePortal</title>
     @vite([
         'app/Modules/Authentication/assets/css/sign-in.css',
-        'app/Modules/Authentication/assets/js/sign-in.js',
+        'app/Modules/Authentication/assets/js/turnstile-gate.js',
     ])
 </head>
 <body class="youth-signin-page">
+    @include('authentication::partials.turnstile-gate', [
+        'turnstileSubtitle' => 'Complete the security check to reset your password.',
+    ])
     <!-- Animated Background -->
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
@@ -329,21 +332,19 @@
                 submitBtn.classList.add('loading');
                 btnText.textContent = 'Resetting...';
 
-                setTimeout(function () {
-                    var modal      = document.getElementById('successModal');
-                    var countdownEl = document.getElementById('countdown');
-                    modal.style.display = 'flex';
-
-                    var seconds  = 3;
-                    var interval = setInterval(function () {
-                        seconds--;
-                        countdownEl.textContent = seconds;
-                        if (seconds <= 0) {
-                            clearInterval(interval);
-                            window.location.href = '{{ route("sign-in") }}';
-                        }
-                    }, 1000);
-                }, 1500);
+                var gate = window.KabataanTurnstileGate;
+                if (!gate || !gate.challenge) {
+                    form.submit();
+                    return;
+                }
+                gate.challenge().then(function (token) {
+                    gate.injectToken(form, token);
+                    form.submit();
+                }).catch(function () {
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('loading');
+                    btnText.textContent = 'Reset Password';
+                });
             });
         });
     </script>

@@ -6,27 +6,25 @@
         <section class="kabataan-hero" id="hero">
             <div class="container kabataan-shell kabataan-hero-grid">
                 <div class="kabataan-hero-copy">
-                    <span class="kabataan-eyebrow">Official youth portal · Santa Cruz, Laguna</span>
+                    <span class="kabataan-eyebrow">Santa Cruz, Laguna</span>
                     <h1>Your Voice. Your Programs. Your Barangay.</h1>
                     <p class="kabataan-hero-text">
-                        Kabataan is the public youth portal of SK OnePortal. KK members aged 15–30 can learn about Sangguniang Kabataan programs, read barangay updates, and join community activities in one place.
+                        The official Kabataan portal for KK members aged 15–30. Find SK programs, barangay updates, and youth services in one place.
                     </p>
-
                     <div class="kabataan-hero-actions">
-                        <a href="{{ route('register') }}" class="kabataan-button kabataan-button-primary">Create Account</a>
-                        <a href="{{ route('homepage') }}#about" class="kabataan-button kabataan-button-secondary">Learn More</a>
+                        <a href="{{ route('sign-in') }}" class="kabataan-button kabataan-button-secondary">Sign In</a>
+                        <a href="{{ route('register') }}" class="kabataan-button kabataan-button-primary">Sign Up</a>
                     </div>
                 </div>
 
                 <div class="kabataan-hero-visual">
                     <div class="kabataan-hero-panel">
                         <img src="/images/skoneportal_logo.webp" alt="SK OnePortal Kabataan logo" class="kabataan-hero-logo">
-                        <h2>SK OnePortal Kabataan</h2>
-                        <p>A clear, official way to stay connected with your barangay SK — without searching across separate pages.</p>
+                        <p class="kabataan-hero-panel-lead">Stay connected with your barangay SK without hunting across separate pages.</p>
                         <ul class="kabataan-hero-points">
-                            <li>Discover scholarships, sports, health, and livelihood programs</li>
-                            <li>Read public ABYIP and program accomplishment records</li>
-                            <li>Sign in to apply, track participation, and get announcements</li>
+                            <li>Browse scholarships, sports, health, and livelihood programs</li>
+                            <li>Read public ABYIP and accomplishment records</li>
+                            <li>Sign in to apply and follow announcements</li>
                         </ul>
                         <dl class="kabataan-hero-facts">
                             <div>
@@ -39,7 +37,7 @@
                             </div>
                             <div>
                                 <dt>Free</dt>
-                                <dd>to join and use</dd>
+                                <dd>to join</dd>
                             </div>
                         </dl>
                     </div>
@@ -49,10 +47,10 @@
 
         <section class="kabataan-section" id="how-it-helps" aria-labelledby="valueHeading">
             <div class="kabataan-shell">
-                <div class="kabataan-section-heading">
+                <div class="kabataan-section-heading kabataan-section-heading--center">
                     <span class="kabataan-eyebrow">What you can do</span>
                     <h2 id="valueHeading">Youth services in one portal</h2>
-                    <p>Browse public information now. Create an account when you are ready to apply and participate.</p>
+                    <p>Public information is open to browse. Create an account when you are ready to apply.</p>
                 </div>
 
                 <div class="kabataan-value-grid">
@@ -69,10 +67,10 @@
 
         <section class="kabataan-section kabataan-section-alt" id="explore" aria-labelledby="exploreHeading">
             <div class="kabataan-shell">
-                <div class="kabataan-section-heading">
+                <div class="kabataan-section-heading kabataan-section-heading--center">
                     <span class="kabataan-eyebrow">Public pages</span>
-                    <h2 id="exploreHeading">Explore Santa Cruz youth services</h2>
-                    <p>These pages are available even before you sign in.</p>
+                    <h2 id="exploreHeading">Explore without signing in</h2>
+                    <p>ABYIP, program accomplishments, and FAQs are available to everyone.</p>
                 </div>
 
                 <div class="kabataan-explore-grid">

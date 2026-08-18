@@ -94,19 +94,54 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Handle resend button click
-    resendBtn.addEventListener('click', function() {
-        // Disable button temporarily
+    resendBtn.addEventListener('click', async function() {
         resendBtn.disabled = true;
         resendBtn.textContent = 'Sending...';
-        
-        // Simulate sending email (prototype)
-        setTimeout(() => {
-            // Reset timer
+
+        const dataEl = document.getElementById('email-verify-data');
+        const resendUrl = dataEl?.dataset.resendUrl || '/email/resend';
+        const email = dataEl?.dataset.email || '';
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+        try {
+            let turnstileToken = '';
+            if (window.KabataanTurnstileGate && window.KabataanTurnstileGate.challenge) {
+                turnstileToken = await window.KabataanTurnstileGate.challenge();
+            }
+
+            const response = await fetch(resendUrl, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    email,
+                    'cf-turnstile-response': turnstileToken,
+                }),
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                showNotification(data.message || 'Unable to resend verification email. Please try again.');
+                return;
+            }
+
             timeRemaining = 600;
             countdownElement.textContent = formatTime(timeRemaining);
             countdownElement.style.color = '#d32f2f';
-            
-            // Re-enable button
+            showNotification(data.message || 'Verification email resent successfully!');
+            clearInterval(timerInterval);
+            startTimer();
+        } catch (error) {
+            if (error && error.message && error.message !== 'Verification cancelled.') {
+                showNotification('Unable to resend verification email. Please try again.');
+            }
+        } finally {
             resendBtn.disabled = false;
             resendBtn.innerHTML = `
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -114,14 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </svg>
                 Resend Verification Email
             `;
-            
-            // Show success message
-            showNotification('Verification email resent successfully!');
-            
-            // Restart timer
-            clearInterval(timerInterval);
-            startTimer();
-        }, 2000);
+        }
     });
     
     // Show notification

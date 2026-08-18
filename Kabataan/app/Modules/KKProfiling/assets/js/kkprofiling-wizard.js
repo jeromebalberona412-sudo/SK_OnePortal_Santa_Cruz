@@ -1538,8 +1538,17 @@
         showEmailStatus('');
 
         try {
+            let turnstileToken = '';
+            if (typeof window.kkpChallengeTurnstile === 'function') {
+                turnstileToken = await window.kkpChallengeTurnstile();
+            } else if (window.KabataanTurnstileGate?.challenge) {
+                turnstileToken = await window.KabataanTurnstileGate.challenge();
+            }
+
             const endpoint = isResend ? `${apiBase}/resend-verification` : `${apiBase}/send-verification`;
-            const data = await postJson(endpoint, {});
+            const data = await postJson(endpoint, {
+                'cf-turnstile-response': turnstileToken,
+            });
 
             if (data.registration_completed) {
                 showRegistrationCompleteState(Boolean(data.auto_approved));

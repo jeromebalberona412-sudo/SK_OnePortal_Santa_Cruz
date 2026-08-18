@@ -122,6 +122,16 @@
             clearStatus();
 
             try {
+                let turnstileToken = '';
+                if (window.KabataanTurnstileGate && window.KabataanTurnstileGate.challenge) {
+                    try {
+                        turnstileToken = await window.KabataanTurnstileGate.challenge();
+                    } catch {
+                        enableResend();
+                        return;
+                    }
+                }
+
                 const response = await fetch(resendUrl, {
                     method: 'POST',
                     headers: {
@@ -131,7 +141,10 @@
                         'X-Requested-With': 'XMLHttpRequest',
                     },
                     credentials: 'same-origin',
-                    body: JSON.stringify({ email }),
+                    body: JSON.stringify({
+                        email,
+                        'cf-turnstile-response': turnstileToken,
+                    }),
                 });
 
                 const data = await response.json().catch(() => ({}));
