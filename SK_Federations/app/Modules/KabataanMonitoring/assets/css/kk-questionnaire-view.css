@@ -174,3 +174,49 @@
         page-break-after: auto;
     }
 }
+
+.kk-profiling-edit-root[hidden] {
+    display: none !important;
+}
+
+.kk-profiling-edit-root {
+    width: 100%;
+}
+
+.kk-profiling-edit-root .kkp-sq-chk {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.kk-profiling-edit-root .kkp-sig-container--readonly {
+    pointer-events: none;
+}
+
+.kk-profiling-edit-root #kkEditLastName,
+.kk-profiling-edit-root #kkEditFirstName,
+.kk-profiling-edit-root #kkEditMiddleName {
+    text-transform: uppercase;
+}
+
+.kkp-assembly-arrow {
+    margin-left: 4px;
+    color: #b8c0c8;
+    font-weight: 700;
+}
+
+.kkp-assembly-arrow--on {
+    color: #111;
+}
+
+.kkp-assembly-followup--inactive {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.kkp-assembly-followup--active {
+    opacity: 1;
+}
+
+#kmKKPViewRoot[hidden] {
+    display: none !important;
+}

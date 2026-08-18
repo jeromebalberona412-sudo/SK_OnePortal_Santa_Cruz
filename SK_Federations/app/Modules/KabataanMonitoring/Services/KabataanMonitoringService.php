@@ -3,13 +3,17 @@
 namespace App\Modules\KabataanMonitoring\Services;
 
 use App\Models\KabataanRegistration;
+use App\Modules\AuditLog\Contracts\AuditLogInterface;
+use App\Modules\Shared\Models\User;
 use App\Services\BarangayLogoUrlService;
 use Illuminate\Support\Facades\Schema;
 
 class KabataanMonitoringService
 {
-    public function __construct(private readonly BarangayLogoUrlService $logoUrls)
-    {
+    public function __construct(
+        private readonly BarangayLogoUrlService $logoUrls,
+        private readonly AuditLogInterface $auditLog,
+    ) {
     }
     /**
      * @return list<array<string, mixed>>
@@ -51,7 +55,15 @@ class KabataanMonitoringService
 
         $query = KabataanRegistration::query()
             ->whereNull('deleted_at')
-            ->whereNotNull('submitted_at');
+            ->whereNotNull('submitted_at')
+            ->whereIn('status', ['active', 'email_verified', 'password_set']);
+
+        if (Schema::hasColumn('kabataan_registrations', 'evaluation_status')) {
+            $query->where(function ($q) {
+                $q->whereNull('evaluation_status')
+                    ->orWhereIn('evaluation_status', ['active', 'Auto Approved']);
+            });
+        }
 
         if ($barangayName) {
             $query->whereHas('barangay', fn ($builder) => $builder->where('name', $barangayName));
@@ -79,6 +91,26 @@ class KabataanMonitoringService
             ->find($id);
     }
 
+    public function destroy(User $user, int $id): void
+    {
+        $record = $this->find($id);
+
+        if ($record === null) {
+            abort(404, 'Kabataan record not found.');
+        }
+
+        $record->delete();
+
+        $this->auditLog->log('kabataan_registration.deleted', $user, [
+            'action' => 'delete',
+            'entity_type' => 'kabataan_registration',
+            'entity_id' => (string) $id,
+            'module' => 'kabataan_monitoring',
+            'barangay' => $record->barangay?->name,
+            'name' => $record->full_name,
+        ]);
+    }
+
     public function renderQuestionnaireHtml(int $id): ?string
     {
         $record = $this->find($id);
@@ -98,7 +130,7 @@ class KabataanMonitoringService
      * @param  array<string, mixed>  $formData
      * @return array<string, mixed>
      */
-    private function buildQuestionnaireFields(KabataanRegistration $record, array $formData): array
+    public function buildQuestionnaireFields(KabataanRegistration $record, array $formData): array
     {
         return [
             'respondent_number' => $this->displayRespondentNumber($record),
@@ -128,7 +160,12 @@ class KabataanMonitoringService
             'kk_times' => $this->formValue($formData, 'kk_times'),
             'kk_assembly' => $this->formValue($formData, 'kk_assembly'),
             'kk_reason' => $this->formValue($formData, 'kk_reason'),
-            'facebook' => $this->formValue($formData, 'facebook'),
+            'facebook' => $this->formValue($formData, 'facebook_profile_url') !== '—'
+                ? $this->formValue($formData, 'facebook_profile_url')
+                : $this->formValue($formData, 'facebook'),
+            'facebook_profile_url' => $this->formValue($formData, 'facebook_profile_url') !== '—'
+                ? $this->formValue($formData, 'facebook_profile_url')
+                : $this->formValue($formData, 'facebook'),
             'group_chat' => $this->formValue($formData, 'group_chat'),
             'signature_name' => $this->resolveSignatureName($record, $formData),
             'signature' => $this->resolveSignature($formData),
@@ -225,9 +262,7 @@ class KabataanMonitoringService
             'attendance' => $this->formValue($formData, 'kk_assembly'),
             'lastCheckIn' => $record->submitted_at?->format('M j, Y') ?? '—',
             'submittedAt' => $record->submitted_at?->toIso8601String(),
-            'submittedYear' => ! empty($formData['profile_updated_year'])
-                ? (int) $formData['profile_updated_year']
-                : ($record->submitted_at ? (int) $record->submitted_at->format('Y') : null),
+            'submittedYear' => $record->submitted_at ? (int) $record->submitted_at->format('Y') : null,
             'score' => '—',
             'programs' => [],
             'recommendations' => [],

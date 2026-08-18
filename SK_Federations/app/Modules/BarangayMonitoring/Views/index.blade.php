@@ -64,20 +64,14 @@
                         <p class="bm-schedule-summary-note">Set when barangay SK Officials may upload ABYIP documents.</p>
                     </div>
                     <div class="bm-schedule-actions">
-                        @if(!empty($abyipSchedule))
+                        @if(!empty($abyipSchedule) || !empty($abyipSchedules))
                         <button type="button" class="bm-btn-schedule secondary" id="btnViewSchedule">
                             <i class="fas fa-eye"></i> View Schedule
                         </button>
-                        <button type="button" class="bm-btn-schedule" id="btnCreateSchedule">
-                            <i class="fas fa-edit"></i> Edit Schedule
-                        </button>
-                        @elseif(!empty($canCreateAbyipSchedule))
+                        @endif
+                        @if(!empty($canCreateAbyipSchedule))
                         <button type="button" class="bm-btn-schedule" id="btnCreateSchedule">
                             <i class="fas fa-plus"></i> Create Schedule
-                        </button>
-                        @else
-                        <button type="button" class="bm-btn-schedule secondary" id="btnViewSchedule" disabled title="A schedule for this calendar year already exists.">
-                            <i class="fas fa-eye"></i> View Schedule
                         </button>
                         @endif
                     </div>
@@ -194,7 +188,7 @@
     <div class="bm-modal-backdrop" data-schedule-view-close></div>
     <div class="bm-modal-dialog bm-modal-lg">
         <div class="bm-modal-header">
-            <h3>ABYIP Submission Schedule</h3>
+            <h3>View ABYIP Schedule</h3>
             <button type="button" class="bm-modal-close" data-schedule-view-close>&times;</button>
         </div>
         <div class="bm-modal-body" id="scheduleViewModalBody">
@@ -234,42 +228,85 @@
                         </div>
                         @endif
                     </div>
-                    @if(!empty($abyipSchedule['histories']))
-                        <div class="bm-schedule-history">
-                            <h5>Schedule History</h5>
-                            <div class="bm-schedule-history-list">
-                                @foreach($abyipSchedule['histories'] as $history)
-                                    <div class="bm-schedule-history-item">
-                                        <div class="bm-schedule-history-top">
-                                            <strong>{{ $history['action_label'] }}</strong>
-                                            <span>{{ $history['created_at'] }}</span>
-                                        </div>
-                                        @if($history['old_deadline'] || $history['new_deadline'])
-                                            <p>Deadline: {{ $history['old_deadline'] ?? '—' }} → {{ $history['new_deadline'] ?? '—' }}</p>
-                                        @endif
-                                        <p class="bm-schedule-history-meta">By {{ $history['updated_by'] }}</p>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
                 </div>
             @else
                 <p class="bm-empty">No schedule has been created yet.</p>
             @endif
         </div>
         <div class="bm-modal-footer bm-schedule-view-footer">
-            @if(!empty($abyipSchedule))
+            <button type="button" class="bm-btn-schedule secondary bm-btn-history" id="btnScheduleHistory">
+                <i class="fas fa-history"></i> Schedule History
+            </button>
+            @if(!empty($abyipSchedule) && ($abyipSchedule['status'] ?? '') !== 'cancelled')
             <button type="button" class="bm-btn-schedule secondary" id="btnEditSchedule" data-id="{{ $abyipSchedule['id'] }}">
-                <i class="fas fa-edit"></i> Edit Schedule
+                <i class="fas fa-edit"></i> Edit
             </button>
             <button type="button" class="bm-btn-schedule danger" id="btnCancelSchedule" data-id="{{ $abyipSchedule['id'] }}">
-                <i class="fas fa-ban"></i> Cancel Schedule
-            </button>
-            <button type="button" class="bm-btn-schedule danger" id="btnDeleteSchedule" data-id="{{ $abyipSchedule['id'] }}">
-                <i class="fas fa-trash"></i> Delete Schedule
+                <i class="fas fa-ban"></i> Cancel
             </button>
             @endif
+            @if(!empty($abyipSchedule))
+            <button type="button" class="bm-btn-schedule danger" id="btnDeleteSchedule" data-id="{{ $abyipSchedule['id'] }}">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+            @endif
+        </div>
+    </div>
+</div>
+
+<div id="scheduleHistoryModal" class="bm-modal bm-modal-stacked" hidden>
+    <div class="bm-modal-backdrop" data-schedule-history-close></div>
+    <div class="bm-modal-dialog bm-modal-lg bm-schedule-history-dialog">
+        <div class="bm-modal-header">
+            <h3>Schedule History by Year</h3>
+            <button type="button" class="bm-modal-close" data-schedule-history-close>&times;</button>
+        </div>
+        <div class="bm-modal-body bm-schedule-history-body">
+            @forelse(($abyipSchedules ?? []) as $yearSchedule)
+                @php
+                    $yearHistories = $yearSchedule['histories'] ?? [];
+                    $yearStatus = strtolower((string) ($yearSchedule['status'] ?? 'active'));
+                @endphp
+                <article class="bm-schedule-year-card">
+                    <div class="bm-schedule-year-head">
+                        <h4>CY {{ $yearSchedule['fiscal_year'] }}</h4>
+                        <span class="bm-schedule-status is-{{ $yearStatus }}">{{ $yearSchedule['status_label'] ?? '—' }}</span>
+                    </div>
+                    <div class="bm-schedule-year-meta">
+                        <span><strong>Open</strong> {{ $yearSchedule['date_start'] ?? '—' }}</span>
+                        <span><strong>Deadline</strong> {{ $yearSchedule['deadline'] ?? '—' }}</span>
+                    </div>
+                    @if(!empty($yearHistories))
+                        <div class="bm-schedule-history-list">
+                            @foreach($yearHistories as $history)
+                                <div class="bm-schedule-history-item">
+                                    <div class="bm-schedule-history-top">
+                                        <strong>{{ $history['action_label'] }}</strong>
+                                        <span>{{ $history['created_at'] }}</span>
+                                    </div>
+                                    @if(!empty($history['old_date_start']) || !empty($history['new_date_start']))
+                                        <p>Open: {{ $history['old_date_start'] ?? '—' }} → {{ $history['new_date_start'] ?? '—' }}</p>
+                                    @endif
+                                    @if(!empty($history['old_deadline']) || !empty($history['new_deadline']))
+                                        <p>Deadline: {{ $history['old_deadline'] ?? '—' }} → {{ $history['new_deadline'] ?? '—' }}</p>
+                                    @endif
+                                    @if(!empty($history['reason']))
+                                        <p>{{ $history['reason'] }}</p>
+                                    @endif
+                                    <p class="bm-schedule-history-meta">By {{ $history['updated_by'] }}</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="bm-schedule-history-empty">No changes recorded for this year.</p>
+                    @endif
+                </article>
+            @empty
+                <p class="bm-empty">No ABYIP schedule history yet.</p>
+            @endforelse
+        </div>
+        <div class="bm-modal-footer">
+            <button type="button" class="bm-btn-secondary" data-schedule-history-close>Close</button>
         </div>
     </div>
 </div>
@@ -324,10 +361,13 @@
         </div>
         <div class="bm-modal-body bm-cancel-schedule-body">
             <p>Are you sure you want to delete this ABYIP submission schedule? Barangay SK Officials will not be able to upload until a new schedule is created.</p>
+            <label class="bm-type-confirm-label" for="deleteScheduleConfirmInput">Type <strong>delete</strong> to confirm</label>
+            <input type="text" id="deleteScheduleConfirmInput" class="bm-type-confirm-input" placeholder="delete" autocomplete="off" autocapitalize="none" spellcheck="false">
+            <p class="bm-type-confirm-hint" id="deleteScheduleConfirmHint" hidden>Please type “delete” to continue.</p>
         </div>
         <div class="bm-modal-footer bm-cancel-schedule-footer">
             <button type="button" class="bm-btn-secondary" data-delete-schedule-close>No, Keep Schedule</button>
-            <button type="button" class="bm-btn-danger-solid" id="confirmDeleteScheduleBtn">Yes, Delete Schedule</button>
+            <button type="button" class="bm-btn-danger-solid" id="confirmDeleteScheduleBtn" disabled>Yes, Delete Schedule</button>
         </div>
     </div>
 </div>
@@ -347,10 +387,13 @@
         </div>
         <div class="bm-modal-body bm-cancel-schedule-body">
             <p>Are you sure you want to cancel the current ABYIP submission schedule? This action cannot be undone.</p>
+            <label class="bm-type-confirm-label" for="cancelScheduleConfirmInput">Type <strong>cancel</strong> to continue</label>
+            <input type="text" id="cancelScheduleConfirmInput" class="bm-type-confirm-input" placeholder="cancel" autocomplete="off" autocapitalize="none" spellcheck="false">
+            <p class="bm-type-confirm-hint" id="cancelScheduleConfirmHint" hidden>Please type “cancel” to continue.</p>
         </div>
         <div class="bm-modal-footer bm-cancel-schedule-footer">
             <button type="button" class="bm-btn-secondary" data-cancel-schedule-close>No, Keep Schedule</button>
-            <button type="button" class="bm-btn-danger-solid" id="confirmCancelScheduleBtn">Yes, Cancel Schedule</button>
+            <button type="button" class="bm-btn-danger-solid" id="confirmCancelScheduleBtn" disabled>Yes, Cancel Schedule</button>
         </div>
     </div>
 </div>

@@ -3,7 +3,7 @@
 @section('title', $barangay . ' - Kabataan Monitoring - SK OnePortal')
 
 @push('main-class')
-    km-main
+    km-main km-barangay-detail-main
 @endpush
 
 @push('main-attributes')
@@ -47,9 +47,17 @@
             </button>
         </div>
 
-        <button type="button" class="km-batch-print-btn" id="km-batch-print-btn" disabled>
-            <i class="fas fa-print"></i> Batch Print
-        </button>
+        <div class="km-batch-actions">
+            <button type="button" class="km-export-btn km-export-btn--excel" id="km-export-excel-btn">
+                <i class="fas fa-file-excel"></i> Excel
+            </button>
+            <button type="button" class="km-export-btn km-export-btn--csv" id="km-export-csv-btn">
+                <i class="fas fa-file-csv"></i> CSV
+            </button>
+            <button type="button" class="km-batch-print-btn" id="km-batch-print-btn" disabled>
+                <i class="fas fa-print"></i> Batch Print
+            </button>
+        </div>
     </section>
 
     <div class="km-table-card">
@@ -60,10 +68,20 @@
                         <th class="km-col-check">
                             <input type="checkbox" id="km-select-all" aria-label="Select all records">
                         </th>
-                        <th>Respondent #</th>
-                        <th>
-                            FULLNAME
-                            <div class="table-col-hint">LN, FN, MN, Suffix</div>
+                        <th class="km-th-sortable" data-sort-key="respondent" data-sort-type="text" aria-sort="none">
+                            <button type="button" class="km-sort-btn" aria-haspopup="menu" aria-expanded="false">
+                                Respondent #
+                                <span class="km-sort-icon" aria-hidden="true"></span>
+                            </button>
+                        </th>
+                        <th class="km-th-sortable" data-sort-key="fullname" data-sort-type="text" aria-sort="none">
+                            <button type="button" class="km-sort-btn km-sort-btn--fullname" aria-haspopup="menu" aria-expanded="false">
+                                <span class="table-fullname-label">
+                                    FULLNAME
+                                    <span class="table-col-hint">LN, FN, MN, Suffix</span>
+                                </span>
+                                <span class="km-sort-icon" aria-hidden="true"></span>
+                            </button>
                         </th>
                         <th>Age</th>
                         <th>Barangay</th>
@@ -81,28 +99,28 @@
         </div>
 
         <p id="km-empty" class="km-empty km-empty--in-card" hidden>No profiles match your current filters.</p>
+    </div>
+</div>
 
-        <div class="km-table-footer pagination-footer" aria-label="Table pagination">
-            <div class="pagination-footer-nav">
-                <button type="button" class="pagination-arrow" id="km-prev-btn" disabled aria-label="Previous page">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <span class="pagination-page-label">Page</span>
-                <input type="number" class="pagination-page-input" id="km-page-input" value="1" min="1" aria-label="Current page">
-                <span class="pagination-page-of">of <span id="km-total-pages">1</span></span>
-                <button type="button" class="pagination-arrow" id="km-next-btn" disabled aria-label="Next page">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
-            <div class="pagination-footer-right">
-                <select id="km-rows-per-page" class="pagination-rows-select" aria-label="Rows per page">
-                    <option value="10" selected>10 rows</option>
-                    <option value="25">25 rows</option>
-                    <option value="50">50 rows</option>
-                </select>
-                <span class="pagination-record-count" id="km-pagination-text">0 records</span>
-            </div>
-        </div>
+<div class="km-page-pagination pagination-footer" aria-label="Table pagination">
+    <div class="pagination-footer-nav">
+        <button type="button" class="pagination-arrow" id="km-prev-btn" disabled aria-label="Previous page">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <span class="pagination-page-label">Page</span>
+        <input type="number" class="pagination-page-input" id="km-page-input" value="1" min="1" aria-label="Current page">
+        <span class="pagination-page-of">of <span id="km-total-pages">1</span></span>
+        <button type="button" class="pagination-arrow" id="km-next-btn" disabled aria-label="Next page">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+    <div class="pagination-footer-right">
+        <select id="km-rows-per-page" class="pagination-rows-select" aria-label="Rows per page">
+            <option value="10" selected>10 rows</option>
+            <option value="25">25 rows</option>
+            <option value="50">50 rows</option>
+        </select>
+        <span class="pagination-record-count" id="km-pagination-text">0 records</span>
     </div>
 </div>
 
@@ -125,14 +143,41 @@
             </div>
         </div>
         <div class="km-kkp-modal-body kk-qs-body" id="kmKKPFormContainer">
-            <p class="km-kkp-loading">Loading questionnaire...</p>
+            <div id="kmKKPViewRoot">
+                <p class="km-kkp-loading">Loading questionnaire...</p>
+            </div>
+            @include('kabataan_monitoring::partials.kk-survey-edit')
         </div>
-        <div class="km-kkp-modal-footer">
+        <div class="km-kkp-modal-footer" id="kmKKPViewFooter">
             <button type="button" class="km-kkp-btn-close" onclick="closeKKPModal()">Close</button>
             <button type="button" class="km-kkp-btn-print" onclick="printKKPForm()"><i class="fas fa-print"></i> Print</button>
         </div>
+        <div class="km-kkp-modal-footer" id="kmKKPEditFooter" hidden>
+            <button type="button" class="km-kkp-btn-close" id="kmKKPEditCancelBtn">Cancel</button>
+            <button type="button" class="km-kkp-btn-save" id="kmKKPEditSaveBtn">Save Changes</button>
+        </div>
     </div>
 </div>
+<div class="km-kkp-modal" id="kmDeleteModal">
+    <div class="km-kkp-modal-overlay" data-km-delete-close></div>
+    <div class="km-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="kmDeleteTitle">
+        <div class="km-delete-header">
+            <h3 id="kmDeleteTitle">Delete Kabataan Record?</h3>
+            <button type="button" class="km-kkp-modal-close" data-km-delete-close aria-label="Close">&times;</button>
+        </div>
+        <div class="km-delete-body">
+            <p>This will remove <strong id="kmDeleteName">this record</strong> from Kabataan Monitoring. Type <strong>delete</strong> to confirm.</p>
+            <label class="km-type-confirm-label" for="kmDeleteConfirmInput">Confirmation</label>
+            <input type="text" id="kmDeleteConfirmInput" class="km-type-confirm-input" placeholder="delete" autocomplete="off" autocapitalize="none" spellcheck="false">
+            <p class="km-type-confirm-hint" id="kmDeleteConfirmHint" hidden>Please type “delete” to continue.</p>
+        </div>
+        <div class="km-delete-footer">
+            <button type="button" class="km-kkp-btn-close" data-km-delete-close>Cancel</button>
+            <button type="button" class="km-btn-delete-confirm" id="kmDeleteConfirmBtn" disabled>Delete Record</button>
+        </div>
+    </div>
+</div>
+<div id="kmSortMenu" class="km-sort-menu" hidden role="menu" aria-label="Sort options"></div>
 @endsection
 
 @push('scripts')
@@ -142,9 +187,14 @@
         window.kmConfig = {
             dataUrl: @json(route('api.kabataan-monitoring.index')),
             questionnaireUrl: @json(url('/api/kabataan-monitoring/__ID__/questionnaire')),
+            editUrl: @json(url('/api/kabataan-monitoring/__ID__/edit')),
+            updateUrl: @json(url('/api/kabataan-monitoring/__ID__')),
+            destroyUrl: @json(url('/api/kabataan-monitoring/__ID__')),
             batchPrintUrl: @json(route('kabataan-monitoring.batch-print')),
             csrfToken: @json(csrf_token()),
         };
     </script>
     <script src="{{ url('/modules/kabataan-monitoring/js/kabataan-monitoring.js') }}?v={{ time() }}"></script>
+    <script src="{{ url('/modules/kabataan-monitoring/js/kabataan-monitoring-table.js') }}?v={{ time() }}"></script>
+    <script src="{{ url('/modules/kabataan-monitoring/js/kabataan-monitoring-edit.js') }}?v={{ time() }}"></script>
 @endpush

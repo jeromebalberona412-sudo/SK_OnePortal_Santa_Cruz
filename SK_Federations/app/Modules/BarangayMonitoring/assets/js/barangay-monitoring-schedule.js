@@ -7,9 +7,42 @@
         return config.csrfToken || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     }
 
+    function resetTypeConfirm(inputId, hintId, buttonId) {
+        var input = document.getElementById(inputId);
+        var hint = document.getElementById(hintId);
+        var button = document.getElementById(buttonId);
+        if (input) input.value = '';
+        if (hint) hint.hidden = true;
+        if (button) button.disabled = true;
+    }
+
+    function bindTypeConfirm(inputId, hintId, buttonId, expected) {
+        var input = document.getElementById(inputId);
+        var hint = document.getElementById(hintId);
+        var button = document.getElementById(buttonId);
+        if (!input || !button) return;
+
+        function sync() {
+            var matched = input.value.trim().toLowerCase() === expected;
+            button.disabled = !matched;
+            if (hint) {
+                hint.hidden = matched || input.value.trim() === '';
+            }
+        }
+
+        input.addEventListener('input', sync);
+        input.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                if (!button.disabled) button.click();
+            }
+        });
+        sync();
+    }
+
     function closeModals() {
         document.querySelectorAll('.bm-modal').forEach(function (modal) {
-            if (modal.id !== 'cancelScheduleModal') {
+            if (modal.id !== 'cancelScheduleModal' && modal.id !== 'deleteScheduleModal') {
                 modal.hidden = true;
             }
         });
@@ -25,14 +58,27 @@
         if (modal) modal.hidden = true;
     }
 
+    function openScheduleHistoryModal() {
+        const modal = document.getElementById('scheduleHistoryModal');
+        if (modal) modal.hidden = false;
+    }
+
+    function closeScheduleHistoryModal() {
+        const modal = document.getElementById('scheduleHistoryModal');
+        if (modal) modal.hidden = true;
+    }
+
     function openCancelScheduleModal() {
+        resetTypeConfirm('cancelScheduleConfirmInput', 'cancelScheduleConfirmHint', 'confirmCancelScheduleBtn');
         const modal = document.getElementById('cancelScheduleModal');
         if (modal) modal.hidden = false;
+        document.getElementById('cancelScheduleConfirmInput')?.focus();
     }
 
     function closeCancelScheduleModal() {
         const modal = document.getElementById('cancelScheduleModal');
         if (modal) modal.hidden = true;
+        resetTypeConfirm('cancelScheduleConfirmInput', 'cancelScheduleConfirmHint', 'confirmCancelScheduleBtn');
     }
 
     const LOADING_FADE_MS = 450;
@@ -342,6 +388,9 @@
     async function cancelSchedule() {
         const schedule = config.currentSchedule || {};
         if (!schedule.id) return;
+        if ((document.getElementById('cancelScheduleConfirmInput')?.value || '').trim().toLowerCase() !== 'cancel') {
+            return;
+        }
 
         const confirmBtn = document.getElementById('confirmCancelScheduleBtn');
         if (confirmBtn) {
@@ -373,16 +422,22 @@
     function closeDeleteScheduleModal() {
         const modal = document.getElementById('deleteScheduleModal');
         if (modal) modal.hidden = true;
+        resetTypeConfirm('deleteScheduleConfirmInput', 'deleteScheduleConfirmHint', 'confirmDeleteScheduleBtn');
     }
 
     function openDeleteScheduleModal() {
+        resetTypeConfirm('deleteScheduleConfirmInput', 'deleteScheduleConfirmHint', 'confirmDeleteScheduleBtn');
         const modal = document.getElementById('deleteScheduleModal');
         if (modal) modal.hidden = false;
+        document.getElementById('deleteScheduleConfirmInput')?.focus();
     }
 
     async function deleteSchedule() {
         const schedule = config.currentSchedule || {};
         if (!schedule.id) return;
+        if ((document.getElementById('deleteScheduleConfirmInput')?.value || '').trim().toLowerCase() !== 'delete') {
+            return;
+        }
 
         const confirmBtn = document.getElementById('confirmDeleteScheduleBtn');
         if (confirmBtn) {
@@ -412,7 +467,12 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        bindTypeConfirm('cancelScheduleConfirmInput', 'cancelScheduleConfirmHint', 'confirmCancelScheduleBtn', 'cancel');
+        bindTypeConfirm('deleteScheduleConfirmInput', 'deleteScheduleConfirmHint', 'confirmDeleteScheduleBtn', 'delete');
+
         document.getElementById('btnViewSchedule')?.addEventListener('click', openScheduleViewModal);
+
+        document.getElementById('btnScheduleHistory')?.addEventListener('click', openScheduleHistoryModal);
 
         document.getElementById('btnCreateSchedule')?.addEventListener('click', function () {
             closeScheduleViewModal();
@@ -431,6 +491,7 @@
         });
 
         document.getElementById('btnEditSchedule')?.addEventListener('click', function () {
+            closeScheduleHistoryModal();
             closeScheduleViewModal();
             openScheduleModal('edit');
         });
@@ -485,6 +546,10 @@
 
         document.querySelectorAll('[data-schedule-view-close]').forEach(function (btn) {
             btn.addEventListener('click', closeScheduleViewModal);
+        });
+
+        document.querySelectorAll('[data-schedule-history-close]').forEach(function (btn) {
+            btn.addEventListener('click', closeScheduleHistoryModal);
         });
 
         document.querySelectorAll('[data-cancel-schedule-close]').forEach(function (btn) {

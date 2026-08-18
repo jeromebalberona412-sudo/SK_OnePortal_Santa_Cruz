@@ -2,8 +2,9 @@
     const config = window.kmConfig || {};
     const records = [];
     const selectedIds = new Set();
+    let pendingDeleteRecord = null;
 
-    const state = { search: '', status: 'all', barangay: 'all', year: 'all' };
+    const state = { search: '', status: 'all', barangay: 'all', year: 'all', sortKey: '', sortDir: '' };
 
     function getFiltered() {
         var q = state.search.trim().toLowerCase();
@@ -26,17 +27,46 @@
         // but kept for compatibility
     }
 
-    function populateYearFilter() {
+    function populateYearFilter(yearsFromApi) {
         var yearFilter = document.getElementById('km-year-filter');
         if (!yearFilter) return;
 
-        var years = Array.from(new Set(records.map(function (r) {
-            return r.submittedYear ? String(r.submittedYear) : '';
-        }).filter(Boolean))).sort(function (a, b) { return parseInt(b, 10) - parseInt(a, 10); });
+        var years = Array.isArray(yearsFromApi)
+            ? yearsFromApi.map(String).filter(Boolean)
+            : [];
 
-        yearFilter.innerHTML = '<option value="all">All Years</option>' + years.map(function (year) {
-            return '<option value="' + year + '">' + year + '</option>';
-        }).join('');
+        setYearSelectOptions(yearFilter, years);
+    }
+
+    function populateBarangayYearFilter() {
+        var yearFilter = document.getElementById('km-brgy-year-filter');
+        if (!yearFilter) return;
+
+        var brgy = window.kmBarangay || '';
+        var years = Array.from(new Set(records.filter(function (r) {
+            return r.barangay === brgy && r.submittedYear;
+        }).map(function (r) {
+            return String(r.submittedYear);
+        }))).sort(function (a, b) {
+            return parseInt(b, 10) - parseInt(a, 10);
+        });
+
+        setYearSelectOptions(yearFilter, years);
+    }
+
+    function setYearSelectOptions(selectEl, years) {
+        var current = selectEl.value || 'all';
+        var html = '<option value="all">All Years</option>';
+        years.forEach(function (year) {
+            html += '<option value="' + escapeHtml(String(year)) + '">' + escapeHtml(String(year)) + '</option>';
+        });
+        selectEl.innerHTML = html;
+        if (Array.from(selectEl.options).some(function (opt) { return opt.value === current; })) {
+            selectEl.value = current;
+        } else {
+            selectEl.value = 'all';
+            state.year = 'all';
+        }
     }
 
     var statusLabel = { active: 'Active', moderate: 'Moderate', inactive: 'Inactive' };
@@ -118,10 +148,10 @@
     };
 
     function initIndex() {
-        loadRecords().then(function () {
+        loadRecords().then(function (years) {
             updateSummary();
             populateBrgyFilter();
-            populateYearFilter();
+            populateYearFilter(years);
             renderBrgyCards();
         });
 
@@ -225,8 +255,10 @@
             (payload.data || []).forEach(function (item) {
                 records.push(item);
             });
+            return payload.years || [];
         } catch (error) {
             console.error(error);
+            return [];
         }
     }
 
@@ -237,6 +269,7 @@
         }
         if (window.kmPageMode === 'barangay-detail') {
             loadRecords().then(function () {
+                populateBarangayYearFilter();
                 renderBarangayDetail();
                 setupBarangayDetailFilters();
             });
@@ -337,6 +370,9 @@
             batchBtn.addEventListener('click', openBatchPrint);
         }
 
+        setupRowActionMenus();
+        setupDeleteConfirmModal();
+
         updateBatchPrintButton();
     }
 
@@ -408,6 +444,212 @@
         form.remove();
     }
 
+    function closeAllKmActionMenus(exceptMenu) {
+        document.querySelectorAll('.km-row-actions-menu.is-open').forEach(function (menu) {
+            if (exceptMenu && menu === exceptMenu) return;
+            menu.classList.remove('is-open');
+            var trigger = menu.querySelector('.km-row-actions-trigger');
+            var dropdown = menu.querySelector('.km-row-actions-dropdown');
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+            if (dropdown) {
+                dropdown.hidden = true;
+                dropdown.classList.remove('is-floating');
+                dropdown.style.position = '';
+                dropdown.style.top = '';
+                dropdown.style.right = '';
+                dropdown.style.left = '';
+            }
+        });
+    }
+
+    function positionKmActionDropdown(menu) {
+        var trigger = menu.querySelector('.km-row-actions-trigger');
+        var dropdown = menu.querySelector('.km-row-actions-dropdown');
+        if (!trigger || !dropdown) return;
+
+        dropdown.hidden = false;
+        dropdown.classList.add('is-floating');
+        dropdown.style.position = 'fixed';
+        dropdown.style.zIndex = '1400';
+
+        var rect = trigger.getBoundingClientRect();
+        var width = dropdown.offsetWidth || 168;
+        var height = dropdown.offsetHeight || 140;
+        var top = rect.bottom + 6;
+        if (top + height > window.innerHeight - 8) {
+            top = Math.max(8, rect.top - height - 6);
+        }
+        var right = Math.max(8, window.innerWidth - rect.right);
+        if (right + width > window.innerWidth - 8) {
+            right = 8;
+        }
+        dropdown.style.top = top + 'px';
+        dropdown.style.right = right + 'px';
+        dropdown.style.left = 'auto';
+    }
+
+    function setupRowActionMenus() {
+        var tbody = document.getElementById('km-table-tbody');
+        if (!tbody || tbody.dataset.kmActionsBound === '1') return;
+        tbody.dataset.kmActionsBound = '1';
+
+        tbody.addEventListener('click', function (event) {
+            var trigger = event.target.closest('.km-row-actions-trigger');
+            if (trigger) {
+                event.preventDefault();
+                event.stopPropagation();
+                var menu = trigger.closest('.km-row-actions-menu');
+                var isOpen = menu.classList.contains('is-open');
+                closeAllKmActionMenus();
+                if (!isOpen) {
+                    menu.classList.add('is-open');
+                    trigger.setAttribute('aria-expanded', 'true');
+                    positionKmActionDropdown(menu);
+                }
+                return;
+            }
+
+            var actionBtn = event.target.closest('[data-km-action]');
+            if (!actionBtn) return;
+
+            event.preventDefault();
+            var action = actionBtn.getAttribute('data-km-action');
+            var slug = actionBtn.getAttribute('data-slug') || '';
+            closeAllKmActionMenus();
+
+            if (action === 'view') {
+                window.openKKPModal(slug);
+                return;
+            }
+
+            if (action === 'edit') {
+                var editId = actionBtn.getAttribute('data-id') || slug;
+                if (typeof window.openKKPEditModal === 'function') {
+                    window.openKKPEditModal(editId);
+                }
+                return;
+            }
+
+            if (action === 'delete') {
+                openKmDeleteModal({
+                    id: actionBtn.getAttribute('data-id') || '',
+                    name: actionBtn.getAttribute('data-name') || 'this record',
+                    slug: slug,
+                });
+            }
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!event.target.closest('.km-row-actions-menu')) {
+                closeAllKmActionMenus();
+            }
+        });
+
+        window.addEventListener('scroll', function () {
+            closeAllKmActionMenus();
+        }, true);
+    }
+
+    function syncDeleteConfirmState() {
+        var input = document.getElementById('kmDeleteConfirmInput');
+        var hint = document.getElementById('kmDeleteConfirmHint');
+        var button = document.getElementById('kmDeleteConfirmBtn');
+        if (!input || !button) return;
+        var matched = input.value.trim().toLowerCase() === 'delete';
+        button.disabled = !matched;
+        if (hint) hint.hidden = matched || input.value.trim() === '';
+    }
+
+    function openKmDeleteModal(record) {
+        pendingDeleteRecord = record;
+        var modal = document.getElementById('kmDeleteModal');
+        var nameEl = document.getElementById('kmDeleteName');
+        var input = document.getElementById('kmDeleteConfirmInput');
+        if (nameEl) nameEl.textContent = record.name || 'this record';
+        if (input) input.value = '';
+        syncDeleteConfirmState();
+        if (modal) {
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        input?.focus();
+    }
+
+    function closeKmDeleteModal() {
+        var modal = document.getElementById('kmDeleteModal');
+        if (modal) modal.classList.remove('show');
+        document.body.style.overflow = '';
+        pendingDeleteRecord = null;
+        var input = document.getElementById('kmDeleteConfirmInput');
+        if (input) input.value = '';
+        syncDeleteConfirmState();
+    }
+
+    async function confirmKmDelete() {
+        if (!pendingDeleteRecord || !pendingDeleteRecord.id) return;
+        if (document.getElementById('kmDeleteConfirmInput')?.value.trim().toLowerCase() !== 'delete') return;
+
+        var button = document.getElementById('kmDeleteConfirmBtn');
+        var urlTemplate = (window.kmConfig && window.kmConfig.destroyUrl) || '';
+        var url = urlTemplate.replace('__ID__', encodeURIComponent(pendingDeleteRecord.id));
+        var deletedId = String(pendingDeleteRecord.id);
+
+        if (button) {
+            button.disabled = true;
+            button.textContent = 'Deleting...';
+        }
+
+        try {
+            var response = await fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': (window.kmConfig && window.kmConfig.csrfToken) || '',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            });
+            var payload = await response.json().catch(function () { return {}; });
+            if (!response.ok) {
+                throw new Error(payload.message || 'Failed to delete record.');
+            }
+
+            for (var i = records.length - 1; i >= 0; i--) {
+                if (String(records[i].id || records[i].slug || '') === deletedId) {
+                    records.splice(i, 1);
+                }
+            }
+            selectedIds.delete(deletedId);
+            closeKmDeleteModal();
+            populateBarangayYearFilter();
+            renderBarangayDetail();
+        } catch (error) {
+            alert(error.message || 'Failed to delete record.');
+        } finally {
+            if (button) {
+                button.disabled = false;
+                button.textContent = 'Delete Record';
+            }
+        }
+    }
+
+    function setupDeleteConfirmModal() {
+        var input = document.getElementById('kmDeleteConfirmInput');
+        input?.addEventListener('input', syncDeleteConfirmState);
+        input?.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                confirmKmDelete();
+            }
+        });
+        document.getElementById('kmDeleteConfirmBtn')?.addEventListener('click', function () {
+            confirmKmDelete();
+        });
+        document.querySelectorAll('[data-km-delete-close]').forEach(function (btn) {
+            btn.addEventListener('click', closeKmDeleteModal);
+        });
+    }
+
     function resetBarangayPagination() {
         window.kmPaginationState = window.kmPaginationState || {};
         window.kmPaginationState.currentPage = 1;
@@ -430,6 +672,7 @@
         if (!tbody) return;
 
         var filtered = getFiltered().filter(function(r){ return r.barangay === brgy; });
+        filtered = applyKmSort(filtered);
 
         window.kmPaginationState = window.kmPaginationState || {};
         if (!window.kmPaginationState.itemsPerPage) {
@@ -460,6 +703,59 @@
 
         renderPaginatedTable();
     }
+
+    function applyKmSort(items) {
+        if (!state.sortKey || !state.sortDir) return items;
+        var copy = items.slice();
+        copy.sort(function (a, b) {
+            var valA = '';
+            var valB = '';
+            if (state.sortKey === 'respondent') {
+                valA = String(a.respondentNumber || '');
+                valB = String(b.respondentNumber || '');
+            } else {
+                valA = formatFullName(a);
+                valB = formatFullName(b);
+            }
+            var cmp = valA.localeCompare(valB, undefined, { numeric: true, sensitivity: 'base' });
+            return state.sortDir === 'asc' ? cmp : -cmp;
+        });
+        return copy;
+    }
+
+    window.kmApplySort = function (key, dir) {
+        state.sortKey = key || '';
+        state.sortDir = dir || '';
+        resetBarangayPagination();
+        renderBarangayDetail();
+    };
+
+    window.kmGetExportRows = function () {
+        var allItems = (window.kmPaginationState && window.kmPaginationState.allItems) || [];
+        var source = allItems;
+        if (selectedIds.size > 0) {
+            source = allItems.filter(function (r) {
+                return selectedIds.has(String(r.id || r.slug || ''));
+            });
+        }
+        return source.map(function (r) {
+            return {
+                respondentNumber: r.respondentNumber || '—',
+                fullName: formatFullName(r),
+                age: r.age || '—',
+                barangay: r.barangay || '—',
+                purokZone: r.purokZone || '—',
+                registeredVoter: r.registeredVoter || '—',
+            };
+        });
+    };
+
+    window.kmReloadRecords = function () {
+        return loadRecords().then(function () {
+            populateBarangayYearFilter();
+            renderBarangayDetail();
+        });
+    };
 
     function formatFullName(r) {
         var suffixRaw = r.suffix || '';
@@ -512,7 +808,18 @@
                 '<td>' + escapeHtml(r.barangay || '—') + '</td>' +
                 '<td>' + escapeHtml(r.purokZone || '—') + '</td>' +
                 '<td>' + escapeHtml(r.registeredVoter || '—') + '</td>' +
-                '<td><div class="km-actions"><button type="button" class="km-btn-view" onclick="openKKPModal(\'' + String(r.slug || '').replace(/'/g, "\\'") + '\')">View</button></div></td>' +
+                '<td class="col-actions">' +
+                    '<div class="km-row-actions-menu">' +
+                        '<button type="button" class="km-row-actions-trigger" aria-label="More actions" aria-haspopup="true" aria-expanded="false">' +
+                            '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>' +
+                        '</button>' +
+                        '<div class="km-row-actions-dropdown" role="menu" hidden>' +
+                            '<button type="button" class="km-row-actions-item" data-km-action="view" data-id="' + escapeHtml(recordId) + '" data-slug="' + escapeHtml(String(r.slug || '')) + '" role="menuitem"><i class="fas fa-eye"></i><span>View</span></button>' +
+                            '<button type="button" class="km-row-actions-item" data-km-action="edit" data-id="' + escapeHtml(recordId) + '" data-slug="' + escapeHtml(String(r.slug || '')) + '" role="menuitem"><i class="fas fa-pen"></i><span>Edit</span></button>' +
+                            '<button type="button" class="km-row-actions-item is-danger" data-km-action="delete" data-id="' + escapeHtml(recordId) + '" data-name="' + escapeHtml(fullName) + '" data-slug="' + escapeHtml(String(r.slug || '')) + '" role="menuitem"><i class="fas fa-trash"></i><span>Delete</span></button>' +
+                        '</div>' +
+                    '</div>' +
+                '</td>' +
                 '</tr>';
         }).join('');
         tbody.innerHTML = rows;
@@ -581,11 +888,15 @@
 
     // ── KK Profiling Form Modal ──
     window.openKKPModal = function(kabataanSlug) {
-        var profile = records.find(function(r){ return r.slug === kabataanSlug; });
+        var profile = records.find(function(r){ return r.slug === kabataanSlug || String(r.id) === String(kabataanSlug); });
         if (!profile) return;
 
+        if (typeof window.kmExitKKPEditMode === 'function') {
+            window.kmExitKKPEditMode();
+        }
+
         var modal = document.getElementById('kmKKPModal');
-        var container = document.getElementById('kmKKPFormContainer');
+        var container = document.getElementById('kmKKPViewRoot') || document.getElementById('kmKKPFormContainer');
         if (!modal || !container) return;
 
         var urlTemplate = (window.kmConfig && window.kmConfig.questionnaireUrl) || '';
@@ -624,6 +935,9 @@
     };
 
     window.closeKKPModal = function() {
+        if (typeof window.kmExitKKPEditMode === 'function') {
+            window.kmExitKKPEditMode();
+        }
         var modal = document.getElementById('kmKKPModal');
         if (modal) {
             modal.classList.remove('show');
@@ -651,7 +965,7 @@
     };
 
     window.printKKPForm = function() {
-        var container = document.getElementById('kmKKPFormContainer');
+        var container = document.getElementById('kmKKPViewRoot') || document.getElementById('kmKKPFormContainer');
         if (!container || !container.innerHTML.trim()) return;
 
         var printWindow = window.open('', '', 'height=800,width=900');

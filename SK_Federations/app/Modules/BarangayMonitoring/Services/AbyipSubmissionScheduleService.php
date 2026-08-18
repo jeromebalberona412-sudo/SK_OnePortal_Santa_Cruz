@@ -26,10 +26,10 @@ class AbyipSubmissionScheduleService
         }
 
         return AbyipSubmissionSchedule::query()
-            ->with($this->scheduleRelations())
+            ->with($this->scheduleRelations(includeHistory: true))
             ->orderByDesc('fiscal_year')
             ->get()
-            ->map(fn (AbyipSubmissionSchedule $schedule) => $this->formatSchedule($schedule));
+            ->map(fn (AbyipSubmissionSchedule $schedule) => $this->formatSchedule($schedule, includeHistory: true));
     }
 
     /**
