@@ -220,3 +220,39 @@
 #kmKKPViewRoot[hidden] {
     display: none !important;
 }
+
+.kk-view-paper .kkp-footer-row {
+    align-items: center;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 20px;
+}
+
+.kk-view-paper .kkp-footer-fb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+    min-width: 0;
+    margin-right: 24px;
+}
+
+.kk-view-paper .kkp-footer-fb-field .kkp-view-value,
+.kk-view-paper .kkp-footer-fb .kkp-uline-fb {
+    display: block;
+    width: 100%;
+    min-width: 220px;
+    max-width: 50ch;
+    min-height: 18px;
+    border: none;
+    border-bottom: 1px solid #555;
+    text-align: center;
+}
+
+.kk-view-paper .kkp-footer-chat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+}

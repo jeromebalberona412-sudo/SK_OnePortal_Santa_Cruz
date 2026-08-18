@@ -53,5 +53,6 @@ return [
     */
     'sk_officials_app_url' => env('SK_OFFICIALS_APP_URL', env('APP_URL')),
     'sk_fed_app_url' => env('SK_FED_APP_URL', env('APP_URL')),
+    'kabataan_app_url' => env('KABATAAN_APP_URL', 'http://localhost:8002'),
 
 ];

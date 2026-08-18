@@ -106,8 +106,6 @@
                     <span class="kkp-inline-label">Birthday:</span>
                     <span class="kkp-uline kkp-uline-med kkp-view-value">{{ $form['birthday'] }}</span>
                 </div>
-                <span class="kkp-hint" style="display:block;text-align:center;margin-top:2px;">Age: 15–30 years old only</span>
-                <span class="kkp-hint" style="display:block;text-align:center;margin-top:2px;">(mm/dd/yyyy)</span>
             </div>
         </div>
         <div class="kkp-personal-right">
@@ -253,9 +251,12 @@
 
     <div class="kkp-footer-row">
         <div class="kkp-footer-fb">
-            <span class="kkp-inline-label">FB Account:</span>
-            <span class="kkp-inline-label">Facebook Profile Link</span>
-            <span class="kkp-uline kkp-uline-fb kkp-view-value">{{ $form['facebook_profile_url'] ?? $form['facebook'] ?? '—' }}</span>
+            <div class="kkp-footer-fb-label-col">
+                <span class="kkp-inline-label">FB Account:</span>
+            </div>
+            <div class="kkp-footer-fb-field">
+                <span class="kkp-uline kkp-uline-fb kkp-view-value">{{ $form['facebook_profile_url'] ?? $form['facebook'] ?? '—' }}</span>
+            </div>
         </div>
         <div class="kkp-footer-chat">
             <span class="kkp-inline-label">Willing to join the group chat?</span>

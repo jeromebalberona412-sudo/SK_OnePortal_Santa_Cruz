@@ -509,9 +509,13 @@
 
         var toggleBtn  = document.getElementById('toggleLogosBtn');
         var toggleText = document.getElementById('toggleBtnText');
+        var label      = logosVisible ? 'Hide Logos' : 'Show Logos';
 
-        if (toggleBtn) toggleBtn.classList.toggle('logos-visible', logosVisible);
-        if (toggleText) toggleText.textContent = logosVisible ? 'Hide Logos' : 'Show Logos';
+        if (toggleBtn) {
+            toggleBtn.classList.toggle('logos-visible', logosVisible);
+            toggleBtn.setAttribute('aria-label', label);
+        }
+        if (toggleText) toggleText.textContent = label;
 
         document.querySelectorAll('.bl-card.has-logo').forEach(function (card) {
             var idx     = card.id.replace('card-', '');

@@ -9,6 +9,8 @@ use App\Services\BarangayLogoUrlService;
 use App\Modules\Shared\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -43,7 +45,10 @@ class KabataanMonitoringController extends Controller
             return response()->json(['message' => 'Record not found.'], 404);
         }
 
-        return response()->json(['html' => $html]);
+        return response()->json([
+            'html' => $html,
+            'data' => $this->updateService->editPayload($id),
+        ]);
     }
 
     public function destroy(Request $request, int $id): JsonResponse
@@ -95,7 +100,7 @@ class KabataanMonitoringController extends Controller
         ]);
 
         try {
-            $this->updateService->update($request->user(), $id, $validated);
+            $result = $this->updateService->update($request->user(), $id, $validated);
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -104,9 +109,18 @@ class KabataanMonitoringController extends Controller
             ], 422);
         }
 
+        $message = 'KK Profiling record updated.';
+        if ($result['invite_sent']) {
+            $message = 'KK Profiling record updated. An activation email was sent to the new address.';
+        } elseif (! empty($result['invite_error'])) {
+            $message = $result['invite_error'];
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'KK Profiling record updated.',
+            'message' => $message,
+            'invite_sent' => $result['invite_sent'],
+            'invite_error' => $result['invite_error'],
         ]);
     }
 
@@ -124,11 +138,26 @@ class KabataanMonitoringController extends Controller
         $barangayId = Barangay::query()->where('name', $barangayName)->value('id');
         $logoUrl = $barangayId ? app(BarangayLogoUrlService::class)->resolve((int) $barangayId) : null;
 
+        // Purok/Zone filter should show all configured zones even if there are no KK records yet.
+        $purokZones = [];
+        if ($barangayId && Schema::hasTable('barangay_zones')) {
+            $purokZones = DB::table('barangay_zones')
+                ->where('barangay_id', (int) $barangayId)
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->pluck('name')
+                ->filter()
+                ->map(fn ($name) => (string) $name)
+                ->values()
+                ->all();
+        }
+
         return view('kabataan_monitoring::barangay-detail', [
             'user' => $request->user(),
             'barangay' => $barangayName,
             'barangayLogoUrl' => $logoUrl,
             'registrationYears' => $this->service->registrationYears($barangayName),
+            'purokZones' => $purokZones,
         ]);
     }
 

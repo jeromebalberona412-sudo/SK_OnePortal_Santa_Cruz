@@ -649,8 +649,7 @@
     display: flex;
     align-items: center;
     gap: 20px;
-    border-top: 1px solid #bbb;
-    padding-top: 5px;
+    padding-top: 2px;
     margin-bottom: 6px;
     flex-wrap: wrap;
     justify-content: flex-start;
@@ -659,22 +658,58 @@
 .kkp-footer-fb {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
+    flex: 0 0 auto;
+    min-width: 0;
+    margin-right: 24px;
+}
+
+.kkp-footer-fb-label-col {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex-shrink: 0;
+    padding-bottom: 9px;
+    line-height: 1.1;
+}
+
+.kkp-footer-fb-label-col .kkp-inline-label {
+    display: block;
+    margin: 0;
+    line-height: 1.1;
+}
+
+.kkp-footer-fb-field {
+    position: relative;
+    flex: 0 0 auto;
+    width: 50ch;
+    min-width: 50ch;
+    max-width: 50ch;
+    padding-bottom: 12px;
 }
 
 .kkp-footer-fb .kkp-inline-label {
     font-size: 9.5px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .kkp-footer-fb .kkp-uline-fb {
     font-size: 10px;
-    max-width: 130px;
+    width: 100%;
+    min-width: 50ch;
+    max-width: 50ch;
+    text-align: center;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: nowrap;
 }
 
 .kkp-footer-chat {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     flex-shrink: 0;
     flex-wrap: nowrap;
 }

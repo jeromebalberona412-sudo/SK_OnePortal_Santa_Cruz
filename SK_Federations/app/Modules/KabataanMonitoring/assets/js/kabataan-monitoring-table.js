@@ -4,6 +4,30 @@
     var sortMenu = null;
     var sortMenuAnchor = null;
 
+    var FORM_2A_HEADERS = [
+        'REGION',
+        'PROVINCE',
+        'CITY/MUNICIPALITY',
+        'BARANGAY',
+        'NAME',
+        'AGE',
+        'BIRTHDAY',
+        'SEX ASSIGNED AT BIRTH',
+        'CIVIL STATUS',
+        'YOUTH CLASSIFICATION',
+        'YOUTH AGE GROUP',
+        'CONTACT NUMBER',
+        'HOME ADDRESS',
+        'HIGHEST EDUCATIONAL ATTAINMENT',
+        'WORK STATUS',
+        'REGISTERED VOTER?',
+        'VOTED LAST ELECTION?',
+        'ATTENDED KK  ASSEMBLY?',
+        'IF YES, HOW MANY TIMES?',
+    ];
+
+    var FORM_2A_SUBHEADERS = ['', '', '', '', '', '', 'MONTH/DAY/YEAR', '', '', '', '', '', '', '', '', '', '', '', ''];
+
     function closeKmSortMenu() {
         if (sortMenu) sortMenu.hidden = true;
         sortMenuAnchor = null;
@@ -24,6 +48,19 @@
         }
     }
 
+    function sortOptionsForKey(key) {
+        if (key === 'respondent') {
+            return [
+                { dir: 'asc', label: 'Sort ascending', hint: '1 → 9', icon: '↑' },
+                { dir: 'desc', label: 'Sort descending', hint: '9 → 1', icon: '↓' },
+            ];
+        }
+        return [
+            { dir: 'asc', label: 'Sort ascending', hint: 'A → Z', icon: '↑' },
+            { dir: 'desc', label: 'Sort descending', hint: 'Z → A', icon: '↓' },
+        ];
+    }
+
     function openKmSortMenu(anchor, key) {
         if (!sortMenu || !anchor) return;
         sortMenuAnchor = anchor;
@@ -32,10 +69,7 @@
             : th?.classList.contains('is-sorted-desc') ? 'desc' : null;
 
         sortMenu.innerHTML = '';
-        [
-            { dir: 'asc', label: 'Sort ascending', hint: 'A → Z', icon: '↑' },
-            { dir: 'desc', label: 'Sort descending', hint: 'Z → A', icon: '↓' },
-        ].forEach(function (opt) {
+        sortOptionsForKey(key).forEach(function (opt) {
             var btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'km-sort-option' + (currentDir === opt.dir ? ' is-active' : '');
@@ -68,7 +102,7 @@
 
     function exportFileName(ext) {
         var barangay = String(window.kmBarangay || 'kabataan-monitoring').replace(/[^\w\- ]+/g, '').trim() || 'kabataan';
-        return barangay.toLowerCase().replace(/\s+/g, '-') + '-kabataan-monitoring.' + ext;
+        return barangay.toUpperCase().replace(/\s+/g, ' ') + '.' + ext;
     }
 
     function downloadBlob(content, mime, filename) {
@@ -83,43 +117,71 @@
         URL.revokeObjectURL(url);
     }
 
+    function rowToForm2A(row) {
+        return [
+            row.region,
+            row.province,
+            row.city,
+            row.barangay,
+            row.fullName,
+            row.age,
+            row.birthday,
+            row.sex,
+            row.civilStatus,
+            row.youthClassification,
+            row.youthAgeGroup,
+            row.contactNumber,
+            row.homeAddress,
+            row.education,
+            row.workStatus,
+            row.registeredVoter,
+            row.votedLastElection,
+            row.kkAssembly,
+            row.kkTimes,
+        ];
+    }
+
+    function selectedDateRange() {
+        return {
+            start: document.getElementById('kmExportStartDate')?.value || '',
+            end: document.getElementById('kmExportEndDate')?.value || '',
+        };
+    }
+
     function exportRows(format) {
         if (typeof window.kmGetExportRows !== 'function') return;
-        var rows = window.kmGetExportRows();
-        if (!rows.length) {
-            alert('No table records to export.');
+        var range = selectedDateRange();
+        if (range.start && range.end && range.start > range.end) {
+            alert('Start date cannot be later than end date.');
             return;
         }
 
-        var headers = ['Respondent #', 'Full Name', 'Age', 'Barangay', 'Purok/Zone', 'Registered Voter'];
-        var data = rows.map(function (row) {
-            return [
-                row.respondentNumber || '—',
-                row.fullName || '—',
-                row.age || '—',
-                row.barangay || '—',
-                row.purokZone || '—',
-                row.registeredVoter || '—',
-            ];
-        });
+        var rows = window.kmGetExportRows(range.start, range.end);
+        if (!rows.length) {
+            alert('No records match the selected date range.');
+            return;
+        }
+
+        var data = rows.map(rowToForm2A);
+        var sheetRows = [FORM_2A_HEADERS, FORM_2A_SUBHEADERS].concat(data);
 
         if (format === 'csv') {
-            var csv = [headers].concat(data).map(function (line) {
+            var csv = sheetRows.map(function (line) {
                 return line.map(csvEscape).join(',');
             }).join('\r\n');
             downloadBlob('\uFEFF' + csv, 'text/csv;charset=utf-8;', exportFileName('csv'));
-            return;
+            closeExportModal();
         }
+    }
 
-        if (typeof XLSX === 'undefined') {
-            alert('Excel export is unavailable. Please refresh the page and try again.');
-            return;
-        }
+    function openExportModal() {
+        var modal = document.getElementById('kmExportModal');
+        if (modal) modal.classList.add('show');
+    }
 
-        var sheet = XLSX.utils.aoa_to_sheet([headers].concat(data));
-        var workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, sheet, 'Kabataan Monitoring');
-        XLSX.writeFile(workbook, exportFileName('xlsx'));
+    function closeExportModal() {
+        var modal = document.getElementById('kmExportModal');
+        if (modal) modal.classList.remove('show');
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -147,14 +209,18 @@
             }
         });
         document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape') closeKmSortMenu();
+            if (event.key === 'Escape') {
+                closeKmSortMenu();
+                closeExportModal();
+            }
         });
 
-        document.getElementById('km-export-excel-btn')?.addEventListener('click', function () {
-            exportRows('xlsx');
-        });
-        document.getElementById('km-export-csv-btn')?.addEventListener('click', function () {
+        document.getElementById('km-export-csv-btn')?.addEventListener('click', openExportModal);
+        document.getElementById('kmExportConfirmCsvBtn')?.addEventListener('click', function () {
             exportRows('csv');
+        });
+        document.querySelectorAll('[data-km-export-close]').forEach(function (btn) {
+            btn.addEventListener('click', closeExportModal);
         });
     });
 })();

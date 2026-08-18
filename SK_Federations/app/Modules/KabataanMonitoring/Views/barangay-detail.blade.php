@@ -33,24 +33,39 @@
     </section>
 
     <section class="km-filter-bar km-filter-bar--detail" aria-label="Profiling filters">
-        <select id="km-brgy-year-filter" class="km-select" aria-label="Filter by year">
-            <option value="all">All Years</option>
-            @foreach($registrationYears as $year)
-                <option value="{{ $year }}">{{ $year }}</option>
-            @endforeach
-        </select>
+        <div class="km-filter-bar-top">
+            <div class="km-filter-dropdowns">
+                <select id="km-brgy-year-filter" class="km-select" aria-label="Filter by year">
+                    <option value="all">All Years</option>
+                    @foreach($registrationYears as $year)
+                        <option value="{{ $year }}">{{ $year }}</option>
+                    @endforeach
+                </select>
+                <select id="km-brgy-age-group-filter" class="km-select" aria-label="Filter by youth age group">
+                    <option value="all">Youth Age Group</option>
+                    <option value="child">Child Youth (15–17)</option>
+                    <option value="core">Core Youth (18–24)</option>
+                    <option value="young">Young Adult (25–30)</option>
+                </select>
+                <select id="km-brgy-purok-filter" class="km-select" aria-label="Filter by purok or zone">
+                    <option value="all">Purok/Zone</option>
+                </select>
+                <select id="km-brgy-voter-filter" class="km-select" aria-label="Filter by registered voter">
+                    <option value="all">Registered Voter</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
 
-        <div class="km-search-group">
-            <input type="text" id="km-brgy-search" class="km-search-input" placeholder="Search by name, respondent #, purok...">
-            <button type="button" class="km-search-btn" onclick="performBarangaySearch()">
-                <i class="fas fa-search"></i> Search
-            </button>
+            <div class="km-search-group km-search-group--compact">
+                <input type="search" id="km-brgy-search" class="km-search-input" placeholder="Search..." aria-label="Search records">
+                <button type="button" class="km-search-btn" onclick="performBarangaySearch()" aria-label="Search">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
         </div>
 
-        <div class="km-batch-actions">
-            <button type="button" class="km-export-btn km-export-btn--excel" id="km-export-excel-btn">
-                <i class="fas fa-file-excel"></i> Excel
-            </button>
+        <div class="km-filter-bar-actions">
             <button type="button" class="km-export-btn km-export-btn--csv" id="km-export-csv-btn">
                 <i class="fas fa-file-csv"></i> CSV
             </button>
@@ -84,7 +99,6 @@
                             </button>
                         </th>
                         <th>Age</th>
-                        <th>Barangay</th>
                         <th>Purok/Zone</th>
                         <th>Registered Voter</th>
                         <th class="col-actions">Actions</th>
@@ -92,7 +106,7 @@
                 </thead>
                 <tbody id="km-table-tbody">
                     <tr class="km-loading-row">
-                        <td colspan="8">Loading records…</td>
+                        <td colspan="7">Loading records…</td>
                     </tr>
                 </tbody>
             </table>
@@ -148,10 +162,6 @@
             </div>
             @include('kabataan_monitoring::partials.kk-survey-edit')
         </div>
-        <div class="km-kkp-modal-footer" id="kmKKPViewFooter">
-            <button type="button" class="km-kkp-btn-close" onclick="closeKKPModal()">Close</button>
-            <button type="button" class="km-kkp-btn-print" onclick="printKKPForm()"><i class="fas fa-print"></i> Print</button>
-        </div>
         <div class="km-kkp-modal-footer" id="kmKKPEditFooter" hidden>
             <button type="button" class="km-kkp-btn-close" id="kmKKPEditCancelBtn">Cancel</button>
             <button type="button" class="km-kkp-btn-save" id="kmKKPEditSaveBtn">Save Changes</button>
@@ -163,17 +173,56 @@
     <div class="km-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="kmDeleteTitle">
         <div class="km-delete-header">
             <h3 id="kmDeleteTitle">Delete Kabataan Record?</h3>
-            <button type="button" class="km-kkp-modal-close" data-km-delete-close aria-label="Close">&times;</button>
+            <button type="button" class="km-kkp-modal-control-btn km-kkp-modal-close" data-km-delete-close aria-label="Close">&times;</button>
         </div>
         <div class="km-delete-body">
-            <p>This will remove <strong id="kmDeleteName">this record</strong> from Kabataan Monitoring. Type <strong>delete</strong> to confirm.</p>
+            <p>This will remove <strong id="kmDeleteName">this record</strong> from Kabataan Monitoring. Type <strong>Confirm</strong> to continue.</p>
             <label class="km-type-confirm-label" for="kmDeleteConfirmInput">Confirmation</label>
-            <input type="text" id="kmDeleteConfirmInput" class="km-type-confirm-input" placeholder="delete" autocomplete="off" autocapitalize="none" spellcheck="false">
-            <p class="km-type-confirm-hint" id="kmDeleteConfirmHint" hidden>Please type “delete” to continue.</p>
+            <input type="text" id="kmDeleteConfirmInput" class="km-type-confirm-input" placeholder="type Confirm to delete" autocomplete="off" autocapitalize="none" spellcheck="false">
+            <p class="km-type-confirm-hint" id="kmDeleteConfirmHint" hidden>Please type “Confirm” to continue.</p>
         </div>
         <div class="km-delete-footer">
             <button type="button" class="km-kkp-btn-close" data-km-delete-close>Cancel</button>
             <button type="button" class="km-btn-delete-confirm" id="kmDeleteConfirmBtn" disabled>Delete Record</button>
+        </div>
+    </div>
+</div>
+<div class="km-kkp-modal" id="kmExportModal">
+    <div class="km-kkp-modal-overlay" data-km-export-close></div>
+    <div class="km-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="kmExportTitle">
+        <div class="km-delete-header">
+            <h3 id="kmExportTitle">Export Records</h3>
+            <button type="button" class="km-kkp-modal-control-btn km-kkp-modal-close" data-km-export-close aria-label="Close">&times;</button>
+        </div>
+        <div class="km-delete-body">
+            <p>Choose a date range to export. Leave both blank to export all currently filtered records.</p>
+            <label class="km-type-confirm-label" for="kmExportStartDate">Start date</label>
+            <input type="date" id="kmExportStartDate" class="km-type-confirm-input">
+            <label class="km-type-confirm-label" for="kmExportEndDate">End date</label>
+            <input type="date" id="kmExportEndDate" class="km-type-confirm-input">
+        </div>
+        <div class="km-delete-footer">
+            <button type="button" class="km-kkp-btn-close" data-km-export-close>Cancel</button>
+            <button type="button" class="km-export-btn km-export-btn--csv" id="kmExportConfirmCsvBtn">Export CSV</button>
+        </div>
+    </div>
+</div>
+<div class="km-kkp-modal" id="kmEditConfirmModal">
+    <div class="km-kkp-modal-overlay" data-km-edit-confirm-close></div>
+    <div class="km-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="kmEditConfirmTitle">
+        <div class="km-delete-header">
+            <h3 id="kmEditConfirmTitle">Save Changes?</h3>
+            <button type="button" class="km-kkp-modal-control-btn km-kkp-modal-close" data-km-edit-confirm-close aria-label="Close">&times;</button>
+        </div>
+        <div class="km-delete-body">
+            <p id="kmEditConfirmMessage">Are you sure you want to edit this KK Profiling record? Type <strong>yes</strong> to confirm.</p>
+            <label class="km-type-confirm-label" for="kmEditConfirmInput">Confirmation</label>
+            <input type="text" id="kmEditConfirmInput" class="km-type-confirm-input" placeholder="type yes" autocomplete="off" autocapitalize="none" spellcheck="false">
+            <p class="km-type-confirm-hint" id="kmEditConfirmHint" hidden>Please type “yes” to continue.</p>
+        </div>
+        <div class="km-delete-footer">
+            <button type="button" class="km-kkp-btn-close" data-km-edit-confirm-close>Cancel</button>
+            <button type="button" class="km-kkp-btn-save" id="kmEditConfirmBtn" disabled>Confirm</button>
         </div>
     </div>
 </div>
@@ -184,6 +233,7 @@
     <script>
         window.kmPageMode = 'barangay-detail';
         window.kmBarangay = @json($barangay);
+        window.kmPurokZones = @json($purokZones ?? []);
         window.kmConfig = {
             dataUrl: @json(route('api.kabataan-monitoring.index')),
             questionnaireUrl: @json(url('/api/kabataan-monitoring/__ID__/questionnaire')),

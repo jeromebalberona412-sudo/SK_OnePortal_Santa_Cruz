@@ -296,10 +296,13 @@
                     {{-- FOOTER: FB Account + Group Chat (with spacing) --}}
                     <div class="kkp-footer-row">
                         <div class="kkp-footer-fb">
-                            <label class="kkp-inline-label" for="kkEditFacebookAccount">FB Account:</label>
-                            <input type="text" id="kkEditFacebookAccount" class="kkp-uline kkp-uline-fb" placeholder=" ">
+                            <div class="kkp-footer-fb-label-col">
+                                <label class="kkp-inline-label" for="kkEditFacebookAccount">FB Account:</label>
+                            </div>
+                            <div class="kkp-footer-fb-field">
+                                <input type="text" id="kkEditFacebookAccount" class="kkp-uline kkp-uline-fb" placeholder=" ">
+                            </div>
                         </div>
-                        <div class="kkp-footer-spacer"></div>
                         <div class="kkp-footer-chat">
                             <span class="kkp-inline-label">Willing to join the group chat?</span>
                             <label class="kkp-chk-lbl"><input type="checkbox" class="kkp-sq-chk" name="kkEditWillingToJoinGroupChat" value="Yes" onchange="kkEditSingleCheck(this,'kkEditWillingToJoinGroupChat')"> Yes</label>

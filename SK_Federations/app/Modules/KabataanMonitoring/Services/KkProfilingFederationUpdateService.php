@@ -4,9 +4,12 @@ namespace App\Modules\KabataanMonitoring\Services;
 
 use App\Models\KabataanRegistration;
 use App\Modules\AuditLog\Contracts\AuditLogInterface;
+use App\Modules\KabataanMonitoring\Notifications\KabataanAccountInviteNotification;
 use App\Modules\Shared\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
@@ -20,14 +23,16 @@ class KkProfilingFederationUpdateService
 
     /**
      * @param  array<string, mixed>  $input
+     * @return array{registration: KabataanRegistration, invite_sent: bool, invite_error: ?string}
      */
-    public function update(User $user, int $id, array $input): KabataanRegistration
+    public function update(User $user, int $id, array $input): array
     {
         $record = $this->monitoring->find($id);
         if ($record === null) {
             abort(404, 'Kabataan record not found.');
         }
 
+        $previousEmail = strtolower(trim((string) $record->email));
         $newEmail = strtolower(trim((string) ($input['email'] ?? '')));
         $newEmail = $newEmail === '' ? null : $newEmail;
 
@@ -43,8 +48,16 @@ class KkProfilingFederationUpdateService
         $formData = $this->mergeFormData($formData, $input);
         $formData['email'] = $newEmail;
 
-        $updated = DB::transaction(function () use ($record, $input, $formData, $newEmail) {
-            $previousEmail = strtolower(trim((string) $record->email));
+        $shouldInvite = $newEmail !== null && $newEmail !== $previousEmail;
+        $plainToken = null;
+
+        $updated = DB::transaction(function () use ($record, $input, $formData, $newEmail, $previousEmail, $shouldInvite, &$plainToken) {
+            if ($shouldInvite) {
+                $plainToken = bin2hex(random_bytes(32));
+                $formData['account_invite_token_hash'] = hash('sha256', $plainToken);
+                $formData['account_invite_expires_at'] = now()->addHours(24)->toIso8601String();
+                unset($formData['account_invite_used_at'], $formData['account_invite_sent_at']);
+            }
 
             $record->update([
                 'last_name' => $input['last_name'],
@@ -68,6 +81,18 @@ class KkProfilingFederationUpdateService
             return $record->fresh();
         });
 
+        $inviteSent = false;
+        $inviteError = null;
+        if (is_string($plainToken) && $plainToken !== '') {
+            $inviteError = $this->deliverInviteMail($updated, $plainToken);
+            if ($inviteError === null) {
+                $inviteSent = true;
+                $sentData = is_array($updated->form_data) ? $updated->form_data : [];
+                $sentData['account_invite_sent_at'] = now()->toIso8601String();
+                $updated->update(['form_data' => $sentData]);
+            }
+        }
+
         $this->auditLog->log('kabataan_registration.updated', $user, [
             'action' => 'update',
             'entity_type' => 'kabataan_registration',
@@ -75,9 +100,15 @@ class KkProfilingFederationUpdateService
             'module' => 'kabataan_monitoring',
             'barangay' => $updated->barangay?->name,
             'name' => $updated->full_name,
+            'email_changed' => $shouldInvite,
+            'invite_sent' => $inviteSent,
         ]);
 
-        return $updated;
+        return [
+            'registration' => $updated,
+            'invite_sent' => $inviteSent,
+            'invite_error' => $inviteError,
+        ];
     }
 
     /**
@@ -231,6 +262,40 @@ class KkProfilingFederationUpdateService
         }
 
         return $merged;
+    }
+
+    private function deliverInviteMail(KabataanRegistration $registration, string $plainToken): ?string
+    {
+        $email = strtolower(trim((string) $registration->email));
+        if ($email === '') {
+            return 'The profile was saved, but there is no email address to send to.';
+        }
+
+        $base = rtrim((string) config('services.kabataan_app_url'), '/');
+        if ($base === '') {
+            return 'The profile was saved, but the Kabataan activation URL is not configured.';
+        }
+
+        $activationUrl = $base.'/kkprofiling/account-invite/'.$registration->id.'/'.$plainToken;
+
+        try {
+            Notification::route('mail', $email)
+                ->notify(new KabataanAccountInviteNotification(
+                    (string) $registration->full_name,
+                    $activationUrl,
+                ));
+
+            return null;
+        } catch (\Throwable $e) {
+            report($e);
+            Log::error('KK Profiling account email failed', [
+                'registration_id' => $registration->id,
+                'email' => $email,
+                'error' => $e->getMessage(),
+            ]);
+
+            return 'The profile was saved, but the activation email could not be sent. Please try saving again.';
+        }
     }
 
     private function normalizeBirthday(string $value): string

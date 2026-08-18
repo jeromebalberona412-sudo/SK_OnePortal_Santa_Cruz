@@ -1,0 +1,38 @@
+<?php
+
+namespace App\Modules\KabataanMonitoring\Notifications;
+
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
+
+class KabataanAccountInviteNotification extends Notification
+{
+    public function __construct(
+        public string $fullName,
+        public string $activationUrl,
+    ) {
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function via(object $notifiable): array
+    {
+        return ['mail'];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        $name = trim($this->fullName) !== '' ? $this->fullName : 'Kabataan';
+
+        return (new MailMessage)
+            ->subject('Your Kabataan OnePortal Account Activation')
+            ->greeting('Hello '.$name.',')
+            ->line('Your email address has been added to your KK Profiling record by SK Federation.')
+            ->line('You can now set up your Kabataan OnePortal account using the secure button below:')
+            ->action('Set Up Account', $this->activationUrl)
+            ->line('This link is temporary and can only be used once. It expires in 24 hours. Do not share it with anyone.')
+            ->line('After setting up your account, you can access the Kabataan system and available SK programs and services for your barangay.')
+            ->line('If you did not request this update, please contact your SK Federation.');
+    }
+}

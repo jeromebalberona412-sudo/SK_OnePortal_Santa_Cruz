@@ -4,7 +4,21 @@
     const selectedIds = new Set();
     let pendingDeleteRecord = null;
 
-    const state = { search: '', status: 'all', barangay: 'all', year: 'all', sortKey: '', sortDir: '' };
+    const state = { search: '', status: 'all', barangay: 'all', year: 'all', voter: 'all', ageGroup: 'all', purok: 'all', sortKey: '', sortDir: '' };
+    const modalCache = {};
+    const modalInflight = {};
+
+    function youthAgeGroupKey(r) {
+        var label = String(r.youthAgeGroup || '').toLowerCase();
+        if (label.indexOf('15-17') !== -1 || label.indexOf('child youth') !== -1) return 'child';
+        if (label.indexOf('18-24') !== -1 || label.indexOf('core youth') !== -1) return 'core';
+        if (label.indexOf('25-30') !== -1 || label.indexOf('young adult') !== -1) return 'young';
+        var n = parseInt(r.age, 10);
+        if (n >= 15 && n <= 17) return 'child';
+        if (n >= 18 && n <= 24) return 'core';
+        if (n >= 25 && n <= 30) return 'young';
+        return '';
+    }
 
     function getFiltered() {
         var q = state.search.trim().toLowerCase();
@@ -12,9 +26,16 @@
             var matchStatus = state.status === 'all' || r.status === state.status;
             var matchBrgy   = state.barangay === 'all' || r.barangay === state.barangay;
             var matchYear = state.year === 'all' || String(r.submittedYear || '') === String(state.year);
+            var voterValue = String(r.registeredVoter || '').trim().toLowerCase();
+            var matchVoter = state.voter === 'all'
+                || (state.voter === 'Yes' && voterValue === 'yes')
+                || (state.voter === 'No' && voterValue === 'no');
+            var matchAgeGroup = state.ageGroup === 'all' || youthAgeGroupKey(r) === state.ageGroup;
+            var purokValue = String(r.purokZone || '').trim();
+            var matchPurok = state.purok === 'all' || purokValue === state.purok;
             var hay = (r.name + ' ' + r.barangay + ' ' + r.focus + ' ' + r.youthClassification + ' ' + (r.respondentNumber || '') + ' ' + (r.purokZone || '')).toLowerCase();
             var matchSearch = !q || hay.includes(q);
-            return matchStatus && matchBrgy && matchSearch && matchYear;
+            return matchStatus && matchBrgy && matchSearch && matchYear && matchVoter && matchAgeGroup && matchPurok;
         });
     }
 
@@ -52,6 +73,46 @@
         });
 
         setYearSelectOptions(yearFilter, years);
+    }
+
+    function populatePurokFilter() {
+        var selectEl = document.getElementById('km-brgy-purok-filter');
+        if (!selectEl) return;
+
+        var current = selectEl.value || 'all';
+        var puroks = [];
+
+        // Use DB-configured zones (even when there are no records yet).
+        if (Array.isArray(window.kmPurokZones) && window.kmPurokZones.length) {
+            puroks = window.kmPurokZones
+                .map(function (z) { return String(z || '').trim(); })
+                .filter(function (z) { return z !== '' && z !== '—'; });
+        } else {
+            // Fallback: zones derived from existing KK records.
+            var brgy = window.kmBarangay || '';
+            puroks = Array.from(new Set(records.filter(function (r) {
+                return (!brgy || r.barangay === brgy) && String(r.purokZone || '').trim() && String(r.purokZone).trim() !== '—';
+            }).map(function (r) {
+                return String(r.purokZone).trim();
+            })));
+        }
+
+        puroks = puroks.sort(function (a, b) {
+            return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+        });
+
+        var html = '<option value="all">Purok/Zone</option>';
+        puroks.forEach(function (purok) {
+            html += '<option value="' + escapeHtml(purok) + '">' + escapeHtml(purok) + '</option>';
+        });
+        selectEl.innerHTML = html;
+        if (puroks.indexOf(current) !== -1) {
+            selectEl.value = current;
+            state.purok = current;
+        } else {
+            selectEl.value = 'all';
+            state.purok = 'all';
+        }
     }
 
     function setYearSelectOptions(selectEl, years) {
@@ -270,6 +331,7 @@
         if (window.kmPageMode === 'barangay-detail') {
             loadRecords().then(function () {
                 populateBarangayYearFilter();
+                populatePurokFilter();
                 renderBarangayDetail();
                 setupBarangayDetailFilters();
             });
@@ -298,6 +360,36 @@
         if (yearFilter) {
             yearFilter.addEventListener('change', function(e) {
                 state.year = e.target.value || 'all';
+                selectedIds.clear();
+                resetBarangayPagination();
+                renderBarangayDetail();
+            });
+        }
+
+        var voterFilter = document.getElementById('km-brgy-voter-filter');
+        if (voterFilter) {
+            voterFilter.addEventListener('change', function(e) {
+                state.voter = e.target.value || 'all';
+                selectedIds.clear();
+                resetBarangayPagination();
+                renderBarangayDetail();
+            });
+        }
+
+        var ageGroupFilter = document.getElementById('km-brgy-age-group-filter');
+        if (ageGroupFilter) {
+            ageGroupFilter.addEventListener('change', function(e) {
+                state.ageGroup = e.target.value || 'all';
+                selectedIds.clear();
+                resetBarangayPagination();
+                renderBarangayDetail();
+            });
+        }
+
+        var purokFilter = document.getElementById('km-brgy-purok-filter');
+        if (purokFilter) {
+            purokFilter.addEventListener('change', function(e) {
+                state.purok = e.target.value || 'all';
                 selectedIds.clear();
                 resetBarangayPagination();
                 renderBarangayDetail();
@@ -505,6 +597,9 @@
                     menu.classList.add('is-open');
                     trigger.setAttribute('aria-expanded', 'true');
                     positionKmActionDropdown(menu);
+                    var prefetchBtn = menu.querySelector('[data-km-action="view"]');
+                    var prefetchId = prefetchBtn && (prefetchBtn.getAttribute('data-id') || prefetchBtn.getAttribute('data-slug'));
+                    if (prefetchId) window.kmFetchModalPayload(prefetchId);
                 }
                 return;
             }
@@ -519,6 +614,14 @@
 
             if (action === 'view') {
                 window.openKKPModal(slug);
+                return;
+            }
+
+            if (action === 'print') {
+                var printId = actionBtn.getAttribute('data-id') || slug;
+                if (typeof window.printKKPById === 'function') {
+                    window.printKKPById(printId);
+                }
                 return;
             }
 
@@ -555,7 +658,7 @@
         var hint = document.getElementById('kmDeleteConfirmHint');
         var button = document.getElementById('kmDeleteConfirmBtn');
         if (!input || !button) return;
-        var matched = input.value.trim().toLowerCase() === 'delete';
+        var matched = input.value.trim().toLowerCase() === 'confirm';
         button.disabled = !matched;
         if (hint) hint.hidden = matched || input.value.trim() === '';
     }
@@ -587,7 +690,7 @@
 
     async function confirmKmDelete() {
         if (!pendingDeleteRecord || !pendingDeleteRecord.id) return;
-        if (document.getElementById('kmDeleteConfirmInput')?.value.trim().toLowerCase() !== 'delete') return;
+        if (document.getElementById('kmDeleteConfirmInput')?.value.trim().toLowerCase() !== 'confirm') return;
 
         var button = document.getElementById('kmDeleteConfirmBtn');
         var urlTemplate = (window.kmConfig && window.kmConfig.destroyUrl) || '';
@@ -621,7 +724,11 @@
             }
             selectedIds.delete(deletedId);
             closeKmDeleteModal();
+            if (typeof window.kmInvalidateModalCache === 'function') {
+                window.kmInvalidateModalCache(deletedId);
+            }
             populateBarangayYearFilter();
+            populatePurokFilter();
             renderBarangayDetail();
         } catch (error) {
             alert(error.message || 'Failed to delete record.');
@@ -691,7 +798,7 @@
         }
 
         if (!filtered.length) {
-            tbody.innerHTML = '<tr class="km-empty-row"><td colspan="8">No profiles match your current filters.</td></tr>';
+            tbody.innerHTML = '<tr class="km-empty-row"><td colspan="7">No profiles match your current filters.</td></tr>';
             if (empty) empty.hidden = true;
             selectedIds.clear();
             syncSelectAllCheckbox();
@@ -730,7 +837,7 @@
         renderBarangayDetail();
     };
 
-    window.kmGetExportRows = function () {
+    window.kmGetExportRows = function (startDate, endDate) {
         var allItems = (window.kmPaginationState && window.kmPaginationState.allItems) || [];
         var source = allItems;
         if (selectedIds.size > 0) {
@@ -738,21 +845,94 @@
                 return selectedIds.has(String(r.id || r.slug || ''));
             });
         }
+
+        var start = startDate || '';
+        var end = endDate || '';
+        if (start || end) {
+            source = source.filter(function (r) {
+                var dateValue = recordExportDate(r);
+                if (!dateValue) return false;
+                if (start && dateValue < start) return false;
+                if (end && dateValue > end) return false;
+                return true;
+            });
+        }
+
         return source.map(function (r) {
             return {
-                respondentNumber: r.respondentNumber || '—',
+                region: dash(r.region) || 'IV-A',
+                province: dash(r.province) || 'Laguna',
+                city: dash(r.city) || 'Santa Cruz',
+                barangay: dash(r.barangay),
                 fullName: formatFullName(r),
-                age: r.age || '—',
-                barangay: r.barangay || '—',
-                purokZone: r.purokZone || '—',
-                registeredVoter: r.registeredVoter || '—',
+                age: dash(r.age),
+                birthday: formatExportBirthday(r.birthday),
+                sex: dash(r.sex),
+                civilStatus: dash(r.civilStatus),
+                youthClassification: dash(r.youthClassification),
+                youthAgeGroup: formatYouthAgeGroup(r.youthAgeGroup, r.age),
+                contactNumber: dash(r.contactNumber),
+                homeAddress: dash(r.purokZone),
+                education: dash(r.education),
+                workStatus: dash(r.workStatus),
+                registeredVoter: dash(r.registeredVoter),
+                votedLastElection: dash(r.votedLastElection),
+                kkAssembly: dash(r.kkAssembly),
+                kkTimes: dash(r.kkTimes),
             };
         });
     };
 
+    function recordExportDate(r) {
+        var submitted = String(r.submittedDate || '').trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(submitted)) return submitted;
+
+        var iso = String(r.submittedAt || '').match(/^(\d{4}-\d{2}-\d{2})/);
+        if (iso) return iso[1];
+
+        var birthday = String(r.birthday || '').trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(birthday)) return birthday;
+        var slash = birthday.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (slash) {
+            return slash[3] + '-' + String(slash[1]).padStart(2, '0') + '-' + String(slash[2]).padStart(2, '0');
+        }
+        return '';
+    }
+
+    function dash(value) {
+        var text = String(value ?? '').trim();
+        return (!text || text === '—') ? '' : text;
+    }
+
+    function formatExportBirthday(value) {
+        var text = dash(value);
+        if (!text) return '';
+        var iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+        if (iso) return iso[2] + '/' + iso[3] + '/' + iso[1];
+        var slash = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(text);
+        if (slash) {
+            var year = slash[3].length === 2 ? '20' + slash[3] : slash[3];
+            return String(slash[1]).padStart(2, '0') + '/' + String(slash[2]).padStart(2, '0') + '/' + year;
+        }
+        return text;
+    }
+
+    function formatYouthAgeGroup(label, age) {
+        var text = dash(label).toLowerCase();
+        if (text.indexOf('15-17') !== -1 || text.indexOf('child youth') !== -1) return '15-17';
+        if (text.indexOf('18-24') !== -1 || text.indexOf('core youth') !== -1) return '18-24';
+        if (text.indexOf('25-30') !== -1 || text.indexOf('young adult') !== -1) return '25-30';
+        var n = parseInt(age, 10);
+        if (n >= 15 && n <= 17) return '15-17';
+        if (n >= 18 && n <= 24) return '18-24';
+        if (n >= 25 && n <= 30) return '25-30';
+        return dash(label);
+    }
+
     window.kmReloadRecords = function () {
         return loadRecords().then(function () {
             populateBarangayYearFilter();
+            populatePurokFilter();
             renderBarangayDetail();
         });
     };
@@ -805,7 +985,6 @@
                 '<td class="km-respondent-cell">' + escapeHtml(r.respondentNumber || '—') + '</td>' +
                 '<td class="km-fullname-cell"><span class="km-fullname">' + escapeHtml(fullName) + '</span></td>' +
                 '<td>' + escapeHtml(String(r.age ?? '—')) + '</td>' +
-                '<td>' + escapeHtml(r.barangay || '—') + '</td>' +
                 '<td>' + escapeHtml(r.purokZone || '—') + '</td>' +
                 '<td>' + escapeHtml(r.registeredVoter || '—') + '</td>' +
                 '<td class="col-actions">' +
@@ -815,6 +994,7 @@
                         '</button>' +
                         '<div class="km-row-actions-dropdown" role="menu" hidden>' +
                             '<button type="button" class="km-row-actions-item" data-km-action="view" data-id="' + escapeHtml(recordId) + '" data-slug="' + escapeHtml(String(r.slug || '')) + '" role="menuitem"><i class="fas fa-eye"></i><span>View</span></button>' +
+                            '<button type="button" class="km-row-actions-item" data-km-action="print" data-id="' + escapeHtml(recordId) + '" data-slug="' + escapeHtml(String(r.slug || '')) + '" role="menuitem"><i class="fas fa-print"></i><span>Print</span></button>' +
                             '<button type="button" class="km-row-actions-item" data-km-action="edit" data-id="' + escapeHtml(recordId) + '" data-slug="' + escapeHtml(String(r.slug || '')) + '" role="menuitem"><i class="fas fa-pen"></i><span>Edit</span></button>' +
                             '<button type="button" class="km-row-actions-item is-danger" data-km-action="delete" data-id="' + escapeHtml(recordId) + '" data-name="' + escapeHtml(fullName) + '" data-slug="' + escapeHtml(String(r.slug || '')) + '" role="menuitem"><i class="fas fa-trash"></i><span>Delete</span></button>' +
                         '</div>' +
@@ -827,6 +1007,7 @@
         syncSelectAllCheckbox();
         updateBatchPrintButton();
         updatePagination(state.allItems, state.currentPage);
+        prefetchVisibleModalPayloads(pageItems);
     }
 
     function updatePagination(items, currentPage) {
@@ -887,6 +1068,59 @@
     };
 
     // ── KK Profiling Form Modal ──
+    window.kmInvalidateModalCache = function (recordId) {
+        if (recordId) {
+            delete modalCache[String(recordId)];
+            return;
+        }
+        Object.keys(modalCache).forEach(function (key) {
+            delete modalCache[key];
+        });
+    };
+
+    window.kmFetchModalPayload = function (recordId) {
+        var key = String(recordId || '');
+        if (!key) return Promise.resolve(null);
+        if (modalCache[key]) return Promise.resolve(modalCache[key]);
+        if (modalInflight[key]) return modalInflight[key];
+
+        var urlTemplate = (window.kmConfig && window.kmConfig.questionnaireUrl) || '';
+        if (!urlTemplate) return Promise.resolve(null);
+
+        modalInflight[key] = fetch(urlTemplate.replace('__ID__', encodeURIComponent(key)), {
+            method: 'GET',
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+        })
+            .then(function (res) {
+                if (!res.ok) throw new Error('Failed to load questionnaire');
+                return res.json();
+            })
+            .then(function (payload) {
+                modalCache[key] = payload;
+                return payload;
+            })
+            .finally(function () {
+                delete modalInflight[key];
+            });
+
+        return modalInflight[key];
+    };
+
+    function prefetchVisibleModalPayloads(pageItems) {
+        var run = function () {
+            (pageItems || []).forEach(function (item) {
+                var id = item && (item.id || item.slug);
+                if (id) window.kmFetchModalPayload(id);
+            });
+        };
+        if (window.requestIdleCallback) {
+            window.requestIdleCallback(run, { timeout: 1200 });
+            return;
+        }
+        setTimeout(run, 0);
+    }
+
     window.openKKPModal = function(kabataanSlug) {
         var profile = records.find(function(r){ return r.slug === kabataanSlug || String(r.id) === String(kabataanSlug); });
         if (!profile) return;
@@ -899,11 +1133,15 @@
         var container = document.getElementById('kmKKPViewRoot') || document.getElementById('kmKKPFormContainer');
         if (!modal || !container) return;
 
-        var urlTemplate = (window.kmConfig && window.kmConfig.questionnaireUrl) || '';
         var recordId = profile.id || profile.slug;
-        var fetchUrl = urlTemplate.replace('__ID__', encodeURIComponent(recordId));
-
-        container.innerHTML = '<p class="km-kkp-loading">Loading questionnaire...</p>';
+        var cached = modalCache[String(recordId)];
+        if (cached && cached.html) {
+            container.innerHTML = '<div class="kk-qs-scroll-wrapper">' + cached.html + '</div>';
+        } else {
+            container.innerHTML = '<p class="km-kkp-loading">Loading questionnaire...</p>';
+        }
+        var editFooter = document.getElementById('kmKKPEditFooter');
+        if (editFooter) editFooter.hidden = true;
         modal.classList.add('show');
         modal.classList.remove('is-fullscreen');
         var resizeBtn = document.getElementById('kmKKPFullscreenBtn');
@@ -914,23 +1152,15 @@
         }
         document.body.style.overflow = 'hidden';
 
-        fetch(fetchUrl, {
-            method: 'GET',
-            headers: { Accept: 'application/json' },
-            credentials: 'same-origin',
-        })
-            .then(function(res) {
-                if (!res.ok) {
-                    throw new Error('Failed to load questionnaire');
-                }
-                return res.json();
-            })
+        window.kmFetchModalPayload(recordId)
             .then(function(data) {
-                var html = data.html || '<p class="km-kkp-loading">No questionnaire data found.</p>';
+                var html = (data && data.html) || '<p class="km-kkp-loading">No questionnaire data found.</p>';
                 container.innerHTML = '<div class="kk-qs-scroll-wrapper">' + html + '</div>';
             })
             .catch(function() {
-                container.innerHTML = '<p class="km-kkp-loading">Unable to load questionnaire. Please try again.</p>';
+                if (!cached) {
+                    container.innerHTML = '<p class="km-kkp-loading">Unable to load questionnaire. Please try again.</p>';
+                }
             });
     };
 
@@ -964,14 +1194,14 @@
         }
     };
 
-    window.printKKPForm = function() {
-        var container = document.getElementById('kmKKPViewRoot') || document.getElementById('kmKKPFormContainer');
-        if (!container || !container.innerHTML.trim()) return;
-
+    function printKKPHtml(formHTML) {
+        if (!formHTML || !String(formHTML).trim()) return;
         var printWindow = window.open('', '', 'height=800,width=900');
-        var formHTML = container.innerHTML;
+        if (!printWindow) {
+            alert('Please allow pop-ups to print this questionnaire.');
+            return;
+        }
         var viewCssHref = window.location.origin + '/modules/kabataan-monitoring/css/kk-questionnaire-view.css';
-
         printWindow.document.write('<html><head><title>KK Survey Questionnaire</title>');
         printWindow.document.write('<link rel="stylesheet" href="' + viewCssHref + '">');
         printWindow.document.write('<style>@page{size:Letter portrait;margin:.35in;}body{margin:0;} .kk-view-paper{zoom:.88;box-shadow:none;border:none;padding:0;} .kkp-notice-body br{display:none;}</style>');
@@ -982,5 +1212,27 @@
         printWindow.onload = function() {
             printWindow.print();
         };
+    }
+
+    window.printKKPById = function(recordId) {
+        if (!recordId) return;
+        var cached = modalCache[String(recordId)];
+        if (cached && cached.html) {
+            printKKPHtml(cached.html);
+            return;
+        }
+        window.kmFetchModalPayload(recordId)
+            .then(function(data) {
+                printKKPHtml((data && data.html) || '');
+            })
+            .catch(function() {
+                alert('Unable to print questionnaire. Please try again.');
+            });
+    };
+
+    window.printKKPForm = function() {
+        var container = document.getElementById('kmKKPViewRoot') || document.getElementById('kmKKPFormContainer');
+        if (!container) return;
+        printKKPHtml(container.innerHTML);
     };
 })();

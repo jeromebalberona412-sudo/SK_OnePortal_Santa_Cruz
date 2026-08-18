@@ -3,6 +3,7 @@
 
     var editingId = null;
     var saving = false;
+    var originalEmail = '';
 
     function getEditField(id) {
         return document.getElementById(id);
@@ -224,6 +225,7 @@
         setCheckboxGroupByHiddenId('kkEditYouthAgeGroup', youthAgeGroupFromAge(request.age) || request.youthAgeGroup || '');
         syncEditAssemblyFollowUp();
         populateSignature(request);
+        originalEmail = normalizeCompare(request.emailAddress && request.emailAddress !== 'No email' ? request.emailAddress : '');
     }
 
     function collectKkProfilingEditPayload() {
@@ -265,12 +267,10 @@
     function setEditMode(isEdit) {
         var viewRoot = document.getElementById('kmKKPViewRoot');
         var editRoot = document.getElementById('kkProfilingEditRoot');
-        var viewFooter = document.getElementById('kmKKPViewFooter');
         var editFooter = document.getElementById('kmKKPEditFooter');
         var title = document.querySelector('#kmKKPModal h2');
         if (viewRoot) viewRoot.hidden = isEdit;
         if (editRoot) editRoot.hidden = !isEdit;
-        if (viewFooter) viewFooter.hidden = isEdit;
         if (editFooter) editFooter.hidden = !isEdit;
         if (title) {
             title.innerHTML = isEdit
@@ -304,11 +304,22 @@
         var saveBtn = document.getElementById('kmKKPEditSaveBtn');
         if (saveBtn && saveBtn.dataset.kmBound !== '1') {
             saveBtn.dataset.kmBound = '1';
-            saveBtn.addEventListener('click', saveEdit);
+            saveBtn.addEventListener('click', openEditConfirmModal);
         }
+        bindEditConfirmModal();
     }
 
-    async function saveEdit() {
+    function syncEditConfirmState() {
+        var input = document.getElementById('kmEditConfirmInput');
+        var hint = document.getElementById('kmEditConfirmHint');
+        var button = document.getElementById('kmEditConfirmBtn');
+        if (!input || !button) return;
+        var matched = input.value.trim().toLowerCase() === 'yes';
+        button.disabled = !matched;
+        if (hint) hint.hidden = matched || input.value.trim() === '';
+    }
+
+    function openEditConfirmModal() {
         if (!editingId || saving) return;
         var payload = collectKkProfilingEditPayload();
         if (!payload.last_name || !payload.first_name) {
@@ -316,7 +327,80 @@
             return;
         }
 
-        var button = document.getElementById('kmKKPEditSaveBtn');
+        var message = document.getElementById('kmEditConfirmMessage');
+        var nextEmail = normalizeCompare(payload.email);
+        if (message) {
+            if (nextEmail && nextEmail !== originalEmail) {
+                message.innerHTML = 'Are you sure you want to edit this KK Profiling record? The email will be changed to <strong>' + escapeEditHtml(payload.email) + '</strong> and an activation email will be sent. Type <strong>yes</strong> to confirm.';
+            } else {
+                message.innerHTML = 'Are you sure you want to edit this KK Profiling record? Type <strong>yes</strong> to confirm.';
+            }
+        }
+
+        var modal = document.getElementById('kmEditConfirmModal');
+        var input = document.getElementById('kmEditConfirmInput');
+        if (input) input.value = '';
+        syncEditConfirmState();
+        if (modal) modal.classList.add('show');
+        input?.focus();
+    }
+
+    function closeEditConfirmModal() {
+        var modal = document.getElementById('kmEditConfirmModal');
+        if (modal) modal.classList.remove('show');
+        var input = document.getElementById('kmEditConfirmInput');
+        if (input) input.value = '';
+        syncEditConfirmState();
+    }
+
+    function escapeEditHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function bindEditConfirmModal() {
+        var input = document.getElementById('kmEditConfirmInput');
+        if (input && input.dataset.kmBound !== '1') {
+            input.dataset.kmBound = '1';
+            input.addEventListener('input', syncEditConfirmState);
+            input.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    saveEdit();
+                }
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    closeEditConfirmModal();
+                }
+            });
+        }
+        var confirmBtn = document.getElementById('kmEditConfirmBtn');
+        if (confirmBtn && confirmBtn.dataset.kmBound !== '1') {
+            confirmBtn.dataset.kmBound = '1';
+            confirmBtn.addEventListener('click', saveEdit);
+        }
+        document.querySelectorAll('[data-km-edit-confirm-close]').forEach(function (btn) {
+            if (btn.dataset.kmBound === '1') return;
+            btn.dataset.kmBound = '1';
+            btn.addEventListener('click', closeEditConfirmModal);
+        });
+    }
+
+    async function saveEdit() {
+        if (!editingId || saving) return;
+        if (document.getElementById('kmEditConfirmInput')?.value.trim().toLowerCase() !== 'yes') return;
+
+        var payload = collectKkProfilingEditPayload();
+        if (!payload.last_name || !payload.first_name) {
+            alert('First name and last name are required.');
+            return;
+        }
+
+        var button = document.getElementById('kmEditConfirmBtn');
+        var saveBtn = document.getElementById('kmKKPEditSaveBtn');
         var urlTemplate = (window.kmConfig && window.kmConfig.updateUrl) || '';
         var url = urlTemplate.replace('__ID__', encodeURIComponent(String(editingId)));
 
@@ -324,6 +408,10 @@
         if (button) {
             button.disabled = true;
             button.textContent = 'Saving...';
+        }
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
         }
 
         try {
@@ -342,9 +430,17 @@
             if (!response.ok || data.success === false) {
                 throw new Error(data.message || 'Failed to save KK Profiling record.');
             }
+            closeEditConfirmModal();
             setEditMode(false);
             window.closeKKPModal();
+            if (typeof window.kmInvalidateModalCache === 'function') {
+                window.kmInvalidateModalCache(editingId);
+            }
             editingId = null;
+            originalEmail = '';
+            if (data.message) {
+                alert(data.message);
+            }
             if (typeof window.kmReloadRecords === 'function') {
                 await window.kmReloadRecords();
             }
@@ -354,7 +450,11 @@
             saving = false;
             if (button) {
                 button.disabled = false;
-                button.textContent = 'Save Changes';
+                button.textContent = 'Confirm';
+            }
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Changes';
             }
         }
     }
@@ -362,8 +462,7 @@
     window.openKKPEditModal = async function (recordId) {
         var modal = document.getElementById('kmKKPModal');
         var viewRoot = document.getElementById('kmKKPViewRoot');
-        var editUrlTemplate = (window.kmConfig && window.kmConfig.editUrl) || '';
-        if (!modal || !editUrlTemplate) return;
+        if (!modal) return;
 
         editingId = recordId;
         bindEditControls();
@@ -373,13 +472,20 @@
         document.body.style.overflow = 'hidden';
 
         try {
-            var response = await fetch(editUrlTemplate.replace('__ID__', encodeURIComponent(String(recordId))), {
-                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                credentials: 'same-origin',
-            });
-            var payload = await response.json().catch(function () { return {}; });
-            if (!response.ok || !payload.data) {
-                throw new Error(payload.message || 'Failed to load record for editing.');
+            var payload = null;
+            if (typeof window.kmFetchModalPayload === 'function') {
+                payload = await window.kmFetchModalPayload(recordId);
+            }
+            if (!payload || !payload.data) {
+                var editUrlTemplate = (window.kmConfig && window.kmConfig.editUrl) || '';
+                var response = await fetch(editUrlTemplate.replace('__ID__', encodeURIComponent(String(recordId))), {
+                    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                });
+                payload = await response.json().catch(function () { return {}; });
+                if (!response.ok || !payload.data) {
+                    throw new Error(payload.message || 'Failed to load record for editing.');
+                }
             }
             populateKkEditForm(payload.data);
         } catch (error) {
@@ -391,7 +497,9 @@
     };
 
     window.kmExitKKPEditMode = function () {
+        closeEditConfirmModal();
         setEditMode(false);
         editingId = null;
+        originalEmail = '';
     };
 })();

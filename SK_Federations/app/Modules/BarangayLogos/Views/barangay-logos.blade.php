@@ -22,7 +22,7 @@
 <div class="barangay-logos-page container-fluid" id="mainContent">
     <div class="barangay-logos-container">
 
-        {{-- ── Page Header ── --}}
+        {{-- ── Page Header (single row: title + search / counter / toggle) ── --}}
         <div class="bl-page-header">
             <div class="bl-page-header-text">
                 <h1 class="bl-page-title">SK Barangay Logos</h1>
@@ -30,46 +30,46 @@
             </div>
 
             <div class="bl-header-controls">
-                    <div class="bl-search-wrap">
-                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="bl-search-icon">
-                            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-                            <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <div class="bl-search-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="bl-search-icon">
+                        <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                        <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <input
+                        type="text"
+                        id="blSearchInput"
+                        class="bl-search-input form-control"
+                        placeholder="Search barangay..."
+                        autocomplete="off"
+                        aria-label="Search barangay"
+                    />
+                    <button type="button" class="bl-search-clear" id="blSearchClear" aria-label="Clear search" style="display:none;">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                            <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
                         </svg>
-                        <input
-                            type="text"
-                            id="blSearchInput"
-                            class="bl-search-input form-control"
-                            placeholder="Search barangay..."
-                            autocomplete="off"
-                            aria-label="Search barangay"
-                        />
-                        <button type="button" class="bl-search-clear" id="blSearchClear" aria-label="Clear search" style="display:none;">
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                                <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                            </svg>
-                        </button>
-                    </div>
+                    </button>
+                </div>
 
-                    <div class="bl-counter-pill">
-                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="bl-counter-icon">
-                            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/>
-                            <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.8"/>
-                            <polyline points="21 15 16 10 5 21" stroke="currentColor" stroke-width="1.8"/>
-                        </svg>
-                        <span id="uploadedCount">{{ $logos->count() }}</span>
-                        <span class="bl-counter-sep">/</span>
-                        <span>26</span>
-                        <span class="bl-counter-label">Uploaded</span>
-                    </div>
+                <div class="bl-counter-pill" aria-label="Uploaded logos count">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="bl-counter-icon">
+                        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                        <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.8"/>
+                        <polyline points="21 15 16 10 5 21" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                    <span id="uploadedCount">{{ $logos->count() }}</span>
+                    <span class="bl-counter-sep">/</span>
+                    <span id="blTotalCount">26</span>
+                    <span class="bl-counter-label">Uploaded</span>
+                </div>
 
-                    <button type="button" class="bl-toggle-btn" id="toggleLogosBtn">
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" id="toggleIcon">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
-                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                            <span id="toggleBtnText">Hide Logos</span>
-                        </button>
+                <button type="button" class="bl-toggle-btn" id="toggleLogosBtn" aria-label="Hide logos">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" id="toggleIcon">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span id="toggleBtnText" class="bl-toggle-btn-text">Hide Logos</span>
+                </button>
             </div>
         </div>
 
