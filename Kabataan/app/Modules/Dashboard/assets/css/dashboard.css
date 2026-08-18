@@ -26,8 +26,10 @@ body.youth-dashboard {
     background: var(--bg);
     color: var(--text-primary);
     overflow: hidden;
+    overflow-x: clip;
     position: relative;
     height: 100vh;
+    max-width: 100%;
 }
 
 /* ── NAVBAR ── */
@@ -252,11 +254,13 @@ body.youth-dashboard {
 
 .dashboard-container {
     max-width: 1400px;
+    width: 100%;
     margin: 0 auto;
     display: grid;
     grid-template-columns: minmax(0, 280px) minmax(0, 1fr) minmax(0, 280px);
     gap: clamp(12px, 1.4vw, 24px);
     height: calc(100vh - var(--nav-h) - 48px);
+    min-width: 0;
 }
 
 .programs-sidebar-left,
@@ -280,18 +284,23 @@ body.youth-dashboard {
 
     body.youth-dashboard {
         overflow: auto;
+        overflow-x: clip;
         height: auto;
     }
 
     .dashboard-main {
         height: auto;
         overflow: visible;
+        overflow-x: clip;
+        max-width: 100%;
     }
 
     .feed-section {
         height: auto;
         overflow: visible;
+        overflow-x: clip;
         padding-right: 0;
+        max-width: 100%;
     }
 }
 
@@ -348,6 +357,7 @@ body.youth-dashboard {
     color: var(--text-primary);
     margin-bottom: 2px;
     letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
 }
 
 .feed-header p { color: var(--text-muted); font-size: 14px; }
@@ -494,6 +504,8 @@ body.youth-dashboard {
     border: 1px solid var(--border);
     transition: box-shadow 0.2s, border-color 0.2s;
     overflow: visible;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .post-card:hover {
@@ -506,6 +518,7 @@ body.youth-dashboard {
     align-items: center;
     gap: 12px;
     margin-bottom: 14px;
+    min-width: 0;
 }
 
 .post-avatar {
@@ -517,20 +530,29 @@ body.youth-dashboard {
     background: #eff6ff;
 }
 
-.post-info { flex: 1; }
+.post-info {
+    flex: 1;
+    min-width: 0;
+}
 
 .post-author {
     font-size: 16px;
     font-weight: 700;
     color: var(--text-primary);
     margin-bottom: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .post-meta {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
     font-size: 13px;
+    min-width: 0;
+    margin: 0;
 }
 
 .post-type {
@@ -1748,11 +1770,18 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
 .btn-secondary:hover { background: var(--border); }
 
 /* ── RESPONSIVE ── */
+@media (min-width: 1201px) {
+    #programsDrawerSidebar,
+    #programsDrawerBackdrop {
+        display: none !important;
+    }
+}
+
 @media (max-width: 1200px) {
     .dashboard-container { grid-template-columns: 1fr; height: auto; }
-    .feed-section { height: auto; overflow: visible; }
-    .dashboard-main { height: auto; overflow: visible; }
-    body.youth-dashboard { overflow: auto; height: auto; }
+    .feed-section { height: auto; overflow: visible; overflow-x: clip; }
+    .dashboard-main { height: auto; overflow: visible; overflow-x: clip; }
+    body.youth-dashboard { overflow: auto; overflow-x: clip; height: auto; }
 
     .programs-sidebar-left,
     .barangay-sidebar-right {
@@ -1794,8 +1823,9 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
 @media (max-width: 768px) {
     .navbar-center { flex: 1; min-width: 0; max-width: none; }
     .search-input { font-size: 13px; padding: 8px 12px 8px 38px; }
-    .dashboard-main { padding: 14px; padding-top: calc(var(--nav-h) + 14px); }
-    .post-card { padding: 16px; }
+    .dashboard-main { padding: 14px; padding-top: calc(var(--nav-h) + 14px); max-width: 100%; overflow-x: clip; }
+    .post-card { padding: 16px; max-width: 100%; }
+    .post-avatar { flex-shrink: 0; }
     .form-row { grid-template-columns: 1fr; }
     .modal-container { width: 95%; }
 }

@@ -13,6 +13,7 @@ let sortMode = 'relevant';
 let sending = false;
 let viewerState = { data: null, filter: 'all' };
 let pageBound = false;
+let viewerBound = false;
 let syncingUrl = false;
 let expandedReplies = new Set();
 
@@ -623,6 +624,7 @@ function findComment(comments, id) {
 }
 
 async function openViewer(target, commentId = null) {
+    bindReactionViewer();
     const modal = document.getElementById('cpReactionViewer');
     const list = document.getElementById('cpViewerList');
     modal.hidden = false;
@@ -683,6 +685,65 @@ function renderViewer(filter) {
     list.innerHTML = rows.length
         ? rows.map((r) => `<div class="cp-viewer-row"><div class="cp-viewer-avatar-wrap"><img src="${escapeHtml(r.avatar_url || '')}" alt=""><span class="cp-viewer-emoji">${REACTION_EMOJI[r.reaction_type] || ''}</span></div><span class="cp-viewer-name">${escapeHtml(r.name || 'Member')}</span></div>`).join('')
         : (Number(data.count || 0) > 0 ? '' : '<p class="cp-viewer-empty">No reactions yet.</p>');
+}
+
+function closeReactionViewer() {
+    const viewer = document.getElementById('cpReactionViewer');
+    if (viewer) {
+        viewer.hidden = true;
+    }
+}
+
+function bindReactionViewer() {
+    if (viewerBound) {
+        return;
+    }
+    viewerBound = true;
+    document.getElementById('cpViewerOverlay')?.addEventListener('click', closeReactionViewer);
+    document.getElementById('cpViewerClose')?.addEventListener('click', closeReactionViewer);
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        if (document.getElementById('editCommentModal')?.classList.contains('active')) return;
+        if (document.getElementById('deleteCommentModal')?.classList.contains('active')) return;
+        const viewer = document.getElementById('cpReactionViewer');
+        if (viewer && !viewer.hidden) {
+            closeReactionViewer();
+            return;
+        }
+        const shell = document.getElementById('commentPreviewShell');
+        if (shell && !shell.hidden && shell.classList.contains('is-open')) {
+            closeCommentPreview();
+        }
+    });
+}
+
+async function openPostReactionViewer(postId) {
+    const modal = document.getElementById('cpReactionViewer');
+    const list = document.getElementById('cpViewerList');
+    if (!modal || !list || !postId) {
+        return;
+    }
+    bindReactionViewer();
+    modal.hidden = false;
+    const cached = (window.BarangayProfileConfig?.posts || []).find((item) => Number(item.id) === Number(postId))
+        || (post && Number(post.id) === Number(postId) ? post : null);
+    viewerState = {
+        data: {
+            reactors: cached?.reactions_summary?.reactors || cached?.reactors || [],
+            reaction_counts: cached?.reaction_counts || {},
+            count: Number(cached?.likes || 0),
+        },
+        filter: 'all',
+    };
+    renderViewer('all');
+    try {
+        viewerState = { data: await apiFetch(`/api/feed/${Number(postId)}/likes`), filter: 'all' };
+        renderViewer('all');
+    } catch (err) {
+        if (!list.querySelector('.cp-viewer-row')) {
+            list.innerHTML = `<p class="cp-viewer-empty">${escapeHtml(err?.message || 'Unable to load reactions.')}</p>`;
+        }
+    }
 }
 
 function composerEls() {
@@ -835,12 +896,6 @@ function bindPage() {
         submitComment(text, Number(field.dataset.replyInput));
     });
 
-    document.getElementById('cpViewerOverlay')?.addEventListener('click', () => {
-        document.getElementById('cpReactionViewer').hidden = true;
-    });
-    document.getElementById('cpViewerClose')?.addEventListener('click', () => {
-        document.getElementById('cpReactionViewer').hidden = true;
-    });
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.cp-reaction-wrap')) closePickers();
         if (!e.target.closest('.cp-options')) {
@@ -849,17 +904,6 @@ function bindPage() {
         if (!e.target.closest('.cp-sort')) {
             document.getElementById('cpSortMenu')?.classList.remove('open');
         }
-    });
-    document.addEventListener('keydown', (e) => {
-        if (e.key !== 'Escape') return;
-        if (document.getElementById('editCommentModal')?.classList.contains('active')) return;
-        if (document.getElementById('deleteCommentModal')?.classList.contains('active')) return;
-        const viewer = document.getElementById('cpReactionViewer');
-        if (viewer && !viewer.hidden) {
-            viewer.hidden = true;
-            return;
-        }
-        closeCommentPreview();
     });
 
     document.getElementById('cpClose')?.addEventListener('click', (e) => {
@@ -920,16 +964,20 @@ function syncCommentsUrl(id) {
     syncingUrl = false;
 }
 
-function openCommentPreview(nextPost, { skipUrl } = {}) {
+function openCommentPreview(nextPost, { skipUrl, preserveScroll } = {}) {
     if (!nextPost) return;
-    if (!post || Number(post.id) !== Number(nextPost.id)) {
+    const samePost = post && Number(post.id) === Number(nextPost.id);
+    if (!samePost) {
         expandedReplies = new Set();
     }
     post = nextPost;
     const shell = document.getElementById('commentPreviewShell');
     if (!shell) return;
+    const scroller = document.getElementById('cpScroll');
+    const prevScroll = preserveScroll && samePost ? (scroller?.scrollTop || 0) : 0;
     shell.hidden = false;
     shell.classList.add('is-open');
+    shell.dataset.postId = String(nextPost.id);
     document.body.style.overflow = 'hidden';
     if (!pageBound) {
         bindPage();
@@ -939,7 +987,11 @@ function openCommentPreview(nextPost, { skipUrl } = {}) {
     renderComments();
     applyViewOnlyState();
     syncCommentSend();
-    document.getElementById('cpScroll')?.scrollTo({ top: 0 });
+    if (preserveScroll && samePost && scroller) {
+        scroller.scrollTop = prevScroll;
+    } else {
+        scroller?.scrollTo({ top: 0 });
+    }
     if (!skipUrl) syncCommentsUrl(nextPost.id);
 }
 
@@ -956,6 +1008,7 @@ function closeCommentPreview({ skipUrl } = {}) {
 
 window.openCommentPreview = openCommentPreview;
 window.closeCommentPreview = closeCommentPreview;
+window.openPostReactionViewer = openPostReactionViewer;
 
 window.addEventListener('popstate', () => {
     if (syncingUrl || cfg().syncUrl === false) return;
@@ -994,6 +1047,8 @@ document.addEventListener('community-feed:comment-deleted', (event) => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    bindReactionViewer();
     if (post) openCommentPreview(post, { skipUrl: true });
 });
+bindReactionViewer();
 })();

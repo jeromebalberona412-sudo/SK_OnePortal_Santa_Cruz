@@ -25,10 +25,8 @@
         'app/Modules/Notifications/assets/css/notifications.css',
         'app/Modules/Notifications/assets/js/notifications.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="youth-notifications-page">
-    @include('dashboard::loading')
     @include('layout::kabataan-header', ['user' => auth()->user(), 'pageBadge' => 'Notifications'])
     @include('layout::programs-drawer', ['barangayName' => $barangayName ?? 'Your Barangay'])
 
@@ -128,6 +126,5 @@
             </section>
         </div>
     </main>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

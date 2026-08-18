@@ -4,6 +4,12 @@
     box-sizing: border-box;
 }
 
+html:has(body.youth-profile),
+body.youth-profile {
+    overflow-x: clip;
+    max-width: 100%;
+}
+
 body.youth-profile {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
@@ -254,11 +260,15 @@ body.youth-profile {
     padding: 24px;
     padding-top: 88px;
     min-height: 100vh;
+    max-width: 100%;
+    overflow-x: clip;
 }
 
 .profile-container {
     max-width: 1400px;
     margin: 0 auto;
+    min-width: 0;
+    max-width: min(1400px, 100%);
 }
 
 /* Profile Header Card */
@@ -394,8 +404,8 @@ body.youth-profile {
 }
 
 .profile-picture-upload-modal__box {
-    max-width: 480px;
-    width: calc(100% - 32px);
+    max-width: 360px;
+    width: min(360px, calc(100% - 32px));
 }
 
 .profile-picture-upload-modal__body {
@@ -1005,6 +1015,8 @@ body.youth-profile {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 24px;
+    min-width: 0;
+    max-width: 100%;
 }
 
 /* Info Cards */
@@ -1015,6 +1027,8 @@ body.youth-profile {
     overflow: hidden;
     margin-bottom: 24px;
     transition: all 0.3s ease;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .info-card:hover {
@@ -1584,14 +1598,18 @@ body.youth-profile {
 .kabataan-modal-box {
     background: #fff;
     border-radius: 16px;
-    width: min(880px, calc(100% - 48px));
-    max-width: 880px;
-    max-height: min(78vh, calc(100vh - 96px));
     overflow: hidden;
     box-shadow: 0 16px 40px rgba(15, 23, 42, 0.4);
     display: flex;
     flex-direction: column;
     transition: width 0.2s ease, height 0.2s ease, max-width 0.2s ease, max-height 0.2s ease, border-radius 0.2s ease;
+}
+
+.kk-preview-modal-container.kabataan-modal-box,
+.kkp-docs-modal-container.kabataan-modal-box {
+    width: min(880px, calc(100% - 48px));
+    max-width: 880px;
+    max-height: min(78vh, calc(100vh - 96px));
 }
 
 .kabataan-modal-backdrop .modal-header {
@@ -1857,9 +1875,25 @@ body.youth-profile {
 /* Responsive Design */
 @media (max-width: 1024px) {
     .profile-content-grid {
+        display: flex;
+        flex-direction: column;
         grid-template-columns: 1fr;
     }
-    
+
+    .profile-left-column {
+        display: contents;
+    }
+
+    .profile-right-column {
+        order: 10;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .account-settings-card {
+        order: 20;
+    }
+
     .summary-stats {
         grid-template-columns: repeat(3, 1fr);
     }
@@ -1869,6 +1903,8 @@ body.youth-profile {
     .profile-main {
         padding: 16px;
         padding-top: 80px;
+        max-width: 100%;
+        overflow-x: clip;
     }
     
     .profile-info-section {
@@ -1911,6 +1947,8 @@ body.youth-profile {
     
     .filter-tabs {
         flex-wrap: wrap;
+        overflow-x: hidden;
+        max-width: 100%;
     }
     
     .tab-btn {
@@ -2050,11 +2088,20 @@ body.youth-profile {
         align-items: center;
     }
 
-    .kabataan-modal-backdrop:not(.modal-maximized) .kabataan-modal-box {
+    .kabataan-modal-backdrop:not(.modal-maximized) .kk-preview-modal-container,
+    .kabataan-modal-backdrop:not(.modal-maximized) .kkp-docs-modal-container {
         width: calc(100% - 8px);
         max-width: 100%;
         max-height: 68vh;
         border-radius: 14px;
+    }
+
+    .profile-picture-upload-modal__box,
+    .profile-picture-confirm-modal__box,
+    .profile-picture-lock-modal__box {
+        width: min(340px, calc(100% - 24px));
+        max-width: 340px;
+        max-height: min(68vh, calc(100vh - 64px));
     }
 
     .kk-preview-modal-container .modal-body {
@@ -2799,19 +2846,32 @@ body.youth-profile {
 @media (max-width: 768px) {
     .account-setting-item {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
         gap: 12px;
     }
     
     .btn-setting-action {
         width: 100%;
+        min-width: 0;
+        max-width: 100%;
         text-align: center;
+    }
+
+    body.youth-profile .filter-tabs {
+        flex-wrap: wrap;
+        overflow: hidden;
+        max-width: 100%;
+    }
+
+    body.youth-profile .filter-tabs .tab-btn {
+        flex: 1 1 calc(50% - 8px);
+        min-width: 0;
     }
 }
 
 .kkp-profile-docs-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
     gap: 14px;
 }
 

@@ -269,21 +269,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     console.log('Dashboard initialized successfully!');
 
-    document.querySelectorAll('.barangay-sidebar-right .brgy-profile-item').forEach((item) => {
-        item.addEventListener('click', () => {
-            if (typeof showLoading === 'function') {
-                showLoading('Loading');
-            }
-        });
-    });
-
     document.querySelectorAll('#programsDrawerSidebar .brgy-profile-item').forEach((item) => {
         item.addEventListener('click', () => {
             if (typeof window.kabataanCloseProgramsDrawer === 'function') {
                 window.kabataanCloseProgramsDrawer();
-            }
-            if (typeof showLoading === 'function') {
-                showLoading('Loading');
             }
         });
     });

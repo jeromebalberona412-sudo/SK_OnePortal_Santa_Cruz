@@ -274,7 +274,6 @@
     </main>
 
     @include('authentication::partials.legal-modals')
-    @include('authentication::partials.signin-legal-prompt')
 
     <script>
         // Password toggle — self-contained, no conflict with form submit handlers

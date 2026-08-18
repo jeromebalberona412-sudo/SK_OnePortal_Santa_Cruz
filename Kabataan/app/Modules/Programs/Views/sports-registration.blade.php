@@ -23,10 +23,8 @@
         'app/Modules/Programs/assets/js/sports-applications-history.js',
         'app/Modules/Programs/assets/js/sports_apply_wizard.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="sch-app-body kabataan-app-page">
-    @include('dashboard::loading')
     @include('layout::kabataan-header')
 
     <main class="gf-container sports-apply-page">
@@ -71,7 +69,7 @@
             <h2 class="gf-section-title">My Sports Applications</h2>
             <p class="sports-kk-note">All sports you have previously applied for, grouped by year and sport type.</p>
             <div id="sportsApplicationsHistory" class="sports-applications-history">
-                <p class="sports-history-loading">Loading your sports applicationsÖ</p>
+                <p class="sports-history-loading">Loading your sports applicationsù</p>
             </div>
         </section>
     </main>
@@ -94,6 +92,5 @@
         window.__kkFieldLabels = @json($kkFieldLabels ?? []);
         window.__sportsBackUrl = @json($backRoute ?? route('dashboard', ['open' => 'sports']));
     </script>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

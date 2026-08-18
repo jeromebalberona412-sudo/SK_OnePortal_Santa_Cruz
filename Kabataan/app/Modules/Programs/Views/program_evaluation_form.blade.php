@@ -19,10 +19,8 @@
         'app/Modules/Programs/assets/css/scholarship_application.css',
         'app/Modules/Programs/assets/js/program_evaluation_form.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
-<body class="sch-app-body kabataan-app-page" data-skip-initial-loading>
-    @include('dashboard::loading')
+<body class="sch-app-body kabataan-app-page">
     @include('layout::kabataan-header', ['showSearch' => false, 'pageBadge' => null])
 
     <div class="gf-container">
@@ -84,6 +82,5 @@
         window.__programEvaluation = @json($evaluation);
         window.__evaluationId = @json($evaluationId);
     </script>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

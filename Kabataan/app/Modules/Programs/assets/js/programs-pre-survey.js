@@ -41,17 +41,14 @@
         if (!validateForm()) return;
 
         if (submitBtn) submitBtn.disabled = true;
-        if (typeof showLoading === 'function') showLoading('Submitting pre-survey');
 
         setTimeout(() => {
-            if (typeof hideLoading === 'function') hideLoading();
             if (successModal) successModal.hidden = false;
             if (submitBtn) submitBtn.disabled = false;
         }, 900);
     });
 
     successClose?.addEventListener('click', () => {
-        if (typeof showLoading === 'function') showLoading('Redirecting');
         window.location.href = dashboardUrl;
     });
 

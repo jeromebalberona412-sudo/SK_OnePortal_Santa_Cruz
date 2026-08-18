@@ -160,7 +160,6 @@
         }
 
         setSubmitLoading(true);
-        if (typeof showLoading === 'function') showLoading('Submitting survey…');
 
         try {
             const response = await fetch('/api/kabataan/programs/survey-responses', {
@@ -190,7 +189,6 @@
             alert(error.message || 'Failed to submit survey.');
         } finally {
             setSubmitLoading(false);
-            if (typeof hideLoading === 'function') hideLoading();
         }
     }
 

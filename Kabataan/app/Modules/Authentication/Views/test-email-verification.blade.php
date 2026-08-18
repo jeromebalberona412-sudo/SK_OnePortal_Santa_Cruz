@@ -139,8 +139,6 @@
     </style>
 </head>
 <body>
-    @include('dashboard::loading')
-    
     <div class="test-container">
         <h1>?? Email Verification Test Page</h1>
         

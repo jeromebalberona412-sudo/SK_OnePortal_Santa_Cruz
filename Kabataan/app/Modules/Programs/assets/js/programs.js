@@ -117,10 +117,6 @@ window.goToPreSurvey = function (programKey) {
         return;
     }
 
-    if (typeof showLoading === 'function') {
-        showLoading('Opening program survey…');
-    }
-
     setTimeout(() => {
         window.location.href = '/programs/survey';
     }, 650);
@@ -130,7 +126,6 @@ window.goToScholarshipApplication = function () {
     const checkbox = document.getElementById('agreeTerms');
     if (!checkbox?.checked) return;
     if (typeof closeEducationModal === 'function') closeEducationModal();
-    if (typeof showLoading === 'function') showLoading('Redirecting to Scholarship Application…');
     setTimeout(() => {
         window.location.href = typeof window.scholarshipApplyUrl !== 'undefined'
             ? window.scholarshipApplyUrl

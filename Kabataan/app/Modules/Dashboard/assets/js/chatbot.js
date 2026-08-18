@@ -268,6 +268,13 @@ window.closeChatbotPopover = function closeChatbotPopover() {
     document.getElementById('chatbotNavBtn')?.setAttribute('aria-expanded', 'false');
 };
 
+function cpHideTopics() {
+    const topics = document.querySelector('#chatbotPopover .cp-topics');
+    if (topics) {
+        topics.hidden = true;
+    }
+}
+
 window.cpHandleSubmit = function cpHandleSubmit(event) {
     event.preventDefault();
 
@@ -280,6 +287,8 @@ window.cpHandleSubmit = function cpHandleSubmit(event) {
     if (!rawText) {
         return;
     }
+
+    cpHideTopics();
 
     const censoredText = cpCensorText(rawText);
     const hasProfanity = cpContainsProfanity(rawText);
@@ -332,6 +341,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     cpRenderStoredMessages();
+    if (cpStoredMessages.length) {
+        cpHideTopics();
+    }
 
     const input = document.getElementById('cpInput');
     if (!input) {

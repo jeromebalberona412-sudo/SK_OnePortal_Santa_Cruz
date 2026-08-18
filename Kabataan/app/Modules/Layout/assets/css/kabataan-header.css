@@ -442,7 +442,7 @@ body.kabataan-has-view-only-banner {
 
 @media (max-width: 1200px) {
     .kabataan-header__page-badge {
-        display: inline-block;
+        display: none;
     }
 
     .kabataan-header__search {
@@ -465,22 +465,59 @@ body.kabataan-has-view-only-banner {
     }
 
     .kabataan-header__container {
-        padding: 0 12px;
-        gap: 10px;
+        padding: 0 10px;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .kabataan-header__brand {
+        gap: 8px;
+        min-width: 0;
+        flex: 0 1 auto;
+    }
+
+    .kabataan-header__logo {
+        width: 30px;
+        height: 30px;
+        padding: 2px;
+    }
+
+    .kabataan-header__title {
+        font-size: 15px;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .kabataan-header__actions {
-        gap: 6px;
+        gap: 2px;
         flex-shrink: 0;
+        margin-left: auto;
+    }
+
+    .kabataan-header__icon-btn,
+    .kabataan-header .nav-icon-btn,
+    .kabataan-header__avatar-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .kabataan-header__icon-btn svg,
+    .kabataan-header .nav-icon-btn svg,
+    .kabataan-header .kab-ai-assistant-btn svg {
+        width: 16px !important;
+        height: 16px !important;
     }
 
     .kabataan-header__dropdown {
         position: fixed;
         top: calc(var(--kab-nav-h) + 8px);
-        right: 12px;
+        right: 8px;
         left: auto;
-        min-width: 196px;
-        max-width: min(220px, calc(100vw - 24px));
+        min-width: 0;
+        width: min(240px, calc(100vw - 16px));
+        max-width: calc(100vw - 16px);
         z-index: 500;
         border-radius: 12px;
     }
@@ -540,4 +577,98 @@ body.kabataan-has-view-only-banner {
 .kabataan-header__user {
     position: relative;
     flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .kabataan-header {
+        overflow: visible;
+    }
+
+    .kabataan-header__container {
+        padding: 0 12px;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .kabataan-header__actions {
+        gap: 4px;
+        flex-shrink: 0;
+    }
+
+    .kabataan-header__icon-btn,
+    .kabataan-header .nav-icon-btn,
+    .kabataan-header__avatar-btn {
+        width: 34px;
+        height: 34px;
+    }
+
+    .kabataan-header__icon-btn svg,
+    .kabataan-header .nav-icon-btn svg {
+        width: 17px;
+        height: 17px;
+    }
+}
+
+@media (max-width: 414px) {
+    .kabataan-header__container {
+        padding: 0 8px;
+        gap: 6px;
+    }
+
+    .kabataan-header__logo {
+        width: 28px;
+        height: 28px;
+    }
+
+    .kabataan-header__title {
+        font-size: 14px;
+    }
+
+    .kabataan-header__icon-btn,
+    .kabataan-header .nav-icon-btn,
+    .kabataan-header__avatar-btn {
+        width: 30px;
+        height: 30px;
+    }
+
+    .kabataan-header__icon-btn svg,
+    .kabataan-header .nav-icon-btn svg,
+    .kabataan-header .kab-ai-assistant-btn svg {
+        width: 15px !important;
+        height: 15px !important;
+    }
+}
+
+@media (max-width: 375px) {
+    .kabataan-header__title {
+        font-size: 13px;
+    }
+
+    .kabataan-header__actions {
+        gap: 1px;
+    }
+
+    .kabataan-header__icon-btn,
+    .kabataan-header .nav-icon-btn,
+    .kabataan-header__avatar-btn {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+@media (max-width: 320px) {
+    .kabataan-header__title {
+        display: none;
+    }
+
+    .kabataan-header__container {
+        padding: 0 6px;
+    }
+
+    .kabataan-header__icon-btn,
+    .kabataan-header .nav-icon-btn,
+    .kabataan-header__avatar-btn {
+        width: 28px;
+        height: 28px;
+    }
 }

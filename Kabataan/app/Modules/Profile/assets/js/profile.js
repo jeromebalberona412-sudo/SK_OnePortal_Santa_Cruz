@@ -362,10 +362,6 @@ function initProfileAvatarChange() {
         formData.append('profile_picture', file);
         formData.append('_token', csrfToken);
 
-        if (typeof showLoading === 'function') {
-            showLoading('Uploading profile picture');
-        }
-
         if (confirmSubmitBtn) {
             confirmSubmitBtn.disabled = true;
             confirmSubmitBtn.textContent = 'Uploading...';
@@ -411,9 +407,6 @@ function initProfileAvatarChange() {
                 }
             })
             .finally(() => {
-                if (typeof hideLoading === 'function') {
-                    hideLoading();
-                }
                 if (confirmSubmitBtn) {
                     confirmSubmitBtn.disabled = false;
                     confirmSubmitBtn.textContent = 'Confirm & Save';
@@ -656,7 +649,6 @@ function initProfileSupportingDocuments() {
         formData.append(documentType + '_front', files.front);
         formData.append(documentType + '_back', files.back);
 
-        if (typeof showLoading === 'function') showLoading('Uploading supporting documents');
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.textContent = 'Uploading...';
@@ -690,7 +682,6 @@ function initProfileSupportingDocuments() {
                 }
             })
             .finally(() => {
-                if (typeof hideLoading === 'function') hideLoading();
                 updateSubmitState();
                 if (submitBtn) submitBtn.textContent = 'Upload Document';
             });

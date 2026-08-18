@@ -19,10 +19,8 @@
         'app/Modules/Programs/assets/css/scholarship_landing.css',
         'app/Modules/Programs/assets/js/program_survey_landing.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="sl-body kabataan-app-page">
-    @include('dashboard::loading')
     @include('layout::kabataan-header', ['showSearch' => false, 'pageBadge' => null])
 
     <div class="sl-container">
@@ -125,6 +123,5 @@
     <script>
         window.__abyipProgramId = @json($abyipProgramId);
     </script>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

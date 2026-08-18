@@ -37,7 +37,6 @@
     }
 
     function goToEvaluation(evaluationId) {
-        if (typeof showLoading === 'function') showLoading('Opening evaluation form…');
         window.location.href = `/programs/evaluation/form?evaluation=${encodeURIComponent(evaluationId)}`;
     }
 

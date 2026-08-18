@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Email Verified - SK Kabataan Portal</title>
     @vite(['app/Modules/Authentication/assets/css/sign-in.css'])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
         .success-container {
             background: white;
@@ -157,7 +156,6 @@
     </style>
 </head>
 <body class="youth-signin-page">
-    @include('dashboard::loading')
     <!-- Animated Background (same as signin page) -->
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
@@ -188,6 +186,5 @@
     </div>
     </main>
 
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

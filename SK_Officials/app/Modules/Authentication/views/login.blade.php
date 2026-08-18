@@ -293,7 +293,6 @@
     </main>
 
     @include('authentication::partials.legal-modals')
-    @include('authentication::partials.login-legal-prompt')
 
     <script>
         function togglePassword() {

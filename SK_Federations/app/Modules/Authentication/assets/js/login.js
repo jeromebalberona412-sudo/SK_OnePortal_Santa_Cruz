@@ -2,9 +2,7 @@
  * SK Federations — Login form with Cloudflare Turnstile
  *
  * Submit listener execution order on #loginForm:
- *   1. auth-legal.js  — capturing phase (useCapture=true)
- *      Blocks if consent checkbox unchecked; otherwise passes through.
- *   2. login.js       — bubbling phase (useCapture=false)
+ *   1. login.js — bubbling phase
  *      Validates fields, shows Turnstile modal, then calls loginForm.submit().
  *
  * loginForm.submit() is a native DOM call — it does NOT fire the submit event,
@@ -296,7 +294,6 @@
 
     // ─── Form submit handler ──────────────────────────────────────────────────
     //
-    // Runs in BUBBLING phase — after auth-legal.js capturing listener.
     // We ALWAYS call e.preventDefault() unless isSubmitting is already true.
     // The only POST is sent by loginForm.submit() inside onTurnstileSuccess().
 
@@ -307,7 +304,7 @@
             return;
         }
 
-        // Token already verified — submit immediately (e.g. re-submit after consent gate)
+        // Token already verified — submit immediately
         if (turnstileToken) {
             e.preventDefault();
             e.stopPropagation();
@@ -374,7 +371,6 @@
             onFieldEdit();
         });
 
-        // Single bubbling-phase submit listener — fires after auth-legal capturing listener
         loginForm.addEventListener('submit', onFormSubmit, false);
 
         // Forgot password

@@ -715,18 +715,6 @@
         return document.querySelector('meta[name="csrf-token"]')?.content || '';
     }
 
-    function showLoading(message) {
-        if (window.showLoading) {
-            window.showLoading(message || 'Please wait...');
-        }
-    }
-
-    function hideLoading() {
-        if (window.hideLoading) {
-            window.hideLoading();
-        }
-    }
-
     function getDraftEmail() {
         const fromForm = form?.querySelector('input[name="email"]')?.value?.trim();
         const fromDisplay = displayEmail?.textContent?.trim();
@@ -1409,7 +1397,6 @@
         }
 
         if (!hasFiles) {
-            showLoading('Continuing to email verification...');
 
             let saved = false;
 
@@ -1449,8 +1436,6 @@
                     || error.message;
 
                 showDocUploadError(message);
-            } finally {
-                hideLoading();
             }
 
             return saved;
@@ -1488,8 +1473,6 @@
                 }
             }
         }
-
-        showLoading('Saving your documents...');
 
         let saved = false;
 
@@ -1546,16 +1529,12 @@
                 || error.message;
 
             showDocUploadError(message);
-        } finally {
-            hideLoading();
         }
 
         return saved;
     }
 
     async function sendVerificationEmail(isResend) {
-        showLoading(isResend ? 'Resending set password link...' : 'Sending set password link...');
-
         showEmailStatus('');
 
         try {
@@ -1608,8 +1587,6 @@
             enableResendButton();
 
             return false;
-        } finally {
-            hideLoading();
         }
     }
 

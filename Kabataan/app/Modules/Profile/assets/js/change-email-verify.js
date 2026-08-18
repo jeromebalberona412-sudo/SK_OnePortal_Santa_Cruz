@@ -20,10 +20,6 @@ document.addEventListener('DOMContentLoaded', function () {
     let confirmationHandled = false;
     const serverCooldown = Number(window.ceResendCooldown || 0);
 
-    function showPageLoading(message) {
-        if (window.showLoading) window.showLoading(message);
-    }
-
     function formatCountdown(seconds) {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -144,7 +140,6 @@ document.addEventListener('DOMContentLoaded', function () {
         clearCooldown();
         if (timerInterval) clearInterval(timerInterval);
         markCompletedUI(message);
-        showPageLoading('Signing out…');
         setTimeout(function () {
             window.location.replace(redirectUrl || '/login');
         }, 900);
@@ -224,7 +219,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 resendBtn.textContent = 'Sending…';
             }
             setCooldownExpiry(COOLDOWN_SECONDS);
-            showPageLoading('Resending…');
         });
     }
 
@@ -233,7 +227,6 @@ document.addEventListener('DOMContentLoaded', function () {
         cancelForm.addEventListener('submit', function () {
             clearCooldown();
             if (timerInterval) clearInterval(timerInterval);
-            showPageLoading('Cancelling…');
         });
     }
 });

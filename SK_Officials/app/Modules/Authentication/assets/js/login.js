@@ -2,10 +2,7 @@
  * SK Officials — Login form with delayed Cloudflare Turnstile
  *
  * Execution order of submit listeners on #loginForm:
- *   1. auth-legal.js  — capturing phase (useCapture=true)
- *      Intercepts if consent checkbox is unchecked.
- *      If consent IS checked, or pendingSubmit flag is set, it returns immediately.
- *   2. login.js       — bubbling phase (useCapture=false, default)
+ *   1. login.js — bubbling phase
  *      Handles field validation, Turnstile modal, and final form dispatch.
  *
  * The only way loginForm.submit() should fire is from onTurnstileSuccess().
@@ -285,10 +282,6 @@
 
     // ─── Form submit handler ──────────────────────────────────────────────────
     //
-    // This listener runs in the BUBBLING phase, i.e. AFTER auth-legal.js's
-    // capturing listener. By the time we get here, the legal-consent gate has
-    // already been satisfied (auth-legal.js either returned or called requestSubmit).
-    //
     // Invariant: we ALWAYS call e.preventDefault() unless isSubmitting is true.
     // The only path that actually sends the POST is loginForm.submit() inside
     // onTurnstileSuccess(). This eliminates the race where the browser would
@@ -304,7 +297,7 @@
         // ── If the token is already present, submit now ───────────────────────
         // This branch is hit when:
         //   a) The user already completed Turnstile this session and then
-        //      re-triggered a submit (e.g. via auth-legal.js requestSubmit).
+        //      re-triggered a submit.
         //   b) We should not show the modal again.
         if (turnstileToken) {
             e.preventDefault();
@@ -378,7 +371,6 @@
             onFieldEdit();
         });
 
-        // Bubbling-phase submit listener (fires after auth-legal.js capturing listener)
         loginForm.addEventListener('submit', onFormSubmit, false);
 
         // Forgot password

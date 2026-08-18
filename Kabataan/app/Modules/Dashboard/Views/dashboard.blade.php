@@ -35,7 +35,6 @@
         'app/Modules/Dashboard/assets/css/notif.css',
         'app/Modules/Dashboard/assets/js/notif.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="preload" href="{{ url('/sounds/reactions_ux.mp3') }}" as="audio" type="audio/mpeg">
     <style>
         .post-card-new {
@@ -68,7 +67,6 @@
     </style>
 </head>
 <body class="youth-dashboard">
-    @include('dashboard::loading')
     @include('layout::kabataan-header', ['user' => $user ?? auth()->user()])
 
     <!-- Main Content -->
@@ -1843,23 +1841,48 @@
         }
     }
 
+    function commentPreviewIsOpen(postId) {
+        const shell = document.getElementById('commentPreviewShell');
+        if (!shell?.classList.contains('is-open')) return false;
+        if (postId == null) return true;
+        return Number(shell.dataset.postId || 0) === Number(postId);
+    }
+
+    async function refreshOpenCommentPreview() {
+        const shell = document.getElementById('commentPreviewShell');
+        const postId = Number(shell?.dataset.postId || 0);
+        if (!commentPreviewIsOpen(postId)) return;
+        if (document.querySelector('#commentPreviewShell .cp-composer-input:focus, #commentPreviewShell [data-reply-input]:focus')) return;
+        try {
+            const data = await apiFeed('/api/feed/' + postId);
+            data.comments_loaded = true;
+            const cached = mergeCachedPost(data);
+            if (cached && commentPreviewIsOpen(postId) && typeof window.openCommentPreview === 'function') {
+                window.openCommentPreview(cached, { skipUrl: true, preserveScroll: true });
+            }
+        } catch (_) { /* keep current preview */ }
+    }
+
     async function openComments(id) {
         const postId = Number(id);
         let cached = postCache.get(postId);
+        if (cached && typeof window.openCommentPreview === 'function') {
+            window.openCommentPreview(cached);
+        }
         const needsComments = !cached || cached.comments_loaded === false;
-        if (typeof window.openCommentPreview === 'function') {
-            if (needsComments) {
-                try {
-                    const data = await apiFeed('/api/feed/' + postId);
-                    data.comments_loaded = true;
-                    postCache.set(postId, Object.assign({}, cached || {}, data));
-                    cached = postCache.get(postId);
-                } catch (_) { /* fall through */ }
-            }
-            if (cached) {
-                window.openCommentPreview(cached);
-                return;
-            }
+        if (needsComments || cached) {
+            try {
+                const data = await apiFeed('/api/feed/' + postId);
+                data.comments_loaded = true;
+                cached = mergeCachedPost(Object.assign({}, cached || {}, data));
+                if (cached && typeof window.openCommentPreview === 'function' && commentPreviewIsOpen(postId)) {
+                    window.openCommentPreview(cached, { skipUrl: true, preserveScroll: true });
+                    return;
+                }
+            } catch (_) { /* fall through */ }
+        }
+        if (cached && typeof window.openCommentPreview === 'function') {
+            return;
         }
         window.location.assign('/dashboard/comments/' + postId);
     }
@@ -2166,12 +2189,14 @@
     async function pollFeedUpdates() {
         if (document.hidden || feedLoading || feedPollInFlight) return;
         if (document.querySelector('.comment-input:focus, .cp-composer-input:focus')) return;
-        if (document.getElementById('commentPreviewShell')?.classList.contains('is-open')) return;
         if (document.getElementById('editCommentModal')?.classList.contains('active')) return;
 
         const tokenAtStart = feedRequestToken;
         feedPollInFlight = true;
         try {
+            if (commentPreviewIsOpen()) {
+                await refreshOpenCommentPreview();
+            }
             const params = new URLSearchParams({ page: 1, filter: feedFilter });
             if (feedSearch) params.set('search', feedSearch);
             const data = await apiFeed(`/api/feed?${params}`);
@@ -2257,6 +2282,5 @@
 
     @include('programs::scholarship.partials.data-privacy-modal')
     @vite(['app/Modules/Dashboard/assets/js/community-feed-comment-preview.js'])
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

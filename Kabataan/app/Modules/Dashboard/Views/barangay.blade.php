@@ -23,7 +23,6 @@
         'app/Modules/Dashboard/assets/css/chatbot.css',
         'app/Modules/Dashboard/assets/js/chatbot.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="preload" href="{{ url('/sounds/reactions_ux.mp3') }}" as="audio" type="audio/mpeg">
     <style>
         html:has(.brgy-stalk-page) {
@@ -159,17 +158,19 @@
         .bfp-loc svg { color: #0450a8; width: 14px; height: 14px; vertical-align: -2px; margin-right: 4px; }
         .bfp-stats {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr) minmax(0, 1.4fr);
             gap: 8px;
         }
         .bfp-stat {
             text-align: center;
-            padding: 10px 8px;
+            padding: 10px 6px;
             border-radius: 10px;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
+            min-width: 0;
         }
         .bfp-stat strong { display: block; font-size: 16px; font-weight: 800; color: #0450a8; line-height: 1.2; }
+        .bfp-stat--term strong { font-size: 13px; white-space: nowrap; }
         .bfp-stat span { display: block; font-size: 10px; color: #64748b; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
         .bfp-sidebar-close,
         .bfp-sidebar-backdrop,
@@ -378,8 +379,6 @@
     </style>
 </head>
 <body class="youth-profile brgy-stalk-page">
-    @include('dashboard::loading')
-
     {{-- KABATAAN HEADER (consistent across all pages) --}}
     @include('layout::kabataan-header')
 
@@ -387,7 +386,7 @@
     <main class="profile-main">
         <div class="profile-container bfp-wrap">
 
-            <a href="{{ route('dashboard') }}" class="bfp-back-link" data-no-loading>
+            <a href="{{ route('dashboard') }}" class="bfp-back-link">
                 <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                 <span>Back to Community Feed</span>
             </a>
@@ -473,7 +472,7 @@
                         <div class="bfp-stats">
                             <div class="bfp-stat"><strong>{{ $post_count ?? 0 }}</strong><span>Posts</span></div>
                             <div class="bfp-stat"><strong>{{ $officer_count ?? 0 }}</strong><span>Officers</span></div>
-                            <div class="bfp-stat"><strong>{{ $term_label ?? '—' }}</strong><span>SK Term</span></div>
+                            <div class="bfp-stat bfp-stat--term"><strong>{{ $term_label ?? '—' }}</strong><span>SK Term</span></div>
                         </div>
                     </div>
 
@@ -599,6 +598,5 @@
         if (e.persisted) { window.location.replace(window.location.href); }
     });
     </script>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

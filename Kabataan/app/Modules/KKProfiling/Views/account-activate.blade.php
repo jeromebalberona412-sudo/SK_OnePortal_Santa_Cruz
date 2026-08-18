@@ -11,11 +11,8 @@
         'app/Modules/KKProfiling/assets/css/kkprofiling.css',
         'app/Modules/KKProfiling/assets/js/kkprofiling.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="youth-signin-page kkp-setpw-page">
-    @include('dashboard::loading')
-
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
         <div class="youth-gradient-overlay"></div>
@@ -147,6 +144,5 @@
         </div>
     </div>
 
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

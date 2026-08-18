@@ -9,19 +9,7 @@
     @vite([
         'app/Modules/Authentication/assets/css/sign-in.css',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
-        #globalLoadingOverlay {
-            opacity: 0;
-            visibility: hidden;
-            position: fixed;
-            inset: 0;
-            z-index: 10000;
-            pointer-events: none;
-        }
-        #globalLoadingOverlay.gl-visible {
-            pointer-events: auto;
-        }
         .youth-login-page {
             min-height: 100vh;
             display: flex;
@@ -314,9 +302,7 @@
         }
     </style>
 </head>
-<body class="youth-login-page" data-skip-initial-loading>
-    @include('dashboard::loading')
-    
+<body class="youth-login-page">
     <!-- Animated Background -->
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
@@ -478,10 +464,6 @@
                     statusEl.style.color = '#666';
                 }
 
-                if (window.showLoading) {
-                    window.showLoading('Sending verification email...');
-                }
-
                 try {
                     const response = await fetch('/api/kkprofiling/resend-verification', {
                         method: 'POST',
@@ -495,10 +477,6 @@
                     });
 
                     const data = await response.json();
-
-                    if (window.hideLoading) {
-                        window.hideLoading();
-                    }
 
                     if (response.ok && data.success) {
                         this.textContent = 'Email sent!';
@@ -517,9 +495,6 @@
                         return;
                     }
                 } catch (err) {
-                    if (window.hideLoading) {
-                        window.hideLoading();
-                    }
                     if (statusEl) {
                         statusEl.textContent = 'Failed to resend verification email. Please check your connection and try again.';
                         statusEl.style.color = '#b91c1c';
@@ -538,16 +513,8 @@
 
         function handleBackClick(e) {
             e.preventDefault();
-            if (window.showLoading) {
-                window.showLoading('Redirecting...');
-                setTimeout(() => {
-                    window.location.href = e.target.href;
-                }, 300);
-            } else {
-                window.location.href = e.target.href;
-            }
+            window.location.href = e.target.href;
         }
     </script>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

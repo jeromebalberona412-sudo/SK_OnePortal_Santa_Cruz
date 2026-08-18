@@ -21,10 +21,6 @@ document.addEventListener('DOMContentLoaded', function () {
     let confirmationHandled = false;
     const serverCooldown = Number(window.cpResendCooldown || 0);
 
-    function showPageLoading(message) {
-        if (window.showLoading) window.showLoading(message);
-    }
-
     function clearResendCooldown() {
         localStorage.removeItem(cooldownKey);
     }
@@ -126,7 +122,6 @@ document.addEventListener('DOMContentLoaded', function () {
         clearResendCooldown();
         if (timerInterval) clearInterval(timerInterval);
         markConfirmedUI(message);
-        showPageLoading('Signing out...');
         setTimeout(function () {
             window.location.replace(redirectUrl || '/login');
         }, 900);
@@ -193,7 +188,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 resendBtn.textContent = 'Sending…';
             }
             setResendCooldownExpiry(COOLDOWN_SECONDS);
-            if (window.showLoading) window.showLoading('Resending…');
         });
     }
 
@@ -202,7 +196,6 @@ document.addEventListener('DOMContentLoaded', function () {
         cancelForm.addEventListener('submit', function () {
             clearResendCooldown();
             if (timerInterval) clearInterval(timerInterval);
-            showPageLoading('Cancelling request...');
         });
     }
 });

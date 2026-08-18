@@ -120,7 +120,7 @@ class KabataanProgramService
      */
     public function getDashboardPayload(User $user): array
     {
-        return Cache::remember("kabataan_dashboard_payload_v2_u{$user->id}", self::CACHE_TTL, function () use ($user) {
+        return Cache::remember("kabataan_dashboard_payload_v3_u{$user->id}", self::CACHE_TTL, function () use ($user) {
             $barangayId = $this->resolveUserBarangayId($user);
             $document = $this->getLatestAbyipDocument($barangayId);
 
@@ -128,11 +128,15 @@ class KabataanProgramService
             if ($document !== null) {
                 $programModels = Abyip::query()
                     ->where('document_id', $document->id)
+                    ->where('row_type', Abyip::ROW_YOUTH_PROGRAM)
+                    ->whereNull('parent_id')
                     ->whereIn('code', self::YOUTH_PROGRAM_LETTERS)
                     ->with(['children' => fn ($q) => $q->orderBy('sort_order')->orderBy('id')])
                     ->orderBy('sort_order')
                     ->orderBy('id')
-                    ->get();
+                    ->get()
+                    ->unique(fn (Abyip $program) => strtoupper(trim((string) ($program->program_letter ?? $program->code ?? ''))))
+                    ->values();
 
                 $programIds = $programModels->pluck('id')->map(fn ($id) => (int) $id)->all();
 

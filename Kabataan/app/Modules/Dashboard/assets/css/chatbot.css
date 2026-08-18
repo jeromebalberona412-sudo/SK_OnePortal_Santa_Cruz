@@ -39,6 +39,13 @@
     pointer-events: none;
 }
 
+@media (max-width: 768px) {
+    .kab-ai-glow-effect {
+        animation: none;
+        opacity: 0;
+    }
+}
+
 @keyframes kabAiGlowPulse {
     0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
     50% { opacity: 0.65; transform: translate(-50%, -50%) scale(1.15); }
@@ -49,10 +56,20 @@
 }
 
 /* Floating popover panel — drops down from icon */
+.chatbot-popover:not(.open) {
+    visibility: hidden;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden;
+    right: 0;
+    padding: 0;
+    border: 0;
+}
+
 .chatbot-popover {
     position: absolute;
     top: calc(100% + 14px); /* 14px gap below the button */
-    right: -8px;            /* align right edge near button */
+    right: 0;
     width: 360px;
     height: 520px;
     background: #ffffff;
@@ -95,6 +112,10 @@
     transform: scale(1) translateY(0);
     opacity: 1;
     pointer-events: all;
+    visibility: visible;
+    width: 360px;
+    height: 520px;
+    overflow: visible;
 }
 
 /* Inner scroll container (clips content inside rounded box) */
@@ -107,13 +128,16 @@
 }
 
 /* Popover header */
+.chatbot-popover .cp-header,
 .cp-header {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 14px 16px;
-    background: linear-gradient(135deg, #022a54 0%, #0450a8 100%);
+    background: linear-gradient(135deg, #022a54 0%, #0450a8 100%) !important;
+    background-image: linear-gradient(135deg, #022a54 0%, #0450a8 100%) !important;
     flex-shrink: 0;
+    color: #ffffff;
 }
 
 .cp-bot-icon {
@@ -137,19 +161,21 @@
     flex: 1;
 }
 
+.chatbot-popover .cp-header-name,
 .cp-header-name {
     font-size: 15px;
     font-weight: 700;
-    color: #ffffff;
+    color: #ffffff !important;
     line-height: 1.2;
 }
 
+.chatbot-popover .cp-header-status,
 .cp-header-status {
     display: flex;
     align-items: center;
     gap: 5px;
     font-size: 12px;
-    color: rgba(255,255,255,0.75);
+    color: rgba(255, 255, 255, 0.92) !important;
     margin-top: 2px;
 }
 
@@ -199,6 +225,10 @@
     flex-shrink: 0;
     border-bottom: 1px solid #f1f5f9;
     scrollbar-width: none;
+}
+
+.cp-topics[hidden] {
+    display: none !important;
 }
 
 .cp-topics::-webkit-scrollbar { display: none; }
@@ -414,29 +444,38 @@
 
 /* Responsive — Tablet (481px–768px) */
 @media (max-width: 768px) {
+    .kab-ai-assistant-btn svg {
+        width: 16px !important;
+        height: 16px !important;
+    }
+
     .chatbot-popover {
-        width: 320px;
+        width: min(320px, calc(100vw - 16px));
         height: 480px;
         right: 0;
+    }
+
+    .chatbot-popover.open {
+        width: min(320px, calc(100vw - 16px));
+        height: 480px;
     }
 }
 
 /* Responsive — Mobile (≤480px): keep arrow, clamp to viewport */
 @media (max-width: 480px) {
     .chatbot-nav-wrapper {
-        /* Ensure the popover can overflow left without clipping */
-        position: static;
+        position: relative;
     }
 
-    .chatbot-popover {
+    .chatbot-popover,
+    .chatbot-popover.open {
         position: fixed;
-        /* Anchor below the navbar (navbar ~60px tall) */
         top: 68px;
         right: 8px;
         left: auto;
-        width: calc(100vw - 16px);
-        max-width: 360px;
-        height: 480px;
+        width: min(360px, calc(100vw - 16px));
+        max-width: calc(100vw - 16px);
+        height: min(480px, calc(100dvh - 84px));
         transform-origin: top right;
     }
 

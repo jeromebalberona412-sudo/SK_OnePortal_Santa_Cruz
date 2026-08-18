@@ -288,9 +288,6 @@
         }
 
         setBusy(true);
-        if (typeof window.showLoading === 'function') {
-            window.showLoading('Submitting KK Profiling...');
-        }
 
         try {
             const assemblyHidden = document.getElementById('kkpKkAssembly');
@@ -333,9 +330,6 @@
             }
             resetTurnstile();
         } finally {
-            if (typeof window.hideLoading === 'function') {
-                window.hideLoading();
-            }
             setBusy(false);
             if (submittedWithoutEmail && nextBtn) {
                 nextBtn.disabled = true;

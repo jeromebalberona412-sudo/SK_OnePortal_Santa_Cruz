@@ -27,9 +27,20 @@ body.brgy-stalk-page {
 }
 
 .bfp-stat strong {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.bfp-stat--term strong {
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: visible;
+    font-size: 13px;
+    letter-spacing: -0.02em;
+    overflow-wrap: normal;
+    word-break: normal;
 }
 
 .brgy-officers-card .officer-item {
@@ -173,6 +184,10 @@ body.brgy-stalk-page {
     pointer-events: none;
 }
 
+.brgy-feed-wrap button.reaction-summary-left {
+    cursor: pointer;
+}
+
 .brgy-feed-wrap .post-images {
     display: grid;
     gap: 6px;
@@ -224,6 +239,7 @@ body.brgy-stalk-page {
     .bfp-name { font-size: 16px; }
 
     .bfp-stat strong { font-size: 13px; }
+    .bfp-stat--term strong { font-size: 12px; }
     .bfp-stat span { font-size: 9px; }
 
     .brgy-officers-card .card-body {
@@ -322,6 +338,7 @@ body.brgy-stalk-page {
 
 @media (max-width: 320px) {
     .bfp-stat strong { font-size: 12px; }
+    .bfp-stat--term strong { font-size: 11px; white-space: normal; }
 
     .brgy-feed-wrap .feed-tab-icon svg {
         width: 18px;

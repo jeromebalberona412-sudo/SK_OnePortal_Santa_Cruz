@@ -470,9 +470,6 @@
             applicationCancelBtn.disabled = true;
             applicationCancelBtn.textContent = 'Cancelling...';
         }
-        if (typeof showLoading === 'function') {
-            showLoading('Cancelling application...');
-        }
 
         try {
             await cancelApplication(activeViewApplicationId, payloadReason);
@@ -497,9 +494,6 @@
             if (applicationCancelBtn) {
                 applicationCancelBtn.disabled = false;
                 applicationCancelBtn.textContent = 'Confirm Cancel';
-            }
-            if (typeof hideLoading === 'function') {
-                hideLoading();
             }
         }
     }

@@ -28,6 +28,38 @@
         return (cfg.posts || []).find((item) => Number(item.id) === Number(postId)) || null;
     }
 
+    function mergeCachedPost(fresh) {
+        if (!fresh || !fresh.id) {
+            return null;
+        }
+        if (!Array.isArray(cfg.posts)) {
+            cfg.posts = [];
+        }
+        const merged = Object.assign({}, cachedPost(fresh.id) || {}, fresh, { comments_loaded: true });
+        const idx = cfg.posts.findIndex((item) => Number(item.id) === Number(fresh.id));
+        if (idx >= 0) {
+            cfg.posts[idx] = merged;
+        } else {
+            cfg.posts.push(merged);
+        }
+        return merged;
+    }
+
+    function commentPreviewIsOpen(postId) {
+        const shell = document.getElementById('commentPreviewShell');
+        if (!shell?.classList.contains('is-open')) {
+            return false;
+        }
+        if (postId == null) {
+            return true;
+        }
+        return Number(shell.dataset.postId || 0) === Number(postId);
+    }
+
+    function commentComposerIsFocused() {
+        return Boolean(document.querySelector('#commentPreviewShell .cp-composer-input:focus, #commentPreviewShell [data-reply-input]:focus'));
+    }
+
     function ensureReactionAudio() {
         if (!reactionAudio) {
             reactionAudio = new Audio(REACTION_SOUND_URL);
@@ -97,32 +129,71 @@
         });
     });
 
-    async function openComments(id) {
-        const postId = Number(id);
-        let post = cachedPost(postId);
+    async function fetchPostWithComments(postId) {
+        const res = await fetch('/api/feed/' + postId, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken(),
+            },
+            credentials: 'same-origin',
+        });
+        if (!res.ok) {
+            return null;
+        }
+        return res.json();
+    }
+
+    async function refreshOpenCommentPreview() {
+        const shell = document.getElementById('commentPreviewShell');
+        const postId = Number(shell?.dataset.postId || 0);
+        if (!commentPreviewIsOpen(postId) || commentComposerIsFocused()) {
+            return;
+        }
         try {
-            const res = await fetch('/api/feed/' + postId, {
-                headers: {
-                    Accept: 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': csrfToken(),
-                },
-                credentials: 'same-origin',
-            });
-            if (res.ok) {
-                post = await res.json();
+            const fresh = await fetchPostWithComments(postId);
+            const merged = mergeCachedPost(fresh);
+            if (merged && commentPreviewIsOpen(postId) && typeof window.openCommentPreview === 'function') {
+                window.openCommentPreview(merged, { skipUrl: true, preserveScroll: true });
             }
         } catch (_) {
-            // use embedded post
+            // keep current preview
         }
-        if (post && typeof window.openCommentPreview === 'function') {
-            window.openCommentPreview(post);
+    }
+
+    async function openComments(id) {
+        const postId = Number(id);
+        const cached = cachedPost(postId);
+        if (cached && typeof window.openCommentPreview === 'function') {
+            window.openCommentPreview(cached);
+        }
+        try {
+            const fresh = await fetchPostWithComments(postId);
+            const merged = mergeCachedPost(fresh);
+            if (!merged || typeof window.openCommentPreview !== 'function') {
+                return;
+            }
+            if (commentPreviewIsOpen(postId)) {
+                window.openCommentPreview(merged, { skipUrl: true, preserveScroll: Boolean(cached) });
+            } else if (!cached) {
+                window.openCommentPreview(merged);
+            }
+        } catch (_) {
+            // keep embedded post
         }
     }
 
     window.openComments = openComments;
 
     document.getElementById('brgyFeed')?.addEventListener('click', (event) => {
+        const reactionsOpener = event.target.closest('[data-open-reactions]');
+        if (reactionsOpener) {
+            event.preventDefault();
+            if (typeof window.openPostReactionViewer === 'function') {
+                window.openPostReactionViewer(reactionsOpener.getAttribute('data-open-reactions'));
+            }
+            return;
+        }
         const opener = event.target.closest('[data-open-comments]');
         if (!opener) {
             return;
@@ -340,11 +411,11 @@
         if (!barangayId || document.hidden || pollInFlight) {
             return;
         }
-        if (document.getElementById('commentPreviewShell')?.classList.contains('is-open')) {
-            return;
-        }
         pollInFlight = true;
         try {
+            if (commentPreviewIsOpen()) {
+                await refreshOpenCommentPreview();
+            }
             const res = await fetch('/api/feed?barangay_id=' + barangayId, {
                 headers: {
                     Accept: 'application/json',

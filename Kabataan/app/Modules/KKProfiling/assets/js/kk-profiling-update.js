@@ -121,15 +121,9 @@ window.handleKkProfilingUpdateSubmit = async function (event) {
 
     function resetSubmit() {
         setSubmitting(false, 'Update KK Profiling');
-        if (typeof window.hideLoading === 'function') {
-            window.hideLoading();
-        }
     }
 
     setSubmitting(true, 'Checking entries...');
-    if (typeof window.showLoading === 'function') {
-        window.showLoading('Checking your entries...');
-    }
 
     const valid = typeof window.validateKkProfilingForm === 'function'
         ? await window.validateKkProfilingForm({ skipEmailExistenceCheck: true })
@@ -141,9 +135,6 @@ window.handleKkProfilingUpdateSubmit = async function (event) {
     }
 
     setSubmitting(true, 'Updating KK Profiling...');
-    if (typeof window.showLoading === 'function') {
-        window.showLoading('Updating KK Profiling...');
-    }
 
     const formData = new FormData(form);
 
@@ -176,9 +167,6 @@ window.handleKkProfilingUpdateSubmit = async function (event) {
         }
 
         setSubmitting(true, 'Update complete. Redirecting...');
-        if (typeof window.showLoading === 'function') {
-            window.showLoading('Update complete. Redirecting...');
-        }
         window.location.href = data.redirect || window.__KK_PROFILING_UPDATE_REDIRECT || '/dashboard';
         return false;
     } catch (err) {

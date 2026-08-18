@@ -117,7 +117,6 @@
         }
 
         setSubmitLoading(true);
-        if (typeof showLoading === 'function') showLoading('Submitting evaluation…');
 
         try {
             const response = await fetch('/api/kabataan/programs/evaluation-responses', {
@@ -147,7 +146,6 @@
             alert(error.message || 'Failed to submit evaluation.');
         } finally {
             setSubmitLoading(false);
-            if (typeof hideLoading === 'function') hideLoading();
         }
     }
 

@@ -141,6 +141,12 @@
 }
 
 @media (max-width: 768px) {
+    html,
+    body.youth-dashboard {
+        overflow-x: clip;
+        max-width: 100%;
+    }
+
     body.youth-dashboard {
         overflow: auto;
         height: auto;

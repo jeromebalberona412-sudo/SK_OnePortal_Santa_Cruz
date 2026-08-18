@@ -27,18 +27,26 @@
         'app/Modules/Dashboard/assets/css/notif.css',
         'app/Modules/Dashboard/assets/js/notif.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
         .kabataan-modal-backdrop {
             padding: 32px 24px;
             align-items: center;
             justify-content: center;
         }
-        .kabataan-modal-box {
+        .kk-preview-modal-container.kabataan-modal-box,
+        .kkp-docs-modal-container.kabataan-modal-box {
             width: min(880px, calc(100% - 48px));
             max-width: 880px;
             max-height: min(78vh, calc(100vh - 96px));
             border-radius: 16px;
+        }
+        .profile-picture-upload-modal__box,
+        .profile-picture-confirm-modal__box,
+        .profile-picture-lock-modal__box {
+            width: min(360px, calc(100% - 32px));
+            max-width: 360px;
+            max-height: min(70vh, calc(100vh - 72px));
+            border-radius: 14px;
         }
         .kabataan-modal-backdrop .modal-toggle-btn,
         .kabataan-modal-backdrop .modal-close {
@@ -87,10 +95,18 @@
             .kabataan-modal-backdrop:not(.modal-maximized) {
                 padding: 56px 14px 28px;
             }
-            .kabataan-modal-backdrop:not(.modal-maximized) .kabataan-modal-box {
+            .kabataan-modal-backdrop:not(.modal-maximized) .kk-preview-modal-container,
+            .kabataan-modal-backdrop:not(.modal-maximized) .kkp-docs-modal-container {
                 width: calc(100% - 8px);
                 max-height: 68vh;
                 border-radius: 14px;
+            }
+            .profile-picture-upload-modal__box,
+            .profile-picture-confirm-modal__box,
+            .profile-picture-lock-modal__box {
+                width: min(340px, calc(100% - 24px));
+                max-width: 340px;
+                max-height: min(68vh, calc(100vh - 64px));
             }
         }
     </style>
@@ -131,7 +147,6 @@
     </script>
 </head>
 <body class="youth-profile kabataan-app-page">
-    @include('dashboard::loading')
     @include('layout::kabataan-header', ['user' => $user])
 
     <!-- Main Content -->
@@ -198,7 +213,7 @@
                                 </h2>
                                 @if($kabataanRegistration)
                                     <div class="kkp-preview-toolbar">
-                                        <button type="button" class="btn-primary kkp-preview-btn" onclick="openKkPreviewModal()" data-no-loading>View Personal Information</button>
+                                        <button type="button" class="btn-primary kkp-preview-btn" onclick="openKkPreviewModal()">View Personal Information</button>
                                     </div>
                                 @else
                                     <div class="empty-state kk-profile-empty-state">
@@ -816,6 +831,5 @@
         btn.addEventListener('click', closeKkPreviewModal);
     });
     </script>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

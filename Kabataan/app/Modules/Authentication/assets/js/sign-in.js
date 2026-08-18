@@ -2,9 +2,7 @@
  * SK OnePortal — Kabataan Sign In
  *
  * Submit listener execution order on #signInForm:
- *   1. auth-legal.js  — capturing phase (useCapture=true)
- *      Blocks if consent radio unchecked; otherwise passes through.
- *   2. sign-in.js — bubbling phase (useCapture=false)
+ *   1. sign-in.js — bubbling phase
  *      Validates fields, shows Turnstile modal, then calls signInForm.submit().
  *
  * signInForm.submit() is a native call — it does NOT fire the submit event,
@@ -384,7 +382,6 @@
             onFieldEdit();
         });
 
-        // Single submit listener — bubbling phase, after auth-legal capturing
         signInForm.addEventListener('submit', onFormSubmit, false);
 
         // Forgot password link

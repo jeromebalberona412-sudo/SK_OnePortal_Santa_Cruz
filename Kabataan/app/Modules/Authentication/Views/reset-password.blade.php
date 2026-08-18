@@ -10,10 +10,8 @@
         'app/Modules/Authentication/assets/css/sign-in.css',
         'app/Modules/Authentication/assets/js/sign-in.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="youth-signin-page">
-    @include('dashboard::loading')
     <!-- Animated Background -->
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
@@ -266,11 +264,8 @@
                 submitBtn.disabled = true;
                 submitBtn.classList.add('loading');
                 btnText.textContent = 'Resetting...';
-                if (window.showLoading) showLoading('Resetting password');
 
                 setTimeout(function () {
-                    if (window.hideLoading) hideLoading();
-
                     var modal      = document.getElementById('successModal');
                     var countdownEl = document.getElementById('countdown');
                     modal.style.display = 'flex';
@@ -281,7 +276,6 @@
                         countdownEl.textContent = seconds;
                         if (seconds <= 0) {
                             clearInterval(interval);
-                            if (window.showLoading) showLoading('Redirecting to sign in');
                             window.location.href = '{{ route("sign-in") }}';
                         }
                     }, 1000);
@@ -427,6 +421,5 @@
         }
     </style>
 
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

@@ -16,11 +16,8 @@
         'app/Modules/KKProfiling/assets/js/kkprofiling.js',
         'app/Modules/KKProfiling/assets/js/kk-profiling-update.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="kkpu-page-body">
-    @include('dashboard::loading')
-
     <header class="kkpu-lock-bar" aria-label="Required KK Profiling update">
         <div class="kkpu-lock-bar__brand">
             <img src="/images/skoneportal_logo.webp" alt="SK OnePortal" class="kkpu-lock-bar__logo">
@@ -85,6 +82,5 @@
         window.__KK_PROFILING_ORIGINAL_EMAIL = @json($kkProfilingOriginalEmail ?? '');
         window.__KK_PROFILING_UPDATE_REDIRECT = @json(route('dashboard'));
     </script>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

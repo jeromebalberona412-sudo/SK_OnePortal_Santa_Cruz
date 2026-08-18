@@ -15,14 +15,11 @@
         'app/Modules/KKProfiling/assets/js/kkprofiling-wizard.js',
         'app/Modules/KKProfiling/assets/js/kkprofiling-optional-email.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     @if(!empty($turnstileEnabled))
         <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
     @endif
 </head>
 <body class="homepage-body kkp-form-page kkp-wizard-mode @if($registrationComplete ?? false) kkp-wizard-registration-complete kkp-wizard-success-modal-open @endif">
-
-    @include('dashboard::loading')
 
     <main class="kkp-main">
         <div class="kkp-page-wrap">
@@ -151,6 +148,5 @@
         </div>
     </div>
 
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

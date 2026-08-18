@@ -25,10 +25,8 @@
         'app/Modules/Programs/assets/js/sports-applications-history.js',
         'app/Modules/Programs/assets/js/sports_landing.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="sl-body sports-landing-page kabataan-app-page">
-    @include('dashboard::loading')
     @include('layout::kabataan-header', ['showSearch' => false, 'pageBadge' => null])
 
     <div id="sportsLandingContent" class="sl-container">
@@ -84,6 +82,5 @@
         window.__kkFieldLabels = @json($kkFieldLabels);
         window.__kabataanPrograms = @json($programsPayload ?? ['abyip_programs' => [], 'schedule_programs' => [], 'pending_evaluations' => []]);
     </script>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

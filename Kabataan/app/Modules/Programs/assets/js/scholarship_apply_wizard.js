@@ -840,15 +840,12 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
     async function handleFinalSubmit() {
         const confirmBtn = document.getElementById('confirmSubmitBtn');
         if (confirmBtn) confirmBtn.disabled = true;
-        if (typeof global.showLoading === 'function') global.showLoading('Submitting application...');
 
         try {
-            const data = await submitApplication();
-            if (typeof global.hideLoading === 'function') global.hideLoading();
+            await submitApplication();
             closeConfirmModal();
             showSuccessModal();
         } catch (error) {
-            if (typeof global.hideLoading === 'function') global.hideLoading();
             alert(error.message || 'Unable to submit application.');
             if (confirmBtn) confirmBtn.disabled = false;
             updateSubmitButtonState();

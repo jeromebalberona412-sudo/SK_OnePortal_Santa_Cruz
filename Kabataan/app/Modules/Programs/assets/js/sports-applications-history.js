@@ -443,7 +443,7 @@
                 return `
                     <div class="sl-answer-item sports-view-answer-card">
                         <p class="sports-view-answer-label">${escapeHtml(answer.question_label || 'Document')}</p>
-                        <a href="${escapeHtml(fileUrl)}" class="sports-view-file-link" target="_blank" rel="noopener" data-no-loading>
+                        <a href="${escapeHtml(fileUrl)}" class="sports-view-file-link" target="_blank" rel="noopener">
                             <span class="sports-view-file-icon" aria-hidden="true">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                             </span>
@@ -629,21 +629,6 @@
         });
 
         resetCancelConfirmButton();
-
-        if (!document.documentElement.dataset.sportsViewVisibilityBound) {
-            document.documentElement.dataset.sportsViewVisibilityBound = '1';
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState !== 'visible') return;
-                if (applicationViewModal && !applicationViewModal.hidden && typeof window.hideLoading === 'function') {
-                    window.hideLoading();
-                }
-            });
-            window.addEventListener('pageshow', () => {
-                if (applicationViewModal && !applicationViewModal.hidden && typeof window.hideLoading === 'function') {
-                    window.hideLoading();
-                }
-            });
-        }
 
         if (applicationViewModal) {
             applicationViewModal.dataset.historyBound = '1';

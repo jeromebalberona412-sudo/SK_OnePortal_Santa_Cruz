@@ -1,16 +1,14 @@
 /**
- * Login Terms & Privacy consent + modals (SK Federations)
+ * Login Terms & Privacy document modals (SK Federations)
  */
 (function () {
     'use strict';
 
     const ACK_STORAGE_PREFIX = 'sk_oneportal_legal_ack_';
     const SCROLL_THRESHOLD = 12;
-    let pendingSubmit = false;
 
     function getAckKey(type) {
-        const portal = 'federation';
-        return `${ACK_STORAGE_PREFIX}${portal}_${type}`;
+        return `${ACK_STORAGE_PREFIX}federation_${type}`;
     }
 
     function isScrolledToBottom(element) {
@@ -129,49 +127,9 @@
         if (!modal) return;
         modal.hidden = true;
         modal.setAttribute('aria-hidden', 'true');
-        if (!document.querySelector('.auth-legal-modal:not([hidden])') && !isPromptOpen()) {
-            document.body.style.overflow = '';
-        }
-    }
-
-    function isPromptOpen() {
-        const prompt = document.getElementById('legalConsentPrompt');
-        return prompt && !prompt.hidden;
-    }
-
-    function openConsentPrompt() {
-        const prompt = document.getElementById('legalConsentPrompt');
-        if (!prompt) return;
-        prompt.hidden = false;
-        prompt.setAttribute('aria-hidden', 'false');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeConsentPrompt(clearPending = true) {
-        const prompt = document.getElementById('legalConsentPrompt');
-        if (!prompt) return;
-        prompt.hidden = true;
-        prompt.setAttribute('aria-hidden', 'true');
         if (!document.querySelector('.auth-legal-modal:not([hidden])')) {
             document.body.style.overflow = '';
         }
-        if (clearPending) {
-            pendingSubmit = false;
-        }
-    }
-
-    function credentialsLookValid(form) {
-        const emailInput = form.querySelector('#email');
-        const passwordInput = form.querySelector('#password');
-        const email = emailInput?.value.trim() || '';
-        const password = passwordInput?.value || '';
-        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-        if (!emailOk || !password) {
-            return false;
-        }
-
-        return password.length >= 8 && password.length <= 64;
     }
 
     function bindModals() {
@@ -190,86 +148,16 @@
             });
         });
 
-        document.querySelectorAll('[data-close-legal-prompt]').forEach((el) => {
-            el.addEventListener('click', () => {
-                closeConsentPrompt();
-            });
-        });
-
-        document.getElementById('legalConsentAgreeBtn')?.addEventListener('click', () => {
-            const consent = document.getElementById('loginLegalConsent');
-            const form = document.getElementById('loginForm');
-            if (consent) {
-                consent.checked = true;
-                consent.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-            closeConsentPrompt(false);
-            if (form) {
-                pendingSubmit = true;
-                if (typeof form.requestSubmit === 'function') {
-                    form.requestSubmit();
-                } else {
-                    form.submit();
-                }
-            }
-        });
-
         document.addEventListener('keydown', (e) => {
             if (e.key !== 'Escape') return;
-            if (isPromptOpen()) {
-                closeConsentPrompt();
-                return;
-            }
             document.querySelectorAll('.auth-legal-modal:not([hidden])').forEach((modal) => {
                 closeModal(modal.id);
             });
         });
     }
 
-    function bindLoginConsent() {
-        const form = document.getElementById('loginForm');
-        const consent = document.getElementById('loginLegalConsent');
-        const consentError = document.getElementById('legalConsentError');
-        const submitBtn = document.getElementById('loginBtn') || form?.querySelector('button[type="submit"]');
-
-        if (!form || !consent) return;
-
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('auth-legal-submit-blocked');
-        }
-
-        consent.addEventListener('change', () => {
-            if (consent.checked && consentError) {
-                consentError.hidden = true;
-            }
-        });
-
-        form.addEventListener('submit', (e) => {
-            if (pendingSubmit) {
-                pendingSubmit = false;
-                return;
-            }
-
-            if (consent.checked) {
-                if (consentError) consentError.hidden = true;
-                return;
-            }
-
-            if (!credentialsLookValid(form)) {
-                return;
-            }
-
-            e.preventDefault();
-            e.stopPropagation();
-            if (consentError) consentError.hidden = true;
-            openConsentPrompt();
-        }, true);
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
         initLegalModalScrollGates();
         bindModals();
-        bindLoginConsent();
     });
 })();

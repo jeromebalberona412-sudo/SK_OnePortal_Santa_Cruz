@@ -6,21 +6,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     
     // ============================================
-    // Success Modal Handler
-    // ============================================
-    const successModal = document.getElementById('successModal');
-
-    // Wire "Go to Sign In" button in success modal to show loading overlay
-    if (successModal) {
-        const goToSigninBtn = successModal.querySelector('a[href]');
-        if (goToSigninBtn) {
-            goToSigninBtn.addEventListener('click', function() {
-                if (window.showLoading) window.showLoading('Redirecting to signin');
-            });
-        }
-    }
-    
-    // ============================================
     // Multi-Step Navigation
     // ============================================
     let currentStep = 1;

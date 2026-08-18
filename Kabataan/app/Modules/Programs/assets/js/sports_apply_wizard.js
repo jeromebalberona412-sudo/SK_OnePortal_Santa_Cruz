@@ -573,14 +573,11 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Submitting...';
         }
-        if (typeof global.showLoading === 'function') global.showLoading('Submitting application...');
 
         try {
             await submitApplication();
-            if (typeof global.hideLoading === 'function') global.hideLoading();
             showSuccessModal();
         } catch (error) {
-            if (typeof global.hideLoading === 'function') global.hideLoading();
             alert(error.message || 'Unable to submit application.');
             if (submitBtn) {
                 submitBtn.disabled = false;

@@ -15,7 +15,7 @@
         'app/Modules/Profile/assets/js/set-password.js',
     ])
 </head>
-<body class="youth-login-page set-password-page" data-skip-initial-loading>
+<body class="youth-login-page set-password-page">
 
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>

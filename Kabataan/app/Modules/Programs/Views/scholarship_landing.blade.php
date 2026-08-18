@@ -27,10 +27,8 @@
         'app/Modules/Programs/assets/js/scholarship_apply_wizard.js',
         'app/Modules/Programs/assets/js/scholarship_landing.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="sl-body kabataan-app-page">
-    @include('dashboard::loading')
     @include('layout::kabataan-header', ['showSearch' => false, 'pageBadge' => null])
 
     <div id="scholarshipPreviewShell" hidden></div>
@@ -346,6 +344,5 @@
     </script>
 
     @include('programs::scholarship.partials.data-privacy-modal')
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

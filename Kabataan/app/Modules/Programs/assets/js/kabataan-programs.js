@@ -410,8 +410,14 @@
         if (!containers.length) return;
 
         const allowedLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+        const seenLetters = new Set();
         const programs = (programsData?.abyip_programs || []).filter((program) => {
-            return allowedLetters.includes(String(program.letter || '').toUpperCase());
+            const letter = String(program.letter || '').toUpperCase();
+            if (!allowedLetters.includes(letter) || seenLetters.has(letter)) {
+                return false;
+            }
+            seenLetters.add(letter);
+            return true;
         });
         const html = programs.length
             ? programs.map(renderSidebarItem).join('')
@@ -927,8 +933,6 @@
             document.getElementById(modalId)?.classList.remove('active');
         });
 
-        if (typeof showLoading === 'function') showLoading('Opening program survey…');
-
         setTimeout(() => {
             window.location.href = `/programs/survey?program=${encodeURIComponent(programId)}`;
         }, 650);
@@ -944,8 +948,6 @@
         Object.values(MODAL_IDS).forEach((modalId) => {
             document.getElementById(modalId)?.classList.remove('active');
         });
-
-        if (typeof showLoading === 'function') showLoading('Opening program evaluation…');
 
         setTimeout(() => {
             window.location.href = `/programs/evaluation/form?evaluation=${encodeURIComponent(evaluationId)}`;
@@ -1194,7 +1196,6 @@
     function goToScheduleApplication(scheduleId, programLetter) {
         if (typeof closeEducationModal === 'function') closeEducationModal();
         if (typeof closeSportsModal === 'function') closeSportsModal();
-        if (typeof showLoading === 'function') showLoading('Redirecting to application…');
 
         const letter = String(programLetter || '').toUpperCase();
         const basePath = letter === 'I' ? '/sports/apply/form' : '/scholarship/apply';

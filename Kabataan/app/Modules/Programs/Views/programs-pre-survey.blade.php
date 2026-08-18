@@ -19,10 +19,8 @@
         'app/Modules/Programs/assets/css/programs-pre-survey.css',
         'app/Modules/Programs/assets/js/programs-pre-survey.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="pps-body kabataan-app-page" data-program-slug="{{ $slug }}" data-program-title="{{ $program['title'] }}">
-    @include('dashboard::loading')
     @include('layout::kabataan-header', ['user' => auth()->user()])
 
     <main class="pps-main">
@@ -54,10 +52,10 @@
                     <h2>Profile Preview</h2>
                     <dl>
                         <div><dt>Name</dt><dd id="ppsPreviewName">{{ $displayName }}</dd></div>
-                        <div><dt>Email</dt><dd id="ppsPreviewEmail">{{ $user->email ?? 'ó' }}</dd></div>
+                        <div><dt>Email</dt><dd id="ppsPreviewEmail">{{ $user->email ?? 'ù' }}</dd></div>
                         <div><dt>Status</dt><dd><span class="pps-badge">From KK Profiling</span></dd></div>
                     </dl>
-                    <p class="pps-profile-card__hint">Displayed for confirmation only ó sourced automatically from your profiling record.</p>
+                    <p class="pps-profile-card__hint">Displayed for confirmation only ù sourced automatically from your profiling record.</p>
                 </div>
             </aside>
 
@@ -98,7 +96,7 @@
                 </section>
 
                 <div class="pps-actions">
-                    <a href="{{ route('dashboard') }}" class="pps-btn pps-btn--ghost" data-no-loading>Back to Dashboard</a>
+                    <a href="{{ route('dashboard') }}" class="pps-btn pps-btn--ghost">Back to Dashboard</a>
                     <button type="submit" class="pps-btn pps-btn--primary" id="ppsSubmitBtn">
                         Submit Pre-Survey
                     </button>
@@ -120,6 +118,5 @@
             <button type="button" class="pps-btn pps-btn--primary" id="ppsSuccessClose">Back to Dashboard</button>
         </div>
     </div>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

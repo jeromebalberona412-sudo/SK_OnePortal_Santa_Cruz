@@ -1507,9 +1507,6 @@ window.handleFormSubmit = async function (event) {
     const submitText = document.getElementById('kkpSubmitText');
 
     function resetSubmitState() {
-        if (window.hideLoading) {
-            window.hideLoading();
-        }
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.classList.remove('is-submitting');
@@ -1534,11 +1531,6 @@ window.handleFormSubmit = async function (event) {
         submitBtn.classList.add('is-submitting');
     }
     if (submitText) submitText.textContent = 'Submitting...';
-
-    // Show page-level loading overlay
-    if (window.showLoading) {
-        window.showLoading('Submitting...');
-    }
 
     // Prepare form data
     const formData = new FormData(form);
@@ -1828,10 +1820,6 @@ function showEmailVerification(email) {
 
             btn.disabled = true;
 
-            if (window.showLoading) {
-                window.showLoading('Resending set password link...');
-            }
-
             try {
                 const response = await fetch('/api/kkprofiling/resend-verification', {
                     method: 'POST',
@@ -1847,10 +1835,6 @@ function showEmailVerification(email) {
 
                 const data = await response.json();
 
-                if (window.hideLoading) {
-                    window.hideLoading();
-                }
-
                 if (response.ok && data.success) {
                     if (data.registration_completed && window.kkpShowRegistrationComplete) {
                         window.kkpShowRegistrationComplete(Boolean(data.auto_approved));
@@ -1865,9 +1849,6 @@ function showEmailVerification(email) {
                     btn.disabled = false;
                 }
             } catch (err) {
-                if (window.hideLoading) {
-                    window.hideLoading();
-                }
                 alert('Failed to resend verification email. Please check your connection and try again.');
                 btn.disabled = false;
             }
@@ -2081,9 +2062,6 @@ function showEmailVerification(email) {
         const btnText = submitBtn?.querySelector('.setpw-btn-text');
         if (submitBtn) submitBtn.disabled = true;
         if (btnText) btnText.textContent = isAccountInvite ? 'Activating account...' : 'Completing registration...';
-        if (window.showLoading) {
-            window.showLoading(isAccountInvite ? 'Activating your account...' : 'Creating your account...');
-        }
 
         try {
             let response;
@@ -2117,8 +2095,6 @@ function showEmailVerification(email) {
 
             const data = await response.json().catch(() => ({}));
 
-            if (window.hideLoading) window.hideLoading();
-
             if (response.ok) {
                 showSuccessModal(
                     data.message || (isAccountInvite
@@ -2142,7 +2118,6 @@ function showEmailVerification(email) {
 
             setFieldError(passwordInput, passwordError, errorMessage);
         } catch {
-            if (window.hideLoading) window.hideLoading();
             setFieldError(
                 passwordInput,
                 passwordError,

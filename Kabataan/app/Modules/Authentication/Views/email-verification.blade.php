@@ -11,10 +11,8 @@
         'app/Modules/Authentication/assets/css/youth-email-verification.css',
         'app/Modules/Authentication/assets/js/youth-email-verification.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="youth-signin-page">
-    @include('dashboard::loading')
     <!-- Animated Background (same as signin page) -->
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
@@ -97,6 +95,5 @@
             <div class="modal-spinner"></div>
         </div>
     </div>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>
