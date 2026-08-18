@@ -83,6 +83,9 @@
         if (!modalEl) {
             return;
         }
+        if (modalEl.parentElement !== document.body) {
+            document.body.appendChild(modalEl);
+        }
         modalEl.classList.add('turnstile-modal-visible');
         document.body.style.overflow = 'hidden';
     }
@@ -166,7 +169,7 @@
             showModal();
             clearError();
             waitForApi(10000).then(renderWidget).catch(function (err) {
-                setError(err.message);
+                rejectPending(err.message || 'Verification system failed to load. Please refresh the page.');
             });
         });
     }

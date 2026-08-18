@@ -10,9 +10,13 @@
         'app/Modules/Authentication/assets/css/sign-in.css',
         'app/Modules/KKProfiling/assets/css/kkprofiling.css',
         'app/Modules/KKProfiling/assets/js/kkprofiling.js',
+        'app/Modules/Authentication/assets/js/turnstile-gate.js',
     ])
 </head>
 <body class="youth-signin-page kkp-setpw-page" @if(!empty($registrationAlreadyComplete)) data-registration-already-complete="1" data-auto-approved="{{ !empty($registrationAutoApproved) ? '1' : '0' }}" @endif>
+    @include('authentication::partials.turnstile-gate', [
+        'turnstileSubtitle' => 'Complete the security check to activate your account.',
+    ])
 
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>

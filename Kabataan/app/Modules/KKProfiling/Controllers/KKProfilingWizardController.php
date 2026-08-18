@@ -469,6 +469,8 @@ class KKProfilingWizardController extends Controller
     {
         set_time_limit((int) config('kkprofiling.finalize_time_limit', 180));
 
+        $this->assertTurnstilePassed($request);
+
         $wizard = $this->draftService->loadByToken($token);
 
         if (! $wizard) {
@@ -555,6 +557,8 @@ class KKProfilingWizardController extends Controller
     public function finalize(Request $request, string $barangay)
     {
         set_time_limit((int) config('kkprofiling.finalize_time_limit', 180));
+
+        $this->assertTurnstilePassed($request);
 
         $this->resolveBarangay($barangay);
         $wizard = $this->requireWizard();

@@ -123,7 +123,14 @@
 
             try {
                 let turnstileToken = '';
-                if (window.KabataanTurnstileGate && window.KabataanTurnstileGate.challenge) {
+                if (window.kabataanTurnstileChallenge) {
+                    try {
+                        turnstileToken = await window.kabataanTurnstileChallenge();
+                    } catch {
+                        enableResend();
+                        return;
+                    }
+                } else if (window.KabataanTurnstileGate && window.KabataanTurnstileGate.challenge) {
                     try {
                         turnstileToken = await window.KabataanTurnstileGate.challenge();
                     } catch {

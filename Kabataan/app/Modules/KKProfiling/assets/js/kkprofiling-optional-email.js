@@ -237,19 +237,38 @@
 
     window.kkpChallengeTurnstile = function () {
         return new Promise((resolve, reject) => {
-            requestTurnstileThen((token) => {
-                resolve(token || '');
-            });
-            const fail = () => {
-                if (pendingAction) {
-                    pendingAction = null;
-                    hideOverlay(turnstileModal);
-                    resetTurnstile();
-                    reject(new Error('Verification cancelled.'));
+            if (!turnstileEnabled || !turnstileSiteKey) {
+                resolve('');
+                return;
+            }
+
+            let settled = false;
+            let fail = null;
+            const cancelBtn = document.getElementById('kkpTurnstileCancelBtn');
+            const backdrop = document.getElementById('kkpTurnstileBackdrop');
+            const finish = (fn, value) => {
+                if (settled) {
+                    return;
                 }
+                settled = true;
+                if (fail) {
+                    cancelBtn?.removeEventListener('click', fail);
+                    backdrop?.removeEventListener('click', fail);
+                }
+                fn(value);
             };
-            document.getElementById('kkpTurnstileCancelBtn')?.addEventListener('click', fail, { once: true });
-            document.getElementById('kkpTurnstileBackdrop')?.addEventListener('click', fail, { once: true });
+
+            fail = () => finish(reject, new Error('Verification cancelled.'));
+            cancelBtn?.addEventListener('click', fail);
+            backdrop?.addEventListener('click', fail);
+
+            requestTurnstileThen((token) => finish(resolve, token || ''))
+                .then(() => {
+                    if (!settled && pendingAction === null) {
+                        finish(reject, new Error('Security verification failed to load.'));
+                    }
+                })
+                .catch((error) => finish(reject, error));
         });
     };
 
@@ -364,7 +383,6 @@
 
         try {
             if (typeof saveStep1Fn === 'function') {
-                const originalAppend = FormData.prototype.append;
                 if (token) {
                     window.__kkpTurnstileToken = token;
                 }

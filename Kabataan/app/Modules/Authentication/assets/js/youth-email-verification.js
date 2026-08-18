@@ -105,7 +105,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             let turnstileToken = '';
-            if (window.KabataanTurnstileGate && window.KabataanTurnstileGate.challenge) {
+            if (window.kabataanTurnstileChallenge) {
+                turnstileToken = await window.kabataanTurnstileChallenge();
+            } else if (window.KabataanTurnstileGate && window.KabataanTurnstileGate.challenge) {
                 turnstileToken = await window.KabataanTurnstileGate.challenge();
             }
 

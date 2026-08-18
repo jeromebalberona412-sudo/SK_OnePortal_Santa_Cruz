@@ -1824,6 +1824,8 @@ function showEmailVerification(email) {
                 let turnstileToken = '';
                 if (typeof window.kkpChallengeTurnstile === 'function') {
                     turnstileToken = await window.kkpChallengeTurnstile();
+                } else if (window.kabataanTurnstileChallenge) {
+                    turnstileToken = await window.kabataanTurnstileChallenge();
                 } else if (window.KabataanTurnstileGate?.challenge) {
                     turnstileToken = await window.KabataanTurnstileGate.challenge();
                 }
@@ -1860,6 +1862,10 @@ function showEmailVerification(email) {
                     btn.disabled = false;
                 }
             } catch (err) {
+                if (err?.message === 'Verification cancelled.') {
+                    btn.disabled = false;
+                    return;
+                }
                 alert('Failed to resend verification email. Please check your connection and try again.');
                 btn.disabled = false;
             }
@@ -2076,10 +2082,20 @@ function showEmailVerification(email) {
 
         try {
             let turnstileToken = '';
-            if (window.KabataanTurnstileGate?.challenge) {
+            if (window.kabataanTurnstileChallenge) {
+                try {
+                    turnstileToken = await window.kabataanTurnstileChallenge();
+                } catch {
+                    if (submitBtn) submitBtn.disabled = false;
+                    if (btnText) btnText.textContent = originalBtnText;
+                    return;
+                }
+            } else if (window.KabataanTurnstileGate?.challenge) {
                 try {
                     turnstileToken = await window.KabataanTurnstileGate.challenge();
                 } catch {
+                    if (submitBtn) submitBtn.disabled = false;
+                    if (btnText) btnText.textContent = originalBtnText;
                     return;
                 }
             }

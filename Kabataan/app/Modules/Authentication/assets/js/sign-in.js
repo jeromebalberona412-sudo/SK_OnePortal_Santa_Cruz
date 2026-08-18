@@ -212,6 +212,13 @@
 
         turnstileToken = token;
         injectTokenInput(token);
+
+        var modalOpen = turnstileModal && turnstileModal.classList.contains('turnstile-modal-visible');
+        if (!modalOpen) {
+            // Pre-render solved in the background. Wait for the user to click Sign In.
+            return;
+        }
+
         hideTurnstileModal(true);
 
         // Set lock BEFORE submit — prevents any re-entrant handler from firing

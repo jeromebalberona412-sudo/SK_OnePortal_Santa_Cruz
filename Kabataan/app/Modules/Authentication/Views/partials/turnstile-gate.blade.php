@@ -48,3 +48,37 @@
          data-enabled="1"
          data-sitekey="{{ $turnstileService->getSiteKey() }}"></div>
 @endif
+
+<script>
+    window.kabataanTurnstileChallenge = function () {
+        if (!document.getElementById('turnstile-gate-config')) {
+            return Promise.resolve('');
+        }
+
+        return new Promise(function (resolve, reject) {
+            var started = Date.now();
+            var wait = function () {
+                var gate = window.KabataanTurnstileGate;
+                if (gate && gate.challenge) {
+                    gate.challenge().then(resolve).catch(reject);
+                    return;
+                }
+                if (Date.now() - started > 8000) {
+                    reject(new Error('Security check failed to load. Please refresh the page.'));
+                    return;
+                }
+                window.setTimeout(wait, 50);
+            };
+            wait();
+        });
+    };
+
+    window.kabataanTurnstileSubmitForm = function (form) {
+        return window.kabataanTurnstileChallenge().then(function (token) {
+            if (window.KabataanTurnstileGate && window.KabataanTurnstileGate.injectToken) {
+                window.KabataanTurnstileGate.injectToken(form, token);
+            }
+            HTMLFormElement.prototype.submit.call(form);
+        });
+    };
+</script>

@@ -8,6 +8,7 @@
     <title>Check Your Email - KK Profiling</title>
     @vite([
         'app/Modules/Authentication/assets/css/sign-in.css',
+        'app/Modules/Authentication/assets/js/turnstile-gate.js',
     ])
     <style>
         .youth-login-page {
@@ -303,6 +304,9 @@
     </style>
 </head>
 <body class="youth-login-page">
+    @include('authentication::partials.turnstile-gate', [
+        'turnstileSubtitle' => 'Complete the security check to resend the verification email.',
+    ])
     <!-- Animated Background -->
     <div class="youth-bg-wrapper">
         <div class="youth-bg-image"></div>
@@ -465,15 +469,37 @@
                 }
 
                 try {
+                    let turnstileToken = '';
+                    if (window.kabataanTurnstileChallenge) {
+                        try {
+                            turnstileToken = await window.kabataanTurnstileChallenge();
+                        } catch {
+                            this.disabled = false;
+                            return;
+                        }
+                    } else if (window.KabataanTurnstileGate && window.KabataanTurnstileGate.challenge) {
+                        try {
+                            turnstileToken = await window.KabataanTurnstileGate.challenge();
+                        } catch {
+                            this.disabled = false;
+                            return;
+                        }
+                    }
+
                     const response = await fetch('/api/kkprofiling/resend-verification', {
                         method: 'POST',
+                        credentials: 'same-origin',
                         headers: {
                             'Content-Type': 'application/json',
                             'Accept': 'application/json',
                             'X-CSRF-TOKEN': csrfToken,
                             'X-Requested-With': 'XMLHttpRequest',
                         },
-                        body: JSON.stringify({ email: email, barangay: barangay }),
+                        body: JSON.stringify({
+                            email: email,
+                            barangay: barangay,
+                            'cf-turnstile-response': turnstileToken,
+                        }),
                     });
 
                     const data = await response.json();

@@ -1541,6 +1541,8 @@
             let turnstileToken = '';
             if (typeof window.kkpChallengeTurnstile === 'function') {
                 turnstileToken = await window.kkpChallengeTurnstile();
+            } else if (window.kabataanTurnstileChallenge) {
+                turnstileToken = await window.kabataanTurnstileChallenge();
             } else if (window.KabataanTurnstileGate?.challenge) {
                 turnstileToken = await window.KabataanTurnstileGate.challenge();
             }
@@ -1582,6 +1584,10 @@
 
             return true;
         } catch (error) {
+            if (error?.message === 'Verification cancelled.') {
+                return false;
+            }
+
             if (error.errors?.draft?.[0] && registrationCompleted) {
                 showRegistrationCompleteState(registrationAutoApproved);
                 return false;

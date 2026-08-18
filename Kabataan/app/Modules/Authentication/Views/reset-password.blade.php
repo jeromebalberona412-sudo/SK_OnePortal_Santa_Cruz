@@ -332,18 +332,18 @@
                 submitBtn.classList.add('loading');
                 btnText.textContent = 'Resetting...';
 
-                var gate = window.KabataanTurnstileGate;
-                if (!gate || !gate.challenge) {
+                var gateSubmit = window.kabataanTurnstileSubmitForm;
+                if (!gateSubmit) {
                     form.submit();
                     return;
                 }
-                gate.challenge().then(function (token) {
-                    gate.injectToken(form, token);
-                    form.submit();
-                }).catch(function () {
+                gateSubmit(form).catch(function (err) {
                     submitBtn.disabled = false;
                     submitBtn.classList.remove('loading');
                     btnText.textContent = 'Reset Password';
+                    if (err && err.message && err.message !== 'Verification cancelled.') {
+                        window.alert(err.message);
+                    }
                 });
             });
         });

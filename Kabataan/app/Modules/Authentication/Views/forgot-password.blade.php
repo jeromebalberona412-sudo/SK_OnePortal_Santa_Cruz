@@ -212,16 +212,16 @@
                     }
 
                     setBtn(true, 'Sending...', true);
-                    var gate = window.KabataanTurnstileGate;
-                    if (!gate || !gate.challenge) {
+                    var submitWithTurnstile = window.kabataanTurnstileSubmitForm;
+                    if (!submitWithTurnstile) {
                         form.submit();
                         return;
                     }
-                    gate.challenge().then(function (token) {
-                        gate.injectToken(form, token);
-                        form.submit();
-                    }).catch(function () {
+                    submitWithTurnstile(form).catch(function (err) {
                         setBtn(false, 'Send Reset Link', false);
+                        if (err && err.message && err.message !== 'Verification cancelled.') {
+                            showErr(err.message);
+                        }
                     });
                 });
             }

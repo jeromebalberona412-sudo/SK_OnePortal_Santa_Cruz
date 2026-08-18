@@ -382,6 +382,10 @@ class AuthController extends Controller
 
     public function sendVerificationEmail(Request $request)
     {
+        if ($fail = $this->turnstileService->requestFailed($request)) {
+            return response()->json(['success' => false, 'message' => $fail], 422);
+        }
+
         return response()->json(['success' => true]);
     }
 

@@ -107,18 +107,18 @@
                 btn.classList.add('loading');
                 label.textContent = 'Sending...';
 
-                var gate = window.KabataanTurnstileGate;
-                if (!gate || !gate.challenge) {
+                var submitWithTurnstile = window.kabataanTurnstileSubmitForm;
+                if (!submitWithTurnstile) {
                     form.submit();
                     return;
                 }
-                gate.challenge().then(function (token) {
-                    gate.injectToken(form, token);
-                    form.submit();
-                }).catch(function () {
+                submitWithTurnstile(form).catch(function (err) {
                     btn.disabled = false;
                     btn.classList.remove('loading');
                     label.textContent = 'Resend activation email';
+                    if (err && err.message && err.message !== 'Verification cancelled.') {
+                        window.alert(err.message);
+                    }
                 });
             });
         }());
