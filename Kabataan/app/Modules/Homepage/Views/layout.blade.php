@@ -27,7 +27,7 @@
 
     @stack('styles')
 </head>
-<body class="homepage-body" data-scroll-to="{{ $scrollTo ?? 'hero' }}">
+<body class="homepage-body kabataan-homepage" data-scroll-to="{{ $scrollTo ?? 'hero' }}">
     <nav class="kabataan-nav" aria-label="Primary navigation">
         <div class="container kabataan-nav-inner">
             <a href="{{ route('homepage') }}" class="kabataan-brand">

@@ -30,42 +30,8 @@
         {{-- CENTER: Feed --}}
         <div class="feed-section">
 
-            {{-- SK Officials Info Card (with compose embedded) --}}
-            <div class="sk-fed-card">
-                <div class="sk-fed-card-banner">
-                    <a href="{{ route('community-feed.barangay', ['slug' => $slug]) }}" class="sk-fed-card-logo-link" aria-label="Open SK Barangay {{ $name }} profile">
-                        <img src="{{ $barangayLogoUrl ?? asset('images/logo.png') }}" alt="SK Barangay {{ $name }} logo" class="sk-fed-card-logo">
-                    </a>
-                    <div class="sk-fed-card-info">
-                        <h2 class="sk-fed-card-name">
-                            <a href="{{ route('community-feed.barangay', ['slug' => $slug]) }}">SK Barangay {{ $name }}</a>
-                        </h2>
-                        <p class="sk-fed-card-sub">SK Officials Portal · Santa Cruz, Laguna</p>
-                    </div>
-                </div>
-                {{-- Create Post button --}}
-                <div style="padding:12px 16px;background:#fff;border-top:1px solid #f0f0f0;">
-                    <button onclick="openComposeModal()" style="width:100%;padding:9px;background:linear-gradient(135deg,#f5c518,#e6a800);color:#1a1a2e;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
-                        + Create Post
-                    </button>
-                </div>
-            </div>
-
             {{-- Filter tabs: hide on scroll down, show on scroll up --}}
             <div class="feed-sticky-toolbar">
-            <div class="feed-header">
-                <div class="feed-header__intro">
-                    <h1>SK Community Feed</h1>
-                </div>
-                <div class="feed-header__search">
-                    <svg class="feed-header__search-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
-                    </svg>
-                    <input type="search" id="feedSearchInput" class="feed-header__search-input" placeholder="Search posts, programs, announcements..." autocomplete="off" aria-label="Search community feed">
-                </div>
-            </div>
-            </div>
-
             <div class="feed-filter-bar">
                 <button type="button" class="feed-tab feed-tab--icon active" data-filter="all" aria-label="All">
                     <span class="feed-tab-icon" aria-hidden="true">
@@ -97,6 +63,41 @@
                     </span>
                     <span class="feed-tab-text">Programs</span>
                 </button>
+            </div>
+            </div>
+            <div class="feed-filter-anchor" aria-hidden="true"></div>
+
+            {{-- SK Officials Info Card (with compose embedded) --}}
+            <div class="sk-fed-card">
+                <div class="sk-fed-card-banner">
+                    <a href="{{ route('community-feed.barangay', ['slug' => $slug]) }}" class="sk-fed-card-logo-link" aria-label="Open SK Barangay {{ $name }} profile">
+                        <img src="{{ $barangayLogoUrl ?? asset('images/logo.png') }}" alt="SK Barangay {{ $name }} logo" class="sk-fed-card-logo">
+                    </a>
+                    <div class="sk-fed-card-info">
+                        <h2 class="sk-fed-card-name">
+                            <a href="{{ route('community-feed.barangay', ['slug' => $slug]) }}">SK Barangay {{ $name }}</a>
+                        </h2>
+                        <p class="sk-fed-card-sub">SK Officials Portal · Santa Cruz, Laguna</p>
+                    </div>
+                </div>
+                {{-- Create Post button --}}
+                <div style="padding:12px 16px;background:#fff;border-top:1px solid #f0f0f0;">
+                    <button onclick="openComposeModal()" style="width:100%;padding:9px;background:linear-gradient(135deg,#f5c518,#e6a800);color:#1a1a2e;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+                        + Create Post
+                    </button>
+                </div>
+            </div>
+
+            <div class="feed-header">
+                <div class="feed-header__intro">
+                    <h1>SK Community Feed</h1>
+                </div>
+                <div class="feed-header__search">
+                    <svg class="feed-header__search-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+                    </svg>
+                    <input type="search" id="feedSearchInput" class="feed-header__search-input" placeholder="Search posts, programs, announcements..." autocomplete="off" aria-label="Search community feed">
+                </div>
             </div>
 
             <div id="feed-posts"></div>

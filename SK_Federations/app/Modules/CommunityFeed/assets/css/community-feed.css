@@ -9,6 +9,10 @@
 /* dashboard.css handles .navbar, .sidebar, .main-content (margin-left:260px, margin-top:64px) */
 
 /* Override main-content padding so cf-container controls spacing */
+body.sk-fed-feed {
+    overflow-x: clip;
+}
+
 body.sk-fed-feed .main-content,
 .cf-main {
     padding: 0 !important;
@@ -191,11 +195,28 @@ body.sk-fed-feed .main-content,
 .feed-header__search-input:focus { outline: none; border-color: transparent; }
 
 .feed-sticky-toolbar {
-    position: relative;
-    z-index: 1;
+    position: sticky;
+    top: var(--navbar-height, 64px);
+    z-index: 90;
     background: #f1f5f9;
-    padding: 8px 0 0;
+    padding: 0;
     margin: 0;
+    overflow: hidden;
+    max-height: 160px;
+    flex-shrink: 0;
+    transition: max-height 0.18s ease, opacity 0.16s ease, transform 0.18s ease;
+}
+
+.feed-sticky-toolbar.is-hidden {
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.feed-filter-anchor {
+    height: 0;
+    flex-shrink: 0;
+    overflow: hidden;
 }
 
 /* ── FILTER TABS ── */
@@ -209,14 +230,38 @@ body.sk-fed-feed .main-content,
     background: #f0f1f5;
     box-shadow: 0 8px 12px -8px rgba(15, 23, 42, 0.18);
     border-radius: 0;
-    position: sticky;
-    top: var(--navbar-height, 64px);
-    z-index: 46;
+    position: relative;
+    top: auto;
+    z-index: auto;
     transform: none;
     opacity: 1;
 }
+@media (max-width: 1024px) {
+    body.sk-fed-feed .cf-main,
+    body.sk-fed-feed .feed-section {
+        overflow-x: visible;
+    }
+    .feed-sticky-toolbar {
+        position: fixed;
+        top: var(--navbar-height, 64px);
+        left: 0;
+        right: 0;
+        width: 100%;
+        z-index: 90;
+        max-height: none;
+        transform: translateY(0);
+        box-shadow: 0 8px 16px -10px rgba(15, 23, 42, 0.22);
+    }
+    .feed-sticky-toolbar.is-hidden {
+        max-height: none;
+        opacity: 1;
+        transform: translateY(-110%);
+        pointer-events: none;
+        box-shadow: none;
+    }
+}
 @media (prefers-reduced-motion: reduce) {
-    .feed-filter-bar { transition: none; }
+    .feed-sticky-toolbar { transition: none; }
 }
 
 .feed-tab {

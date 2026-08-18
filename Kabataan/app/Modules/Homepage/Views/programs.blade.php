@@ -102,7 +102,6 @@
                             data-status="{{ $program['status'] }}"
                         >
                             <div class="program-card-media">
-                                <img src="{{ $program['hero'] }}" alt="{{ $program['title'] }}">
                                 <span class="program-badge program-badge-sector {{ $program['sector'] }}">{{ $sector['label'] }}</span>
                                 <span class="program-badge program-badge-status {{ $program['status'] }}">{{ $status['label'] }}</span>
                             </div>
@@ -155,7 +154,6 @@
             <div class="program-modal-grid">
                 <article class="program-modal-main">
                     <div class="program-modal-media">
-                        <img id="modalImage" src="" alt="">
                         <div class="program-modal-media-overlay"></div>
                         <div class="program-modal-header">
                             <div class="program-modal-badges">
@@ -338,7 +336,6 @@
                 return;
             }
 
-            const modalImage = document.getElementById('modalImage');
             const modalTitle = document.getElementById('modalTitle');
             const modalSummary = document.getElementById('modalSummary');
             const modalAbout = document.getElementById('modalAbout');
@@ -352,10 +349,6 @@
             const modalBudgetUtilization = document.getElementById('modalBudgetUtilization');
             const modalBudgetBar = document.getElementById('modalBudgetBar');
 
-            if (modalImage) {
-                modalImage.src = program.hero;
-                modalImage.alt = program.title;
-            }
             if (modalTitle) modalTitle.textContent = program.title;
             if (modalTopbarTitle) modalTopbarTitle.textContent = `${program.title} Details`;
             if (modalSummary) modalSummary.textContent = program.summary;

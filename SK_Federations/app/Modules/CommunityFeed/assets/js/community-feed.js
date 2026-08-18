@@ -1371,8 +1371,125 @@ function mountFeedPostsList(list, containerId, filterType) {
 
 window.mountFeedPostsList = mountFeedPostsList;
 
+function bindFilterBarScrollHide() {
+    var toolbar = document.querySelector('.feed-sticky-toolbar');
+    var bar = document.querySelector('.feed-filter-bar:not(.bfp-filter-bar)');
+    var anchor = document.querySelector('.feed-filter-anchor');
+    var feedSection = document.querySelector('.feed-section');
+    if (!toolbar || !bar) return;
+
+    var DOWN_THRESHOLD = 8;
+    var UP_THRESHOLD = 4;
+    var TOP_SHOW = 12;
+    var overlayQuery = window.matchMedia('(max-width: 1024px)');
+    var lastY = 0;
+    var ticking = false;
+    var barHeight = 64;
+
+    function headerHeight() {
+        var header = document.querySelector('.navbar.sk-fed-navbar, .navbar');
+        return Math.round((header && header.getBoundingClientRect().height) || 64);
+    }
+
+    function scrollRoot() {
+        if (!feedSection) return window;
+        var overflowY = getComputedStyle(feedSection).overflowY;
+        if (overflowY === 'auto' || overflowY === 'scroll') {
+            return feedSection;
+        }
+        return window;
+    }
+
+    function currentY() {
+        var root = scrollRoot();
+        return root === window
+            ? (window.scrollY || document.documentElement.scrollTop || 0)
+            : root.scrollTop;
+    }
+
+    function measureBar() {
+        var height = toolbar.scrollHeight || bar.offsetHeight;
+        if (height > 8) barHeight = height;
+        return barHeight;
+    }
+
+    function updateAnchor() {
+        if (!anchor) return;
+        if (!overlayQuery.matches) {
+            anchor.style.height = '0px';
+            return;
+        }
+        anchor.style.height = toolbar.classList.contains('is-hidden') ? '0px' : (measureBar() + 'px');
+    }
+
+    function syncStickyTop() {
+        toolbar.style.top = headerHeight() + 'px';
+        updateAnchor();
+    }
+
+    function showBar() {
+        toolbar.classList.remove('is-hidden');
+        bar.classList.remove('is-hidden');
+        updateAnchor();
+    }
+
+    function hideBar() {
+        measureBar();
+        toolbar.classList.add('is-hidden');
+        updateAnchor();
+    }
+
+    lastY = currentY();
+    showBar();
+    syncStickyTop();
+
+    function apply() {
+        ticking = false;
+        var y = Math.max(0, currentY());
+        var delta = y - lastY;
+        lastY = y;
+
+        if (y <= TOP_SHOW) {
+            showBar();
+            return;
+        }
+        if (delta >= DOWN_THRESHOLD) {
+            hideBar();
+            return;
+        }
+        if (delta <= -UP_THRESHOLD) {
+            showBar();
+        }
+    }
+
+    function onScroll() {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(apply);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('scroll', onScroll, { passive: true });
+    if (feedSection) feedSection.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', function () {
+        lastY = currentY();
+        syncStickyTop();
+        if (currentY() <= TOP_SHOW) showBar();
+    });
+    if (overlayQuery.addEventListener) {
+        overlayQuery.addEventListener('change', function () {
+            lastY = currentY();
+            syncStickyTop();
+            if (currentY() <= TOP_SHOW) showBar();
+        });
+    }
+    bar.addEventListener('focusin', showBar);
+}
+
 function setFeedFilter(btn, filter) {
     if (isLoading) return;
+    var toolbar = document.querySelector('.feed-sticky-toolbar');
+    if (toolbar) toolbar.classList.remove('is-hidden');
     var bar = document.querySelector('.feed-filter-bar');
     if (bar) bar.classList.remove('is-hidden');
     var goHome = filter === 'all';
@@ -1678,6 +1795,8 @@ function toggleLinkInput() {
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', function() {
     ensureFeedReactionAudio();
+    bindFilterBarScrollHide();
+    document.querySelector('.feed-sticky-toolbar')?.classList.remove('is-hidden');
     document.querySelector('.feed-filter-bar')?.classList.remove('is-hidden');
     document.addEventListener('pointerdown', ensureFeedReactionAudio, { once: true, capture: true });
     if (document.getElementById('feed-posts')) {

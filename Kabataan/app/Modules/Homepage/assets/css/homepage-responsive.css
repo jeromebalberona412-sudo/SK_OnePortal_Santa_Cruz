@@ -58,6 +58,47 @@
     }
 }
 
+.homepage-body .about-hero {
+    padding: 56px 0 40px;
+}
+
+@media (max-width: 768px) {
+    .homepage-body .kabataan-section {
+        padding: 48px 0;
+    }
+
+    .homepage-body .kabataan-hero-panel {
+        align-items: stretch;
+    }
+
+    .homepage-body .kabataan-hero-logo {
+        width: 64px;
+        height: 64px;
+    }
+
+    .homepage-body .kabataan-hero-facts dd {
+        font-size: 0.7rem;
+    }
+
+    .homepage-body .about-hero {
+        padding: 40px 0 32px;
+    }
+}
+
+@media (max-width: 375px) {
+    .homepage-body .kabataan-hero {
+        padding: 92px 0 36px;
+    }
+
+    .homepage-body .kabataan-hero-facts {
+        gap: 8px;
+    }
+
+    .homepage-body .kabataan-hero-facts div {
+        padding: 10px 6px;
+    }
+}
+
 @media (max-width: 575.98px) {
     .homepage-body .kabataan-hero-actions {
         flex-direction: column;

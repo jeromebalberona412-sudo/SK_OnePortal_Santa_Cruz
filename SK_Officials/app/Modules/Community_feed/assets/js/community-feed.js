@@ -381,9 +381,123 @@ function scrollFeedHome() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+function bindFilterBarScrollHide() {
+    const toolbar = document.querySelector('.feed-sticky-toolbar');
+    const bar = document.querySelector('.feed-filter-bar');
+    const anchor = document.querySelector('.feed-filter-anchor');
+    const feedSection = document.querySelector('.feed-section');
+    if (!toolbar || !bar) return;
+
+    const DOWN_THRESHOLD = 8;
+    const UP_THRESHOLD = 4;
+    const TOP_SHOW = 12;
+    const overlayQuery = window.matchMedia('(max-width: 768px)');
+    let lastY = 0;
+    let ticking = false;
+    let barHeight = 64;
+
+    function headerHeight() {
+        const header = document.querySelector('.main-header');
+        return Math.round(header?.getBoundingClientRect().height || 70);
+    }
+
+    function scrollRoot() {
+        if (!feedSection) return window;
+        const overflowY = getComputedStyle(feedSection).overflowY;
+        if (overflowY === 'auto' || overflowY === 'scroll') {
+            return feedSection;
+        }
+        return window;
+    }
+
+    function currentY() {
+        const root = scrollRoot();
+        return root === window
+            ? (window.scrollY || document.documentElement.scrollTop || 0)
+            : root.scrollTop;
+    }
+
+    function measureBar() {
+        const height = toolbar.scrollHeight || bar.offsetHeight;
+        if (height > 8) barHeight = height;
+        return barHeight;
+    }
+
+    function updateAnchor() {
+        if (!anchor) return;
+        if (!overlayQuery.matches) {
+            anchor.style.height = '0px';
+            return;
+        }
+        anchor.style.height = toolbar.classList.contains('is-hidden') ? '0px' : (measureBar() + 'px');
+    }
+
+    function syncStickyTop() {
+        toolbar.style.top = headerHeight() + 'px';
+        updateAnchor();
+    }
+
+    function showBar() {
+        toolbar.classList.remove('is-hidden');
+        bar.classList.remove('is-hidden');
+        updateAnchor();
+    }
+
+    function hideBar() {
+        measureBar();
+        toolbar.classList.add('is-hidden');
+        updateAnchor();
+    }
+
+    lastY = currentY();
+    showBar();
+    syncStickyTop();
+
+    function apply() {
+        ticking = false;
+        const y = Math.max(0, currentY());
+        const delta = y - lastY;
+        lastY = y;
+
+        if (y <= TOP_SHOW) {
+            showBar();
+            return;
+        }
+        if (delta >= DOWN_THRESHOLD) {
+            hideBar();
+            return;
+        }
+        if (delta <= -UP_THRESHOLD) {
+            showBar();
+        }
+    }
+
+    function onScroll() {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(apply);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('scroll', onScroll, { passive: true });
+    feedSection?.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', function () {
+        lastY = currentY();
+        syncStickyTop();
+        if (currentY() <= TOP_SHOW) showBar();
+    });
+    overlayQuery.addEventListener('change', function () {
+        lastY = currentY();
+        syncStickyTop();
+        if (currentY() <= TOP_SHOW) showBar();
+    });
+    bar.addEventListener('focusin', showBar);
+}
+
 function setFeedFilter(btn, filter) {
     if (feedLoading) return;
 
+    document.querySelector('.feed-sticky-toolbar')?.classList.remove('is-hidden');
     document.querySelector('.feed-filter-bar')?.classList.remove('is-hidden');
 
     const goHome = filter === 'all';
@@ -1745,6 +1859,8 @@ function toggleSidebar() {
 document.addEventListener('DOMContentLoaded', () => {
     bindFeedFilterTabs();
     bindInfiniteScroll();
+    bindFilterBarScrollHide();
+    document.querySelector('.feed-sticky-toolbar')?.classList.remove('is-hidden');
     document.querySelector('.feed-filter-bar')?.classList.remove('is-hidden');
     loadFeed(true).then(() => startFeedPolling());
 

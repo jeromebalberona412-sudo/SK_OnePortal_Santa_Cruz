@@ -57,10 +57,9 @@
 }
 
 .about-hero::after {
-    background-image: url('/images/Background.png');
-    background-size: cover;
-    background-position: center;
-    opacity: 0.08;
+    background:
+        radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.12), transparent 32%),
+        radial-gradient(circle at 82% 80%, rgba(255, 255, 255, 0.08), transparent 28%);
 }
 
 .about-hero-grid {
@@ -79,7 +78,7 @@
     line-height: 1.02;
     letter-spacing: -0.04em;
     font-weight: 800;
-    max-width: 12ch;
+    max-width: 18ch;
     margin: 14px 0 18px;
 }
 
@@ -421,7 +420,7 @@
 .about-impact-card span {
     color: #475569;
     line-height: 1.5;
-    max-width: 18ch;
+    max-width: 12ch;
     font-weight: 600;
 }
 

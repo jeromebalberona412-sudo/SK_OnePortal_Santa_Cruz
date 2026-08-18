@@ -87,23 +87,33 @@
                         </div>
                         <ul class="rp-password-rules" id="passwordRules" aria-live="polite">
                             <li id="rule-length">
-                                <span class="rp-rule-icon" aria-hidden="true"></span>
+                                <span class="rp-rule-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3.1 6-6.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </span>
                                 At least 8 characters
                             </li>
                             <li id="rule-lowercase">
-                                <span class="rp-rule-icon" aria-hidden="true"></span>
+                                <span class="rp-rule-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3.1 6-6.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </span>
                                 At least one lowercase letter
                             </li>
                             <li id="rule-uppercase">
-                                <span class="rp-rule-icon" aria-hidden="true"></span>
+                                <span class="rp-rule-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3.1 6-6.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </span>
                                 At least one uppercase letter
                             </li>
                             <li id="rule-number">
-                                <span class="rp-rule-icon" aria-hidden="true"></span>
+                                <span class="rp-rule-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3.1 6-6.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </span>
                                 At least one number
                             </li>
                             <li id="rule-special">
-                                <span class="rp-rule-icon" aria-hidden="true"></span>
+                                <span class="rp-rule-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3.1 6-6.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </span>
                                 At least one special character
                             </li>
                         </ul>
@@ -213,30 +223,82 @@
             // ── Live password rules checklist ──
             var passwordInput = document.getElementById('password');
             var passwordRules = document.getElementById('passwordRules');
+            var confirmInput  = document.getElementById('password_confirmation');
+            var confirmErr    = document.getElementById('confirmPasswordError');
 
-            if (passwordInput && passwordRules) {
-                passwordInput.addEventListener('input', function () {
-                    var s = validatePasswordStrength(this.value);
-                    var rules = [
-                        { id: 'rule-length',    ok: s.hasMinLength  },
-                        { id: 'rule-lowercase', ok: s.hasLowerCase  },
-                        { id: 'rule-uppercase', ok: s.hasUpperCase  },
-                        { id: 'rule-number',    ok: s.hasNumber     },
-                        { id: 'rule-special',   ok: s.hasSpecial    },
-                    ];
-                    passwordRules.classList.toggle('active', this.value.length > 0);
-                    rules.forEach(function (rule) {
-                        var node = document.getElementById(rule.id);
-                        if (node) node.classList.toggle('ok', rule.ok);
-                    });
+            function updatePasswordRules(value) {
+                if (!passwordRules) return;
+
+                var s = validatePasswordStrength(value);
+                var rules = [
+                    { id: 'rule-length',    ok: s.hasMinLength  },
+                    { id: 'rule-lowercase', ok: s.hasLowerCase  },
+                    { id: 'rule-uppercase', ok: s.hasUpperCase  },
+                    { id: 'rule-number',    ok: s.hasNumber     },
+                    { id: 'rule-special',   ok: s.hasSpecial    },
+                ];
+
+                rules.forEach(function (rule) {
+                    var node = document.getElementById(rule.id);
+                    if (node) node.classList.toggle('ok', rule.ok);
                 });
+
+                if (!value.length) {
+                    passwordRules.classList.remove('active', 'is-complete');
+                    return;
+                }
+
+                if (s.isValid) {
+                    passwordRules.classList.add('is-complete');
+                    passwordRules.classList.remove('active');
+                    return;
+                }
+
+                passwordRules.classList.add('active');
+                passwordRules.classList.remove('is-complete');
+            }
+
+            function updateConfirmMatch() {
+                if (!confirmErr || !confirmInput) return;
+
+                var newPassword = passwordInput ? passwordInput.value : '';
+                var confirmation = confirmInput.value;
+
+                if (!confirmation.length) {
+                    confirmErr.textContent = '';
+                    confirmErr.style.display = 'none';
+                    confirmInput.classList.remove('error');
+                    return;
+                }
+
+                if (newPassword !== confirmation) {
+                    confirmErr.textContent = 'Passwords do not match.';
+                    confirmErr.style.display = 'block';
+                    confirmInput.classList.add('error');
+                    return;
+                }
+
+                confirmErr.textContent = '';
+                confirmErr.style.display = 'none';
+                confirmInput.classList.remove('error');
+            }
+
+            if (passwordInput) {
+                passwordInput.addEventListener('input', function () {
+                    updatePasswordRules(this.value);
+                    updateConfirmMatch();
+                });
+            }
+
+            if (confirmInput) {
+                confirmInput.addEventListener('input', updateConfirmMatch);
+                confirmInput.addEventListener('blur', updateConfirmMatch);
             }
 
             // ── Form submit ──
             var form     = document.getElementById('resetPasswordForm');
             var submitBtn  = document.getElementById('resetSubmitBtn');
             var btnText    = document.getElementById('resetBtnText');
-            var confirmErr = document.getElementById('confirmPasswordError');
 
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
@@ -244,19 +306,21 @@
                 var password     = document.getElementById('password').value;
                 var confirmation = document.getElementById('password_confirmation').value;
 
-                // Hide previous confirm error
-                confirmErr.style.display = 'none';
+                updateConfirmMatch();
 
                 var strength = validatePasswordStrength(password);
                 if (!strength.isValid) {
-                    // Rules list is visible — user can see what's missing
+                    updatePasswordRules(password);
                     if (passwordRules) passwordRules.classList.add('active');
                     return;
                 }
 
                 if (password !== confirmation) {
-                    confirmErr.textContent  = 'Passwords do not match.';
-                    confirmErr.style.display = 'block';
+                    if (confirmErr && confirmInput) {
+                        confirmErr.textContent = 'Passwords do not match.';
+                        confirmErr.style.display = 'block';
+                        confirmInput.classList.add('error');
+                    }
                     return;
                 }
 
@@ -345,74 +409,99 @@
             margin: 0;
         }
 
+        /* Keep fields close; only grow when rules are visible */
+        #resetPasswordForm {
+            gap: 0.7rem;
+        }
+
+        #resetPasswordForm .youth-form-group {
+            gap: 0.4rem;
+        }
+
+        .youth-signin-section--fp .fp-card-header {
+            margin-bottom: 1.1rem;
+        }
+
+        .youth-signin-section--fp .fp-card-header .card-helper-text {
+            margin-top: 0.2rem;
+        }
+
         /* ── Password rules checklist ── */
         .rp-password-rules {
             list-style: none;
-            margin: 0.6rem 0 0;
-            padding: 0.6rem 0.75rem;
+            margin: -0.4rem 0 0;
+            padding: 0;
             background: #f8fafc;
-            border: 1px solid #e2e8f0;
+            border: 0 solid #e2e8f0;
             border-radius: 10px;
             opacity: 0;
             max-height: 0;
             overflow: hidden;
-            transition: opacity 0.25s ease, max-height 0.3s ease;
+            pointer-events: none;
+            transition: opacity 0.22s ease, max-height 0.28s ease, margin 0.22s ease, padding 0.22s ease, border-width 0.22s ease;
         }
 
         .rp-password-rules.active {
             opacity: 1;
             max-height: 240px;
+            margin-top: 0.2rem;
+            padding: 0.55rem 0.75rem;
+            border-width: 1px;
+            pointer-events: auto;
+        }
+
+        .rp-password-rules.is-complete {
+            opacity: 0;
+            max-height: 0;
+            margin-top: -0.4rem;
+            padding: 0;
+            border-width: 0;
+            pointer-events: none;
         }
 
         .rp-password-rules li {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             font-size: 0.82rem;
-            color: #94a3b8;
-            padding: 2px 0;
+            color: #64748b;
+            padding: 3px 0;
+            line-height: 1.35;
             transition: color 0.2s ease;
         }
 
         .rp-password-rules li.ok {
-            color: #16a34a;
+            color: #15803d;
+            font-weight: 600;
         }
 
-        /* SVG icon via inline background — no broken chars */
         .rp-rule-icon {
             flex-shrink: 0;
-            width: 14px;
-            height: 14px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
-            background: #cbd5e1;
-            position: relative;
-            transition: background 0.2s ease;
+            border: 2px solid #cbd5e1;
+            background: #fff;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.18s ease, border-color 0.18s ease;
         }
 
-        /* Dot for unchecked */
-        .rp-rule-icon::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 50%;
+        .rp-rule-icon svg {
+            width: 10px;
+            height: 10px;
+            opacity: 0;
         }
 
-        /* Checkmark for passed rule — drawn with box-shadow trick */
         .ok .rp-rule-icon {
             background: #16a34a;
+            border-color: #16a34a;
         }
 
-        .ok .rp-rule-icon::before {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 4px;
-            width: 5px;
-            height: 8px;
-            border: 2px solid #fff;
-            border-top: none;
-            border-left: none;
-            transform: rotate(45deg);
+        .ok .rp-rule-icon svg {
+            opacity: 1;
         }
 
         /* Spinner animation */

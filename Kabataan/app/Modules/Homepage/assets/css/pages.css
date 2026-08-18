@@ -16,7 +16,7 @@
     display: grid;
     align-items: end;
     padding: 88px 0 58px;
-    background-image: linear-gradient(122deg, rgba(6, 25, 56, 0.86), rgba(4, 72, 135, 0.72)), url('/modules/homepage/image/5.png');
+    background-image: linear-gradient(122deg, #022a54 0%, #0450a8 58%, #1a6fd4 100%);
     background-size: cover;
     background-position: center 30%;
 }
@@ -233,13 +233,8 @@
 
 .program-card-media {
     position: relative;
-    height: 190px;
-}
-
-.program-card-media img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: 120px;
+    background: linear-gradient(135deg, #022a54 0%, #0450a8 58%, #1a6fd4 100%);
 }
 
 .program-badge {
@@ -513,14 +508,8 @@
 
 .program-modal-media {
     position: relative;
-    min-height: clamp(220px, 42vh, 360px);
-}
-
-.program-modal-media img {
-    width: 100%;
-    height: 100%;
-    min-height: clamp(220px, 42vh, 360px);
-    object-fit: cover;
+    min-height: clamp(180px, 32vh, 280px);
+    background: linear-gradient(135deg, #022a54 0%, #0450a8 58%, #1a6fd4 100%);
 }
 
 .program-modal-media-overlay {
@@ -982,12 +971,9 @@ body.program-modal-open {
     content: '';
     position: absolute;
     inset: 0;
-    background-image: url('/images/Background.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: 0.07;
-    animation: heroBgZoom 30s ease-in-out infinite alternate;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.10), transparent 36%),
+        radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.12), transparent 32%);
     pointer-events: none;
 }
 
@@ -1187,12 +1173,9 @@ body.program-modal-open {
     content: '';
     position: absolute;
     inset: 0;
-    background-image: url('/images/Background.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: 0.07;
-    animation: heroBgZoom 30s ease-in-out infinite alternate;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.10), transparent 36%),
+        radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.12), transparent 32%);
     pointer-events: none;
 }
 

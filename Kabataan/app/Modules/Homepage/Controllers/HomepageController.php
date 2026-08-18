@@ -40,12 +40,25 @@ class HomepageController extends Controller
             ],
         ];
 
-        $heroImages = [
-            asset('modules/homepage/image/1.png'),
-            asset('modules/homepage/image/2.png'),
-            asset('modules/homepage/image/3.png'),
-            asset('modules/homepage/image/4.png'),
-            asset('modules/homepage/image/5.png'),
+        $publicLinks = [
+            [
+                'title' => 'Barangay ABYIP',
+                'text' => 'Read Annual Barangay Youth Investment Program documents published by SK offices.',
+                'href' => route('baranggay_abyip.index'),
+                'label' => 'View ABYIP',
+            ],
+            [
+                'title' => 'Program Accomplishments',
+                'text' => 'See completed and ongoing youth programs reported across Santa Cruz barangays.',
+                'href' => route('program_accomplishments.barangays'),
+                'label' => 'View accomplishments',
+            ],
+            [
+                'title' => 'Help & FAQs',
+                'text' => 'Find answers about registration, sign-in, KK profiling, and who can use the portal.',
+                'href' => route('homepage') . '#faq',
+                'label' => 'Read FAQs',
+            ],
         ];
 
         $featuredPrograms = [];
@@ -101,7 +114,7 @@ class HomepageController extends Controller
             'municipality'      => $municipality,
             'heroStats'         => $heroStats,
             'valueProps'        => $valueProps,
-            'heroImages'        => $heroImages,
+            'publicLinks'       => $publicLinks,
             'featuredPrograms'  => $featuredPrograms,
             'barangayTabs'      => $barangayTabs,
             'barangayCards'     => $barangayCards,

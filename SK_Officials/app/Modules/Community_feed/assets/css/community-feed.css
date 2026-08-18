@@ -107,11 +107,28 @@ body {
 }
 
 .feed-sticky-toolbar {
-    position: relative;
-    z-index: 1;
+    position: sticky;
+    top: var(--sk-header-height, 70px);
+    z-index: 90;
     background: #f0f1f5;
-    padding: 4px 0 0;
-    margin-bottom: 0;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    max-height: 160px;
+    flex-shrink: 0;
+    transition: max-height 0.18s ease, opacity 0.16s ease, transform 0.18s ease;
+}
+
+.feed-sticky-toolbar.is-hidden {
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.feed-filter-anchor {
+    height: 0;
+    flex-shrink: 0;
+    overflow: hidden;
 }
 
 .feed-header__intro { flex: 1; min-width: 0; padding-left: 4px; }
@@ -165,14 +182,38 @@ body {
     background: #f0f1f5;
     box-shadow: 0 8px 12px -8px rgba(15, 23, 42, 0.18);
     border-radius: 0;
-    position: sticky;
-    top: 70px;
-    z-index: 46;
+    position: relative;
+    top: auto;
+    z-index: auto;
     transform: none;
     opacity: 1;
 }
+@media (max-width: 768px) {
+    .ann-main,
+    .feed-section {
+        overflow-x: visible;
+    }
+    .feed-sticky-toolbar {
+        position: fixed;
+        top: var(--sk-header-height, 60px);
+        left: 0;
+        right: 0;
+        width: 100%;
+        z-index: 90;
+        max-height: none;
+        transform: translateY(0);
+        box-shadow: 0 8px 16px -10px rgba(15, 23, 42, 0.22);
+    }
+    .feed-sticky-toolbar.is-hidden {
+        max-height: none;
+        opacity: 1;
+        transform: translateY(-110%);
+        pointer-events: none;
+        box-shadow: none;
+    }
+}
 @media (prefers-reduced-motion: reduce) {
-    .feed-filter-bar { transition: none; }
+    .feed-sticky-toolbar { transition: none; }
 }
 .feed-tab {
     padding: 12px 24px;
@@ -686,7 +727,6 @@ body.feed-keyboard .programs-fab {
         margin-top: 60px;
     }
     .feed-filter-bar {
-        top: 60px;
         flex-wrap: nowrap;
         overflow-x: auto;
         padding: 0;
@@ -1200,7 +1240,6 @@ body.feed-keyboard .programs-fab {
     }
 
     .feed-filter-bar {
-        top: var(--sk-header-height, 60px);
         display: flex;
         justify-content: stretch;
         align-items: stretch;

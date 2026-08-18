@@ -28,46 +28,8 @@
             {{-- ── CENTER: Feed ── --}}
             <div class="feed-section">
 
-                {{-- Compose Post --}}
-                <div class="post-card compose-card">
-                    <div class="compose-row">
-                        <img src="{{ $avatar }}" alt="Avatar" class="post-avatar">
-                        <button class="compose-trigger" onclick="openComposeModal()">
-                            What's happening in your barangay?
-                        </button>
-                    </div>
-                    <div class="compose-actions">
-                        <button class="compose-action-btn" onclick="openComposeModal('announcement')">
-                            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M18 3a1 1 0 00-1.447-.894L8.763 6H5a3 3 0 000 6h.28l1.771 5.316A1 1 0 008 18h1a1 1 0 001-1v-4.382l6.553 3.276A1 1 0 0018 15V3z"/></svg>
-                            Announcement
-                        </button>
-                        <button class="compose-action-btn" onclick="openComposeModal('event')">
-                            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
-                            Event
-                        </button>
-                        <button class="compose-action-btn" onclick="openComposeModal('photo')">
-                            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/></svg>
-                            Photo
-                        </button>
-                    </div>
-                </div>
-
-                {{-- Feed header --}}
-                <div class="feed-sticky-toolbar">
-                <div class="feed-header">
-                    <div class="feed-header__intro">
-                        <h1>SK Community Feed</h1>
-                    </div>
-                    <div class="feed-header__search">
-                        <svg class="feed-header__search-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
-                        </svg>
-                        <input type="search" id="feedSearchInput" class="feed-header__search-input" placeholder="Search posts, programs, announcements..." autocomplete="off" aria-label="Search community feed">
-                    </div>
-                </div>
-                </div>
-
                 {{-- Filter tabs: hide on scroll down, show on scroll up --}}
+                <div class="feed-sticky-toolbar">
                 <div class="feed-filter-bar">
                     <button type="button" class="feed-tab feed-tab--icon active" data-filter="all" onclick="setFeedFilter(this,'all')" aria-label="All">
                         <span class="feed-tab-icon" aria-hidden="true">
@@ -99,6 +61,45 @@
                         </span>
                         <span class="feed-tab-text">Programs</span>
                     </button>
+                </div>
+                </div>
+                <div class="feed-filter-anchor" aria-hidden="true"></div>
+
+                {{-- Compose Post --}}
+                <div class="post-card compose-card">
+                    <div class="compose-row">
+                        <img src="{{ $avatar }}" alt="Avatar" class="post-avatar">
+                        <button class="compose-trigger" onclick="openComposeModal()">
+                            What's happening in your barangay?
+                        </button>
+                    </div>
+                    <div class="compose-actions">
+                        <button class="compose-action-btn" onclick="openComposeModal('announcement')">
+                            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M18 3a1 1 0 00-1.447-.894L8.763 6H5a3 3 0 000 6h.28l1.771 5.316A1 1 0 008 18h1a1 1 0 001-1v-4.382l6.553 3.276A1 1 0 0018 15V3z"/></svg>
+                            Announcement
+                        </button>
+                        <button class="compose-action-btn" onclick="openComposeModal('event')">
+                            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+                            Event
+                        </button>
+                        <button class="compose-action-btn" onclick="openComposeModal('photo')">
+                            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/></svg>
+                            Photo
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Feed header --}}
+                <div class="feed-header">
+                    <div class="feed-header__intro">
+                        <h1>SK Community Feed</h1>
+                    </div>
+                    <div class="feed-header__search">
+                        <svg class="feed-header__search-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+                        </svg>
+                        <input type="search" id="feedSearchInput" class="feed-header__search-input" placeholder="Search posts, programs, announcements..." autocomplete="off" aria-label="Search community feed">
+                    </div>
                 </div>
 
                 {{-- Feed Posts --}}
