@@ -42,6 +42,7 @@
             <div class="youth-signin-card">
                 <div id="cpVerifySection"
                      data-status-url="{{ route('change-password.verify.status', [], false) }}"
+                     data-resend-url="{{ route('change-password.resend', [], false) }}"
                      data-email="{{ $user->email }}">
 
                     <div class="card-header">
@@ -50,16 +51,6 @@
                     </div>
 
                     <div class="ce-verify-content">
-                        <div class="ce-sent-header">
-                            <div class="ce-sent-icon" id="cpStatusIcon">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="ce-sent-title" id="cpStatusTitle">Verification Sent!</div>
-                            <div class="ce-sent-sub" id="cpStatusSub">Open your inbox and tap the confirmation link.</div>
-                        </div>
-
                         <div class="cp-listening-badge" id="cpListeningBadge">
                             <span class="cp-listening-dot"></span>
                             Listening for email confirmation…
@@ -101,7 +92,7 @@
                         <div class="ce-actions" id="cpActions">
                             <form action="{{ route('change-password.resend') }}" method="POST" id="cpResendForm">
                                 @csrf
-                                <button type="submit" class="ce-btn-resend" id="cpResendBtn" @if($resendCooldown > 0) disabled @endif>
+                                <button type="button" class="ce-btn-resend" id="cpResendBtn" @if($resendCooldown > 0) disabled @endif>
                                     Resend Verification
                                 </button>
                             </form>

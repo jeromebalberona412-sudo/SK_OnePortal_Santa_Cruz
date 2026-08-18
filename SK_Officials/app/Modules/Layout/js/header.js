@@ -225,8 +225,6 @@ function initializeNotifications() {
     const notifMenu     = document.getElementById('notifMenu');
     const markAllBtn    = document.getElementById('notifMarkAllBtn');
     const notifList     = document.getElementById('notifList');
-    const notifBadge    = document.getElementById('notifBadge');
-    const notifCountPill = document.getElementById('notifCountPill');
     const notifEmpty    = document.getElementById('notifEmpty');
 
     if (!notifBtn || !notifDropdown) return;
@@ -272,7 +270,7 @@ function initializeNotifications() {
             if (item.classList.contains('notif-unread') && id) {
                 try {
                     const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
-                    await fetch(`/api/sk-officials/notifications/${id}/read`, {
+                    const response = await fetch(`/api/sk-officials/notifications/${id}/read`, {
                         method: 'POST',
                         headers: {
                             'Accept': 'application/json',
@@ -280,14 +278,19 @@ function initializeNotifications() {
                         },
                         credentials: 'same-origin',
                     });
+                    const data = await response.json().catch(() => ({}));
+                    if (typeof data.unread_count === 'number') {
+                        updateNotificationBadge(data.unread_count);
+                    } else {
+                        updateNotificationBadge(Math.max(0, getUnreadTotal() - 1));
+                    }
                 } catch {
-                    // Continue with local UI update.
+                    updateNotificationBadge(Math.max(0, getUnreadTotal() - 1));
                 }
 
                 item.classList.remove('notif-unread');
                 const dot = item.querySelector('.notif-unread-dot');
                 if (dot) dot.remove();
-                updateUnreadCount();
             }
 
             if (actionUrl) {
@@ -310,7 +313,7 @@ function initializeNotifications() {
             e.stopPropagation();
             try {
                 const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
-                await fetch('/api/sk-officials/notifications/read-all', {
+                const response = await fetch('/api/sk-officials/notifications/read-all', {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',
@@ -318,8 +321,10 @@ function initializeNotifications() {
                     },
                     credentials: 'same-origin',
                 });
+                const data = await response.json().catch(() => ({}));
+                updateNotificationBadge(typeof data.unread_count === 'number' ? data.unread_count : 0);
             } catch {
-                // Continue with local UI update.
+                updateNotificationBadge(0);
             }
 
             const unreadItems = notifList ? notifList.querySelectorAll('.notif-unread') : [];
@@ -328,28 +333,19 @@ function initializeNotifications() {
                 const dot = item.querySelector('.notif-unread-dot');
                 if (dot) dot.remove();
             });
-            updateUnreadCount();
         });
     }
 
     /* ── Count helpers ── */
-    function updateUnreadCount() {
-        const unread = notifList ? notifList.querySelectorAll('.notif-unread').length : 0;
-
-        if (notifBadge) {
-            notifBadge.textContent = unread;
-            notifBadge.style.display = unread > 0 ? 'flex' : 'none';
-        }
-        if (notifCountPill) {
-            notifCountPill.textContent = unread;
-            notifCountPill.style.display = unread > 0 ? 'inline' : 'none';
-        }
+    function syncNotifEmptyState() {
         if (notifEmpty && notifList) {
             const hasItems = notifList.querySelectorAll('.notif-item').length > 0;
             notifEmpty.style.display = hasItems ? 'none' : 'flex';
             notifList.style.display = hasItems ? '' : 'none';
         }
     }
+
+    syncNotifEmptyState();
 }
 
 function closeNotifDropdown() {
@@ -428,19 +424,38 @@ window.addEventListener('resize', function () {
     }
 });
 
+function formatNotifCount(count) {
+    const n = Math.max(0, parseInt(count, 10) || 0);
+    return n > 99 ? '99+' : String(n);
+}
+
+function getUnreadTotal() {
+    const notifBadge = document.getElementById('notifBadge');
+    if (!notifBadge) return 0;
+
+    const stored = notifBadge.getAttribute('data-unread-total');
+    if (stored !== null && stored !== '') {
+        return Math.max(0, parseInt(stored, 10) || 0);
+    }
+
+    return Math.max(0, parseInt(notifBadge.textContent, 10) || 0);
+}
+
 function updateNotificationBadge(count) {
     const notifBadge = document.getElementById('notifBadge');
     const notifCountPill = document.getElementById('notifCountPill');
-    const unread = typeof count === 'number'
-        ? count
-        : (document.querySelectorAll('#notifList .notif-unread').length || 0);
+    const unread = typeof count === 'number' && !isNaN(count)
+        ? Math.max(0, count)
+        : getUnreadTotal();
+    const label = unread > 0 ? formatNotifCount(unread) : '';
 
     if (notifBadge) {
-        notifBadge.textContent = unread;
+        notifBadge.setAttribute('data-unread-total', String(unread));
+        notifBadge.textContent = label;
         notifBadge.style.display = unread > 0 ? 'flex' : 'none';
     }
     if (notifCountPill) {
-        notifCountPill.textContent = unread;
+        notifCountPill.textContent = label;
         notifCountPill.style.display = unread > 0 ? 'inline' : 'none';
     }
 }

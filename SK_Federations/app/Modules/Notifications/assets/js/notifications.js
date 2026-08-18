@@ -45,7 +45,7 @@ function initNotificationPage() {
         if (readEl) readEl.textContent = read;
 
         if (typeof updateNotifBadge === 'function') {
-            updateNotifBadge();
+            updateNotifBadge(unread.length);
         }
     }
 
@@ -87,8 +87,11 @@ function initNotificationPage() {
         if (!id || !item.classList.contains('notif-page-unread')) return;
 
         try {
-            await postNotificationAction(`/api/sk-federations/notifications/${id}/read`);
+            const data = await postNotificationAction(`/api/sk-federations/notifications/${id}/read`);
             markAsReadUi(item);
+            if (typeof updateNotifBadge === 'function' && data && typeof data.unread_count === 'number') {
+                updateNotifBadge(data.unread_count);
+            }
         } catch {
             markAsReadUi(item);
         }
@@ -113,9 +116,14 @@ function initNotificationPage() {
         markAllBtn.addEventListener('click', async function () {
             if (!list) return;
             try {
-                await postNotificationAction('/api/sk-federations/notifications/read-all');
+                const data = await postNotificationAction('/api/sk-federations/notifications/read-all');
+                if (typeof updateNotifBadge === 'function' && data && typeof data.unread_count === 'number') {
+                    updateNotifBadge(data.unread_count);
+                }
             } catch {
-                // Continue with UI update.
+                if (typeof updateNotifBadge === 'function') {
+                    updateNotifBadge(0);
+                }
             }
             list.querySelectorAll('.notif-page-unread').forEach(function (item) {
                 markAsReadUi(item);

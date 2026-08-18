@@ -200,6 +200,38 @@
             </div>
 
             <div class="profile-content-grid">
+                    <section class="info-card participation-summary-card" aria-labelledby="participationSummaryTitle">
+                        <div class="card-header">
+                            <h2 id="participationSummaryTitle">
+                                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                                </svg>
+                                Participation Summary
+                            </h2>
+                        </div>
+                        <div class="card-body participation-summary-body">
+                            <div class="participation-summary-grid">
+                                <article class="ps-stat ps-stat--joined">
+                                    <p class="ps-stat-label">Programs Joined</p>
+                                    <p class="ps-stat-value">{{ $totalPrograms ?? 0 }}</p>
+                                </article>
+                                <article class="ps-stat ps-stat--approved">
+                                    <p class="ps-stat-label">Approved</p>
+                                    <p class="ps-stat-value">{{ $approvedPrograms ?? 0 }}</p>
+                                </article>
+                                <article class="ps-stat ps-stat--pending">
+                                    <p class="ps-stat-label">Pending Review</p>
+                                    <p class="ps-stat-value">{{ $evaluationPrograms ?? 0 }}</p>
+                                </article>
+                                <article class="ps-stat ps-stat--completed">
+                                    <p class="ps-stat-label">Completed</p>
+                                    <p class="ps-stat-value">{{ $completedPrograms ?? 0 }}</p>
+                                </article>
+                            </div>
+                        </div>
+                    </section>
+
                 <!-- Left Column - Personal Information -->
                 <div class="profile-left-column">
                     <div class="info-card kk-profile-combined-card">
@@ -252,69 +284,6 @@
                                 </div>
                             </section>
                             @endif
-                        </div>
-                    </div>
-
-                    <!-- Participation Summary Card -->
-                    <div class="info-card">
-                        <div class="card-header">
-                            <h2>
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
-                                </svg>
-                                Participation Summary
-                            </h2>
-                        </div>
-                        <div class="card-body">
-                            <div class="summary-stats">
-                                <div class="stat-item">
-                                    <div class="stat-icon programs">
-                                        <svg viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z"/>
-                                            <path d="M3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
-                                        </svg>
-                                    </div>
-                                    <div class="stat-info">
-                                        <p class="stat-label">Programs Joined</p>
-                                        <p class="stat-value">{{ $totalPrograms ?? 0 }}</p>
-                                    </div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-icon approved">
-                                        <svg viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                        </svg>
-                                    </div>
-                                    <div class="stat-info">
-                                        <p class="stat-label">Approved</p>
-                                        <p class="stat-value">{{ $approvedPrograms ?? 0 }}</p>
-                                    </div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-icon evaluation">
-                                        <svg viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                                            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                        </svg>
-                                    </div>
-                                    <div class="stat-info">
-                                        <p class="stat-label">Pending Review</p>
-                                        <p class="stat-value">{{ $evaluationPrograms ?? 0 }}</p>
-                                    </div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-icon completed">
-                                        <svg viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                        </svg>
-                                    </div>
-                                    <div class="stat-info">
-                                        <p class="stat-label">Completed</p>
-                                        <p class="stat-value">{{ $completedPrograms ?? 0 }}</p>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
 

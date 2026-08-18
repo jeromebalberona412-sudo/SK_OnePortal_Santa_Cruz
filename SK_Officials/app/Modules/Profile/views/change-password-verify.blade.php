@@ -41,6 +41,7 @@
             <div class="sk-login-card">
                 <div id="cpVerifySection"
                      data-status-url="{{ route('change-password.verify.status', [], false) }}"
+                     data-resend-url="{{ route('change-password.resend', [], false) }}"
                      data-email="{{ $user->email }}">
 
                     <div class="card-header" style="text-align:center;">
@@ -59,14 +60,14 @@
                         </div>
                     @else
                         <div class="sk-alert sk-alert-success" id="cpFeedback" role="status">
-                            Open your inbox and tap the confirmation link.
+                            Check your email and tap the confirmation link. This page will sign you out automatically after you confirm.
                         </div>
                     @endif
 
                     <div class="cp-verify-form" id="cpActions">
                         <form action="{{ route('change-password.resend') }}" method="POST" id="cpResendForm">
                             @csrf
-                            <button type="submit" class="sk-submit-btn" id="cpResendBtn">
+                            <button type="button" class="sk-submit-btn" id="cpResendBtn">
                                 <span id="cpResendBtnText">Resend Verification</span>
                             </button>
                         </form>
@@ -85,5 +86,8 @@
             </div>
         </div>
     </main>
+    <script>
+        window.cpResendCooldown = {{ (int) ($resendCooldown ?? 0) }};
+    </script>
 </body>
 </html>

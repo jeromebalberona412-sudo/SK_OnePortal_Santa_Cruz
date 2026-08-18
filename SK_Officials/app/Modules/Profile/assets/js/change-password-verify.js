@@ -5,6 +5,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const verifySection = document.getElementById('cpVerifySection');
     const statusUrl = verifySection?.dataset.statusUrl || '';
+    const resendUrl = verifySection?.dataset.resendUrl || '';
+    const accountEmail = verifySection?.dataset.email || 'default';
+    const cooldownKey = `sk_officials_password_change_resend_${accountEmail}`;
     const resendBtn = document.getElementById('cpResendBtn');
     const resendBtnText = document.getElementById('cpResendBtnText');
     const resendForm = document.getElementById('cpResendForm');
@@ -14,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let remainingSeconds = 0;
     let resendInFlight = false;
     let confirmationHandled = false;
+    const serverCooldown = Number(window.cpResendCooldown || 0);
 
     function csrfToken() {
         return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
@@ -53,6 +57,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function storedRemaining() {
+        const expiry = Number.parseInt(localStorage.getItem(cooldownKey) || '0', 10);
+        return expiry > Date.now() ? Math.max(0, Math.ceil((expiry - Date.now()) / 1000)) : 0;
+    }
+
+    function setResendCooldownExpiry(seconds) {
+        localStorage.setItem(cooldownKey, String(Date.now() + Math.max(1, seconds || COOLDOWN_SECONDS) * 1000));
+    }
+
+    function clearResendCooldown() {
+        localStorage.removeItem(cooldownKey);
+    }
+
     function clearCountdown() {
         if (timerInterval) {
             clearInterval(timerInterval);
@@ -75,6 +92,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (remainingSeconds <= 0) {
             clearCountdown();
+            clearResendCooldown();
             restoreResendButton();
             return;
         }
@@ -87,12 +105,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function startCountdown(seconds) {
         clearCountdown();
-        remainingSeconds = Math.max(0, Number(seconds) || COOLDOWN_SECONDS);
+        remainingSeconds = Math.max(0, Number(seconds) || 0);
 
         if (remainingSeconds <= 0) {
+            clearResendCooldown();
             restoreResendButton();
             return;
         }
+
+        setResendCooldownExpiry(remainingSeconds);
 
         if (resendBtn) {
             resendBtn.disabled = true;
@@ -101,6 +122,16 @@ document.addEventListener('DOMContentLoaded', function () {
         setButtonLabel(`Resend available in ${remainingSeconds}s`);
 
         timerInterval = setInterval(tickCountdown, 1000);
+    }
+
+    function bootstrapTimer() {
+        let remaining = storedRemaining();
+        if (remaining <= 0 && serverCooldown > 0) {
+            remaining = serverCooldown;
+        }
+        if (remaining > 0) {
+            startCountdown(remaining);
+        }
     }
 
     function markConfirmedUI() {
@@ -112,7 +143,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function redirectToLogin(message, redirectUrl) {
         clearCountdown();
+        clearResendCooldown();
         markConfirmedUI();
+        if (feedback && message) {
+            setFeedback(message, 'success');
+        }
         window.location.replace(redirectUrl || '/login');
     }
 
@@ -124,11 +159,15 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const response = await fetch(statusUrl, {
                 method: 'GET',
-                headers: { Accept: 'application/json' },
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
                 credentials: 'same-origin',
             });
 
-            if (response.status === 401 || response.status === 419) {
+            const contentType = response.headers.get('content-type') || '';
+            if (response.status === 401 || response.status === 419 || response.redirected || !contentType.includes('application/json')) {
                 redirectToLogin('Password changed successfully. Please sign in with your new password.', '/login');
                 return;
             }
@@ -164,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function () {
     async function submitResend(event) {
         event.preventDefault();
 
-        if (resendInFlight || remainingSeconds > 0 || !resendForm) {
+        if (resendInFlight || remainingSeconds > 0 || storedRemaining() > 0 || !(resendUrl || resendForm)) {
             return;
         }
 
@@ -172,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setButtonLoading(true);
 
         try {
-            const response = await fetch(resendForm.action, {
+            const response = await fetch(resendUrl || resendForm.action, {
                 method: 'POST',
                 headers: {
                     Accept: 'application/json',
@@ -217,16 +256,27 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    bootstrapTimer();
     checkConfirmationStatus();
 
+    if (resendBtn) {
+        resendBtn.addEventListener('click', function (event) {
+            event.preventDefault();
+            submitResend(event);
+        });
+    }
+
     if (resendForm) {
-        resendForm.addEventListener('submit', submitResend);
+        resendForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+        });
     }
 
     const cancelForm = document.getElementById('cpCancelForm');
     if (cancelForm) {
         cancelForm.addEventListener('submit', function () {
             clearCountdown();
+            clearResendCooldown();
         });
     }
 });

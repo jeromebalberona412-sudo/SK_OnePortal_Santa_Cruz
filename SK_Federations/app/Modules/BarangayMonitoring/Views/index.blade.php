@@ -99,15 +99,15 @@
             <section class="bm-card" aria-label="All barangays list">
                 <div class="bm-card-head">
                     <h3>All Barangays</h3>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                        <select id="bmFilterStatus" onchange="bmFilterBarangays()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#475569;background:#fff;cursor:pointer;">
+                    <div class="bm-list-filters">
+                        <select id="bmFilterStatus" class="bm-filter-select" onchange="bmFilterBarangays()" aria-label="Filter by status">
                             <option value="all">All Status</option>
                             <option value="approved">Approved</option>
                             <option value="pending">Pending</option>
                             <option value="rejected">Rejected</option>
                             <option value="not_submitted">Not Submitted</option>
                         </select>
-                        <select id="bmFilterBarangay" onchange="bmFilterBarangays()" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#475569;background:#fff;cursor:pointer;">
+                        <select id="bmFilterBarangay" class="bm-filter-select" onchange="bmFilterBarangays()" aria-label="Filter by barangay">
                             <option value="all">All Barangays</option>
                             <option value="Alipit">Alipit</option>
                             <option value="Bagumbayan">Bagumbayan</option>
@@ -235,7 +235,9 @@
         </div>
         <div class="bm-modal-footer bm-schedule-view-footer">
             <button type="button" class="bm-btn-schedule secondary bm-btn-history" id="btnScheduleHistory">
-                <i class="fas fa-history"></i> Schedule History
+                <i class="fas fa-history"></i>
+                <span class="bm-btn-label-full">Schedule History</span>
+                <span class="bm-btn-label-short">History</span>
             </button>
             @if(!empty($abyipSchedule) && ($abyipSchedule['status'] ?? '') !== 'cancelled')
             <button type="button" class="bm-btn-schedule secondary" id="btnEditSchedule" data-id="{{ $abyipSchedule['id'] }}">

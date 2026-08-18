@@ -167,6 +167,8 @@ body.youth-dashboard {
     border-radius: 10px;
     min-width: 17px;
     text-align: center;
+    white-space: nowrap;
+    box-sizing: border-box;
 }
 
 /* User Menu */

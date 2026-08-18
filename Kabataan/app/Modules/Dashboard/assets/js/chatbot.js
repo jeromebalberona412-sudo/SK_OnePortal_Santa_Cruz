@@ -233,7 +233,7 @@ function cpAlignArrow() {
     const btnCenter = btnRect.left + btnRect.width / 2;
 
     let popRight;
-    if (window.innerWidth <= 480) {
+    if (window.innerWidth <= 768) {
         popRight = window.innerWidth - 8;
     } else {
         popRight = popover.getBoundingClientRect().right;
@@ -243,7 +243,12 @@ function cpAlignArrow() {
     popover.style.setProperty('--cp-arrow-right', `${arrowRight}px`);
 }
 
-window.toggleChatbotPopover = function toggleChatbotPopover() {
+window.toggleChatbotPopover = function toggleChatbotPopover(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
     const popover = document.getElementById('chatbotPopover');
     const btn = document.getElementById('chatbotNavBtn');
     if (!popover || !btn) {
@@ -256,11 +261,19 @@ window.toggleChatbotPopover = function toggleChatbotPopover() {
         return;
     }
 
+    if (typeof window.kabataanCloseHeaderOverlays === 'function') {
+        window.kabataanCloseHeaderOverlays('chatbot');
+    } else {
+        document.getElementById('kabataanHeaderUser')?.classList.remove('is-open');
+        document.querySelector('.kabataan-header__avatar-btn')?.setAttribute('aria-expanded', 'false');
+        document.getElementById('notifPopover')?.classList.remove('open');
+        document.getElementById('notifNavBtn')?.setAttribute('aria-expanded', 'false');
+    }
+
     popover.classList.add('open');
     btn.setAttribute('aria-expanded', 'true');
     cpAlignArrow();
     document.getElementById('cpInput')?.focus();
-    document.getElementById('notifPopover')?.classList.remove('open');
 };
 
 window.closeChatbotPopover = function closeChatbotPopover() {

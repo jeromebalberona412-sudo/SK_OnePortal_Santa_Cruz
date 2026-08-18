@@ -21,7 +21,6 @@
             <p class="dso-page-subtitle">Records removed from the SK Officials list.</p>
         </div>
         <div class="dso-header-right col-md-6">
-            <a href="{{ route('archived.sk-officials-records') }}" class="archive-goto-btn">Go to SK Officials Records</a>
             <select id="dsoYearFilter" class="dso-year-filter form-select">
                 <option value="all">All Years</option>
             </select>
@@ -31,9 +30,6 @@
             <input type="text" id="dsoSearch" class="dso-search-input form-control" placeholder="Search by name or barangay…">
         </div>
     </div>
-
-    <!-- Stats -->
-    <div class="dso-stats-row" id="dsoStatsRow"></div>
 
     <!-- Filter Tabs + Dropdowns -->
     <div class="dso-filter-bar">
@@ -72,13 +68,27 @@
                 <tbody id="dsoTableBody"></tbody>
             </table>
         </div>
-        <div class="dso-pagination">
-            <span class="dso-pagination-info" id="dsoPaginationInfo">No records found</span>
-            <div class="dso-pagination-controls">
-                <button type="button" id="dsoPrevBtn" class="dso-page-btn" disabled>Previous</button>
-                <div id="dsoPageNumbers" class="dso-page-numbers"></div>
-                <button type="button" id="dsoNextBtn" class="dso-page-btn" disabled>Next</button>
-            </div>
+    </div>
+
+    <div class="dso-page-footer pagination-footer" aria-label="Table pagination">
+        <div class="pagination-footer-nav">
+            <button type="button" class="pagination-arrow" id="dsoPrevBtn" disabled aria-label="Previous page">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <span class="pagination-page-label">Page</span>
+            <input type="number" class="pagination-page-input" id="dsoPageInput" value="1" min="1" aria-label="Current page">
+            <span class="pagination-page-of">of <span id="dsoTotalPages">1</span></span>
+            <button type="button" class="pagination-arrow" id="dsoNextBtn" disabled aria-label="Next page">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+        </div>
+        <div class="pagination-footer-right">
+            <select id="dsoRowsPerPageSelect" class="pagination-rows-select" aria-label="Rows per page">
+                <option value="10">10 rows</option>
+                <option value="50">50 rows</option>
+                <option value="100">100 rows</option>
+            </select>
+            <span class="pagination-record-count" id="dsoPaginationInfo">0 records</span>
         </div>
     </div>
 

@@ -145,6 +145,7 @@ body.youth-profile {
     border-radius: 10px;
     min-width: 18px;
     text-align: center;
+    white-space: nowrap;
 }
 
 /* User Menu */
@@ -1123,74 +1124,80 @@ body.youth-profile {
     font-weight: 500;
 }
 
-/* Summary Stats */
-.summary-stats {
+/* Participation Summary */
+.participation-summary-card {
+    grid-column: 1 / -1;
+    order: -1;
+}
+
+.participation-summary-body {
+    padding: 20px 24px 24px;
+}
+
+.participation-summary-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
 }
 
-.stat-item {
+.ps-stat {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
-    border-radius: 12px;
-    transition: all 0.3s ease;
-}
-
-.stat-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
+    gap: 10px;
+    min-height: 118px;
+    padding: 20px 16px;
+    text-align: center;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    border-top: 4px solid #0450a8;
 }
 
-.stat-icon svg {
-    width: 24px;
-    height: 24px;
-    color: white;
+.ps-stat--joined {
+    border-top-color: #0450a8;
+    background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 48%);
 }
 
-.stat-icon.programs {
-    background: linear-gradient(135deg, #0450a8 0%, #0d5fc4 100%);
+.ps-stat--approved {
+    border-top-color: #16a34a;
+    background: linear-gradient(180deg, #f0fdf4 0%, #f8fafc 48%);
 }
 
-.stat-icon.ongoing {
-    background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
+.ps-stat--pending {
+    border-top-color: #d97706;
+    background: linear-gradient(180deg, #fffbeb 0%, #f8fafc 48%);
 }
 
-.stat-icon.completed {
-    background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+.ps-stat--completed {
+    border-top-color: #0f766e;
+    background: linear-gradient(180deg, #f0fdfa 0%, #f8fafc 48%);
 }
 
-.stat-info {
-    flex: 1;
-}
-
-.stat-label {
+.ps-stat-label {
+    margin: 0;
     font-size: 12px;
-    color: #999;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
+    color: #64748b;
+    line-height: 1.35;
 }
 
-.stat-value {
-    font-size: 24px;
-    font-weight: 700;
-    color: #333;
+.ps-stat-value {
+    margin: 0;
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1;
+    color: #0f172a;
+    font-variant-numeric: tabular-nums;
 }
+
+.ps-stat--joined .ps-stat-value { color: #0450a8; }
+.ps-stat--approved .ps-stat-value { color: #15803d; }
+.ps-stat--pending .ps-stat-value { color: #b45309; }
+.ps-stat--completed .ps-stat-value { color: #0f766e; }
 
 /* Filter Tabs */
 .filter-tabs {
@@ -1894,8 +1901,14 @@ body.youth-profile {
         order: 20;
     }
 
-    .summary-stats {
-        grid-template-columns: repeat(3, 1fr);
+    .participation-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .ps-stat {
+        min-height: 110px;
+        padding: 18px 14px;
     }
 }
 
@@ -1936,11 +1949,26 @@ body.youth-profile {
         grid-template-columns: 1fr;
         gap: 16px;
     }
-    
-    .summary-stats {
-        grid-template-columns: 1fr;
+
+    .participation-summary-body {
+        padding: 16px;
     }
-    
+
+    .participation-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .ps-stat {
+        min-height: 102px;
+        padding: 16px 12px;
+        gap: 8px;
+    }
+
+    .ps-stat-value {
+        font-size: 30px;
+    }
+
     .form-row {
         grid-template-columns: 1fr;
     }
@@ -1983,7 +2011,21 @@ body.youth-profile {
     .card-body {
         padding: 16px;
     }
-    
+
+    .ps-stat {
+        min-height: 96px;
+        padding: 14px 10px;
+        gap: 8px;
+    }
+
+    .ps-stat-label {
+        font-size: 11px;
+    }
+
+    .ps-stat-value {
+        font-size: 28px;
+    }
+
     .program-item {
         flex-direction: column;
         align-items: flex-start;

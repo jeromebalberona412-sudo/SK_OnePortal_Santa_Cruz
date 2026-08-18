@@ -7,7 +7,7 @@
     <div class="notif-popover-header">
         <div class="notif-popover-title">
             <h4>Notifications</h4>
-            <span class="notif-count-pill" id="notifCountPill" style="{{ ($unreadNotificationCount ?? 0) > 0 ? '' : 'display: none;' }}">{{ $unreadNotificationCount ?? 0 }}</span>
+            <span class="notif-count-pill" id="notifCountPill" style="{{ ($unreadNotificationCount ?? 0) > 0 ? '' : 'display: none;' }}">{{ ((int) ($unreadNotificationCount ?? 0)) > 99 ? '99+' : ($unreadNotificationCount ?? 0) }}</span>
         </div>
         <button type="button" class="notif-mark-all" id="notifMarkAllBtn" title="Mark all as read">
             Mark all as read
@@ -24,7 +24,6 @@
                 tabindex="0"
             >
                 <div class="notif-content">
-                    <div class="notif-item-category">{{ $notification['category_label'] ?? 'General' }}</div>
                     <div class="notif-item-title">{{ $notification['title'] }}</div>
                     <div class="notif-item-text">{{ $notification['text'] }}</div>
                     <div class="notif-item-time">{{ $notification['time'] }}</div>

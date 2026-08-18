@@ -249,6 +249,8 @@
     align-items: center;
     justify-content: center;
     line-height: 1;
+    white-space: nowrap;
+    box-sizing: border-box;
 }
 
 /* User Menu */
@@ -1167,6 +1169,7 @@
     line-height: 1;
     pointer-events: none;
     box-sizing: border-box;
+    white-space: nowrap;
 }
 
 /* AI Assistant Button */

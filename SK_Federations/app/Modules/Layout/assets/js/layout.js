@@ -184,19 +184,37 @@ function closeNotifPopover() {
     }
 }
 
-function updateNotifBadge() {
+function formatNotifCount(count) {
+    var n = Math.max(0, parseInt(count, 10) || 0);
+    return n > 99 ? '99+' : String(n);
+}
+
+function getUnreadTotal() {
+    var notifBadge = document.getElementById('notifBadge');
+    if (!notifBadge) return 0;
+
+    var stored = notifBadge.getAttribute('data-unread-total');
+    if (stored !== null && stored !== '') {
+        return Math.max(0, parseInt(stored, 10) || 0);
+    }
+
+    return Math.max(0, parseInt(notifBadge.textContent, 10) || 0);
+}
+
+function updateNotifBadge(count) {
     var notifList = document.getElementById('notifList');
     var notifBadge = document.getElementById('notifBadge');
     var notifCountPill = document.getElementById('notifCountPill');
     var notifEmpty = document.getElementById('notifEmpty');
-    var unread = notifList ? notifList.querySelectorAll('.notif-unread').length : 0;
+    var unread = typeof count === 'number' && !isNaN(count) ? Math.max(0, count) : getUnreadTotal();
 
     if (notifBadge) {
-        notifBadge.textContent = unread > 0 ? String(unread) : '';
+        notifBadge.setAttribute('data-unread-total', String(unread));
+        notifBadge.textContent = unread > 0 ? formatNotifCount(unread) : '';
         notifBadge.style.display = unread > 0 ? 'inline-flex' : 'none';
     }
     if (notifCountPill) {
-        notifCountPill.textContent = unread > 0 ? String(unread) : '';
+        notifCountPill.textContent = unread > 0 ? formatNotifCount(unread) : '';
         notifCountPill.style.display = unread > 0 ? 'inline' : 'none';
     }
     if (notifEmpty && notifList) {
@@ -205,6 +223,8 @@ function updateNotifBadge() {
         notifList.style.display = hasItems ? '' : 'none';
     }
 }
+
+window.updateNotifBadge = updateNotifBadge;
 
 window.toggleNotifPopover = function (e) {
     e.stopPropagation();
@@ -283,10 +303,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!item) return;
         var id = item.getAttribute('data-id');
         var actionUrl = item.getAttribute('data-action-url') || '';
+        var wasUnread = item.classList.contains('notif-unread');
 
-        if (item.classList.contains('notif-unread') && id) {
+        if (wasUnread && id) {
             try {
-                await fetch('/api/sk-federations/notifications/' + id + '/read', {
+                var response = await fetch('/api/sk-federations/notifications/' + id + '/read', {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',
@@ -294,8 +315,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     credentials: 'same-origin',
                 });
+                var data = await response.json();
+                if (data && typeof data.unread_count === 'number') {
+                    updateNotifBadge(data.unread_count);
+                } else {
+                    updateNotifBadge(Math.max(0, getUnreadTotal() - 1));
+                }
             } catch (err) {
-                // Continue with local UI update.
+                updateNotifBadge(Math.max(0, getUnreadTotal() - 1));
             }
 
             item.classList.remove('notif-unread');
@@ -303,7 +330,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (dot) {
                 dot.remove();
             }
-            updateNotifBadge();
         }
 
         if (actionUrl) {
@@ -331,7 +357,7 @@ document.addEventListener('DOMContentLoaded', function () {
         markAllBtn.addEventListener('click', async function (e) {
             e.stopPropagation();
             try {
-                await fetch('/api/sk-federations/notifications/read-all', {
+                var response = await fetch('/api/sk-federations/notifications/read-all', {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',
@@ -339,8 +365,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     credentials: 'same-origin',
                 });
+                var data = await response.json();
+                updateNotifBadge(data && typeof data.unread_count === 'number' ? data.unread_count : 0);
             } catch (err) {
-                // Continue with local UI update.
+                updateNotifBadge(0);
             }
             if (notifList) {
                 notifList.querySelectorAll('.notif-unread').forEach(function (item) {
@@ -351,11 +379,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
             }
-            updateNotifBadge();
         });
     }
 
-    updateNotifBadge();
+    updateNotifBadge(getUnreadTotal());
+
+    fetch('/api/sk-federations/notifications?limit=5', {
+        headers: { 'Accept': 'application/json' },
+        credentials: 'same-origin',
+    }).then(function (response) {
+        return response.ok ? response.json() : null;
+    }).then(function (data) {
+        if (data && typeof data.unread_count === 'number') {
+            updateNotifBadge(data.unread_count);
+        }
+    }).catch(function () {
+        // Keep the server-rendered unread total.
+    });
 });
 
 // ── Logout Modal ──

@@ -4,7 +4,7 @@
 
 /* Wrapper — anchors the popover to the nav button */
 .chatbot-nav-wrapper {
-    position: relative;
+    position: static;
 }
 
 /* SKai header button — matches SK Officials style, blue theme for Kabataan */
@@ -15,8 +15,8 @@
 }
 
 .kab-ai-assistant-btn svg {
-    width: 22px !important;
-    height: 22px !important;
+    width: 19px !important;
+    height: 19px !important;
 }
 
 .kab-ai-assistant-btn:hover,
@@ -68,17 +68,18 @@
 
 .chatbot-popover {
     position: absolute;
-    top: calc(100% + 14px); /* 14px gap below the button */
+    top: calc(100% + 10px);
     right: 0;
-    width: 360px;
-    height: 520px;
+    width: 280px;
+    max-width: min(280px, calc(100vw - 16px));
+    height: 460px;
     background: #ffffff;
-    border-radius: 16px;
+    border-radius: 14px;
     box-shadow: 0 8px 32px rgba(2, 42, 84, 0.20), 0 2px 8px rgba(0,0,0,0.10);
     display: flex;
     flex-direction: column;
-    overflow: visible; /* allow caret to show */
-    z-index: 9999;
+    overflow: visible;
+    z-index: 500;
     transform: scale(0.94) translateY(-8px);
     opacity: 0;
     pointer-events: none;
@@ -113,8 +114,9 @@
     opacity: 1;
     pointer-events: all;
     visibility: visible;
-    width: 360px;
-    height: 520px;
+    width: 280px;
+    max-width: min(280px, calc(100vw - 16px));
+    height: 460px;
     overflow: visible;
 }
 
@@ -442,44 +444,61 @@
     transform: none;
 }
 
-/* Responsive — Tablet (481px–768px) */
+/* Responsive — Tablet + phone: same spot, smaller panel */
 @media (max-width: 768px) {
     .kab-ai-assistant-btn svg {
         width: 16px !important;
         height: 16px !important;
     }
 
-    .chatbot-popover {
-        width: min(320px, calc(100vw - 16px));
-        height: 480px;
-        right: 0;
-    }
-
-    .chatbot-popover.open {
-        width: min(320px, calc(100vw - 16px));
-        height: 480px;
-    }
-}
-
-/* Responsive — Mobile (≤480px): keep arrow, clamp to viewport */
-@media (max-width: 480px) {
-    .chatbot-nav-wrapper {
-        position: relative;
-    }
-
     .chatbot-popover,
     .chatbot-popover.open {
         position: fixed;
-        top: 68px;
+        top: calc(var(--kab-nav-h, 68px) + 6px);
         right: 8px;
         left: auto;
-        width: min(360px, calc(100vw - 16px));
+        width: min(232px, calc(100vw - 16px));
         max-width: calc(100vw - 16px);
-        height: min(480px, calc(100dvh - 84px));
+        height: min(52vh, 340px);
+        z-index: 500;
+        border-radius: 12px;
         transform-origin: top right;
     }
 
-    /* Keep the arrow visible, pointing up toward the icon */
+    .cp-inner {
+        border-radius: 12px;
+    }
+
+    .chatbot-popover .cp-header,
+    .cp-header {
+        padding: 8px 10px;
+        gap: 8px;
+    }
+
+    .cp-bot-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .cp-header-name {
+        font-size: 13px;
+    }
+
+    .cp-header-status {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 375px) {
+    .chatbot-popover,
+    .chatbot-popover.open {
+        right: 6px;
+        width: min(210px, calc(100vw - 12px));
+        height: min(48vh, 300px);
+    }
+}
+
+@media (max-width: 480px) {
     .chatbot-popover::before {
         top: -8px;
         display: block;

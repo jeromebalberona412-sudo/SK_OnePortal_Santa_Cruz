@@ -211,6 +211,7 @@ body.kabataan-has-view-only-banner {
     align-items: center;
     gap: 8px;
     margin-left: auto;
+    position: relative;
 }
 
 /* Header icons — transparent until hover (matches dashboard) */
@@ -251,7 +252,8 @@ body.kabataan-has-view-only-banner {
 }
 
 .kabataan-header__user {
-    position: relative;
+    position: static;
+    flex-shrink: 0;
 }
 
 .kabataan-header__avatar-btn {
@@ -271,21 +273,30 @@ body.kabataan-has-view-only-banner {
     object-fit: cover;
 }
 
-.kabataan-header__dropdown {
+.kabataan-header .notif-nav-wrapper,
+.kabataan-header .chatbot-nav-wrapper {
+    position: static;
+}
+
+.kabataan-header__dropdown,
+.kabataan-header .user-dropdown {
     position: absolute;
     top: calc(100% + 10px);
     right: 0;
     background: white;
     border-radius: 14px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-    min-width: 260px;
+    min-width: 280px;
+    width: 280px;
+    max-width: min(280px, calc(100vw - 16px));
     opacity: 0;
     visibility: hidden;
     transform: translateY(-8px);
     transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
     border: 1px solid rgba(0, 0, 0, 0.06);
-    z-index: 400;
+    z-index: 500;
     overflow: hidden;
+    max-height: min(72vh, 440px);
 }
 
 .kabataan-header__user.is-open .kabataan-header__dropdown {
@@ -315,6 +326,7 @@ body.kabataan-has-view-only-banner {
 .kabataan-header__dropdown-user-info {
     display: flex;
     flex-direction: column;
+    gap: 4px;
     min-width: 0;
 }
 
@@ -322,15 +334,17 @@ body.kabataan-has-view-only-banner {
     font-size: 14px;
     font-weight: 700;
     color: #fff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.35;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .kabataan-header__dropdown-role {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.65);
-    margin-top: 2px;
+    color: rgba(255, 255, 255, 0.72);
+    margin-top: 0;
+    line-height: 1.4;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -340,7 +354,7 @@ body.kabataan-has-view-only-banner {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 11px 16px;
+    padding: 12px 16px;
     color: #1a56db;
     text-decoration: none;
     font-size: 14px;
@@ -409,7 +423,7 @@ body.kabataan-has-view-only-banner {
 .kabataan-header .dropdown-divider {
     height: 1px;
     background: #f3f4f6;
-    margin: 2px 0;
+    margin: 6px 8px;
 }
 
 .kabataan-header__menu-toggle {
@@ -510,18 +524,6 @@ body.kabataan-has-view-only-banner {
         height: 16px !important;
     }
 
-    .kabataan-header__dropdown {
-        position: fixed;
-        top: calc(var(--kab-nav-h) + 8px);
-        right: 8px;
-        left: auto;
-        min-width: 0;
-        width: min(240px, calc(100vw - 16px));
-        max-width: calc(100vw - 16px);
-        z-index: 500;
-        border-radius: 12px;
-    }
-
     .kabataan-header__dropdown-user-card {
         padding: 10px 12px;
         gap: 8px;
@@ -575,7 +577,7 @@ body.kabataan-has-view-only-banner {
 }
 
 .kabataan-header__user {
-    position: relative;
+    position: static;
     flex-shrink: 0;
 }
 
@@ -606,6 +608,62 @@ body.kabataan-has-view-only-banner {
     .kabataan-header .nav-icon-btn svg {
         width: 17px;
         height: 17px;
+    }
+
+    .kabataan-header__dropdown,
+    .kabataan-header .user-dropdown {
+        position: fixed;
+        top: calc(var(--kab-nav-h) + 6px);
+        right: 8px;
+        left: auto;
+        min-width: 0;
+        width: min(232px, calc(100vw - 16px));
+        max-width: calc(100vw - 16px);
+        z-index: 500;
+        border-radius: 12px;
+    }
+
+    .kabataan-header__dropdown-user-card {
+        padding: 10px 12px;
+        gap: 8px;
+    }
+
+    .kabataan-header__dropdown-avatar {
+        width: 32px;
+        height: 32px;
+    }
+
+    .kabataan-header__dropdown-name {
+        font-size: 12px;
+    }
+
+    .kabataan-header__dropdown-role {
+        font-size: 10px;
+    }
+
+    .kabataan-header__dropdown-link {
+        padding: 8px 12px;
+        font-size: 12px;
+        gap: 8px;
+    }
+
+    .kabataan-header__dropdown-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+    }
+
+    .kabataan-header__dropdown-icon svg {
+        width: 13px;
+        height: 13px;
+    }
+}
+
+@media (max-width: 375px) {
+    .kabataan-header__dropdown,
+    .kabataan-header .user-dropdown {
+        right: 6px;
+        width: min(210px, calc(100vw - 12px));
     }
 }
 

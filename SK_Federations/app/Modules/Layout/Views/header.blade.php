@@ -13,6 +13,10 @@
     @stack('navbar-center')
 
     <div class="navbar-right">
+        @php
+            $unreadNotifCount = (int) ($unreadNotificationCount ?? 0);
+            $unreadNotifLabel = $unreadNotifCount > 99 ? '99+' : (string) $unreadNotifCount;
+        @endphp
         <div class="notif-menu" id="notifMenu">
             <button
                 type="button"
@@ -24,7 +28,7 @@
                 aria-haspopup="true"
             >
                 <i class="fas fa-bell"></i>
-                <span class="notif-badge" id="notifBadge" style="{{ ($unreadNotificationCount ?? 0) > 0 ? '' : 'display: none;' }}">{{ $unreadNotificationCount ?? 0 }}</span>
+                <span class="notif-badge" id="notifBadge" data-unread-total="{{ $unreadNotifCount }}" style="{{ $unreadNotifCount > 0 ? '' : 'display: none;' }}">{{ $unreadNotifLabel }}</span>
             </button>
 
             @include('notifications::dropdown-popover')

@@ -42,22 +42,12 @@
             <div class="youth-signin-card">
                 <div id="ceVerifySection"
                      data-status-url="{{ route('change-email.verify.status', [], false) }}">
-                    <div class="card-header">
+                    <div class="card-header ce-card-header">
                         <h2 class="card-title">Verify Email Change</h2>
-                        <p class="card-helper-text">We sent a confirmation link to your new email address.</p>
+                        <p class="card-helper-text">Check your new email and tap the confirmation link. This page will detect it automatically.</p>
                     </div>
 
                     <div class="ce-verify-content">
-                        <div class="ce-sent-header">
-                            <div class="ce-sent-icon">
-                                <svg viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="ce-sent-title" id="ceStatusTitle">{{ $awaitingPassword ? 'Email Verified!' : 'Verification Sent!' }}</div>
-                            <div class="ce-sent-sub" id="ceStatusSub">{{ $awaitingPassword ? 'Set your new password on the other tab to finish the email change.' : 'Open your inbox and tap the confirmation link.' }}</div>
-                        </div>
-
                         <div class="cp-listening-badge {{ $awaitingPassword ? 'is-confirmed' : '' }}" id="ceListeningBadge">
                             <span class="cp-listening-dot"></span>
                             {{ $awaitingPassword ? 'Waiting for new password…' : 'Listening for email confirmation…' }}

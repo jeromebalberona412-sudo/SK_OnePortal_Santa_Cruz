@@ -1,5 +1,5 @@
 /**
- * Reusable Kabataan header — user menu, logout modal & mobile helpers
+ * Reusable Kabataan header — user menu, overlay exclusivity, logout modal & mobile helpers
  */
 (function () {
     'use strict';
@@ -7,17 +7,50 @@
     const userWrap = document.getElementById('kabataanHeaderUser');
     const avatarBtn = userWrap?.querySelector('.kabataan-header__avatar-btn');
 
+    function closeProfileMenu() {
+        if (!userWrap) {
+            return;
+        }
+
+        userWrap.classList.remove('is-open');
+        avatarBtn?.setAttribute('aria-expanded', 'false');
+    }
+
+    function closeHeaderOverlays(except) {
+        if (except !== 'profile') {
+            closeProfileMenu();
+        }
+
+        if (except !== 'chatbot' && typeof window.closeChatbotPopover === 'function') {
+            window.closeChatbotPopover();
+        }
+
+        if (except !== 'notif' && typeof window.closeNotifPopover === 'function') {
+            window.closeNotifPopover();
+        }
+    }
+
+    window.kabataanCloseProfileMenu = closeProfileMenu;
+    window.kabataanCloseHeaderOverlays = closeHeaderOverlays;
+
     if (avatarBtn && userWrap) {
         avatarBtn.addEventListener('click', function (e) {
+            e.preventDefault();
             e.stopPropagation();
-            const open = userWrap.classList.toggle('is-open');
-            avatarBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+
+            const willOpen = !userWrap.classList.contains('is-open');
+            if (willOpen) {
+                closeHeaderOverlays('profile');
+                userWrap.classList.add('is-open');
+                avatarBtn.setAttribute('aria-expanded', 'true');
+            } else {
+                closeProfileMenu();
+            }
         });
 
         document.addEventListener('click', function (e) {
-            if (!userWrap.contains(e.target)) {
-                userWrap.classList.remove('is-open');
-                avatarBtn.setAttribute('aria-expanded', 'false');
+            if (userWrap.classList.contains('is-open') && !userWrap.contains(e.target)) {
+                closeProfileMenu();
             }
         });
     }
@@ -70,9 +103,15 @@
     });
 
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && drawerSidebar?.classList.contains('drawer-open')) {
-            closeProgramsDrawer();
+        if (e.key !== 'Escape') {
+            return;
         }
-    });
 
+        if (drawerSidebar?.classList.contains('drawer-open')) {
+            closeProgramsDrawer();
+            return;
+        }
+
+        closeHeaderOverlays();
+    });
 })();

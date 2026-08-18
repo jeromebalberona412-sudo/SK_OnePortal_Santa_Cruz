@@ -18,7 +18,7 @@ let aroffRecords = [];
 let aroffFiltered = [];
 let aroffIsLoading = false;
 let aroffCurrentPage = 1;
-const aroffPerPage = 10;
+let aroffPerPage = 10;
 let aroffSearchQ = '';
 let aroffYearFilter = 'all';
 let aroffTermFilter = 'all';
@@ -28,6 +28,7 @@ const AROFF_POLL_MS = 20000;
 
 function initArchivedSkOfficials() {
     bindAroffSearch();
+    bindAroffPagination();
     bindAroffViewModal();
     loadAroffRecords();
     startAroffRealtimeRefresh();
@@ -66,14 +67,15 @@ async function loadAroffRecords() {
 
         aroffRecords = payload.data || [];
         aroffFiltered = [...aroffRecords];
-        renderAroffStats(payload.stats || {});
         populateAroffFilters(payload.filters || {});
-        aroffCurrentPage = 1;
+        const pages = Math.max(1, Math.ceil(aroffFiltered.length / aroffPerPage) || 1);
+        if (aroffCurrentPage > pages) {
+            aroffCurrentPage = pages;
+        }
         renderAroffTable();
     } catch (error) {
         aroffRecords = [];
         aroffFiltered = [];
-        renderAroffStats({ total: 0, positions: 0, barangays: 0 });
         renderAroffTable();
     } finally {
         aroffIsLoading = false;
@@ -111,43 +113,30 @@ function populateAroffFilters(filters) {
     }
 }
 
-// ── Stats ─────────────────────────────────────────────────────────────────────
-function renderAroffStats(stats = null) {
-    const row = document.getElementById('aroffStatsRow');
-    if (!row) return;
+function escapeAroffHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
 
-    const total = stats?.total ?? aroffRecords.length;
-    const positions = stats?.positions ?? [...new Set(aroffRecords.map(r => r.position))].length;
-    const barangays = stats?.barangays ?? [...new Set(aroffRecords.map(r => r.barangay))].length;
+function aroffProfileGroup(iconClass, title, fields) {
+    const cells = fields.map(([label, value]) => `
+        <div class="account-profile-field">
+            <label>${escapeAroffHtml(label)}</label>
+            <p>${escapeAroffHtml(value || '-')}</p>
+        </div>
+    `).join('');
 
-    row.innerHTML = `
-        <div class="aroff-stat-card aroff-stat-card-teal">
-            <div class="aroff-stat-top">
-                <span class="aroff-stat-value">${total}</span>
-                <div class="aroff-stat-icon aroff-icon-teal">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                </div>
+    return `
+        <div class="account-profile-group">
+            <div class="account-profile-group-label">
+                <i class="fa-solid ${iconClass}"></i> ${escapeAroffHtml(title)}
             </div>
-            <span class="aroff-stat-label">Total Archived</span>
+            <div class="account-profile-row">${cells}</div>
         </div>
-        <div class="aroff-stat-card aroff-stat-card-green">
-            <div class="aroff-stat-top">
-                <span class="aroff-stat-value">${positions}</span>
-                <div class="aroff-stat-icon aroff-icon-green">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                </div>
-            </div>
-            <span class="aroff-stat-label">Positions</span>
-        </div>
-        <div class="aroff-stat-card aroff-stat-card-purple">
-            <div class="aroff-stat-top">
-                <span class="aroff-stat-value">${barangays}</span>
-                <div class="aroff-stat-icon aroff-icon-purple">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                </div>
-            </div>
-            <span class="aroff-stat-label">Barangays</span>
-        </div>`;
+    `;
 }
 
 // ── Render Table ──────────────────────────────────────────────────────────────
@@ -162,7 +151,7 @@ function renderAroffTable() {
 
     if (aroffFiltered.length === 0) {
         tbody.innerHTML = `<tr class="aroff-empty-row"><td colspan="5">No archived SK Officials records found.</td></tr>`;
-        if (info) info.textContent = 'No records found';
+        if (info) info.textContent = '0 records';
         renderAroffPagination(0);
         return;
     }
@@ -184,7 +173,7 @@ function renderAroffTable() {
         </tr>`;
     }).join('');
 
-    if (info) info.textContent = `Showing ${start + 1}–${Math.min(end, aroffFiltered.length)} of ${aroffFiltered.length} records`;
+    if (info) info.textContent = `${aroffFiltered.length} record${aroffFiltered.length === 1 ? '' : 's'}`;
 
     renderAroffPagination(aroffFiltered.length);
 
@@ -194,21 +183,46 @@ function renderAroffTable() {
 }
 
 function renderAroffPagination(total) {
-    const pages = Math.ceil(total / aroffPerPage);
-    const nums = document.getElementById('aroffPageNumbers');
+    const pages = Math.max(1, Math.ceil(total / aroffPerPage) || 1);
     const prev = document.getElementById('aroffPrevBtn');
     const next = document.getElementById('aroffNextBtn');
+    const pageInput = document.getElementById('aroffPageInput');
+    const totalPages = document.getElementById('aroffTotalPages');
 
-    if (nums) {
-        nums.innerHTML = Array.from({ length: pages }, (_, i) => `
-            <button class="aroff-page-btn ${i + 1 === aroffCurrentPage ? 'active' : ''}">${i + 1}</button>
-        `).join('');
-        nums.querySelectorAll('.aroff-page-btn').forEach((btn, i) => {
-            btn.addEventListener('click', () => { aroffCurrentPage = i + 1; renderAroffTable(); });
-        });
+    if (totalPages) totalPages.textContent = String(pages);
+    if (pageInput) {
+        pageInput.value = String(aroffCurrentPage);
+        pageInput.max = String(pages);
     }
-    if (prev) { prev.disabled = aroffCurrentPage === 1; prev.onclick = () => { aroffCurrentPage--; renderAroffTable(); }; }
-    if (next) { next.disabled = aroffCurrentPage >= pages || pages === 0; next.onclick = () => { aroffCurrentPage++; renderAroffTable(); }; }
+    if (prev) prev.disabled = aroffCurrentPage <= 1 || total === 0;
+    if (next) next.disabled = aroffCurrentPage >= pages || total === 0;
+}
+
+function bindAroffPagination() {
+    document.getElementById('aroffPrevBtn')?.addEventListener('click', () => {
+        if (aroffCurrentPage > 1) {
+            aroffCurrentPage -= 1;
+            renderAroffTable();
+        }
+    });
+    document.getElementById('aroffNextBtn')?.addEventListener('click', () => {
+        const pages = Math.max(1, Math.ceil(aroffFiltered.length / aroffPerPage) || 1);
+        if (aroffCurrentPage < pages) {
+            aroffCurrentPage += 1;
+            renderAroffTable();
+        }
+    });
+    document.getElementById('aroffPageInput')?.addEventListener('change', function () {
+        const pages = Math.max(1, Math.ceil(aroffFiltered.length / aroffPerPage) || 1);
+        const nextPage = Math.min(pages, Math.max(1, parseInt(this.value, 10) || 1));
+        aroffCurrentPage = nextPage;
+        renderAroffTable();
+    });
+    document.getElementById('aroffRowsPerPageSelect')?.addEventListener('change', function () {
+        aroffPerPage = Math.max(1, parseInt(this.value, 10) || 10);
+        aroffCurrentPage = 1;
+        renderAroffTable();
+    });
 }
 
 // ── Search ────────────────────────────────────────────────────────────────────
@@ -222,13 +236,17 @@ function bindAroffSearch() {
         input.addEventListener('input', function () {
             aroffSearchQ = this.value.trim();
             window.clearTimeout(searchTimer);
-            searchTimer = window.setTimeout(() => loadAroffRecords(), 300);
+            searchTimer = window.setTimeout(() => {
+                aroffCurrentPage = 1;
+                loadAroffRecords();
+            }, 300);
         });
     }
 
     if (yearSelect) {
         yearSelect.addEventListener('change', function () {
             aroffYearFilter = this.value;
+            aroffCurrentPage = 1;
             loadAroffRecords();
         });
     }
@@ -236,6 +254,7 @@ function bindAroffSearch() {
     if (termSelect) {
         termSelect.addEventListener('change', function () {
             aroffTermFilter = this.value;
+            aroffCurrentPage = 1;
             loadAroffRecords();
         });
     }
@@ -249,87 +268,29 @@ function openAroffViewModal(id) {
     const body = document.getElementById('aroffViewBody');
     if (body) {
         body.innerHTML = `
-            <div class="aroff-view-section-block">
-                <div class="aroff-view-section-header">
-                    <span class="aroff-view-section-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>
-                    </span>
-                    <span class="aroff-view-section-label">Personal Information</span>
-                </div>
-                <div class="aroff-view-info-grid">
-                    <div class="aroff-view-field">
-                        <span class="aroff-view-label">Full Name</span>
-                        <span class="aroff-view-value aroff-view-fullname">${formatRecordName(r)}</span>
-                    </div>
-                    <div class="aroff-view-field">
-                        <span class="aroff-view-label">Email Address</span>
-                        <span class="aroff-view-value">${r.email || '—'}</span>
-                    </div>
-                    <div class="aroff-view-field">
-                        <span class="aroff-view-label">Date of Birth</span>
-                        <span class="aroff-view-value">${r.dateOfBirth || '—'}</span>
-                    </div>
-                    <div class="aroff-view-field">
-                        <span class="aroff-view-label">Age</span>
-                        <span class="aroff-view-value">${r.age || '—'}</span>
-                    </div>
-                    <div class="aroff-view-field">
-                        <span class="aroff-view-label">Contact Number</span>
-                        <span class="aroff-view-value">${r.contactNumber || '—'}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="aroff-view-section-block">
-                <div class="aroff-view-section-header">
-                    <span class="aroff-view-section-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    </span>
-                    <span class="aroff-view-section-label">Location Information</span>
-                </div>
-                <div class="aroff-view-info-grid">
-                    <div class="aroff-view-field">
-                        <span class="aroff-view-label">Barangay</span>
-                        <span class="aroff-view-value">${r.barangay || '—'}</span>
-                    </div>
-                    <div class="aroff-view-field">
-                        <span class="aroff-view-label">Municipality</span>
-                        <span class="aroff-view-value">${r.municipality || '—'}</span>
-                    </div>
-                    <div class="aroff-view-field">
-                        <span class="aroff-view-label">Province</span>
-                        <span class="aroff-view-value">${r.province || '—'}</span>
-                    </div>
-                    <div class="aroff-view-field">
-                        <span class="aroff-view-label">Region</span>
-                        <span class="aroff-view-value">${r.region || '—'}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="aroff-view-section-block">
-                <div class="aroff-view-section-header">
-                    <span class="aroff-view-section-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                    </span>
-                    <span class="aroff-view-section-label">Term Information</span>
-                </div>
-                <div class="aroff-view-info-grid">
-                    <div class="aroff-view-field">
-                        <span class="aroff-view-label">Position</span>
-                        <span class="aroff-view-value">${r.position || '—'}</span>
-                    </div>
-                    <div class="aroff-view-field">
-                        <span class="aroff-view-label">Term Start</span>
-                        <span class="aroff-view-value">${r.termStart || '—'}</span>
-                    </div>
-                    <div class="aroff-view-field">
-                        <span class="aroff-view-label">Term End</span>
-                        <span class="aroff-view-value">${r.termEnd || '—'}</span>
-                    </div>
-                    <div class="aroff-view-field">
-                        <span class="aroff-view-label">Term Status</span>
-                        <span class="aroff-badge aroff-badge-green">${r.termStatus || 'Completed Term'}</span>
-                    </div>
-                </div>
+            <div class="account-modal-card">
+                ${aroffProfileGroup('fa-user', 'Personal Information', [
+                    ['Full Name', formatRecordName(r)],
+                    ['Sex', r.sex],
+                    ['Date of Birth', r.dateOfBirth],
+                    ['Age', r.age],
+                    ['Contact Number', r.contactNumber],
+                ])}
+                ${aroffProfileGroup('fa-briefcase', 'Position & Account', [
+                    ['Position', r.position],
+                    ['Email Address', r.email],
+                    ['Email Verification', r.emailVerification || r.emailVerifiedAt || 'Not Verified'],
+                ])}
+                ${aroffProfileGroup('fa-location-dot', 'Address', [
+                    ['Region', r.region || 'IV-A CALABARZON'],
+                    ['Province', r.province || 'Laguna'],
+                    ['Municipality', r.municipality || 'Santa Cruz'],
+                    ['Barangay', r.barangay],
+                ])}
+                ${aroffProfileGroup('fa-calendar-check', 'Term Information', [
+                    ['Term Start', r.termStart],
+                    ['Term End', r.termEnd],
+                ])}
             </div>`;
     }
 

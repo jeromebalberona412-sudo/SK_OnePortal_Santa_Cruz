@@ -346,12 +346,31 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function resendChangePassword(Request $request): RedirectResponse
+    public function resendChangePassword(Request $request): RedirectResponse|JsonResponse
     {
         try {
             $this->passwordChangeService->resend($request->user()->fresh());
         } catch (ValidationException $exception) {
+            $message = collect($exception->errors())->flatten()->first()
+                ?: 'Unable to resend verification email. Please try again.';
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => $message,
+                    'resend_cooldown' => $this->passwordChangeService->resendCooldownRemaining($request->user()->fresh()),
+                ], 422);
+            }
+
             return back()->withErrors($exception->errors());
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'ok' => true,
+                'message' => 'Verification email resent. Check your inbox.',
+                'resend_cooldown' => 60,
+            ]);
         }
 
         return back()->with('status', 'Verification email resent.');

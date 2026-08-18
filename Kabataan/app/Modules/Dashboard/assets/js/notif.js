@@ -11,7 +11,7 @@ function npAlignArrow() {
     const btnCenter = btnRect.left + btnRect.width / 2;
 
     let popRight;
-    if (window.innerWidth <= 480) {
+    if (window.innerWidth <= 768) {
         popRight = window.innerWidth - 8;
     } else {
         popRight = popover.getBoundingClientRect().right;
@@ -21,17 +21,37 @@ function npAlignArrow() {
     popover.style.setProperty('--np-arrow-right', arrowRight + 'px');
 }
 
+function npFormatCount(count) {
+    const n = Math.max(0, parseInt(count, 10) || 0);
+    return n > 99 ? '99+' : String(n);
+}
+
+function npGetUnreadTotal() {
+    const badge = document.getElementById('notifNavBadge');
+    if (!badge) return 0;
+
+    const stored = badge.getAttribute('data-unread-total');
+    if (stored !== null && stored !== '') {
+        return Math.max(0, parseInt(stored, 10) || 0);
+    }
+
+    return Math.max(0, parseInt(badge.textContent, 10) || 0);
+}
+
 function npUpdateBadge(unread) {
     const count = Math.max(0, parseInt(unread, 10) || 0);
+    const label = count > 0 ? npFormatCount(count) : '';
     const badge = document.getElementById('notifNavBadge');
     const pill = document.getElementById('notifCountPill');
 
     if (badge) {
-        badge.textContent = String(count);
+        badge.setAttribute('data-unread-total', String(count));
+        badge.textContent = label;
         badge.hidden = count <= 0;
     }
     if (pill) {
-        pill.textContent = String(count);
+        pill.setAttribute('data-unread-total', String(count));
+        pill.textContent = label;
         pill.hidden = count <= 0;
     }
 }
@@ -50,7 +70,12 @@ window.KabataanNotifications = {
     updateBadge: npUpdateBadge,
 };
 
-window.toggleNotifPopover = function () {
+window.toggleNotifPopover = function (event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
     const popover = document.getElementById('notifPopover');
     const btn = document.getElementById('notifNavBtn');
     if (!popover) return;
@@ -60,8 +85,15 @@ window.toggleNotifPopover = function () {
         return;
     }
 
-    document.getElementById('chatbotPopover')?.classList.remove('open');
-    document.getElementById('chatbotNavBtn')?.setAttribute('aria-expanded', 'false');
+    if (typeof window.kabataanCloseHeaderOverlays === 'function') {
+        window.kabataanCloseHeaderOverlays('notif');
+    } else {
+        document.getElementById('chatbotPopover')?.classList.remove('open');
+        document.getElementById('chatbotNavBtn')?.setAttribute('aria-expanded', 'false');
+        document.getElementById('kabataanHeaderUser')?.classList.remove('is-open');
+        document.querySelector('.kabataan-header__avatar-btn')?.setAttribute('aria-expanded', 'false');
+    }
+
     popover.classList.add('open');
     btn?.setAttribute('aria-expanded', 'true');
     npAlignArrow();
@@ -106,14 +138,15 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await response.json().catch(() => ({}));
             if (typeof data.unread_count === 'number') {
                 npUpdateBadge(data.unread_count);
+            } else {
+                npUpdateBadge(Math.max(0, npGetUnreadTotal() - 1));
             }
         } catch (err) {
-            // Continue navigation even if mark-read fails.
+            npUpdateBadge(Math.max(0, npGetUnreadTotal() - 1));
         }
 
         item.classList.remove('np-unread');
         item.querySelector('.np-unread-dot')?.remove();
-        npUpdateBadge(document.querySelectorAll('#notifList .np-unread').length);
     }
 
     list?.addEventListener('click', async function (e) {
@@ -156,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     npSyncEmptyState();
-    npUpdateBadge(document.querySelectorAll('#notifList .np-unread').length);
+    npUpdateBadge(npGetUnreadTotal());
 
     const toast = document.getElementById('kabataanHeaderToast');
     if (toast) {

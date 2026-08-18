@@ -31,9 +31,6 @@
         </div>
     </div>
 
-    <!-- Stats -->
-    <div class="arfed-stats-row" id="arfedStatsRow"></div>
-
     <!-- Table Card -->
     <div class="arfed-table-card">
         <div class="arfed-table-wrapper">
@@ -50,13 +47,27 @@
                 <tbody id="arfedTableBody"></tbody>
             </table>
         </div>
-        <div class="arfed-pagination">
-            <span class="arfed-pagination-info" id="arfedPaginationInfo">No records found</span>
-            <div class="arfed-pagination-controls">
-                <button type="button" id="arfedPrevBtn" class="arfed-page-btn" disabled>Previous</button>
-                <div id="arfedPageNumbers" class="arfed-page-numbers"></div>
-                <button type="button" id="arfedNextBtn" class="arfed-page-btn" disabled>Next</button>
-            </div>
+    </div>
+
+    <div class="arfed-page-footer pagination-footer" aria-label="Table pagination">
+        <div class="pagination-footer-nav">
+            <button type="button" class="pagination-arrow" id="arfedPrevBtn" disabled aria-label="Previous page">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <span class="pagination-page-label">Page</span>
+            <input type="number" class="pagination-page-input" id="arfedPageInput" value="1" min="1" aria-label="Current page">
+            <span class="pagination-page-of">of <span id="arfedTotalPages">1</span></span>
+            <button type="button" class="pagination-arrow" id="arfedNextBtn" disabled aria-label="Next page">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+        </div>
+        <div class="pagination-footer-right">
+            <select id="arfedRowsPerPageSelect" class="pagination-rows-select" aria-label="Rows per page">
+                <option value="10">10 rows</option>
+                <option value="50">50 rows</option>
+                <option value="100">100 rows</option>
+            </select>
+            <span class="pagination-record-count" id="arfedPaginationInfo">0 records</span>
         </div>
     </div>
 

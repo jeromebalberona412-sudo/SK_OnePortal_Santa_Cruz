@@ -3,7 +3,7 @@
    ============================================= */
 
 .notif-nav-wrapper {
-    position: relative;
+    position: static;
 }
 
 .notif-nav-btn {
@@ -20,11 +20,14 @@
     border-radius: 999px;
     background: #ef4444;
     color: #ffffff;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
     line-height: 16px;
     text-align: center;
     box-shadow: 0 0 0 2px rgba(4, 80, 168, 0.9);
+    white-space: nowrap;
+    box-sizing: border-box;
+    font-variant-numeric: tabular-nums;
 }
 
 .notif-popover:not(.open) {
@@ -39,16 +42,17 @@
 
 .notif-popover {
     position: absolute;
-    top: calc(100% + 14px);
+    top: calc(100% + 10px);
     right: 0;
-    width: 340px;
+    width: 280px;
+    max-width: min(280px, calc(100vw - 16px));
     background: #ffffff;
-    border-radius: 16px;
+    border-radius: 14px;
     box-shadow: 0 8px 32px rgba(2, 42, 84, 0.18), 0 2px 8px rgba(0,0,0,0.08);
     display: flex;
     flex-direction: column;
     overflow: visible;
-    z-index: 9999;
+    z-index: 500;
     transform: scale(0.94) translateY(-8px);
     opacity: 0;
     pointer-events: none;
@@ -74,7 +78,8 @@
     opacity: 1;
     pointer-events: all;
     visibility: visible;
-    width: 340px;
+    width: 280px;
+    max-width: min(280px, calc(100vw - 16px));
     overflow: visible;
 }
 
@@ -120,6 +125,8 @@
     min-width: 18px;
     text-align: center;
     line-height: 16px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
 }
 
 .np-mark-all-btn {
@@ -295,55 +302,89 @@
     background: #eff6ff;
 }
 
-/* Responsive — Tablet (481px–768px) */
+/* Responsive — Tablet + phone: same spot, smaller panel */
 @media (max-width: 768px) {
-    .notif-popover,
-    .notif-popover.open {
-        width: min(280px, calc(100vw - 16px));
+    .notif-nav-badge {
+        min-width: 18px;
+        height: 13px;
+        font-size: 8px;
+        line-height: 13px;
+        padding: 0 3px;
+        top: 0;
         right: 0;
-        max-height: min(62vh, 380px);
+        box-shadow: 0 0 0 1.5px rgba(4, 80, 168, 0.9);
     }
 
-    .np-body {
-        max-height: min(46vh, 260px);
-    }
-
-    .np-header {
-        padding: 10px 12px;
-    }
-
-    .np-title {
-        font-size: 14px;
-    }
-}
-
-/* Responsive — Mobile (≤480px): keep arrow, clamp to viewport */
-@media (max-width: 480px) {
-    .notif-nav-wrapper {
-        position: relative;
+    .np-count-pill {
+        font-size: 9px;
+        min-width: 16px;
+        padding: 0 5px;
+        line-height: 14px;
     }
 
     .notif-popover,
     .notif-popover.open {
         position: fixed;
-        top: 68px;
+        top: calc(var(--kab-nav-h, 68px) + 6px);
         right: 8px;
         left: auto;
-        width: min(300px, calc(100vw - 16px));
+        width: min(232px, calc(100vw - 16px));
         max-width: calc(100vw - 16px);
-        max-height: min(58vh, 360px);
-        transform-origin: top right;
+        max-height: min(58vh, 340px);
+        z-index: 500;
+        border-radius: 12px;
+    }
+
+    .np-inner {
+        border-radius: 12px;
     }
 
     .np-body {
-        max-height: min(42vh, 240px);
+        max-height: min(42vh, 220px);
     }
 
-    .np-empty {
-        padding: 24px 16px 20px;
+    .np-header {
+        padding: 8px 10px;
+        gap: 6px;
     }
 
-    /* Arrow stays visible, JS sets --np-arrow-right to align with button */
+    .np-title {
+        font-size: 13px;
+    }
+
+    .np-mark-all-btn {
+        font-size: 10px;
+        padding: 4px 6px;
+    }
+
+    .np-item {
+        padding: 8px 10px;
+    }
+
+    .np-item-title {
+        font-size: 0.78rem;
+    }
+
+    .np-item-text {
+        font-size: 0.72rem;
+    }
+
+    .np-see-all-btn {
+        font-size: 0.75rem;
+        padding: 6px 8px;
+    }
+}
+
+@media (max-width: 375px) {
+    .notif-popover,
+    .notif-popover.open {
+        right: 6px;
+        width: min(210px, calc(100vw - 12px));
+        max-height: min(54vh, 300px);
+    }
+}
+
+@media (max-width: 480px) {
     .notif-popover::before {
         top: -8px;
         display: block;

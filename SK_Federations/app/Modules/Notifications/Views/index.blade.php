@@ -42,7 +42,6 @@
                     tabindex="0"
                 >
                     <div class="notif-content">
-                        <div class="notif-item-category">{{ $notification['category_label'] ?? 'General' }}</div>
                         <div class="notif-item-title">{{ $notification['title'] }}</div>
                         <p class="notif-item-text">{{ $notification['text'] }}</p>
                         <div class="notif-item-time">{{ $notification['time'] }}</div>
