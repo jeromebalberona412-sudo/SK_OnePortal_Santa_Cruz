@@ -13,6 +13,9 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/dashboard/{id}/comments', function (int $id) {
         return redirect('/dashboard/comments/'.$id);
     })->whereNumber('id');
+    Route::get('/barangay/{slug}/{post}', [DashboardController::class, 'barangayComments'])
+        ->whereNumber('post')
+        ->name('barangay.comments');
     Route::get('/barangay/{slug}', [DashboardController::class, 'barangay'])->name('barangay');
 
     Route::get('/api/feed', [AnnouncementFeedController::class, 'feed']);

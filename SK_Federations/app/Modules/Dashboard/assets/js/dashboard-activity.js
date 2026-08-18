@@ -147,18 +147,19 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function setActivityFullscreen(enabled) {
-        if (!els.modalDialog) {
+        if (!els.modalDialog || !els.modal) {
             return;
         }
 
         els.modalDialog.classList.toggle('dash-activity-modal-dialog--fullscreen', enabled);
+        els.modal.classList.toggle('dash-activity-modal--fullscreen', enabled);
 
         if (els.fullscreenBtn) {
-            const icon = els.fullscreenBtn.querySelector('i');
+            const icon = els.fullscreenBtn.querySelector('.dash-fs-icon');
             if (icon) {
-                icon.className = enabled ? 'fas fa-compress' : 'fas fa-expand';
+                icon.textContent = enabled ? '⧉' : '□';
             }
-            els.fullscreenBtn.setAttribute('aria-label', enabled ? 'Exit fullscreen' : 'Toggle fullscreen');
+            els.fullscreenBtn.setAttribute('aria-label', enabled ? 'Restore down' : 'Enter fullscreen');
         }
     }
 

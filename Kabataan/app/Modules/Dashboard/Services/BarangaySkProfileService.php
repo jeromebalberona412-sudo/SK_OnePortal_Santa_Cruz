@@ -81,7 +81,7 @@ class BarangaySkProfileService
     public function buildProfile(Barangay $barangay): array
     {
         $logoUrl = $this->logoUrlService->resolve($barangay->id);
-        $officials = $this->listOfficials($barangay->id, $logoUrl);
+        $officials = $this->listOfficials($barangay->id);
         $posts = $this->listPosts($barangay->id, $logoUrl);
 
         return [
@@ -107,9 +107,10 @@ class BarangaySkProfileService
     /**
      * @return Collection<int, array{name: string, role: string, initials: string, sort_key: int}>
      */
-    private function listOfficials(int $barangayId, ?string $logoUrl = null): Collection
+    private function listOfficials(int $barangayId): Collection
     {
-        return Cache::remember("barangay_sk_profiles.officials.{$barangayId}", self::CACHE_TTL, function () use ($barangayId, $logoUrl) {
+        return Cache::remember("barangay_sk_profiles.officials.{$barangayId}.v3", self::CACHE_TTL, function () use ($barangayId) {
+            $logoUrl = $this->logoUrlService->resolve($barangayId);
             $rows = DB::table('users')
                 ->join('official_profiles', 'users.id', '=', 'official_profiles.user_id')
                 ->where('users.barangay_id', $barangayId)
@@ -119,6 +120,7 @@ class BarangaySkProfileService
                 ->orderBy('official_profiles.last_name')
                 ->get([
                     'users.name',
+                    'users.profile_image_url',
                     'official_profiles.first_name',
                     'official_profiles.last_name',
                     'official_profiles.middle_name',
@@ -129,12 +131,13 @@ class BarangaySkProfileService
             return $rows->map(function ($row) use ($logoUrl) {
                 $fullName = $this->buildOfficialFullName($row);
                 $role = trim((string) ($row->position ?? 'SK Official'));
+                $photo = trim((string) ($row->profile_image_url ?? ''));
 
                 return [
                     'name' => $fullName,
                     'role' => $role !== '' ? $role : 'SK Official',
                     'initials' => $this->buildInitials($fullName),
-                    'logo_url' => $logoUrl,
+                    'logo_url' => $photo !== '' ? $photo : $logoUrl,
                     'sort_key' => $this->positionSortKey($role),
                 ];
             })->sortBy([

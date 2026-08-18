@@ -35,6 +35,40 @@ class AnnouncementFeedController extends Controller
     {
         $user = Auth::user();
         $barangayId = $this->resolveBarangayId($user);
+        $scopeBarangayId = (int) $request->query('barangay_id', 0);
+
+        if ($scopeBarangayId > 0) {
+            abort_unless($this->canViewBarangay($user, $scopeBarangayId), 404);
+
+            $posts = Announcement::with([
+                'barangay',
+                'user',
+                'images',
+                'reactions.user',
+            ])
+                ->withCount(['reactions', 'comments'])
+                ->active()
+                ->where('barangay_id', $scopeBarangayId)
+                ->whereRaw('"is_federation_wide" = false')
+                ->whereNull('deleted_at')
+                ->orderByDesc('created_at')
+                ->get();
+
+            $canEngage = $this->canEngageWithPostBarangay($user, $scopeBarangayId);
+
+            return response()->json([
+                'data' => $posts->map(function (Announcement $post) use ($user, $canEngage) {
+                    $data = $this->formatPost($post, $user->id);
+                    $data['type'] = strtolower((string) ($data['type'] ?? 'update'));
+                    $data['can_engage'] = $canEngage;
+
+                    return $data;
+                })->values(),
+                'current_page' => 1,
+                'last_page' => 1,
+                'total' => $posts->count(),
+            ]);
+        }
 
         if (! $barangayId) {
             return response()->json([
@@ -96,9 +130,6 @@ class AnnouncementFeedController extends Controller
      */
     public function formattedVisiblePost(User $user, int $id): array
     {
-        $barangayId = $this->resolveBarangayId($user);
-        abort_unless($barangayId, 404);
-
         $post = Announcement::with([
             'barangay',
             'user',
@@ -110,13 +141,47 @@ class AnnouncementFeedController extends Controller
             ->withCount('reactions')
             ->active()
             ->where('id', $id)
-            ->where(function ($q) use ($barangayId) {
-                $q->where('barangay_id', $barangayId)
-                    ->orWhereRaw('"is_federation_wide" = true');
-            })
             ->firstOrFail();
 
-        return $this->formatPost($post, $user->id);
+        abort_unless($this->canViewPost($user, $post), 404);
+
+        $data = $this->formatPost($post, $user->id);
+        $data['type'] = strtolower((string) ($data['type'] ?? ''));
+        $data['can_engage'] = $this->canEngageWithPost($user, $post);
+
+        return $data;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function presentBarangayPosts(int $barangayId, User $user): array
+    {
+        $posts = Announcement::with([
+            'barangay',
+            'user',
+            'images',
+            'reactions.user',
+            'comments.user',
+            'comments.reactions.user',
+        ])
+            ->withCount('reactions')
+            ->active()
+            ->where('barangay_id', $barangayId)
+            ->whereRaw('"is_federation_wide" = false')
+            ->whereNull('deleted_at')
+            ->orderByDesc('created_at')
+            ->get();
+
+        $canEngage = $this->canEngageWithPostBarangay($user, $barangayId);
+
+        return $posts->map(function (Announcement $post) use ($user, $canEngage) {
+            $data = $this->formatPost($post, $user->id);
+            $data['type'] = strtolower((string) ($data['type'] ?? 'update'));
+            $data['can_engage'] = $canEngage;
+
+            return $data;
+        })->values()->all();
     }
 
     public function likes(int $id): JsonResponse
@@ -146,7 +211,8 @@ class AnnouncementFeedController extends Controller
     public function react(Request $request, int $id): JsonResponse
     {
         $user = Auth::user();
-        Announcement::query()->active()->findOrFail($id);
+        $post = Announcement::query()->active()->findOrFail($id);
+        abort_unless($this->canEngageWithPost($user, $post), 403, 'You can only react to posts from your barangay.');
         $validated = $request->validate([
             'reaction_type' => ['nullable', 'string', Rule::in(AnnouncementReaction::TYPES)],
             'client_seq' => ['sometimes', 'integer', 'min:1'],
@@ -236,7 +302,8 @@ class AnnouncementFeedController extends Controller
             'parent_id' => 'nullable|integer',
         ]);
 
-        Announcement::query()->active()->findOrFail($id);
+        $post = Announcement::query()->active()->findOrFail($id);
+        abort_unless($this->canEngageWithPost($user, $post), 403, 'You can only comment on posts from your barangay.');
 
         if ($request->filled('parent_id')) {
             AnnouncementComment::query()
@@ -320,7 +387,8 @@ class AnnouncementFeedController extends Controller
     public function commentReact(Request $request, int $id, int $commentId): JsonResponse
     {
         $user = Auth::user();
-        Announcement::query()->active()->findOrFail($id);
+        $post = Announcement::query()->active()->findOrFail($id);
+        abort_unless($this->canEngageWithPost($user, $post), 403, 'You can only react to comments from your barangay.');
         $comment = AnnouncementComment::query()
             ->where('community_feed_id', $id)
             ->where('id', $commentId)
@@ -713,6 +781,65 @@ class AnnouncementFeedController extends Controller
         }
 
         return $comment;
+    }
+
+    private function canViewBarangay(User $user, int $barangayId): bool
+    {
+        $tenantId = $this->resolveTenantId($user);
+        if ($tenantId === null) {
+            return false;
+        }
+
+        $barangayTenantId = DB::table('barangays')->where('id', $barangayId)->value('tenant_id');
+
+        return $barangayTenantId !== null && (int) $barangayTenantId === $tenantId;
+    }
+
+    private function canViewPost(User $user, Announcement $post): bool
+    {
+        if ($post->is_federation_wide) {
+            return true;
+        }
+
+        $viewerBarangayId = $this->resolveBarangayId($user);
+        if ($viewerBarangayId && (int) $post->barangay_id === $viewerBarangayId) {
+            return true;
+        }
+
+        $tenantId = $this->resolveTenantId($user);
+        if ($tenantId === null) {
+            return false;
+        }
+
+        $postTenantId = $post->relationLoaded('barangay')
+            ? $post->barangay?->tenant_id
+            : $post->barangay()->value('tenant_id');
+
+        return $postTenantId !== null && (int) $postTenantId === $tenantId;
+    }
+
+    private function canEngageWithPost(User $user, Announcement $post): bool
+    {
+        if ($post->is_federation_wide) {
+            return $this->resolveBarangayId($user) !== null;
+        }
+
+        return $this->canEngageWithPostBarangay($user, (int) $post->barangay_id);
+    }
+
+    private function canEngageWithPostBarangay(User $user, int $barangayId): bool
+    {
+        $viewerBarangayId = $this->resolveBarangayId($user);
+
+        return $viewerBarangayId !== null && $viewerBarangayId === $barangayId;
+    }
+
+    private function resolveTenantId(User $user): ?int
+    {
+        $registration = KabataanRegistration::with('barangay')->where('user_id', $user->id)->latest()->first();
+        $tenantId = $registration?->barangay?->tenant_id ?? $user->tenant_id;
+
+        return $tenantId ? (int) $tenantId : null;
     }
 
     private function resolveBarangayId(User $user): ?int

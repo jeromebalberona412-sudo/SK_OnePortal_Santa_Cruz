@@ -195,7 +195,7 @@ function renderPost() {
             </button>
             <button type="button" class="cp-stats-comments" id="cpFocusComments">${comments > 0 ? `${formatCount(comments)} comment${comments === 1 ? '' : 's'}` : ''}</button>
         </div>
-        <div class="cp-actions">
+        <div class="cp-actions"${isViewOnly() ? ' hidden' : ''}>
             <div class="cp-reaction-wrap" data-target="post">
                 <button type="button" class="cp-action${post.liked ? ' liked' : ''}" id="cpLikeBtn" data-type="${escapeHtml(type)}">${likeInner(type)}</button>
                 ${pickerHtml(type)}
@@ -204,7 +204,9 @@ function renderPost() {
         </div>
     `;
 
-    bindReactionWrap(document.querySelector('.cp-reaction-wrap'));
+    if (!isViewOnly()) {
+        bindReactionWrap(document.querySelector('.cp-reaction-wrap'));
+    }
     document.querySelectorAll('.cp-media-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
             if (typeof window.openLightbox === 'function') {
@@ -226,11 +228,15 @@ function renderComments() {
     const root = document.getElementById('cpComments');
     const comments = sortComments(post?.comments || []);
     if (!comments.length) {
-        root.innerHTML = '<p class="cp-empty">No comments yet. Be the first to comment.</p>';
+        root.innerHTML = isViewOnly()
+            ? '<p class="cp-empty">No comments yet.</p>'
+            : '<p class="cp-empty">No comments yet. Be the first to comment.</p>';
         return;
     }
     root.innerHTML = comments.map((c) => commentHtml(c, false)).join('');
-    root.querySelectorAll('.cp-reaction-wrap').forEach(bindReactionWrap);
+    if (!isViewOnly()) {
+        root.querySelectorAll('.cp-reaction-wrap').forEach(bindReactionWrap);
+    }
 }
 
 function commentHtml(comment, isReply) {
@@ -240,7 +246,7 @@ function commentHtml(comment, isReply) {
     const badge = likes > 0
         ? `<button type="button" class="cp-bubble-react" data-comment-id="${comment.id}">${facesHtml(comment.reaction_counts)}<span class="cp-react-total">${formatCount(likes)}</span></button>`
         : `<button type="button" class="cp-bubble-react" data-comment-id="${comment.id}" hidden></button>`;
-    const options = comment.owned
+    const options = !isViewOnly() && comment.owned
         ? `<div class="cp-options">
             <button type="button" class="cp-options-btn" data-opt="${comment.id}">⋯</button>
             <div class="cp-options-menu" id="cp-opt-${comment.id}">
@@ -263,19 +269,19 @@ function commentHtml(comment, isReply) {
                 ${badge}
             </div>
             <div class="cp-comment-meta">
-                <div class="cp-reaction-wrap" data-target="comment" data-comment-id="${comment.id}">
+                ${isViewOnly() ? `<span class="cp-time">${escapeHtml(comment.time || '')}</span>` : `<div class="cp-reaction-wrap" data-target="comment" data-comment-id="${comment.id}">
                     <button type="button" class="cp-like-btn${comment.liked ? ' liked' : ''}" data-type="${escapeHtml(type)}">${commentLikeInner(type)}</button>
                     ${pickerHtml(type)}
                 </div>
                 <button type="button" class="cp-meta-btn" data-reply="${comment.id}">Reply</button>
                 <span class="cp-time">${escapeHtml(comment.time || '')}</span>
-                ${options}
+                ${options}`}
             </div>
             ${viewReplies}
-            <div class="cp-reply-box" id="cp-reply-${comment.id}">
+            ${isViewOnly() ? '' : `<div class="cp-reply-box" id="cp-reply-${comment.id}">
                 <input type="text" maxlength="500" placeholder="Write a reply..." data-reply-input="${comment.id}">
                 <button type="button" class="cp-send-btn" data-reply-send="${comment.id}" disabled aria-label="Send reply">${SEND_SVG}</button>
-            </div>
+            </div>`}
             ${replies.length ? `<div class="cp-replies" id="cp-replies-${comment.id}"${repliesOpen ? '' : ' hidden'}>${replies.map((r) => commentHtml(r, true)).join('')}</div>` : ''}
         </div>
     </div>`;
@@ -422,6 +428,7 @@ function paintCpCommentReaction(commentId, liked, type, count, counts) {
 }
 
 async function setPostReaction(type) {
+    if (isViewOnly() || !post) return;
     const btn = document.getElementById('cpLikeBtn');
     const current = btn?.dataset.type || post.reaction_type || '';
     const next = resolveNextReaction(current, type);
@@ -450,6 +457,7 @@ async function setPostReaction(type) {
 }
 
 async function setCommentReaction(commentId, type) {
+    if (isViewOnly() || !post) return;
     const wrap = document.querySelector(`.cp-reaction-wrap[data-comment-id="${commentId}"]`);
     const btn = wrap?.querySelector('.cp-like-btn');
     const comment = findComment(post.comments, commentId);
@@ -544,7 +552,7 @@ function refreshPreview(focusId) {
 }
 
 async function submitComment(body, parentId = null) {
-    if (sending || !body) return;
+    if (isViewOnly() || sending || !body) return;
     sending = true;
     const tempId = 'tmp-' + Date.now();
     const optimistic = {
@@ -882,6 +890,19 @@ function feedPath() {
     return cfg().feedUrl || '/dashboard';
 }
 
+function isViewOnly() {
+    return Boolean(cfg().viewOnly);
+}
+
+function applyViewOnlyState() {
+    const shell = document.getElementById('commentPreviewShell');
+    const composer = document.getElementById('cpComposer');
+    shell?.classList.toggle('is-view-only', isViewOnly());
+    if (composer) {
+        composer.hidden = isViewOnly();
+    }
+}
+
 function pathOf(url) {
     try {
         return new URL(url, window.location.origin).pathname;
@@ -891,6 +912,7 @@ function pathOf(url) {
 }
 
 function syncCommentsUrl(id) {
+    if (cfg().syncUrl === false) return;
     const next = id ? commentsPath(id) : feedPath();
     if (pathOf(window.location.href) === pathOf(next)) return;
     syncingUrl = true;
@@ -915,6 +937,7 @@ function openCommentPreview(nextPost, { skipUrl } = {}) {
     }
     renderPost();
     renderComments();
+    applyViewOnlyState();
     syncCommentSend();
     document.getElementById('cpScroll')?.scrollTo({ top: 0 });
     if (!skipUrl) syncCommentsUrl(nextPost.id);
@@ -935,9 +958,10 @@ window.openCommentPreview = openCommentPreview;
 window.closeCommentPreview = closeCommentPreview;
 
 window.addEventListener('popstate', () => {
-    if (syncingUrl) return;
+    if (syncingUrl || cfg().syncUrl === false) return;
     const match = window.location.pathname.match(/\/dashboard\/comments\/(\d+)\/?$/)
-        || window.location.pathname.match(/\/dashboard\/(\d+)\/comments\/?$/);
+        || window.location.pathname.match(/\/dashboard\/(\d+)\/comments\/?$/)
+        || window.location.pathname.match(/\/barangay\/[^/]+\/(\d+)\/?$/);
     if (match) {
         const id = Number(match[1]);
         if (post && Number(post.id) === id) {

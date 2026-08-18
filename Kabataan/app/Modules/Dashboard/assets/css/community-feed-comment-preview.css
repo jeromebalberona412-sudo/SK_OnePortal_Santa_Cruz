@@ -339,6 +339,11 @@
 .cp-options-menu button.danger { color: #b91c1c; }
 .cp-empty { color: var(--cp-muted); text-align: center; padding: 24px 8px; font-size: 14px; }
 
+.cp-composer[hidden],
+.cp-shell.is-view-only .cp-composer {
+    display: none;
+}
+
 .cp-composer {
     display: flex;
     align-items: center;

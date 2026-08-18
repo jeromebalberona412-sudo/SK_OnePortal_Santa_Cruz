@@ -48,12 +48,12 @@ document.addEventListener('DOMContentLoaded', function () {
         els.tableBody.innerHTML = rows.map(function (row, index) {
             return `
                 <tr>
-                    <td class="cell-primary">${escapeHtml(row.created_date)}</td>
-                    <td>${escapeHtml(row.created_time)}</td>
-                    <td class="dash-audit-cell-email">${escapeHtml(row.user_email || '-')}</td>
-                    <td>${escapeHtml(row.role)}</td>
-                    <td>${escapeHtml(row.event_type)}</td>
-                    <td>${escapeHtml(row.ip_address)}</td>
+                    <td class="cell-primary dash-audit-col-date">${escapeHtml(row.created_date)}</td>
+                    <td class="dash-audit-col-time">${escapeHtml(row.created_time)}</td>
+                    <td class="dash-audit-cell-email dash-audit-col-email">${escapeHtml(row.user_email || '-')}</td>
+                    <td class="dash-audit-col-role">${escapeHtml(row.role)}</td>
+                    <td class="dash-audit-col-event">${escapeHtml(row.event_type)}</td>
+                    <td class="dash-audit-col-ip">${escapeHtml(row.ip_address)}</td>
                     <td>
                         <button type="button" class="dash-audit-details-btn" data-row-index="${index}">View</button>
                     </td>

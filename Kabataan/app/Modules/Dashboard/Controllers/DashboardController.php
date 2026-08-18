@@ -76,11 +76,20 @@ class DashboardController extends Controller
 
     public function barangay(Request $request, string $slug)
     {
-        if (! Auth::check()) {
+        return $this->barangayPage($slug);
+    }
+
+    public function barangayComments(Request $request, string $slug, int $post)
+    {
+        return $this->barangayPage($slug, $post);
+    }
+
+    private function barangayPage(string $slug, ?int $postId = null)
+    {
+        $user = Auth::user();
+        if (! $user) {
             return redirect()->route('sign-in');
         }
-
-        $user = Auth::user();
 
         $registration = KabataanRegistration::with('barangay')->where('user_id', $user->id)->latest()->first();
         $tenantId = (int) ($user->tenant_id ?? $registration?->barangay?->tenant_id ?? 0);
@@ -91,9 +100,23 @@ class DashboardController extends Controller
         }
 
         $profile = $this->barangaySkProfileService->buildProfile($barangay);
+        $viewerBarangayId = (int) ($registration?->barangay_id ?? $user->barangay_id ?? 0);
+        if ($viewerBarangayId === 0 && ! empty($user->email)) {
+            $emailReg = KabataanRegistration::where('email', $user->email)->latest()->first();
+            $viewerBarangayId = (int) ($emailReg?->barangay_id ?? 0);
+        }
+        $canEngage = $viewerBarangayId > 0 && $viewerBarangayId === (int) $barangay->id;
+        $posts = app(AnnouncementFeedController::class)->presentBarangayPosts((int) $barangay->id, $user);
+
+        $commentPreviewPost = null;
+        if ($postId !== null) {
+            $commentPreviewPost = collect($posts)->first(fn (array $post) => (int) $post['id'] === $postId);
+            abort_unless($commentPreviewPost !== null, 404);
+        }
 
         return view('dashboard::barangay', [
             'user' => $user,
+            'userAvatarUrl' => app(ProfileImageService::class)->resolveDisplayUrl($user),
             'slug' => $profile['slug'],
             'name' => $profile['name'],
             'color' => $profile['color'],
@@ -101,10 +124,13 @@ class DashboardController extends Controller
             'initials' => $profile['initials'],
             'location' => $profile['location'],
             'term_label' => $profile['term_label'],
-            'post_count' => $profile['post_count'],
+            'post_count' => count($posts),
             'officer_count' => $profile['officer_count'],
             'officials' => $profile['officials'],
-            'posts' => $profile['posts'],
+            'posts' => $posts,
+            'canEngage' => $canEngage,
+            'barangayId' => (int) $barangay->id,
+            'commentPreviewPost' => $commentPreviewPost,
         ])->withHeaders([
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma' => 'no-cache',

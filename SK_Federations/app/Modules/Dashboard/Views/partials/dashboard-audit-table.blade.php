@@ -11,12 +11,12 @@
             <table class="dash-audit-table" id="dashAuditLogsTable">
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Event Type</th>
-                        <th>IP Address</th>
+                        <th class="dash-audit-col-date">Date</th>
+                        <th class="dash-audit-col-time">Time</th>
+                        <th class="dash-audit-col-email">Email</th>
+                        <th class="dash-audit-col-role">Role</th>
+                        <th class="dash-audit-col-event">Event Type</th>
+                        <th class="dash-audit-col-ip">IP Address</th>
                         <th class="dash-audit-col-actions">Actions</th>
                     </tr>
                 </thead>

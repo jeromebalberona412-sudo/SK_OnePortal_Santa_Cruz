@@ -32,8 +32,8 @@
                 <p id="dashActivityModalSubtitle">Complete federation activity history</p>
             </div>
             <div class="dash-activity-modal-actions">
-                <button type="button" class="dash-activity-modal-fullscreen" id="dashActivityFullscreenBtn" aria-label="Toggle fullscreen">
-                    <i class="fas fa-expand"></i>
+                <button type="button" class="dash-activity-modal-fullscreen" id="dashActivityFullscreenBtn" aria-label="Enter fullscreen">
+                    <span class="dash-fs-icon" aria-hidden="true">□</span>
                 </button>
                 <button type="button" class="dash-activity-modal-close" data-dash-activity-close aria-label="Close">
                     <i class="fas fa-times"></i>

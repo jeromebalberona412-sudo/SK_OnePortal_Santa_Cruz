@@ -63,35 +63,6 @@
             </a>
         </div>
         
-        <style>
-            .dash-stats-grid {
-                display: grid;
-                grid-template-columns: repeat(5, 1fr);
-                gap: 16px;
-                margin-bottom: 24px;
-            }
-            @media (max-width: 1400px) {
-                .dash-stats-grid {
-                    grid-template-columns: repeat(5, 1fr);
-                }
-            }
-            @media (max-width: 1200px) {
-                .dash-stats-grid {
-                    grid-template-columns: repeat(3, 1fr);
-                }
-            }
-            @media (max-width: 768px) {
-                .dash-stats-grid {
-                    grid-template-columns: repeat(2, 1fr);
-                }
-            }
-            @media (max-width: 480px) {
-                .dash-stats-grid {
-                    grid-template-columns: 1fr;
-                }
-            }
-        </style>
-        
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 document.querySelectorAll('.stat-card-clickable').forEach(function(card) {
@@ -211,10 +182,18 @@
             <div class="content-card dash-col-4">
                 <div class="card-header dash-sex-chart-header">
                     <h3><i class="fas fa-venus-mars" style="color:#213F99;margin-right:8px;"></i>Sex Distribution of SK Officials</h3>
-                    <select id="sexDistributionTypeFilter" class="kk-barangay-select" aria-label="Filter by type">
-                        <option value="officials">SK Officials</option>
-                        <option value="kabataan">Kabataan</option>
-                    </select>
+                    <div class="dash-sex-chart-filters">
+                        <select id="sexDistributionTypeFilter" class="kk-barangay-select" aria-label="Filter by group">
+                            <option value="all">All</option>
+                            <option value="officials" selected>SK Officials</option>
+                            <option value="kabataan">Kabataan</option>
+                        </select>
+                        <select id="sexDistributionSexFilter" class="kk-barangay-select" aria-label="Filter by sex">
+                            <option value="all" selected>All</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="card-body chart-body dash-sex-chart-body">
                     <canvas id="sexChart"></canvas>
@@ -320,7 +299,50 @@
         @endphp
         const sexDistributionOfficials = @json($sexDistributionOfficialsData);
         const sexDistributionKabataan = @json($sexDistributionKabataanData);
-        
+
+        function combineSexDistribution(first, second) {
+            const labels = ['Male', 'Female'];
+            const values = labels.map(function (label, index) {
+                return Number(first.values?.[index] || 0) + Number(second.values?.[index] || 0);
+            });
+            return { labels: labels, values: values };
+        }
+
+        const sexDistributionAll = combineSexDistribution(sexDistributionOfficials, sexDistributionKabataan);
+
+        function getSexDistributionByType(type) {
+            if (type === 'kabataan') {
+                return sexDistributionKabataan;
+            }
+            if (type === 'all') {
+                return sexDistributionAll;
+            }
+            return sexDistributionOfficials;
+        }
+
+        function applySexFilter(source, sexFilter) {
+            const labels = source.labels || ['Male', 'Female'];
+            const values = source.values || [0, 0];
+            if (sexFilter === 'male') {
+                return { labels: ['Male'], values: [values[0] || 0], colors: [fedBlue] };
+            }
+            if (sexFilter === 'female') {
+                return { labels: ['Female'], values: [values[1] || 0], colors: [fedRed] };
+            }
+            return { labels: labels, values: values, colors: sexChartColors };
+        }
+
+        function updateSexChart() {
+            const typeFilter = document.getElementById('sexDistributionTypeFilter')?.value || 'officials';
+            const sexFilter = document.getElementById('sexDistributionSexFilter')?.value || 'all';
+            const source = getSexDistributionByType(typeFilter);
+            const filtered = applySexFilter(source, sexFilter);
+            sexChart.data.labels = filtered.labels;
+            sexChart.data.datasets[0].data = filtered.values;
+            sexChart.data.datasets[0].backgroundColor = filtered.colors || sexChartColors;
+            sexChart.update();
+        }
+
         let sexChartLabels = sexDistributionOfficials.labels || ['Male', 'Female'];
         let sexChartValues = sexDistributionOfficials.values || [0, 0];
         const sexChartColors = [fedBlue, fedRed];
@@ -348,25 +370,8 @@
             },
         });
 
-        document.getElementById('sexDistributionTypeFilter')?.addEventListener('change', function () {
-            const filter = this.value;
-            let labels, values;
-
-            if (filter === 'officials') {
-                labels = sexDistributionOfficials.labels || ['Male', 'Female'];
-                values = sexDistributionOfficials.values || [0, 0];
-            } else if (filter === 'kabataan') {
-                labels = sexDistributionKabataan.labels || ['Male', 'Female'];
-                values = sexDistributionKabataan.values || [0, 0];
-            } else {
-                labels = sexDistributionOfficials.labels || ['Male', 'Female'];
-                values = sexDistributionOfficials.values || [0, 0];
-            }
-
-            sexChart.data.labels = labels;
-            sexChart.data.datasets[0].data = values;
-            sexChart.update();
-        });
+        document.getElementById('sexDistributionTypeFilter')?.addEventListener('change', updateSexChart);
+        document.getElementById('sexDistributionSexFilter')?.addEventListener('change', updateSexChart);
 </script>
 <script>
         (() => {
