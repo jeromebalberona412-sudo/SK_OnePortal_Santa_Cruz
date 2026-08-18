@@ -564,6 +564,13 @@ body.sidebar-collapsed .toggle-icon-collapse { display: block; }
 
 .profile-dropdown-icon--password svg { stroke: #22c55e; }
 
+.profile-dropdown-icon--settings {
+    background: #f0fdf4;
+    color: #22c55e;
+}
+
+.profile-dropdown-icon--settings svg { stroke: #22c55e; }
+
 .profile-dropdown-icon--logout {
     background: #fef2f2;
     color: #ef4444;
@@ -575,6 +582,42 @@ body.sidebar-collapsed .toggle-icon-collapse { display: block; }
 .profile-dropdown-header { padding: 16px 18px 12px; border-bottom: 1px solid #f1f5f9; }
 .profile-dropdown-header .dd-name { font-size: 14px; font-weight: 700; color: #1e293b; }
 .profile-dropdown-header .dd-email { font-size: 12px; color: #64748b; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 768px) {
+    .profile-dropdown {
+        width: min(268px, calc(100vw - 16px));
+        border-radius: 12px;
+    }
+    .profile-dropdown-user-card {
+        padding: 12px;
+        gap: 10px;
+    }
+    .profile-dropdown-avatar {
+        width: 36px;
+        height: 36px;
+    }
+    .profile-dropdown-name {
+        font-size: 12px;
+    }
+    .profile-dropdown-role {
+        font-size: 11px;
+        margin-top: 2px;
+    }
+    .profile-dropdown-item {
+        padding: 9px 12px;
+        font-size: 13px;
+        gap: 10px;
+    }
+    .profile-dropdown-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+    }
+    .profile-dropdown-icon svg {
+        width: 14px;
+        height: 14px;
+    }
+}
 
 .dd-item {
     display: flex; align-items: center; gap: 10px;

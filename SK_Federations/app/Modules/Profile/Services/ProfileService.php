@@ -27,7 +27,7 @@ class ProfileService
             'sex' => $this->displayValue($officialProfile?->sex ?? null),
             'birthdate' => $this->formatDate($officialProfile?->date_of_birth),
             'contact_number' => $this->displayValue($officialProfile?->contact_number),
-            'position' => $this->displayPosition($isBootstrapAdmin ? 'Admin' : $officialProfile?->position),
+            'position' => $this->displayPosition($isBootstrapAdmin ? 'Admin' : $this->resolveProfilePosition($officialProfile)),
             'region' => $this->displayValue($officialProfile?->region ?? 'IV-A CALABARZON'),
             'province' => $this->displayValue($officialProfile?->province ?? 'Laguna'),
             'municipality' => $this->displayValue($officialProfile?->municipality ?? 'Santa Cruz'),
@@ -105,6 +105,20 @@ class ProfileService
         $trimmed = trim((string) $position);
 
         return $trimmed !== '' ? $trimmed : 'N/A';
+    }
+
+    private function resolveProfilePosition(?OfficialProfile $officialProfile): ?string
+    {
+        if ($officialProfile === null) {
+            return null;
+        }
+
+        $federationPosition = trim((string) ($officialProfile->federation_position ?? ''));
+        if ($federationPosition !== '') {
+            return $federationPosition;
+        }
+
+        return $officialProfile->position;
     }
 
     private function formatDate(mixed $value): string

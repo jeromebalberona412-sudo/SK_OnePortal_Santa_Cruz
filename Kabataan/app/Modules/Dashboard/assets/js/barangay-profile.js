@@ -391,4 +391,32 @@
         });
     });
     startFeedPolling();
+
+    function initBfpSidebarDrawer() {
+        const fab = document.getElementById('bfpSidebarFab');
+        const sidebar = document.getElementById('bfpSidebar');
+        const backdrop = document.getElementById('bfpSidebarBackdrop');
+        const closeBtn = document.getElementById('bfpSidebarClose');
+        if (!fab || !sidebar || !backdrop) return;
+
+        const openDrawer = () => {
+            sidebar.classList.add('drawer-open');
+            backdrop.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+        const closeDrawer = () => {
+            sidebar.classList.remove('drawer-open');
+            backdrop.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+
+        fab.addEventListener('click', openDrawer);
+        closeBtn?.addEventListener('click', closeDrawer);
+        backdrop.addEventListener('click', closeDrawer);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDrawer();
+        });
+    }
+
+    initBfpSidebarDrawer();
 })();

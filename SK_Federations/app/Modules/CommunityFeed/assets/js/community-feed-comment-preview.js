@@ -148,14 +148,14 @@ function pickerHtml(active) {
 
 function likeInner(type) {
     const label = type ? (REACTION_LABEL[type] || 'Like') : 'Like';
-    const icon = type && type !== 'like' ? `<span>${REACTION_EMOJI[type]}</span>` : THUMBS_SVG;
+    const icon = type && REACTION_EMOJI[type] ? `<span>${REACTION_EMOJI[type]}</span>` : THUMBS_SVG;
     return `${icon}<span>${escapeHtml(label)}</span>`;
 }
 
 function commentLikeInner(type) {
     const label = type ? (REACTION_LABEL[type] || 'Like') : 'Like';
-    if (type && type !== 'like') {
-        return `<span class="comment-react-emoji">${REACTION_EMOJI[type] || ''}</span><span>${escapeHtml(label)}</span>`;
+    if (type && REACTION_EMOJI[type]) {
+        return `<span class="comment-react-emoji">${REACTION_EMOJI[type]}</span><span>${escapeHtml(label)}</span>`;
     }
     return `<span>${escapeHtml(label)}</span>`;
 }

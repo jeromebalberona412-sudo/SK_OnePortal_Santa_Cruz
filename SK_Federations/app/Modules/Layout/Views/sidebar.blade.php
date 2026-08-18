@@ -12,6 +12,20 @@
             <div class="sidebar-user-info">
                 <div class="s-name">{{ $displayName ?? ($user->name ?? 'User') }}</div>
                 <div class="s-role">{{ $formattedRole }}</div>
+                @if(!empty($sidebarMeta))
+                    @if(!empty($sidebarMeta['position']))
+                        <div class="s-meta">{{ $sidebarMeta['position'] }}</div>
+                    @endif
+                    @if(!empty($sidebarMeta['sex']))
+                        <div class="s-meta">{{ $sidebarMeta['sex'] }}</div>
+                    @endif
+                    @if(!empty($sidebarMeta['contact_number']))
+                        <div class="s-meta">{{ $sidebarMeta['contact_number'] }}</div>
+                    @endif
+                    @if(!empty($sidebarMeta['term_start']) && !empty($sidebarMeta['term_end']))
+                        <div class="s-meta">Term: {{ $sidebarMeta['term_start'] }} – {{ $sidebarMeta['term_end'] }}</div>
+                    @endif
+                @endif
             </div>
         </a>
 
@@ -27,7 +41,7 @@
             <i class="fas fa-calendar-alt"></i><span>Calendar</span>
         </a>
 
-        <a href="{{ route('community-feed') }}" class="menu-item {{ request()->routeIs('community-feed', 'community-feed.comments', 'sk-fed-profile', 'skfed.barangay-profile') ? 'active' : '' }}" data-tooltip="SK Community Feed" id="sidebar-community-feed-link" data-no-loading>
+        <a href="{{ route('community-feed') }}" class="menu-item {{ request()->routeIs('community-feed', 'community-feed.comments', 'sk-fed-profile', 'skfed.barangay-profile', 'skfed.barangay-profile.comments') ? 'active' : '' }}" data-tooltip="SK Community Feed" id="sidebar-community-feed-link" data-no-loading>
             <i class="fas fa-rss"></i><span>SK Community Feed</span>
         </a>
 

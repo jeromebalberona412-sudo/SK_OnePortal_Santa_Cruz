@@ -38,4 +38,11 @@ function initTabs() {
         });
     }
 
+    const params = new URLSearchParams(window.location.search);
+    const hashTab = (window.location.hash || '').replace('#', '').toLowerCase();
+    const requestedTab = (params.get('tab') || hashTab || '').toLowerCase();
+
+    if (requestedTab === 'settings' || requestedTab === 'account-settings') {
+        activateTab(1);
+    }
 }

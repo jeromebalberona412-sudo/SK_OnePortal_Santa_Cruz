@@ -59,6 +59,11 @@ class CommunityFeedPostController extends Controller
             $query->where('type', $request->filter);
         }
 
+        if ($request->filled('barangay_id')) {
+            $query->where('barangay_id', (int) $request->barangay_id)
+                ->whereRaw('"is_federation_wide" = false');
+        }
+
         if ($search = trim((string) $request->get('search', ''))) {
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', '%'.$search.'%')

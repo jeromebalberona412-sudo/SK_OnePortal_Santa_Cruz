@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Modules\Accounts\Models\OfficialProfile;
+use App\Modules\Accounts\Models\OfficialTerm;
 use App\Modules\Accounts\Policies\AccountPolicy;
 use App\Modules\Authentication\Services\BootstrapSkFedAdminService;
 use App\Modules\Shared\Models\User;
@@ -76,6 +77,7 @@ class AppServiceProvider extends ServiceProvider
                 'user' => $user,
                 'avatar' => asset('Images/SK_Fed_profile.png'),
                 'displayName' => $this->resolveSidebarDisplayName($user),
+                'sidebarMeta' => $this->resolveSidebarMeta($user),
                 'formattedRole' => match (true) {
                     $user && strtolower((string) $user->email) === BootstrapSkFedAdminService::bootstrapEmailNormalized() => 'Admin',
                     $user?->isSkFed() => 'SK Federation',
@@ -116,5 +118,56 @@ class AppServiceProvider extends ServiceProvider
         $name = trim((string) $user->name);
 
         return $name !== '' ? $name : 'User';
+    }
+
+    /**
+     * @return array<string, string>|null
+     */
+    private function resolveSidebarMeta(?User $user): ?array
+    {
+        if (! $user?->hasFederationLeadershipAccess()) {
+            return null;
+        }
+
+        $profile = $user->officialProfile;
+        if ($profile === null) {
+            return null;
+        }
+
+        $position = trim((string) ($profile->federation_position ?? ''));
+        if (! in_array($position, OfficialProfile::FEDERATION_PORTAL_ACCESS_POSITIONS, true)) {
+            return null;
+        }
+
+        $term = $profile->terms()
+            ->when(
+                \Illuminate\Support\Facades\Schema::hasColumn('official_terms', 'status'),
+                fn ($query) => $query->where('status', OfficialTerm::STATUS_ACTIVE)
+            )
+            ->orderByDesc('term_start')
+            ->first();
+
+        $formatTerm = static function ($value): string {
+            if ($value === null || $value === '') {
+                return 'N/A';
+            }
+
+            try {
+                return \Illuminate\Support\Carbon::parse($value)->format('M d, Y');
+            } catch (\Throwable) {
+                return 'N/A';
+            }
+        };
+
+        $contact = trim((string) ($profile->contact_number ?? ''));
+        $sex = trim((string) ($profile->sex ?? ''));
+
+        return array_filter([
+            'position' => $position,
+            'term_start' => $formatTerm($term?->term_start),
+            'term_end' => $formatTerm($term?->term_end),
+            'contact_number' => $contact !== '' ? $contact : null,
+            'sex' => $sex !== '' ? $sex : null,
+        ], fn ($value) => $value !== null && $value !== '');
     }
 }

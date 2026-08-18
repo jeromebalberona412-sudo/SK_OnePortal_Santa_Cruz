@@ -2,6 +2,7 @@
 
 namespace App\Modules\CommunityFeed\Services;
 
+use App\Modules\Accounts\Models\OfficialTerm;
 use App\Modules\BarangayMonitoring\Services\BarangayMonitoringService;
 use App\Modules\Profile\Models\Barangay;
 use App\Modules\Shared\Models\Announcement;
@@ -123,9 +124,9 @@ class CommunityFeedService
     }
 
     /**
-     * @return list<array{name: string, role: string, initials: string}>
+     * @return list<array{name: string, role: string, initials: string, logo_url: string|null}>
      */
-    public function listOfficialsForBarangay(?int $barangayId): array
+    public function listOfficialsForBarangay(?int $barangayId, ?string $logoUrl = null): array
     {
         if ($barangayId === null || ! Schema::hasTable('users')) {
             return [];
@@ -137,7 +138,7 @@ class CommunityFeedService
             ->where('role', User::ROLE_SK_OFFICIAL)
             ->where('status', User::STATUS_ACTIVE)
             ->get()
-            ->map(function (User $official) {
+            ->map(function (User $official) use ($logoUrl) {
                 $name = trim((string) $official->name);
                 $role = trim((string) ($official->officialProfile?->position ?? 'SK Official'));
 
@@ -145,6 +146,7 @@ class CommunityFeedService
                     'name' => $name !== '' ? $name : 'SK Official',
                     'role' => $role !== '' ? $role : 'SK Official',
                     'initials' => $this->initials($name !== '' ? $name : 'SK'),
+                    'logo_url' => $logoUrl,
                     'sort_key' => $this->positionSortKey($role),
                 ];
             })
@@ -156,9 +158,46 @@ class CommunityFeedService
                 'name' => $official['name'],
                 'role' => $official['role'],
                 'initials' => $official['initials'],
+                'logo_url' => $official['logo_url'],
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * @return array{label: string, start: string, end: string}
+     */
+    public function resolveBarangayTerm(?int $barangayId): array
+    {
+        if ($barangayId === null || ! Schema::hasTable('official_terms')) {
+            return ['label' => '—', 'start' => 'N/A', 'end' => 'N/A'];
+        }
+
+        $terms = OfficialTerm::query()
+            ->where('status', OfficialTerm::STATUS_ACTIVE)
+            ->whereHas('officialProfile.user', function ($query) use ($barangayId) {
+                $query->where('barangay_id', $barangayId)
+                    ->where('role', User::ROLE_SK_OFFICIAL)
+                    ->where('status', User::STATUS_ACTIVE);
+            })
+            ->get(['term_start', 'term_end']);
+
+        if ($terms->isEmpty()) {
+            return ['label' => '—', 'start' => 'N/A', 'end' => 'N/A'];
+        }
+
+        $start = $terms->min('term_start');
+        $end = $terms->max('term_end');
+
+        if ($start === null || $end === null) {
+            return ['label' => '—', 'start' => 'N/A', 'end' => 'N/A'];
+        }
+
+        return [
+            'label' => $start->format('Y').'–'.$end->format('Y'),
+            'start' => $start->format('M d, Y'),
+            'end' => $end->format('M d, Y'),
+        ];
     }
 
     /**

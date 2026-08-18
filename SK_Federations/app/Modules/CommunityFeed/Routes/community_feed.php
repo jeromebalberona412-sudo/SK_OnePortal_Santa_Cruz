@@ -40,6 +40,9 @@ Route::middleware(['auth', 'verified', 'single.session', 'sk_fed.access', 'trust
         Route::get('/sk-federation-profile', [CommunityFeedController::class, 'skFedProfile'])->name('sk-fed-profile');
         Route::post('/sk-federation-profile/post', [CommunityFeedController::class, 'createPost'])->name('sk-fed-profile.post');
         Route::get('/barangay-profile/{slug}', [CommunityFeedController::class, 'barangayProfile'])->name('skfed.barangay-profile');
+        Route::get('/barangay-profile/{slug}/comments/{id}', [CommunityFeedController::class, 'barangayComments'])
+            ->whereNumber('id')
+            ->name('skfed.barangay-profile.comments');
 
         // Federation-wide post API
         Route::prefix('api/community-feed')->group(function () {

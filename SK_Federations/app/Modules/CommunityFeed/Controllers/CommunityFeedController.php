@@ -54,32 +54,112 @@ class CommunityFeedController extends Controller
 
     public function createPost(Request $request): RedirectResponse
     {
-        // Prototype: just redirect back with success
         return redirect()->route('sk-fed-profile')->with('success', 'Post created successfully.');
     }
 
     public function barangayProfile(Request $request, string $slug): View
     {
-        $tenantId = $request->user()?->tenant_id;
+        $user = $request->user();
+        $tenantId = $user?->tenant_id;
         $profile = $this->feedService->resolveBarangayProfile($slug, $tenantId);
 
         if ($profile === null) {
             abort(404);
         }
 
-        $name = $profile['name'];
-        $color = $profile['color'];
-        $officials = $this->feedService->listOfficialsForBarangay($profile['id'] ?? null);
-        $posts = $this->feedService->listPostsForBarangay($profile['id'] ?? null);
+        $barangayId = $profile['id'] ?? null;
+        $term = $this->feedService->resolveBarangayTerm($barangayId);
+        $officials = $this->feedService->listOfficialsForBarangay($barangayId, $profile['logo_url'] ?? null);
+        $formattedPosts = $this->loadFormattedBarangayPosts($barangayId, (int) $user->id);
 
         return view('community_feed::barangay-profile', [
-            'user' => $request->user(),
+            'user' => $user,
             'slug' => $slug,
-            'name' => $name,
-            'color' => $color,
+            'name' => $profile['name'],
+            'color' => $profile['color'],
             'profile' => $profile,
             'officials' => $officials,
-            'posts' => $posts,
+            'officer_count' => count($officials),
+            'post_count' => count($formattedPosts),
+            'term_label' => $term['label'],
+            'formattedPosts' => $formattedPosts,
+            'commentPreviewPost' => null,
         ]);
+    }
+
+    public function barangayComments(Request $request, string $slug, int $id): View
+    {
+        $user = $request->user();
+        $tenantId = $user?->tenant_id;
+        $profile = $this->feedService->resolveBarangayProfile($slug, $tenantId);
+
+        if ($profile === null) {
+            abort(404);
+        }
+
+        $barangayId = $profile['id'] ?? null;
+        $post = Announcement::query()
+            ->active()
+            ->where('barangay_id', $barangayId)
+            ->whereRaw('"is_federation_wide" = false')
+            ->with([
+                'barangay',
+                'comments.user',
+                'comments.reactions',
+                'user',
+                'images',
+                'reactions.user',
+            ])
+            ->withCount('reactions')
+            ->findOrFail($id);
+
+        $term = $this->feedService->resolveBarangayTerm($barangayId);
+        $officials = $this->feedService->listOfficialsForBarangay($barangayId, $profile['logo_url'] ?? null);
+        $formattedPosts = $this->loadFormattedBarangayPosts($barangayId, (int) $user->id);
+
+        return view('community_feed::barangay-profile', [
+            'user' => $user,
+            'slug' => $slug,
+            'name' => $profile['name'],
+            'color' => $profile['color'],
+            'profile' => $profile,
+            'officials' => $officials,
+            'officer_count' => count($officials),
+            'post_count' => count($formattedPosts),
+            'term_label' => $term['label'],
+            'formattedPosts' => $formattedPosts,
+            'commentPreviewPost' => app(CommunityFeedPostController::class)->formatPostForPage($post, (int) $user->id),
+        ]);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function loadFormattedBarangayPosts(?int $barangayId, int $userId): array
+    {
+        if ($barangayId === null) {
+            return [];
+        }
+
+        $formatter = app(CommunityFeedPostController::class);
+
+        return Announcement::query()
+            ->with([
+                'barangay',
+                'comments.user',
+                'comments.reactions',
+                'user',
+                'images',
+                'reactions.user',
+            ])
+            ->withCount('reactions')
+            ->active()
+            ->where('barangay_id', $barangayId)
+            ->whereRaw('"is_federation_wide" = false')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn (Announcement $post) => $formatter->formatPostForPage($post, $userId))
+            ->values()
+            ->all();
     }
 }

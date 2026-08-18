@@ -104,13 +104,15 @@ class BarangayProfileService
      */
     private function listOfficials(int $barangayId): Collection
     {
+        $logoUrl = $this->logoUrlService->resolve($barangayId);
+
         return User::query()
             ->with('officialProfile')
             ->where('barangay_id', $barangayId)
             ->where('role', User::ROLE_SK_OFFICIAL)
             ->where('status', User::STATUS_ACTIVE)
             ->get()
-            ->map(function (User $official) {
+            ->map(function (User $official) use ($logoUrl) {
                 $fullName = $this->committeeService->buildOfficialFullName($official);
                 $role     = trim((string) ($official->officialProfile?->position ?? 'SK Official'));
 
@@ -118,6 +120,7 @@ class BarangayProfileService
                     'name' => $fullName !== '' ? $fullName : trim((string) $official->name),
                     'role' => $role !== '' ? $role : 'SK Official',
                     'initials' => $this->buildInitials($fullName !== '' ? $fullName : (string) $official->name),
+                    'logo_url' => $logoUrl,
                     'sort_key' => $this->positionSortKey($role),
                 ];
             })
@@ -129,6 +132,7 @@ class BarangayProfileService
                 'name' => $official['name'],
                 'role' => $official['role'],
                 'initials' => $official['initials'],
+                'logo_url' => $official['logo_url'],
             ])
             ->values();
     }

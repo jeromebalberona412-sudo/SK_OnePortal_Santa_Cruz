@@ -578,9 +578,7 @@ function initializeCalendar() {
             const noteId = notes[dateKey]?.id;
             if (!noteId) return;
 
-            const defaultHtml = delBtn.innerHTML;
             delBtn.disabled = true;
-            delBtn.innerHTML = '<span class="calendar-action-spinner"></span> Deleting...';
 
             try {
                 await calendarApiFetch(`/api/calendar/notes/${noteId}`, { method: 'DELETE' });
@@ -592,7 +590,6 @@ function initializeCalendar() {
                 showToast(err.message || 'Failed to delete note.', 'error');
             } finally {
                 delBtn.disabled = false;
-                delBtn.innerHTML = defaultHtml;
             }
         }
 
@@ -635,9 +632,7 @@ function initializeCalendar() {
                 if (!ok) return;
             }
 
-            const defaultHtml = saveBtn.innerHTML;
             saveBtn.disabled = true;
-            saveBtn.innerHTML = '<span class="calendar-action-spinner calendar-action-spinner-dark"></span> Saving...';
 
             const isoDate = dateKeyToIso(activeYear, activeMonthIndex, activeDay);
 
@@ -670,7 +665,6 @@ function initializeCalendar() {
                 showToast(err.message || 'Failed to save note.', 'error');
             } finally {
                 saveBtn.disabled = false;
-                saveBtn.innerHTML = defaultHtml;
             }
         }
 

@@ -186,8 +186,8 @@ function reactionLabel(type) {
 
 function commentLikeInner(type) {
     var label = reactionLabel(type);
-    if (type && type !== 'like') {
-        return '<span class="comment-react-emoji">' + (REACTION_EMOJI[type] || '') + '</span><span>' + escapeHtml(label) + '</span>';
+    if (type && REACTION_EMOJI[type]) {
+        return '<span class="comment-react-emoji">' + REACTION_EMOJI[type] + '</span><span>' + escapeHtml(label) + '</span>';
     }
     return escapeHtml(label);
 }
@@ -742,7 +742,7 @@ function buildPost(p) {
 
     var statsHtml = buildStatsBar(p);
     var reactionType = p.reaction_type || (liked ? 'like' : '');
-    var likeIcon = reactionType && reactionType !== 'like' ? REACTION_EMOJI[reactionType] : LIKE_THUMB_SVG;
+    var likeIcon = reactionType && REACTION_EMOJI[reactionType] ? REACTION_EMOJI[reactionType] : LIKE_THUMB_SVG;
 
     return '<div class="post-header">'
         + avatarImg(avatar, 'post-avatar', p.author_name)
@@ -874,7 +874,7 @@ function paintPostReaction(id, liked, nextType, count) {
     btn.classList.toggle('liked', Boolean(liked));
     btn.dataset.type = nextType || '';
     var icon = btn.querySelector('.reaction-icon');
-    if (icon) icon.innerHTML = (nextType && nextType !== 'like') ? REACTION_EMOJI[nextType] : LIKE_THUMB_SVG;
+    if (icon) icon.innerHTML = (nextType && REACTION_EMOJI[nextType]) ? REACTION_EMOJI[nextType] : LIKE_THUMB_SVG;
     var label = document.getElementById('like-count-' + id);
     if (label) label.textContent = reactionLabel(nextType);
     var wrap = btn.closest('.reaction-wrap');
@@ -1334,6 +1334,39 @@ window.setReaction = setReaction;
 window.setCommentReaction = setCommentReaction;
 window.toggleLike = toggleLike;
 
+function mountFeedPostsList(list, containerId, filterType) {
+    var container = document.getElementById(containerId);
+    if (!container || typeof buildPost !== 'function') return;
+
+    var filter = filterType || 'all';
+    var filtered = (list || []).filter(function (p) {
+        if (!p || !p.id) return false;
+        return filter === 'all' || String(p.type || '') === filter;
+    });
+
+    container.innerHTML = '';
+
+    if (!filtered.length) {
+        container.innerHTML = '<div class="post-card" style="text-align:center;color:#999;padding:32px;">No posts found.</div>';
+        return;
+    }
+
+    filtered.forEach(function (p) {
+        knownPostIds.add(Number(p.id));
+        postCache.set(Number(p.id), p);
+        var el = document.createElement('div');
+        el.className = 'post-card';
+        el.dataset.postId = p.id;
+        el.dataset.postType = p.type || '';
+        el.innerHTML = buildPost(p);
+        bindPostImageClicks(el, p);
+        bindReactionControls(el);
+        container.appendChild(el);
+    });
+}
+
+window.mountFeedPostsList = mountFeedPostsList;
+
 function setFeedFilter(btn, filter) {
     if (isLoading) return;
     var bar = document.querySelector('.feed-filter-bar');
@@ -1680,7 +1713,9 @@ document.addEventListener('DOMContentLoaded', function() {
     ensureFeedReactionAudio();
     bindFilterBarScrollHide();
     document.addEventListener('pointerdown', ensureFeedReactionAudio, { once: true, capture: true });
-    renderPosts(true);
+    if (document.getElementById('feed-posts')) {
+        renderPosts(true);
+    }
     document.getElementById('compose-content')?.addEventListener('input', updateCharCount);
     updateCharCount();
     var searchInput = document.getElementById('feedSearchInput');

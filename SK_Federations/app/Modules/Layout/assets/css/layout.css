@@ -48,6 +48,16 @@
     line-height: 1.35;
 }
 
+.sidebar-user-info .s-meta {
+    font-size: 10px;
+    margin-top: 4px;
+    color: #94a3b8;
+    white-space: normal;
+    overflow: visible;
+    word-break: break-word;
+    line-height: 1.35;
+}
+
 body.sidebar-collapsed .sidebar-avatar {
     width: 36px;
     height: 36px;
