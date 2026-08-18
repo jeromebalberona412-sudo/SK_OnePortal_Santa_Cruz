@@ -45,6 +45,54 @@
             from { opacity: 0; transform: translateY(-8px); }
             to { opacity: 1; transform: none; }
         }
+        .youth-dashboard .feed-sticky-toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            background: var(--bg, #f8fafc);
+            overflow: hidden;
+            max-height: 160px;
+            flex-shrink: 0;
+            transition: max-height 0.18s ease, opacity 0.16s ease, transform 0.18s ease;
+        }
+        .youth-dashboard .feed-sticky-toolbar.is-hidden {
+            max-height: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .youth-dashboard .feed-filter-bar {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+        }
+        .youth-dashboard .feed-filter-anchor {
+            height: 0;
+            flex-shrink: 0;
+        }
+        @media (max-width: 1200px) {
+            .youth-dashboard .dashboard-main,
+            .youth-dashboard .feed-section {
+                overflow-x: visible;
+            }
+            .youth-dashboard .feed-sticky-toolbar {
+                position: fixed;
+                top: var(--kab-nav-h, var(--nav-h, 68px));
+                left: 0;
+                right: 0;
+                width: 100%;
+                max-height: none;
+                opacity: 1;
+                transform: translateY(0);
+                box-shadow: 0 8px 16px -10px rgba(15, 23, 42, 0.25);
+            }
+            .youth-dashboard .feed-sticky-toolbar.is-hidden {
+                max-height: none;
+                opacity: 1;
+                transform: translateY(-110%);
+                pointer-events: none;
+                box-shadow: none;
+            }
+        }
         .lightbox-nav {
             display: none;
             align-items: center;
@@ -54,28 +102,15 @@
             z-index: 5;
             pointer-events: auto;
         }
-        @media (min-width: 769px) {
-            .youth-dashboard .feed-sticky-toolbar {
-                overflow: visible;
-            }
-            .youth-dashboard .feed-filter-bar,
-            .youth-dashboard .feed-filter-bar.is-hidden {
-                display: flex !important;
-                transform: none !important;
-                opacity: 1 !important;
-                visibility: visible !important;
-                pointer-events: auto !important;
-            }
-        }
         @media (max-width: 768px) {
-            .youth-dashboard .feed-sticky-toolbar {
-                overflow: hidden;
+            .lightbox-nav {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+                background: rgba(0,0,0,0.55);
             }
-            .youth-dashboard .feed-filter-bar.is-hidden {
-                transform: translateY(-110%);
-                opacity: 0;
-                pointer-events: none;
-            }
+            .lightbox-prev { left: 8px; }
+            .lightbox-next { right: 8px; }
         }
     </style>
 </head>
@@ -108,26 +143,6 @@
                         {{ session('success') }}
                     </div>
                 @endif
-                
-                <div class="feed-header">
-                    <div class="feed-header__intro">
-                        <h1>SK Community Feed</h1>
-                        <p>Posts, events, and programs from your barangay SK.</p>
-                    </div>
-                    <div class="feed-header__search">
-                        <svg class="feed-header__search-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
-                        </svg>
-                        <input
-                            type="search"
-                            id="feedSearchInput"
-                            class="feed-header__search-input"
-                            placeholder="Search posts, programs, announcements..."
-                            autocomplete="off"
-                            aria-label="Search community feed"
-                        >
-                    </div>
-                </div>
 
                 <div class="feed-sticky-toolbar">
                 <div class="feed-filter-bar" role="tablist" aria-label="Filter community feed">
@@ -162,6 +177,27 @@
                         <span class="feed-tab-text">Programs</span>
                     </button>
                 </div>
+                </div>
+                <div class="feed-filter-anchor" aria-hidden="true"></div>
+                
+                <div class="feed-header">
+                    <div class="feed-header__intro">
+                        <h1>SK Community Feed</h1>
+                        <p>Posts, events, and programs from your barangay SK.</p>
+                    </div>
+                    <div class="feed-header__search">
+                        <svg class="feed-header__search-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+                        </svg>
+                        <input
+                            type="search"
+                            id="feedSearchInput"
+                            class="feed-header__search-input"
+                            placeholder="Search posts, programs, announcements..."
+                            autocomplete="off"
+                            aria-label="Search community feed"
+                        >
+                    </div>
                 </div>
 
                 <div id="feed-posts">
@@ -1148,66 +1184,120 @@
     bindInfiniteScroll();
 
     function bindFilterBarScrollHide() {
+        const toolbar = document.querySelector('.feed-sticky-toolbar');
         const bar = document.querySelector('.feed-filter-bar');
-        if (!bar) return;
+        const anchor = document.querySelector('.feed-filter-anchor');
+        const feedSection = document.querySelector('.feed-section');
+        if (!toolbar || !bar) return;
 
-        const mobileQuery = window.matchMedia('(max-width: 768px)');
+        const DOWN_THRESHOLD = 8;
+        const UP_THRESHOLD = 4;
+        const TOP_SHOW = 12;
         let lastY = 0;
         let ticking = false;
+        let barHeight = 64;
 
-        function isMobileFeed() {
-            return mobileQuery.matches;
+        function headerHeight() {
+            const header = document.querySelector('.kabataan-header');
+            return Math.round(header?.getBoundingClientRect().height || 68);
+        }
+
+        function scrollRoot() {
+            if (!feedSection) return window;
+            const overflowY = getComputedStyle(feedSection).overflowY;
+            if (overflowY === 'auto' || overflowY === 'scroll') {
+                return feedSection;
+            }
+            return window;
+        }
+
+        function isOverlay() {
+            return scrollRoot() === window;
         }
 
         function currentY() {
-            return window.scrollY || document.documentElement.scrollTop || 0;
+            const root = scrollRoot();
+            return root === window
+                ? (window.scrollY || document.documentElement.scrollTop || 0)
+                : root.scrollTop;
+        }
+
+        function measureBar() {
+            const height = toolbar.scrollHeight || bar.offsetHeight;
+            if (height > 8) barHeight = height;
+            return barHeight;
+        }
+
+        function updateAnchor() {
+            if (!anchor) return;
+            if (!isOverlay()) {
+                anchor.style.height = '0px';
+                return;
+            }
+            anchor.style.height = toolbar.classList.contains('is-hidden') ? '0px' : (measureBar() + 'px');
+        }
+
+        function syncStickyTop() {
+            toolbar.style.top = isOverlay() ? (headerHeight() + 'px') : '0px';
+            updateAnchor();
+        }
+
+        function showBar() {
+            toolbar.classList.remove('is-hidden');
+            bar.classList.remove('is-hidden');
+            updateAnchor();
+        }
+
+        function hideBar() {
+            measureBar();
+            toolbar.classList.add('is-hidden');
+            updateAnchor();
         }
 
         lastY = currentY();
+        showBar();
+        syncStickyTop();
 
         function apply() {
             ticking = false;
-
-            if (!isMobileFeed()) {
-                bar.classList.remove('is-hidden');
-                return;
-            }
-
-            const y = currentY();
+            const y = Math.max(0, currentY());
             const delta = y - lastY;
             lastY = y;
 
-            if (y < 48) {
-                bar.classList.remove('is-hidden');
+            if (y <= TOP_SHOW) {
+                showBar();
                 return;
             }
-            if (delta > 6) {
-                bar.classList.add('is-hidden');
+            if (delta >= DOWN_THRESHOLD) {
+                hideBar();
                 return;
             }
-            if (delta < -2) {
-                bar.classList.remove('is-hidden');
+            if (delta <= -UP_THRESHOLD) {
+                showBar();
             }
         }
 
         function onScroll() {
-            if (!isMobileFeed()) return;
             if (ticking) return;
             ticking = true;
             requestAnimationFrame(apply);
         }
 
         window.addEventListener('scroll', onScroll, { passive: true });
-        mobileQuery.addEventListener('change', function () {
+        document.addEventListener('scroll', onScroll, { passive: true });
+        feedSection?.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', function () {
             lastY = currentY();
-            bar.classList.remove('is-hidden');
+            syncStickyTop();
+            if (currentY() <= TOP_SHOW) showBar();
         });
-        bar.addEventListener('focusin', () => bar.classList.remove('is-hidden'));
+        bar.addEventListener('focusin', showBar);
     }
 
     bindFilterBarScrollHide();
 
     function setFeedFilter(btn, filter) {
+        document.querySelector('.feed-sticky-toolbar')?.classList.remove('is-hidden');
         document.querySelector('.feed-filter-bar')?.classList.remove('is-hidden');
         feedFilter = filter;
         document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
@@ -1215,6 +1305,7 @@
         loadFeed(true, { force: true });
     }
 
+    document.querySelector('.feed-sticky-toolbar')?.classList.remove('is-hidden');
     document.querySelector('.feed-filter-bar')?.classList.remove('is-hidden');
 
     document.querySelectorAll('.feed-tab[data-feed-filter]').forEach(btn => {

@@ -293,14 +293,12 @@ body.youth-dashboard {
     .dashboard-main {
         height: auto;
         overflow: visible;
-        overflow-x: clip;
         max-width: 100%;
     }
 
     .feed-section {
         height: auto;
         overflow: visible;
-        overflow-x: clip;
         padding-right: 0;
         max-width: 100%;
     }
@@ -332,6 +330,7 @@ body.youth-dashboard {
     overflow-y: auto;
     overflow-x: hidden;
     height: 100%;
+    min-height: 0;
     padding-right: 6px;
 }
 
@@ -405,11 +404,20 @@ body.youth-dashboard {
 .feed-sticky-toolbar {
     position: sticky;
     top: 0;
-    z-index: 80;
+    z-index: 90;
     background: var(--bg);
-    padding: 0 0 4px;
+    padding: 0;
     margin: 0;
-    overflow: visible;
+    overflow: hidden;
+    max-height: 160px;
+    flex-shrink: 0;
+    transition: max-height 0.18s ease, opacity 0.16s ease;
+}
+
+.feed-sticky-toolbar.is-hidden {
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .comment-preview {
@@ -1783,8 +1791,8 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
 
 @media (max-width: 1200px) {
     .dashboard-container { grid-template-columns: 1fr; height: auto; }
-    .feed-section { height: auto; overflow: visible; overflow-x: clip; }
-    .dashboard-main { height: auto; overflow: visible; overflow-x: clip; }
+    .feed-section { height: auto; overflow: visible; }
+    .dashboard-main { height: auto; overflow: visible; }
     body.youth-dashboard { overflow: auto; overflow-x: clip; height: auto; }
 
     .programs-sidebar-left,
@@ -1953,22 +1961,14 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
     background: var(--bg);
     box-shadow: 0 8px 12px -8px rgba(15, 23, 42, 0.18);
     position: relative;
-    top: auto;
     z-index: 1;
-    transform: none;
-    opacity: 1;
     overflow-x: auto;
     scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
 }
 
 .feed-filter-bar::-webkit-scrollbar {
     display: none;
-}
-
-.feed-filter-bar.is-hidden {
-    transform: none;
-    opacity: 1;
-    pointer-events: auto;
 }
 
 .feed-loading-card {
@@ -1978,11 +1978,35 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
     font-size: 14px;
     font-weight: 600;
 }
+.feed-filter-anchor {
+    height: 0;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
 @media (max-width: 1200px) {
-    .feed-sticky-toolbar { top: var(--kab-nav-h, var(--nav-h, 68px)); }
+    .feed-sticky-toolbar {
+        position: fixed;
+        top: var(--kab-nav-h, var(--nav-h, 68px));
+        left: 0;
+        right: 0;
+        width: 100%;
+        z-index: 90;
+        max-height: none;
+        transform: translateY(0);
+        box-shadow: 0 8px 16px -10px rgba(15, 23, 42, 0.22);
+    }
+
+    .feed-sticky-toolbar.is-hidden {
+        max-height: none;
+        opacity: 1;
+        transform: translateY(-110%);
+        pointer-events: none;
+        box-shadow: none;
+    }
 }
 @media (prefers-reduced-motion: reduce) {
-    .feed-filter-bar { transition: none; }
+    .feed-sticky-toolbar { transition: none; }
 }
 
 .feed-tab {
@@ -1997,7 +2021,7 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
     transition: all 0.2s;
     font-family: inherit;
     position: relative;
-    bottom: -2px;
+    bottom: 0;
     flex: 1;
     text-align: center;
 }
@@ -2060,7 +2084,6 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
 @media (max-width: 768px) {
     .feed-sticky-toolbar {
         top: var(--kab-nav-h, var(--nav-h, 68px));
-        overflow: hidden;
     }
 
     .feed-filter-bar {
@@ -2068,14 +2091,7 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
         flex-wrap: nowrap;
         scrollbar-width: none;
         gap: 0;
-        transition: transform 0.22s ease, opacity 0.18s ease;
-    }
-
-    .feed-filter-bar.is-hidden {
-        transform: translateY(-110%);
-        opacity: 0;
-        pointer-events: none;
-        box-shadow: none;
+        margin-bottom: 8px;
     }
 
     .feed-filter-bar::-webkit-scrollbar {
@@ -2086,22 +2102,22 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
         padding: 8px 10px;
         font-size: 13px;
         white-space: nowrap;
-        flex: 1 1 0;
-        min-width: 0;
+        flex: 1 0 auto;
+        min-width: 64px;
     }
 
     .feed-tab--icon {
-        padding: 8px 4px 10px;
-        min-width: 0;
+        padding: 8px 6px 10px;
+        min-width: 68px;
         gap: 2px;
     }
 
     .feed-tab-text {
-        font-size: 10px;
+        font-size: 11px;
         display: block;
         max-width: none;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        overflow: visible;
+        text-overflow: clip;
     }
 
     .post-header {
