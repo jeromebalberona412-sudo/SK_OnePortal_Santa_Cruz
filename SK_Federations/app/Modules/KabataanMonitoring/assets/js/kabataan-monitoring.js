@@ -48,16 +48,7 @@
         // but kept for compatibility
     }
 
-    function populateYearFilter(yearsFromApi) {
-        var yearFilter = document.getElementById('km-year-filter');
-        if (!yearFilter) return;
-
-        var years = Array.isArray(yearsFromApi)
-            ? yearsFromApi.map(String).filter(Boolean)
-            : [];
-
-        setYearSelectOptions(yearFilter, years);
-    }
+    function populateYearFilter() {}
 
     function populateBarangayYearFilter() {
         var yearFilter = document.getElementById('km-brgy-year-filter');
@@ -150,10 +141,12 @@
             'Santisima Cruz', 'Santo Angel Central', 'Santo Angel Norte', 'Santo Angel Sur'
         ];
 
-        // Filter barangays based on selected barangay filter
-        var brgysToDisplay = state.barangay === 'all' ? allBrgys : [state.barangay];
+        var query = state.search.trim().toLowerCase();
+        var brgysToDisplay = allBrgys.filter(function (brgy) {
+            return !query || brgy.toLowerCase().includes(query);
+        });
 
-        if (empty) empty.hidden = true;
+        if (empty) empty.hidden = brgysToDisplay.length > 0;
 
         var today = new Date();
         var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -209,10 +202,9 @@
     };
 
     function initIndex() {
-        loadRecords().then(function (years) {
+        loadRecords().then(function () {
             updateSummary();
             populateBrgyFilter();
-            populateYearFilter(years);
             renderBrgyCards();
         });
 
@@ -222,23 +214,20 @@
                 state.search = e.target.value || '';
                 renderBrgyCards();
             });
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    renderBrgyCards();
+                }
+            });
         }
 
-        var brgyFilter = document.getElementById('km-brgy-filter');
-        if (brgyFilter) {
-            brgyFilter.addEventListener('change', function(e) {
-                state.barangay = e.target.value || 'all';
+        var indexSearchBtn = document.querySelector('.km-search-group--index .km-search-btn');
+        if (indexSearchBtn) {
+            indexSearchBtn.addEventListener('click', function () {
                 renderBrgyCards();
             });
         }
 
-        var yearFilter = document.getElementById('km-year-filter');
-        if (yearFilter) {
-            yearFilter.addEventListener('change', function(e) {
-                state.year = e.target.value || 'all';
-                renderBrgyCards();
-            });
-        }
     }
 
     // ── Detail page ──

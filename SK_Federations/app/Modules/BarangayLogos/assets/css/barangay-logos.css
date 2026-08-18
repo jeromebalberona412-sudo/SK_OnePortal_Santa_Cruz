@@ -960,79 +960,95 @@
 }
 
 @media (max-width: 1024px) {
-    .bl-page-subtitle { display: none; }
-    .bl-page-title { margin: 0; }
+    .bl-page-title { font-size: 1.45rem; }
 }
 
 @media (max-width: 900px) {
     .barangay-logos-container { padding: 1.25rem 1rem 2rem; }
     .bl-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-    .bl-page-title { font-size: 1.25rem; }
-    .bl-search-wrap {
-        flex-basis: 132px;
-        min-width: 96px;
-        max-width: 132px;
-    }
-    .bl-counter-pill,
-    .bl-toggle-btn {
-        padding: 6px 11px;
-        font-size: 0.8rem;
-    }
+    .bl-page-title { font-size: 1.3rem; }
 }
 
 @media (max-width: 768px) {
     .bl-page-header {
-        gap: 8px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .bl-page-header-text {
+        text-align: left;
+    }
+
+    .bl-page-title {
+        font-size: 1.2rem;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+    }
+
+    .bl-page-subtitle {
+        display: block;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        line-height: 1.4;
     }
 
     .bl-header-controls {
-        gap: 6px;
-    }
-
-    .bl-counter-label {
-        display: none;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        width: 100%;
+        gap: 8px;
     }
 
     .bl-search-wrap {
-        flex-basis: 120px;
-        min-width: 88px;
-        max-width: 120px;
+        flex: 1 1 100%;
+        min-width: 0;
+        max-width: none;
     }
 
     .bl-search-input {
-        font-size: 0.78rem;
-        height: 32px;
+        font-size: 0.82rem;
+        height: 36px;
+    }
+
+    .bl-counter-pill,
+    .bl-toggle-btn {
+        padding: 7px 12px;
+        font-size: 0.82rem;
+    }
+
+    .bl-toggle-btn-text,
+    .bl-counter-label {
+        display: inline;
     }
 }
 
 @media (max-width: 540px) {
     .barangay-logos-container { padding: 1rem 0.75rem 1.75rem; }
     .bl-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
-    .bl-page-title { font-size: 1.05rem; }
+    .bl-page-title { font-size: 1.1rem; }
     .bl-modal { max-width: 95vw; }
     .bl-card-footer { padding: 10px 10px 12px; gap: 8px; }
     .bl-barangay-name { font-size: 0.78rem; }
     .bl-upload-btn { font-size: 0.74rem; padding: 7px 10px; max-width: 100%; }
 
     .bl-search-wrap {
-        flex-basis: 96px;
-        min-width: 80px;
-        max-width: 96px;
+        flex-basis: 100%;
+        min-width: 100%;
+        max-width: 100%;
     }
 
     .bl-search-input {
-        padding-left: 28px;
-        padding-right: 26px;
-    }
-
-    .bl-search-input::placeholder {
-        font-size: 0.72rem;
+        padding-left: 30px;
+        padding-right: 28px;
     }
 
     .bl-counter-pill {
-        padding: 6px 9px;
-        gap: 3px;
-        font-size: 0.75rem;
+        padding: 7px 10px;
+        gap: 4px;
+        font-size: 0.78rem;
     }
 
     .bl-counter-icon {
@@ -1040,33 +1056,25 @@
         height: 14px;
     }
 
-    .bl-toggle-btn-text {
-        display: none;
-    }
-
     .bl-toggle-btn {
-        padding: 6px 9px;
-        gap: 0;
+        padding: 7px 10px;
+        gap: 6px;
     }
 }
 
 @media (max-width: 390px) {
-    .bl-page-header {
+    .bl-header-controls {
         gap: 6px;
     }
 
-    .bl-header-controls {
-        gap: 5px;
+    .bl-counter-pill,
+    .bl-toggle-btn {
+        font-size: 0.76rem;
     }
 
-    .bl-search-wrap {
-        flex-basis: 84px;
-        min-width: 72px;
-        max-width: 84px;
-    }
-
-    .bl-counter-pill .bl-counter-icon {
-        display: none;
+    .bl-counter-label,
+    .bl-toggle-btn-text {
+        display: inline;
     }
 
     .bl-grid {

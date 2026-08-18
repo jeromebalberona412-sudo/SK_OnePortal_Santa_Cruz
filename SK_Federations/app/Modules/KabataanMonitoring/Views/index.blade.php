@@ -22,42 +22,22 @@
             </section>
 
             <section class="km-filter-bar" aria-label="Kabataan filters">
-                <select id="km-year-filter" class="km-select" aria-label="Filter by year">
-                    <option value="all">All Years</option>
-                </select>
-                <select id="km-brgy-filter" class="km-select" aria-label="Filter by barangay">
-                    <option value="all">All Barangays</option>
-                    <option value="Alipit">Alipit</option>
-                    <option value="Bagumbayan">Bagumbayan</option>
-                    <option value="Bubukal">Bubukal</option>
-                    <option value="Calios">Calios</option>
-                    <option value="Duhat">Duhat</option>
-                    <option value="Gatid">Gatid</option>
-                    <option value="Jasaan">Jasaan</option>
-                    <option value="Labuin">Labuin</option>
-                    <option value="Malinao">Malinao</option>
-                    <option value="Oogong">Oogong</option>
-                    <option value="Pagsawitan">Pagsawitan</option>
-                    <option value="Palasan">Palasan</option>
-                    <option value="Patimbao">Patimbao</option>
-                    <option value="Poblacion I">Poblacion I</option>
-                    <option value="Poblacion II">Poblacion II</option>
-                    <option value="Poblacion III">Poblacion III</option>
-                    <option value="Poblacion IV">Poblacion IV</option>
-                    <option value="Poblacion V">Poblacion V</option>
-                    <option value="San Jose">San Jose</option>
-                    <option value="San Juan">San Juan</option>
-                    <option value="San Pablo Norte">San Pablo Norte</option>
-                    <option value="San Pablo Sur">San Pablo Sur</option>
-                    <option value="Santisima Cruz">Santisima Cruz</option>
-                    <option value="Santo Angel Central">Santo Angel Central</option>
-                    <option value="Santo Angel Norte">Santo Angel Norte</option>
-                    <option value="Santo Angel Sur">Santo Angel Sur</option>
-                </select>
+                <div class="km-search-group km-search-group--index">
+                    <input
+                        type="search"
+                        id="km-search"
+                        class="km-search-input"
+                        placeholder="Search barangay"
+                        aria-label="Search barangay"
+                    >
+                    <button type="button" class="km-search-btn" aria-label="Search barangay">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
             </section>
 
             <div id="km-brgy-cards"></div>
-            <p id="km-empty" class="km-empty" hidden>No profiles match your current filters.</p>
+            <p id="km-empty" class="km-empty" hidden>No barangays match your search.</p>
 
         </div>
 @endsection

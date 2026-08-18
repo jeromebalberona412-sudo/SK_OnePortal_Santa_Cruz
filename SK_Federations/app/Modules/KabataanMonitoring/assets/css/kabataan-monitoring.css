@@ -590,12 +590,38 @@
 .km-filter-bar {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 10px;
     flex-wrap: wrap;
     background: transparent;
     border: none;
     box-shadow: none;
     padding: 0;
+}
+
+.km-filter-bar .km-search-group--index {
+    flex: 0 0 220px;
+    width: 220px;
+    max-width: 100%;
+    min-width: 0;
+    margin-left: auto;
+    justify-content: flex-end;
+}
+
+.km-filter-bar .km-search-group--index .km-search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.km-filter-bar .km-search-group--index .km-search-input,
+.km-filter-bar .km-search-group--index .km-search-btn {
+    height: 34px;
+    font-size: 12px;
+}
+
+.km-filter-bar .km-search-group--index .km-search-btn {
+    padding: 0 12px;
+    min-width: 34px;
 }
 
 .km-filter-bar--detail {
@@ -2049,6 +2075,15 @@ body.sidebar-collapsed .km-page-pagination {
 }
 
 @media (max-width: 768px) {
+    .km-filter-bar {
+        justify-content: stretch;
+    }
+
+    .km-filter-bar .km-search-group--index {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
     .main-content.km-barangay-detail-main {
         padding: 12px 12px 52px;
     }
