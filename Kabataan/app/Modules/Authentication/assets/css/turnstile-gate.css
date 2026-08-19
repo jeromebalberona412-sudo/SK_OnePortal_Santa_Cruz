@@ -163,7 +163,7 @@
     position: relative;
     z-index: 3;
     width: 100%;
-    max-width: 304px;
+    max-width: 420px; /* desktop-like width */
 }
 
 #turnstile-container iframe {
@@ -258,7 +258,7 @@
 
     #turnstile-container {
         width: 100%;
-        max-width: 100%;
+        max-width: 420px;
         min-height: 78px;
     }
 }

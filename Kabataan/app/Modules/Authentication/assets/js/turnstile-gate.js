@@ -43,7 +43,9 @@
     }
 
     function widgetSize() {
-        return isSmallViewport() ? 'compact' : 'normal';
+        // Keep the same "normal" layout even on small screens.
+        // The compact layout often collapses into a single-line appearance.
+        return 'normal';
     }
 
     function afterModalPaint(callback) {
