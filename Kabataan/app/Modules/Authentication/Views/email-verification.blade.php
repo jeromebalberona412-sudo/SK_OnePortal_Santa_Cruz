@@ -8,6 +8,7 @@
     <title>Email Verification - SK Kabataan Portal</title>
     @vite([
         'app/Modules/Authentication/assets/css/sign-in.css',
+        'app/Modules/Authentication/assets/css/turnstile-gate.css',
         'app/Modules/Authentication/assets/css/youth-email-verification.css',
         'app/Modules/Authentication/assets/js/turnstile-gate.js',
         'app/Modules/Authentication/assets/js/youth-email-verification.js',

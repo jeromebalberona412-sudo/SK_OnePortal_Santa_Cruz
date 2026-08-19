@@ -11,6 +11,7 @@
     <title>Forgot Password - SK OnePortal</title>
     @vite([
         'app/Modules/Authentication/assets/css/sign-in.css',
+        'app/Modules/Authentication/assets/css/turnstile-gate.css',
         'app/Modules/Authentication/assets/css/auth-legal.css',
         'app/Modules/Authentication/assets/js/turnstile-gate.js',
     ])
@@ -212,17 +213,16 @@
                     }
 
                     setBtn(true, 'Sending...', true);
-                    var submitWithTurnstile = window.kabataanTurnstileSubmitForm;
-                    if (!submitWithTurnstile) {
-                        form.submit();
+                    if (typeof window.kabataanTurnstileSubmitForm === 'function') {
+                        window.kabataanTurnstileSubmitForm(form).catch(function (err) {
+                            setBtn(false, 'Send Reset Link', false);
+                            if (err && err.message && err.message !== 'Verification cancelled.') {
+                                showErr(err.message);
+                            }
+                        });
                         return;
                     }
-                    submitWithTurnstile(form).catch(function (err) {
-                        setBtn(false, 'Send Reset Link', false);
-                        if (err && err.message && err.message !== 'Verification cancelled.') {
-                            showErr(err.message);
-                        }
-                    });
+                    form.submit();
                 });
             }
         }());

@@ -18,19 +18,14 @@
     const noEmailScrollHint = document.getElementById('kkpNoEmailScrollHint');
     const successModal = document.getElementById('kkpRegSuccessModal');
     const successLoginBtn = document.getElementById('kkpRegSuccessLoginBtn');
-    const turnstileModal = document.getElementById('kkpTurnstileModal');
-    const turnstileContainer = document.getElementById('kkpTurnstileContainer');
-    const turnstileError = document.getElementById('kkpTurnstileError');
     const turnstileEnabled = root.dataset.turnstileEnabled === '1';
     const turnstileSiteKey = root.dataset.turnstileSitekey || '';
     const slug = root.dataset.barangaySlug || '';
     const apiBase = `/api/kkprofiling/${slug}/wizard`;
 
-    let turnstileWidgetId = null;
     let turnstileToken = null;
     let isSubmitting = false;
     let submittedWithoutEmail = false;
-    let pendingAction = null;
     let saveStep1Fn = null;
 
     function csrfToken() {
@@ -140,136 +135,46 @@
         }
     }
 
-    function showTurnstileError(message) {
-        if (!turnstileError) {
-            return;
-        }
-        turnstileError.hidden = !message;
-        turnstileError.textContent = message || '';
-    }
-
-    function resetTurnstile() {
-        turnstileToken = null;
-        showTurnstileError('');
-        if (turnstileWidgetId !== null && typeof window.turnstile !== 'undefined') {
-            window.turnstile.reset(turnstileWidgetId);
-        }
-    }
-
-    function waitForTurnstileApi() {
+    function waitForTurnstileGate(maxWaitMs = 8000) {
         return new Promise((resolve, reject) => {
-            if (typeof window.turnstile !== 'undefined') {
-                resolve();
-                return;
-            }
-            let attempts = 0;
-            const timer = setInterval(() => {
-                attempts += 1;
-                if (typeof window.turnstile !== 'undefined') {
-                    clearInterval(timer);
-                    resolve();
+            const start = Date.now();
+            const check = () => {
+                if (window.KabataanTurnstileGate?.challenge) {
+                    resolve(window.KabataanTurnstileGate);
                     return;
                 }
-                if (attempts > 40) {
-                    clearInterval(timer);
-                    reject(new Error('Security verification failed to load. Please refresh and try again.'));
+                if (Date.now() - start > maxWaitMs) {
+                    reject(new Error('Security check failed to load. Please refresh the page.'));
+                    return;
                 }
-            }, 150);
+                window.setTimeout(check, 50);
+            };
+            check();
         });
     }
 
-    function renderTurnstile() {
-        if (!turnstileContainer || !turnstileSiteKey || typeof window.turnstile === 'undefined') {
-            return;
-        }
-        if (turnstileWidgetId !== null) {
-            window.turnstile.reset(turnstileWidgetId);
-            return;
-        }
-        turnstileWidgetId = window.turnstile.render(turnstileContainer, {
-            sitekey: turnstileSiteKey,
-            callback: onTurnstileSuccess,
-            'expired-callback': onTurnstileExpired,
-            'error-callback': onTurnstileError,
-        });
-    }
-
-    function onTurnstileSuccess(token) {
-        turnstileToken = token;
-        showTurnstileError('');
-        hideOverlay(turnstileModal);
-        const action = pendingAction;
-        pendingAction = null;
-        if (action) {
-            action(token);
-        }
-    }
-
-    function onTurnstileExpired() {
-        turnstileToken = null;
-        showTurnstileError('Verification expired. Please complete the check again.');
-    }
-
-    function onTurnstileError() {
-        turnstileToken = null;
-        showTurnstileError('Security verification failed. Please try again.');
-    }
-
-    async function requestTurnstileThen(action) {
+    function runTurnstileChallenge() {
         if (!turnstileEnabled || !turnstileSiteKey) {
-            action('');
-            return;
+            return Promise.resolve('');
         }
-
-        pendingAction = action;
-        showOverlay(turnstileModal);
-        showTurnstileError('');
-
-        try {
-            await waitForTurnstileApi();
-            renderTurnstile();
-        } catch (error) {
-            pendingAction = null;
-            hideOverlay(turnstileModal);
-            window.alert(error.message);
+        if (typeof window.kabataanTurnstileChallenge === 'function') {
+            return window.kabataanTurnstileChallenge();
         }
+        return waitForTurnstileGate().then((gate) => gate.challenge());
+    }
+
+    function requestTurnstileThen(action) {
+        return runTurnstileChallenge().then((token) => {
+            turnstileToken = token || '';
+            if (action) {
+                action(turnstileToken);
+            }
+            return turnstileToken;
+        });
     }
 
     window.kkpChallengeTurnstile = function () {
-        return new Promise((resolve, reject) => {
-            if (!turnstileEnabled || !turnstileSiteKey) {
-                resolve('');
-                return;
-            }
-
-            let settled = false;
-            let fail = null;
-            const cancelBtn = document.getElementById('kkpTurnstileCancelBtn');
-            const backdrop = document.getElementById('kkpTurnstileBackdrop');
-            const finish = (fn, value) => {
-                if (settled) {
-                    return;
-                }
-                settled = true;
-                if (fail) {
-                    cancelBtn?.removeEventListener('click', fail);
-                    backdrop?.removeEventListener('click', fail);
-                }
-                fn(value);
-            };
-
-            fail = () => finish(reject, new Error('Verification cancelled.'));
-            cancelBtn?.addEventListener('click', fail);
-            backdrop?.addEventListener('click', fail);
-
-            requestTurnstileThen((token) => finish(resolve, token || ''))
-                .then(() => {
-                    if (!settled && pendingAction === null) {
-                        finish(reject, new Error('Security verification failed to load.'));
-                    }
-                })
-                .catch((error) => finish(reject, error));
-        });
+        return requestTurnstileThen(null);
     };
 
     function setBusy(busy) {
@@ -365,7 +270,7 @@
             if (!error.errors || Object.keys(error.errors).length === 0) {
                 window.alert(error.message);
             }
-            resetTurnstile();
+            turnstileToken = null;
         } finally {
             setBusy(false);
             if (submittedWithoutEmail && nextBtn) {
@@ -422,9 +327,7 @@
             return true;
         }
 
-        await requestTurnstileThen((token) => {
-            continueWithEmail(token);
-        });
+        await continueWithEmail('');
         return true;
     };
 
@@ -471,6 +374,10 @@
         hideOverlay(noEmailModal);
         requestTurnstileThen((token) => {
             submitWithoutEmail(token);
+        }).catch((error) => {
+            if (error?.message !== 'Verification cancelled.') {
+                window.alert(error.message);
+            }
         });
     });
 
@@ -484,20 +391,6 @@
 
     document.getElementById('kkpNoEmailBackdrop')?.addEventListener('click', () => {
         closeNoEmailConfirm();
-    });
-
-    document.getElementById('kkpTurnstileCancelBtn')?.addEventListener('click', () => {
-        pendingAction = null;
-        resetTurnstile();
-        hideOverlay(turnstileModal);
-        setBusy(false);
-    });
-
-    document.getElementById('kkpTurnstileBackdrop')?.addEventListener('click', () => {
-        pendingAction = null;
-        resetTurnstile();
-        hideOverlay(turnstileModal);
-        setBusy(false);
     });
 
     syncStep1Button();

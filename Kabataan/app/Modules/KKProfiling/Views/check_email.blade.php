@@ -8,6 +8,7 @@
     <title>Check Your Email - KK Profiling</title>
     @vite([
         'app/Modules/Authentication/assets/css/sign-in.css',
+        'app/Modules/Authentication/assets/css/turnstile-gate.css',
         'app/Modules/Authentication/assets/js/turnstile-gate.js',
     ])
     <style>

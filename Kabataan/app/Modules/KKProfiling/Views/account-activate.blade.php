@@ -8,9 +8,10 @@
     <title>Activate Your Kabataan Account - SK OnePortal</title>
     @vite([
         'app/Modules/Authentication/assets/css/sign-in.css',
+        'app/Modules/Authentication/assets/css/turnstile-gate.css',
+        'app/Modules/Authentication/assets/js/turnstile-gate.js',
         'app/Modules/KKProfiling/assets/css/kkprofiling.css',
         'app/Modules/KKProfiling/assets/js/kkprofiling.js',
-        'app/Modules/Authentication/assets/js/turnstile-gate.js',
     ])
 </head>
 <body class="youth-signin-page kkp-setpw-page">

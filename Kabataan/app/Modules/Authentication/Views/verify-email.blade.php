@@ -11,6 +11,7 @@
     <title>Check Your Email - SK OnePortal</title>
     @vite([
         'app/Modules/Authentication/assets/css/sign-in.css',
+        'app/Modules/Authentication/assets/css/turnstile-gate.css',
         'app/Modules/Authentication/assets/css/youth-fp-verify-email.css',
         'app/Modules/Authentication/assets/js/turnstile-gate.js',
         'app/Modules/Authentication/assets/js/youth-fp-verify-email.js',

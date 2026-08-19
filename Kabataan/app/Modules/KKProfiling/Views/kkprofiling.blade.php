@@ -11,15 +11,20 @@
         'app/Modules/KKProfiling/assets/css/kkprofiling.css',
         'app/Modules/KKProfiling/assets/css/kkprofiling-wizard.css',
         'app/Modules/KKProfiling/assets/css/kkprofiling-optional-email.css',
+        'app/Modules/Authentication/assets/css/turnstile-gate.css',
+        'app/Modules/Authentication/assets/js/turnstile-gate.js',
         'app/Modules/KKProfiling/assets/js/kkprofiling.js',
         'app/Modules/KKProfiling/assets/js/kkprofiling-wizard.js',
         'app/Modules/KKProfiling/assets/js/kkprofiling-optional-email.js',
     ])
-    @if(!empty($turnstileEnabled))
-        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-    @endif
+    @inject('turnstileService', 'App\Services\TurnstileService')
 </head>
 <body class="homepage-body kkp-form-page kkp-wizard-mode @if($registrationComplete ?? false) kkp-wizard-registration-complete kkp-wizard-success-modal-open @endif">
+
+    @include('authentication::partials.turnstile-gate', [
+        'turnstileService' => $turnstileService,
+        'turnstileSubtitle' => 'Complete the security check to continue.',
+    ])
 
     <main class="kkp-main">
         <div class="kkp-page-wrap">
@@ -122,7 +127,6 @@
 
     @include('kkprofiling::partials.kk-profiling-signature-modals')
     @include('kkprofiling::partials.kk-profiling-no-email-modal')
-    @include('kkprofiling::partials.kk-profiling-turnstile-modal')
 
     <div class="kkp-reg-success-overlay" id="kkpRegSuccessModal" @if(empty($registrationComplete ?? false)) hidden @endif aria-hidden="{{ ($registrationComplete ?? false) ? 'false' : 'true' }}">
         <div class="kkp-reg-success-modal" role="dialog" aria-labelledby="kkpRegSuccessTitle" aria-modal="true">

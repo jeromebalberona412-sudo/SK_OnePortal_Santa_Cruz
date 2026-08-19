@@ -71,7 +71,7 @@
 }
 
 .kkp-info-modal-close:focus-visible {
-    outline: 3px solid #fdc020;
+    outline: 3px solid #0450a8;
     outline-offset: 2px;
 }
 
@@ -193,28 +193,8 @@
 }
 
 .kkp-info-btn:focus-visible {
-    outline: 3px solid #fdc020;
+    outline: 3px solid #0450a8;
     outline-offset: 2px;
-}
-
-.kkp-turnstile-modal-card {
-    max-width: 420px;
-}
-
-.kkp-turnstile-header,
-.kkp-turnstile-body {
-    padding: 1.35rem 1.35rem 0.5rem;
-}
-
-.kkp-turnstile-subtitle,
-.kkp-turnstile-error {
-    margin: 0 0 0.75rem;
-    color: #475569;
-    font-size: 0.92rem;
-}
-
-.kkp-turnstile-error {
-    color: #b91c1c;
 }
 
 .kkp-wizard-email-recommend {

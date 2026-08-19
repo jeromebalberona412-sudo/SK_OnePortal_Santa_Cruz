@@ -11,6 +11,7 @@ export default defineConfig({
 
                 // Authentication
                 'app/Modules/Authentication/assets/css/sign-in.css',
+                'app/Modules/Authentication/assets/css/turnstile-gate.css',
                 'app/Modules/Authentication/assets/css/auth-legal.css',
                 'app/Modules/Authentication/assets/css/youth-fp-verify-email.css',
                 'app/Modules/Authentication/assets/js/sign-in.js',

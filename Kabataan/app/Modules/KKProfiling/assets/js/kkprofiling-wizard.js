@@ -1386,6 +1386,19 @@
         }
     }
 
+    async function getStep2TurnstileToken() {
+        if (typeof window.kabataanTurnstileChallenge === 'function') {
+            return window.kabataanTurnstileChallenge();
+        }
+        if (window.KabataanTurnstileGate?.challenge) {
+            return window.KabataanTurnstileGate.challenge();
+        }
+        if (typeof window.kkpChallengeTurnstile === 'function') {
+            return window.kkpChallengeTurnstile();
+        }
+        return '';
+    }
+
     async function saveStep2() {
         hideDocUploadError();
 
@@ -1396,6 +1409,17 @@
             return false;
         }
 
+        let turnstileToken = '';
+        try {
+            turnstileToken = await getStep2TurnstileToken();
+        } catch (error) {
+            if (error?.message === 'Verification cancelled.') {
+                return false;
+            }
+            showDocUploadError(error?.message || 'Security verification failed. Please try again.');
+            return false;
+        }
+
         if (!hasFiles) {
 
             let saved = false;
@@ -1403,6 +1427,9 @@
             try {
                 const formData = new FormData();
                 formData.append('skip_documents', '1');
+                if (turnstileToken) {
+                    formData.append('cf-turnstile-response', turnstileToken);
+                }
 
                 const response = await postFormData(`${apiBase}/step-2`, formData);
 
@@ -1486,6 +1513,9 @@
             if (selfie) {
                 formData.append('selfie', selfie);
             }
+            if (turnstileToken) {
+                formData.append('cf-turnstile-response', turnstileToken);
+            }
 
             const response = await postFormData(`${apiBase}/step-2`, formData);
 
@@ -1539,12 +1569,12 @@
 
         try {
             let turnstileToken = '';
-            if (typeof window.kkpChallengeTurnstile === 'function') {
-                turnstileToken = await window.kkpChallengeTurnstile();
-            } else if (window.kabataanTurnstileChallenge) {
+            if (typeof window.kabataanTurnstileChallenge === 'function') {
                 turnstileToken = await window.kabataanTurnstileChallenge();
             } else if (window.KabataanTurnstileGate?.challenge) {
                 turnstileToken = await window.KabataanTurnstileGate.challenge();
+            } else if (typeof window.kkpChallengeTurnstile === 'function') {
+                turnstileToken = await window.kkpChallengeTurnstile();
             }
 
             const endpoint = isResend ? `${apiBase}/resend-verification` : `${apiBase}/send-verification`;

@@ -11,7 +11,9 @@
     <title>OnePortal Youth Officials</title>
     @vite([
         'app/Modules/Authentication/assets/css/sign-in.css',
+        'app/Modules/Authentication/assets/css/turnstile-gate.css',
         'app/Modules/Authentication/assets/css/auth-legal.css',
+        'app/Modules/Authentication/assets/js/turnstile-gate.js',
         'app/Modules/Authentication/assets/js/sign-in.js',
         'app/Modules/Authentication/assets/js/auth-legal.js',
     ])

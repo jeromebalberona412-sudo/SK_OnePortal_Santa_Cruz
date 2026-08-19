@@ -43,8 +43,6 @@ class KKProfilingWizardController extends Controller
 
     public function saveStep1(Request $request, string $barangay)
     {
-        $this->assertTurnstilePassed($request);
-
         $barangayRecord = $this->resolveBarangay($barangay);
         $validated = $this->validateStep1($request, (int) $barangayRecord->id, true);
 
@@ -107,6 +105,8 @@ class KKProfilingWizardController extends Controller
     public function saveStep2(Request $request, string $barangay)
     {
         set_time_limit((int) config('ocr.timeout', 120) + 60);
+
+        $this->assertTurnstilePassed($request);
 
         $barangayRecord = $this->resolveBarangay($barangay);
         $wizard = $this->requireWizard();

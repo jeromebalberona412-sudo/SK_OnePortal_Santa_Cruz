@@ -17,7 +17,7 @@
             <p class="kkp-turnstile-error" id="kkpTurnstileError" hidden></p>
         </div>
         <div class="kkp-info-modal-actions">
-            <button type="button" class="kkp-info-btn kkp-info-btn-secondary" id="kkpTurnstileCancelBtn">Cancel</button>
+            <button type="button" class="kkp-info-btn kkp-info-btn-secondary" id="kkpTurnstileCancelBtn">Cancel and go back</button>
         </div>
     </div>
 </div>

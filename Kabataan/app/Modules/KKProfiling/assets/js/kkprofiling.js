@@ -1822,12 +1822,12 @@ function showEmailVerification(email) {
 
             try {
                 let turnstileToken = '';
-                if (typeof window.kkpChallengeTurnstile === 'function') {
-                    turnstileToken = await window.kkpChallengeTurnstile();
-                } else if (window.kabataanTurnstileChallenge) {
+                if (typeof window.kabataanTurnstileChallenge === 'function') {
                     turnstileToken = await window.kabataanTurnstileChallenge();
                 } else if (window.KabataanTurnstileGate?.challenge) {
                     turnstileToken = await window.KabataanTurnstileGate.challenge();
+                } else if (typeof window.kkpChallengeTurnstile === 'function') {
+                    turnstileToken = await window.kkpChallengeTurnstile();
                 }
 
                 const response = await fetch('/api/kkprofiling/resend-verification', {
