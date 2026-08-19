@@ -282,7 +282,8 @@ html {
 
 /* Right Login Card */
 .sk-login-section {
-    width: 580px;
+    width: 100%;
+    max-width: 484px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -892,7 +893,8 @@ html {
     }
 
     .sk-login-section {
-        width: 500px;
+        width: 100%;
+        max-width: 484px;
         padding: 3rem 3rem 3rem 2rem;
     }
 }
@@ -930,7 +932,7 @@ html {
 
     .sk-login-section {
         width: 100%;
-        max-width: 580px;
+        max-width: 484px;
         margin: 0 auto;
         padding: 0 1.25rem 2rem;
         overflow-y: visible;
