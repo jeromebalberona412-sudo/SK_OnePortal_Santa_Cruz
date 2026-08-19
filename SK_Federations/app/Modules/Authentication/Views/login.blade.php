@@ -152,7 +152,7 @@
                                 <input class="form-check-input" type="checkbox" id="remember" name="remember" value="1">
                                 <label class="form-check-label" for="remember">Remember me</label>
                             </div>
-                            <a href="{{ url('/forgot-password') }}" class="forgot-password" id="forgotBtn">Forgot Password?</a>
+                            <a href="{{ url('/forgot-password') }}" class="forgot-password" id="forgotBtn">Forgot Password</a>
                         </div>
 
                         @include('authentication::partials.login-legal-consent')

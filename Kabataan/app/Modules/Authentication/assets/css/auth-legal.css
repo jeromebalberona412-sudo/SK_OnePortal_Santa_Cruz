@@ -355,3 +355,21 @@
         align-self: stretch;
     }
 }
+
+@media (max-width: 480px) {
+    /* Make inline legal buttons + text wrap nicely on phones */
+    .auth-legal-consent-wrap {
+        margin-bottom: 0.5rem;
+    }
+
+    .auth-legal-consent-text {
+        font-size: 0.75rem;
+        line-height: 1.35;
+        word-break: break-word;
+    }
+
+    .auth-legal-link {
+        font-size: 0.75rem;
+        white-space: normal;
+    }
+}

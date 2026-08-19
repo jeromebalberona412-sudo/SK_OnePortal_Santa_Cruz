@@ -82,3 +82,21 @@ input[type="password"]::-webkit-contacts-auto-fill-button  { visibility: hidden 
     .form-options    { flex-wrap: nowrap; gap: 0.35rem; justify-content: space-between; align-items: center; }
     .form-check-label, .forgot-password { font-size: 0.8rem; }
 }
+
+@media (max-width: 480px) {
+    /* Mobile: allow the text to wrap instead of overflowing/clipping */
+    .forgot-password {
+        white-space: normal;
+        line-height: 1.15;
+        max-width: 150px;
+        flex-shrink: 1;
+        word-break: break-word;
+    }
+}
+
+@media (max-width: 360px) {
+    .forgot-password {
+        max-width: 130px;
+        font-size: 0.78rem;
+    }
+}

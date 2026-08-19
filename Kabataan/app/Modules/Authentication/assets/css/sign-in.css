@@ -469,6 +469,7 @@ html {
     gap: 0.75rem;
     margin-top: 0.25rem;
     flex-wrap: nowrap;
+    margin-bottom: 0.35rem;
 }
 
 .youth-remember-block {
@@ -477,12 +478,13 @@ html {
     align-items: flex-start;
     gap: 0.35rem;
     min-width: 0;
-    flex: 0 1 auto;
+    flex: 1 1 auto;
 }
 
 .youth-forgot-link {
-    flex-shrink: 0;
     white-space: nowrap;
+    flex-shrink: 1;
+    min-width: 0;
 }
 
 .youth-remember-modal-dialog {
@@ -533,6 +535,8 @@ html {
     font-size: 0.95rem;
     color: var(--youth-gray-600);
     font-weight: 500;
+    white-space: nowrap;
+    display: inline-block;
 }
 
 .youth-link {
@@ -687,6 +691,38 @@ a.youth-submit-btn:visited {
     margin-top: 12px;
 }
 
+@media (max-width: 480px) {
+    /* Keep register + back-home links readable on small screens */
+    .youth-register-section {
+        padding: 0 0.5rem;
+    }
+
+    .register-text {
+        font-size: 0.9rem;
+    }
+
+    .register-home-link {
+        display: block;
+        width: 100%;
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    .register-link {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .register-text {
+        font-size: 0.86rem;
+    }
+
+    .register-home-link {
+        margin-top: 8px;
+    }
+}
+
 /* ============================================
    Footer
    ============================================ */
@@ -778,6 +814,17 @@ a.youth-submit-btn:visited {
         gap: 0.75rem;
         flex-wrap: nowrap;
     }
+
+    /* Mobile: keep Remember me + Forgot password on one line */
+    .youth-remember-block {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .youth-forgot-link {
+        flex-shrink: 1;
+        min-width: 0;
+    }
 }
 
 @media (max-width: 480px) {
@@ -793,6 +840,14 @@ a.youth-submit-btn:visited {
     .card-subtitle { font-size: 1.25rem; }
     .youth-input { padding: 0.875rem 1rem; font-size: 0.95rem; }
     .youth-submit-btn { padding: 1rem 1.5rem; font-size: 1rem; }
+
+    .youth-form-options {
+        margin-bottom: 0.25rem;
+    }
+
+    .checkbox-label {
+        font-size: 0.9rem;
+    }
 }
 
 /* ============================================
