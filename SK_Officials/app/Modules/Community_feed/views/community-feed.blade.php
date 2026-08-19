@@ -78,11 +78,8 @@
                         <p class="sk-fed-card-sub">SK Officials Portal · Santa Cruz, Laguna</p>
                     </div>
                 </div>
-                {{-- Create Post button --}}
-                <div style="padding:12px 16px;background:#fff;border-top:1px solid #f0f0f0;">
-                    <button onclick="openComposeModal()" style="width:100%;padding:9px;background:linear-gradient(135deg,#f5c518,#e6a800);color:#1a1a2e;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
-                        + Create Post
-                    </button>
+                <div class="sk-fed-card-create">
+                    <button onclick="openComposeModal()" class="sk-fed-create-btn">+ Create Post</button>
                 </div>
             </div>
 
