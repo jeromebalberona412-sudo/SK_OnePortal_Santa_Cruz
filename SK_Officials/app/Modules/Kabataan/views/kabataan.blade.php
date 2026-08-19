@@ -86,6 +86,10 @@
                         <input type="text" id="kabataanSearch" class="abyip-filter-search-inline" placeholder="Search kabataan..." autocomplete="off">
                     </div>
                 </div>
+                <button type="button" class="kkp-export-csv-btn" id="kabExportCsvBtn" title="Export to CSV">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Export CSV
+                </button>
             </div>
             <div class="filters-row">
                 <div class="filter-item">
@@ -903,6 +907,53 @@
                 </svg>
                 Save Signature
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Save Confirmation Modal -->
+<!-- Export CSV Filter Modal -->
+<div class="modal-backdrop kk-modal-backdrop" id="kabExportModal" style="display:none;">
+    <div class="modal-box kk-modal-box kk-modal-animate-small kk-modal-no-border kkp-export-modal-box">
+        <div class="modal-header">
+            <h2 class="modal-title">Export Kabataan Records to CSV</h2>
+            <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body kkp-export-modal-body">
+            <p class="kkp-export-description">Filter records by submission date before exporting. Leave blank to export all records.</p>
+            <div class="kkp-export-filters">
+                <div class="kkp-export-filter-row">
+                    <label for="kabExportDateFrom" class="kkp-export-label">From</label>
+                    <input type="date" id="kabExportDateFrom" class="kkp-export-date-input">
+                </div>
+                <div class="kkp-export-filter-row">
+                    <label for="kabExportDateTo" class="kkp-export-label">To</label>
+                    <input type="date" id="kabExportDateTo" class="kkp-export-date-input">
+                </div>
+            </div>
+            <p class="kkp-export-count" id="kabExportRecordCount"></p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-approve-cancel" data-modal-close>Cancel</button>
+            <button type="button" class="btn btn-approve-confirm" id="kabExportConfirmBtn">Export</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-backdrop kk-modal-backdrop" id="kabEditConfirmModal" style="display:none;">
+    <div class="modal-box kk-modal-box kk-modal-animate-small kk-modal-no-border kkp-confirm-edit-modal">
+        <div class="modal-header">
+            <h2 class="modal-title">Confirm Save Changes</h2>
+            <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body kkp-confirm-edit-body">
+            <p class="kkp-confirm-edit-text">Are you sure you want to save these changes? This will update the kabataan's record.</p>
+            <label for="kabEditConfirmInput" class="kkp-confirm-edit-label">Type <strong>Yes</strong> to confirm</label>
+            <input type="text" id="kabEditConfirmInput" class="kkp-confirm-edit-input" placeholder="Type Yes" autocomplete="off" maxlength="3">
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-approve-cancel" data-modal-close>Cancel</button>
+            <button type="button" class="btn btn-approve-confirm" id="kabEditConfirmSaveBtn" disabled>Save Changes</button>
         </div>
     </div>
 </div>

@@ -1358,6 +1358,33 @@ function initializeKabataanUI() {
         };
     }
 
+    const kabEditConfirmModal = document.getElementById('kabEditConfirmModal');
+    const kabEditConfirmInput = document.getElementById('kabEditConfirmInput');
+    const kabEditConfirmSaveBtn = document.getElementById('kabEditConfirmSaveBtn');
+
+    function openKabEditConfirm() {
+        if (kabEditConfirmInput) kabEditConfirmInput.value = '';
+        if (kabEditConfirmSaveBtn) kabEditConfirmSaveBtn.disabled = true;
+        if (kabEditConfirmModal) kabEditConfirmModal.style.display = 'flex';
+        kabEditConfirmInput?.focus();
+    }
+
+    function closeKabEditConfirm() {
+        if (kabEditConfirmModal) kabEditConfirmModal.style.display = 'none';
+    }
+
+    kabEditConfirmInput?.addEventListener('input', () => {
+        const match = kabEditConfirmInput.value.trim().toLowerCase() === 'yes';
+        if (kabEditConfirmSaveBtn) kabEditConfirmSaveBtn.disabled = !match;
+    });
+
+    kabEditConfirmModal?.addEventListener('click', (e) => {
+        if (e.target === kabEditConfirmModal) closeKabEditConfirm();
+    });
+    kabEditConfirmModal?.querySelectorAll('[data-modal-close]').forEach(btn => {
+        btn.addEventListener('click', closeKabEditConfirm);
+    });
+
     if (saveBtn) {
         saveBtn.addEventListener('click', () => {
             const d = getFormData();
@@ -1367,42 +1394,48 @@ function initializeKabataanUI() {
                 alert('First Name or Last Name is required.');
                 return;
             }
-
-            const payload = buildApiPayload(d);
-            const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-            const isEdit = editingIndex !== null && kabataan[editingIndex]?.id;
-            if (!isEdit) return;
-            const url = `/kabataan/${kabataan[editingIndex].id}`;
-            const method = 'PUT';
-
-            saveBtn.disabled = true;
-            saveBtn.textContent = 'Saving...';
-
-            fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrf,
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            })
-            .then(r => r.json())
-            .then(res => {
-                if (!res.success) throw new Error(res.message || 'Save failed');
-                broadcastKkProfileEvent();
-                closeModal();
-                loadData();
-                showKabataanToast(res.message || 'Kabataan record updated.', 'success');
-            })
-            .catch(err => showKabataanToast(err.message || 'Failed to save record.', 'error'))
-            .finally(() => {
-                saveBtn.disabled = false;
-                saveBtn.textContent = 'Save';
-            });
+            openKabEditConfirm();
         });
     }
+
+    kabEditConfirmSaveBtn?.addEventListener('click', () => {
+        closeKabEditConfirm();
+
+        const d = getFormData();
+        const payload = buildApiPayload(d);
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const isEdit = editingIndex !== null && kabataan[editingIndex]?.id;
+        if (!isEdit) return;
+        const url = `/kabataan/${kabataan[editingIndex].id}`;
+        const method = 'PUT';
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+
+        fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrf,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (!res.success) throw new Error(res.message || 'Save failed');
+            broadcastKkProfileEvent();
+            closeModal();
+            loadData();
+            showKabataanToast(res.message || 'Kabataan record updated.', 'success');
+        })
+        .catch(err => showKabataanToast(err.message || 'Failed to save record.', 'error'))
+        .finally(() => {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save';
+        });
+    });
 
     function parseCsvTsv(text) {
         const lines = text.trim().split(/\r?\n/).filter(Boolean);
@@ -1870,6 +1903,138 @@ function initializeKabataanUI() {
             render();
         })
         .catch(() => render());
+    }
+
+    // --- Export CSV/XLSX ---
+    const exportBtn = document.getElementById('kabExportCsvBtn');
+    const exportModal = document.getElementById('kabExportModal');
+    const exportDateFrom = document.getElementById('kabExportDateFrom');
+    const exportDateTo = document.getElementById('kabExportDateTo');
+    const exportRecordCount = document.getElementById('kabExportRecordCount');
+    const exportConfirmBtn = document.getElementById('kabExportConfirmBtn');
+
+    function parseSubmittedDate(dateStr) {
+        if (!dateStr || dateStr === '—') return null;
+        const parts = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (parts) return new Date(+parts[3], +parts[1] - 1, +parts[2]);
+        const iso = Date.parse(dateStr);
+        return isNaN(iso) ? null : new Date(iso);
+    }
+
+    function getFilteredExportRows() {
+        const fromVal = exportDateFrom?.value;
+        const toVal = exportDateTo?.value;
+        const from = fromVal ? new Date(fromVal + 'T00:00:00') : null;
+        const to = toVal ? new Date(toVal + 'T23:59:59') : null;
+
+        return kabataan.filter(r => {
+            const d = parseSubmittedDate(r.date);
+            if (from && (!d || d < from)) return false;
+            if (to && (!d || d > to)) return false;
+            return true;
+        });
+    }
+
+    function updateExportCount() {
+        if (!exportRecordCount) return;
+        const count = getFilteredExportRows().length;
+        exportRecordCount.textContent = count + ' record' + (count !== 1 ? 's' : '') + ' will be exported.';
+    }
+
+    function escapeCsvField(val) {
+        const s = String(val ?? '').replace(/\r?\n/g, ' ');
+        if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+            return '"' + s.replace(/"/g, '""') + '"';
+        }
+        return s;
+    }
+
+    function buildExportFullName(r) {
+        const parts = [r.lastName, r.firstName];
+        const mn = String(r.middleName || '').trim();
+        if (mn && mn.toLowerCase() !== 'none') parts.push(mn);
+        const sfx = formatDisplaySuffix(r.suffix, r.suffixOther);
+        if (sfx) parts.push(sfx);
+        return parts.filter(Boolean).join(' ');
+    }
+
+    function exportToCsv() {
+        const rows = getFilteredExportRows();
+        if (!rows.length) {
+            showKabataanToast('No records to export.', 'error');
+            return;
+        }
+
+        const headers = [
+            'REGION', 'PROVINCE', 'CITY/MUNICIPALITY', 'BARANGAY', 'NAME',
+            'AGE', 'BIRTHDAY', 'SEX ASSIGNED AT BIRTH', 'CIVIL STATUS',
+            'YOUTH CLASSIFICATION', 'YOUTH AGE GROUP', 'CONTACT NUMBER',
+            'HOME ADDRESS', 'HIGHEST EDUCATIONAL ATTAINMENT', 'WORK STATUS',
+            'REGISTERED VOTER?', 'VOTED LAST ELECTION?', 'ATTENDED KK ASSEMBLY?',
+            'IF YES, HOW MANY TIMES?',
+        ];
+
+        const colWidths = [14, 12, 20, 18, 30, 6, 16, 22, 14, 22, 22, 16, 20, 32, 14, 18, 20, 22, 22];
+
+        const dataRows = rows.map(r => [
+            r.region || '', r.province || '', r.city || '', r.barangay || '',
+            buildExportFullName(r), r.age ?? '', r.birthday || '', r.sex || '',
+            r.civilStatus || '', r.youthClassification || '', r.youthAgeGroup || '',
+            r.contact || '', r.purokZone || '', r.highestEducation || r.educationalBackground || '',
+            r.workStatus || '', r.registeredSKVoter || '', r.votingHistory || '',
+            r.attendedKKAssembly || '', r.kkTimes || '',
+        ]);
+
+        if (typeof XLSX !== 'undefined') {
+            const wb = XLSX.utils.book_new();
+            const wsData = [headers, ...dataRows];
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            ws['!cols'] = colWidths.map(w => ({ wch: w }));
+            XLSX.utils.book_append_sheet(wb, ws, 'Kabataan');
+            const now = new Date();
+            const stamp = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+            XLSX.writeFile(wb, 'kabataan-records_' + stamp + '.xlsx');
+        } else {
+            const csvLines = [headers.map(escapeCsvField).join(',')];
+            dataRows.forEach(row => {
+                csvLines.push(row.map(escapeCsvField).join(','));
+            });
+            const bom = '\uFEFF';
+            const blob = new Blob([bom + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const now = new Date();
+            const stamp = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+            a.download = 'kabataan-records_' + stamp + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        if (exportModal) { exportModal.style.display = 'none'; }
+        showKabataanToast(rows.length + ' record' + (rows.length !== 1 ? 's' : '') + ' exported.', 'success');
+    }
+
+    if (exportBtn && exportModal) {
+        exportBtn.addEventListener('click', () => {
+            if (exportDateFrom) exportDateFrom.value = '';
+            if (exportDateTo) exportDateTo.value = '';
+            updateExportCount();
+            exportModal.style.display = 'flex';
+        });
+
+        exportDateFrom?.addEventListener('change', updateExportCount);
+        exportDateTo?.addEventListener('change', updateExportCount);
+        exportConfirmBtn?.addEventListener('click', exportToCsv);
+
+        exportModal.addEventListener('click', (e) => {
+            if (e.target === exportModal) exportModal.style.display = 'none';
+        });
+        exportModal.querySelectorAll('[data-modal-close]').forEach(btn => {
+            btn.addEventListener('click', () => { exportModal.style.display = 'none'; });
+        });
     }
 
     window.addEventListener('kk-profile-event', () => loadData());

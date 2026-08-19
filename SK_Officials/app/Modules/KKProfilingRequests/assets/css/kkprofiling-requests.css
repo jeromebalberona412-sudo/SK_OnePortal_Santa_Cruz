@@ -3634,3 +3634,165 @@ body {
         justify-content: center;
     }
 }
+
+/* Edit Save Confirmation Modal */
+.kkp-confirm-edit-modal {
+    max-width: 380px;
+    width: calc(100% - 32px);
+}
+
+.kkp-confirm-edit-body {
+    padding: 20px 24px;
+}
+
+.kkp-confirm-edit-text {
+    font-size: 13px;
+    color: #475569;
+    margin: 0 0 16px;
+    line-height: 1.5;
+}
+
+.kkp-confirm-edit-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 6px;
+}
+
+.kkp-confirm-edit-input {
+    width: 100%;
+    padding: 9px 12px;
+    font-size: 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    color: #1e293b;
+    background: #fff;
+}
+
+.kkp-confirm-edit-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.kkp-confirm-edit-modal .btn-approve-confirm:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+    background: #94a3b8;
+    border-color: #94a3b8;
+    color: #fff;
+}
+
+.kkp-confirm-edit-modal .btn-approve-confirm:not(:disabled) {
+    background: #16a34a;
+    border-color: #15803d;
+    color: #fff;
+}
+
+@media (max-width: 480px) {
+    .kkp-confirm-edit-body {
+        padding: 16px;
+    }
+}
+
+/* Export CSV Button */
+.kkp-export-csv-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    background: #16a34a;
+    border: 1px solid #15803d;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.kkp-export-csv-btn:hover {
+    background: #15803d;
+    border-color: #166534;
+}
+
+.kkp-export-csv-btn svg {
+    flex-shrink: 0;
+    stroke: #fff;
+}
+
+/* Export Modal */
+.kkp-export-modal-box {
+    max-width: 420px;
+    width: calc(100% - 32px);
+}
+
+.kkp-export-modal-body {
+    padding: 20px 24px;
+}
+
+.kkp-export-description {
+    font-size: 13px;
+    color: #475569;
+    margin: 0 0 16px;
+    line-height: 1.5;
+}
+
+.kkp-export-filters {
+    display: flex;
+    gap: 12px;
+}
+
+.kkp-export-filter-row {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.kkp-export-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.kkp-export-date-input {
+    padding: 8px 10px;
+    font-size: 13px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    color: #1e293b;
+    background: #fff;
+    width: 100%;
+}
+
+.kkp-export-date-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.kkp-export-count {
+    margin: 14px 0 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+}
+
+@media (max-width: 480px) {
+    .kkp-export-csv-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .kkp-export-filters {
+        flex-direction: column;
+    }
+
+    .kkp-export-modal-body {
+        padding: 16px;
+    }
+}

@@ -505,7 +505,7 @@ body.kabataan-has-view-only-banner {
     }
 
     .kabataan-header__actions {
-        gap: 2px;
+        gap: 3px;
         flex-shrink: 0;
         margin-left: auto;
     }
@@ -513,15 +513,15 @@ body.kabataan-has-view-only-banner {
     .kabataan-header__icon-btn,
     .kabataan-header .nav-icon-btn,
     .kabataan-header__avatar-btn {
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
     }
 
     .kabataan-header__icon-btn svg,
     .kabataan-header .nav-icon-btn svg,
     .kabataan-header .kab-ai-assistant-btn svg {
-        width: 16px !important;
-        height: 16px !important;
+        width: 18px !important;
+        height: 18px !important;
     }
 
     .kabataan-header__dropdown-user-card {
@@ -685,15 +685,15 @@ body.kabataan-has-view-only-banner {
     .kabataan-header__icon-btn,
     .kabataan-header .nav-icon-btn,
     .kabataan-header__avatar-btn {
-        width: 30px;
-        height: 30px;
+        width: 34px;
+        height: 34px;
     }
 
     .kabataan-header__icon-btn svg,
     .kabataan-header .nav-icon-btn svg,
     .kabataan-header .kab-ai-assistant-btn svg {
-        width: 15px !important;
-        height: 15px !important;
+        width: 17px !important;
+        height: 17px !important;
     }
 }
 
@@ -703,14 +703,21 @@ body.kabataan-has-view-only-banner {
     }
 
     .kabataan-header__actions {
-        gap: 1px;
+        gap: 2px;
     }
 
     .kabataan-header__icon-btn,
     .kabataan-header .nav-icon-btn,
     .kabataan-header__avatar-btn {
-        width: 28px;
-        height: 28px;
+        width: 32px;
+        height: 32px;
+    }
+
+    .kabataan-header__icon-btn svg,
+    .kabataan-header .nav-icon-btn svg,
+    .kabataan-header .kab-ai-assistant-btn svg {
+        width: 16px !important;
+        height: 16px !important;
     }
 }
 
@@ -726,7 +733,14 @@ body.kabataan-has-view-only-banner {
     .kabataan-header__icon-btn,
     .kabataan-header .nav-icon-btn,
     .kabataan-header__avatar-btn {
-        width: 28px;
-        height: 28px;
+        width: 30px;
+        height: 30px;
+    }
+
+    .kabataan-header__icon-btn svg,
+    .kabataan-header .nav-icon-btn svg,
+    .kabataan-header .kab-ai-assistant-btn svg {
+        width: 15px !important;
+        height: 15px !important;
     }
 }

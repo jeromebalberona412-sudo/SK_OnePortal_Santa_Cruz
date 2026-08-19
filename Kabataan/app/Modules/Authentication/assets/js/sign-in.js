@@ -301,4 +301,12 @@
         document.head.appendChild(style);
     }());
 
+    window.addEventListener('pageshow', function (e) {
+        if (e.persisted) {
+            document.querySelectorAll('.youth-alert-success').forEach(function (el) {
+                el.remove();
+            });
+        }
+    });
+
 }());

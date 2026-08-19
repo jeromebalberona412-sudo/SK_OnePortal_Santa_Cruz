@@ -28,7 +28,8 @@ body {
 .main-content {
     margin-left: 280px;
     margin-top: 70px;
-    min-height: calc(100vh - 70px);
+    height: calc(100vh - 70px);
+    overflow: hidden;
     transition: margin-left 0.3s ease;
 }
 
@@ -45,16 +46,24 @@ body {
     width: 100%; max-width: 1400px; margin: 0 auto;
     display: grid; grid-template-columns: 1fr 300px;
     gap: 24px; padding: 28px 32px;
-    align-items: stretch; box-sizing: border-box;
+    align-items: start; box-sizing: border-box;
+    height: calc(100vh - 70px);
+    min-width: 0;
 }
 
-.feed-section { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.feed-section {
+    display: flex; flex-direction: column; gap: 20px; min-width: 0;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+}
 
 /* SK Officials Info Card */
 .sk-fed-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 .sk-fed-card-banner {
     background: var(--sk-grad);
-    border-bottom: 3px solid var(--sk-gold);
+    border-bottom: none;
     padding: 20px 24px; display: flex; align-items: center; gap: 16px;
 }
 .sk-fed-card-logo-link { display: inline-flex; flex-shrink: 0; border-radius: 50%; line-height: 0; }
@@ -108,7 +117,7 @@ body {
 
 .feed-sticky-toolbar {
     position: sticky;
-    top: var(--sk-header-height, 70px);
+    top: 0;
     z-index: 90;
     background: #f0f1f5;
     padding: 0;
@@ -189,25 +198,27 @@ body {
     opacity: 1;
 }
 @media (max-width: 768px) {
+    .main-content {
+        height: calc(100vh - 60px);
+        margin-top: 60px;
+    }
+    .ann-container {
+        height: calc(100vh - 60px);
+    }
     .ann-main,
     .feed-section {
-        overflow-x: visible;
+        overflow-x: hidden;
     }
     .feed-sticky-toolbar {
-        position: fixed;
-        top: var(--sk-header-height, 60px);
-        left: 0;
-        right: 0;
-        width: 100%;
+        position: sticky;
+        top: 0;
         z-index: 90;
-        max-height: none;
-        transform: translateY(0);
+        max-height: 160px;
         box-shadow: 0 8px 16px -10px rgba(15, 23, 42, 0.22);
     }
     .feed-sticky-toolbar.is-hidden {
-        max-height: none;
-        opacity: 1;
-        transform: translateY(-110%);
+        max-height: 0;
+        opacity: 0;
         pointer-events: none;
         box-shadow: none;
     }
@@ -528,10 +539,8 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
 /* ── PROGRAMS RIGHT SIDEBAR ── */
 .programs-sidebar {
     min-width: 0;
-    align-self: start;
-    position: sticky;
-    top: 86px;
-    max-height: calc(100vh - 98px);
+    height: 100%;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
 }
@@ -548,7 +557,8 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
     display: flex;
     flex-direction: column;
     min-height: 0;
-    max-height: calc(100vh - 98px);
+    max-height: 100%;
+    height: 100%;
     overflow: hidden;
 }
 .sidebar-title { font-size: 16px; font-weight: 700; color: #333; margin-bottom: 3px; flex-shrink: 0; }
@@ -951,7 +961,7 @@ body.feed-keyboard .programs-fab {
 
 /* Compose modal fullscreen */
 .compose-modal-container { max-width: 560px; transition: all 0.25s ease; }
-.compose-modal.compose-maximized .compose-modal-container { max-width: min(960px, 96vw); width: 96vw; height: 92vh; display: flex; flex-direction: column; }
+.compose-modal.compose-maximized .compose-modal-container { max-width: 100vw !important; width: 100vw !important; height: 100vh !important; max-height: 100vh !important; border-radius: 0 !important; display: flex; flex-direction: column; }
 .compose-modal.compose-maximized .modal-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
 .compose-modal.compose-maximized .compose-textarea { min-height: 40vh; flex: 1; }
 .compose-modal .modal-header {
@@ -994,6 +1004,7 @@ body.feed-keyboard .programs-fab {
     opacity: 0.7;
 }
 .compose-modal .modal-close.compose-window-btn svg { color: #2c2c3e; width: 16px; height: 16px; }
+.compose-fullscreen-text-btn { font-size: 20px; font-weight: 400; line-height: 1; }
 .compose-modal .modal-close.compose-window-btn:hover svg { color: #2c2c3e; }
 #compose-post-btn {
     background: var(--sk-dark);

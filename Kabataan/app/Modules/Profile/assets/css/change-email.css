@@ -265,6 +265,25 @@ body.youth-signin-page {
     animation: none;
 }
 
+/* ── Back to Profile on mobile — below submit, full width ─── */
+@media (max-width: 480px) {
+    .ce-back-section {
+        margin-top: 0.75rem;
+    }
+
+    .ce-back-section .register-text {
+        margin: 0;
+    }
+
+    .ce-back-section .register-link {
+        display: block;
+        width: 100%;
+        text-align: center;
+        font-size: 0.875rem;
+        padding: 10px 0;
+    }
+}
+
 @media (max-width: 768px) {
     .youth-signin-card {
         max-width: 100%;

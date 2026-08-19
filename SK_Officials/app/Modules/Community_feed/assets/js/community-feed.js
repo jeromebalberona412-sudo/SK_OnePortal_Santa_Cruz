@@ -402,11 +402,7 @@ function bindFilterBarScrollHide() {
     }
 
     function scrollRoot() {
-        if (!feedSection) return window;
-        const overflowY = getComputedStyle(feedSection).overflowY;
-        if (overflowY === 'auto' || overflowY === 'scroll') {
-            return feedSection;
-        }
+        if (feedSection) return feedSection;
         return window;
     }
 
@@ -425,15 +421,10 @@ function bindFilterBarScrollHide() {
 
     function updateAnchor() {
         if (!anchor) return;
-        if (!overlayQuery.matches) {
-            anchor.style.height = '0px';
-            return;
-        }
-        anchor.style.height = toolbar.classList.contains('is-hidden') ? '0px' : (measureBar() + 'px');
+        anchor.style.height = '0px';
     }
 
     function syncStickyTop() {
-        toolbar.style.top = headerHeight() + 'px';
         updateAnchor();
     }
 
@@ -1565,7 +1556,7 @@ function openComposeModal(type) {
     if (btn) {
         btn.title = 'Full screen';
         btn.setAttribute('aria-label', 'Full screen');
-        btn.innerHTML = '<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M3 3h5v2H5v3H3V3zm9 0h5v5h-2V5h-3V3zM3 12h2v3h3v2H3v-5zm12 0h2v5h-5v-2h3v-3z"/></svg>';
+        btn.textContent = '\u25A1';
     }
 }
 
@@ -1583,9 +1574,7 @@ function toggleComposeFullscreen() {
     if (btn) {
         btn.title = isMax ? 'Restore down' : 'Full screen';
         btn.setAttribute('aria-label', btn.title);
-        btn.innerHTML = isMax
-            ? '<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M7 7H3v4h2V9h2V7zm6 0v2h2v2h2V7h-4zM7 13H5v-2H3v4h4v-2zm6 2v-2h2v-2h2v4h-4v-2z"/></svg>'
-            : '<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M3 3h5v2H5v3H3V3zm9 0h5v5h-2V5h-3V3zM3 12h2v3h3v2H3v-5zm12 0h2v5h-5v-2h3v-3z"/></svg>';
+        btn.textContent = isMax ? '\u29C9' : '\u25A1';
     }
 }
 
@@ -1613,7 +1602,15 @@ async function editPost(id) {
         document.getElementById('compose-link-input').value = post.link_url || '';
         refreshPreviewGrid();
         updateCharCount();
-        document.getElementById('composeModal').classList.add('active');
+        const modal = document.getElementById('composeModal');
+        modal.classList.remove('compose-maximized');
+        modal.classList.add('active');
+        const fsBtn = document.getElementById('composeFullscreenBtn');
+        if (fsBtn) {
+            fsBtn.title = 'Full screen';
+            fsBtn.setAttribute('aria-label', 'Full screen');
+            fsBtn.textContent = '\u25A1';
+        }
     } catch (err) {
         notifyFeed('Unable to load the post for editing. Please try again.', 'error');
     }

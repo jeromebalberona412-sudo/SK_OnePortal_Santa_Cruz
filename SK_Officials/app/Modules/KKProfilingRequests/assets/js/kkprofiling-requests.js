@@ -1301,6 +1301,140 @@ function initializeKKProfilingRequestsUI() {
         });
     }
 
+    // ── Export CSV ──
+    const exportBtn = document.getElementById('kkExportCsvBtn');
+    const exportModal = document.getElementById('kkExportModal');
+    const exportDateFrom = document.getElementById('kkExportDateFrom');
+    const exportDateTo = document.getElementById('kkExportDateTo');
+    const exportConfirmBtn = document.getElementById('kkExportConfirmBtn');
+    const exportRecordCount = document.getElementById('kkExportRecordCount');
+
+    function parseSubmittedDate(dateStr) {
+        if (!dateStr || dateStr === '—') return null;
+        const parts = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (parts) return new Date(+parts[3], +parts[1] - 1, +parts[2]);
+        const iso = Date.parse(dateStr);
+        return isNaN(iso) ? null : new Date(iso);
+    }
+
+    function getFilteredExportRows() {
+        const fromVal = exportDateFrom?.value;
+        const toVal = exportDateTo?.value;
+        const from = fromVal ? new Date(fromVal + 'T00:00:00') : null;
+        const to = toVal ? new Date(toVal + 'T23:59:59') : null;
+
+        return requests.filter(r => {
+            const d = parseSubmittedDate(r.date);
+            if (from && (!d || d < from)) return false;
+            if (to && (!d || d > to)) return false;
+            return true;
+        });
+    }
+
+    function updateExportCount() {
+        if (!exportRecordCount) return;
+        const count = getFilteredExportRows().length;
+        exportRecordCount.textContent = count + ' record' + (count !== 1 ? 's' : '') + ' will be exported.';
+    }
+
+    function escapeCsvField(val) {
+        const s = String(val ?? '').replace(/\r?\n/g, ' ');
+        if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+            return '"' + s.replace(/"/g, '""') + '"';
+        }
+        return s;
+    }
+
+    function buildFullName(r) {
+        const parts = [r.lastName, r.firstName];
+        const mn = formatMiddleNameDisplay(r.middleName);
+        if (mn && mn !== 'None') parts.push(mn);
+        const sfx = formatDisplaySuffix(r.suffixRaw, r.suffixOther);
+        if (sfx && sfx !== 'None') parts.push(sfx);
+        return parts.filter(Boolean).join(' ');
+    }
+
+    function exportToCsv() {
+        const rows = getFilteredExportRows();
+        if (!rows.length) {
+            showToast('No records to export.', 'error');
+            return;
+        }
+
+        const headers = [
+            'REGION', 'PROVINCE', 'CITY/MUNICIPALITY', 'BARANGAY', 'NAME',
+            'AGE', 'BIRTHDAY', 'SEX ASSIGNED AT BIRTH', 'CIVIL STATUS',
+            'YOUTH CLASSIFICATION', 'YOUTH AGE GROUP', 'CONTACT NUMBER',
+            'HOME ADDRESS', 'HIGHEST EDUCATIONAL ATTAINMENT', 'WORK STATUS',
+            'REGISTERED VOTER?', 'VOTED LAST ELECTION?', 'ATTENDED KK ASSEMBLY?',
+            'IF YES, HOW MANY TIMES?',
+        ];
+
+        const colWidths = [14, 12, 20, 18, 30, 6, 16, 22, 14, 22, 22, 16, 20, 32, 14, 18, 20, 22, 22];
+
+        const dataRows = rows.map(r => [
+            r.region || '', r.province || '', r.city || '', r.barangay || '',
+            buildFullName(r), r.age ?? '', r.birthday || '', r.sex || '',
+            r.civilStatus || '', r.youthClassification || '', r.youthAgeGroup || '',
+            r.contactNumber || '', r.purokZone || '', r.educationalBackground || '',
+            r.workStatus || '', r.registeredSKVoter || '', r.votingHistory || '',
+            r.attendedKKAssembly || '', r.kkTimes || '',
+        ]);
+
+        if (typeof XLSX !== 'undefined') {
+            const wb = XLSX.utils.book_new();
+            const wsData = [headers, ...dataRows];
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            ws['!cols'] = colWidths.map(w => ({ wch: w }));
+
+            XLSX.utils.book_append_sheet(wb, ws, 'KK Profiling');
+            const now = new Date();
+            const stamp = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+            XLSX.writeFile(wb, 'kk-profiling-requests_' + stamp + '.xlsx');
+        } else {
+            const csvLines = [headers.map(escapeCsvField).join(',')];
+            dataRows.forEach(row => {
+                csvLines.push(row.map(escapeCsvField).join(','));
+            });
+            const bom = '\uFEFF';
+            const blob = new Blob([bom + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const now = new Date();
+            const stamp = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+            a.download = 'kk-profiling-requests_' + stamp + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        if (exportModal) { exportModal.style.display = 'none'; }
+        showToast(rows.length + ' record' + (rows.length !== 1 ? 's' : '') + ' exported.', 'success');
+    }
+
+    if (exportBtn && exportModal) {
+        exportBtn.addEventListener('click', () => {
+            if (exportDateFrom) exportDateFrom.value = '';
+            if (exportDateTo) exportDateTo.value = '';
+            updateExportCount();
+            exportModal.style.display = 'flex';
+        });
+
+        exportDateFrom?.addEventListener('change', updateExportCount);
+        exportDateTo?.addEventListener('change', updateExportCount);
+        exportConfirmBtn?.addEventListener('click', exportToCsv);
+
+        exportModal.addEventListener('click', (e) => {
+            if (e.target === exportModal) exportModal.style.display = 'none';
+        });
+        exportModal.querySelectorAll('[data-modal-close]').forEach(btn => {
+            btn.addEventListener('click', () => { exportModal.style.display = 'none'; });
+        });
+    }
+
     window.addEventListener('kk-profile-event', () => loadData());
     bindKkProfilingEdit({
         findRequestById,

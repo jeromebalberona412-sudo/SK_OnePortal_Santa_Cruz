@@ -480,10 +480,35 @@ export function bindKkProfilingEdit({
         editingId = null;
     });
 
-    saveBtn?.addEventListener('click', async () => {
-        if (!editingId || saving) {
-            return;
-        }
+    const editConfirmModal = document.getElementById('kkEditConfirmModal');
+    const editConfirmInput = document.getElementById('kkEditConfirmInput');
+    const editConfirmSaveBtn = document.getElementById('kkEditConfirmSaveBtn');
+
+    function openEditConfirmModal() {
+        if (editConfirmInput) editConfirmInput.value = '';
+        if (editConfirmSaveBtn) editConfirmSaveBtn.disabled = true;
+        if (editConfirmModal) editConfirmModal.style.display = 'flex';
+        editConfirmInput?.focus();
+    }
+
+    function closeEditConfirmModal() {
+        if (editConfirmModal) editConfirmModal.style.display = 'none';
+    }
+
+    editConfirmInput?.addEventListener('input', () => {
+        const match = editConfirmInput.value.trim().toLowerCase() === 'yes';
+        if (editConfirmSaveBtn) editConfirmSaveBtn.disabled = !match;
+    });
+
+    editConfirmModal?.addEventListener('click', (e) => {
+        if (e.target === editConfirmModal) closeEditConfirmModal();
+    });
+    editConfirmModal?.querySelectorAll('[data-modal-close]').forEach(btn => {
+        btn.addEventListener('click', closeEditConfirmModal);
+    });
+
+    saveBtn?.addEventListener('click', () => {
+        if (!editingId || saving) return;
 
         const payload = collectKkProfilingEditPayload();
         if (!payload.last_name || !payload.first_name) {
@@ -491,6 +516,14 @@ export function bindKkProfilingEdit({
             return;
         }
 
+        openEditConfirmModal();
+    });
+
+    editConfirmSaveBtn?.addEventListener('click', async () => {
+        if (!editingId || saving) return;
+        closeEditConfirmModal();
+
+        const payload = collectKkProfilingEditPayload();
         saving = true;
         saveBtn.disabled = true;
         saveBtn.textContent = 'Saving...';

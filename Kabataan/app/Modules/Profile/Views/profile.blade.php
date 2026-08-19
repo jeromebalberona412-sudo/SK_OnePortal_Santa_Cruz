@@ -13,8 +13,10 @@
         'app/Modules/Layout/assets/css/kabataan-bootstrap.css',
         'app/Modules/Layout/assets/css/kabataan-responsive.css',
         'app/Modules/Layout/assets/css/kabataan-header.css',
+        'app/Modules/Layout/assets/css/programs-drawer.css',
         'app/Modules/Layout/assets/css/kabataan-logout.css',
         'app/Modules/Layout/assets/js/kabataan-header.js',
+        'app/Modules/Programs/assets/js/kabataan-programs.js',
         'app/Modules/Layout/assets/js/kabataan-logout.js',
         'app/Modules/Profile/assets/css/profile.css',
         'app/Modules/KKProfiling/assets/css/kkprofiling.css',
@@ -148,6 +150,7 @@
 </head>
 <body class="youth-profile kabataan-app-page">
     @include('layout::kabataan-header', ['user' => $user])
+    @include('layout::programs-drawer')
 
     <!-- Main Content -->
     <main class="profile-main">
@@ -273,10 +276,6 @@
                                 @if(!empty($supportingDocuments))
                                     <p class="kkp-docs-summary" id="profileSupportingDocsSummary">
                                         {{ count($supportingDocuments) }} document{{ count($supportingDocuments) === 1 ? '' : 's' }} on file. Uploads are locked and cannot be replaced.
-                                    </p>
-                                @else
-                                    <p class="kkp-docs-summary" id="profileSupportingDocsSummary">
-                                        No supporting documents on file yet. You may upload one optional document (School ID or Barangay Clearance) to help SK officials verify your registration.
                                     </p>
                                 @endif
                                 <div class="kkp-preview-toolbar">
@@ -531,8 +530,8 @@
                 <h2 class="modal-title">Supporting Documents</h2>
                 <div class="modal-window-controls">
                     <button type="button" class="modal-toggle-btn" id="supportingDocsFullscreenBtn" aria-label="Maximize">
-                        <svg class="modal-icon-maximize" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
-                        <svg class="modal-icon-restore" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+                        <span class="modal-icon-maximize" aria-hidden="true">&#9633;</span>
+                        <span class="modal-icon-restore" aria-hidden="true" hidden>&#10697;</span>
                     </button>
                     <button type="button" class="modal-close" onclick="closeSupportingDocsModal()" aria-label="Close">&times;</button>
                 </div>
@@ -559,7 +558,12 @@
                     <button type="button" class="btn-secondary" onclick="closeSupportingDocsModal()">Close</button>
                 </div>
                 @else
-                <div class="kkp-docs-upload-section">
+                <div class="kkp-docs-empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="kkp-docs-empty-icon" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <p class="kkp-docs-empty-text">No supporting documents uploaded.</p>
+                </div>
+                {{-- Original upload form removed: no upload allowed when no documents exist --}}
+                <div class="kkp-docs-upload-section" hidden>
                     <h3 class="kkp-docs-upload-heading">Upload document</h3>
                     <p class="kkp-docs-upload-intro">
                         Upload <strong>one</strong> optional supporting ID  School ID or PhilSys / National ID. Provide front and back images. JPG or PNG, max 10MB each.
@@ -647,8 +651,8 @@
                 <h2 class="modal-title">Personal Information</h2>
                 <div class="modal-window-controls">
                     <button type="button" class="modal-toggle-btn" id="kkPreviewFullscreenBtn" data-modal-toggle aria-label="Maximize">
-                        <svg class="modal-icon-maximize" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
-                        <svg class="modal-icon-restore" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+                        <span class="modal-icon-maximize" aria-hidden="true">&#9633;</span>
+                        <span class="modal-icon-restore" aria-hidden="true" hidden>&#10697;</span>
                     </button>
                     <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
                 </div>

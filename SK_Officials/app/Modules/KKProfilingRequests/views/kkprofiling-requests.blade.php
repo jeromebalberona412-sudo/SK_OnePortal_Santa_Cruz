@@ -88,6 +88,10 @@
                         <input type="text" id="kkSearch" class="abyip-filter-search-inline" placeholder="Search KK profiling..." maxlength="80" autocomplete="off">
                     </div>
                 </div>
+                <button type="button" class="kkp-export-csv-btn" id="kkExportCsvBtn" title="Export to CSV">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Export CSV
+                </button>
             </div>
             <div class="filters-row">
                 <div class="filter-item">
@@ -268,8 +272,8 @@
             </p>
             <div class="reject-reasons">
                 <label class="reject-reason-item">
-                    <input type="checkbox" class="kk-reject-reason" value="Incorrect Purok / Zone">
-                    <span>Incorrect Purok / Zone</span>
+                    <input type="checkbox" class="kk-reject-reason" value="Incorrect Barangay">
+                    <span>Incorrect Barangay</span>
                 </label>
                 <label class="reject-reason-item">
                     <input type="checkbox" class="kk-reject-reason kk-reject-other-checkbox" value="Other" id="kkRejectOtherCheckbox">
@@ -287,8 +291,56 @@
     </div>
 </div>
 
+<!-- Edit Save Confirmation Modal -->
+<div class="modal-backdrop kk-modal-backdrop" id="kkEditConfirmModal" style="display:none;">
+    <div class="modal-box kk-modal-box kk-modal-animate-small kk-modal-no-border kkp-confirm-edit-modal">
+        <div class="modal-header">
+            <h2 class="modal-title">Confirm Save Changes</h2>
+            <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body kkp-confirm-edit-body">
+            <p class="kkp-confirm-edit-text">Are you sure you want to save these changes? This will update the kabataan's KK Profiling record.</p>
+            <label for="kkEditConfirmInput" class="kkp-confirm-edit-label">Type <strong>Yes</strong> to confirm</label>
+            <input type="text" id="kkEditConfirmInput" class="kkp-confirm-edit-input" placeholder="Type Yes" autocomplete="off" maxlength="3">
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-approve-cancel" data-modal-close>Cancel</button>
+            <button type="button" class="btn btn-approve-confirm" id="kkEditConfirmSaveBtn" disabled>Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Export CSV Filter Modal -->
+<div class="modal-backdrop kk-modal-backdrop" id="kkExportModal" style="display:none;">
+    <div class="modal-box kk-modal-box kk-modal-animate-small kk-modal-no-border kkp-export-modal-box">
+        <div class="modal-header">
+            <h2 class="modal-title">Export KK Profiling to CSV</h2>
+            <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body kkp-export-modal-body">
+            <p class="kkp-export-description">Filter records by submission date before exporting. Leave blank to export all records.</p>
+            <div class="kkp-export-filters">
+                <div class="kkp-export-filter-row">
+                    <label for="kkExportDateFrom" class="kkp-export-label">From</label>
+                    <input type="date" id="kkExportDateFrom" class="kkp-export-date-input">
+                </div>
+                <div class="kkp-export-filter-row">
+                    <label for="kkExportDateTo" class="kkp-export-label">To</label>
+                    <input type="date" id="kkExportDateTo" class="kkp-export-date-input">
+                </div>
+            </div>
+            <p class="kkp-export-count" id="kkExportRecordCount"></p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-approve-cancel" data-modal-close>Cancel</button>
+            <button type="button" class="btn btn-approve-confirm" id="kkExportConfirmBtn">Export</button>
+        </div>
+    </div>
+</div>
+
 <!-- Success Modal - Removed and replaced with toast notification -->
 
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 @vite([
     'app/Modules/Layout/js/header.js',
     'app/Modules/Layout/js/sidebar.js',

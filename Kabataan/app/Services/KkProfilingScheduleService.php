@@ -149,6 +149,16 @@ class KkProfilingScheduleService
 
         $targetYear = $this->scheduleProfilingYear($schedule);
 
+        // Accounts created/submitted in the same profiling year already
+        // contain current data — no update needed regardless of schedule toggling.
+        $submittedYear = (int) \Carbon\Carbon::parse($registration->submitted_at)
+            ->timezone($this->timezone())
+            ->format('Y');
+
+        if ($submittedYear >= $targetYear) {
+            return false;
+        }
+
         return ! $this->hasCompletedProfilingForYear($registration, $targetYear);
     }
 

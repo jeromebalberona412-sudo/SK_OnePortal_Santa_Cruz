@@ -142,9 +142,7 @@
         <div class="modal-header">
             <h2 id="compose-modal-title" class="compose-modal-title">Create Post</h2>
             <div class="compose-modal-window-actions">
-                <button type="button" id="composeFullscreenBtn" class="compose-window-btn" onclick="toggleComposeFullscreen()" title="Full screen" aria-label="Full screen">
-                    <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M3 3h5v2H5v3H3V3zm9 0h5v5h-2V5h-3V3zM3 12h2v3h3v2H3v-5zm12 0h2v5h-5v-2h3v-3z"/></svg>
-                </button>
+                <button type="button" id="composeFullscreenBtn" class="compose-window-btn compose-fullscreen-text-btn" onclick="toggleComposeFullscreen()" title="Full screen" aria-label="Full screen">&#9633;</button>
                 <button type="button" class="modal-close compose-window-btn" onclick="closeComposeModal()" aria-label="Close"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
             </div>
         </div>
