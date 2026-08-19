@@ -1,16 +1,13 @@
 /**
  * Shared Cloudflare Turnstile challenge for SK Officials auth forms.
- * Call SkOfficialsTurnstileGate.challenge(), then injectToken(form, token) before submit.
- *
- * Only the Turnstile API script is preloaded on page load. The checkbox widget is
- * rendered when the modal opens so it always starts unchecked — the user must
- * click it themselves. After verification completes, the form submits automatically.
+ * Renders a fresh widget only while the modal is visible (mobile-safe).
  */
 (function () {
     'use strict';
 
     var widgetId = null;
     var rendered = false;
+    var errorRetries = 0;
     var pending = null;
 
     function config() {
@@ -40,8 +37,13 @@
         return Boolean(modalEl && modalEl.classList.contains('turnstile-modal-visible'));
     }
 
-    function widgetSize() {
-        return window.matchMedia('(max-width: 480px)').matches ? 'compact' : 'normal';
+    function afterModalPaint(callback) {
+        var delay = window.matchMedia('(max-width: 768px)').matches ? 250 : 80;
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+                setTimeout(callback, delay);
+            });
+        });
     }
 
     function waitForApi(maxWaitMs) {
@@ -66,7 +68,7 @@
 
     function setError(message) {
         var modalEl = modal();
-        if (!modalEl) {
+        if (!modalEl || !isModalOpen()) {
             return;
         }
         var errEl = modalEl.querySelector('.turnstile-modal-error');
@@ -112,7 +114,7 @@
         clearError();
     }
 
-    function destroyWidget() {
+    function clearWidget() {
         if (rendered && widgetId !== null && typeof window.turnstile !== 'undefined') {
             try {
                 window.turnstile.remove(widgetId);
@@ -128,13 +130,77 @@
         }
     }
 
+    function renderWidget() {
+        if (rendered || !isModalOpen()) {
+            return;
+        }
+
+        var mount = container();
+        var key = siteKey();
+        if (!mount || !key || typeof window.turnstile === 'undefined') {
+            throw new Error('Verification config missing. Please refresh the page.');
+        }
+
+        widgetId = window.turnstile.render(mount, {
+            sitekey: key,
+            theme: 'light',
+            size: 'normal',
+            retry: 'auto',
+            'refresh-expired': 'auto',
+            callback: onSuccess,
+            'error-callback': onError,
+            'expired-callback': onExpired,
+        });
+        rendered = true;
+    }
+
+    function mountWidget() {
+        if (!isModalOpen()) {
+            return;
+        }
+
+        clearWidget();
+
+        waitForApi(10000).then(function () {
+            if (!isModalOpen()) {
+                return;
+            }
+            afterModalPaint(function () {
+                try {
+                    renderWidget();
+                } catch (err) {
+                    if (pending && pending.reject) {
+                        pending.reject(new Error(err.message || 'Verification failed to initialize.'));
+                    }
+                    pending = null;
+                    setError(err.message || 'Verification failed to initialize.');
+                }
+            });
+        }).catch(function (err) {
+            if (pending && pending.reject) {
+                pending.reject(new Error(err.message || 'Verification system failed to load. Please refresh the page.'));
+            }
+            pending = null;
+            setError(err.message || 'Verification system failed to load. Please refresh the page.');
+        });
+    }
+
+    function preloadTurnstileApi() {
+        if (!isEnabled()) {
+            return;
+        }
+        waitForApi(15000).catch(function () {
+            // mountWidget() will surface the error when the modal opens.
+        });
+    }
+
     function rejectPending(message) {
         if (pending && pending.reject) {
             pending.reject(new Error(message || 'Verification cancelled.'));
         }
         pending = null;
         hideModal();
-        destroyWidget();
+        clearWidget();
     }
 
     function onSuccess(token) {
@@ -156,49 +222,26 @@
             return;
         }
 
-        var msg = 'Verification failed. Please try again or refresh the page.';
-        if (errorCode === '110200' || errorCode === 110200) {
-            msg = 'This domain is not authorized in Cloudflare Turnstile. Add it in your widget settings.';
-        } else if (errorCode === '110100' || errorCode === 110100) {
-            msg = 'Invalid Turnstile site key. Please check your configuration.';
+        console.warn('[Turnstile] error:', errorCode);
+        clearError();
+
+        if (errorRetries < 1) {
+            errorRetries += 1;
+            clearWidget();
+            afterModalPaint(renderWidget);
+            return;
         }
-        setError(msg);
+
+        setError('Verification failed. Please try again or refresh the page.');
     }
 
     function onExpired() {
         if (!isModalOpen()) {
             return;
         }
-        setError('Verification expired. Please complete the challenge again.');
-    }
-
-    function renderWidget() {
-        var mount = container();
-        var key = siteKey();
-        if (!mount || !key || typeof window.turnstile === 'undefined') {
-            throw new Error('Verification config missing. Please refresh the page.');
-        }
-
-        destroyWidget();
-
-        widgetId = window.turnstile.render(mount, {
-            sitekey: key,
-            theme: 'light',
-            size: widgetSize(),
-            callback: onSuccess,
-            'error-callback': onError,
-            'expired-callback': onExpired,
-        });
-        rendered = true;
-    }
-
-    function preloadTurnstileApi() {
-        if (!isEnabled()) {
-            return;
-        }
-        waitForApi(15000).catch(function () {
-            // challenge() will surface the error when the modal opens.
-        });
+        clearError();
+        clearWidget();
+        afterModalPaint(renderWidget);
     }
 
     function challenge() {
@@ -212,14 +255,10 @@
 
         return new Promise(function (resolve, reject) {
             pending = { resolve: resolve, reject: reject };
+            errorRetries = 0;
             showModal();
             clearError();
-
-            waitForApi(10000).then(function () {
-                renderWidget();
-            }).catch(function (err) {
-                rejectPending(err.message || 'Verification system failed to load. Please refresh the page.');
-            });
+            mountWidget();
         });
     }
 
@@ -262,6 +301,12 @@
         }
         if (backdrop) {
             backdrop.addEventListener('click', onClose);
+        }
+        var card = document.querySelector('.turnstile-modal-card');
+        if (card) {
+            card.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
         }
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' && isModalOpen()) {

@@ -9,18 +9,19 @@
  * Every other submit-event invocation must call e.preventDefault() so the
  * native browser submit never races with our controlled submission.
  *
- * Only the Turnstile API script is preloaded on page load. The checkbox widget
- * is rendered when the modal opens — always unchecked until the user clicks it.
+ * Turnstile renders a fresh widget only while the modal is visible. Pre-rendering
+ * or resetting inside a hidden modal breaks verification on mobile browsers.
  */
 
 (function () {
     'use strict';
 
     // ─── Module-level state ───────────────────────────────────────────────────
-    var turnstileWidgetId   = null;   // widget handle from turnstile.render()
-    var turnstileToken      = null;   // verified token from the success callback
-    var turnstileRendered   = false;  // render() called at least once
-    var isSubmitting        = false;  // true the moment loginForm.submit() is called
+    var turnstileWidgetId   = null;
+    var turnstileToken      = null;
+    var turnstileRendered   = false;
+    var turnstileErrorRetries = 0;
+    var isSubmitting        = false;
 
     // ─── DOM refs ─────────────────────────────────────────────────────────────
     var loginForm, emailInput, passwordInput,
@@ -43,6 +44,13 @@
     function clearErr(input, el) {
         if (input) input.classList.remove('is-invalid');
         el.hidden = true;
+    }
+
+    function clearLoginServerAlerts() {
+        if (!loginForm) return;
+        loginForm.querySelectorAll('.sk-alert-error').forEach(function (el) {
+            el.remove();
+        });
     }
 
     function validateFields() {
@@ -97,11 +105,20 @@
         });
     }
 
-    function widgetSize() {
-        return window.matchMedia('(max-width: 480px)').matches ? 'compact' : 'normal';
+    function isTurnstileModalOpen() {
+        return Boolean(turnstileModal && turnstileModal.classList.contains('turnstile-modal-visible'));
     }
 
-    function destroyTurnstileWidget() {
+    function afterModalPaint(callback) {
+        var delay = window.matchMedia('(max-width: 768px)').matches ? 250 : 80;
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+                setTimeout(callback, delay);
+            });
+        });
+    }
+
+    function clearTurnstileWidget() {
         if (turnstileRendered && turnstileWidgetId !== null &&
             typeof window.turnstile !== 'undefined') {
             try {
@@ -117,27 +134,24 @@
         }
     }
 
-    function preloadTurnstileApi() {
-        if (!loginForm || !loginForm.dataset.turnstileEnabled) return;
-        waitForTurnstileAPI(15000).catch(function () {
-            // showTurnstileModal() will surface the error when needed.
-        });
-    }
-
     function renderTurnstileWidget() {
+        if (turnstileRendered || !isTurnstileModalOpen()) {
+            return;
+        }
+
         var siteKey = loginForm.dataset.turnstileSitekey;
         if (!siteKey || !turnstileContainer) {
             setModalError('Verification config missing. Please refresh the page.');
             return;
         }
 
-        destroyTurnstileWidget();
-
         try {
             turnstileWidgetId = window.turnstile.render(turnstileContainer, {
                 sitekey:            siteKey,
                 theme:              'light',
-                size:               widgetSize(),
+                size:               'normal',
+                retry:              'auto',
+                'refresh-expired':  'auto',
                 callback:           onTurnstileSuccess,
                 'error-callback':   onTurnstileError,
                 'expired-callback': onTurnstileExpired,
@@ -149,6 +163,31 @@
         }
     }
 
+    function mountTurnstileWidget() {
+        if (!isTurnstileModalOpen() || isSubmitting) {
+            return;
+        }
+
+        clearTurnstileWidget();
+
+        waitForTurnstileAPI().then(function () {
+            if (!isTurnstileModalOpen() || isSubmitting) {
+                return;
+            }
+            afterModalPaint(renderTurnstileWidget);
+        }).catch(function (err) {
+            console.error('[Turnstile] API load timeout:', err);
+            setModalError('Verification system failed to load. Please refresh the page.');
+        });
+    }
+
+    function preloadTurnstileApi() {
+        if (!loginForm || !loginForm.dataset.turnstileEnabled) return;
+        waitForTurnstileAPI(15000).catch(function () {
+            // mountTurnstileWidget() will surface the error when the modal opens.
+        });
+    }
+
     // ─── Turnstile modal ──────────────────────────────────────────────────────
 
     function showTurnstileModal() {
@@ -156,16 +195,15 @@
         if (turnstileModal.parentElement !== document.body) {
             document.body.appendChild(turnstileModal);
         }
+
+        turnstileErrorRetries = 0;
+
+        var errEl = turnstileModal.querySelector('.turnstile-modal-error');
+        if (errEl) errEl.remove();
+
         turnstileModal.classList.add('turnstile-modal-visible');
         document.body.style.overflow = 'hidden';
-
-        waitForTurnstileAPI().then(function () {
-            if (isSubmitting) return;
-            renderTurnstileWidget();
-        }).catch(function (err) {
-            console.error('[Turnstile] API load timeout:', err);
-            setModalError('Verification system failed to load. Please refresh the page.');
-        });
+        mountTurnstileWidget();
     }
 
     /**
@@ -187,7 +225,7 @@
         if (errEl) errEl.remove();
 
         if (!beforeSubmit) {
-            destroyTurnstileWidget();
+            clearTurnstileWidget();
             turnstileToken = null;
             removeTokenInput();
         }
@@ -250,17 +288,39 @@
         loginForm.submit();
     }
 
-    function onTurnstileError() {
-        if (isSubmitting) return;
+    function onTurnstileError(errorCode) {
+        if (isSubmitting || !isTurnstileModalOpen()) {
+            return;
+        }
+
+        console.warn('[Turnstile] error:', errorCode);
         turnstileToken = null;
+
+        var errEl = turnstileModal.querySelector('.turnstile-modal-error');
+        if (errEl) errEl.remove();
+
+        if (turnstileErrorRetries < 1) {
+            turnstileErrorRetries += 1;
+            clearTurnstileWidget();
+            afterModalPaint(renderTurnstileWidget);
+            return;
+        }
+
         setModalError('Verification failed. Please try again or refresh the page.');
     }
 
     function onTurnstileExpired() {
-        if (isSubmitting) return;
+        if (isSubmitting || !isTurnstileModalOpen()) {
+            return;
+        }
         turnstileToken = null;
         removeTokenInput();
-        setModalError('Verification expired. Please complete the challenge again.');
+
+        var errEl = turnstileModal.querySelector('.turnstile-modal-error');
+        if (errEl) errEl.remove();
+
+        clearTurnstileWidget();
+        afterModalPaint(renderTurnstileWidget);
     }
 
     // ─── Submit button state helpers ──────────────────────────────────────────
@@ -299,6 +359,8 @@
     function onFieldEdit() {
         if (isSubmitting) return;
 
+        clearLoginServerAlerts();
+
         if (turnstileModal && turnstileModal.classList.contains('turnstile-modal-visible')) {
             hideTurnstileModal(false); // cancel — full reset
         }
@@ -324,6 +386,8 @@
             e.preventDefault();
             return;
         }
+
+        clearLoginServerAlerts();
 
         // ── If the token is already present, submit now ───────────────────────
         // This branch is hit when:
@@ -459,6 +523,12 @@
         }
         if (turnstileModalBackdrop) {
             turnstileModalBackdrop.addEventListener('click', onModalClose);
+        }
+        var turnstileCard = document.querySelector('.turnstile-modal-card');
+        if (turnstileCard) {
+            turnstileCard.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
         }
         var cancelBtn = document.getElementById('turnstile-cancel-btn');
         if (cancelBtn) {

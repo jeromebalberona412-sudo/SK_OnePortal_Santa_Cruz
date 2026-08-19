@@ -25,6 +25,7 @@
         'turnstileSubtitle' => 'Complete the security check to continue logging in.',
     ])
 
+    <main class="sk-login-container">
         {{-- ─── Left Side — Logo & Branding ─────────────────────────────────────── --}}
         <div class="sk-branding-section">
             <div class="branding-content">
@@ -49,9 +50,8 @@
         <div class="sk-login-section">
             <div class="sk-login-card">
 
-                <div class="card-header" style="text-align:center;">
-                    <p class="card-subtitle"
-                       style="font-size:1.4rem;font-weight:800;color:#0f172a;letter-spacing:-0.02em;">
+                <div class="card-header card-header-login">
+                    <p class="card-subtitle card-subtitle-login">
                         Login to your account
                     </p>
                 </div>
