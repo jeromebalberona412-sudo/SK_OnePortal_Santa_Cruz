@@ -567,9 +567,9 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
     flex-direction: column;
 }
 .programs-sidebar::-webkit-scrollbar,
-.brgy-link-list::-webkit-scrollbar { width: 6px; }
+.barangay-profiles-list::-webkit-scrollbar { width: 6px; }
 .programs-sidebar::-webkit-scrollbar-thumb,
-.brgy-link-list::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.45); border-radius: 6px; }
+.barangay-profiles-list::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.45); border-radius: 6px; }
 
 .sidebar-card {
     background: white;
@@ -613,35 +613,46 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
 .category-content p  { font-size: 11px; color: #999; transition: color 0.25s; }
 .chevron { width: 16px; height: 16px; color: #bbb; transition: color 0.25s; flex-shrink: 0; }
 
-/* Barangay link items */
-.brgy-link-list {
+/* Barangay profile items (matches Kabataan dashboard) */
+.barangay-profiles-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    gap: 6px;
     flex: 1;
     min-height: 0;
-    padding-right: 4px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
+    padding-right: 4px;
 }
-.brgy-link-item {
-    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
-    background: #f5f7fa; border-radius: 12px; text-decoration: none; transition: background 0.2s;
+
+.brgy-profile-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 11px;
+    background: var(--bg, #f8fafc);
+    border-radius: var(--radius-sm, 8px);
+    border: 1px solid transparent;
+    transition: background 0.15s, border-color 0.15s;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
 }
-.brgy-link-item:hover { background: #eef1fb; }
-.brgy-link-dot {
-    width: 38px; height: 38px; border-radius: 50%;
-    background: linear-gradient(135deg, #2c2c3e, #3a3a4a);
+.brgy-profile-item:hover { background: #eff6ff; border-color: #bfdbfe; }
+
+.brgy-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; overflow: hidden;
+    font-size: 12px; font-weight: 800; color: white; flex-shrink: 0;
+    background: linear-gradient(135deg, #1a56db 0%, #1e40af 100%);
+    overflow: hidden;
 }
-.brgy-link-logo { width: 100%; height: 100%; object-fit: cover; display: block; }
-.brgy-link-initials { font-size: 12px; font-weight: 800; color: #fff; }
-.brgy-link-empty { font-size: 13px; color: #94a3b8; text-align: center; padding: 16px 8px; }
-.brgy-link-info { flex: 1; min-width: 0; }
-.brgy-link-name { font-size: 13px; font-weight: 700; color: #1a1d25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.brgy-link-sub { font-size: 11px; color: #999; }
+.brgy-avatar-logo { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.brgy-profiles-empty { font-size: 13px; color: #94a3b8; text-align: center; padding: 16px 8px; }
+
+.brgy-info { flex: 1; min-width: 0; }
+.brgy-name { font-size: 13px; font-weight: 700; color: var(--text-primary, #1a1d25); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brgy-chair { font-size: 11px; color: var(--text-muted, #999); margin-top: 1px; }
 
 /* Compose Modal */
 .compose-author-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
@@ -733,7 +744,7 @@ button.reaction-summary-left:hover { background: #f0f2f5; }
         max-height: 100%; height: 100%;
         display: flex; flex-direction: column; min-height: 0; overflow: hidden;
     }
-    .brgy-link-list {
+    .barangay-profiles-list {
         overflow-y: auto;
         overscroll-behavior: contain;
         flex: 1;
@@ -994,7 +1005,7 @@ body.feed-keyboard .programs-fab {
     align-items: center;
     justify-content: space-between;
 }
-.compose-modal-title {
+.compose-modal .modal-header h2.compose-modal-title {
     font-size: 16px;
     font-weight: 700;
     color: #fff;

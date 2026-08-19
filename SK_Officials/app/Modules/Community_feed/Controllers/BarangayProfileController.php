@@ -15,13 +15,24 @@ class BarangayProfileController extends Controller
 
     public function show(Request $request, string $slug): View
     {
-        $tenantId = $request->user()?->tenant_id;
+        $user = $request->user();
+        $tenantId = $user?->tenant_id;
         $barangay = $this->barangayProfileService->findBySlug($slug, $tenantId);
 
         abort_if($barangay === null, 404);
 
         $profile = $this->barangayProfileService->buildProfile($barangay);
 
-        return view('Community_feed::barangay-profile', $profile);
+        $isOwnBarangay = $user && (int) $user->barangay_id === (int) $barangay->id;
+
+        $barangayLogoUrl = $profile['logo_url'] ?? '';
+
+        return view('Community_feed::barangay-profile', array_merge($profile, [
+            'user' => $user,
+            'slug' => $profile['slug'],
+            'isOwnBarangay' => $isOwnBarangay,
+            'barangayLogoUrl' => $barangayLogoUrl,
+            'commentPreviewPost' => null,
+        ]));
     }
 }

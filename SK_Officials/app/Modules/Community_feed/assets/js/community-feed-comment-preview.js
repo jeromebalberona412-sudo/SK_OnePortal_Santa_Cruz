@@ -290,6 +290,8 @@ function closePickers(except = null) {
 }
 
 function bindReactionWrap(wrap) {
+    const viewOnly = Boolean(cfg().viewOnly);
+    if (viewOnly) return;
     if (!wrap || wrap.dataset.bound === '1') return;
     wrap.dataset.bound = '1';
     const btn = wrap.querySelector('.cp-action, .cp-like-btn');
@@ -692,6 +694,7 @@ function renderViewer(filter) {
 }
 
 function bindPage() {
+    const viewOnly = Boolean(cfg().viewOnly);
     const input = document.getElementById('cpCommentInput');
     const send = document.getElementById('cpSendBtn');
     const updateSend = () => { send.disabled = !input.value.trim(); };
@@ -709,6 +712,13 @@ function bindPage() {
         updateSend();
         submitComment(text);
     });
+    if (viewOnly) {
+        // Prevent "another barangay" users from reacting/creating comments.
+        if (input) input.disabled = true;
+        if (send) send.disabled = true;
+        document.getElementById('cpComposer')?.setAttribute('hidden', '');
+    }
+
     send?.addEventListener('click', () => {
         const text = input.value.trim();
         if (!text) return;
@@ -925,6 +935,18 @@ function closeCommentPreview({ skipUrl } = {}) {
 
 window.openCommentPreview = openCommentPreview;
 window.closeCommentPreview = closeCommentPreview;
+
+// For "reactions only" UI (e.g. other-barangay barangay profile stalk pages).
+// Opens the existing reaction viewer without opening the full comment preview shell.
+window.openReactionViewer = function (nextPost) {
+    if (!nextPost) return;
+    post = nextPost;
+    if (!pageBound) {
+        bindPage();
+        pageBound = true;
+    }
+    openViewer('post');
+};
 
 window.addEventListener('popstate', () => {
     if (syncingUrl) return;

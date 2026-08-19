@@ -104,24 +104,24 @@
             <div class="sidebar-card">
                 <h2 class="sidebar-title">Barangay SK Profiles</h2>
                 <p class="sidebar-subtitle">Browse SK officials from each barangay.</p>
-                <div class="brgy-link-list" id="brgyLinkList">
+                <div class="barangay-profiles-list" id="brgyLinkList">
                     @forelse($barangayProfiles as $brgy)
-                    <a href="{{ route('community-feed.barangay', ['slug' => $brgy['slug']]) }}" class="brgy-link-item">
-                        <div class="brgy-link-dot">
+                    <a href="{{ route('community-feed.barangay', ['slug' => $brgy['slug']]) }}" class="brgy-profile-item">
+                        <div class="brgy-avatar">
                             @if(!empty($brgy['logo_url']))
-                                <img src="{{ $brgy['logo_url'] }}" alt="Brgy. {{ $brgy['name'] }} logo" class="brgy-link-logo">
+                                <img src="{{ $brgy['logo_url'] }}" alt="Brgy. {{ $brgy['name'] }} logo" class="brgy-avatar-logo">
                             @else
-                                <span class="brgy-link-initials">{{ $brgy['initials'] }}</span>
+                                {{ $brgy['initials'] }}
                             @endif
                         </div>
-                        <div class="brgy-link-info">
-                            <p class="brgy-link-name">Brgy. {{ $brgy['name'] }}</p>
-                            <p class="brgy-link-sub">SK Officials</p>
+                        <div class="brgy-info">
+                            <p class="brgy-name">Brgy. {{ $brgy['name'] }}</p>
+                            <p class="brgy-chair">SK Officials</p>
                         </div>
-                        <svg style="width:14px;height:14px;color:#bbb;flex-shrink:0;" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                        <svg style="width:16px;height:16px;color:#bbb;flex-shrink:0;" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
                     </a>
                     @empty
-                    <p class="brgy-link-empty">No barangays found for your municipality.</p>
+                    <p class="brgy-profiles-empty">No barangays found for your municipality.</p>
                     @endforelse
                 </div>
             </div>

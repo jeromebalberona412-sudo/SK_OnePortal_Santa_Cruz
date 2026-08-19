@@ -32,6 +32,7 @@ class BarangayProfileService
         private readonly CommitteeService $committeeService,
         private readonly BarangayLogoUrlService $logoUrlService,
         private readonly CloudinaryService $cloudinary,
+        private readonly CommunityFeedPresenter $communityFeedPresenter,
     ) {
     }
 
@@ -142,42 +143,32 @@ class BarangayProfileService
      */
     private function listPosts(int $barangayId): Collection
     {
+        // Provide full `post.comments` tree so the existing comment-preview JS can render comments
+        // (it does not fetch comments on its own).
         return CommunityFeed::query()
-            ->with(['user', 'barangay', 'images'])
+            ->with([
+                'user',
+                'barangay',
+                'images',
+                'reactions',
+                'comments.reactions',
+            ])
             ->active()
             ->withCount(['reactions', 'comments'])
             ->where('barangay_id', $barangayId)
             ->whereRaw('"is_federation_wide" = false')
             ->orderByDesc('created_at')
             ->get()
-            ->map(function (CommunityFeed $post) use ($barangayId) {
-                $type = strtolower((string) $post->type);
+            ->map(function (CommunityFeed $post) {
+                // userId=0 so `owned/liked` are effectively disabled for non-owner viewing.
+                $data = $this->communityFeedPresenter->formatPost($post, 0, 'sk_official');
 
-                return [
-                    'id' => $post->id,
-                    'type' => $type,
-                    'type_label' => ucfirst($type),
-                    'type_class' => in_array($type, ['event', 'announcement', 'activity', 'program', 'update'], true)
-                        ? $type
-                        : 'update',
-                    'title' => $post->title ?: 'Barangay Update',
-                    'body' => $post->body,
-                    'image_url' => $this->cloudinary->normalizeUrl(
-                        $post->images->first()?->image_url
-                    ),
-                    'images' => $post->images
-                        ->map(fn ($img) => $this->cloudinary->normalizeUrl($img->image_url))
-                        ->values()
-                        ->all(),
-                    'link_url' => $post->link_url,
-                    'posted_at' => $post->created_at?->format('M j, Y') ?? '—',
-                    'posted_time' => $post->created_at?->diffForHumans() ?? '',
-                    'author_name' => $post->user?->name
-                        ? $this->committeeService->buildOfficialFullName($post->user)
-                        : ('SK Brgy. '.($post->barangay?->name ?? '')),
-                    'likes' => (int) ($post->reactions_count ?? 0),
-                    'comments' => (int) ($post->comments_count ?? 0),
-                ];
+                $type = strtolower((string) ($data['type'] ?? 'update'));
+                $data['type_class'] = $type;
+                $data['type_label'] = ucfirst($type);
+                $data['posted_time'] = (string) ($data['time'] ?? '');
+
+                return $data;
             });
     }
 
@@ -187,8 +178,7 @@ class BarangayProfileService
             ->where('status', OfficialTerm::STATUS_ACTIVE)
             ->whereHas('officialProfile.user', function ($query) use ($barangayId) {
                 $query->where('barangay_id', $barangayId)
-                    ->where('role', User::ROLE_SK_OFFICIAL)
-                    ->where('status', User::STATUS_ACTIVE);
+                    ->where('role', User::ROLE_SK_OFFICIAL);
             })
             ->get(['term_start', 'term_end']);
 
