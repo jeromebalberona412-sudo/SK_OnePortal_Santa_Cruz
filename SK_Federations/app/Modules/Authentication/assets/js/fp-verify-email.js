@@ -144,6 +144,25 @@
             clearStatus();
 
             try {
+                let turnstileToken = '';
+                if (window.fedTurnstileChallenge) {
+                    try {
+                        turnstileToken = await window.fedTurnstileChallenge();
+                    } catch {
+                        if (resendSpinner) resendSpinner.hidden = true;
+                        enableResend();
+                        return;
+                    }
+                } else if (window.FedTurnstileGate && window.FedTurnstileGate.challenge) {
+                    try {
+                        turnstileToken = await window.FedTurnstileGate.challenge();
+                    } catch {
+                        if (resendSpinner) resendSpinner.hidden = true;
+                        enableResend();
+                        return;
+                    }
+                }
+
                 const response = await fetch(resendUrl, {
                     method: 'POST',
                     headers: {
@@ -153,7 +172,10 @@
                         'X-Requested-With': 'XMLHttpRequest',
                     },
                     credentials: 'same-origin',
-                    body: JSON.stringify({ email }),
+                    body: JSON.stringify({
+                        email,
+                        'cf-turnstile-response': turnstileToken,
+                    }),
                 });
 
                 const data = await response.json().catch(() => ({}));

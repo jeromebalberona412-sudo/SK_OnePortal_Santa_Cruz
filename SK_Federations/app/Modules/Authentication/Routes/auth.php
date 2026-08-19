@@ -52,7 +52,7 @@ Route::middleware('guest')->group(function () {
         ->name('password.email');
     Route::get('/forgot-password/verify-email', [AuthController::class, 'showForgotPasswordVerifyEmail'])->name('password.verify-email');
     Route::post('/forgot-password/resend', [AuthController::class, 'resendForgotPasswordEmail'])
-        ->middleware(['throttle:skfed-password-reset-ip', 'throttle:skfed-password-reset-email'])
+        ->middleware(['turnstile', 'throttle:skfed-password-reset-ip', 'throttle:skfed-password-reset-email'])
         ->name('password.verify-email.resend');
     Route::get('/set-new-password/{token}', [AuthController::class, 'showResetPassword'])
         ->middleware(['throttle:skfed-password-reset-form'])

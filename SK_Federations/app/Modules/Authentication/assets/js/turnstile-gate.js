@@ -10,6 +10,8 @@
     var errorRetries = 0;
     var pending = null;
     var mountTimer = null;
+    var successHandled = false;
+    var completing = false;
 
     function config() {
         return document.getElementById('turnstile-gate-config');
@@ -47,7 +49,12 @@
     }
 
     function afterModalPaint(callback) {
-        var delay = isSmallViewport() ? 520 : (isMobileViewport() ? 400 : 80);
+        var delay = 80;
+        if (isSmallViewport()) {
+            delay = 520;
+        } else if (isMobileViewport()) {
+            delay = 400;
+        }
         requestAnimationFrame(function () {
             requestAnimationFrame(function () {
                 setTimeout(callback, delay);
@@ -237,30 +244,46 @@
     }
 
     function rejectPending(message) {
+        if (completing) {
+            return;
+        }
         if (pending && pending.reject) {
             pending.reject(new Error(message || 'Verification cancelled.'));
         }
         pending = null;
+        successHandled = false;
         hideModal();
         clearWidget();
     }
 
     function onSuccess(token) {
-        if (!isModalOpen() || !pending) {
+        if (successHandled || completing || !pending) {
+            return;
+        }
+        if (!token || typeof token !== 'string') {
             return;
         }
 
+        successHandled = true;
+        completing = true;
+
         var resolve = pending.resolve;
         pending = null;
-        hideModal();
 
         if (resolve) {
             resolve(token);
         }
+
+        hideModal();
+
+        window.setTimeout(function () {
+            clearWidget();
+            completing = false;
+        }, 120);
     }
 
     function onError(errorCode) {
-        if (!isModalOpen()) {
+        if (!isModalOpen() || successHandled || completing) {
             return;
         }
 
@@ -285,7 +308,7 @@
     }
 
     function onExpired() {
-        if (!isModalOpen()) {
+        if (!isModalOpen() || successHandled || completing) {
             return;
         }
         clearError();
@@ -298,13 +321,15 @@
             return Promise.resolve('');
         }
 
-        if (pending) {
+        if (pending && !completing) {
             rejectPending('Verification cancelled.');
         }
 
         return new Promise(function (resolve, reject) {
             pending = { resolve: resolve, reject: reject };
             errorRetries = 0;
+            successHandled = false;
+            completing = false;
             showModal();
             clearError();
             mountWidget();
@@ -340,6 +365,9 @@
         var cancelBtn = document.getElementById('turnstile-cancel-btn');
         var backdrop = document.getElementById('turnstile-modal-backdrop');
         function onClose() {
+            if (completing) {
+                return;
+            }
             rejectPending('Verification cancelled.');
         }
         if (closeBtn) {
@@ -406,9 +434,9 @@
     };
 
     window.fedTurnstileSubmitForm = function (form) {
-        return window.fedTurnstileChallenge().then(function (token) {
-            injectToken(form, token);
-            HTMLFormElement.prototype.submit.call(form);
-        });
+        if (window.FedTurnstileGate && window.FedTurnstileGate.submitForm) {
+            return window.FedTurnstileGate.submitForm(form);
+        }
+        return Promise.reject(new Error('Security check failed to load. Please refresh the page.'));
     };
 }());

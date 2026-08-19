@@ -13,10 +13,15 @@
     @vite([
         'app/Modules/Authentication/assets/css/auth-base.css',
         'app/Modules/Authentication/assets/css/fp-verify-email.css',
+        'app/Modules/Authentication/assets/css/turnstile-gate.css',
+        'app/Modules/Authentication/assets/js/turnstile-gate.js',
         'app/Modules/Authentication/assets/js/fp-verify-email.js',
     ])
 </head>
 <body>
+    @include('authentication::partials.turnstile-gate', [
+        'turnstileSubtitle' => 'Complete the security check to resend your reset link.',
+    ])
     @auth
         <script>window.location.replace("{{ route('dashboard') }}");</script>
     @endauth

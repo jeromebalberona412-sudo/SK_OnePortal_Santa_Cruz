@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const COOLDOWN_KEY = form.dataset.cooldownKey || 'sk_fed_fp_cooldown_until';
 
     let cooldownInterval = null;
+    let submitInProgress = false;
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -170,6 +171,10 @@ document.addEventListener('DOMContentLoaded', function () {
     form.addEventListener('submit', function (e) {
         e.preventDefault();
 
+        if (submitInProgress) {
+            return;
+        }
+
         // Refresh CSRF token before submission
         refreshCsrfToken();
 
@@ -198,11 +203,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // Proceed — show sending state
+        submitInProgress = true;
         if (submitBtn)  submitBtn.disabled = true;
         if (fpBtnText)  fpBtnText.textContent = 'Sending...';
 
         if (typeof window.fedTurnstileSubmitForm === 'function') {
             window.fedTurnstileSubmitForm(form).catch(function (err) {
+                submitInProgress = false;
                 if (submitBtn) submitBtn.disabled = false;
                 if (fpBtnText) fpBtnText.textContent = emailSent ? 'Resend Reset Link' : 'Send Reset Link';
                 if (err && err.message && err.message !== 'Verification cancelled.') {
@@ -214,6 +221,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        submitInProgress = false;
         form.submit();
     });
 });

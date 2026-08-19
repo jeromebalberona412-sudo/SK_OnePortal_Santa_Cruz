@@ -12,6 +12,7 @@
     'use strict';
 
     var isSubmitting = false;
+    var turnstileInProgress = false;
 
     var loginForm, emailInput, passwordInput,
         emailError, passwordError, loginBtn, loginBtnText;
@@ -85,6 +86,7 @@
         }).then(function (token) {
             window.FedTurnstileGate.injectToken(loginForm, token);
             isSubmitting = true;
+            turnstileInProgress = false;
             setSigningIn();
             loginForm.submit();
         });
@@ -118,7 +120,7 @@
     }
 
     function onFieldEdit() {
-        if (isSubmitting) return;
+        if (isSubmitting || turnstileInProgress) return;
         if (window.FedTurnstileGate && window.FedTurnstileGate.isOpen &&
             window.FedTurnstileGate.isOpen()) {
             window.FedTurnstileGate.cancel();
@@ -138,7 +140,7 @@
     }
 
     function onFormSubmit(e) {
-        if (isSubmitting) {
+        if (isSubmitting || turnstileInProgress) {
             e.preventDefault();
             e.stopPropagation();
             return;
@@ -158,6 +160,7 @@
             return;
         }
 
+        turnstileInProgress = true;
         lockAuthFields();
         if (loginBtn) {
             loginBtn.disabled = true;
@@ -166,6 +169,7 @@
 
         runTurnstileThenSubmit().catch(function (err) {
             isSubmitting = false;
+            turnstileInProgress = false;
             resetLoginBtn();
             if (err && err.message && err.message.indexOf('cancelled') === -1) {
                 console.warn('[Turnstile]', err.message);
@@ -206,13 +210,15 @@
         }
 
         var serverErrEl = document.getElementById('turnstile-server-error');
-        if (serverErrEl && (loginForm.dataset.turnstileEnabled ||
-            (window.FedTurnstileGate && window.FedTurnstileGate.isEnabled()))) {
-            waitForGate().then(function (gate) {
-                return gate.challenge();
-            }).catch(function () {
-                // User closed modal; server error remains visible on page.
-            });
+        if (serverErrEl && serverErrEl.textContent.trim()) {
+            var alertHost = loginForm.querySelector('.form-header');
+            if (alertHost) {
+                var alertEl = document.createElement('div');
+                alertEl.className = 'alert alert-danger access-denied-alert';
+                alertEl.setAttribute('role', 'alert');
+                alertEl.textContent = serverErrEl.textContent.trim();
+                alertHost.insertAdjacentElement('afterend', alertEl);
+            }
         }
 
         window.history.pushState(null, '', window.location.href);
