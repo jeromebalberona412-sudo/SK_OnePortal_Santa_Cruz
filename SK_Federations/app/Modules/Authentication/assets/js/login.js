@@ -1,10 +1,7 @@
 /**
  * SK Federations — Login form with Cloudflare Turnstile
  *
- * Submit listener execution order on #loginForm:
- *   1. login.js — bubbling phase
- *      Validates fields, runs Turnstile via FedTurnstileGate, then submits.
- *
+ * Flow: validate fields → show Turnstile modal → user checks box → token → submit once.
  * loginForm.submit() is a native DOM call — it does NOT fire the submit event.
  */
 
@@ -16,6 +13,13 @@
 
     var loginForm, emailInput, passwordInput,
         emailError, passwordError, loginBtn, loginBtnText;
+
+    function turnstileMsg(key) {
+        if (window.FedTurnstileGate && window.FedTurnstileGate.messages) {
+            return window.FedTurnstileGate.messages[key] || '';
+        }
+        return '';
+    }
 
     function validEmail(v) {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
@@ -31,9 +35,27 @@
         if (el) { el.style.display = 'none'; el.textContent = ''; }
     }
 
+    function showFormTurnstileError(msg) {
+        var host = loginForm.querySelector('.form-header');
+        if (!host) return;
+        var existing = loginForm.querySelector('.turnstile-form-error');
+        if (existing) existing.remove();
+        var alertEl = document.createElement('div');
+        alertEl.className = 'alert alert-danger access-denied-alert turnstile-form-error';
+        alertEl.setAttribute('role', 'alert');
+        alertEl.textContent = msg;
+        host.insertAdjacentElement('afterend', alertEl);
+    }
+
+    function clearFormTurnstileError() {
+        var existing = loginForm ? loginForm.querySelector('.turnstile-form-error') : null;
+        if (existing) existing.remove();
+    }
+
     function validateFields() {
         clearErr(emailInput, emailError);
         clearErr(passwordInput, passwordError);
+        clearFormTurnstileError();
 
         var ok    = true;
         var email = emailInput ? emailInput.value.trim() : '';
@@ -71,7 +93,7 @@
                     return;
                 }
                 if (Date.now() - start > maxWaitMs) {
-                    reject(new Error('Security check failed to load. Please refresh the page.'));
+                    reject(new Error(turnstileMsg('loadFailed') || 'Cloudflare verification failed to load. Please refresh the page.'));
                     return;
                 }
                 window.setTimeout(check, 50);
@@ -84,6 +106,9 @@
         return waitForGate().then(function (gate) {
             return gate.challenge();
         }).then(function (token) {
+            if (!token || String(token).trim() === '') {
+                throw new Error(turnstileMsg('missingToken') || 'Please complete the Cloudflare verification first.');
+            }
             window.FedTurnstileGate.injectToken(loginForm, token);
             isSubmitting = true;
             turnstileInProgress = false;
@@ -106,6 +131,7 @@
         lockAuthFields();
         if (!loginBtn) return;
         loginBtn.disabled = true;
+        loginBtn.classList.remove('waiting-for-turnstile');
         loginBtn.classList.add('loading');
         if (loginBtnText) loginBtnText.textContent = 'Logging in...';
     }
@@ -121,6 +147,7 @@
 
     function onFieldEdit() {
         if (isSubmitting || turnstileInProgress) return;
+        clearFormTurnstileError();
         if (window.FedTurnstileGate && window.FedTurnstileGate.isOpen &&
             window.FedTurnstileGate.isOpen()) {
             window.FedTurnstileGate.cancel();
@@ -172,7 +199,7 @@
             turnstileInProgress = false;
             resetLoginBtn();
             if (err && err.message && err.message.indexOf('cancelled') === -1) {
-                console.warn('[Turnstile]', err.message);
+                showFormTurnstileError(err.message);
             }
         });
     }
@@ -211,14 +238,7 @@
 
         var serverErrEl = document.getElementById('turnstile-server-error');
         if (serverErrEl && serverErrEl.textContent.trim()) {
-            var alertHost = loginForm.querySelector('.form-header');
-            if (alertHost) {
-                var alertEl = document.createElement('div');
-                alertEl.className = 'alert alert-danger access-denied-alert';
-                alertEl.setAttribute('role', 'alert');
-                alertEl.textContent = serverErrEl.textContent.trim();
-                alertHost.insertAdjacentElement('afterend', alertEl);
-            }
+            showFormTurnstileError(serverErrEl.textContent.trim());
         }
 
         window.history.pushState(null, '', window.location.href);

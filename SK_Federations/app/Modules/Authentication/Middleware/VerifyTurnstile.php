@@ -19,11 +19,17 @@ class VerifyTurnstile
             return $next($request);
         }
 
-        $responseToken = (string) $request->input('cf-turnstile-response', '');
+        $responseToken = trim((string) $request->input('cf-turnstile-response', ''));
+
+        if ($responseToken === '') {
+            throw ValidationException::withMessages([
+                'cf-turnstile-response' => 'Please complete the Cloudflare verification first.',
+            ]);
+        }
 
         if (! $this->turnstileService->verify($responseToken, $request->ip())) {
             throw ValidationException::withMessages([
-                'cf-turnstile-response' => 'Bot verification failed.',
+                'cf-turnstile-response' => 'Cloudflare verification failed. Please try again.',
             ]);
         }
 

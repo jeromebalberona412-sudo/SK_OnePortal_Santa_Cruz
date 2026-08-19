@@ -1,21 +1,7 @@
 /**
  * SK Federations — Forgot Password JS
  *
- * Handles two pages:
- *
- * 1. /forgot-password        (data-email-sent="0")
- *    - Email input + Send Reset Link button.
- *    - No timer on load. Any stale timer is cleared on load.
- *
- * 2. /forgot-password/verify-email  (data-email-sent="1")
- *    - Resend Reset Link button with 60-second cooldown.
- *    - Timer rules:
- *        • First arrival (nothing in localStorage yet) → start fresh 60s
- *          because the server just sent the email.
- *        • Page refresh while timer is running → resume from where it left off.
- *        • Clicking Resend → start a new 60s from that moment.
- *        • Back to /forgot-password (different email) → old timer is irrelevant
- *          (different key); new one starts when they submit again.
+ * Flow: validate email → show Turnstile → user checks box → token → submit once.
  */
 document.addEventListener('DOMContentLoaded', function () {
     const form          = document.getElementById('forgotPasswordForm');
@@ -30,15 +16,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const COOLDOWN_DURATION = 60;
     const emailSent = form.dataset.emailSent === '1';
-
-    // Use an email-scoped key so each submission gets its own independent timer.
-    // The key is embedded in the blade via data-cooldown-key.
     const COOLDOWN_KEY = form.dataset.cooldownKey || 'sk_fed_fp_cooldown_until';
 
     let cooldownInterval = null;
     let submitInProgress = false;
+    let turnstileInProgress = false;
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    function turnstileMsg(key) {
+        if (window.FedTurnstileGate && window.FedTurnstileGate.messages) {
+            return window.FedTurnstileGate.messages[key] || '';
+        }
+        return '';
+    }
 
     function setInputError(input, errorEl, msg) {
         if (!input || !errorEl) return;
@@ -58,21 +47,16 @@ document.addEventListener('DOMContentLoaded', function () {
         return String(Math.max(0, s));
     }
 
-    // ── CSRF Token Refresh ────────────────────────────────────────────────────
-
     function refreshCsrfToken() {
         const csrfInput = form.querySelector('input[name="_token"]');
         const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-        
+
         if (csrfInput && csrfMeta) {
             csrfInput.value = csrfMeta.content;
         }
     }
 
-    // Refresh CSRF token every 5 minutes to prevent expiration
     setInterval(refreshCsrfToken, 5 * 60 * 1000);
-
-    // ── Cooldown timer ────────────────────────────────────────────────────────
 
     function getStoredUntil() {
         const v = localStorage.getItem(COOLDOWN_KEY);
@@ -89,7 +73,6 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.removeItem(COOLDOWN_KEY);
     }
 
-    /** Run the tick loop against a fixed `until` timestamp. */
     function runTick(until) {
         clearInterval(cooldownInterval);
 
@@ -115,73 +98,80 @@ document.addEventListener('DOMContentLoaded', function () {
         cooldownInterval = setInterval(tick, 1000);
     }
 
-    /** Start a brand-new 60-second cooldown from right now. */
     function startFreshCooldown() {
         const until = Date.now() + COOLDOWN_DURATION * 1000;
         storeUntil(until);
         runTick(until);
     }
 
-    /** Resume an existing cooldown if one is stored and still active. */
-    function resumeCooldownIfActive() {
-        const until = getStoredUntil();
-        if (until <= Date.now()) {
-            clearStored();
-            return false;
-        }
-        runTick(until);
-        return true;
-    }
-
-    // ── Bootstrap ─────────────────────────────────────────────────────────────
-    //
-    // verify-email page (/forgot-password/verify-email):
-    //   - If no timer stored yet → first arrival → start fresh 60s.
-    //   - If timer already stored and still running → resume (page was refreshed).
-    //   - If timer stored but expired → clear it, leave button enabled.
-    //
-    // forgot-password page (/forgot-password):
-    //   - Always clear any stale timer so the button is ready to use.
-
     if (emailSent) {
         const until = getStoredUntil();
         if (until > Date.now()) {
-            // Refresh scenario: resume from stored expiry
             runTick(until);
         } else {
-            // First arrival: start fresh
             startFreshCooldown();
         }
     } else {
-        // /forgot-password page — clear any stale key so a future visit is clean
         clearStored();
     }
 
-    // ── Email field events (only on /forgot-password) ─────────────────────────
-
     if (emailInput && emailInput.type === 'email') {
         emailInput.addEventListener('input', function () {
+            if (turnstileInProgress || submitInProgress) return;
             this.classList.remove('is-invalid');
             if (emailError) emailError.hidden = true;
         });
     }
 
-    // ── Submit handler ────────────────────────────────────────────────────────
+    function resetSubmitButton() {
+        submitInProgress = false;
+        turnstileInProgress = false;
+        if (submitBtn && !(emailSent && getStoredUntil() > Date.now())) {
+            submitBtn.disabled = false;
+        }
+        if (fpBtnText) {
+            fpBtnText.textContent = emailSent ? 'Resend Reset Link' : 'Send Reset Link';
+        }
+    }
+
+    function runTurnstileThenSubmit() {
+        const turnstileRequired = window.FedTurnstileGate && window.FedTurnstileGate.isEnabled();
+
+        if (!turnstileRequired) {
+            submitInProgress = true;
+            if (submitBtn) submitBtn.disabled = true;
+            if (fpBtnText) fpBtnText.textContent = 'Sending...';
+            HTMLFormElement.prototype.submit.call(form);
+            return Promise.resolve();
+        }
+
+        turnstileInProgress = true;
+        if (submitBtn) submitBtn.disabled = true;
+
+        return window.fedTurnstileChallenge().then(function (token) {
+            if (!token || String(token).trim() === '') {
+                throw new Error(turnstileMsg('missingToken') || 'Please complete the Cloudflare verification first.');
+            }
+            window.FedTurnstileGate.injectToken(form, token);
+            turnstileInProgress = false;
+            submitInProgress = true;
+            if (fpBtnText) fpBtnText.textContent = 'Sending...';
+            HTMLFormElement.prototype.submit.call(form);
+        });
+    }
 
     form.addEventListener('submit', function (e) {
         e.preventDefault();
 
-        if (submitInProgress) {
+        if (submitInProgress || turnstileInProgress) {
             return;
         }
 
-        // Refresh CSRF token before submission
         refreshCsrfToken();
 
         const email = emailInput ? emailInput.value.trim() : '';
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-        // Validate only on the /forgot-password page (email input is visible)
         if (emailInput && emailInput.type === 'email') {
             emailInput.classList.remove('is-invalid');
             if (emailError) emailError.hidden = true;
@@ -197,31 +187,17 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        // Block if cooldown is still active
         if (submitBtn && submitBtn.disabled) {
             return;
         }
 
-        // Proceed — show sending state
-        submitInProgress = true;
-        if (submitBtn)  submitBtn.disabled = true;
-        if (fpBtnText)  fpBtnText.textContent = 'Sending...';
-
-        if (typeof window.fedTurnstileSubmitForm === 'function') {
-            window.fedTurnstileSubmitForm(form).catch(function (err) {
-                submitInProgress = false;
-                if (submitBtn) submitBtn.disabled = false;
-                if (fpBtnText) fpBtnText.textContent = emailSent ? 'Resend Reset Link' : 'Send Reset Link';
-                if (err && err.message && err.message !== 'Verification cancelled.') {
-                    if (emailInput && emailError) {
-                        setInputError(emailInput, emailError, err.message);
-                    }
+        runTurnstileThenSubmit().catch(function (err) {
+            resetSubmitButton();
+            if (err && err.message && err.message.indexOf('cancelled') === -1) {
+                if (emailInput && emailError) {
+                    setInputError(emailInput, emailError, err.message);
                 }
-            });
-            return;
-        }
-
-        submitInProgress = false;
-        form.submit();
+            }
+        });
     });
 });

@@ -13,6 +13,15 @@
     var successHandled = false;
     var completing = false;
 
+    var MSG = {
+        missingToken: 'Please complete the Cloudflare verification first.',
+        failed: 'Cloudflare verification failed. Please try again.',
+        tryAgain: 'Please complete the Cloudflare verification and try again.',
+        cancelled: 'Verification cancelled.',
+        loadFailed: 'Cloudflare verification failed to load. Please refresh the page.',
+        initFailed: 'Cloudflare verification failed to initialize. Please try again.',
+    };
+
     function config() {
         return document.getElementById('turnstile-gate-config');
     }
@@ -76,7 +85,7 @@
                     resolve();
                 } else if (Date.now() - start > maxWaitMs) {
                     clearInterval(iv);
-                    reject(new Error('Verification system failed to load. Please refresh the page.'));
+                    reject(new Error(MSG.loadFailed));
                 }
             }, 100);
         });
@@ -205,18 +214,18 @@
                     renderWidget();
                 } catch (err) {
                     if (pending && pending.reject) {
-                        pending.reject(new Error(err.message || 'Verification failed to initialize.'));
+                        pending.reject(new Error(MSG.initFailed));
                     }
                     pending = null;
-                    setError(err.message || 'Verification failed to initialize.');
+                    setError(MSG.initFailed);
                 }
             });
         }).catch(function (err) {
             if (pending && pending.reject) {
-                pending.reject(new Error(err.message || 'Verification system failed to load. Please refresh the page.'));
+                pending.reject(new Error(MSG.loadFailed));
             }
             pending = null;
-            setError(err.message || 'Verification system failed to load. Please refresh the page.');
+            setError(MSG.loadFailed);
         });
     }
 
@@ -248,7 +257,7 @@
             return;
         }
         if (pending && pending.reject) {
-            pending.reject(new Error(message || 'Verification cancelled.'));
+            pending.reject(new Error(message || MSG.cancelled));
         }
         pending = null;
         successHandled = false;
@@ -260,7 +269,14 @@
         if (successHandled || completing || !pending) {
             return;
         }
-        if (!token || typeof token !== 'string') {
+        if (!token || typeof token !== 'string' || token.trim() === '') {
+            setError(MSG.missingToken);
+            if (pending && pending.reject) {
+                pending.reject(new Error(MSG.missingToken));
+            }
+            pending = null;
+            successHandled = false;
+            completing = false;
             return;
         }
 
@@ -298,11 +314,13 @@
             return;
         }
 
-        var msg = 'Verification failed. Please try again or refresh the page.';
+        var msg = MSG.failed;
         if (errorCode === '110200' || errorCode === 110200) {
             msg = 'Domain not authorized in Cloudflare Turnstile dashboard. Please add this domain (or enable localhost) in your Cloudflare widget settings.';
         } else if (errorCode === '110100' || errorCode === 110100) {
             msg = 'Invalid Turnstile site key. Please check your configuration.';
+        } else if (errorCode === '600010' || errorCode === 600010) {
+            msg = MSG.tryAgain;
         }
         setError(msg);
     }
@@ -322,7 +340,7 @@
         }
 
         if (pending && !completing) {
-            rejectPending('Verification cancelled.');
+            rejectPending(MSG.cancelled);
         }
 
         return new Promise(function (resolve, reject) {
@@ -355,9 +373,20 @@
 
     function submitForm(form) {
         return challenge().then(function (token) {
+            if (!token || String(token).trim() === '') {
+                return Promise.reject(new Error(MSG.missingToken));
+            }
             injectToken(form, token);
             HTMLFormElement.prototype.submit.call(form);
         });
+    }
+
+    function hasValidToken(form) {
+        if (!form) {
+            return false;
+        }
+        var field = form.querySelector('input[name="cf-turnstile-response"]');
+        return Boolean(field && String(field.value || '').trim() !== '');
     }
 
     function bindClose() {
@@ -368,7 +397,7 @@
             if (completing) {
                 return;
             }
-            rejectPending('Verification cancelled.');
+            rejectPending(MSG.cancelled);
         }
         if (closeBtn) {
             closeBtn.addEventListener('click', onClose);
@@ -405,10 +434,12 @@
         isOpen: isModalOpen,
         challenge: challenge,
         cancel: function () {
-            rejectPending('Verification cancelled.');
+            rejectPending(MSG.cancelled);
         },
         injectToken: injectToken,
         submitForm: submitForm,
+        hasValidToken: hasValidToken,
+        messages: MSG,
     };
 
     window.fedTurnstileChallenge = function () {
@@ -424,7 +455,7 @@
                     return;
                 }
                 if (Date.now() - started > 8000) {
-                    reject(new Error('Security check failed to load. Please refresh the page.'));
+                    reject(new Error(MSG.loadFailed));
                     return;
                 }
                 window.setTimeout(wait, 50);
@@ -437,6 +468,6 @@
         if (window.FedTurnstileGate && window.FedTurnstileGate.submitForm) {
             return window.FedTurnstileGate.submitForm(form);
         }
-        return Promise.reject(new Error('Security check failed to load. Please refresh the page.'));
+        return Promise.reject(new Error(MSG.loadFailed));
     };
 }());

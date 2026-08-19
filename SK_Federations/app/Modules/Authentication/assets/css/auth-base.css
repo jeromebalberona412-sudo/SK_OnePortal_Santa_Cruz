@@ -420,10 +420,21 @@ button.login-btn.btn-primary:disabled { opacity: 0.6; transform: none; }
     .collab-logo-wrapper .logo-glow-wrapper::before { width: 150px; height: 150px; }
     .logo-glow-wrapper     { margin-bottom: 1.5rem; }
     .login-form-container  { padding: 0 1.25rem 2rem; }
-    .login-card-inner      { padding: 2rem 3rem; border-radius: 20px; }
+    .login-card-inner      { padding: 2rem 1.5rem; border-radius: 20px; }
     .form-header h2        { font-size: 1.5rem; }
     .form-control          { padding: 0.875rem 1rem; font-size: 0.95rem; }
     .login-btn             { padding: 1rem 1.5rem; font-size: 1rem; }
+}
+
+@media (max-width: 390px) {
+    .login-form-container  { padding: 0 1rem 1.75rem; }
+    .login-card-inner      { padding: 1.75rem 1.25rem; border-radius: 18px; }
+}
+
+@media (max-width: 360px) {
+    .login-form-container  { padding: 0 0.75rem 1.5rem; }
+    .login-card-inner      { padding: 1.5rem 1rem; border-radius: 16px; }
+    .login-btn             { padding: 0.875rem 1.25rem; font-size: 0.95rem; }
 }
 
 @media screen and (max-width: 768px) {

@@ -56,15 +56,15 @@ class FortifyServiceProvider extends ServiceProvider
 
                 if ($turnstileToken === '') {
                     throw ValidationException::withMessages([
-                        'email'    => ['Human verification is required. Please complete the challenge.'],
-                        'password' => ['Human verification is required. Please complete the challenge.'],
+                        'email'    => ['Please complete the Cloudflare verification first.'],
+                        'password' => ['Please complete the Cloudflare verification first.'],
                     ])->redirectTo(route('login'));
                 }
 
                 if (! $turnstileService->verify($turnstileToken, $request->ip())) {
                     throw ValidationException::withMessages([
-                        'email'    => ['Human verification failed. Please try again.'],
-                        'password' => ['Human verification failed. Please try again.'],
+                        'email'    => ['Cloudflare verification failed. Please try again.'],
+                        'password' => ['Cloudflare verification failed. Please try again.'],
                     ])->redirectTo(route('login'));
                 }
             }
