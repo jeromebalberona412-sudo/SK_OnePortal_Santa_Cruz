@@ -13,9 +13,15 @@
     @vite([
         'app/Modules/Authentication/assets/css/auth-base.css',
         'app/Modules/Authentication/assets/css/forgot-password.css',
+        'app/Modules/Authentication/assets/css/turnstile-gate.css',
+        'app/Modules/Authentication/assets/js/turnstile-gate.js',
+        'app/Modules/Authentication/assets/js/forgot-password.js',
     ])
 </head>
 <body>
+    @include('authentication::partials.turnstile-gate', [
+        'turnstileSubtitle' => 'Complete the security check to send a reset link.',
+    ])
     @auth
         <script>window.location.replace("{{ route('dashboard') }}");</script>
     @endauth
@@ -134,8 +140,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    @vite(['app/Modules/Authentication/assets/js/forgot-password.js'])
-    
+
     <script>
         // CSRF Token Refresh - Prevent 419 Page Expired Error
         document.addEventListener('DOMContentLoaded', function() {

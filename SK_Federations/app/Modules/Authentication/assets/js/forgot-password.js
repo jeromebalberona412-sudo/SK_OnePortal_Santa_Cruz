@@ -168,6 +168,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Submit handler ────────────────────────────────────────────────────────
 
     form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
         // Refresh CSRF token before submission
         refreshCsrfToken();
 
@@ -180,13 +182,11 @@ document.addEventListener('DOMContentLoaded', function () {
             if (emailError) emailError.hidden = true;
 
             if (!email) {
-                e.preventDefault();
                 setInputError(emailInput, emailError, 'Please enter your email address.');
                 return;
             }
 
             if (!emailRegex.test(email)) {
-                e.preventDefault();
                 setInputError(emailInput, emailError, 'Please enter a valid email address.');
                 return;
             }
@@ -194,12 +194,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Block if cooldown is still active
         if (submitBtn && submitBtn.disabled) {
-            e.preventDefault();
             return;
         }
 
         // Proceed — show sending state
         if (submitBtn)  submitBtn.disabled = true;
         if (fpBtnText)  fpBtnText.textContent = 'Sending...';
+
+        if (typeof window.fedTurnstileSubmitForm === 'function') {
+            window.fedTurnstileSubmitForm(form).catch(function (err) {
+                if (submitBtn) submitBtn.disabled = false;
+                if (fpBtnText) fpBtnText.textContent = emailSent ? 'Resend Reset Link' : 'Send Reset Link';
+                if (err && err.message && err.message !== 'Verification cancelled.') {
+                    if (emailInput && emailError) {
+                        setInputError(emailInput, emailError, err.message);
+                    }
+                }
+            });
+            return;
+        }
+
+        form.submit();
     });
 });

@@ -46,7 +46,13 @@ class AppServiceProvider extends ServiceProvider
 
         $applicationUrl = trim((string) config('app.url'));
 
-        if ($applicationUrl !== '' && filter_var($applicationUrl, FILTER_VALIDATE_URL)) {
+        // In local dev, match the browser host (127.0.0.1 vs LAN IP) so Vite/CSS/assets load.
+        if ($this->app->environment('local') && ! $this->app->runningInConsole()) {
+            $requestRoot = request()->getSchemeAndHttpHost();
+            if ($requestRoot !== '') {
+                URL::forceRootUrl($requestRoot);
+            }
+        } elseif ($applicationUrl !== '' && filter_var($applicationUrl, FILTER_VALIDATE_URL)) {
             URL::forceRootUrl($applicationUrl);
 
             if (str_starts_with(strtolower($applicationUrl), 'https://')) {

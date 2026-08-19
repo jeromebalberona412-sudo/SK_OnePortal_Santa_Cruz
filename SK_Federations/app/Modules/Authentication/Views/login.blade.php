@@ -13,15 +13,18 @@
     @vite([
         'app/Modules/Authentication/assets/css/auth-base.css',
         'app/Modules/Authentication/assets/css/login.css',
+        'app/Modules/Authentication/assets/css/turnstile-gate.css',
         'app/Modules/Authentication/assets/css/auth-legal.css',
         'app/Modules/Authentication/assets/js/auth-legal.js',
+        'app/Modules/Authentication/assets/js/turnstile-gate.js',
         'app/Modules/Authentication/assets/js/login.js',
     ])
-    @if(config('services.turnstile.enabled') && config('services.turnstile.site_key'))
-        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-    @endif
 </head>
 <body>
+
+    @include('authentication::partials.turnstile-gate', [
+        'turnstileSubtitle' => 'Complete the security check to continue logging in.',
+    ])
 
     <script>
         (function() {
@@ -34,33 +37,6 @@
             };
         })();
     </script>
-
-    @if(config('services.turnstile.enabled') && config('services.turnstile.site_key'))
-        <div id="turnstile-modal" class="turnstile-modal" role="dialog" aria-modal="true" aria-label="Human verification">
-            <div id="turnstile-modal-backdrop" class="turnstile-modal-backdrop"></div>
-            <div class="turnstile-modal-card">
-                <div class="turnstile-modal-header">
-                    <button id="turnstile-close-btn" class="turnstile-close-btn" type="button" aria-label="Cancel verification">
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414
-                                     1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293
-                                     4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                  clip-rule="evenodd"/>
-                        </svg>
-                    </button>
-                </div>
-                <div class="turnstile-modal-body">
-                    <div id="turnstile-container"></div>
-                </div>
-                <div class="turnstile-modal-footer">
-                    <button id="turnstile-cancel-btn" type="button" class="turnstile-cancel-link">
-                        Cancel and go back
-                    </button>
-                </div>
-            </div>
-        </div>
-    @endif
 
     <div class="login-page">
         <div class="bg-wrapper">

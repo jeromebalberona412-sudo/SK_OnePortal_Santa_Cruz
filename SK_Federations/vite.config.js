@@ -28,6 +28,10 @@ export default defineConfig({
                 'app/Modules/Authentication/assets/css/auth-legal.css',
                 'app/Modules/Authentication/assets/js/auth-legal.js',
 
+                // ── Authentication — shared Turnstile ───────────────────────
+                'app/Modules/Authentication/assets/css/turnstile-gate.css',
+                'app/Modules/Authentication/assets/js/turnstile-gate.js',
+
                 // ── Authentication — Login ─────────────────────────────────
                 'app/Modules/Authentication/assets/css/login.css',
                 'app/Modules/Authentication/assets/js/login.js',
