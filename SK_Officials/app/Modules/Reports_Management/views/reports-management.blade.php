@@ -12,12 +12,10 @@
         'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Reports_Management/assets/css/reports-management.css'
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/abyip-pending-notice.css') }}">
 </head>
 <body>
 
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -163,7 +161,6 @@
         abyipGate: @json($abyipGate ?? null),
     };
 </script>
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 <script src="{{ url('/shared/js/abyip-pending-notice.js') }}"></script>
 </body>
 </html>

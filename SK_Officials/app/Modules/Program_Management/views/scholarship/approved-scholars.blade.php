@@ -15,12 +15,10 @@
         'app/Modules/Program_Management/assets/css/scholarship/approved-scholars.css',
         'app/Modules/Dashboard/assets/css/dashboard.css'
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
 </head>
 <body class="has-table-page-footer">
 
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -246,6 +244,5 @@
     'app/Modules/Program_Management/assets/js/scholarship/scholarship-view-shared.js',
     'app/Modules/Program_Management/assets/js/scholarship/approved-scholars.js'
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

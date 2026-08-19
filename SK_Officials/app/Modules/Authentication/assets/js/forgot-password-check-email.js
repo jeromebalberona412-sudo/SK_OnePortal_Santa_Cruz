@@ -30,6 +30,12 @@
             }
         }
 
+        function resetSubmitBtn() {
+            if (resendBtnText) {
+                resendBtnText.textContent = 'Resend Reset Link';
+            }
+        }
+
         function runCooldownTick(untilTimestampMs) {
             clearCooldownIntervalRef();
 
@@ -43,7 +49,7 @@
                         localStorage.removeItem(getCooldownKey());
                     } catch (_) {}
                     if (resendBtn) resendBtn.disabled = false;
-                    if (resendBtnText) resendBtnText.textContent = 'Resend Reset Link';
+                    resetSubmitBtn();
                     return;
                 }
 
@@ -103,30 +109,46 @@
                 runCooldownTick(untilMs);
             } else {
                 if (resendBtn) resendBtn.disabled = false;
-                if (resendBtnText) resendBtnText.textContent = 'Resend Reset Link';
+                resetSubmitBtn();
             }
         }
 
-        let submitInProgress = false;
         if (resendForm && resendBtn) {
             resendForm.addEventListener('submit', function (e) {
-                if (submitInProgress) {
-                    e.preventDefault();
-                    return;
-                }
+                e.preventDefault();
 
                 if (resendBtn.disabled) {
-                    e.preventDefault();
                     return;
                 }
 
-                submitInProgress = true;
-                resendBtn.disabled = true;
-                if (resendBtnText) resendBtnText.textContent = 'Sending...';
+                const gate = window.SkOfficialsTurnstileGate;
+                if (!gate || !gate.isEnabled || !gate.isEnabled()) {
+                    resendBtn.disabled = true;
+                    if (resendBtnText) resendBtnText.textContent = 'Sending...';
+                    try {
+                        localStorage.removeItem(getCooldownKey());
+                    } catch (_) {}
+                    resendForm.submit();
+                    return;
+                }
 
-                try {
-                    localStorage.removeItem(getCooldownKey());
-                } catch (_) {}
+                gate.challenge().then(function (token) {
+                    gate.injectToken(resendForm, token);
+                    resendBtn.disabled = true;
+                    if (resendBtnText) resendBtnText.textContent = 'Sending...';
+                    try {
+                        localStorage.removeItem(getCooldownKey());
+                    } catch (_) {}
+                    HTMLFormElement.prototype.submit.call(resendForm);
+                }).catch(function () {
+                    const untilMs = resolveCooldownUntilMs();
+                    if (untilMs > Date.now()) {
+                        runCooldownTick(untilMs);
+                    } else {
+                        resendBtn.disabled = false;
+                        resetSubmitBtn();
+                    }
+                });
             });
         }
     });

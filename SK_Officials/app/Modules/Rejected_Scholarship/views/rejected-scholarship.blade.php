@@ -20,7 +20,6 @@
 </head>
 <body class="has-table-page-footer">
 
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -134,6 +133,5 @@
     'app/Modules/Program_Management/assets/js/scholarship/scholarship-view-shared.js',
     'app/Modules/Rejected_Scholarship/assets/js/rejected-scholarship.js'
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

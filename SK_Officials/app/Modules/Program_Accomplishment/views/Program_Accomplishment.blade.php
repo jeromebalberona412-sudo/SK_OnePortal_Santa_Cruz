@@ -13,12 +13,10 @@
         'app/Modules/Layout/css/table-row-actions-menu.css',
         'app/Modules/Program_Accomplishment/Assets/css/program-accomplishment.css',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
 </head>
 <body>
 
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -373,7 +371,6 @@
     'app/Modules/Layout/js/table-row-actions-menu.js',
     'app/Modules/Program_Accomplishment/Assets/js/program-accomplishment.js',
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 
 </body>
 </html>

@@ -9,10 +9,8 @@
         'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholarship_application_form.css'
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -210,6 +208,5 @@
     'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Program_Management/assets/js/scholarship/scholarship_requests.js'
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

@@ -12,6 +12,8 @@
     @vite([
         'app/Modules/Authentication/assets/css/login.css',
         'app/Modules/Authentication/assets/css/forgot-password.css',
+        'app/Modules/Authentication/assets/js/turnstile-gate.js',
+        'app/Modules/Authentication/assets/js/verify-account.js',
     ])
 </head>
 <body class="sk-login-page">
@@ -52,7 +54,7 @@
                     </div>
                 @endif
 
-                <form class="sk-login-form" id="forgotPasswordForm" method="POST" action="{{ route('account.activation.send') }}" novalidate>
+                <form class="sk-login-form" id="activateAccountForm" method="POST" action="{{ route('account.activation.send') }}" novalidate>
                     @csrf
 
                     <div class="sk-form-group">
@@ -91,56 +93,9 @@
         </div>
     </main>
 
-    <script>
-        (function () {
-            var form = document.getElementById('forgotPasswordForm');
-            var emailInput = document.getElementById('email');
-            var emailError = document.getElementById('email-error');
-            var submitBtn = document.getElementById('submitBtn');
-            var btnText = document.getElementById('fpBtnText');
-
-            function showErr(msg) {
-                emailInput.classList.add('is-invalid');
-                emailError.textContent = msg;
-                emailError.hidden = false;
-            }
-
-            if (emailInput && emailError) {
-                emailInput.addEventListener('input', function () {
-                    emailInput.classList.remove('is-invalid');
-                    emailError.hidden = true;
-                });
-            }
-
-            if (form) {
-                form.addEventListener('submit', function (e) {
-                    e.preventDefault();
-                    var email = emailInput ? emailInput.value.trim() : '';
-                    if (emailInput) {
-                        emailInput.classList.remove('is-invalid');
-                    }
-                    if (emailError) {
-                        emailError.hidden = true;
-                    }
-
-                    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                        showErr('Invalid email or no email.');
-                        return;
-                    }
-                    if (submitBtn && submitBtn.disabled) {
-                        return;
-                    }
-                    if (submitBtn) {
-                        submitBtn.disabled = true;
-                    }
-                    if (btnText) {
-                        btnText.textContent = 'Sending...';
-                    }
-                    form.submit();
-                });
-            }
-        }());
-    </script>
+    @include('authentication::partials.turnstile-gate', [
+        'turnstileSubtitle' => 'Complete the security check before we send your activation link.',
+    ])
 
 </body>
 </html>

@@ -75,12 +75,14 @@ function responseHasRememberCookie($response): bool
     return false;
 }
 
-it('shows the remember me checkbox and warning on the login page', function () {
+it('shows the remember me checkbox on the login page', function () {
     get('/login')
         ->assertOk()
         ->assertSee('Remember me')
         ->assertDontSee('Remember me on this device')
-        ->assertSee('Only select this on a personal device. Do not use on shared or public computers.');
+        ->assertSee('Forgot password')
+        ->assertDontSee('Forgot password?')
+        ->assertSee('Remember this device?');
 });
 
 it('logs in without remember me and does not set a remember cookie', function () {

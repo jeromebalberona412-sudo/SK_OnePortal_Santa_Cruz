@@ -12,12 +12,10 @@
         'app/Modules/Layout/css/sidebar.css',
         'app/Modules/ScheduleKKProfiling/assets/css/schedule-kkprofiling.css'
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
 </head>
 <body>
 
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -235,7 +233,6 @@
     'app/Modules/Layout/js/sidebar.js',
     'app/Modules/ScheduleKKProfiling/assets/js/schedule-kkprofiling.js'
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>
 <!-- PLACEHOLDER_KABATAAN_MODAL -->

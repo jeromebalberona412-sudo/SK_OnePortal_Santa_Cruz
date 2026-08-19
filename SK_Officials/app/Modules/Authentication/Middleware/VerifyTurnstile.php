@@ -16,7 +16,7 @@ class VerifyTurnstile
     public function handle(Request $request, Closure $next): Response
     {
         // If Turnstile is disabled in config, skip verification
-        if (! config('services.turnstile.enabled', false)) {
+        if (! $this->turnstileService->isEnabled()) {
             return $next($request);
         }
 

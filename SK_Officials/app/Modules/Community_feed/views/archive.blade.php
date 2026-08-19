@@ -13,12 +13,10 @@
         'app/Modules/Layout/css/table-row-actions-menu.css',
         'app/Modules/Community_feed/assets/css/community-feed-archive.css',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
 </head>
 <body>
 
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 

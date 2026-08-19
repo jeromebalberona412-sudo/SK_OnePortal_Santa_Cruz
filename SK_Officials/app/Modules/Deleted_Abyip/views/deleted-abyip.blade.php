@@ -10,11 +10,9 @@
         'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Deleted_Kabataan/assets/css/deleted-kabataan.css'
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/sk-archive-terms.css') }}">
 </head>
 <body>
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -75,7 +73,6 @@
 </div>
 
 @vite(['app/Modules/Deleted_Abyip/assets/js/deleted-abyip.js'])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 <script src="{{ url('/shared/js/sk-archive-terms.js') }}"></script>
 </body>
 </html>

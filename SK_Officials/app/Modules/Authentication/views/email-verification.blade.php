@@ -11,7 +11,6 @@
         'app/Modules/Authentication/assets/css/youth-email-verification.css',
         'app/Modules/Authentication/assets/js/youth-email-verification.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="youth-login-page">
     @include('dashboard::loading')
@@ -97,6 +96,5 @@
             <div class="modal-spinner"></div>
         </div>
     </div>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

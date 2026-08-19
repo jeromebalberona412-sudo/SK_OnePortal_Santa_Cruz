@@ -13,11 +13,8 @@
         'app/Modules/Authentication/assets/css/login.css',
         'app/Modules/Authentication/assets/css/verify-wait.css',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="sk-login-page">
-    @include('loading')
-    
     <!-- Animated Background -->
     <div class="sk-bg-wrapper">
         <div class="sk-bg-image"></div>
@@ -121,7 +118,6 @@
         </div>
     </div>
 
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
     @vite(['app/Modules/Authentication/assets/js/verify-wait.js'])
 </body>
 </html>

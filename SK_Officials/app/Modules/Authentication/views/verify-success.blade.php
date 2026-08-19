@@ -13,10 +13,8 @@
         'app/Modules/Authentication/assets/css/verify-success.css',
         'app/Modules/Authentication/assets/js/verify-success.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="sk-login-page">
-    @include('loading')
     
     <!-- Animated Background -->
     <div class="sk-bg-wrapper">
@@ -65,6 +63,5 @@
         </div>
     </main>
 
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

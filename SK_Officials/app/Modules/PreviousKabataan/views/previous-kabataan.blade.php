@@ -13,11 +13,9 @@
         'app/Modules/PreviousKabataan/assets/css/previous-kabataan.css'
     ])
     <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
 
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -287,7 +285,6 @@
     'app/Modules/Layout/js/sidebar.js',
     'app/Modules/PreviousKabataan/assets/js/previous-kabataan.js'
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 
 <!-- Toast (top-center) -->
 <div class="prev-kab-toast" id="prevKabToast" style="display:none;" role="status" aria-live="polite">

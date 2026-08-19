@@ -11,12 +11,10 @@
         'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Program_Management/assets/css/schedule-programs.css'
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/abyip-pending-notice.css') }}">
 </head>
 <body>
 
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -284,7 +282,6 @@
     'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Program_Management/assets/js/schedule-programs.js'
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 <script>
 // Inline date validation for Schedule Programs
 document.addEventListener('DOMContentLoaded', function() {

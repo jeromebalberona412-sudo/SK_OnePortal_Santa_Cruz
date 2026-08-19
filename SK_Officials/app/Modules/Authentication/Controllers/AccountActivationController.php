@@ -4,6 +4,7 @@ namespace App\Modules\Authentication\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Authentication\Services\AccountActivationService;
+use App\Modules\Authentication\Services\TurnstileService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -15,6 +16,7 @@ class AccountActivationController extends Controller
 {
     public function __construct(
         protected AccountActivationService $accountActivationService,
+        protected TurnstileService $turnstileService,
     ) {}
 
     public function showRequestForm(): View
@@ -24,6 +26,12 @@ class AccountActivationController extends Controller
 
     public function sendLink(Request $request): RedirectResponse
     {
+        if ($fail = $this->turnstileService->requestFailed($request)) {
+            return back()
+                ->withErrors(['captcha' => $fail])
+                ->withInput();
+        }
+
         if (config('fortify.lowercase_usernames') && $request->has('email')) {
             $request->merge([
                 'email' => Str::lower((string) $request->input('email')),

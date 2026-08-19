@@ -9,16 +9,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Success Modal Handler
     // ============================================
     const successModal = document.getElementById('successModal');
-
-    // Wire "Go to Login" button in success modal to show loading overlay
-    if (successModal) {
-        const goToLoginBtn = successModal.querySelector('a[href]');
-        if (goToLoginBtn) {
-            goToLoginBtn.addEventListener('click', function() {
-                if (window.showLoading) window.showLoading('Redirecting to login');
-            });
-        }
-    }
     
     // ============================================
     // Multi-Step Navigation
@@ -341,13 +331,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             if (isValid) {
-                // For demo/testing: Show success modal directly on this page
                 e.preventDefault();
-                if (window.showLoading) window.showLoading('Creating your account');
-                setTimeout(() => {
-                    if (window.hideLoading) window.hideLoading();
-                    if (successModal) successModal.style.display = 'flex';
-                }, 800);
+                if (successModal) successModal.style.display = 'flex';
                 return;
                 
                 // Show loading state (this won't run because of return above)

@@ -14,11 +14,9 @@
         'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Profile/assets/css/profile.css'
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
 
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -223,6 +221,5 @@
     'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Profile/assets/js/profile.js'
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

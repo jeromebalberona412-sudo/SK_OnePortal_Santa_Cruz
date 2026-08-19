@@ -12,12 +12,10 @@
         'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Committees/assets/css/committees.css'
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/abyip-pending-notice.css') }}">
 </head>
 <body>
 
-@include('loading')
 <!-- ================= HEADER ================= -->
 @include('layout::header')
 
@@ -225,7 +223,6 @@
     'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Committees/assets/js/committees.js'
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 <script src="{{ url('/shared/js/abyip-pending-notice.js') }}"></script>
 <script>
     window.committeesAbyipGate = @json($abyipGate ?? null);

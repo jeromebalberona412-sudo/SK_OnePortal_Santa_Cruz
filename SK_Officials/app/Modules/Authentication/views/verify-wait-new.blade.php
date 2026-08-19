@@ -14,10 +14,8 @@
         'app/Modules/Authentication/assets/css/verify-wait.css',
         'app/Modules/Authentication/assets/js/verify-wait.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="sk-login-page">
-    @include('loading')
     
     <!-- Animated Background -->
     <div class="sk-bg-wrapper">
@@ -103,6 +101,5 @@
         </div>
     </div>
 
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

@@ -17,7 +17,7 @@ return [
     |
     */
 
-    'enabled' => (bool) env('TURNSTILE_ENABLED', true),
+    'enabled' => filter_var(env('TURNSTILE_ENABLED', true), FILTER_VALIDATE_BOOLEAN),
 
     'site_key' => env('TURNSTILE_SITE_KEY', ''),
 

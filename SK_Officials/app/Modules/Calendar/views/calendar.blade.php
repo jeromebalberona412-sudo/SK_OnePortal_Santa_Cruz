@@ -12,11 +12,9 @@
         'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Calendar/assets/css/calendar.css'
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
 
-@include('loading')
 <!-- ================= HEADER ================= -->
 @include('layout::header')
 
@@ -57,7 +55,6 @@
     'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Calendar/assets/js/calendar.js'
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>
 

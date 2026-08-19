@@ -96,13 +96,20 @@
 
     // ─── Turnstile modal ──────────────────────────────────────────────────────
 
+    function widgetSize() {
+        return window.matchMedia('(max-width: 480px)').matches ? 'compact' : 'normal';
+    }
+
     function showTurnstileModal() {
         if (!turnstileModal) return;
+        if (turnstileModal.parentElement !== document.body) {
+            document.body.appendChild(turnstileModal);
+        }
         turnstileModal.classList.add('turnstile-modal-visible');
         document.body.style.overflow = 'hidden';
 
         waitForTurnstileAPI().then(function () {
-            if (isSubmitting) return; // abort if we somehow got here mid-submission
+            if (isSubmitting) return;
 
             if (!turnstileRendered) {
                 var siteKey = loginForm.dataset.turnstileSitekey;
@@ -114,7 +121,7 @@
                     turnstileWidgetId = window.turnstile.render(turnstileContainer, {
                         sitekey:            siteKey,
                         theme:              'light',
-                        size:               'normal',
+                        size:               widgetSize(),
                         callback:           onTurnstileSuccess,
                         'error-callback':   onTurnstileError,
                         'expired-callback': onTurnstileExpired,
@@ -125,7 +132,6 @@
                     setModalError('Failed to initialize verification. Please refresh the page.');
                 }
             } else if (!isSubmitting && turnstileWidgetId !== null) {
-                // Already rendered — just reset so the checkbox appears fresh
                 window.turnstile.reset(turnstileWidgetId);
             }
         }).catch(function (err) {
@@ -322,13 +328,8 @@
         }
 
         showTurnstileModal();
-        lockAuthFields();
         if (submitBtn) {
-            submitBtn.disabled = true;
             submitBtn.classList.add('waiting-for-turnstile');
-            submitBtn.classList.add('loading');
-            var span = submitBtn.querySelector('span');
-            if (span) span.textContent = 'Logging in...';
         }
     }
 
@@ -378,6 +379,52 @@
         if (forgotBtn) {
             forgotBtn.addEventListener('click', function () {
                 window.location.href = '/forgot-password';
+            });
+        }
+
+        var rememberInput = document.getElementById('remember');
+        var rememberModal = document.getElementById('remember-modal');
+        var rememberCancel = document.getElementById('remember-modal-cancel');
+        var rememberConfirm = document.getElementById('remember-modal-confirm');
+        var rememberBackdrop = document.getElementById('remember-modal-backdrop');
+
+        function openRememberModal() {
+            if (!rememberModal) return;
+            rememberModal.hidden = false;
+            rememberModal.classList.add('is-open');
+        }
+
+        function closeRememberModal() {
+            if (!rememberModal) return;
+            rememberModal.classList.remove('is-open');
+            rememberModal.hidden = true;
+        }
+
+        if (rememberInput && rememberModal) {
+            rememberInput.addEventListener('change', function () {
+                if (!rememberInput.checked) {
+                    return;
+                }
+                rememberInput.checked = false;
+                openRememberModal();
+            });
+
+            rememberConfirm?.addEventListener('click', function () {
+                rememberInput.checked = true;
+                closeRememberModal();
+            });
+
+            function cancelRemember() {
+                rememberInput.checked = false;
+                closeRememberModal();
+            }
+
+            rememberCancel?.addEventListener('click', cancelRemember);
+            rememberBackdrop?.addEventListener('click', cancelRemember);
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && rememberModal.classList.contains('is-open')) {
+                    cancelRemember();
+                }
             });
         }
 

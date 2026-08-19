@@ -15,12 +15,10 @@
         'app/Modules/Rejected_KKProfiling/assets/css/rejected-kkprofiling.css'
     ])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/sk-archive-terms.css') }}">
 </head>
 <body>
 
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -143,6 +141,5 @@
     'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Rejected_Sports/assets/js/rejected-sports.js'
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

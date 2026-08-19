@@ -14,11 +14,8 @@
         'app/Modules/Profile/assets/css/change-password.css',
         'app/Modules/Profile/assets/js/change-password.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="sk-login-page">
-    @include('loading')
-
     <main class="sk-login-container">
         <div class="sk-branding-section">
             <div class="branding-content">
@@ -185,6 +182,5 @@
             }
         }
     </script>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

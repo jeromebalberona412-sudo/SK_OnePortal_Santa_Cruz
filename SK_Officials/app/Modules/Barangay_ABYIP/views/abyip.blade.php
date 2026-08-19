@@ -22,14 +22,11 @@
         'app/Modules/Barangay_ABYIP/Assets/css/editor.css',
         'app/Modules/Barangay_ABYIP/Assets/css/review.css',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body>
 
 @include('layout::header')
 @include('layout::sidebar')
-@include('loading')
-
 <main class="main-content">
     <div class="page-container abyip-page">
 
@@ -512,6 +509,5 @@
     'app/Modules/Layout/js/sidebar.js',
     'app/Modules/Barangay_ABYIP/Assets/js/abyip.js',
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

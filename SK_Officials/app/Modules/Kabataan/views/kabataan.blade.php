@@ -15,13 +15,11 @@
         'app/Modules/KKProfilingRequests/assets/css/kkp-paper-form.css',
         'app/Modules/KKProfilingRequests/assets/css/kk-questionnaire-view.css',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
     @include('layout::partials.table-column-sort')
 </head>
 <body>
 
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -916,6 +914,5 @@
     'app/Modules/Layout/js/table-row-actions-menu.js',
     'app/Modules/Kabataan/assets/js/kabataan.js'
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

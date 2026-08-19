@@ -18,7 +18,6 @@
         'app/Modules/Program_Management/assets/css/survey/survey.css',
         'app/Modules/GForm_Builder/assets/css/gform-builder.css',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <script type="application/json" id="surveyProgramConfig">{!! json_encode([
         'committee' => $committee,
         'activeTab' => $activeTab,
@@ -29,7 +28,6 @@
     ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!}</script>
 </head>
 <body class="survey-app" data-committee="{{ $committee }}" data-survey-tab="{{ $activeTab }}">
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -92,6 +90,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 </script>
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

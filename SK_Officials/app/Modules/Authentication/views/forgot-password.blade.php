@@ -12,6 +12,7 @@
     @vite([
         'app/Modules/Authentication/assets/css/login.css',
         'app/Modules/Authentication/assets/css/forgot-password.css',
+        'app/Modules/Authentication/assets/js/turnstile-gate.js',
         'app/Modules/Authentication/assets/js/forgot-password.js',
     ])
 </head>
@@ -92,6 +93,10 @@
             </div>
         </div>
     </main>
+
+    @include('authentication::partials.turnstile-gate', [
+        'turnstileSubtitle' => 'Complete the security check before we send your reset link.',
+    ])
 
 </body>
 </html>

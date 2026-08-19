@@ -14,11 +14,9 @@
         'app/Modules/Program_Management/assets/css/scholarship/scholar_list.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholar_evaluation.css'
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body data-program-key="sports" data-program-letter="I">
 
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -45,6 +43,5 @@
     'app/Modules/GForm_Builder/assets/js/gform-builder.js',
     'app/Modules/Program_Management/assets/js/scholarship/scholar_evaluation.js'
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

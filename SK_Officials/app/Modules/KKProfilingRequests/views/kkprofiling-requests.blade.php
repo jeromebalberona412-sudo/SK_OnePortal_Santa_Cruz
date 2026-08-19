@@ -16,13 +16,11 @@
         'app/Modules/KKProfilingRequests/assets/css/kkp-paper-form.css',
         'app/Modules/KKProfilingRequests/assets/css/kk-questionnaire-view.css',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
     @include('layout::partials.table-column-sort')
 </head>
 <body>
 
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -300,7 +298,6 @@
 <script>
     window.KK_BARANGAY_ZONES = @json(($barangayZones ?? collect())->pluck('name')->values());
 </script>
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>
 

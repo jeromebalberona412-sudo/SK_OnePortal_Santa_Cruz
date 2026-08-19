@@ -12,7 +12,6 @@
         'app/Modules/Layout/css/sidebar.css',
         'app/Modules/Community_feed/assets/css/community-feed.css',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
         html:has(body.bfp-page) {
             overflow-x: clip;
@@ -348,6 +347,5 @@ document.querySelectorAll('.bfp-tab').forEach(function(tab) {
     });
 })();
 </script>
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

@@ -15,7 +15,6 @@
         'app/Modules/Program_Management/assets/css/scholarship/scholarship-schedule.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholar_report.css'
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <style>
         .toggle-switch {
             position: relative;
@@ -58,7 +57,6 @@
     </style>
 </head>
 <body>
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -463,7 +461,6 @@
     'app/Modules/Program_Management/assets/js/scholarship/scholarship-schedule.js',
     'app/Modules/Program_Management/assets/js/scholarship/scholar_schedule.js'
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 <script>
 // Initialize form builder when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {

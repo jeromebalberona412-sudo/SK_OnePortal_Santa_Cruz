@@ -13,10 +13,8 @@
         'app/Modules/Program_Management/assets/css/scholarship/scholar_application_from.css',
         'app/Modules/Program_Management/assets/css/sports/sports_requests.css'
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body data-program-key="sports">
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -221,6 +219,5 @@
     'app/Modules/Layout/js/table-row-actions-menu.js',
     'app/Modules/Program_Management/assets/js/sports/sports_requests.js'
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

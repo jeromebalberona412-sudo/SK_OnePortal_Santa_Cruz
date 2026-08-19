@@ -11,7 +11,6 @@
         'app/Modules/Authentication/assets/css/youth-register.css',
         'app/Modules/Authentication/assets/js/youth-register.js',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
 </head>
 <body class="youth-login-page">
     @include('dashboard::loading')
@@ -489,6 +488,5 @@
             </div>
         </div>
     </div>
-    <script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

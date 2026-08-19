@@ -12,11 +12,9 @@
         'app/Modules/Program_Management/assets/css/scholarship/scholarship_application_form.css',
         'app/Modules/Program_Management/assets/css/sports/sports_requests.css',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
 </head>
 <body class="has-table-page-footer">
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -220,6 +218,5 @@
     'app/Modules/Program_Management/assets/js/scholarship/scholarship-view-shared.js',
     'app/Modules/Program_Management/assets/js/scholarship/scholarship-applications.js'
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

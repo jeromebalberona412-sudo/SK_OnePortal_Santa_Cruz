@@ -14,11 +14,9 @@
         'app/Modules/GForm_Builder/assets/css/gform-builder.css',
         'app/Modules/Program_Management/assets/css/scholarship/scholarship-schedule.css',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/abyip-pending-notice.css') }}">
 </head>
 <body data-program-key="sports">
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -197,7 +195,6 @@
     'app/Modules/Program_Management/assets/js/sports/sports-age-classifications.js',
     'app/Modules/Program_Management/assets/js/sports/sports-schedule.js',
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 <script src="{{ url('/shared/js/abyip-pending-notice.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {

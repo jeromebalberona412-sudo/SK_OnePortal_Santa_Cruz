@@ -10,6 +10,7 @@ use App\Modules\Authentication\Services\EmailVerificationDeviceService;
 use App\Modules\Authentication\Services\PasswordResetService;
 use App\Modules\Authentication\Services\TenantContextService;
 use App\Modules\Authentication\Services\TrustedDeviceService;
+use App\Modules\Authentication\Services\TurnstileService;
 use App\Modules\Profile\Services\PasswordChangeService;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
@@ -34,6 +35,7 @@ class AuthController extends Controller
         protected AccountActivationService $accountActivationService,
         protected PasswordChangeService $passwordChangeService,
         protected EmailVerificationDeviceService $emailVerificationDeviceService,
+        protected TurnstileService $turnstileService,
     ) {}
 
     public function showLogin(): View
@@ -454,6 +456,12 @@ class AuthController extends Controller
 
     public function sendPasswordResetLink(Request $request): RedirectResponse
     {
+        if ($fail = $this->turnstileService->requestFailed($request)) {
+            return back()
+                ->withErrors(['captcha' => $fail])
+                ->withInput();
+        }
+
         if (config('fortify.lowercase_usernames') && $request->has('email')) {
             $request->merge([
                 'email' => Str::lower((string) $request->input('email')),

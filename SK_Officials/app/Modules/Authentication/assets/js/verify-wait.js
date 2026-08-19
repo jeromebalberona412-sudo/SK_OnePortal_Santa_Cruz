@@ -3,10 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const POLL_INTERVAL_MS = 500;
     const BTN_LABEL = 'Resend Verification Email';
 
-    if (typeof window.hideLoading === 'function') {
-        window.hideLoading();
-    }
-
     const verifyContent = document.querySelector('.verify-content');
     if (!verifyContent) {
         return;
@@ -307,10 +303,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         showDeviceNotification('SK Officials', 'Email verified successfully!');
 
-        if (typeof window.showLoading === 'function') {
-            window.showLoading('Redirecting', 'Taking you to the dashboard...');
-        }
-
         setTimeout(() => {
             window.location.replace(destination);
         }, 350);
@@ -443,10 +435,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('pageshow', () => {
-        if (typeof window.hideLoading === 'function') {
-            window.hideLoading();
-        }
-
         updateResendButton();
 
         if (!verificationComplete) {

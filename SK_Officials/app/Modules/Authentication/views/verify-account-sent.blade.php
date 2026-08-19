@@ -12,6 +12,8 @@
     @vite([
         'app/Modules/Authentication/assets/css/login.css',
         'app/Modules/Authentication/assets/css/forgot-password.css',
+        'app/Modules/Authentication/assets/js/turnstile-gate.js',
+        'app/Modules/Authentication/assets/js/verify-account-sent.js',
     ])
 </head>
 <body class="sk-login-page">
@@ -43,6 +45,15 @@
                     <p class="card-subtitle">{{ $message }}</p>
                 </div>
 
+                @if ($errors->any())
+                    <div class="sk-alert sk-alert-error">
+                        <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                        {{ $errors->first() }}
+                    </div>
+                @endif
+
                 <form class="sk-login-form" method="POST" action="{{ route('account.activation.send') }}" id="resendActivationForm">
                     @csrf
                     <input type="hidden" name="email" value="{{ $email }}">
@@ -59,54 +70,15 @@
                 </form>
 
                 <div style="margin-top: 0.75rem;">
-                    <a href="{{ route('account.activation.sent') }}" class="sk-secondary-btn" data-no-loading>Cancel</a>
+                    <a href="{{ route('account.activation.request') }}" class="sk-secondary-btn" data-no-loading>Cancel</a>
                 </div>
             </div>
         </div>
     </main>
 
-    <script>
-        (function () {
-            var form = document.getElementById('resendActivationForm');
-            var btn = document.getElementById('resendActivationBtn');
-            var label = document.getElementById('resendActivationLabel');
-            if (!form || !btn || !label) {
-                return;
-            }
-
-            var remaining = parseInt(btn.getAttribute('data-remaining'), 10) || 0;
-
-            function formatTime(seconds) {
-                var mins = Math.floor(seconds / 60);
-                var secs = seconds % 60;
-                return mins + ':' + String(secs).padStart(2, '0');
-            }
-
-            function tick() {
-                if (remaining <= 0) {
-                    btn.disabled = false;
-                    label.textContent = 'Resend activation email';
-                    return;
-                }
-
-                btn.disabled = true;
-                label.textContent = 'Resend in ' + formatTime(remaining);
-                remaining -= 1;
-                window.setTimeout(tick, 1000);
-            }
-
-            tick();
-
-            form.addEventListener('submit', function (e) {
-                if (btn.disabled) {
-                    e.preventDefault();
-                    return;
-                }
-                btn.disabled = true;
-                label.textContent = 'Sending...';
-            });
-        }());
-    </script>
+    @include('authentication::partials.turnstile-gate', [
+        'turnstileSubtitle' => 'Complete the security check before we resend your activation link.',
+    ])
 
 </body>
 </html>

@@ -14,13 +14,11 @@
         'app/Modules/Community_feed/assets/css/community-feed.css',
         'app/Modules/Community_feed/assets/css/community-feed-comment-preview.css',
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/sk-archive-terms.css') }}">
     <link rel="preload" href="{{ url('/sounds/reactions_ux.mp3') }}" as="audio" type="audio/mpeg">
 </head>
 <body>
 
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -355,6 +353,5 @@ window.showFeedToast = showFeedToast;
         </div>
     </div>
 </div>
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>

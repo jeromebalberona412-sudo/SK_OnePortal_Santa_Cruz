@@ -14,11 +14,9 @@
         'app/Modules/Program_Management/assets/css/sports/sports_requests.css',
         'app/Modules/Program_Management/assets/css/sports/sports_list.css'
     ])
-    <link rel="stylesheet" href="{{ url('/shared/css/loading.css') }}">
     <link rel="stylesheet" href="{{ url('/shared/css/table-page-footer.css') }}">
 </head>
 <body data-program-key="sports">
-@include('loading')
 @include('layout::header')
 @include('layout::sidebar')
 
@@ -266,6 +264,5 @@
     'app/Modules/Layout/js/table-row-actions-menu.js',
     'app/Modules/Program_Management/assets/js/sports/sports_list.js'
 ])
-<script src="{{ url('/shared/js/loading.js') }}"></script>
 </body>
 </html>
