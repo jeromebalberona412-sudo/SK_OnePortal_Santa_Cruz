@@ -67,10 +67,15 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        if (submitBtn) {
+            submitBtn.classList.add('waiting-for-turnstile');
+        }
+
         gate.challenge().then(function (token) {
             gate.injectToken(form, token);
             if (submitBtn) {
                 submitBtn.disabled = true;
+                submitBtn.classList.remove('waiting-for-turnstile');
                 submitBtn.classList.add('loading');
             }
             if (btnText) {
@@ -78,6 +83,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             HTMLFormElement.prototype.submit.call(form);
         }).catch(function (err) {
+            if (submitBtn) {
+                submitBtn.classList.remove('waiting-for-turnstile');
+            }
             resetSubmitBtn();
             if (err && err.message && err.message !== 'Verification cancelled.') {
                 showErr(err.message);

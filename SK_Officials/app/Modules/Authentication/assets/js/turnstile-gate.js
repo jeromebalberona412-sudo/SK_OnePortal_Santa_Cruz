@@ -1,6 +1,10 @@
 /**
  * Shared Cloudflare Turnstile challenge for SK Officials auth forms.
  * Call SkOfficialsTurnstileGate.challenge(), then injectToken(form, token) before submit.
+ *
+ * Only the Turnstile API script is preloaded on page load. The checkbox widget is
+ * rendered when the modal opens so it always starts unchecked — the user must
+ * click it themselves. After verification completes, the form submits automatically.
  */
 (function () {
     'use strict';
@@ -29,6 +33,11 @@
 
     function container() {
         return document.getElementById('turnstile-container');
+    }
+
+    function isModalOpen() {
+        var modalEl = modal();
+        return Boolean(modalEl && modalEl.classList.contains('turnstile-modal-visible'));
     }
 
     function widgetSize() {
@@ -103,27 +112,50 @@
         clearError();
     }
 
+    function destroyWidget() {
+        if (rendered && widgetId !== null && typeof window.turnstile !== 'undefined') {
+            try {
+                window.turnstile.remove(widgetId);
+            } catch (err) {
+                console.warn('[Turnstile] remove failed:', err);
+            }
+        }
+        widgetId = null;
+        rendered = false;
+        var mount = container();
+        if (mount) {
+            mount.innerHTML = '';
+        }
+    }
+
     function rejectPending(message) {
         if (pending && pending.reject) {
             pending.reject(new Error(message || 'Verification cancelled.'));
         }
         pending = null;
         hideModal();
-        if (rendered && widgetId !== null && typeof window.turnstile !== 'undefined') {
-            window.turnstile.reset(widgetId);
-        }
+        destroyWidget();
     }
 
     function onSuccess(token) {
-        var resolve = pending && pending.resolve;
+        if (!isModalOpen() || !pending) {
+            return;
+        }
+
+        var resolve = pending.resolve;
         pending = null;
         hideModal();
+
         if (resolve) {
             resolve(token);
         }
     }
 
     function onError(errorCode) {
+        if (!isModalOpen()) {
+            return;
+        }
+
         var msg = 'Verification failed. Please try again or refresh the page.';
         if (errorCode === '110200' || errorCode === 110200) {
             msg = 'This domain is not authorized in Cloudflare Turnstile. Add it in your widget settings.';
@@ -134,6 +166,9 @@
     }
 
     function onExpired() {
+        if (!isModalOpen()) {
+            return;
+        }
         setError('Verification expired. Please complete the challenge again.');
     }
 
@@ -143,10 +178,9 @@
         if (!mount || !key || typeof window.turnstile === 'undefined') {
             throw new Error('Verification config missing. Please refresh the page.');
         }
-        if (rendered && widgetId !== null) {
-            window.turnstile.reset(widgetId);
-            return;
-        }
+
+        destroyWidget();
+
         widgetId = window.turnstile.render(mount, {
             sitekey: key,
             theme: 'light',
@@ -156,6 +190,15 @@
             'expired-callback': onExpired,
         });
         rendered = true;
+    }
+
+    function preloadTurnstileApi() {
+        if (!isEnabled()) {
+            return;
+        }
+        waitForApi(15000).catch(function () {
+            // challenge() will surface the error when the modal opens.
+        });
     }
 
     function challenge() {
@@ -171,7 +214,10 @@
             pending = { resolve: resolve, reject: reject };
             showModal();
             clearError();
-            waitForApi(10000).then(renderWidget).catch(function (err) {
+
+            waitForApi(10000).then(function () {
+                renderWidget();
+            }).catch(function (err) {
                 rejectPending(err.message || 'Verification system failed to load. Please refresh the page.');
             });
         });
@@ -218,13 +264,19 @@
             backdrop.addEventListener('click', onClose);
         }
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && modal() && modal().classList.contains('turnstile-modal-visible')) {
+            if (e.key === 'Escape' && isModalOpen()) {
                 onClose();
             }
         });
     }
 
     bindClose();
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', preloadTurnstileApi);
+    } else {
+        preloadTurnstileApi();
+    }
 
     window.SkOfficialsTurnstileGate = {
         isEnabled: isEnabled,

@@ -1,5 +1,5 @@
 /**
- * SK Officials — Login form with delayed Cloudflare Turnstile
+ * SK Officials — Login form with Cloudflare Turnstile
  *
  * Execution order of submit listeners on #loginForm:
  *   1. login.js — bubbling phase
@@ -8,6 +8,9 @@
  * The only way loginForm.submit() should fire is from onTurnstileSuccess().
  * Every other submit-event invocation must call e.preventDefault() so the
  * native browser submit never races with our controlled submission.
+ *
+ * Only the Turnstile API script is preloaded on page load. The checkbox widget
+ * is rendered when the modal opens — always unchecked until the user clicks it.
  */
 
 (function () {
@@ -94,11 +97,59 @@
         });
     }
 
-    // ─── Turnstile modal ──────────────────────────────────────────────────────
-
     function widgetSize() {
         return window.matchMedia('(max-width: 480px)').matches ? 'compact' : 'normal';
     }
+
+    function destroyTurnstileWidget() {
+        if (turnstileRendered && turnstileWidgetId !== null &&
+            typeof window.turnstile !== 'undefined') {
+            try {
+                window.turnstile.remove(turnstileWidgetId);
+            } catch (err) {
+                console.warn('[Turnstile] remove failed:', err);
+            }
+        }
+        turnstileWidgetId = null;
+        turnstileRendered = false;
+        if (turnstileContainer) {
+            turnstileContainer.innerHTML = '';
+        }
+    }
+
+    function preloadTurnstileApi() {
+        if (!loginForm || !loginForm.dataset.turnstileEnabled) return;
+        waitForTurnstileAPI(15000).catch(function () {
+            // showTurnstileModal() will surface the error when needed.
+        });
+    }
+
+    function renderTurnstileWidget() {
+        var siteKey = loginForm.dataset.turnstileSitekey;
+        if (!siteKey || !turnstileContainer) {
+            setModalError('Verification config missing. Please refresh the page.');
+            return;
+        }
+
+        destroyTurnstileWidget();
+
+        try {
+            turnstileWidgetId = window.turnstile.render(turnstileContainer, {
+                sitekey:            siteKey,
+                theme:              'light',
+                size:               widgetSize(),
+                callback:           onTurnstileSuccess,
+                'error-callback':   onTurnstileError,
+                'expired-callback': onTurnstileExpired,
+            });
+            turnstileRendered = true;
+        } catch (err) {
+            console.error('[Turnstile] render() failed:', err);
+            setModalError('Failed to initialize verification. Please refresh the page.');
+        }
+    }
+
+    // ─── Turnstile modal ──────────────────────────────────────────────────────
 
     function showTurnstileModal() {
         if (!turnstileModal) return;
@@ -110,30 +161,7 @@
 
         waitForTurnstileAPI().then(function () {
             if (isSubmitting) return;
-
-            if (!turnstileRendered) {
-                var siteKey = loginForm.dataset.turnstileSitekey;
-                if (!siteKey) {
-                    console.error('[Turnstile] site key missing');
-                    return;
-                }
-                try {
-                    turnstileWidgetId = window.turnstile.render(turnstileContainer, {
-                        sitekey:            siteKey,
-                        theme:              'light',
-                        size:               widgetSize(),
-                        callback:           onTurnstileSuccess,
-                        'error-callback':   onTurnstileError,
-                        'expired-callback': onTurnstileExpired,
-                    });
-                    turnstileRendered = true;
-                } catch (err) {
-                    console.error('[Turnstile] render() failed:', err);
-                    setModalError('Failed to initialize verification. Please refresh the page.');
-                }
-            } else if (!isSubmitting && turnstileWidgetId !== null) {
-                window.turnstile.reset(turnstileWidgetId);
-            }
+            renderTurnstileWidget();
         }).catch(function (err) {
             console.error('[Turnstile] API load timeout:', err);
             setModalError('Verification system failed to load. Please refresh the page.');
@@ -159,11 +187,7 @@
         if (errEl) errEl.remove();
 
         if (!beforeSubmit) {
-            // User cancelled — reset the widget and discard the token
-            if (turnstileRendered && turnstileWidgetId !== null &&
-                typeof window.turnstile !== 'undefined') {
-                window.turnstile.reset(turnstileWidgetId);
-            }
+            destroyTurnstileWidget();
             turnstileToken = null;
             removeTokenInput();
         }
@@ -207,15 +231,16 @@
     // ─── Turnstile callbacks ──────────────────────────────────────────────────
 
     function onTurnstileSuccess(token) {
-        if (isSubmitting) return; // late callback — already submitted
+        if (isSubmitting) return;
+
+        if (!turnstileModal || !turnstileModal.classList.contains('turnstile-modal-visible')) {
+            return;
+        }
 
         turnstileToken = token;
         injectTokenInput(token);
-
-        // Close the modal without resetting the widget (beforeSubmit = true)
         hideTurnstileModal(true);
 
-        // Update button UI
         if (submitBtn) {
             submitBtn.classList.remove('waiting-for-turnstile');
         }
@@ -446,6 +471,8 @@
         if (serverErrEl && loginForm.dataset.turnstileEnabled) {
             showTurnstileModal();
         }
+
+        preloadTurnstileApi();
     }
 
     if (document.readyState === 'loading') {

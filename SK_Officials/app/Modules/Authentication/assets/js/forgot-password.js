@@ -77,15 +77,19 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        submitBtn.classList.add('waiting-for-turnstile');
+
         gate.challenge().then(function (token) {
             gate.injectToken(form, token);
             submitBtn.disabled = true;
+            submitBtn.classList.remove('waiting-for-turnstile');
             submitBtn.classList.add('loading');
             if (fpBtnText) {
                 fpBtnText.textContent = 'Sending...';
             }
             HTMLFormElement.prototype.submit.call(form);
         }).catch(function (err) {
+            submitBtn.classList.remove('waiting-for-turnstile');
             resetSubmitBtn();
             if (err && err.message && err.message !== 'Verification cancelled.') {
                 setInputError(emailInput, emailError, err.message);

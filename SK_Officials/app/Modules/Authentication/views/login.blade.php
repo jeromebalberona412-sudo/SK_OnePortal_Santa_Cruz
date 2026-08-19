@@ -18,15 +18,6 @@
 
     @php $turnstileEnabled = app(\App\Modules\Authentication\Services\TurnstileService::class)->isEnabled(); @endphp
 
-    @if ($turnstileEnabled)
-        {{--
-            render=explicit: prevents Cloudflare from auto-scanning the DOM and
-            rendering any widget it finds. Our JS calls turnstile.render() manually
-            after waiting for the API to be ready, eliminating the load-race bug.
-        --}}
-        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-    @endif
-
 </head>
 <body class="sk-login-page">
 
